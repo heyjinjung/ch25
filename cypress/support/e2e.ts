@@ -1,4 +1,6 @@
 /// <reference types="cypress" />
 
-// Shared Cypress E2E setup. Extend with custom commands if needed.
+import "./commands";
+
+// Shared Cypress E2E setup.
 export {};

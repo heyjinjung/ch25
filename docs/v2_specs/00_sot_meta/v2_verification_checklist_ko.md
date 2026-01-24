@@ -146,6 +146,8 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] v2-only 기준 충족 (V1 TeamBattleService import 제거 확인)
 - [x] v2-only import 검증 테스트 통과 (tests/v2_tests/phase1_env/test_v2_architecture_sot.py)
 	- 커맨드: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+- [x] 팀 선택 윈도우 48h 반영 확인 (V2TeamBattleService)
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 #### 3.2.8 Survey/Inbox
 - [x] 단위 테스트 추가

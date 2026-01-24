@@ -77,6 +77,7 @@ const V2AdminLoginPage: FC = () => {
               </label>
               <input
                 {...register("username")}
+                data-testid="login-username"
                 className="w-full rounded-xl border border-obsidian-border bg-obsidian-bg px-4 py-3 text-white placeholder:text-obsidian-muted focus:outline-none focus:ring-2 focus:ring-obsidian-accent/40"
                 placeholder="external_id"
                 autoComplete="username"
@@ -94,6 +95,7 @@ const V2AdminLoginPage: FC = () => {
               </label>
               <input
                 {...register("password")}
+                data-testid="login-password"
                 type="password"
                 className="w-full rounded-xl border border-obsidian-border bg-obsidian-bg px-4 py-3 text-white placeholder:text-obsidian-muted focus:outline-none focus:ring-2 focus:ring-obsidian-accent/40"
                 placeholder="password"
@@ -114,6 +116,7 @@ const V2AdminLoginPage: FC = () => {
 
             <button
               type="submit"
+              data-testid="login-submit"
               disabled={isLoading}
               className="w-full rounded-xl bg-obsidian-accent px-4 py-3 font-bold text-black hover:opacity-90 disabled:opacity-50"
             >

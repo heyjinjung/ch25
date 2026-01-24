@@ -73,6 +73,7 @@ const V2MobileBottomNav: React.FC = () => {
         <Link 
           key={idx} 
           to={item.to} 
+          data-testid={`user-nav:${item.to.split("/").pop()}`}
           className="flex flex-col items-center justify-center p-2 transition-all active:scale-95"
           onClick={() => playTabTouch()}
         >

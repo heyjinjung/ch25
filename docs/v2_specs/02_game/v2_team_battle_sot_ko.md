@@ -1,5 +1,5 @@
 문서 타입: SoT
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-19
 작성자: GitHub Copilot
 대상: BE/FE/운영
@@ -53,7 +53,7 @@ V2 팀배틀(Team Battle)의 게임 규칙, 데이터 모델, API 스키마를 �
 ## 6. SoT: 핵심 규칙
 **서비스 기준**: [app/services/team_battle_service.py](../../../app/services/team_battle_service.py#L17-L205)
 
-- 팀 선택 가능 시간: 시즌 시작 후 24시간(`TEAM_SELECTION_WINDOW_HOURS = 24`).
+- 팀 선택 가능 시간: 시즌 시작 후 48시간(`TEAM_SELECTION_WINDOW_HOURS = 48`, KST 기준).
 - 팀 최대 인원: 7명(`TEAM_MAX_MEMBERS = 7`).
 - 시즌 활성화 우선순위: DB에서 `is_active=true`인 시즌이 있으면 이를 우선 사용.
 - 활성 시즌이 없으면 **롤링 시즌(2일)**을 자동 생성하여 사용.
@@ -64,9 +64,9 @@ V2 팀배틀(Team Battle)의 게임 규칙, 데이터 모델, API 스키마를 �
 **정산 로직 기준**: [app/services/team_battle_service.py](../../../app/services/team_battle_service.py#L521-L636)
 
 ### 7.1 포인트 규칙
-- 기본 포인트: `TEAM_BATTLE_POINTS_PER_PLAY` 설정값.
+- 기본 포인트: `TEAM_BATTLE_POINTS_PER_PLAY` 설정값(기본값 5).
 - 일일 포인트 캡: `TEAM_BATTLE_DAILY_PLAY_CAP` 설정값.
-- 최소 보상 참여 기준: 300점(`MIN_POINTS_FOR_REWARD = 300`).
+- 최소 보상 참여 기준: 350점(`MIN_POINTS_FOR_REWARD = 350`).
 
 ### 7.2 보상 정산 (현행)
 - 팀배틀 보상은 **수동 지급(Manual)** 기준이다.
@@ -77,11 +77,19 @@ V2 팀배틀(Team Battle)의 게임 규칙, 데이터 모델, API 스키마를 �
 - 팀배틀 보상이 자동 지급으로 전환될 경우, RewardType 표준 SoT와 보상 매핑 SoT를 따른다.
 - 관련 문서: [RewardType 표준 SoT](../01_core/v2_reward_type_standard_sot_ko.md), [보상 매핑 SoT](../01_core/v2_reward_mapping_sot_ko.md)
 
+### 7.4 추가 보상 (입금 3일 이내 유저)
+- 조건: 최근 3일 이내 입금 이력이 있는 유저(운영 기준).
+- 지급 시점: 정산 시점(팀배틀 정산 실행 시) 일괄 처리.
+- 350점 도달 시: 금고 10000 자동 적립.
+- 500점 도달 시: 금고 30000 자동 적립 + 룰렛티켓 10장 + 주사위 5장 + 복권 5장 지급.
+
 ## 8. 운영/검증 (QA)
-- [ ] 팀 선택 윈도우(24h) 제한 동작 확인
+- [ ] 팀 선택 윈도우(48h) 제한 동작 확인
 - [ ] 팀 최대 인원(7명) 제한 동작 확인
 - [ ] 포인트 캡/최소 보상 기준 적용 확인
+- [ ] 추가 보상(입금 3일 이내 + 350/500점) 지급 확인
 - [ ] 정산 결과가 수동 지급 전제로 반환되는지 확인
 
 ## 9. 변경 이력
+- v1.1 (2026-01-24, GitHub Copilot): 핵심 값 변경 및 추가 보상 규칙 반영
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

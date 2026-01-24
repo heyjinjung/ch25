@@ -9,6 +9,8 @@ from sqlalchemy import and_, case, func, select
 from sqlalchemy.orm import Session
 
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
+from app.models.game_wallet import GameTokenType
+from app.services.reward_service import RewardService
 from app.models.external_ranking import ExternalRankingData
 from app.models.game_wallet import GameTokenType
 from app.core.config import get_settings
@@ -23,9 +25,16 @@ class TeamBattleService:
     def DAILY_POINT_CAP(self) -> int:
         return get_settings().team_battle_daily_play_cap
 
-    TEAM_SELECTION_WINDOW_HOURS = 24
+    TEAM_SELECTION_WINDOW_HOURS = 48
     TEAM_MAX_MEMBERS = 7
-    MIN_POINTS_FOR_REWARD = 300  # Fixed 300 points as per Grinder Rule
+    MIN_POINTS_FOR_REWARD = 350
+    EXTRA_REWARD_350_POINTS = 10000
+    EXTRA_REWARD_500_POINTS = 30000
+    EXTRA_REWARD_500_ROULETTE = 10
+    EXTRA_REWARD_500_DICE = 5
+    EXTRA_REWARD_500_LOTTERY = 5
+    EXTRA_REWARD_ACTION_350 = "TEAM_BONUS_350"
+    EXTRA_REWARD_ACTION_500 = "TEAM_BONUS_500"
     DEFAULT_WEIGHT_DEPOSIT = 0.6
     DEFAULT_WEIGHT_PLAY = 0.4
 
@@ -176,6 +185,126 @@ class TeamBattleService:
         # Must have positive activity vs daily baseline
         if (row.deposit_amount <= (row.daily_base_deposit or 0)) and (row.play_count <= (row.daily_base_play or 0)):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="USAGE_REQUIRED_TODAY")
+
+    def _is_recent_depositor(self, db: Session, user_id: int, now: datetime) -> bool:
+        from app.models.user_activity import UserActivity
+
+        activity = db.execute(
+            select(UserActivity).where(UserActivity.user_id == user_id)
+        ).scalar_one_or_none()
+        if not activity or not activity.last_charge_at:
+            return False
+
+        settings = get_settings()
+        tz = ZoneInfo(settings.timezone)
+        utc = timezone.utc
+
+        base_now = now if now.tzinfo else now.replace(tzinfo=utc)
+        now_kst = base_now.astimezone(tz)
+
+        base_charge = activity.last_charge_at
+        base_charge = base_charge if base_charge.tzinfo else base_charge.replace(tzinfo=utc)
+        charge_kst = base_charge.astimezone(tz)
+
+        return charge_kst >= (now_kst - timedelta(days=3))
+
+    def _has_reward_log(self, db: Session, user_id: int, season_id: int, action: str) -> bool:
+        exists = db.execute(
+            select(TeamEventLog.id).where(
+                TeamEventLog.user_id == user_id,
+                TeamEventLog.season_id == season_id,
+                TeamEventLog.action == action,
+            )
+        ).scalar_one_or_none()
+        return bool(exists)
+
+    def _grant_extra_rewards_if_eligible(
+        self,
+        db: Session,
+        user_id: int,
+        season_id: int,
+        team_id: int,
+        total_points: int,
+        now: datetime,
+    ) -> None:
+        if total_points < self.MIN_POINTS_FOR_REWARD:
+            return
+        if not self._is_recent_depositor(db, user_id, now):
+            return
+
+        reward_service = RewardService()
+
+        if total_points >= self.MIN_POINTS_FOR_REWARD and not self._has_reward_log(db, user_id, season_id, self.EXTRA_REWARD_ACTION_350):
+            reward_service._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=self.EXTRA_REWARD_350_POINTS,
+                reason=self.EXTRA_REWARD_ACTION_350,
+                label="TEAM_BATTLE_BONUS",
+                meta={"season_id": season_id, "points": total_points},
+                commit=False,
+            )
+            db.add(
+                TeamEventLog(
+                    team_id=team_id,
+                    user_id=user_id,
+                    season_id=season_id,
+                    action=self.EXTRA_REWARD_ACTION_350,
+                    delta=0,
+                    meta={"vault_points": self.EXTRA_REWARD_350_POINTS, "points": total_points},
+                )
+            )
+
+        if total_points >= 500 and not self._has_reward_log(db, user_id, season_id, self.EXTRA_REWARD_ACTION_500):
+            reward_service._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=self.EXTRA_REWARD_500_POINTS,
+                reason=self.EXTRA_REWARD_ACTION_500,
+                label="TEAM_BATTLE_BONUS",
+                meta={"season_id": season_id, "points": total_points},
+                commit=False,
+            )
+            reward_service.grant_ticket(
+                db,
+                user_id=user_id,
+                token_type=GameTokenType.ROULETTE_COIN,
+                amount=self.EXTRA_REWARD_500_ROULETTE,
+                meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                commit=False,
+            )
+            reward_service.grant_ticket(
+                db,
+                user_id=user_id,
+                token_type=GameTokenType.DICE_TOKEN,
+                amount=self.EXTRA_REWARD_500_DICE,
+                meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                commit=False,
+            )
+            reward_service.grant_ticket(
+                db,
+                user_id=user_id,
+                token_type=GameTokenType.LOTTERY_TICKET,
+                amount=self.EXTRA_REWARD_500_LOTTERY,
+                meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                commit=False,
+            )
+            db.add(
+                TeamEventLog(
+                    team_id=team_id,
+                    user_id=user_id,
+                    season_id=season_id,
+                    action=self.EXTRA_REWARD_ACTION_500,
+                    delta=0,
+                    meta={
+                        "vault_points": self.EXTRA_REWARD_500_POINTS,
+                        "roulette": self.EXTRA_REWARD_500_ROULETTE,
+                        "dice": self.EXTRA_REWARD_500_DICE,
+                        "lottery": self.EXTRA_REWARD_500_LOTTERY,
+                        "points": total_points,
+                    },
+                )
+            )
 
     def get_membership(self, db: Session, user_id: int) -> TeamMember | None:
         return db.get(TeamMember, user_id)
@@ -602,10 +731,105 @@ class TeamBattleService:
                     users.append({"user_id": m.user_id, "points": points})
             return users
 
+        now = self._now_utc()
+        reward_written = False
+
+        def apply_extra_rewards(team_id: int, users: list[dict]) -> None:
+            nonlocal reward_written
+            reward_service = RewardService()
+            for row in users:
+                user_id = row["user_id"]
+                points = int(row.get("points") or 0)
+                if not self._is_recent_depositor(db, user_id, now):
+                    continue
+
+                if points >= self.MIN_POINTS_FOR_REWARD and not self._has_reward_log(db, user_id, season_id, self.EXTRA_REWARD_ACTION_350):
+                    reward_service._grant_vault_locked(
+                        db,
+                        user_id=user_id,
+                        amount=self.EXTRA_REWARD_350_POINTS,
+                        reason=self.EXTRA_REWARD_ACTION_350,
+                        label="TEAM_BATTLE_BONUS",
+                        meta={"season_id": season_id, "points": points},
+                        commit=False,
+                    )
+                    db.add(
+                        TeamEventLog(
+                            team_id=team_id,
+                            user_id=user_id,
+                            season_id=season_id,
+                            action=self.EXTRA_REWARD_ACTION_350,
+                            delta=0,
+                            meta={"vault_points": self.EXTRA_REWARD_350_POINTS, "points": points},
+                        )
+                    )
+                    reward_written = True
+
+                if points >= 500 and not self._has_reward_log(db, user_id, season_id, self.EXTRA_REWARD_ACTION_500):
+                    reward_service._grant_vault_locked(
+                        db,
+                        user_id=user_id,
+                        amount=self.EXTRA_REWARD_500_POINTS,
+                        reason=self.EXTRA_REWARD_ACTION_500,
+                        label="TEAM_BATTLE_BONUS",
+                        meta={"season_id": season_id, "points": points},
+                        commit=False,
+                    )
+                    reward_service.grant_ticket(
+                        db,
+                        user_id=user_id,
+                        token_type=GameTokenType.ROULETTE_COIN,
+                        amount=self.EXTRA_REWARD_500_ROULETTE,
+                        meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                        commit=False,
+                    )
+                    reward_service.grant_ticket(
+                        db,
+                        user_id=user_id,
+                        token_type=GameTokenType.DICE_TOKEN,
+                        amount=self.EXTRA_REWARD_500_DICE,
+                        meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                        commit=False,
+                    )
+                    reward_service.grant_ticket(
+                        db,
+                        user_id=user_id,
+                        token_type=GameTokenType.LOTTERY_TICKET,
+                        amount=self.EXTRA_REWARD_500_LOTTERY,
+                        meta={"reason": self.EXTRA_REWARD_ACTION_500, "label": "TEAM_BATTLE_BONUS"},
+                        commit=False,
+                    )
+                    db.add(
+                        TeamEventLog(
+                            team_id=team_id,
+                            user_id=user_id,
+                            season_id=season_id,
+                            action=self.EXTRA_REWARD_ACTION_500,
+                            delta=0,
+                            meta={
+                                "vault_points": self.EXTRA_REWARD_500_POINTS,
+                                "roulette": self.EXTRA_REWARD_500_ROULETTE,
+                                "dice": self.EXTRA_REWARD_500_DICE,
+                                "lottery": self.EXTRA_REWARD_500_LOTTERY,
+                                "points": points,
+                            },
+                        )
+                    )
+                    reward_written = True
+
         # Rewards are fully manual for this event.
         rank1 = standings[0]
         rank2 = standings[1] if len(standings) > 1 else None
         rank3 = standings[2] if len(standings) > 2 else None
+
+        apply_extra_rewards(rank1.team_id, eligible_users_for_team(rank1.team_id))
+        if rank2:
+            apply_extra_rewards(rank2.team_id, eligible_users_for_team(rank2.team_id))
+        if rank3:
+            apply_extra_rewards(rank3.team_id, eligible_users_for_team(rank3.team_id))
+
+        if reward_written:
+            db.commit()
 
         # Event payouts (manual): 1st 30만, 2nd 20만, 3rd 5만
         return {
