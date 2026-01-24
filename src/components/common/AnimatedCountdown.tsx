@@ -12,7 +12,10 @@ type Props = {
 
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
-const Segment: React.FC<{ value: string; className?: string }> = ({ value, className }) => {
+const Segment: React.FC<{ value: string; className?: string }> = ({
+  value,
+  className,
+}) => {
   const prevRef = useRef<string>(value);
   const [bump, setBump] = useState(false);
 
@@ -78,7 +81,10 @@ const AnimatedCountdown: React.FC<Props> = ({
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
-    const isWarning = typeof warnUnderMs === "number" && warnUnderMs > 0 ? msLeft < warnUnderMs : false;
+    const isWarning =
+      typeof warnUnderMs === "number" && warnUnderMs > 0
+        ? msLeft < warnUnderMs
+        : false;
 
     return {
       kind: "running" as const,
@@ -105,17 +111,17 @@ const AnimatedCountdown: React.FC<Props> = ({
       {showDays && model.days > 0 ? (
         <>
           <Segment value={String(model.days)} />
-          <span className="mx-1">??/span>
+          <span className="mx-1">일</span>
         </>
       ) : null}
       <Segment value={pad2(model.hours)} />
-      <span className="ml-1">?�간</span>
+      <span className="ml-1">시간</span>
       <span className="mx-1" />
       <Segment value={pad2(model.minutes)} />
-      <span className="ml-1">�?/span>
+      <span className="ml-1">분</span>
       <span className="mx-1" />
       <Segment value={pad2(model.seconds)} />
-      <span className="ml-1">�?/span>
+      <span className="ml-1">초</span>
       {suffix ? <span className="ml-2">{suffix}</span> : null}
     </span>
   );

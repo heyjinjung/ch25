@@ -17,12 +17,49 @@ export const getFallbackRouletteStatus = () => ({
   token_type: "ROULETTE_COIN" as const,
   token_balance: 10,
   segments: [
-    { label: "금고 ?�립 100??, weight: 30, reward_type: "POINT", reward_amount: 100, slot_index: 0 },
-    { label: "금고 ?�립 200??, weight: 25, reward_type: "POINT", reward_amount: 200, slot_index: 1 },
-    { label: "금고 ?�립 500??, weight: 15, reward_type: "POINT", reward_amount: 500, slot_index: 2 },
-    { label: "?�큰 1�?, weight: 10, reward_type: "TOKEN", reward_amount: 1, slot_index: 3 },
-    { label: "�?, weight: 15, reward_type: "NONE", reward_amount: 0, slot_index: 4 },
-    { label: "??��", weight: 5, isJackpot: true, reward_type: "POINT", reward_amount: 10000, slot_index: 5 },
+    {
+      label: "금고 적립 100원",
+      weight: 30,
+      reward_type: "POINT",
+      reward_amount: 100,
+      slot_index: 0,
+    },
+    {
+      label: "금고 적립 200원",
+      weight: 25,
+      reward_type: "POINT",
+      reward_amount: 200,
+      slot_index: 1,
+    },
+    {
+      label: "금고 적립 500원",
+      weight: 15,
+      reward_type: "POINT",
+      reward_amount: 500,
+      slot_index: 2,
+    },
+    {
+      label: "토큰 1개",
+      weight: 10,
+      reward_type: "TOKEN",
+      reward_amount: 1,
+      slot_index: 3,
+    },
+    {
+      label: "꽝",
+      weight: 15,
+      reward_type: "NONE",
+      reward_amount: 0,
+      slot_index: 4,
+    },
+    {
+      label: "잭팟",
+      weight: 5,
+      isJackpot: true,
+      reward_type: "POINT",
+      reward_amount: 10000,
+      slot_index: 5,
+    },
   ],
 });
 
@@ -45,7 +82,7 @@ export const playFallbackRoulette = () => {
     remaining_spins: 0,
     reward_type: segment.reward_type,
     reward_value: segment.reward_amount,
-    message: "?�모 ?�이?�입?�다.",
+    message: "데모 데이터입니다.",
   };
 };
 
@@ -75,7 +112,7 @@ export const playFallbackDice = () => {
     result,
     remaining_plays: diceState.remainingPlays,
     vaultEarn,
-    message: result === "WIN" ? "?�리!" : result === "LOSE" ? "?�배" : "무승부",
+    message: result === "WIN" ? "승리!" : result === "LOSE" ? "패배" : "무승부",
   };
 };
 
@@ -83,11 +120,51 @@ const lotteryState = {
   remainingPlays: 0,
   tokenBalance: 10,
   prizes: [
-    { id: 1, label: "?�이??, reward_type: "DIAMOND", reward_amount: 1, stock: null, is_active: true, weight: 5 },
-    { id: 2, label: "금고 ?�립 1,000??, reward_type: "POINT", reward_amount: 1000, stock: null, is_active: true, weight: 30 },
-    { id: 3, label: "?�큰 50�?, reward_type: "TOKEN", reward_amount: 50, stock: 10, is_active: true, weight: 15 },
-    { id: 4, label: "쿠폰 20,000??, reward_type: "COUPON", reward_amount: 20000, stock: 3, is_active: true, weight: 2 },
-    { id: 5, label: "�?, reward_type: "NONE", reward_amount: 0, stock: null, is_active: true, weight: 48 },
+    {
+      id: 1,
+      label: "다이아",
+      reward_type: "DIAMOND",
+      reward_amount: 1,
+      stock: null,
+      is_active: true,
+      weight: 5,
+    },
+    {
+      id: 2,
+      label: "금고 적립 1,000원",
+      reward_type: "POINT",
+      reward_amount: 1000,
+      stock: null,
+      is_active: true,
+      weight: 30,
+    },
+    {
+      id: 3,
+      label: "토큰 50개",
+      reward_type: "TOKEN",
+      reward_amount: 50,
+      stock: 10,
+      is_active: true,
+      weight: 15,
+    },
+    {
+      id: 4,
+      label: "쿠폰 20,000원",
+      reward_type: "COUPON",
+      reward_amount: 20000,
+      stock: 3,
+      is_active: true,
+      weight: 2,
+    },
+    {
+      id: 5,
+      label: "꽝",
+      reward_type: "NONE",
+      reward_amount: 0,
+      stock: null,
+      is_active: true,
+      weight: 48,
+    },
   ],
 };
 
@@ -103,7 +180,9 @@ export const getFallbackLotteryStatus = () => ({
 });
 
 export const playFallbackLottery = () => {
-  const activePrizes = lotteryState.prizes.filter((p) => p.is_active && (p.stock === null || p.stock > 0));
+  const activePrizes = lotteryState.prizes.filter(
+    (p) => p.is_active && (p.stock === null || p.stock > 0),
+  );
   const totalWeight = activePrizes.reduce((sum, p) => sum + p.weight, 0);
   let random = Math.random() * totalWeight;
   let selectedPrize = activePrizes[0];
@@ -120,11 +199,16 @@ export const playFallbackLottery = () => {
   return {
     prize: selectedPrize,
     remaining_plays: lotteryState.remainingPlays,
-    message: selectedPrize.reward_type === "NONE" ? "�?" : `${selectedPrize.label} ?�첨!`,
+    message:
+      selectedPrize.reward_type === "NONE"
+        ? "꽝!"
+        : `${selectedPrize.label} 당첨!`,
   };
 };
 
-export const getFallbackTodayFeature = (): { feature_type: NullableFeatureType } => ({ feature_type: null });
+export const getFallbackTodayFeature = (): {
+  feature_type: NullableFeatureType;
+} => ({ feature_type: null });
 
 const rankingEntries = Array.from({ length: 10 }, (_, index) => ({
   rank: index + 1,
@@ -160,11 +244,41 @@ const seasonPassState: {
   next_level_xp: 200,
   max_level: 10,
   levels: [
-    { level: 1, required_xp: 0, reward_label: "���?, is_claimed: true, is_unlocked: true },
-    { level: 2, required_xp: 80, reward_label: "300 coin", is_claimed: true, is_unlocked: true },
-    { level: 3, required_xp: 150, reward_label: "�̸���", is_claimed: false, is_unlocked: true },
-    { level: 4, required_xp: 220, reward_label: "�ٹ̱�", is_claimed: false, is_unlocked: false },
-    { level: 5, required_xp: 300, reward_label: "�����̾� Ƽ��", is_claimed: false, is_unlocked: false },
+    {
+      level: 1,
+      required_xp: 0,
+      reward_label: "���",
+      is_claimed: true,
+      is_unlocked: true,
+    },
+    {
+      level: 2,
+      required_xp: 80,
+      reward_label: "300 coin",
+      is_claimed: true,
+      is_unlocked: true,
+    },
+    {
+      level: 3,
+      required_xp: 150,
+      reward_label: "�̸���",
+      is_claimed: false,
+      is_unlocked: true,
+    },
+    {
+      level: 4,
+      required_xp: 220,
+      reward_label: "�ٹ̱�",
+      is_claimed: false,
+      is_unlocked: false,
+    },
+    {
+      level: 5,
+      required_xp: 300,
+      reward_label: "�����̾� Ƽ��",
+      is_claimed: false,
+      is_unlocked: false,
+    },
   ],
 };
 
@@ -179,14 +293,30 @@ export const getFallbackSeasonPassStatus = () => ({
 export const claimFallbackSeasonReward = (level: number) => {
   const target = seasonPassState.levels.find((lvl) => lvl.level === level);
   if (!target) {
-    return { level, reward_label: "���� ����", message: "���� ���? �������� �ʴ� ����" };
+    return {
+      level,
+      reward_label: "���� ����",
+      message: "���� ���: �������� �ʴ� ����",
+    };
   }
   if (!target.is_unlocked) {
-    return { level, reward_label: target.reward_label, message: "���� ���? ���� ���?�������� ����" };
+    return {
+      level,
+      reward_label: target.reward_label,
+      message: "���� ���: ���� ��� �������� ����",
+    };
   }
   if (target.is_claimed) {
-    return { level, reward_label: target.reward_label, message: "���� ���? �̹� ����" };
+    return {
+      level,
+      reward_label: target.reward_label,
+      message: "���� ���: �̹� ����",
+    };
   }
   target.is_claimed = true;
-  return { level: target.level, reward_label: target.reward_label, message: "���� ���? ���� ����" };
+  return {
+    level: target.level,
+    reward_label: target.reward_label,
+    message: "���� ���: ���� ����",
+  };
 };

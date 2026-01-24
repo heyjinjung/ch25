@@ -6,9 +6,19 @@ import {
   getInventoryStats,
   getUserInventoryList,
 } from "../../../api/adminApi";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -38,14 +48,16 @@ export default function TicketInventoryPage() {
   });
 
   // Inventory queries
-  const { data: inventoryStats = [], refetch: refetchInventoryStats } = useQuery({
-    queryKey: ["inventoryStats"],
-    queryFn: getInventoryStats,
-  });
+  const { data: inventoryStats = [], refetch: refetchInventoryStats } =
+    useQuery({
+      queryKey: ["inventoryStats"],
+      queryFn: getInventoryStats,
+    });
 
   const { data: userInventory = [], refetch: refetchUserInventory } = useQuery({
     queryKey: ["userInventory", inventorySearch],
-    queryFn: () => getUserInventoryList({ search: inventorySearch || undefined }),
+    queryFn: () =>
+      getUserInventoryList({ search: inventorySearch || undefined }),
   });
 
   const handleRefresh = () => {
@@ -70,7 +82,7 @@ export default function TicketInventoryPage() {
               <span className="text-zinc-300">티켓 & 아이템 관리</span>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">
-              가용자 & 인벤토리 관리
+              사용자 & 인벤토리 관리
             </h1>
             <p className="text-sm text-zinc-400">
               사용자별 티켓 및 인벤토리 데이터를 조회합니다.
@@ -115,7 +127,10 @@ export default function TicketInventoryPage() {
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {ticketStats.map((stat) => (
-                <Card key={stat.ticketType} className="bg-[#18181B] border-white/5">
+                <Card
+                  key={stat.ticketType}
+                  className="bg-[#18181B] border-white/5"
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       {stat.ticketType}
@@ -142,7 +157,7 @@ export default function TicketInventoryPage() {
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
                 <Input
-                  placeholder="유저 검색(닉네임, 텔레그램)"
+                  placeholder="닉네임 검색(또는 텔레그램)"
                   value={ticketSearch}
                   onChange={(e) => setTicketSearch(e.target.value)}
                   className="pl-9 bg-black/50 border-white/10"
@@ -154,10 +169,15 @@ export default function TicketInventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400">유저</TableHead>
+                    <TableHead className="text-zinc-400">닉네임</TableHead>
                     <TableHead className="text-zinc-400">종류</TableHead>
-                    <TableHead className="text-zinc-400 text-right">잔여</TableHead>
-                    <TableHead className="text-zinc-400 text-right">사용</TableHead>
+                    <TableHead className="text-zinc-400 text-right">
+                      보유
+                    </TableHead>
+                    <TableHead className="text-zinc-400 text-right">
+                      사용
+                    </TableHead>
+                    <TableHead className="text-zinc-400">만료일</TableHead>
                     <TableHead className="text-zinc-400">마지막 사용</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -200,7 +220,10 @@ export default function TicketInventoryPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center text-zinc-600">
+                      <TableCell
+                        colSpan={5}
+                        className="h-24 text-center text-zinc-600"
+                      >
                         티켓 데이터가 없습니다.
                       </TableCell>
                     </TableRow>
@@ -221,7 +244,10 @@ export default function TicketInventoryPage() {
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {inventoryStats.map((stat) => (
-                <Card key={stat.itemType} className="bg-[#18181B] border-white/5">
+                <Card
+                  key={stat.itemType}
+                  className="bg-[#18181B] border-white/5"
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       {stat.itemType}
@@ -248,7 +274,7 @@ export default function TicketInventoryPage() {
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
                 <Input
-                  placeholder="유저 검색(닉네임, 텔레그램)"
+                  placeholder="닉네임 검색(또는 텔레그램)"
                   value={inventorySearch}
                   onChange={(e) => setInventorySearch(e.target.value)}
                   className="pl-9 bg-black/50 border-white/10"
@@ -260,10 +286,14 @@ export default function TicketInventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400">유저</TableHead>
+                    <TableHead className="text-zinc-400">닉네임</TableHead>
                     <TableHead className="text-zinc-400">종류</TableHead>
-                    <TableHead className="text-zinc-400 text-right">잔여</TableHead>
-                    <TableHead className="text-zinc-400 text-right">사용</TableHead>
+                    <TableHead className="text-zinc-400 text-right">
+                      보유
+                    </TableHead>
+                    <TableHead className="text-zinc-400 text-right">
+                      사용
+                    </TableHead>
                     <TableHead className="text-zinc-400">만료일</TableHead>
                     <TableHead className="text-zinc-400">마지막 사용</TableHead>
                   </TableRow>
@@ -312,8 +342,11 @@ export default function TicketInventoryPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center text-zinc-600">
-                        인벤토리 데이터가 없습니다.
+                      <TableCell
+                        colSpan={6}
+                        className="h-24 text-center text-zinc-600"
+                      >
+                        인벤토리가 비어 있습니다.
                       </TableCell>
                     </TableRow>
                   )}
