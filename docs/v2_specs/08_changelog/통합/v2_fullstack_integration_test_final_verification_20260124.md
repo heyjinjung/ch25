@@ -1,10 +1,11 @@
 문서 타입: 최종검증
-버전: v1.0
+버전: v1.2
 작성일: 2026-01-24
+수정일: 2026-01-24
 작성자: GitHub Copilot
 대상 독자: BE/FE/QA/운영
 
-# ✅ V2 통합 테스트 — 최종검증 (누적, 2026-01-24)
+# ✅ V2 통합 테스트 — 최종검증 (누적, 2026-01-24) (v1.2)
 
 **상태 레전드:** ✅ PASS / ❌ FAIL / ⏳ TODO
 
@@ -31,6 +32,17 @@
 - Admin (CRM/Users): `artifacts/20260124/api/crm_message_create_response_v2.json`, `artifacts/20260124/api/admin_users_list_response_v2.json` ✅
 - Public: *(진행 예정 — 증거 미수집)* ⏳
 
+### Admin 요청/응답 요약
+- CRM: `POST /api/v2/admin/marketing/messages` → **201 Created**
+  - 증거: `artifacts/20260124/api/crm_message_create_response_v2.json`
+- Users: `GET /api/v2/admin/users` → **200 OK** (N items)
+  - 증거: `artifacts/20260124/api/admin_users_list_response_v2.json`
+
+### 참조(References)
+- `docs/v2_specs/00_sot_meta/v2_fullstack_integration_deploy_guide_ko.md` — 배포 체크리스트 및 최소 통합 테스트 세트
+- `docs/v2_specs/00_sot_meta/v2_fullstack_integration_ground_sot_ko.md` — Full-Stack SoT(인증/에러/타임존 기준)
+
+
 ## 3. 재현 및 원인 가설 / 상태
 1. 과거 증상(해결됨): `POST /api/v2/dice/play` → 500 `v2 user not found` (해결 후 재검증 PASS)
    - 가설(초기): V2 유저 레코드 동기화/매핑(legacy_id ↔ v2_id) 지연 또는 `V2UserService.ensure_legacy_user_id` 로직 결함
@@ -48,4 +60,14 @@
 - 권장 소유자: QA / BE (Public scenarios)
 
 ---
-**메모:** 이 파일은 `docs/v2_specs/00_sot_meta/`에 생성되었습니다. 원하시면 이 내용을 기반으로 이슈/PR을 생성해 드리겠습니다.
+## 6. Next Steps
+- [ ] Create PR: `docs: update final verification v1.1` (includes references and admin summaries)
+- [ ] Create issue: `Public area: add automation smoke tests` (assign to QA)
+- [ ] Add `verify_admin_users.ps1` to artifacts runbook and schedule in CI (optional)
+
+## 7. 변경 이력
+- v1.2 (2026-01-24, GitHub Copilot): Bump version to v1.2 (metadata update only)
+- v1.1 (2026-01-24, GitHub Copilot): Add Deploy Guide & Ground SoT references, Admin request/response summary, version bump
+- v1.0 (2026-01-24, GitHub Copilot): 최초 작성
+
+**메모:** 이 파일은 `docs/v2_specs/00_sot_meta/`에 생성되었습니다. 원하시면 PR/이슈를 제가 대신 생성해 드리겠습니다.
