@@ -83,7 +83,7 @@ export default function MissionManagerPage() {
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("?�말�???미션????��?�시겠습?�까?")) {
+    if (confirm("정말 이 미션을 삭제하시겠습니까?")) {
       deleteMutation.mutate(id);
     }
   };
@@ -166,7 +166,7 @@ export default function MissionManagerPage() {
       // V2 SoT: Special
       case "NONE":
         return null;
-      // Legacy support (백엔?��? ?�직 변???�인 경우)
+      // Legacy support
       case "TICKET_ROULETTE":
       case "TICKET_DICE":
       case "TICKET_LOTTERY":
@@ -186,10 +186,10 @@ export default function MissionManagerPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1">
-            미션 관�?(Mission Ops)
+            미션 관리 (Mission Ops)
           </h1>
           <p className="text-sm text-zinc-400">
-            ?�일 미션 �??�트�?보상???�정?�니??
+            데일리 미션 리스트 및 보상을 설정합니다.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function MissionManagerPage() {
             onClick={() => setIsCreateOpen(true)}
           >
             <Plus className="w-4 h-4" />
-            미션 ?�성
+            미션 생성
           </Button>
         </div>
       </div>
@@ -236,7 +236,7 @@ export default function MissionManagerPage() {
               </div>
             ) : filteredMissions.length === 0 ? (
               <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
-                ?�록??미션???�습?�다.
+                등록된 미션이 없습니다.
               </div>
             ) : (
               filteredMissions.map((mission) => (
@@ -304,7 +304,7 @@ export default function MissionManagerPage() {
                           }
                         />
                         <span className="text-xs text-zinc-500 font-medium">
-                          �?
+                          개
                         </span>
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export default function MissionManagerPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-[#18181B] border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle>??미션 ?�성</DialogTitle>
+            <DialogTitle>새 미션 생성</DialogTitle>
             <DialogDescription className="text-zinc-400">
               신규 미션의 기본 정보와 보상을 설정합니다.
             </DialogDescription>
@@ -375,7 +375,7 @@ export default function MissionManagerPage() {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="title" className="text-right text-zinc-400">
-                ?�목
+                제목
               </Label>
               <Input
                 id="title"
@@ -389,7 +389,7 @@ export default function MissionManagerPage() {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="logicKey" className="text-right text-zinc-400">
-                로직 ??
+                로직 키
               </Label>
               <Input
                 id="logicKey"
@@ -404,7 +404,7 @@ export default function MissionManagerPage() {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="condition" className="text-right text-zinc-400">
-                ?�명/조건
+                설명/조건
               </Label>
               <Input
                 id="condition"
@@ -418,7 +418,7 @@ export default function MissionManagerPage() {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="targetValue" className="text-right text-zinc-400">
-                목표 ?�수
+                목표 점수
               </Label>
               <Input
                 id="targetValue"
@@ -482,7 +482,7 @@ export default function MissionManagerPage() {
               onClick={handleCreate}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
-              ?�성
+              생성
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -491,7 +491,7 @@ export default function MissionManagerPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-[#18181B] border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle>미션 ?�집</DialogTitle>
+            <DialogTitle>미션 편집</DialogTitle>
             <DialogDescription className="text-zinc-400">
               기존 미션의 조건/보상을 수정합니다.
             </DialogDescription>
@@ -520,7 +520,7 @@ export default function MissionManagerPage() {
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">?�목</Label>
+                <Label className="text-right text-zinc-400">제목</Label>
                 <Input
                   value={editForm.title}
                   onChange={(e) =>
@@ -542,7 +542,7 @@ export default function MissionManagerPage() {
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">?�명/조건</Label>
+                <Label className="text-right text-zinc-400">설명/조건</Label>
                 <Input
                   value={editForm.condition}
                   onChange={(e) =>
@@ -553,7 +553,7 @@ export default function MissionManagerPage() {
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">목표 ?�수</Label>
+                <Label className="text-right text-zinc-400">목표 점수</Label>
                 <Input
                   type="number"
                   value={editForm.targetValue}
@@ -608,7 +608,7 @@ export default function MissionManagerPage() {
                     setEditForm({ ...editForm, isActive: checked })
                   }
                 />
-                <span className="ml-2 text-sm text-zinc-400">?�성</span>
+                <span className="ml-2 text-sm text-zinc-400">활성</span>
               </div>
             </div>
           )}
@@ -624,7 +624,7 @@ export default function MissionManagerPage() {
               onClick={handleSaveEdit}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
-              ?�??
+              저장
             </Button>
           </DialogFooter>
         </DialogContent>
