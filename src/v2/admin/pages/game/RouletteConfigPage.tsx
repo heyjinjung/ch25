@@ -99,7 +99,7 @@ export default function RouletteConfigPage() {
 
   // If no config found for grade, standard handling
   if (!localConfig && configs && configs.length > 0) {
-      // Fallback or empty state
+    // Fallback or empty state
   }
 
   return (
@@ -219,120 +219,171 @@ export default function RouletteConfigPage() {
               </div>
 
               <div className="space-y-2">
-                  <Label className="text-zinc-400">소모 티켓 타입</Label>
-                  <Select 
-                    value={localConfig.ticketType}
-                    onValueChange={(v) => handleConfigChange("ticketType", v)}
-                  >
-                    <SelectTrigger className="bg-black/20 border-white/10">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-800 border-zinc-700">
-                        <SelectItem value="ROULETTE_TICKET">일반 룰렛 티켓</SelectItem>
-                        <SelectItem value="DIAMOND_TICKET">다이아 티켓</SelectItem>
-                        <SelectItem value="GOLDEN_TICKET">황금 티켓</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <Label className="text-zinc-400">소모 티켓 타입</Label>
+                <Select
+                  value={localConfig.ticketType}
+                  onValueChange={(v) => handleConfigChange("ticketType", v)}
+                >
+                  <SelectTrigger className="bg-black/20 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
+                    <SelectItem value="ROULETTE_TICKET">
+                      일반 룰렛 티켓
+                    </SelectItem>
+                    <SelectItem value="TRIAL_TICKET">체험 티켓</SelectItem>
+                    <SelectItem value="DIAMOND_TICKET">다이아 티켓</SelectItem>
+                    <SelectItem value="GOLDEN_TICKET">황금 티켓</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
 
           {/* Segments Table */}
           <Card className="bg-zinc-900 border-white/10 overflow-hidden">
-             <CardHeader>
-                 <CardTitle className="text-white">슬롯(Segment) 및 확률 설정</CardTitle>
-                 <CardDescription>
-                     룰렛판의 각 슬롯에 대한 가중치와 보상을 설정합니다. 가중치가 높을수록 당첨 확률이 높아집니다.
-                 </CardDescription>
-             </CardHeader>
-             <div className="overflow-x-auto">
-                 <Table>
-                     <TableHeader className="bg-white/5">
-                         <TableRow className="border-white/5 hover:bg-transparent">
-                             <TableHead className="text-zinc-400 w-[80px] text-center">슬롯</TableHead>
-                             <TableHead className="text-zinc-400">라벨</TableHead>
-                             <TableHead className="text-zinc-400 w-[120px]">가중치</TableHead>
-                             <TableHead className="text-zinc-400 w-[100px] text-right">확률(Est.)</TableHead>
-                             <TableHead className="text-zinc-400 w-[200px]">보상 타입</TableHead>
-                             <TableHead className="text-zinc-400 w-[120px]">수량</TableHead>
-                             <TableHead className="text-zinc-400 text-center">잭팟 여부</TableHead>
-                         </TableRow>
-                     </TableHeader>
-                     <TableBody>
-                         {localConfig.segments.map((segment, index) => {
-                             const totalWeight = localConfig.segments.reduce((sum, s) => sum + s.weight, 0);
-                             const probability = totalWeight > 0 ? ((segment.weight / totalWeight) * 100).toFixed(2) : "0.00";
+            <CardHeader>
+              <CardTitle className="text-white">
+                슬롯(Segment) 및 확률 설정
+              </CardTitle>
+              <CardDescription>
+                룰렛판의 각 슬롯에 대한 가중치와 보상을 설정합니다. 가중치가
+                높을수록 당첨 확률이 높아집니다.
+              </CardDescription>
+            </CardHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="text-zinc-400 w-[80px] text-center">
+                      슬롯
+                    </TableHead>
+                    <TableHead className="text-zinc-400">라벨</TableHead>
+                    <TableHead className="text-zinc-400 w-[120px]">
+                      가중치
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-[100px] text-right">
+                      확률(Est.)
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-[200px]">
+                      보상 타입
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-[120px]">
+                      수량
+                    </TableHead>
+                    <TableHead className="text-zinc-400 text-center">
+                      잭팟 여부
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {localConfig.segments.map((segment, index) => {
+                    const totalWeight = localConfig.segments.reduce(
+                      (sum, s) => sum + s.weight,
+                      0,
+                    );
+                    const probability =
+                      totalWeight > 0
+                        ? ((segment.weight / totalWeight) * 100).toFixed(2)
+                        : "0.00";
 
-                             return (
-                                 <TableRow key={index} className="border-white/5 hover:bg-white/5">
-                                     <TableCell className="text-center font-mono text-zinc-500">
-                                         #{index + 1}
-                                     </TableCell>
-                                     <TableCell>
-                                         <Input 
-                                            value={segment.label}
-                                            onChange={(e) => handleSegmentChange(index, "label", e.target.value)}
-                                            className="bg-black/20 border-white/10 h-8"
-                                         />
-                                     </TableCell>
-                                     <TableCell>
-                                          <div className="relative">
-                                            <Input 
-                                                type="number"
-                                                value={segment.weight}
-                                                onChange={(e) => handleSegmentChange(index, "weight", parseInt(e.target.value))}
-                                                className={`bg-black/20 border-white/10 h-8 font-mono ${segment.weight === 0 ? "text-zinc-500" : "text-emerald-400"}`}
-                                            />
-                                            {segment.weight === 0 && (
-                                                <AlertTriangle className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
-                                            )}
-                                          </div>
-                                     </TableCell>
-                                     <TableCell className="text-right text-zinc-400 font-mono text-xs">
-                                         {probability}%
-                                     </TableCell>
-                                     <TableCell>
-                                         <Select 
-                                            value={segment.rewardType}
-                                            onValueChange={(v) => handleSegmentChange(index, "rewardType", v)}
-                                         >
-                                             <SelectTrigger className="bg-black/20 border-white/10 h-8">
-                                                 <SelectValue />
-                                             </SelectTrigger>
-                                             <SelectContent className="bg-zinc-800 border-zinc-700">
-                                                {REWARD_ITEMS.map(item => (
-                                                    <SelectItem key={item.value} value={item.value}>
-                                                        {item.label}
-                                                    </SelectItem>
-                                                ))}
-                                             </SelectContent>
-                                         </Select>
-                                     </TableCell>
-                                     <TableCell>
-                                         <Input 
-                                            type="number"
-                                            value={segment.rewardAmount}
-                                            onChange={(e) => handleSegmentChange(index, "rewardAmount", parseInt(e.target.value))}
-                                            className="bg-black/20 border-white/10 h-8 text-right font-mono"
-                                         />
-                                     </TableCell>
-                                     <TableCell className="text-center">
-                                         <Switch 
-                                            checked={segment.isJackpot}
-                                            onCheckedChange={(checked) => handleSegmentChange(index, "isJackpot", checked)}
-                                         />
-                                     </TableCell>
-                                 </TableRow>
-                             );
-                         })}
-                     </TableBody>
-                 </Table>
-             </div>
+                    return (
+                      <TableRow
+                        key={index}
+                        className="border-white/5 hover:bg-white/5"
+                      >
+                        <TableCell className="text-center font-mono text-zinc-500">
+                          #{index + 1}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={segment.label}
+                            onChange={(e) =>
+                              handleSegmentChange(
+                                index,
+                                "label",
+                                e.target.value,
+                              )
+                            }
+                            className="bg-black/20 border-white/10 h-8"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              value={segment.weight}
+                              onChange={(e) =>
+                                handleSegmentChange(
+                                  index,
+                                  "weight",
+                                  parseInt(e.target.value),
+                                )
+                              }
+                              className={`bg-black/20 border-white/10 h-8 font-mono ${segment.weight === 0 ? "text-zinc-500" : "text-emerald-400"}`}
+                            />
+                            {segment.weight === 0 && (
+                              <AlertTriangle className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-zinc-400 font-mono text-xs">
+                          {probability}%
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={segment.rewardType}
+                            onValueChange={(v) =>
+                              handleSegmentChange(index, "rewardType", v)
+                            }
+                          >
+                            <SelectTrigger className="bg-black/20 border-white/10 h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              {REWARD_ITEMS.map((item) => (
+                                <SelectItem key={item.value} value={item.value}>
+                                  {item.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={segment.rewardAmount}
+                            onChange={(e) =>
+                              handleSegmentChange(
+                                index,
+                                "rewardAmount",
+                                parseInt(e.target.value),
+                              )
+                            }
+                            className="bg-black/20 border-white/10 h-8 text-right font-mono"
+                          />
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={segment.isJackpot}
+                            onCheckedChange={(checked) =>
+                              handleSegmentChange(index, "isJackpot", checked)
+                            }
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </div>
       ) : (
         <div className="text-center py-20 bg-zinc-900 border border-white/10 rounded-xl">
-            <p className="text-zinc-500">해당 등급의 설정을 불러올 수 없습니다.</p>
+          <p className="text-zinc-500">
+            해당 등급의 설정을 불러올 수 없습니다.
+          </p>
         </div>
       )}
     </div>

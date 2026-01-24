@@ -60,6 +60,15 @@ export default function LevelConfigPage() {
     maxLevel: 100,
     maxXp: 1000000,
   });
+  const rewardTypeSet = useMemo(
+    () => new Set(REWARD_ITEMS.map((item) => item.value)),
+    [],
+  );
+  const isGlobalConfigValid =
+    Number.isFinite(globalConfig.maxLevel) &&
+    globalConfig.maxLevel > 0 &&
+    Number.isFinite(globalConfig.maxXp) &&
+    globalConfig.maxXp > 0;
 
   const [editingLevels, setEditingLevels] = useState<
     Record<number, AdminLevelDto>
@@ -159,7 +168,7 @@ export default function LevelConfigPage() {
                     onChange={(e) =>
                       setGlobalConfig({
                         ...globalConfig,
-                        maxLevel: parseInt(e.target.value),
+                        maxLevel: Number(e.target.value) || 0,
                       })
                     }
                     className="bg-black/20 border-white/10"
@@ -173,11 +182,16 @@ export default function LevelConfigPage() {
                     onChange={(e) =>
                       setGlobalConfig({
                         ...globalConfig,
-                        maxXp: parseInt(e.target.value),
+                        maxXp: Number(e.target.value) || 0,
                       })
                     }
                     className="bg-black/20 border-white/10"
                   />
+                  {!isGlobalConfigValid && (
+                    <p className="text-xs text-red-400">
+                      최대 레벨/경험치는 1 이상 숫자여야 합니다.
+                    </p>
+                  )}
                 </div>
               </div>
               <DialogFooter>
@@ -188,6 +202,7 @@ export default function LevelConfigPage() {
                   취소
                 </Button>
                 <Button
+                  disabled={!isGlobalConfigValid}
                   onClick={async () => {
                     await updateGlobalConfig.mutateAsync(globalConfig);
                     setIsGlobalConfigOpen(false);
@@ -285,6 +300,9 @@ export default function LevelConfigPage() {
                 {filteredLevels.map((lvl) => {
                   const editData = editingLevels[lvl.level] || lvl;
                   const isEdited = !!editingLevels[lvl.level];
+                  const isInvalidRewardType = !rewardTypeSet.has(
+                    editData.rewardType,
+                  );
 
                   return (
                     <TableRow
@@ -315,7 +333,13 @@ export default function LevelConfigPage() {
                             handleLevelFieldChange(lvl.level, "rewardType", v)
                           }
                         >
-                          <SelectTrigger className="h-8 bg-black/20 border-white/5 w-40">
+                          <SelectTrigger
+                            className={cn(
+                              "h-8 bg-black/20 border-white/5 w-40",
+                              isInvalidRewardType &&
+                                "border-red-500/60 text-red-200",
+                            )}
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-zinc-800 border-zinc-700">
@@ -326,6 +350,11 @@ export default function LevelConfigPage() {
                             ))}
                           </SelectContent>
                         </Select>
+                        {isInvalidRewardType && (
+                          <p className="mt-1 text-xs text-red-400">
+                            SoT 밖 보상 타입입니다. 수정이 필요합니다.
+                          </p>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Input

@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import UserListPage from "./UserListPage";
 import UserSegmentPage from "./UserSegmentPage";
 import { Users, Target } from "lucide-react";
@@ -17,14 +22,14 @@ export default function UserManagementTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Users className="w-4 h-4" />
-              ?�원 관�?
+              회원관리
             </TabsTrigger>
             <TabsTrigger
               value="segments"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Target className="w-4 h-4" />
-              ?�그먼트
+              세그먼트
             </TabsTrigger>
           </TabsList>
         </div>

@@ -172,7 +172,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-bg text-obsidian-text font-sans selection:bg-obsidian-accent selection:text-white">
+    <div className="min-h-screen bg-obsidian-bg text-obsidian-text font-sans selection:bg-obsidian-accent selection:text-white dark">
       {/* Desktop Sidebar */}
       {!isMobile && (
         <aside className="fixed left-0 top-0 h-screen w-64 border-r border-obsidian-border bg-obsidian-surface flex flex-col">
@@ -187,7 +187,7 @@ export default function AdminLayout() {
 
           <div className="px-6 py-4">
             <label className="block text-xs font-medium text-obsidian-muted mb-2">
-              메뉴 ?�터
+              메뉴 필터
             </label>
             <select
               className="w-full rounded-lg bg-obsidian-bg/60 border border-obsidian-border px-2 py-2 text-sm text-white focus:outline-none"
@@ -197,8 +197,8 @@ export default function AdminLayout() {
                 setActiveSectionFilter(next);
               }}
             >
-              <option value="ALL">?�체</option>
-              <option value="OPS">?�영</option>
+              <option value="ALL">전체</option>
+              <option value="OPS">운영</option>
               <option value="CORE">코어</option>
               <option value="GAME">게임 관리</option>
               <option value="SYSTEM">시스템</option>
@@ -290,7 +290,7 @@ export default function AdminLayout() {
               className="flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400 w-full transition-colors"
             >
               <LogOut size={18} />
-              로그?�웃
+              로그아웃
             </button>
           </div>
         </aside>
@@ -314,7 +314,7 @@ export default function AdminLayout() {
                 <Search size={14} className="text-obsidian-muted" />
                 <input
                   type="text"
-                  placeholder="?��? 검??(Enter)"
+                  placeholder="빠른 검색(Enter)"
                   className="bg-transparent text-sm text-white placeholder-obsidian-muted focus:outline-none w-64"
                 />
               </div>
@@ -324,8 +324,8 @@ export default function AdminLayout() {
             <button
               type="button"
               className="relative rounded-full p-2 text-obsidian-muted hover:bg-white/5 hover:text-white"
-              aria-label="?�림"
-              title="?�림"
+              aria-label="알림"
+              title="알림"
             >
               <Bell size={20} />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />

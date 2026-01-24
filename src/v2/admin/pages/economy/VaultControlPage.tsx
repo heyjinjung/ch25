@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  CheckCircle2,
-  Search,
-  Wallet,
-} from "lucide-react";
+import { CheckCircle2, Search, Wallet } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -46,8 +42,9 @@ import {
   useAdminApproveWithdrawal,
   useAdminRejectWithdrawal,
   useVaultUsers,
+  useForceEditVault,
 } from "../../../hooks/useV2Admin";
-import { AdminWithdrawalDto } from "../../../api/adminApi";
+import { AdminWithdrawalDto, UserVaultDto } from "../../../api/adminApi";
 
 export default function VaultControlPage() {
   const [activeTab, setActiveTab] = useState("withdrawals");
@@ -63,6 +60,14 @@ export default function VaultControlPage() {
     useState<AdminWithdrawalDto | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+
+  const forceEditMutation = useForceEditVault();
+  const [forceEditUser, setForceEditUser] = useState<
+    UserVaultDto | null
+  >(null);
+  const [forceEditAmount, setForceEditAmount] = useState("");
+  const [forceEditReason, setForceEditReason] = useState("");
+  const [isForceEditOpen, setIsForceEditOpen] = useState(false);
 
   // Vault Users State
   const { data: vaultUsers, isLoading: isLoadingUsers } = useVaultUsers();
@@ -88,6 +93,26 @@ export default function VaultControlPage() {
     });
     setIsRejectDialogOpen(false);
     setSelectedWithdrawal(null);
+  };
+
+  const handleOpenForceEdit = (user: UserVaultDto) => {
+    setForceEditUser(user);
+    setForceEditAmount("");
+    setForceEditReason("");
+    setIsForceEditOpen(true);
+  };
+
+  const handleForceEdit = async () => {
+    if (!forceEditUser) return;
+    const amount = Number(forceEditAmount);
+    if (!Number.isFinite(amount) || amount === 0) return;
+    await forceEditMutation.mutateAsync({
+      user_id: forceEditUser.user_id,
+      amount,
+      reason: forceEditReason || "관리자 강제조정",
+    });
+    setIsForceEditOpen(false);
+    setForceEditUser(null);
   };
 
   // Filtered Users
@@ -153,22 +178,33 @@ export default function VaultControlPage() {
                           신청자: {w.nickname} (UID: {w.userId})
                         </CardDescription>
                       </div>
-                      <Badge variant="outline" className="border-yellow-500/50 text-yellow-500">
+                      <Badge
+                        variant="outline"
+                        className="border-yellow-500/50 text-yellow-500"
+                      >
                         {w.status}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-2 text-sm text-zinc-300">
                     <div className="flex justify-between border-t border-white/5 mt-2">
-                       {/* Note: Bank info not available in DTO currently. Assuming future expansion. */}
+                      {/* Note: Bank info not available in DTO currently. Assuming future expansion. */}
                       <span className="text-zinc-500">신청일시:</span>
                       <span className="text-zinc-400">
-                        {w.requestTime ? format(new Date(w.requestTime), "yyyy-MM-dd HH:mm") : "-"}
+                        {w.requestTime
+                          ? format(new Date(w.requestTime), "yyyy-MM-dd HH:mm")
+                          : "-"}
                       </span>
                     </div>
-                     <div className="flex justify-between">
+                    <div className="flex justify-between">
                       <span className="text-zinc-500">위험도:</span>
-                      <Badge className={w.riskLevel === 'HIGH' ? 'bg-red-500' : 'bg-zinc-500'}>{w.riskLevel}</Badge>
+                      <Badge
+                        className={
+                          w.riskLevel === "HIGH" ? "bg-red-500" : "bg-zinc-500"
+                        }
+                      >
+                        {w.riskLevel}
+                      </Badge>
                     </div>
                   </CardContent>
                   <CardFooter className="bg-black/20 p-3 grid grid-cols-2 gap-2">
@@ -209,34 +245,61 @@ export default function VaultControlPage() {
               <TableHeader className="bg-white/5">
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="text-zinc-400">유저 정보</TableHead>
-                  <TableHead className="text-zinc-400 text-right">금고 잔액</TableHead>
-                   {/* Removed totalDeposit and totalWithdraw just in case they are not in UserVaultDto */}
+                  <TableHead className="text-zinc-400 text-right">
+                    금고 잔액
+                  </TableHead>
+                  <TableHead className="text-zinc-400 text-right">
+                    강제조정
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoadingUsers ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-20 text-zinc-500">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center py-20 text-zinc-500"
+                    >
                       로딩중...
                     </TableCell>
                   </TableRow>
                 ) : filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-20 text-zinc-500">
+                    <TableCell
+                      colSpan={4}
+                      className="text-center py-20 text-zinc-500"
+                    >
                       검색 결과가 없습니다.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredUsers.map((user) => (
-                    <TableRow key={user.user_id} className="border-white/5 hover:bg-white/5">
+                    <TableRow
+                      key={user.user_id}
+                      className="border-white/5 hover:bg-white/5"
+                    >
                       <TableCell>
                         <div>
-                          <p className="font-bold text-white">{user.nickname}</p>
-                          <p className="text-xs text-zinc-500">UID: {user.user_id}</p>
+                          <p className="font-bold text-white">
+                            {user.nickname}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            UID: {user.user_id}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-emerald-400 font-bold">
                         ₩ {user.vault_balance.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-white/10 text-white hover:bg-white/10"
+                          onClick={() => handleOpenForceEdit(user)}
+                        >
+                          조정
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -277,6 +340,57 @@ export default function VaultControlPage() {
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               반려 확정
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Force Edit Dialog */}
+      <Dialog open={isForceEditOpen} onOpenChange={setIsForceEditOpen}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>금고 잔액 강제조정</DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              {forceEditUser
+                ? `${forceEditUser.nickname} (UID: ${forceEditUser.user_id})`
+                : "대상 유저"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm text-zinc-400">조정 금액</label>
+              <Input
+                type="number"
+                placeholder="예: 10000 또는 -5000"
+                value={forceEditAmount}
+                onChange={(e) => setForceEditAmount(e.target.value)}
+                className="bg-black/20 border-white/10 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-zinc-400">사유</label>
+              <Textarea
+                value={forceEditReason}
+                onChange={(e) => setForceEditReason(e.target.value)}
+                className="bg-black/20 border-white/10 text-white"
+                placeholder="관리자 강제조정 사유"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsForceEditOpen(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleForceEdit}
+              disabled={
+                !forceEditUser ||
+                !Number.isFinite(Number(forceEditAmount)) ||
+                Number(forceEditAmount) === 0 ||
+                forceEditMutation.isPending
+              }
+            >
+              적용
             </Button>
           </DialogFooter>
         </DialogContent>

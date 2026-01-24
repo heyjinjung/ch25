@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import MessageSenderPage from "./MessageSenderPage";
 import SurveyPage from "./SurveyPage";
 import { MessageSquare, ClipboardList } from "lucide-react";
@@ -24,7 +29,7 @@ export default function MarketingTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <ClipboardList className="w-4 h-4" />
-              ?�문 조사
+              설문 조사
             </TabsTrigger>
           </TabsList>
         </div>

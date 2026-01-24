@@ -79,7 +79,7 @@ const V2AdminLoginPage: FC = () => {
                 {...register("username")}
                 data-testid="login-username"
                 className="w-full rounded-xl border border-obsidian-border bg-obsidian-bg px-4 py-3 text-white placeholder:text-obsidian-muted focus:outline-none focus:ring-2 focus:ring-obsidian-accent/40"
-                placeholder="external_id"
+                placeholder="CC ID"
                 autoComplete="username"
               />
               {errors.username && (

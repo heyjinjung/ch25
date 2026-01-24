@@ -358,14 +358,14 @@ export default function CCDepositPage() {
             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
             onClick={addRow}
           >
-            <Plus className="w-4 h-4" />행 추가
+                        <Plus className="w-4 h-4" /> 행 추가
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 gap-2"
             onClick={handleSaveAll}
             disabled={!isDirty || isSaving}
           >
-            {isSaving ? "저장중.." : "전체 저장"}
+                        {isSaving ? "저장중.." : "전체 저장"}
           </Button>
         </div>
       </div>
@@ -418,7 +418,7 @@ export default function CCDepositPage() {
                 onClick={() => handleSort("createdAt")}
               >
                 <div className="flex items-center">
-                  작업일시 {getSortIcon("createdAt")}
+                                    작업 일시 {getSortIcon("createdAt")}
                 </div>
               </TableHead>
               <TableHead className="text-zinc-400">검수</TableHead>

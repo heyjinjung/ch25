@@ -193,7 +193,7 @@ export function UserDetailDrawer({
                   <TabsContent value="wallet" className="m-0 space-y-4">
                     <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
                       <div>
-                        <div className="text-sm text-zinc-500">?�여 ?�켓</div>
+                        <div className="text-sm text-zinc-500">보유 티켓</div>
                         <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
                           <Ticket className="w-6 h-6 text-indigo-400" />
                           {(user.ticketBalance || 0).toLocaleString()} T
@@ -209,14 +209,14 @@ export function UserDetailDrawer({
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        ?�켓 지�??�수
+                        티켓 지급/회수
                       </Button>
                     </div>
 
                     <Card className="bg-[#18181B] border-white/5">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-bold text-zinc-200">
-                          최근 ?�켓 로그
+                          최근 티켓 로그
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
@@ -257,14 +257,14 @@ export function UserDetailDrawer({
                           ))
                         ) : (
                           <div className="text-xs text-zinc-500">
-                            ?�시??로그가 ?�습?�다.
+                            표시할 로그가 없습니다.
                           </div>
                         )}
                       </CardContent>
                     </Card>
                   </TabsContent>
 
-                  {/* 2. ?�벤?�리 (Inventory) */}
+                  {/* 2. 인벤토리 (Inventory) */}
                   <TabsContent value="inventory" className="m-0 space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                       <Package className="w-5 h-5 text-indigo-400" />
@@ -273,21 +273,21 @@ export function UserDetailDrawer({
                     <Card className="bg-[#18181B] border-white/5">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-bold text-zinc-200">
-                          ?�벤?�리 강제 ?�정
+                          인벤토리 강제 조정
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-3">
                           <div className="space-y-2">
                             <Label className="text-xs text-zinc-400">
-                              ?�이???�??
+                              아이템 선택
                             </Label>
                             <Select
                               value={inventoryAdjustItemType}
                               onValueChange={setInventoryAdjustItemType}
                             >
                               <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
-                                <SelectValue placeholder="?�이???�택" />
+                                <SelectValue placeholder="아이템 선택" />
                               </SelectTrigger>
                               <SelectContent className="bg-[#18181B] border-white/10 text-white">
                                 {inventoryAdjustItems.map((item) => (
@@ -304,11 +304,11 @@ export function UserDetailDrawer({
                           </div>
                           <div className="space-y-2">
                             <Label className="text-xs text-zinc-400">
-                              ?�량 (+지�? -차감)
+                              수량 (+지급 -차감)
                             </Label>
                             <Input
                               type="number"
-                              placeholder="?? 10 ?�는 -10"
+                              placeholder="예: 10 또는 -10"
                               value={inventoryAdjustDelta}
                               onChange={(e) =>
                                 setInventoryAdjustDelta(e.target.value)
@@ -318,9 +318,9 @@ export function UserDetailDrawer({
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs text-zinc-400">?�유</Label>
+                          <Label className="text-xs text-zinc-400">사유</Label>
                           <Textarea
-                            placeholder="?? ?�영??조정"
+                            placeholder="예: 운영상 조정"
                             value={inventoryAdjustNote}
                             onChange={(e) =>
                               setInventoryAdjustNote(e.target.value)
@@ -338,8 +338,8 @@ export function UserDetailDrawer({
                             }
                           >
                             {adjustInventory.isPending
-                              ? "처리 �?.."
-                              : "?�정 ?�행"}
+                              ? "처리 중.."
+                              : "조정 실행"}
                           </Button>
                         </div>
                       </CardContent>

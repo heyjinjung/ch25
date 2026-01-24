@@ -423,10 +423,10 @@ export default function UserListPage() {
             onClick={() => setPage(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
-            ?�전
+            이전
           </Button>
           <span className="text-sm text-zinc-400">
-            {page} / {totalPages} ?�이지
+            {page} / {totalPages} 페이지
           </span>
           <Button
             variant="outline"
@@ -435,7 +435,7 @@ export default function UserListPage() {
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
           >
-            ?�음
+            다음
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -451,20 +451,20 @@ export default function UserListPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-[#121214] border border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-white">?�원 ?�록</DialogTitle>
+            <DialogTitle className="text-white">회원 등록</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              external_id???�수?�니?? ?�머지???�택 ?�력?�니??
+              CC ID는 필수입니다. 나머지는 선택 입력입니다.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm text-zinc-300">external_id</label>
+              <label className="text-sm text-zinc-300">CC ID</label>
               <Input
                 value={createExternalId}
                 onChange={(e) => setCreateExternalId(e.target.value)}
                 className="bg-zinc-900 border-zinc-800 text-zinc-200"
-                placeholder="?? user_001"
+                placeholder="예: cc_123"
               />
             </div>
             <div className="space-y-2">
@@ -478,7 +478,7 @@ export default function UserListPage() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm text-zinc-300">?�벨</label>
+                <label className="text-sm text-zinc-300">레벨</label>
                 <Input
                   type="number"
                   value={createLevel}
@@ -487,7 +487,7 @@ export default function UserListPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-zinc-300">?�태</label>
+                <label className="text-sm text-zinc-300">상태</label>
                 <Select
                   value={createStatus}
                   onValueChange={(v) =>
@@ -513,7 +513,7 @@ export default function UserListPage() {
                   value={createTelegramId}
                   onChange={(e) => setCreateTelegramId(e.target.value)}
                   className="bg-zinc-900 border-zinc-800 text-zinc-200"
-                  placeholder="?�택"
+                  placeholder="선택"
                 />
               </div>
               <div className="space-y-2">
@@ -546,7 +546,7 @@ export default function UserListPage() {
                 createUserMutation.isPending || !createExternalId.trim()
               }
             >
-              {createUserMutation.isPending ? "?�록 �?.." : "?�록"}
+              {createUserMutation.isPending ? "등록 중.." : "등록"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -55,31 +55,61 @@ export default function MissionManagerPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<AdminMissionDto | null>(null);
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState(() => ({
     category: "DAILY",
     title: "",
     condition: "",
     rewardType: "VAULT",
     rewardAmount: 100,
     targetValue: 1,
-    logicKey: "PLAY_GAME",
-  });
+    logicKey: `DAILY_${Date.now()}`,
+  }));
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const logicKeySet = new Set(
+    missions.map((m) => String(m.logicKey || "").toUpperCase()),
+  );
+
+  const normalizeLogicKey = (value: string) =>
+    String(value || "")
+      .trim()
+      .toUpperCase();
 
   const handleCreate = () => {
-    createMutation.mutate(createForm, {
-      onSuccess: () => {
-        setIsCreateOpen(false);
-        setCreateForm({
-          category: "DAILY",
-          title: "",
-          condition: "",
-          rewardType: "VAULT",
-          rewardAmount: 100,
-          targetValue: 1,
-          logicKey: "PLAY_GAME",
-        });
+    setCreateError(null);
+    const nextLogicKey = normalizeLogicKey(createForm.logicKey);
+    if (!createForm.title.trim()) {
+      setCreateError("제목을 입력하세요.");
+      return;
+    }
+    if (!nextLogicKey) {
+      setCreateError("로직 키를 입력하세요.");
+      return;
+    }
+    if (logicKeySet.has(nextLogicKey)) {
+      setCreateError("이미 사용 중인 로직 키입니다.");
+      return;
+    }
+
+    createMutation.mutate(
+      { ...createForm, logicKey: nextLogicKey },
+      {
+        onSuccess: () => {
+          setIsCreateOpen(false);
+          setCreateForm({
+            category: "DAILY",
+            title: "",
+            condition: "",
+            rewardType: "VAULT",
+            rewardAmount: 100,
+            targetValue: 1,
+            logicKey: `DAILY_${Date.now()}`,
+          });
+          setCreateError(null);
+        },
       },
-    });
+    );
   };
 
   const handleDelete = (id: number) => {
@@ -90,11 +120,30 @@ export default function MissionManagerPage() {
 
   const openEdit = (mission: AdminMissionDto) => {
     setEditForm({ ...mission });
+    setEditError(null);
     setIsEditOpen(true);
   };
 
   const handleSaveEdit = () => {
     if (!editForm) return;
+    setEditError(null);
+    const nextLogicKey = normalizeLogicKey(editForm.logicKey);
+    const isDuplicate = missions.some(
+      (m) =>
+        m.id !== editForm.id && normalizeLogicKey(m.logicKey) === nextLogicKey,
+    );
+    if (!editForm.title.trim()) {
+      setEditError("제목을 입력하세요.");
+      return;
+    }
+    if (!nextLogicKey) {
+      setEditError("로직 키를 입력하세요.");
+      return;
+    }
+    if (isDuplicate) {
+      setEditError("이미 사용 중인 로직 키입니다.");
+      return;
+    }
     updateMutation.mutate(
       {
         id: editForm.id,
@@ -103,14 +152,17 @@ export default function MissionManagerPage() {
           title: editForm.title,
           condition: editForm.condition,
           targetValue: editForm.targetValue,
-          logicKey: editForm.logicKey,
+          logicKey: nextLogicKey,
           rewardType: editForm.rewardType,
           rewardAmount: editForm.rewardAmount,
           isActive: editForm.isActive,
         },
       },
       {
-        onSuccess: () => setIsEditOpen(false),
+        onSuccess: () => {
+          setIsEditOpen(false);
+          setEditError(null);
+        },
       },
     );
   };
@@ -400,6 +452,11 @@ export default function MissionManagerPage() {
                 className="col-span-3 bg-black/50 border-white/10"
                 placeholder="PLAY_ROULETTE, ATTENDANCE..."
               />
+              {createError && (
+                <p className="col-span-4 text-xs text-red-400 text-right">
+                  {createError}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
@@ -480,6 +537,7 @@ export default function MissionManagerPage() {
             </Button>
             <Button
               onClick={handleCreate}
+              disabled={createMutation.isPending}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               생성
@@ -540,6 +598,9 @@ export default function MissionManagerPage() {
                   className="col-span-3 bg-black/50 border-white/10"
                 />
               </div>
+              {editError && (
+                <p className="text-xs text-red-400 text-right">{editError}</p>
+              )}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right text-zinc-400">설명/조건</Label>
@@ -622,6 +683,7 @@ export default function MissionManagerPage() {
             </Button>
             <Button
               onClick={handleSaveEdit}
+              disabled={updateMutation.isPending}
               className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
               저장

@@ -154,10 +154,10 @@ export default function ModalControlPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
             <Power className="w-8 h-8 text-indigo-400" />
-            모달 ?�어 (Modal Control)
+            모달 제어 (Modal Control)
           </h1>
           <p className="text-sm text-zinc-400">
-            ?�체 모달???�출 ?��?�??�어?�니?? OFF ???�당 모달?� ?�전??차단?�니??
+            전체 모달의 노출 여부를 제어합니다. OFF 시 해당 모달은 완전히 차단됩니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -167,7 +167,7 @@ export default function ModalControlPage() {
             onClick={handleRefresh}
           >
             <RefreshCw className="w-4 h-4" />
-            ?�로고침
+            새로고침
           </Button>
           <Button
             variant="outline"
@@ -175,7 +175,7 @@ export default function ModalControlPage() {
             onClick={() => setShowPreview(!showPreview)}
           >
             <Eye className="w-4 h-4" />
-            {showPreview ? "미리보기 ?�기" : "모달 미리보기"}
+            {showPreview ? "미리보기 닫기" : "모달 미리보기"}
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 gap-2"
@@ -251,7 +251,7 @@ export default function ModalControlPage() {
               모달 미리보기 - 출석 스트릭
             </CardTitle>
             <CardDescription>
-              ?�제 ?�용?�에�??�시?�는 모달??미리보기?�니??
+              실제 서비스에서 표시되는 모달의 미리보기입니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center items-center min-h-[400px] bg-black/20 rounded-lg">
@@ -276,7 +276,7 @@ export default function ModalControlPage() {
       {isDirty && (
         <div className="fixed bottom-6 right-6 bg-yellow-900/90 border border-yellow-500/50 rounded-lg px-4 py-2 shadow-xl">
           <p className="text-sm text-yellow-200">
-            변경사??�� ?�?�되지 ?�았?�니??
+            변경사항이 저장되지 않았습니다.
           </p>
         </div>
       )}

@@ -61,9 +61,7 @@ const V2UserLoginPage: FC = () => {
           "test 계정이 아직 없습니다. 아래 'test 계정 생성(개발환경)'을 눌러주세요",
         );
       } else {
-        setServerError(
-          detail || "인증에 실패했습니다. 자격 증명을 확인하세요",
-        );
+        setServerError(detail || "인증에 실패했습니다. 자격 증명을 확인하세요");
       }
     } finally {
       setIsLoading(false);
@@ -117,7 +115,7 @@ const V2UserLoginPage: FC = () => {
               <input
                 {...register("username")}
                 className="w-full rounded-xl border border-obsidian-border bg-obsidian-bg px-4 py-3 text-white placeholder:text-obsidian-muted focus:outline-none focus:ring-2 focus:ring-obsidian-accent/40"
-                placeholder="external_id"
+                placeholder="CC ID"
                 autoComplete="username"
                 disabled={isLoading}
               />
