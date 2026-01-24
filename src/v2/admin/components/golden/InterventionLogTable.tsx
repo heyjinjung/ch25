@@ -11,7 +11,8 @@ export const InterventionLogTable = ({
 }: InterventionLogTableProps) => {
   const getTriggerBadgeColor = (triggerId: string) => {
     if (triggerId.includes("LOSE")) return "bg-red-500/20 text-red-400";
-    if (triggerId.includes("BAL_DROP")) return "bg-orange-500/20 text-orange-400";
+    if (triggerId.includes("BAL_DROP"))
+      return "bg-orange-500/20 text-orange-400";
     if (triggerId.includes("ZERO")) return "bg-purple-500/20 text-purple-400";
     return "bg-gray-500/20 text-gray-400";
   };
@@ -35,7 +36,7 @@ export const InterventionLogTable = ({
     const expiry = new Date(cooldownExpiresAt);
 
     if (expiry < now) {
-      return "만료??;
+      return "만료됨";
     }
 
     const diffMs = expiry.getTime() - now.getTime();
@@ -43,9 +44,9 @@ export const InterventionLogTable = ({
     const diffHours = Math.floor(diffMins / 60);
 
     if (diffHours > 0) {
-      return `${diffHours}?�간 ${diffMins % 60}�??�음`;
+      return `${diffHours}시간 ${diffMins % 60}분 남음`;
     }
-    return `${diffMins}�??�음`;
+    return `${diffMins}분 남음`;
   };
 
   if (isLoading) {
@@ -59,7 +60,7 @@ export const InterventionLogTable = ({
   if (!logs || logs.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
-        ?�터벤션 로그가 ?�습?�다
+        인터벤션 로그가 없습니다
       </div>
     );
   }
@@ -71,28 +72,28 @@ export const InterventionLogTable = ({
           <thead className="bg-gray-900/50 border-b border-gray-700/50">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                발생 ?�각
+                발생 시각
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                ?�리�?ID
+                트리거 ID
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                ?�리�?조건
+                트리거 조건
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                ?�행???�션
+                실행 액션
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                ?�전 ?�액
+                이전 잔액
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                ?�션 ?��?
+                세션 변화
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
                 최근 결과
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                쿨다??
+                쿨다운
               </th>
             </tr>
           </thead>

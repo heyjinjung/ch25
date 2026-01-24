@@ -30,7 +30,7 @@ export const GoldenEventStream = () => {
 
       ws.onopen = () => {
         setIsConnected(true);
-        console.log("??Golden Event Stream connected");
+        console.log("Golden Event Stream connected");
       };
 
       ws.onmessage = (e) => {
@@ -38,7 +38,7 @@ export const GoldenEventStream = () => {
           const message = JSON.parse(e.data);
 
           if (message.type === "connection") {
-            console.log("Golden ?�벤???�트�??�결??);
+            console.log("Golden 이벤트 스트림 연결됨");
             return;
           }
 
@@ -60,7 +60,7 @@ export const GoldenEventStream = () => {
           }
 
           if (message.type === "error") {
-            console.error(`WebSocket ?�류: ${message.message}`);
+            console.error(`WebSocket 오류: ${message.message}`);
           }
         } catch (err) {
           console.error("Failed to parse WebSocket message:", err);
@@ -69,7 +69,7 @@ export const GoldenEventStream = () => {
 
       ws.onerror = (error) => {
         console.error("WebSocket error:", error);
-        console.error("Golden ?�벤???�트�??�결 ?�류");
+        console.error("Golden 이벤트 스트림 연결 오류");
         setIsConnected(false);
       };
 
@@ -84,7 +84,7 @@ export const GoldenEventStream = () => {
       };
     } catch (error) {
       console.error("Failed to connect WebSocket:", error);
-      console.error("WebSocket ?�결 ?�패");
+      console.error("WebSocket 연결 실패");
     }
   };
 
@@ -120,17 +120,17 @@ export const GoldenEventStream = () => {
   const getGameTypeIcon = (gameType: string) => {
     switch (gameType.toUpperCase()) {
       case "DICE":
-        return "?��";
+        return "🎲";
       case "SLOT":
-        return "?��";
+        return "🎰";
       case "ROULETTE":
-        return "?��";
+        return "🎡";
       case "POKER":
-        return "?��";
+        return "♠️";
       case "BLACKJACK":
-        return "?��";
+        return "🃏";
       default:
-        return "?��";
+        return "🎮";
     }
   };
 
@@ -149,7 +149,7 @@ export const GoldenEventStream = () => {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-bold text-gray-100">
-            ?�시�?게임 ?�벤???�트�?
+            실시간 게임 이벤트
           </h2>
           <div className="flex items-center gap-2">
             <div
@@ -158,13 +158,11 @@ export const GoldenEventStream = () => {
               }`}
             />
             <span className="text-xs text-gray-400">
-              {isConnected ? "?�결?? : "?�결 �?.."}
+              {isConnected ? "연결됨" : "연결 중..."}
             </span>
           </div>
         </div>
-        <div className="text-sm text-gray-400">
-          ?�벤???? {events.length}
-        </div>
+        <div className="text-sm text-gray-400">이벤트: {events.length}</div>
       </div>
 
       {/* Event Stream */}
@@ -174,13 +172,13 @@ export const GoldenEventStream = () => {
             <thead className="bg-gray-900/50 border-b border-gray-700/50">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                  ?�간
+                  시간
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
                   게임
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                  ?��? ID
+                  유저 ID
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
                   결과
@@ -189,10 +187,10 @@ export const GoldenEventStream = () => {
                   베팅
                 </th>
                 <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                  지�?
+                  지급
                 </th>
                 <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                  ?�액
+                  잔액
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
                   출처
@@ -206,9 +204,7 @@ export const GoldenEventStream = () => {
                     colSpan={8}
                     className="px-3 py-8 text-center text-gray-500"
                   >
-                    {isConnected
-                      ? "?�벤?��? 기다리는 �?.."
-                      : "?�결 �?.."}
+                    {isConnected ? "이벤트를 기다리는 중..." : "연결 중..."}
                   </td>
                 </tr>
               ) : (
@@ -266,7 +262,7 @@ export const GoldenEventStream = () => {
 
       {/* Footer Note */}
       <div className="mt-3 text-xs text-gray-500 text-center">
-        최근 100�??�벤?�만 ?�시?�니??
+        최근 100�??�벤?�만 ?�시?�니??
       </div>
     </div>
   );
