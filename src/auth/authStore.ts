@@ -13,6 +13,7 @@ export interface AuthUser {
   readonly telegram_username?: string | null;
   readonly login_streak?: number;
   readonly role?: string;
+  readonly avatarUrl?: string;
 }
 
 interface AuthState {
@@ -28,7 +29,8 @@ const AUTH_VERSION_KEY = "xmas_auth_version";
 const CURRENT_AUTH_VERSION = "v3";
 const LEGACY_KEYS = ["access_token", "token"];
 
-const isBrowser = typeof window !== "undefined" && typeof localStorage !== "undefined";
+const isBrowser =
+  typeof window !== "undefined" && typeof localStorage !== "undefined";
 
 const hydrateFromStorage = (): AuthState => {
   if (!isBrowser) return { token: null, user: null };
@@ -42,12 +44,24 @@ const hydrateFromStorage = (): AuthState => {
     return { token: null, user: null };
   }
 
-  const storedToken = localStorage.getItem(ACCESS_TOKEN_KEY) ?? LEGACY_KEYS.map((k) => localStorage.getItem(k)).find(Boolean) ?? null;
+  const storedToken =
+    localStorage.getItem(ACCESS_TOKEN_KEY) ??
+    LEGACY_KEYS.map((k) => localStorage.getItem(k)).find(Boolean) ??
+    null;
   const storedUser = localStorage.getItem(ACCESS_USER_KEY);
-  return {
-    token: storedToken,
-    user: storedUser ? (JSON.parse(storedUser) as AuthUser) : null,
-  };
+  if (!storedUser) {
+    return { token: storedToken, user: null };
+  }
+
+  try {
+    return {
+      token: storedToken,
+      user: JSON.parse(storedUser) as AuthUser,
+    };
+  } catch {
+    localStorage.removeItem(ACCESS_USER_KEY);
+    return { token: storedToken, user: null };
+  }
 };
 
 const state: AuthState = hydrateFromStorage();

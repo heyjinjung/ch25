@@ -165,6 +165,8 @@ export default {
         // Admin Depth (SoT)
         'admin-card': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         'admin-glow': '0 0 0 1px rgba(99, 102, 241, 0.15), 0 0 28px rgba(99, 102, 241, 0.22)',
+        'cc-glow': '0 0 15px rgba(210, 253, 156, 0.4), 0 0 5px rgba(210, 253, 156, 0.2)',
+        'red-neon': '0 0 15px rgba(239, 68, 68, 0.5), 0 0 5px rgba(239, 68, 68, 0.3)',
       },
       animation: {
         'spin-slow': 'spin 3s linear infinite',

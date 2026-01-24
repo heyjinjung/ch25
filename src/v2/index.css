@@ -33,6 +33,10 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+
+    /* Telegram Mini App Safe Area & Layout Constants (65px Header) */
+    --header-offset: calc(env(safe-area-inset-top) + 65px);
+    --nav-offset: calc(env(safe-area-inset-bottom) + 90px);
   }
 
   .dark {
@@ -70,22 +74,26 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Magic UI: Shine Border Animation */
-@keyframes shine {
+@keyframes marquee {
   0% {
-    background-position: 0% 0%;
+    transform: translateX(100%);
   }
-  50% {
-    background-position: 100% 100%;
+
+  100% {
+    transform: translateX(-100%);
   }
-  to {
-    background-position: 0% 0%;
-  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 15s linear infinite;
+  padding-left: 100%;
 }
 
 .animate-shine {

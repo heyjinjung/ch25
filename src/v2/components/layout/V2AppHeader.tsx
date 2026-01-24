@@ -1,8 +1,7 @@
-import React from "react";
 import { useAuth } from "../../../auth/authStore";
 import { useQuery } from "@tanstack/react-query";
 import { getV2VaultStatus } from "../../api/v1CompatAdapter";
-import { Wallet, Ticket, User } from "lucide-react";
+import AnimatedNumber from "../common/AnimatedNumber";
 
 const V2AppHeader: React.FC = () => {
   const { user } = useAuth();
@@ -16,68 +15,63 @@ const V2AppHeader: React.FC = () => {
 
   const vaultBalance = vault?.vaultBalance ?? 0;
   const ticketCount = vault?.ticketCount ?? 0;
-  const segment = (user?.segment || vault?.segment || "common").toLowerCase();
+  const segment = (user?.segment || "common").toLowerCase();
 
-  const getSegmentColor = (seg: string) => {
+  const getGlowClass = (seg: string) => {
     switch (seg) {
-      case "whale":
-        return "text-purple-400 border-purple-500/30 bg-purple-500/10";
-      case "vip":
-        return "text-amber-400 border-amber-500/30 bg-amber-500/10";
-      default:
-        return "text-zinc-400 border-zinc-500/30 bg-zinc-500/10";
+      case "whale": return "border-purple-400/50 shadow-[0_0_10px_rgba(168,85,247,0.3)]";
+      case "vip": return "border-amber-400/50 shadow-[0_0_10px_rgba(251,191,36,0.3)]";
+      default: return "border-cc-lime/50 shadow-[0_0_10px_rgba(210,253,156,0.2)]";
     }
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-black/80 backdrop-blur-xl border-b border-white/5 z-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-[391px] flex items-center justify-between gap-3">
-        {/* User Info */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center border border-white/20 shadow-lg">
-            <User className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-white leading-none mb-1">
-              {user?.nickname || "Guest User"}
-            </span>
-            <div
-              className={`text-[10px] font-black uppercase px-1.5 py-0.5 rounded border tracking-tighter w-fit ${getSegmentColor(segment)}`}
-            >
-              {segment}
+    <header className="fixed top-0 left-0 right-0 h-[var(--header-offset)] bg-[#121214] border-b border-white/5 z-50 flex items-center justify-center p-0">
+      <div className="w-full max-w-[391px] px-2 flex items-center justify-between gap-3 h-full pt-[env(safe-area-inset-top)] pb-1">
+        {/* User Profile - Standard Row */}
+        <div className="flex items-center gap-2.5">
+          <div className={`w-11 h-11 rounded-full border-2 p-0.5 bg-zinc-900 overflow-hidden ${getGlowClass(segment)}`}>
+            <div className="w-full h-full rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt="P" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-800 flex items-center justify-center text-xs text-zinc-400 font-black">CC</div>
+              )}
             </div>
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-[14px] font-black text-white truncate max-w-[80px]">
+              {user?.nickname || "Guest"}
+            </span>
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter mt-1">LEVEL 1</span>
           </div>
         </div>
 
-        {/* Assets Panel */}
-        <div className="flex-1 flex items-center justify-between bg-zinc-900/80 rounded-xl h-10 px-3 border border-white/5 shadow-inner gap-4">
-          {/* Vault Balance */}
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/20">
-              <Wallet className="w-3.5 h-3.5 text-emerald-400" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black text-emerald-400 font-mono leading-none">
-                ₩{vaultBalance.toLocaleString()}
-              </span>
-              <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-                Vault
-              </span>
+        {/* Asset Panel (60px Target Depth) */}
+        <div className="flex-1 max-w-[210px] flex items-center justify-around bg-white/5 border border-white/10 rounded-2xl h-10 px-2.5 gap-1 backdrop-blur-sm">
+          {/* Vault */}
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <img src="/assets/asset_coin_gold.webp" alt="V" className="w-5 h-5 object-contain" />
+            <div className="flex flex-col items-start leading-none gap-0.5">
+              <span className="text-[8px] text-zinc-500 font-black uppercase">금고</span>
+              <div className="flex items-baseline gap-0.5">
+                <AnimatedNumber value={vaultBalance} className="text-[14px] font-black text-[#F59E0B] font-mono" />
+                <span className="text-[9px] text-[#F59E0B]/80 font-bold">P</span>
+              </div>
             </div>
           </div>
 
-          {/* Ticket Balance */}
-          <div className="flex items-center gap-2 pr-1">
-            <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20">
-              <Ticket className="w-3.5 h-3.5 text-indigo-400" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-black text-indigo-400 font-mono leading-none">
-                {ticketCount.toLocaleString()}
-              </span>
-              <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-                Tickets
-              </span>
+          <div className="w-[1px] h-6 bg-white/10" />
+
+          {/* Tickets */}
+          <div className="flex items-center gap-2 flex-1 justify-center">
+            <img src="/assets/asset_ticket_green.webp" alt="T" className="w-5 h-5 object-contain" />
+            <div className="flex flex-col items-start leading-none gap-0.5">
+              <span className="text-[8px] text-zinc-500 font-black uppercase">티켓</span>
+              <div className="flex items-baseline gap-0.5">
+                <AnimatedNumber value={ticketCount} className="text-[14px] font-black text-[#D2FD9C] font-mono" />
+                <span className="text-[9px] text-[#D2FD9C]/80 font-bold">장</span>
+              </div>
             </div>
           </div>
         </div>

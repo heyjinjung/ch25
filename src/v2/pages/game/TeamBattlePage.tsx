@@ -33,7 +33,7 @@ const BATTLE_GAMES: GameOption[] = [
     id: "dice",
     name: "Dice Battle",
     desc: "주사위로 승부하세요",
-    path: "/v2/game/dice",
+    path: "/game/dice",
     icon: ICON_DICE,
     points: 10,
   },
@@ -41,7 +41,7 @@ const BATTLE_GAMES: GameOption[] = [
     id: "roulette",
     name: "Roulette",
     desc: "한방 승부 룰렛",
-    path: "/v2/game/roulette",
+    path: "/game/roulette",
     icon: ICON_ROULETTE,
     points: 10,
   },
@@ -49,7 +49,7 @@ const BATTLE_GAMES: GameOption[] = [
     id: "lottery",
     name: "Lottery",
     desc: "매일 대박 기회",
-    path: "/v2/game/lottery",
+    path: "/game/lottery",
     icon: ICON_LOTTERY,
     points: 10,
   },
@@ -66,7 +66,14 @@ const TeamBattlePage: React.FC = () => {
 
   const myTeam = myTeamQuery.data?.team;
   const teams = teamsQuery.data || [];
-  const entries = leaderboardQuery.data?.entries ?? [];
+  const entries = Array.isArray(leaderboardQuery.data?.entries)
+    ? leaderboardQuery.data?.entries
+    : [];
+  const leaderboard = entries.map((entry) => ({
+    team_id: entry.team.id,
+    team_name: entry.team.name,
+    points: entry.season_score,
+  }));
   const [showGameModal, setShowGameModal] = React.useState(false);
 
   const loading =
@@ -89,14 +96,12 @@ const TeamBattlePage: React.FC = () => {
   };
 
   // Calculate Team Scores for Gauge
-  const redScore =
-    Array.isArray(entries) && teams[0]
-      ? entries.find((l) => l.team.id === teams[0].id)?.season_score || 0
-      : 0;
-  const blueScore =
-    Array.isArray(entries) && teams[1]
-      ? entries.find((l) => l.team.id === teams[1].id)?.season_score || 0
-      : 0;
+  const redScore = teams[0]
+    ? entries.find((l) => l.team.id === teams[0].id)?.season_score || 0
+    : 0;
+  const blueScore = teams[1]
+    ? entries.find((l) => l.team.id === teams[1].id)?.season_score || 0
+    : 0;
   const totalScore = redScore + blueScore || 1;
   const redPercent = Math.round((redScore / totalScore) * 100);
   const bluePercent = 100 - redPercent;
@@ -174,9 +179,7 @@ const TeamBattlePage: React.FC = () => {
                   : "scale-100",
               )}
             >
-              <div
-                className="relative mb-4 h-28 w-28 animate-float-slow delay-1000"
-              >
+              <div className="relative mb-4 h-28 w-28 animate-float-slow delay-1000">
                 <img
                   src={AVATAR_BLUE}
                   alt="Blue Team"
@@ -204,20 +207,21 @@ const TeamBattlePage: React.FC = () => {
               <span>{bluePercent}% Domination</span>
             </div>
             <div className="relative h-4 w-full overflow-hidden rounded-full bg-black/50 ring-1 ring-white/10">
-            <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000 w-[var(--red-w)]"
-                style={{ "--red-w": `${redPercent}%` } as React.CSSProperties}
+              <div
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000"
+                style={{ width: `${redPercent}%` }}
               />
               <div
-                className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000 w-[var(--blue-w)]"
-                style={{ "--blue-w": `${bluePercent}%` } as React.CSSProperties}
+                className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000"
+                style={{ width: `${bluePercent}%` }}
               />
               {/* Center Spark */}
               <div
-                className="absolute top-0 bottom-0 w-1 bg-white blur-[2px] transition-all duration-1000 ease-in-out left-[var(--red-w)]"
+                className="absolute top-0 bottom-0 w-1 bg-white blur-[2px]"
                 style={{
-                  "--red-w": `${redPercent}%`,
-                } as React.CSSProperties}
+                  left: `${redPercent}%`,
+                  transition: "left 1s ease-in-out",
+                }}
               />
             </div>
           </div>
@@ -265,7 +269,7 @@ const TeamBattlePage: React.FC = () => {
                 My Status
               </p>
               <p className="text-lg font-bold text-white uppercase">
-                {myTeam.name} - READY TO FIGHT
+                {myTeam?.name || "READY"} - READY TO FIGHT
               </p>
             </div>
             <Button
@@ -353,9 +357,9 @@ const TeamBattlePage: React.FC = () => {
           </h3>
         </div>
         <div className="space-y-2">
-          {entries.slice(0, 10).map((entry, idx) => (
+          {leaderboard.slice(0, 10).map((ranker, idx) => (
             <div
-              key={entry.team.id}
+              key={ranker.team_id}
               className="flex items-center justify-between rounded-xl bg-white/5 px-4 py-3 border border-white/5"
             >
               <div className="flex items-center gap-3">
@@ -372,15 +376,15 @@ const TeamBattlePage: React.FC = () => {
                   {idx + 1}
                 </div>
                 <span className="text-sm font-bold text-white truncate max-w-[120px]">
-                  {entry.team.name}
+                  {ranker.team_name}
                 </span>
               </div>
               <span className="font-mono text-sm text-emerald-400 font-bold">
-                {entry.season_score.toLocaleString()} P
+                {ranker.points.toLocaleString()} P
               </span>
             </div>
           ))}
-          {entries.length === 0 && (
+          {leaderboard.length === 0 && (
             <p className="text-center text-white/30 text-sm py-4">
               No data available
             </p>

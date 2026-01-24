@@ -1,22 +1,10 @@
-// src/components/layout/V2LiveFeedBar.tsx
-import React from "react";
+﻿import React from "react";
 
 const V2LiveFeedBar: React.FC = () => {
   return (
-    <div className="fixed top-[100px] left-0 right-0 z-[49] w-full max-w-[391px] mx-auto h-[32px] px-[14px] py-[6px] flex items-center bg-[#8EF695]/25 text-[#1E1E1E] text-xs overflow-hidden whitespace-nowrap">
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
-        }
-        .live-feed-marquee {
-          display: inline-block;
-          animation: marquee 15s linear infinite;
-          padding-left: 100%;
-        }
-      `}</style>
-      <div className="live-feed-marquee">
-        <span>?�� CC25 ?�규 ?�데?�트: 고해?�도 V2 ?�터?�이?��? ?�용?�었?�니?? ???�로??게임 보너???�벤?��? ?�인?�세?? ??지�?미션???�료?�고 ?�별 ?�켓??받아보세??</span>
+    <div className="fixed top-[var(--header-offset)] left-0 right-0 z-[49] w-full max-w-[391px] mx-auto h-[40px] px-3 flex items-center bg-[#1a1a1e] border-b border-white/10 text-emerald-400/90 text-sm font-medium overflow-hidden whitespace-nowrap">
+      <div className="animate-marquee">
+        <span className="tracking-tight">🚀 CC25 업데이트: 고해상도 V2 인터페이스가 적용되었습니다. 💎 게임 보너스 이벤트를 확인하세요! ✨ 미션을 완료하고 특별 티켓을 받아보세요!</span>
       </div>
     </div>
   );

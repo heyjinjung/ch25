@@ -1,5 +1,10 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  useV2DiceStatus,
+  useV2RouletteStatus,
+  useV2LotteryStatus,
+} from "../../hooks/useV2Game";
 import gsap from "gsap";
 import "./GamedashPage.css";
 
@@ -15,14 +20,46 @@ const GAMES = [
 export default function GamedashPage() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const diceStatusQuery = useV2DiceStatus();
+  const rouletteStatusQuery = useV2RouletteStatus();
+  const lotteryStatusQuery = useV2LotteryStatus();
+
+  const noticeItems = useMemo(() => {
+    const diceRemaining = diceStatusQuery.data?.remaining_plays;
+    const rouletteRemaining = rouletteStatusQuery.data?.remaining_spins;
+    const lotteryRemaining = lotteryStatusQuery.data?.remaining_tickets;
+
+    const toText = (label: string, value?: number) =>
+      `${label} ì”ì—¬ ${
+        typeof value === "number" ? value.toLocaleString() : "-"
+      }íšŒ`;
+
+    return [
+      toText("ë£°ë ›", rouletteRemaining),
+      toText("ì£¼ì‚¬ìœ„", diceRemaining),
+      toText("ë³µê¶Œ", lotteryRemaining),
+    ];
+  }, [
+    diceStatusQuery.data?.remaining_plays,
+    rouletteStatusQuery.data?.remaining_spins,
+    lotteryStatusQuery.data?.remaining_tickets,
+  ]);
+
+  const getGameBadge = (gameId: string) => {
+    if (gameId === "dice") return diceStatusQuery.data?.remaining_plays;
+    if (gameId === "rocket") return rouletteStatusQuery.data?.remaining_spins;
+    if (gameId === "ball") return lotteryStatusQuery.data?.remaining_tickets;
+    return undefined;
+  };
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       // Shimmer Effect Timeline
       const tlShimmer = gsap.timeline({ repeat: -1, repeatDelay: 3 });
-      tlShimmer.fromTo(".card-shine", 
-        { x: "-150%", skewX: -20 }, 
-        { x: "400%", duration: 1.5, ease: "power2.inOut", stagger: 0.1 }
+      tlShimmer.fromTo(
+        ".card-shine",
+        { x: "-150%", skewX: -20 },
+        { x: "400%", duration: 1.5, ease: "power2.inOut", stagger: 0.1 },
       );
 
       // Vertical Notice Animation (3 lines visible, rotating)
@@ -36,7 +73,7 @@ export default function GamedashPage() {
           y: -itemHeight * i,
           duration: 1,
           ease: "power2.inOut",
-          delay: 2
+          delay: 2,
         });
       }
 
@@ -62,14 +99,16 @@ export default function GamedashPage() {
           />
           <div className="notice-container">
             <div className="notice-wrapper">
-              {/* Original 3 items */}
-              <div className="notice-item"> ?´ë²ˆì£???‚¤ì°¬ìŠ¤ ì¶”ê? ?°ì¼“ì¦ì •</div>
-              <div className="notice-item"> ?…ë°?´íŠ¸! ?° ?¬ë¼ì§„ê·¸?˜í”½</div>
-              <div className="notice-item"> ?’ê³¨ë“œ?¤ë? ?¡ì•„?? ê³ ì•¡ë£°ë ›</div>
-              {/* Duplicated for seamless loop (since 3 are visible, we need them to follow) */}
-              <div className="notice-item"> ?´ë²ˆì£???‚¤ì°¬ìŠ¤ ì¶”ê? ?°ì¼“ì¦ì •</div>
-              <div className="notice-item"> ?…ë°?´íŠ¸! ?° ?¬ë¼ì§„ê·¸?˜í”½</div>
-              <div className="notice-item">?’ê³¨ë“œ?¤ë? ?¡ì•„?? ê³ ì•¡ë£°ë ›</div>
+              {noticeItems.map((text, idx) => (
+                <div key={`notice-${idx}`} className="notice-item">
+                  {text}
+                </div>
+              ))}
+              {noticeItems.map((text, idx) => (
+                <div key={`notice-dup-${idx}`} className="notice-item">
+                  {text}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -83,12 +122,17 @@ export default function GamedashPage() {
               onClick={() => navigate(game.to)}
             >
               <div className="card-shine" />
-              {game.id === "ball" && (
-                <span className="game-card-badge badge-hot">HOT</span>
-              )}
-              {game.id === "rocket" && (
-                <span className="game-card-badge badge-new">NEW</span>
-              )}
+              {(() => {
+                const remaining = getGameBadge(game.id);
+                if (typeof remaining !== "number") return null;
+                const label = remaining > 0 ? "READY" : "WAIT";
+                const badgeClass = remaining > 0 ? "badge-hot" : "badge-new";
+                return (
+                  <span className={`game-card-badge ${badgeClass}`}>
+                    {label}
+                  </span>
+                );
+              })()}
               <img src={game.icon} className="game-card-icon" alt={game.id} />
             </div>
           ))}

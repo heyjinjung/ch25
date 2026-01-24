@@ -16,7 +16,8 @@ export default function V2AppLayout() {
       {/* 32px Fixed Live Feed Bar (follows Header) */}
       <V2LiveFeedBar />
       
-      <main className="flex-1 w-full max-w-[391px] mx-auto pt-[96px] pb-[86.87px] flex flex-col relative z-20">
+      {/* 100px Header + 32px Live Feed Bar Gap */}
+      <main className="flex-1 w-full max-w-[391px] mx-auto px-2 pt-[calc(var(--header-offset)+32px)] pb-[var(--nav-offset)] flex flex-col relative z-20">
         <Outlet />
       </main>
 

@@ -4,6 +4,8 @@ import { BrowserRouter } from "react-router-dom";
 import AppRouter from "./router/AppRouter";
 import QueryProvider from "./providers/QueryProvider";
 import { TelegramProvider } from "./providers/TelegramProvider";
+import { SoundProvider } from "./contexts/SoundContext";
+import { ThemeProvider } from "./v2/contexts/ThemeContext";
 import "./v2/index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -11,7 +13,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <QueryProvider>
         <TelegramProvider>
-          <AppRouter />
+          <SoundProvider>
+            <ThemeProvider>
+              <AppRouter />
+            </ThemeProvider>
+          </SoundProvider>
         </TelegramProvider>
       </QueryProvider>
     </BrowserRouter>

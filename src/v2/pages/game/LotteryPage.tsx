@@ -1,139 +1,240 @@
-import { useState } from "react";
-import confetti from "canvas-confetti";
-import { Ticket, Trophy } from "lucide-react";
+// src/v2/pages/game/LotteryPage.tsx
+import React, { useState, useRef, useLayoutEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
+import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
+import { triggerHaptic, triggerNotification } from "../../utils/haptic";
+import "./LotteryRedesign.css";
 
-import { useV2LotteryStatus, useV2LotteryPlay } from "../../hooks/useV2Game";
-import LotteryCard from "../../components/game/LotteryCard";
-import { useTheme } from "../../contexts/ThemeContext";
+const ASSET_PATH = "/v2/assets/04lotto";
 
-interface Prize {
-  id: number;
-  label: string;
-  reward_type: string;
-  reward_amount: string | number;
-}
-
-export default function LotteryPage() {
-  const { theme } = useTheme();
-  
-  const [isScratching, setIsScratching] = useState(false);
+const LotteryPage: React.FC = () => {
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [currentPrize, setCurrentPrize] = useState<Prize | undefined>(undefined);
+  const [revealedPrize, setRevealedPrize] = useState<any | null>(null);
+  const [collectionModalOpen, setCollectionModalOpen] = useState(false);
 
-  const { data: status } = useV2LotteryStatus();
-  
-  const playMutation = useV2LotteryPlay();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const ball1Ref = useRef<HTMLImageElement>(null);
+  const ball2Ref = useRef<HTMLImageElement>(null);
+  const ball3Ref = useRef<HTMLImageElement>(null);
+  const ball4Ref = useRef<HTMLImageElement>(null);
 
-  const handlePlay = () => {
-    if (playMutation.isPending || isScratching) return;
-    
-    // Check ticket balance
-    if ((status?.token_balance ?? 0) <= 0) {
-      alert("티켓이 부족합니다.");
-      return;
-    }
+  const queryClient = useQueryClient();
 
-    playMutation.mutate(undefined, {
-      onSuccess: (data) => {
-        setIsScratching(true);
-        setIsRevealed(false);
-        
-        // Prepare prize object from response
-        // Note: The response structure might need adjustment based on strict API definition,
-        // but assuming it returns the won prize details.
-        // If data is just success/fail, we might need to parse.
-        // Looking at v1CompatAdapter, it returns LotteryPlayResponse which has 'result' and 'reward'
-        
-        const prizeData = data.result === "WIN" && data.game_data.prize ? {
-          id: data.game_data.prize.id,
-          label: data.game_data.prize.label,
-          reward_type: data.game_data.prize.reward_type,
-          reward_amount: data.game_data.prize.reward_amount
-        } : undefined;
+  // ============================================================================
+  // API Queries
+  // ============================================================================
 
-        setCurrentPrize(prizeData);
+  const { data, isLoading } = useQuery({
+    queryKey: ["v2-lottery-status"],
+    queryFn: () => getV2LotteryStatus(),
+    refetchOnWindowFocus: true,
+    staleTime: 10000,
+  });
 
-        // Simulate scratch delay
-        setTimeout(() => {
-          setIsScratching(false);
-          setIsRevealed(true);
-          
-          if (data.result === "WIN") {
-            confetti({
-              particleCount: 150,
-              spread: 70,
-              origin: { y: 0.6 },
-              colors: [theme.colors.primary, theme.colors.accent, '#FFFFFF']
-            });
-          }
-        }, 2000);
-      },
-      onError: (error) => {
-        console.error("Lottery play failed", error);
-        alert("게임 진행 중 오류가 발생했습니다.");
-      }
+  const playMutation = useMutation({
+    mutationFn: () => playV2Lottery(),
+    onError: (error) => {
+      console.error("[LotteryPage] Play failed:", error);
+      triggerNotification("error");
+    },
+  });
+
+  // ============================================================================
+  // GSAP Animations
+  // ============================================================================
+
+  useLayoutEffect(() => {
+    if (!containerRef.current) return;
+
+    const ctx = gsap.context(() => {
+      const balls = [ball1Ref, ball2Ref, ball3Ref, ball4Ref];
+      balls.forEach((ref, idx) => {
+        if (!ref.current) return;
+
+        gsap.to(ref.current, {
+          x: `+=${8 + idx * 2}`,
+          y: `-=${6 + idx}`,
+          rotation: `+=${12 + idx * 3}`,
+          duration: 1.6 + idx * 0.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+      });
     });
+
+    return () => ctx.revert();
+  }, []);
+
+  // ============================================================================
+  // Play Handler
+  // ============================================================================
+
+  const handlePlay = async () => {
+    if (isPlaying || isRevealed || !data || data.token_balance <= 0) return;
+
+    try {
+      triggerHaptic("heavy");
+      setIsPlaying(true);
+
+      // Intensive mixing animation
+      [ball1Ref, ball2Ref, ball3Ref, ball4Ref].forEach((ref, idx) => {
+        if (ref.current) {
+          gsap.to(ref.current, {
+            y: "random(-60, 60)",
+            x: "random(-70, 70)",
+            rotation: `random(-${120 + idx * 20}, ${120 + idx * 20})`,
+            duration: 0.12,
+            repeat: 14,
+            yoyo: true,
+            ease: "power2.inOut",
+          });
+        }
+      });
+
+      const result = await playMutation.mutateAsync();
+
+      setTimeout(() => {
+        setIsPlaying(false);
+        setIsRevealed(true);
+
+        const prize = result.game_data?.prize;
+        if (prize) {
+          setRevealedPrize(prize);
+          if (prize.reward_type !== "NONE") {
+            triggerNotification("success");
+          }
+        }
+
+        queryClient.invalidateQueries({ queryKey: ["v2-lottery-status"] });
+      }, 2000);
+    } catch (err) {
+      console.error("[LotteryPage] Play error:", err);
+      setIsPlaying(false);
+    }
   };
 
-  const resetGame = () => {
+  const handleReset = () => {
     setIsRevealed(false);
-    setIsScratching(false);
-    setCurrentPrize(undefined);
+    setRevealedPrize(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-black">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#37EBFF] border-t-transparent" />
+      </div>
+    );
+  }
+
+  const collection = {
+    C1: data?.collectionProgress?.C1 ?? 0,
+    C2: data?.collectionProgress?.C2 ?? 0,
+    J: data?.collectionProgress?.J ?? 0,
+    M: data?.collectionProgress?.M ?? 0,
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-4 pb-24 flex flex-col items-center">
-      {/* Header Stats */}
-      <div className="w-full max-w-[500px] grid grid-cols-2 gap-3 mb-8 mt-16">
-        <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1 shadow-lg backdrop-blur-md">
-           <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
-              <Ticket className="w-4 h-4 text-emerald-400" />
-           </div>
-           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Available Tickets</span>
-           <span className="text-lg font-black font-mono text-emerald-400">
-             {status?.token_balance?.toLocaleString() ?? 0}
-           </span>
-        </div>
-        <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1 shadow-lg backdrop-blur-md">
-           <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center mb-1">
-              <Trophy className="w-4 h-4 text-indigo-400" />
-           </div>
-           <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Today's Plays</span>
-           <span className="text-lg font-black font-mono text-indigo-400">
-             {status?.today_tickets ?? 0} / {status?.max_daily_tickets ?? 0}
-           </span>
-        </div>
-      </div>
+    <div className="lottery-redesign-container" ref={containerRef}>
+      <img
+        src={`${ASSET_PATH}/game-L.svg`}
+        className="lottery-bg-overlay"
+        alt=""
+      />
 
-      {/* Main Card Section */}
-      <div className="relative w-full max-w-[400px] flex items-center justify-center mb-8">
-        <LotteryCard 
-          prize={currentPrize}
-          isRevealed={isRevealed}
-          isScratching={isScratching}
-          onScratch={handlePlay}
+      {/* Ball Arena Section */}
+      <div className="ball-arena-container mt-4">
+        <img
+          ref={ball1Ref}
+          src={`${ASSET_PATH}/Mix balls 3.png`}
+          className="mixing-ball ball-1 w-[173px]"
+          alt=""
+        />
+        <img
+          ref={ball2Ref}
+          src={`${ASSET_PATH}/Mix balls 1.png`}
+          className="mixing-ball ball-2 w-[128px]"
+          alt=""
+        />
+        <img
+          ref={ball3Ref}
+          src={`${ASSET_PATH}/Mix balls 4.png`}
+          className="mixing-ball ball-3 w-[77px]"
+          alt=""
+        />
+        <img
+          ref={ball4Ref}
+          src={`${ASSET_PATH}/Mix balls 2.png`}
+          className="mixing-ball ball-4 w-[100px]"
+          alt=""
         />
       </div>
 
-      {/* Action Button */}
-      <div className="w-full max-w-[360px] space-y-4">
-        {isRevealed ? (
-           <button
-             onClick={resetGame}
-             className="w-full h-14 rounded-2xl bg-white text-black font-black text-lg tracking-widest uppercase hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-           >
-             Play Again
-           </button>
-        ) : (
-           <div className="text-center text-zinc-500 text-sm animate-pulse">
-             {isScratching ? "Scratching..." : "Tap card to scratch!"}
-           </div>
-        )}
-        
-        <p className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-8">
-           Premium Scratch System • V2
-        </p>
+      {/* Lotto Logo Area */}
+      <div className="flex flex-col items-center gap-4 mt-4">
+        <img
+          src={`${ASSET_PATH}/Lotto_Horizontal 1.png`}
+          className="lotto-logo-img"
+          alt="LOTTO"
+        />
       </div>
+
+      {/* Action Area */}
+      <div className="lottery-action-section">
+        <div className="flex w-full justify-center px-8">
+          <button
+            onClick={() => setCollectionModalOpen(true)}
+            className="lotto-collection-button"
+          >
+            View Collection
+          </button>
+        </div>
+
+        <button
+          className={`lotto-play-button ${isPlaying || (data?.token_balance ?? 0) <= 0 ? "disabled" : ""}`}
+          onClick={isRevealed ? handleReset : handlePlay}
+          disabled={isPlaying}
+        >
+          {isRevealed ? "NEXT GAME" : isPlaying ? "MIXING..." : "PLAY NOW"}
+        </button>
+      </div>
+
+      {/* Result Layer */}
+      <AnimatePresence>
+        {isRevealed && revealedPrize && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
+          >
+            <div className="bg-black/80 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/10 flex flex-col items-center gap-2">
+              <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">
+                Game Result
+              </span>
+              <span className="text-3xl font-black text-white text-center">
+                {revealedPrize.label}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <LotteryCollectionModal
+        open={collectionModalOpen}
+        onClose={() => setCollectionModalOpen(false)}
+        collection={collection}
+        onCraft={async () => {
+          await new Promise((resolve) => setTimeout(resolve, 800));
+          queryClient.invalidateQueries({ queryKey: ["v2-lottery-status"] });
+        }}
+      />
     </div>
   );
-}
+};
+
+export default LotteryPage;

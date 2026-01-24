@@ -166,8 +166,7 @@ def roulette_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RouletteStatusResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _v2_roulette_game_service.get_status(db=db, user_id=legacy_user_id, ticket_type=ticket_type)
+    return _v2_roulette_game_service.get_status(db=db, user_id=user_id, ticket_type=ticket_type)
 
 
 @router.post("/roulette/play", response_model=RoulettePlayResponse)
@@ -176,9 +175,8 @@ def roulette_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RoulettePlayResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     ticket_type = payload.ticket_type if payload else GameTokenType.ROULETTE_COIN.value
-    return _v2_roulette_game_service.play(db=db, user_id=legacy_user_id, ticket_type=ticket_type)
+    return _v2_roulette_game_service.play(db=db, user_id=user_id, ticket_type=ticket_type)
 
 
 @router.get("/dice/status", response_model=DiceStatusResponse)
@@ -186,8 +184,7 @@ def dice_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DiceStatusResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _v2_dice_game_service.get_status(db=db, user_id=legacy_user_id)
+    return _v2_dice_game_service.get_status(db=db, user_id=user_id)
 
 
 @router.post("/dice/play", response_model=DicePlayResponse)
@@ -195,8 +192,7 @@ def dice_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DicePlayResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _v2_dice_game_service.play(db=db, user_id=legacy_user_id)
+    return _v2_dice_game_service.play(db=db, user_id=user_id)
 
 
 @router.get("/lottery/status", response_model=LotteryStatusResponse)
@@ -204,8 +200,7 @@ def lottery_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryStatusResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _v2_lottery_game_service.get_status(db=db, user_id=legacy_user_id)
+    return _v2_lottery_game_service.get_status(db=db, user_id=user_id)
 
 
 @router.post("/lottery/play", response_model=LotteryPlayResponse)
@@ -213,8 +208,7 @@ def lottery_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryPlayResponse:
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    return _v2_lottery_game_service.play(db=db, user_id=legacy_user_id)
+    return _v2_lottery_game_service.play(db=db, user_id=user_id)
 
 
 @router.post("/segments/run", response_model=V2SegmentBatchResponse, tags=["v2-admin"])

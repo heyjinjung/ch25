@@ -41,7 +41,7 @@ const V2AdminLoginPage: FC = () => {
       const token = res?.data?.access_token;
       if (token) {
         setAdminToken(token);
-        navigate("/v2/admin/dashboard");
+        navigate("/admin/dashboard");
         return;
       }
 

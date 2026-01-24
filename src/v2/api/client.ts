@@ -46,7 +46,7 @@ export const v2Client = axios.create({
 v2Client.interceptors.request.use((config) => {
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : "";
-  const isV2AdminPath = pathname.startsWith("/v2/admin");
+  const isV2AdminPath = pathname.startsWith("/admin");
 
   const token = isV2AdminPath
     ? getAdminToken() ||
