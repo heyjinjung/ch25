@@ -646,7 +646,7 @@ export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
 };
 
 export const confirmDeposit = async (id: number): Promise<void> => {
-  await v2Client.post(`/admin/api/economy/deposits/${id}/confirm`);
+  await v2Client.post(`/api/v2/admin/economy/deposits/${id}/confirm`);
 };
 
 export interface AdminDepositLogDto {
@@ -1002,7 +1002,7 @@ export const updateExchangeRate = async (
   id: string,
   rate: number,
 ): Promise<void> => {
-  await v2Client.put(`/admin/api/economy/exchange-rates/${id}`, { rate });
+  await v2Client.put(`/api/v2/admin/economy/exchange-rates/${id}`, { rate });
 };
 
 export const grantItem = async (data: GrantItemRequest): Promise<void> => {

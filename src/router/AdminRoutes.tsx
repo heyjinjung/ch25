@@ -37,6 +37,14 @@ import AdminSystemHealthPage from "../admin/pages/AdminSystemHealthPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
 
+// V2 Imports
+import CCDepositPage from "@/v2/admin/pages/economy/CCDepositPage";
+import VaultControlPage from "@/v2/admin/pages/economy/VaultControlPage";
+import TicketInventoryTabPage from "@/v2/admin/pages/economy/TicketInventoryTabPage";
+import UserManagementTabPage from "@/v2/admin/pages/users/UserManagementTabPage";
+import MarketingTabPage from "@/v2/admin/pages/marketing/MarketingTabPage";
+import OpsDashboard from "@/v2/admin/pages/dashboard/OpsDashboard";
+
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
@@ -55,11 +63,15 @@ const AdminRoutes: React.FC = () => {
           <Route path="dice" element={<DiceConfigPage />} />
           <Route path="lottery" element={<LotteryConfigPage />} />
           <Route path="external-ranking" element={<ExternalRankingPage />} />
+          <Route path="economy/deposits" element={<CCDepositPage />} />
+          <Route path="economy/vault" element={<VaultControlPage />} />
+          <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
           <Route path="game-tokens" element={<TicketManagerPage />} />
           <Route path="game-token-logs" element={<Navigate to="/admin/game-tokens" replace />} />
-          <Route path="users" element={<UserAdminPage />} />
+          <Route path="users" element={<UserManagementTabPage />} />
           <Route path="marketing" element={<MarketingDashboardPage />} />
           <Route path="messages" element={<MessageCenterPage />} />
+          <Route path="marketing/messages" element={<MarketingTabPage />} />
           <Route path="user-segments" element={<UserSegmentsPage />} />
           <Route path="segment-rules" element={<SegmentRulesPage />} />
           <Route path="team-battle" element={<AdminTeamBattlePage />} />
