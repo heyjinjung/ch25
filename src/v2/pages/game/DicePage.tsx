@@ -1,4 +1,4 @@
-// src/v2/pages/game/DicePage.tsx
+// src/pages/game/DicePage.tsx
 import { useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
@@ -8,7 +8,7 @@ import { useAuth } from "../../../auth/authStore";
 import gsap from "gsap";
 import "./DiceRedesign.css";
 
-const ASSET_PATH = "/v2/assets/03dice";
+const ASSET_PATH = "/assets/03dice";
 
 const DicePage = () => {
   const { user } = useAuth();
@@ -205,7 +205,7 @@ const DicePage = () => {
           </button>
 
           <div className="item-board-card">
-            <span className="item-board-text">아이템 준비중</span>
+            <span className="item-board-text">?�이??준비중</span>
           </div>
         </div>
       </div>

@@ -25,7 +25,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                 <button
                     onClick={onClose}
                     className="absolute top-5 right-5 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
-                    title="닫기"
+                    title="?�기"
                 >
                     <X size={18} />
                 </button>
@@ -34,14 +34,14 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                 <div className="relative pt-12 pb-6 px-6 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 mb-4">
                         <Crown size={12} className="text-amber-400" />
-                        <span className="text-[10px] font-black text-amber-500 tracking-widest uppercase">VIP 자격안내</span>
+                        <span className="text-[10px] font-black text-amber-500 tracking-widest uppercase">VIP ?�격?�내</span>
                     </div>
 
                     <h2 className="text-[26px] font-black text-white leading-[1.1] tracking-tight mb-3 italic">
                         BECOME A <span className="text-amber-500">WHALE</span>
                     </h2>
                     <p className="text-zinc-500 text-sm font-medium leading-relaxed">
-                        상위 1%에게만 허락된<br />특별한 VIP 혜택을 누리세요.
+                        ?�위 1%?�게�??�락??br />?�별??VIP ?�택???�리?�요.
                     </p>
                 </div>
 
@@ -54,9 +54,9 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                             </div>
                             <div className="flex-1">
                                 <div className="text-white font-black text-base italic leading-tight">
-                                    첫 입금 50만원 이상
+                                    �??�금 50만원 ?�상
                                 </div>
-                                <div className="text-[10px] text-zinc-600 font-bold mt-1">즉시 VIP 골드 테마 적용</div>
+                                <div className="text-[10px] text-zinc-600 font-bold mt-1">즉시 VIP 골드 ?�마 ?�용</div>
                             </div>
                         </div>
                     </div>
@@ -68,9 +68,9 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                             </div>
                             <div className="flex-1">
                                 <div className="text-white font-black text-base italic leading-tight">
-                                    7일 누적 300만원 이상
+                                    7???�적 300만원 ?�상
                                 </div>
-                                <div className="text-[10px] text-zinc-600 font-bold mt-1">특별 리워드 및 전담 케어</div>
+                                <div className="text-[10px] text-zinc-600 font-bold mt-1">?�별 리워??�??�담 케??/div>
                             </div>
                         </div>
                     </div>
@@ -85,7 +85,7 @@ const VipEligibilityModal: React.FC<VipEligibilityModalProps> = ({ onClose }) =>
                         }}
                         className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_16px_30px_-10px_rgba(245,158,11,0.45)] border border-amber-300/30 active:scale-[0.98] hover:brightness-110 hover:shadow-[0_20px_36px_-12px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 group transition-all"
                     >
-                        <span>입금하고 자격 획득하기</span>
+                        <span>?�금?�고 ?�격 ?�득?�기</span>
                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </button>
 

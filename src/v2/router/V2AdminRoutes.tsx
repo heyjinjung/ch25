@@ -34,7 +34,7 @@ const V2AdminRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route
             index
-            element={<Navigate to="/v2/admin/dashboard" replace />}
+            element={<Navigate to="/admin/dashboard" replace />}
           />
           <Route path="dashboard" element={<OpsDashboard />} />
           <Route path="dashboard/radar" element={<CrisisRadarPage />} />
@@ -61,13 +61,16 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="game/modals" element={<ModalControlPage />} />
 
           {/* Inventory */}
-          <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
+          <Route
+            path="inventory/tickets"
+            element={<TicketInventoryTabPage />}
+          />
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />
           <Route
             path="*"
-            element={<Navigate to="/v2/admin/dashboard" replace />}
+            element={<Navigate to="/admin/dashboard" replace />}
           />
         </Route>
       </Route>
@@ -77,7 +80,7 @@ const V2AdminRoutes: React.FC = () => {
 
 function RequireV2AdminAuth() {
   if (!isAdminAuthenticated()) {
-    return <Navigate to="/v2/admin/login" replace />;
+    return <Navigate to="/admin/login" replace />;
   }
   return <Outlet />;
 }

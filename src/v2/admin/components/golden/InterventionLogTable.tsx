@@ -1,4 +1,4 @@
-import { InterventionLogDto } from "@/v2/api/adminApi";
+import { InterventionLogDto } from "@/api/adminApi";
 
 interface InterventionLogTableProps {
   logs: InterventionLogDto[];
@@ -35,7 +35,7 @@ export const InterventionLogTable = ({
     const expiry = new Date(cooldownExpiresAt);
 
     if (expiry < now) {
-      return "만료됨";
+      return "만료??;
     }
 
     const diffMs = expiry.getTime() - now.getTime();
@@ -43,9 +43,9 @@ export const InterventionLogTable = ({
     const diffHours = Math.floor(diffMins / 60);
 
     if (diffHours > 0) {
-      return `${diffHours}시간 ${diffMins % 60}분 남음`;
+      return `${diffHours}?�간 ${diffMins % 60}�??�음`;
     }
-    return `${diffMins}분 남음`;
+    return `${diffMins}�??�음`;
   };
 
   if (isLoading) {
@@ -59,7 +59,7 @@ export const InterventionLogTable = ({
   if (!logs || logs.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
-        인터벤션 로그가 없습니다
+        ?�터벤션 로그가 ?�습?�다
       </div>
     );
   }
@@ -71,28 +71,28 @@ export const InterventionLogTable = ({
           <thead className="bg-gray-900/50 border-b border-gray-700/50">
             <tr>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                발생 시각
+                발생 ?�각
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                트리거 ID
+                ?�리�?ID
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                트리거 조건
+                ?�리�?조건
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                실행된 액션
+                ?�행???�션
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                이전 잔액
+                ?�전 ?�액
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
-                세션 델타
+                ?�션 ?��?
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
                 최근 결과
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                쿨다운
+                쿨다??
               </th>
             </tr>
           </thead>

@@ -22,7 +22,7 @@ const CrisisRadar: React.FC<CrisisRadarProps> = ({ onScenarioClick }) => {
         return (
             <div className="flex items-center justify-center h-32 bg-zinc-900/50 rounded-2xl border border-white/5">
                 <Loader2 className="w-6 h-6 text-zinc-500 animate-spin" />
-                <span className="ml-2 text-zinc-500 text-sm">위기 신호 로딩 중...</span>
+                <span className="ml-2 text-zinc-500 text-sm">?�기 ?�호 로딩 �?..</span>
             </div>
         );
     }
@@ -31,7 +31,7 @@ const CrisisRadar: React.FC<CrisisRadarProps> = ({ onScenarioClick }) => {
         return (
             <div className="flex items-center justify-center h-32 bg-zinc-900/50 rounded-2xl border border-rose-500/20">
                 <AlertTriangle className="w-5 h-5 text-rose-400" />
-                <span className="ml-2 text-rose-400 text-sm">위기 신호 로드 실패</span>
+                <span className="ml-2 text-rose-400 text-sm">?�기 ?�호 로드 ?�패</span>
             </div>
         );
     }
@@ -73,7 +73,7 @@ const CrisisRadar: React.FC<CrisisRadarProps> = ({ onScenarioClick }) => {
             <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-rose-400" />
-                    위기 감지 레이더
+                    ?�기 감�? ?�이??
                 </h3>
                 {highRiskSignals.length > 0 && (
                     <span className="px-2 py-0.5 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full animate-pulse">
@@ -124,7 +124,7 @@ const CrisisRadar: React.FC<CrisisRadarProps> = ({ onScenarioClick }) => {
                             {signal.count > 0 && (
                                 <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="text-xs text-indigo-400 font-medium">
-                                        작전 실행 →
+                                        ?�전 ?�행 ??
                                     </span>
                                 </div>
                             )}

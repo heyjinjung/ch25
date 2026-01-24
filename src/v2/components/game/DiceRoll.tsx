@@ -8,7 +8,7 @@ interface DiceRollProps {
   isRolling: boolean;
   onRollComplete?: () => void;
   size?: number;
-  label?: '유저' | '딜러';
+  label?: '?��?' | '?�러';
 }
 
 const DiceRoll = ({ value, isRolling, onRollComplete, size = 80, label }: DiceRollProps) => {
@@ -21,8 +21,7 @@ const DiceRoll = ({ value, isRolling, onRollComplete, size = 80, label }: DiceRo
 
     const dice = diceRef.current;
 
-    // GSAP 롤링 애니메이션
-    const tl = gsap.timeline({
+    // GSAP 롤링 ?�니메이??    const tl = gsap.timeline({
       onComplete: () => {
         rollTimeoutRef.current = setTimeout(() => {
           onRollComplete?.();
@@ -68,7 +67,7 @@ const DiceRoll = ({ value, isRolling, onRollComplete, size = 80, label }: DiceRo
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        {/* 주사위 이미지 */}
+        {/* 주사???��?지 */}
         {!isRolling && value && (
           <motion.img
             src={theme.assets.diceIcon}
@@ -80,7 +79,7 @@ const DiceRoll = ({ value, isRolling, onRollComplete, size = 80, label }: DiceRo
           />
         )}
 
-        {/* 롤링 중 표시 */}
+        {/* 롤링 �??�시 */}
         {isRolling && (
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
@@ -91,7 +90,7 @@ const DiceRoll = ({ value, isRolling, onRollComplete, size = 80, label }: DiceRo
           </motion.div>
         )}
 
-        {/* 값 표시 (숫자) */}
+        {/* �??�시 (?�자) */}
         {!isRolling && value && (
           <motion.div
             className="absolute bottom-1 right-1 flex items-center justify-center w-6 h-6 rounded-full bg-black/80 border border-white/30"

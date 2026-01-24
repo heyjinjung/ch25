@@ -32,7 +32,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    aria-label="VIP 모달 닫기"
+                    aria-label="VIP 모달 ?�기"
                     className="absolute top-4 right-4 p-2 rounded-full bg-white/5 text-white/40 hover:bg-white/10 hover:text-white transition-colors z-30 border border-white/5"
                 >
                     <X size={18} />
@@ -69,8 +69,8 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                         VIP LOUNGE
                     </h2>
                     <p className="text-white font-bold text-base leading-snug">
-                        회장님, 귀하를<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">최고 등급 라운지</span>로 모십니다
+                        ?�장?? 귀?��?<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">최고 ?�급 ?�운지</span>�?모십?�다
                     </p>
                 </div>
 
@@ -89,7 +89,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                             <span className="text-3xl font-black text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.3)]">+500</span>
                             <span className="text-lg font-black text-amber-500/50">XP</span>
                         </div>
-                        <p className="text-[10px] text-white/30 font-medium">시즌 패스 레벨이 상승합니다</p>
+                        <p className="text-[10px] text-white/30 font-medium">?�즌 ?�스 ?�벨???�승?�니??/p>
                     </motion.div>
 
                     <motion.button
@@ -98,7 +98,7 @@ const VipPromotionModal: React.FC<VipPromotionModalProps> = ({ onClose }) => {
                         onClick={onClose}
                         className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-black font-black text-lg shadow-[0_8px_12px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all outline-none hover:brightness-110"
                     >
-                        혜택 수령하기
+                        ?�택 ?�령?�기
                     </motion.button>
                 </div>
             </motion.div>

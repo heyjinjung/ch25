@@ -1,4 +1,4 @@
-// src/v2/hooks/useV2TeamBattle.ts
+// src/hooks/useV2TeamBattle.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getV2ActiveSeason,

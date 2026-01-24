@@ -33,8 +33,8 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
     const conditions = [
         {
             id: "min-balance",
-            title: "최소 출금 가능액",
-            description: "보유 금액 10,000원 이상",
+            title: "최소 출금 가?�액",
+            description: "보유 금액 10,000???�상",
             status: isBalanceMet,
             icon: Wallet,
             progress: `${vaultBalance.toLocaleString()} / ${minWithdrawal.toLocaleString()}`,
@@ -46,30 +46,30 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
         
         {
             id: "deposit",
-            title: "금일 입금 내역",
-            description: "당일 입금 기록 필요",
+            title: "금일 ?�금 ?�역",
+            description: "?�일 ?�금 기록 ?�요",
             status: isDepositMet,
             icon: Landmark,
-            progress: isDepositMet ? "완료" : "미완료",
+            progress: isDepositMet ? "?�료" : "미완�?,
             percent: isDepositMet ? 100 : 0
         },
         {
             id: "plays",
-            title: "게임 플레이",
+            title: "게임 ?�레??,
             // [MODIFIED] Dynamic text for 7-day window and variable target
-            description: `최근 3일 이내 게임 ${dailyPlayTarget}회 이상 플레이`,
+            description: `최근 3???�내 게임 ${dailyPlayTarget}???�상 ?�레??,
             status: isPlayMet,
             icon: Gamepad2,
-            progress: `${dailyPlayCount} / ${dailyPlayTarget}회`,
+            progress: `${dailyPlayCount} / ${dailyPlayTarget}??,
             percent: Math.min(100, (dailyPlayCount / dailyPlayTarget) * 100)
         },
         {
             id: "spent",
-            title: "금고 사용 실적",
-            description: `금고 일일 사용액 ${dailyVaultSpentTarget.toLocaleString()}원 이상`,
+            title: "금고 ?�용 ?�적",
+            description: `금고 ?�일 ?�용??${dailyVaultSpentTarget.toLocaleString()}???�상`,
             status: isSpentMet,
             icon: Coins,
-            progress: `${dailyVaultSpent.toLocaleString()} / ${dailyVaultSpentTarget.toLocaleString()}원`,
+            progress: `${dailyVaultSpent.toLocaleString()} / ${dailyVaultSpentTarget.toLocaleString()}??,
             percent: Math.min(100, (dailyVaultSpent / dailyVaultSpentTarget) * 100)
         }
     ];
@@ -101,15 +101,15 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                 <div className="relative pt-8 pb-5 px-6 text-center">
 
                     <h2 className="text-lg font-black text-white tracking-tight mb-1">
-                        출금 신청 조건
+                        출금 ?�청 조건
                     </h2>
                     <p className="text-white/40 text-xs font-medium">
-                        금고 잔액을 출금하기 위한 필수 조건입니다.
+                        금고 ?�액??출금?�기 ?�한 ?�수 조건?�니??
                     </p>
 
                     <button
                         onClick={onClose}
-                        title="닫기"
+                        title="?�기"
                         className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors"
                     >
                         <X size={18} />
@@ -145,7 +145,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                             )}>{item.title}</span>
                                             {item.status ? (
                                                 <div className="flex items-center gap-1 text-lime-400">
-                                                    <span className="text-[10px] font-bold">완료</span>
+                                                    <span className="text-[10px] font-bold">?�료</span>
                                                     <CheckCircle2 size={14} className="fill-lime-500/20" />
                                                 </div>
                                             ) : (
@@ -193,7 +193,7 @@ const WithdrawalConditionsModal: React.FC<WithdrawalConditionsModalProps> = ({
                                 : "bg-zinc-800 text-zinc-500 cursor-default"
                         )}
                     >
-                        <span>{allConditionsMet ? "지금 바로 출금하기" : "조건 달성 시 출금 가능"}</span>
+                        <span>{allConditionsMet ? "지�?바로 출금?�기" : "조건 ?�성 ??출금 가??}</span>
                         {allConditionsMet && <ChevronRight size={16} />}
                     </button>
                 </div>

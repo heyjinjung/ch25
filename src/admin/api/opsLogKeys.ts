@@ -1,4 +1,4 @@
-// src/admin/api/opsLogKeys.ts
+// src/api/admin/opsLogKeys.ts
 
 export const OpsLogCategory = {
   ROUTINE: "ROUTINE",

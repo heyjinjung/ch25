@@ -40,16 +40,16 @@ const AdminOpsLogPage: React.FC = () => {
       <header className="flex flex-col md:flex-row items-start md:items-end justify-between gap-4 border-b border-admin-border pb-6 pt-4">
         <div>
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            운영 기록 감시 <span className="text-admin-brand/40">Ops Log</span>
+            ?�영 기록 감시 <span className="text-admin-brand/40">Ops Log</span>
           </h1>
           <p className="mt-1.5 text-xs font-bold text-admin-text-muted flex items-center gap-2">
             <Activity size={12} className="text-admin-brand" />
-            리스크 운영, 지급 관리, 이슈 발생 내역을 실시간으로 추적하고 감사 로그로 기록합니다.
+            리스???�영, 지�?관�? ?�슈 발생 ?�역???�시간으�?추적?�고 감사 로그�?기록?�니??
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-admin-border bg-admin-sidebar px-4 py-2 shadow-inner">
           <div className="flex flex-col">
-            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">상태</span>
+            <span className="text-[9px] font-bold text-admin-text-muted uppercase tracking-widest leading-none">?�태</span>
             <span className="text-xs font-bold text-admin-success">NODE_OPERATIONAL</span>
           </div>
           <div className="h-6 w-px bg-admin-border mx-2" />
@@ -79,11 +79,11 @@ const AdminOpsLogPage: React.FC = () => {
           <div className="group relative overflow-hidden rounded-xl border border-admin-border bg-admin-sidebar p-1 shadow-lg">
             <div className="flex flex-col md:flex-row items-center gap-1">
               <div className="flex flex-1 items-center gap-2 bg-admin-bg/50 px-4 py-3 rounded-l-lg md:rounded-l-lg border-r border-admin-border">
-                <label className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest whitespace-nowrap">발생 시점</label>
+                <label className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest whitespace-nowrap">발생 ?�점</label>
                 <input
                   type="date"
-                  aria-label="발생 시점"
-                  title="발생 시점"
+                  aria-label="발생 ?�점"
+                  title="발생 ?�점"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                   className="bg-transparent border-none text-sm font-bold text-admin-text-base focus:ring-0 outline-none w-full"
@@ -91,25 +91,25 @@ const AdminOpsLogPage: React.FC = () => {
               </div>
 
               <div className="flex flex-1 items-center gap-2 bg-admin-bg/50 px-4 py-3 rounded-r-lg md:rounded-r-lg">
-                <label className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest whitespace-nowrap">분류 필터</label>
+                <label className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest whitespace-nowrap">분류 ?�터</label>
                 <select
-                  aria-label="분류 필터"
-                  title="분류 필터"
+                  aria-label="분류 ?�터"
+                  title="분류 ?�터"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as any)}
                   className="bg-admin-input border border-admin-border text-sm font-bold text-admin-text-base focus:ring-0 outline-none w-full appearance-none rounded-md px-2 py-1"
                 >
-                  <option value="">전체 내역 (ALL)</option>
+                  <option value="">?�체 ?�역 (ALL)</option>
                   <option value="ROUTINE">루틴 (ROUTINE)</option>
-                  <option value="EVENT">이벤트 (EVENT)</option>
-                  <option value="ISSUE">이슈 (ISSUE)</option>
-                  <option value="PAYOUT">지급 (PAYOUT)</option>
-                  <option value="SYSTEM">시스템 (SYSTEM)</option>
+                  <option value="EVENT">?�벤??(EVENT)</option>
+                  <option value="ISSUE">?�슈 (ISSUE)</option>
+                  <option value="PAYOUT">지�?(PAYOUT)</option>
+                  <option value="SYSTEM">?�스??(SYSTEM)</option>
                   <option value="AUDIT">감사 (AUDIT)</option>
-                  <option value="CS">고객지원 (CS)</option>
-                  <option value="MARKETING">마케팅 (MARKETING)</option>
-                  <option value="NOTIFICATION">알림 (NOTIFICATION)</option>
-                  <option value="EXPERIMENT">실험 (EXPERIMENT)</option>
+                  <option value="CS">고객지??(CS)</option>
+                  <option value="MARKETING">마�???(MARKETING)</option>
+                  <option value="NOTIFICATION">?�림 (NOTIFICATION)</option>
+                  <option value="EXPERIMENT">?�험 (EXPERIMENT)</option>
                   <option value="ANALYTICS">분석 (ANALYTICS)</option>
                 </select>
               </div>
@@ -118,7 +118,7 @@ const AdminOpsLogPage: React.FC = () => {
             {error && (
               <div className="m-3 flex items-center gap-3 rounded-lg border border-admin-danger/30 bg-admin-danger/10 p-3 text-xs font-bold text-admin-danger animate-pulse">
                 <ShieldAlert size={14} />
-                <span>조회 실패: {(error as any)?.message || "로그를 불러오지 못했습니다."}</span>
+                <span>조회 ?�패: {(error as any)?.message || "로그�?불러?��? 못했?�니??"}</span>
               </div>
             )}
           </div>
@@ -126,19 +126,19 @@ const AdminOpsLogPage: React.FC = () => {
           {/* Result Stream */}
           <div className="admin-card-premium overflow-hidden">
             <div className="px-6 py-4 border-b border-admin-border flex items-center justify-between">
-              <h2 className="text-admin-subtitle text-admin-text-primary">운영 로그</h2>
-              <span className="text-xs text-admin-text-muted">총 {(logs ?? []).length}건</span>
+              <h2 className="text-admin-subtitle text-admin-text-primary">?�영 로그</h2>
+              <span className="text-xs text-admin-text-muted">�?{(logs ?? []).length}�?/span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="admin-table w-full">
                 <thead>
                   <tr>
-                    <th className="admin-th w-[90px]">시간</th>
+                    <th className="admin-th w-[90px]">?�간</th>
                     <th className="admin-th w-[120px]">분류</th>
-                    <th className="admin-th">액션</th>
-                    <th className="admin-th w-[140px]">타겟</th>
-                    <th className="admin-th">메타</th>
+                    <th className="admin-th">?�션</th>
+                    <th className="admin-th w-[140px]">?��?/th>
+                    <th className="admin-th">메�?</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -147,7 +147,7 @@ const AdminOpsLogPage: React.FC = () => {
                       <tr key={i} className="admin-tr">
                         <td className="admin-td text-admin-text-muted">...</td>
                         <td className="admin-td text-admin-text-muted">...</td>
-                        <td className="admin-td text-admin-text-muted">불러오는 중...</td>
+                        <td className="admin-td text-admin-text-muted">불러?�는 �?..</td>
                         <td className="admin-td text-admin-text-muted">...</td>
                         <td className="admin-td text-admin-text-muted">...</td>
                       </tr>
@@ -155,7 +155,7 @@ const AdminOpsLogPage: React.FC = () => {
                   ) : (logs ?? []).length === 0 ? (
                     <tr className="admin-tr">
                       <td colSpan={5} className="admin-td text-center text-admin-text-muted py-10">
-                        선택한 조건에 해당하는 로그가 없습니다.
+                        ?�택??조건???�당?�는 로그가 ?�습?�다.
                       </td>
                     </tr>
                   ) : (

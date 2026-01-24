@@ -25,7 +25,7 @@ const msUntilLocalMidnight = (now: Date) => {
 
 const parseSeasonEndMs = (endDate?: string | null) => {
   if (!endDate) return null;
-  // backend는 date(YYYY-MM-DD) 형태를 내려줍니다.
+  // backend??date(YYYY-MM-DD) ?�태�??�려줍니??
   const parts = endDate.split("-").map((v) => Number(v));
   if (parts.length !== 3) return null;
   const [y, m, d] = parts;
@@ -66,7 +66,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
     };
   }, [season.data]);
 
-  const displayName = user?.nickname || user?.external_id || "플레이어";
+  const displayName = user?.nickname || user?.external_id || "?�레?�어";
   const statusLabel = user?.status || "ACTIVE";
 
   const sizing =
@@ -110,7 +110,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
         " rounded-[16px] border border-black/15 bg-cc-moss text-white backdrop-blur-sm " +
         sizing.pad
       }
-      aria-label="내 레벨 카드"
+      aria-label="???�벨 카드"
     >
       <header className="flex items-center gap-4 sm:gap-5">
         <div className={"relative rounded-full border border-white/15 bg-black/35 " + sizing.avatar}>
@@ -128,7 +128,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
               "absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-[#d2fd9c] font-bold text-black " +
               sizing.badge
             }
-            aria-label="현재 레벨"
+            aria-label="?�재 ?�벨"
           >
             {derived.currentLevel}
           </div>
@@ -141,15 +141,15 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
 
       <div className="mt-7">
         <div className="flex items-center justify-between text-[clamp(13px,2.8vw,14px)] text-white">
-          <span>레벨 {derived.currentLevel}</span>
-          <span>레벨 {derived.nextLevel}</span>
+          <span>?�벨 {derived.currentLevel}</span>
+          <span>?�벨 {derived.nextLevel}</span>
         </div>
         <div className={`mt-2 w-full rounded-full bg-[#d2fd9c]/20 ${barHeight}`}>
           <div className="h-full rounded-full bg-[#d2fd9c]" style={{ width: `${derived.pct}%` }} />
         </div>
         <div className="mt-2 flex items-center justify-between text-[clamp(13px,2.8vw,14px)]">
           <span className="text-white/85">{derived.currentXp.toLocaleString()} XP</span>
-          <span className="text-[#d2fd9c]">다음 레벨까지 {derived.remaining.toLocaleString()} XP 남음</span>
+          <span className="text-[#d2fd9c]">?�음 ?�벨까�? {derived.remaining.toLocaleString()} XP ?�음</span>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
                 aria-hidden="true"
               />
             </span>
-            완료한 미션
+            ?�료??미션
           </div>
         </div>
         <div className="rounded-[10px] border border-black/15 bg-cc-olive/20 px-5 py-5 text-center">
@@ -181,7 +181,7 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
                 aria-hidden="true"
               />
             </span>
-            획득한 뱃지
+            ?�득??뱃�?
           </div>
         </div>
         <div className="rounded-[10px] border border-black/15 bg-cc-olive/20 px-5 py-5 text-center">
@@ -196,15 +196,15 @@ const LevelCard: React.FC<{ variant: LevelCardVariant }> = ({ variant }) => {
                 aria-hidden="true"
               />
             </span>
-            총 획득 XP
+            �??�득 XP
           </div>
         </div>
       </div>
 
       {season.isLoading ? (
-        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">레벨 정보를 불러오는 중...</p>
+        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">?�벨 ?�보�?불러?�는 �?..</p>
       ) : season.isError ? (
-        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">레벨 정보를 불러오지 못했습니다.</p>
+        <p className="mt-6 text-[clamp(13px,2.8vw,14px)] text-white/65">?�벨 ?�보�?불러?��? 못했?�니??</p>
       ) : null}
     </section>
   );
@@ -231,14 +231,14 @@ const SeasonPassMainPanel: React.FC = () => {
             </span>
             <div>
               <p className="text-[clamp(15px,2.8vw,21px)] font-medium leading-[1.15] tracking-[-0.2px]" style={{ color: baseAccent }}>
-                지민이와 함께하는 겨울 시즌 패스
+                지민이?� ?�께?�는 겨울 ?�즌 ?�스
               </p>
               <h1 className="mt-2 text-[clamp(20px,6vw,24px)] font-bold leading-[1.1] tracking-[0.2px]" style={{ color: baseAccent }}>
-                내 레벨 확인
+                ???�벨 ?�인
               </h1>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-white/75">
                 <span className="text-[clamp(12px,2.6vw,13px)] font-semibold" style={{ color: baseAccent }}>
-                  시즌 종료까지
+                  ?�즌 종료까�?
                 </span>
                 <span className="inline-flex items-center rounded-[10px] border border-white/15 bg-black/25 px-3 py-1.5">
                   <AnimatedCountdown
@@ -318,15 +318,15 @@ const SeasonPassFigmaPage: React.FC = () => {
     try {
       if (localStorage.getItem(seenKey) === "1") return null;
     } catch {
-      // storage 접근 실패 시에는 배너를 아예 띄우지 않아 과도한 노출을 방지합니다.
+      // storage ?�근 ?�패 ?�에??배너�??�예 ?�우지 ?�아 과도???�출??방�??�니??
       return null;
     }
 
-    const headline = kind === "season_end" ? "시즌 마감이 임박했어요" : "오늘 누적 진행을 챙겨요";
+    const headline = kind === "season_end" ? "?�즌 마감???�박?�어?? : "?�늘 ?�적 진행??챙겨??;
     const body =
       remainingXp > 0
-        ? `다음 보상까지 ${remainingXp.toLocaleString()} XP만 더 모으면 돼요.`
-        : "조금만 더 하면 다음 보상을 받을 수 있어요.";
+        ? `?�음 보상까�? ${remainingXp.toLocaleString()} XP�???모으�??�요.`
+        : "조금�????�면 ?�음 보상??받을 ???�어??";
 
     return { kind, seenKey, headline, body };
   }, [season.data, user?.external_id, user?.id]);
@@ -362,12 +362,12 @@ const SeasonPassFigmaPage: React.FC = () => {
       if (remaining > 0 && progressPct >= 90) {
         sessionStorage.setItem(sessionKey, "1");
         addToast(
-          `거의 다 왔어요! 다음 보상까지 ${remaining.toLocaleString()} XP만 더 모으면 돼요.`,
+          `거의 ???�어?? ?�음 보상까�? ${remaining.toLocaleString()} XP�???모으�??�요.`,
           "info"
         );
       }
     } catch {
-      // sessionStorage 접근 불가 환경에서는 토스트를 스킵합니다.
+      // sessionStorage ?�근 불�? ?�경?�서???�스?��? ?�킵?�니??
     }
   }, [season.data, season.isError, season.isLoading, addToast]);
 
@@ -397,7 +397,7 @@ const SeasonPassFigmaPage: React.FC = () => {
                       }
                     }}
                   >
-                    게임하러 가기
+                    게임?�러 가�?
                   </Link>
                   <button
                     type="button"
@@ -411,7 +411,7 @@ const SeasonPassFigmaPage: React.FC = () => {
                       setNudgeDismissed(true);
                     }}
                   >
-                    오늘은 그만 보기
+                    ?�늘?� 그만 보기
                   </button>
                 </div>
               </div>

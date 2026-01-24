@@ -28,7 +28,7 @@ export const formatDate = (date?: string | Date | null, template: string = "YYYY
 };
 
 /**
- * Returns a relative time string (e.g., "방금 전", "3시간 전").
+ * Returns a relative time string (e.g., "방금 ??, "3?�간 ??).
  * @param date - Date string or object.
  * @returns Relative time string.
  */

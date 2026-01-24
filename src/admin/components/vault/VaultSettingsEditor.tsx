@@ -40,7 +40,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
         mutationFn: (json: any) => updateVaultConfig(program.key, json),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "vault", "program"] });
-            alert("운영 설정이 저장되었습니다.");
+            alert("?�영 ?�정???�?�되?�습?�다.");
         }
     });
 
@@ -112,23 +112,23 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                 <div>
                     <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
                         <Zap className="h-5 w-5 text-admin-warning" />
-                        금고 운영 파라미터
+                        금고 ?�영 ?�라미터
                     </h3>
-                    <p className="text-admin-body text-admin-text-secondary">적립 배수, 게임 적립금, 체험 티켓 보상 가치를 설정합니다.</p>
+                    <p className="text-admin-body text-admin-text-secondary">?�립 배수, 게임 ?�립�? 체험 ?�켓 보상 가치�? ?�정?�니??</p>
                 </div>
                 <button onClick={saveConfig} disabled={mutation.isPending} className="btn-admin-primary">
                     <Save className="h-4 w-4" />
-                    설정 저장
+                    ?�정 ?�??
                 </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="admin-card p-4 space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-admin-body font-bold text-admin-text-primary">이벤트 적립 배수 (Multiplier)</h4>
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">?�벤???�립 배수 (Multiplier)</h4>
                         <div className="flex items-center gap-2 text-admin-text-muted text-xs">
                             <HelpCircle className="h-4 w-4" />
-                            <span>전역 배수</span>
+                            <span>?�역 배수</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -139,21 +139,21 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 className={inputClass}
                                 value={multiplier}
                                 onChange={e => setMultiplier(parseFloat(e.target.value) || 1.0)}
-                                aria-label="적립 배수"
-                                title="적립 배수"
+                                aria-label="?�립 배수"
+                                title="?�립 배수"
                             />
                         </div>
                         <div className="text-2xl font-black text-admin-text-primary">x</div>
                     </div>
                     <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
-                        모든 금고 적립(게임/티켓/체험)에 적용되는 전역 배수입니다. 기본값은 1.0이며, 이벤트 기간에만 조정하는 것을 권장합니다.
+                        모든 금고 ?�립(게임/?�켓/체험)???�용?�는 ?�역 배수?�니?? 기본값�? 1.0?�며, ?�벤??기간?�만 조정?�는 것을 권장?�니??
                     </p>
                 </div>
 
                 <div className="admin-card overflow-hidden">
                     <div className="p-4 border-b border-admin-border bg-admin-sidebar/80 flex items-center justify-between">
-                        <h4 className="text-admin-body font-bold text-admin-text-primary">게임 적립 설정 (Game Earn)</h4>
-                        <button onClick={addGameEarn} className="btn-admin-ghost p-2" aria-label="게임 적립 항목 추가" title="게임 적립 항목 추가">
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">게임 ?�립 ?�정 (Game Earn)</h4>
+                        <button onClick={addGameEarn} className="btn-admin-ghost p-2" aria-label="게임 ?�립 ??�� 추�?" title="게임 ?�립 ??�� 추�?">
                             <Plus className="h-4 w-4" />
                         </button>
                     </div>
@@ -182,7 +182,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                                     disabled={isDice}
                                                 >
                                                     <option value="ROULETTE">ROULETTE</option>
-                                                    <option value="DICE">DICE (관리: 주사위 설정)</option>
+                                                    <option value="DICE">DICE (관�? 주사???�정)</option>
                                                     <option value="LOTTERY">LOTTERY</option>
                                                 </select>
                                             </td>
@@ -210,13 +210,13 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                             </td>
                                             <td className="admin-td text-right">
                                                 {isDice ? (
-                                                    <span className="text-[11px] text-admin-text-muted">DICE는 /admin/dice에서 관리</span>
+                                                    <span className="text-[11px] text-admin-text-muted">DICE??/admin/dice?�서 관�?/span>
                                                 ) : (
                                                     <button
                                                         onClick={() => removeGameEarn(i)}
                                                         className="btn-admin-ghost p-2 text-admin-danger"
-                                                        aria-label={`게임 적립 항목 삭제 ${i + 1}`}
-                                                        title="삭제"
+                                                        aria-label={`게임 ?�립 ??�� ??�� ${i + 1}`}
+                                                        title="??��"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
@@ -227,7 +227,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 })}
                                 {gameEarn.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-admin-text-secondary italic">설정된 게임 적립 항목이 없습니다.</td>
+                                        <td colSpan={4} className="px-6 py-8 text-center text-admin-text-secondary italic">?�정??게임 ?�립 ??��???�습?�다.</td>
                                     </tr>
                                 )}
                             </tbody>
@@ -239,12 +239,12 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
             {trialPayoutEnabled && (
                 <div className="admin-card overflow-hidden">
                     <div className="p-4 border-b border-admin-border bg-admin-sidebar/80 flex items-center justify-between">
-                        <h4 className="text-admin-body font-bold text-admin-text-primary">체험 티켓 보상 가치 설정 (Valuation)</h4>
+                        <h4 className="text-admin-body font-bold text-admin-text-primary">체험 ?�켓 보상 가�??�정 (Valuation)</h4>
                         <button
                             onClick={addValuation}
                             className="btn-admin-ghost p-2"
-                            aria-label="Valuation 항목 추가"
-                            title="Valuation 항목 추가"
+                            aria-label="Valuation ??�� 추�?"
+                            title="Valuation ??�� 추�?"
                         >
                             <Plus className="h-4 w-4" />
                         </button>
@@ -266,7 +266,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                                 className={inputClass}
                                                 value={v.rewardId}
                                                 onChange={e => updateValuation(i, "rewardId", e.target.value)}
-                                                placeholder="예: POINT:1000"
+                                                placeholder="?? POINT:1000"
                                                 aria-label={`Reward ID ${i + 1}`}
                                                 title="Reward ID"
                                             />
@@ -285,8 +285,8 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                             <button
                                                 onClick={() => removeValuation(i)}
                                                 className="btn-admin-ghost p-2 text-admin-danger"
-                                                aria-label={`Valuation 항목 삭제 ${i + 1}`}
-                                                title="삭제"
+                                                aria-label={`Valuation ??�� ??�� ${i + 1}`}
+                                                title="??��"
                                             >
                                                 <Trash2 className="h-4 w-4" />
                                             </button>
@@ -295,7 +295,7 @@ const VaultSettingsEditor: React.FC<Props> = ({ program }) => {
                                 ))}
                                 {valuations.length === 0 && (
                                     <tr>
-                                        <td colSpan={3} className="px-6 py-12 text-center text-admin-text-secondary italic">설정된 가치 항목이 없습니다.</td>
+                                        <td colSpan={3} className="px-6 py-12 text-center text-admin-text-secondary italic">?�정??가�???��???�습?�다.</td>
                                     </tr>
                                 )}
                             </tbody>

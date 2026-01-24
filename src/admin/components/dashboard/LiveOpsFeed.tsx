@@ -37,18 +37,18 @@ const LiveOpsFeed: React.FC = () => {
     const logsList = Array.isArray(logs) ? logs : [];
 
     const ACTION_LABELS: Record<string, string> = {
-        OFFER_PERSONALIZED_TRACKED: "개입/재참여 시도",
-        FEED_EVENT_PUBLISHED: "피드 이벤트 발행",
-        GAME_PLAY_RECORDED: "게임 플레이 기록",
-        ADMIN_MANUAL_GRANT: "관리자 수동 지급",
-        SYSTEM_HEALTHCHECK: "시스템 점검",
+        OFFER_PERSONALIZED_TRACKED: "개입/?�참???�도",
+        FEED_EVENT_PUBLISHED: "?�드 ?�벤??발행",
+        GAME_PLAY_RECORDED: "게임 ?�레??기록",
+        ADMIN_MANUAL_GRANT: "관리자 ?�동 지�?,
+        SYSTEM_HEALTHCHECK: "?�스???��?",
     };
 
     const CATEGORY_LABELS: Record<string, string> = {
         [OpsLogCategoryValues.GAME_PLAY]: "게임",
-        [OpsLogCategoryValues.ECONOMY]: "정산",
-        [OpsLogCategoryValues.SYSTEM]: "시스템",
-        [OpsLogCategoryValues.USER_MANAGEMENT]: "유저",
+        [OpsLogCategoryValues.ECONOMY]: "?�산",
+        [OpsLogCategoryValues.SYSTEM]: "?�스??,
+        [OpsLogCategoryValues.USER_MANAGEMENT]: "?��?",
         [OpsLogCategoryValues.SECURITY]: "보안",
     };
 
@@ -59,13 +59,13 @@ const LiveOpsFeed: React.FC = () => {
             if (trigger === "PREDICTIVE_REENGAGEMENT") {
                 const segment = String(meta.segment ?? "-");
                 const churn = meta.churn_probability !== undefined ? `(${Number(meta.churn_probability).toFixed(2)})` : "";
-                return `재참여 큐 등록 · ${segment} ${churn}`.trim();
+                return `?�참?????�록 · ${segment} ${churn}`.trim();
             }
             const eventType = String(meta.event_type ?? "-");
-            const eligible = meta.eligible === false ? "(중지됨)" : "";
-            return `개입 시도 · ${eventType} ${eligible}`.trim();
+            const eligible = meta.eligible === false ? "(중�???" : "";
+            return `개입 ?�도 · ${eventType} ${eligible}`.trim();
         }
-        return "운영 이벤트";
+        return "?�영 ?�벤??;
     };
 
     const getCategoryIcon = (category: OpsLogCategoryType) => {
@@ -96,11 +96,11 @@ const LiveOpsFeed: React.FC = () => {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
                     </div>
-                    <h2 className="text-[24px] font-light text-zinc-200 tracking-tight">실시간 운영 피드</h2>
+                    <h2 className="text-[24px] font-light text-zinc-200 tracking-tight">?�시�??�영 ?�드</h2>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-900/50 border border-white/5">
                     <span className="w-1.5 h-1.5 rounded-full border border-zinc-500"></span>
-                    <span className="text-[12px] text-zinc-500">실시간</span>
+                    <span className="text-[12px] text-zinc-500">?�시�?/span>
                 </div>
             </div>
 
@@ -109,11 +109,11 @@ const LiveOpsFeed: React.FC = () => {
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center h-64 text-zinc-500 gap-3">
                         <Clock className="h-6 w-6 animate-pulse opacity-50" />
-                        <span className="text-sm font-light">데이터 수신 중...</span>
+                        <span className="text-sm font-light">?�이???�신 �?..</span>
                     </div>
                 ) : logs && !Array.isArray(logs) ? (
                     <div className="flex flex-col items-center justify-center h-64 text-zinc-500 gap-3">
-                        <span className="text-sm font-light">피드 데이터 형식이 올바르지 않습니다</span>
+                        <span className="text-sm font-light">?�드 ?�이???�식???�바르�? ?�습?�다</span>
                         <span className="text-xs font-mono opacity-60">type: {typeof logs}</span>
                     </div>
                 ) : logsList.length === 0 ? (
@@ -121,7 +121,7 @@ const LiveOpsFeed: React.FC = () => {
                         <div className="p-4 rounded-full border-2 border-zinc-700">
                             <Zap className="h-6 w-6" />
                         </div>
-                        <span className="text-sm font-light">오늘 기록된 운영 로그가 없습니다</span>
+                        <span className="text-sm font-light">?�늘 기록???�영 로그가 ?�습?�다</span>
                     </div>
                 ) : (
                     <div className="flex flex-col">

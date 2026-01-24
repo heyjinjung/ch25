@@ -7,6 +7,6 @@ export type EconomyStats = {
 };
 
 export async function fetchEconomyStats(): Promise<EconomyStats> {
-  const { data } = await adminApi.get<EconomyStats>("/admin/api/economy/stats");
+  const { data } = await adminApi.get<EconomyStats>("/api/admin/economy/stats");
   return data;
 }

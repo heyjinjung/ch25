@@ -1,4 +1,4 @@
-// src/admin/api/adminRouletteApi.ts
+// src/api/admin/adminRouletteApi.ts
 import { adminApi } from "./httpClient";
 import type { AdminRewardType } from "../types/adminReward";
 
@@ -32,20 +32,20 @@ export interface AdminRouletteConfig extends AdminRouletteConfigPayload {
 }
 
 export async function fetchRouletteConfigs() {
-  const { data } = await adminApi.get<AdminRouletteConfig[]>("/admin/api/roulette-config/");
+  const { data } = await adminApi.get<AdminRouletteConfig[]>("/api/admin/roulette-config/");
   return data;
 }
 
 export async function createRouletteConfig(payload: AdminRouletteConfigPayload) {
-  const { data } = await adminApi.post<AdminRouletteConfig>("/admin/api/roulette-config/", payload);
+  const { data } = await adminApi.post<AdminRouletteConfig>("/api/admin/roulette-config/", payload);
   return data;
 }
 
 export async function updateRouletteConfig(id: number, payload: AdminRouletteConfigPayload) {
-  const { data } = await adminApi.put<AdminRouletteConfig>(`/admin/api/roulette-config/${id}`, payload);
+  const { data } = await adminApi.put<AdminRouletteConfig>(`/api/admin/roulette-config/${id}`, payload);
   return data;
 }
 
 export async function deleteRouletteConfig(id: number) {
-  await adminApi.delete(`/admin/api/roulette-config/${id}`);
+  await adminApi.delete(`/api/admin/roulette-config/${id}`);
 }

@@ -1,4 +1,4 @@
-// src/v2/hooks/useV2Game.ts
+// src/hooks/useV2Game.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getV2RouletteStatus,

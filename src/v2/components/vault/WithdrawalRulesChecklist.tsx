@@ -51,7 +51,7 @@ const RuleItem: React.FC<RuleItemProps> = ({
             )}>{title}</span>
             {status ? (
               <div className="flex items-center gap-1 text-orange-400">
-                <span className="text-[10px] font-bold uppercase">완료</span>
+                <span className="text-[10px] font-bold uppercase">?�료</span>
                 <CheckCircle2 size={14} className="fill-orange-500/20" />
               </div>
             ) : (
@@ -113,8 +113,8 @@ export const WithdrawalRulesChecklist: React.FC<WithdrawalRulesChecklistProps> =
   const conditions = [
     {
       id: "min-balance",
-      title: "최소 출금 가능액",
-      description: `보유 금액 ${(minWithdrawal ?? 0).toLocaleString()}원 이상`,
+      title: "최소 출금 가?�액",
+      description: `보유 금액 ${(minWithdrawal ?? 0).toLocaleString()}???�상`,
       status: isBalanceMet,
       icon: Wallet,
       progressText: `${(vaultBalance ?? 0).toLocaleString()} / ${(minWithdrawal ?? 0).toLocaleString()}`,
@@ -122,29 +122,29 @@ export const WithdrawalRulesChecklist: React.FC<WithdrawalRulesChecklistProps> =
     },
     {
       id: "deposit",
-      title: "금일 입금 내역",
-      description: "당일 입금 기록 필요",
+      title: "금일 ?�금 ?�역",
+      description: "?�일 ?�금 기록 ?�요",
       status: isDepositMet,
       icon: Landmark,
-      progressText: isDepositMet ? "완료" : "미완료",
+      progressText: isDepositMet ? "?�료" : "미완�?,
       percent: isDepositMet ? 100 : 0
     },
     {
       id: "plays",
-      title: "게임 플레이",
-      description: `최근 3일 이내 게임 ${(playTarget ?? 0).toLocaleString()}회 이상 플레이`,
+      title: "게임 ?�레??,
+      description: `최근 3???�내 게임 ${(playTarget ?? 0).toLocaleString()}???�상 ?�레??,
       status: isPlayMet,
       icon: Gamepad2,
-      progressText: `${playCount ?? 0} / ${playTarget ?? 0}회`,
+      progressText: `${playCount ?? 0} / ${playTarget ?? 0}??,
       percent: Math.min(100, (playCount / (playTarget || 1)) * 100)
     },
     {
       id: "spent",
-      title: "금고 사용 실적",
-      description: `금고 일일 사용액 ${(spendTarget ?? 0).toLocaleString()}원 이상`,
+      title: "금고 ?�용 ?�적",
+      description: `금고 ?�일 ?�용??${(spendTarget ?? 0).toLocaleString()}???�상`,
       status: isSpentMet,
       icon: Coins,
-      progressText: `${(spendAmount ?? 0).toLocaleString()} / ${(spendTarget ?? 0).toLocaleString()}원`,
+      progressText: `${(spendAmount ?? 0).toLocaleString()} / ${(spendTarget ?? 0).toLocaleString()}??,
       percent: Math.min(100, (spendAmount / (spendTarget || 1)) * 100)
     }
   ];
@@ -155,7 +155,7 @@ export const WithdrawalRulesChecklist: React.FC<WithdrawalRulesChecklistProps> =
       <AccordionItem value="checklist" className="border-none">
         <AccordionTrigger className="hover:no-underline py-4">
           <div className="flex items-center justify-between w-full pr-4">
-            <h3 className="text-sm font-bold text-white/60 tracking-tight uppercase">출금 신청 조건</h3>
+            <h3 className="text-sm font-bold text-white/60 tracking-tight uppercase">출금 ?�청 조건</h3>
           </div>
         </AccordionTrigger>
         <AccordionContent className="pt-4 pb-0">

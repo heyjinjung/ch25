@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
     Users,
@@ -31,7 +31,7 @@ import { useNavigate } from "react-router-dom";
 import CrisisRadar from "../components/CrisisRadar";
 import { CrisisSignal } from "../api/adminDashboardApi";
 
-const MarketingDashboardPage: React.FC = () => {
+export const MarketingDashboardPage: React.FC = () => {
     const { addToast } = useToast();
     const navigate = useNavigate();
 
@@ -42,7 +42,7 @@ const MarketingDashboardPage: React.FC = () => {
 
     const formatWon = (value?: number | null) => {
         if (value === null || value === undefined) return "-";
-        return `₩${value.toLocaleString()}`;
+        return `??{value.toLocaleString()}`;
     };
 
     const formatPercent = (value?: number | null) => {
@@ -88,7 +88,7 @@ const MarketingDashboardPage: React.FC = () => {
 
     const goToMessage = (targetType: string, targetValue: string) => {
         navigate("/admin/messages");
-        addToast(`메시지 대상: ${targetType} = ${targetValue}`, "info");
+        addToast(`硫붿떆吏 ??? ${targetType} = ${targetValue}`, "info");
     };
 
     const handleCardClick = (title: string, segment: string) => {
@@ -124,84 +124,84 @@ const MarketingDashboardPage: React.FC = () => {
 
     const kpis: Array<{ title: string; value: string; icon: React.ReactNode; sub: string; segment: string }> = [
         {
-            title: "전체 고객",
+            title: "?꾩껜 怨좉컼",
             value: formatNumber(stats?.total_users),
             icon: <Users size={20} />,
-            sub: stats ? `${formatNumber(stats.active_users)}명 활성` : "-",
+            sub: stats ? `${formatNumber(stats.active_users)}紐??쒖꽦` : "-",
             segment: "TOTAL_USERS",
         },
         {
-            title: "전환율(결제)",
+            title: "?꾪솚??寃곗젣)",
             value: formatPercent(stats?.conversion_rate),
             icon: <TrendingUp size={20} />,
-            sub: stats ? `${formatNumber(stats.paying_users)}명 결제` : "-",
+            sub: stats ? `${formatNumber(stats.paying_users)}紐?寃곗젣` : "-",
             segment: "PAYING_USERS",
         },
         {
-            title: "고액 이용자(Whale)",
+            title: "怨좎븸 ?댁슜??Whale)",
             value: formatNumber(stats?.whale_count),
             icon: <Crown size={20} />,
-            sub: "VIP 대상",
+            sub: "VIP ???,
             segment: "WHALE",
         },
         {
-            title: "빈 탱크(기회)",
+            title: "鍮??깊겕(湲고쉶)",
             value: formatNumber(stats?.empty_tank_count),
             icon: <Droplets size={20} />,
-            sub: "잔액 부족",
+            sub: "?붿븸 遺議?,
             segment: "EMPTY_TANK",
         },
         {
-            title: "이탈률(Churn)",
+            title: "?댄깉瑜?Churn)",
             value: formatPercent(stats?.churn_rate),
             icon: <UserMinus size={20} />,
-            sub: "30일 미접속",
+            sub: "30??誘몄젒??,
             segment: "DORMANT",
         },
         {
-            title: "신규 성장률",
+            title: "?좉퇋 ?깆옣瑜?,
             value: formatPercent(stats?.new_user_growth),
             icon: <Activity size={20} />,
-            sub: "최근 7일 증가",
+            sub: "理쒓렐 7??利앷?",
             segment: "TOTAL_USERS",
         },
         {
-            title: "평균 활동일수",
-            value: stats ? `${stats.avg_active_days}일` : "-",
+            title: "?됯퇏 ?쒕룞?쇱닔",
+            value: stats ? `${stats.avg_active_days}?? : "-",
             icon: <BarChart2 size={20} />,
-            sub: "평균 이용 기간",
+            sub: "?됯퇏 ?댁슜 湲곌컙",
             segment: "TOTAL_USERS",
         },
         {
-            title: "룰렛 플레이",
+            title: "猷곕젢 ?뚮젅??,
             value: formatNumber(stats?.roulette_spins),
             icon: <Disc size={20} />,
-            sub: "전체 플레이 횟수",
+            sub: "?꾩껜 ?뚮젅???잛닔",
             segment: "TOTAL_USERS",
         },
         {
-            title: "주사위 플레이",
+            title: "二쇱궗???뚮젅??,
             value: formatNumber(stats?.dice_rolls),
             icon: <Dices size={20} />,
-            sub: "전체 플레이 횟수",
+            sub: "?꾩껜 ?뚮젅???잛닔",
             segment: "TOTAL_USERS",
         },
         {
-            title: "평균 금고 잔액",
+            title: "?됯퇏 湲덇퀬 ?붿븸",
             value: formatWon(stats?.avg_vault_balance),
             icon: <Lock size={20} />,
-            sub: "결제 유저 평균",
+            sub: "寃곗젣 ?좎? ?됯퇏",
             segment: "PAYING_USERS",
         },
         {
-            title: "오늘 입금액",
+            title: "?ㅻ뒛 ?낃툑??,
             value: formatWon(stats?.today_deposit_amount),
             icon: <Crown size={20} />,
-            sub: stats ? `최근 7일 ${formatWon(stats.last7d_deposit_amount)}` : "-",
+            sub: stats ? `理쒓렐 7??${formatWon(stats.last7d_deposit_amount)}` : "-",
             segment: "PAYING_USERS",
         },
         {
-            title: "누적 플레이",
+            title: "?꾩쟻 ?뚮젅??,
             value: formatNumber(stats?.total_play_count),
             icon: <Activity size={20} />,
             sub: "API Play Count",
@@ -213,7 +213,7 @@ const MarketingDashboardPage: React.FC = () => {
             <header className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-                        마케팅 센터 <span className="text-admin-brand/40">Marketing</span>
+                        留덉????쇳꽣 <span className="text-admin-brand/40">Marketing</span>
                     </h1>
                 </div>
                 <div className="flex gap-2">
@@ -221,7 +221,7 @@ const MarketingDashboardPage: React.FC = () => {
                         onClick={() => navigate("/admin/messages")}
                         className="btn-admin-primary flex items-center gap-2"
                     >
-                        <Send size={18} /> 캠페인
+                        <Send size={18} /> 罹좏럹??
                     </button>
                 </div>
             </header>
@@ -238,22 +238,22 @@ const MarketingDashboardPage: React.FC = () => {
             {/* Ops Summary Section */}
             <div className="admin-card p-6">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-admin-subtitle text-admin-text-primary">금일 운영 요약</h3>
+                    <h3 className="text-admin-subtitle text-admin-text-primary">湲덉씪 ?댁쁺 ?붿빟</h3>
                     <button
                         onClick={() => navigate("/admin/ops")}
                         className="btn-admin-secondary"
                     >
-                        운영 대시보드
+                        ?댁쁺 ??쒕낫??
                     </button>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("금일 접속자", "today_active")}
+                        onClick={() => handleOpsCardClick("湲덉씪 ?묒냽??, "today_active")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-admin-body font-medium text-admin-text-secondary">금일 접속자</p>
+                        <p className="text-admin-body font-medium text-admin-text-secondary">湲덉씪 ?묒냽??/p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatNumber(ops?.today_active_users)}
                         </h3>
@@ -265,10 +265,10 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("금일 게임 플레이", "today_game_plays")}
+                        onClick={() => handleOpsCardClick("湲덉씪 寃뚯엫 ?뚮젅??, "today_game_plays")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-admin-body font-medium text-admin-text-secondary">금일 게임 플레이</p>
+                        <p className="text-admin-body font-medium text-admin-text-secondary">湲덉씪 寃뚯엫 ?뚮젅??/p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatNumber(ops?.today_game_plays)}
                         </h3>
@@ -280,10 +280,10 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("티켓 사용량", "today_ticket_usage")}
+                        onClick={() => handleOpsCardClick("?곗폆 ?ъ슜??, "today_ticket_usage")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-admin-body font-medium text-admin-text-secondary">티켓 사용량</p>
+                        <p className="text-admin-body font-medium text-admin-text-secondary">?곗폆 ?ъ슜??/p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatNumber(ops?.today_ticket_usage)}
                         </h3>
@@ -295,15 +295,15 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("이탈 위험", "churn_risk")}
+                        onClick={() => handleOpsCardClick("?댄깉 ?꾪뿕", "churn_risk")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">이탈 위험</p>
+                        <p className="text-sm font-medium text-gray-400">?댄깉 ?꾪뿕</p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatNumber(ops?.churn_risk_count)}
                         </h3>
                         <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
-                            <span>어제 활동, 오늘 미접속</span>
+                            <span>?댁젣 ?쒕룞, ?ㅻ뒛 誘몄젒??/span>
                             <TrendingDown size={14} />
                         </div>
                     </button>
@@ -312,10 +312,10 @@ const MarketingDashboardPage: React.FC = () => {
                 <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("웰컴 리텐션(D-2)", "welcome_retention")}
+                        onClick={() => handleOpsCardClick("?곗뺨 由ы뀗??D-2)", "welcome_retention")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">웰컴 리텐션(D-2)</p>
+                        <p className="text-sm font-medium text-gray-400">?곗뺨 由ы뀗??D-2)</p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : `${(ops?.welcome_retention_rate ?? 0).toFixed(1)}%`}
                         </h3>
@@ -327,12 +327,12 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("웰컴 지급 현황", "welcome_claims")}
+                        onClick={() => handleOpsCardClick("?곗뺨 吏湲??꾪솴", "welcome_claims")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">웰컴 지급 현황</p>
+                        <p className="text-sm font-medium text-gray-400">?곗뺨 吏湲??꾪솴</p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
-                            {opsLoading ? "-" : "조회"}
+                            {opsLoading ? "-" : "議고쉶"}
                         </h3>
                         <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
                             <span>Who claimed / unclaimed</span>
@@ -342,10 +342,10 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("외부 랭킹 입금액", "external_ranking_deposit")}
+                        onClick={() => handleOpsCardClick("?몃? ??궧 ?낃툑??, "external_ranking_deposit")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">외부 랭킹 입금액</p>
+                        <p className="text-sm font-medium text-gray-400">?몃? ??궧 ?낃툑??/p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatWon(ops?.external_ranking_deposit)}
                         </h3>
@@ -357,30 +357,30 @@ const MarketingDashboardPage: React.FC = () => {
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("전체 금고 보유액", "total_vault_balance")}
+                        onClick={() => handleOpsCardClick("?꾩껜 湲덇퀬 蹂댁쑀??, "total_vault_balance")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">전체 금고 보유액</p>
+                        <p className="text-sm font-medium text-gray-400">?꾩껜 湲덇퀬 蹂댁쑀??/p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatWon(ops?.total_vault_balance)}
                         </h3>
                         <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
-                            <span>(현금 + 게임)</span>
+                            <span>(?꾧툑 + 寃뚯엫)</span>
                             <Lock size={14} />
                         </div>
                     </button>
 
                     <button
                         type="button"
-                        onClick={() => handleOpsCardClick("인벤토리 자산", "total_inventory_liability")}
+                        onClick={() => handleOpsCardClick("?몃깽?좊━ ?먯궛", "total_inventory_liability")}
                         className="admin-card p-5 text-left hover:border-admin-brand hover:bg-admin-hover transition-all"
                     >
-                        <p className="text-sm font-medium text-gray-400">인벤토리 자산</p>
+                        <p className="text-sm font-medium text-gray-400">?몃깽?좊━ ?먯궛</p>
                         <h3 className="mt-2 text-2xl font-bold text-white tracking-tight">
                             {opsLoading ? "-" : formatNumber(ops?.total_inventory_liability)}
                         </h3>
                         <div className="mt-3 text-xs text-gray-500 font-mono flex justify-between items-center">
-                            <span>보유 아이템 자산총량</span>
+                            <span>蹂댁쑀 ?꾩씠???먯궛珥앸웾</span>
                             <Package size={14} />
                         </div>
                     </button>
@@ -393,17 +393,17 @@ const MarketingDashboardPage: React.FC = () => {
                     <div className="w-full max-w-4xl max-h-[80vh] flex flex-col rounded-2xl border border-admin-border bg-admin-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         <header className="flex items-center justify-between border-b border-admin-border px-6 py-4">
                             <div>
-                                <h3 className="text-admin-subtitle text-admin-text-primary">{selectedOpsMetric?.title} 세부내역</h3>
+                                <h3 className="text-admin-subtitle text-admin-text-primary">{selectedOpsMetric?.title} ?몃??댁뿭</h3>
                                 <p className="text-admin-body text-admin-text-secondary">
-                                    {(displayedOpsDetails?.length ?? 0)}건
+                                    {(displayedOpsDetails?.length ?? 0)}嫄?
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setIsOpsModalOpen(false)}
                                 className="rounded-full p-2 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary transition-colors"
-                                aria-label="닫기"
-                                title="닫기"
+                                aria-label="?リ린"
+                                title="?リ린"
                             >
                                 <X size={24} />
                             </button>
@@ -413,13 +413,13 @@ const MarketingDashboardPage: React.FC = () => {
                             {isOpsDetailsLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                                     <Loader2 size={40} className="animate-spin mb-4" />
-                                    <p>세부내역을 불러오는 중...</p>
+                                    <p>?몃??댁뿭??遺덈윭?ㅻ뒗 以?..</p>
                                 </div>
                             ) : isOpsDetailsError ? (
                                 <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-                                    <div className="font-semibold">조회 실패</div>
+                                    <div className="font-semibold">議고쉶 ?ㅽ뙣</div>
                                     <div className="mt-1 text-sm opacity-90">
-                                        {String((opsDetailsError as any)?.message ?? "알 수 없는 오류")}
+                                        {String((opsDetailsError as any)?.message ?? "?????녿뒗 ?ㅻ쪟")}
                                     </div>
                                 </div>
                             ) : (
@@ -451,7 +451,7 @@ const MarketingDashboardPage: React.FC = () => {
                                         </div>
                                     ))}
                                     {(displayedOpsDetails?.length ?? 0) === 0 && (
-                                        <div className="text-center py-10 text-gray-600">세부내역이 없습니다.</div>
+                                        <div className="text-center py-10 text-gray-600">?몃??댁뿭???놁뒿?덈떎.</div>
                                     )}
                                 </div>
                             )}
@@ -459,18 +459,18 @@ const MarketingDashboardPage: React.FC = () => {
 
                         <footer className="border-t border-admin-border px-6 py-4 bg-admin-card flex justify-end">
                             <button type="button" onClick={() => setIsOpsModalOpen(false)} className="btn-admin-secondary">
-                                닫기
+                                ?リ린
                             </button>
                         </footer>
                     </div>
                 </div>
             )}
 
-            {/* ──────────────────────────────────────────────────────────────────
+            {/* ??????????????????????????????????????????????????????????????????
                 SECTION DIVIDER: KPI Metrics
-               ────────────────────────────────────────────────────────────────── */}
+               ?????????????????????????????????????????????????????????????????? */}
             <div className="h-px bg-white/5 my-8" />
-            <h3 className="text-lg font-semibold text-zinc-100 mb-4">세그먼트 지표</h3>
+            <h3 className="text-lg font-semibold text-zinc-100 mb-4">?멸렇癒쇳듃 吏??/h3>
 
             {/* KPI Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -511,9 +511,9 @@ const MarketingDashboardPage: React.FC = () => {
                     );
                 })}
             </div>
-            {/* ──────────────────────────────────────────────────────────────────
+            {/* ??????????????????????????????????????????????????????????????????
                 SECTION DIVIDER: Actions Panel (Dynamic from API)
-               ────────────────────────────────────────────────────────────────── */}
+               ?????????????????????????????????????????????????????????????????? */}
             <div className="h-px bg-white/5 my-8" />
 
             {/* Actions Panel - Rendered only if target segments exist */}
@@ -521,7 +521,7 @@ const MarketingDashboardPage: React.FC = () => {
                 <div className="grid grid-cols-1 gap-8">
                     <div className="admin-card p-6">
                         <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                            <Target size={20} className="text-admin-brand" /> 추천 액션 (Live)
+                            <Target size={20} className="text-admin-brand" /> 異붿쿇 ?≪뀡 (Live)
                         </h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -530,10 +530,10 @@ const MarketingDashboardPage: React.FC = () => {
                                 <div className="admin-card p-5 hover:border-purple-500/50 transition-colors cursor-pointer group" onClick={() => goToMessage("SEGMENT", "WHALE")}>
                                     <div className="flex items-center gap-3 mb-2">
                                         <Crown size={18} className="text-purple-400 group-hover:scale-110 transition-transform" />
-                                        <span className="font-bold text-white">VIP 대상 캠페인</span>
+                                        <span className="font-bold text-white">VIP ???罹좏럹??/span>
                                     </div>
                                     <p className="text-sm text-gray-400">
-                                        상위 1% 고액 유저 <span className="text-purple-400 font-bold">{formatNumber(stats?.whale_count)}명</span>에게 특별 혜택을 제안하세요.
+                                        ?곸쐞 1% 怨좎븸 ?좎? <span className="text-purple-400 font-bold">{formatNumber(stats?.whale_count)}紐?/span>?먭쾶 ?밸퀎 ?쒗깮???쒖븞?섏꽭??
                                     </p>
                                 </div>
                             )}
@@ -543,10 +543,10 @@ const MarketingDashboardPage: React.FC = () => {
                                 <div className="admin-card p-5 hover:border-red-500/50 transition-colors cursor-pointer group" onClick={() => goToMessage("SEGMENT", "EMPTY_TANK")}>
                                     <div className="flex items-center gap-3 mb-2">
                                         <Zap size={18} className="text-red-400 group-hover:scale-110 transition-transform" />
-                                        <span className="font-bold text-white">충전 유도</span>
+                                        <span className="font-bold text-white">異⑹쟾 ?좊룄</span>
                                     </div>
                                     <p className="text-sm text-gray-400">
-                                        잔액 부족 유저 <span className="text-red-400 font-bold">{formatNumber(stats?.empty_tank_count)}명</span>에게 충전 보너스를 안내하세요.
+                                        ?붿븸 遺議??좎? <span className="text-red-400 font-bold">{formatNumber(stats?.empty_tank_count)}紐?/span>?먭쾶 異⑹쟾 蹂대꼫?ㅻ? ?덈궡?섏꽭??
                                     </p>
                                 </div>
                             )}
@@ -556,10 +556,10 @@ const MarketingDashboardPage: React.FC = () => {
                                 <div className="admin-card p-5 hover:border-orange-500/50 transition-colors cursor-pointer group" onClick={() => goToMessage("SEGMENT", "DORMANT")}>
                                     <div className="flex items-center gap-3 mb-2">
                                         <UserMinus size={18} className="text-orange-400 group-hover:scale-110 transition-transform" />
-                                        <span className="font-bold text-white">휴면 복귀</span>
+                                        <span className="font-bold text-white">?대㈃ 蹂듦?</span>
                                     </div>
                                     <p className="text-sm text-gray-400">
-                                        이탈 위험군 <span className="text-orange-400 font-bold">{formatNumber(stats?.segments?.["DORMANT"])}명</span>에게 복귀 선물을 발송하세요.
+                                        ?댄깉 ?꾪뿕援?<span className="text-orange-400 font-bold">{formatNumber(stats?.segments?.["DORMANT"])}紐?/span>?먭쾶 蹂듦? ?좊Ъ??諛쒖넚?섏꽭??
                                     </p>
                                 </div>
                             )}
@@ -574,10 +574,10 @@ const MarketingDashboardPage: React.FC = () => {
                     <div className="w-full max-w-4xl max-h-[80vh] flex flex-col rounded-2xl border border-admin-border bg-admin-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                         <header className="flex items-center justify-between border-b border-admin-border px-6 py-4">
                             <div>
-                                <h3 className="text-admin-subtitle text-admin-text-primary">{selectedKpi?.title} 리스트</h3>
-                                <p className="text-admin-body text-admin-text-secondary">{userList?.length || 0}명의 유저가 조회되었습니다.</p>
+                                <h3 className="text-admin-subtitle text-admin-text-primary">{selectedKpi?.title} 由ъ뒪??/h3>
+                                <p className="text-admin-body text-admin-text-secondary">{userList?.length || 0}紐낆쓽 ?좎?媛 議고쉶?섏뿀?듬땲??</p>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary transition-colors" aria-label="닫기" title="닫기">
+                            <button onClick={() => setIsModalOpen(false)} className="rounded-full p-2 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary transition-colors" aria-label="?リ린" title="?リ린">
                                 <X size={24} />
                             </button>
                         </header>
@@ -586,7 +586,7 @@ const MarketingDashboardPage: React.FC = () => {
                             {isUsersLoading ? (
                                 <div className="flex flex-col items-center justify-center py-20 text-gray-500">
                                     <Loader2 size={40} className="animate-spin mb-4" />
-                                    <p>유저 정보를 불러오는 중...</p>
+                                    <p>?좎? ?뺣낫瑜?遺덈윭?ㅻ뒗 以?..</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
@@ -647,7 +647,7 @@ const MarketingDashboardPage: React.FC = () => {
                                                         )}
                                                         {!user.tags?.length && !user.memo && (
                                                             <span className="text-xs text-admin-text-muted opacity-50">
-                                                                상세보기
+                                                                ?곸꽭蹂닿린
                                                             </span>
                                                         )}
                                                     </div>
@@ -658,7 +658,7 @@ const MarketingDashboardPage: React.FC = () => {
 
                                     {userList?.length === 0 && (
                                         <div className="text-center py-20 text-gray-500">
-                                            <p>조건에 해당하는 유저가 없습니다.</p>
+                                            <p>議곌굔???대떦?섎뒗 ?좎?媛 ?놁뒿?덈떎.</p>
                                         </div>
                                     )}
                                 </div>
@@ -670,7 +670,7 @@ const MarketingDashboardPage: React.FC = () => {
                                 onClick={() => setIsModalOpen(false)}
                                 className="btn-admin-secondary"
                             >
-                                닫기
+                                ?リ린
                             </button>
                         </footer>
                     </div>

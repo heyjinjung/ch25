@@ -50,12 +50,12 @@ const MissionApprovalQueue: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "mission-approvals"] });
             setSelectedIds([]);
             addToast(
-                `${variables.ids.length}건의 미션 승인 요청을 ${variables.status === "APPROVED" ? "승인" : "거절"} 처리했습니다.`,
+                `${variables.ids.length}건의 미션 ?�인 ?�청??${variables.status === "APPROVED" ? "?�인" : "거절"} 처리?�습?�다.`,
                 "success"
             );
         },
         onError: (err: any) => {
-            addToast(`처리 중 오류가 발생했습니다: ${String(err?.message ?? err)}`, "error");
+            addToast(`처리 �??�류가 발생?�습?�다: ${String(err?.message ?? err)}`, "error");
         }
     });
 
@@ -76,7 +76,7 @@ const MissionApprovalQueue: React.FC = () => {
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center py-20 bg-admin-sidebar/30 rounded-2xl border border-admin-border animate-pulse">
             <Activity size={32} className="text-admin-brand mb-4 animate-spin" />
-            <p className="text-xs font-bold text-admin-text-muted uppercase tracking-[0.2em]">승인 대기 목록 동기화 중...</p>
+            <p className="text-xs font-bold text-admin-text-muted uppercase tracking-[0.2em]">?�인 ?��?목록 ?�기??�?..</p>
         </div>
     );
 
@@ -86,8 +86,8 @@ const MissionApprovalQueue: React.FC = () => {
                 <div className="h-16 w-16 rounded-full bg-admin-success/10 border border-admin-success/20 flex items-center justify-center mb-6">
                     <CheckCircle size={32} className="text-admin-success opacity-40" />
                 </div>
-                <h3 className="text-lg font-bold text-admin-text-base uppercase tracking-tight">승인 대기 없음</h3>
-                <p className="mt-1 text-xs font-bold text-admin-text-muted">현재 승인 대기 중인 사용자 미션 기록이 없습니다.</p>
+                <h3 className="text-lg font-bold text-admin-text-base uppercase tracking-tight">?�인 ?��??�음</h3>
+                <p className="mt-1 text-xs font-bold text-admin-text-muted">?�재 ?�인 ?��?중인 ?�용??미션 기록???�습?�다.</p>
             </div>
         );
     }
@@ -100,7 +100,7 @@ const MissionApprovalQueue: React.FC = () => {
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-admin-bg border border-admin-border">
                         <Users size={14} className="text-admin-brand" />
                         <span className="text-xs font-bold text-admin-text-base uppercase tracking-wider">
-                            승인 대기 <span className="text-admin-brand">{queue.length}</span>
+                            ?�인 ?��?<span className="text-admin-brand">{queue.length}</span>
                         </span>
                     </div>
                     {selectedIds.length > 0 && (
@@ -108,7 +108,7 @@ const MissionApprovalQueue: React.FC = () => {
                     )}
                     {selectedIds.length > 0 && (
                         <span className="text-[11px] font-bold text-admin-success animate-in slide-in-from-left-2 uppercase tracking-widest">
-                            <span className="mr-1">{selectedIds.length}</span>건 선택됨
+                            <span className="mr-1">{selectedIds.length}</span>�??�택??
                         </span>
                     )}
                 </div>
@@ -120,7 +120,7 @@ const MissionApprovalQueue: React.FC = () => {
                         disabled={selectedIds.length === 0 || mutation.isPending}
                         className="flex items-center gap-2 rounded-lg bg-admin-bg px-5 py-2.5 text-[11px] font-bold text-admin-danger/80 hover:text-admin-danger hover:bg-admin-danger/10 border border-admin-border hover:border-admin-danger/30 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest"
                     >
-                        <XCircle size={16} /> 일괄 거절
+                        <XCircle size={16} /> ?�괄 거절
                     </button>
                     <button
                         type="button"
@@ -128,7 +128,7 @@ const MissionApprovalQueue: React.FC = () => {
                         disabled={selectedIds.length === 0 || mutation.isPending}
                         className="flex items-center gap-2 rounded-lg bg-admin-brand px-6 py-2.5 text-[11px] font-bold text-white hover:bg-admin-brand/90 shadow-lg shadow-admin-brand/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:grayscale uppercase tracking-widest"
                     >
-                        <CheckCircle size={16} /> 일괄 승인
+                        <CheckCircle size={16} /> ?�괄 ?�인
                     </button>
                 </div>
             </div>
@@ -145,15 +145,15 @@ const MissionApprovalQueue: React.FC = () => {
                                             type="checkbox"
                                             checked={queue.length > 0 && selectedIds.length === queue.length}
                                             onChange={toggleSelectAll}
-                                            aria-label="전체 선택"
-                                            title="전체 선택"
+                                            aria-label="?�체 ?�택"
+                                            title="?�체 ?�택"
                                             className="h-4 w-4 rounded border-admin-border bg-admin-bg text-admin-brand focus:ring-admin-brand/20 accent-admin-brand cursor-pointer"
                                         />
                                     </div>
                                 </th>
-                                <th className="admin-th">요청자</th>
+                                <th className="admin-th">?�청??/th>
                                 <th className="admin-th">미션</th>
-                                <th className="admin-th">완료 시각</th>
+                                <th className="admin-th">?�료 ?�각</th>
                                 <th className="admin-th text-right">처리</th>
                             </tr>
                         </thead>
@@ -166,8 +166,8 @@ const MissionApprovalQueue: React.FC = () => {
                                                 type="checkbox"
                                                 checked={selectedIds.includes(item.id)}
                                                 onChange={() => toggleSelect(item.id)}
-                                                aria-label={`선택: ${item.nickname || "사용자"} (${item.user_id})`}
-                                                title={`선택: ${item.nickname || "사용자"} (${item.user_id})`}
+                                                aria-label={`?�택: ${item.nickname || "?�용??} (${item.user_id})`}
+                                                title={`?�택: ${item.nickname || "?�용??} (${item.user_id})`}
                                                 className="h-4 w-4 rounded border-admin-border bg-admin-bg text-admin-brand focus:ring-admin-brand/20 accent-admin-brand cursor-pointer"
                                             />
                                         </div>
@@ -178,7 +178,7 @@ const MissionApprovalQueue: React.FC = () => {
                                                 <Users size={18} />
                                             </div>
                                             <div className="flex flex-col">
-                                                <p className="text-sm font-bold text-admin-text-base group-hover:text-admin-brand transition-colors">{item.nickname || "(닉네임 없음)"}</p>
+                                                <p className="text-sm font-bold text-admin-text-base group-hover:text-admin-brand transition-colors">{item.nickname || "(?�네???�음)"}</p>
                                                 <p className="text-[10px] text-admin-text-muted font-medium tracking-tight mt-0.5">
                                                     UID: <span className="text-admin-text-subtle font-mono font-bold">{item.user_id}</span>
                                                     {item.telegram_id && (
@@ -199,7 +199,7 @@ const MissionApprovalQueue: React.FC = () => {
                                                     className="h-2 w-32 overflow-hidden rounded-full border border-admin-border bg-admin-bg accent-admin-brand flex-shrink-0"
                                                     value={Math.min(item.current_value, item.target_value)}
                                                     max={Math.max(1, item.target_value)}
-                                                    aria-label="진행률"
+                                                    aria-label="진행�?
                                                 />
                                                 <span className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest font-mono">
                                                     {item.current_value.toLocaleString()}<span className="opacity-30"> / </span>{item.target_value.toLocaleString()}
@@ -234,7 +234,7 @@ const MissionApprovalQueue: React.FC = () => {
                                                 type="button"
                                                 onClick={() => mutation.mutate({ ids: [item.id], status: "APPROVED" })}
                                                 className="h-9 w-9 flex items-center justify-center rounded-lg border border-admin-border bg-admin-bg text-admin-text-muted hover:text-admin-success hover:border-admin-success/30 hover:bg-admin-success/5 transition-all active:scale-90"
-                                                title="승인"
+                                                title="?�인"
                                             >
                                                 <CheckCircle size={18} />
                                             </button>
@@ -253,10 +253,10 @@ const MissionApprovalQueue: React.FC = () => {
                     <ShieldAlert className="text-admin-warning" size={20} />
                 </div>
                 <div>
-                    <h4 className="text-xs font-bold text-admin-warning uppercase tracking-[0.2em] mb-1.5">운영 안내</h4>
+                    <h4 className="text-xs font-bold text-admin-warning uppercase tracking-[0.2em] mb-1.5">?�영 ?�내</h4>
                     <p className="text-[11px] font-bold text-admin-text-muted/80 leading-relaxed max-w-2xl">
-                        승인 처리 시 해당 기록의 상태가 즉시 변경됩니다. 승인/거절 전에는 진행 수치와 미션 내용을 확인하세요.
-                        불명확한 요청은 <span className="text-admin-warning/90">거절</span> 후 사용자에게 재요청하는 것을 권장합니다.
+                        ?�인 처리 ???�당 기록???�태가 즉시 변경됩?�다. ?�인/거절 ?�에??진행 ?�치?� 미션 ?�용???�인?�세??
+                        불명?�한 ?�청?� <span className="text-admin-warning/90">거절</span> ???�용?�에�??�요�?��??것을 권장?�니??
                     </p>
                 </div>
             </div>

@@ -10,7 +10,7 @@ const SurveyListPage: React.FC = () => {
   if (isLoading) {
     return (
       <section className="rounded-2xl border border-emerald-800/40 bg-slate-950/80 p-6">
-        <p className="text-sm text-emerald-100">설문을 불러오는 중...</p>
+        <p className="text-sm text-emerald-100">?�문??불러?�는 �?..</p>
       </section>
     );
   }
@@ -18,13 +18,13 @@ const SurveyListPage: React.FC = () => {
   if (isError || !data) {
     return (
       <section className="rounded-2xl border border-red-800/40 bg-slate-950/85 p-6">
-        <p className="text-sm font-semibold text-red-100">설문 목록을 가져오지 못했습니다.</p>
+        <p className="text-sm font-semibold text-red-100">?�문 목록??가?�오지 못했?�니??</p>
         <button
           type="button"
           onClick={() => refetch()}
           className="mt-3 rounded-full border border-emerald-600 px-3 py-2 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/40"
         >
-          다시 시도
+          ?�시 ?�도
         </button>
       </section>
     );
@@ -35,19 +35,19 @@ const SurveyListPage: React.FC = () => {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-emerald-200">Survey</p>
-          <h1 className="text-xl font-bold text-white">참여 가능한 설문</h1>
+          <h1 className="text-xl font-bold text-white">참여 가?�한 ?�문</h1>
         </div>
         <button
           type="button"
           onClick={() => refetch()}
           className="rounded-full border border-slate-700 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
         >
-          새로고침
+          ?�로고침
         </button>
       </header>
 
       {data.length === 0 ? (
-        <p className="text-sm text-slate-300">현재 참여 가능한 설문이 없습니다.</p>
+        <p className="text-sm text-slate-300">?�재 참여 가?�한 ?�문???�습?�다.</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {data.map((survey) => {
@@ -76,7 +76,7 @@ const SurveyListPage: React.FC = () => {
                 onClick={() => navigate(`/surveys/${survey.id}`)}
                 className="mt-3 inline-flex items-center rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
               >
-                참여하기 →
+                참여?�기 ??
               </button>
             </article>
             );

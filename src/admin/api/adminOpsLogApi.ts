@@ -61,7 +61,7 @@ export type CreateOpsLogEntryOptions = {
     confirm?: boolean;
 };
 
-const BASE_PATH = "/admin/api/ops";
+const BASE_PATH = "/api/admin/ops";
 
 export async function fetchOpsDailyLog(date: string) {
     const { data } = await adminApi.get<OpsDailyLog>(`${BASE_PATH}/daily-log/${date}`);

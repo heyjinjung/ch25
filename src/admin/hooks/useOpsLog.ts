@@ -58,7 +58,7 @@ export function useCreateOpsLogEntry(dateForListUpdate?: string, filtersForListU
         if (!filtersForListUpdate) return true;
         if (filtersForListUpdate.category && payload.category !== filtersForListUpdate.category) return false;
         if (filtersForListUpdate.action_code && payload.action_code !== filtersForListUpdate.action_code) return false;
-        // actor_id 필터는 생성 시점에 확정 불가(서버에서 채움) → 안전하게 갱신 생략
+        // actor_id ?�터???�성 ?�점???�정 불�?(?�버?�서 채�?) ???�전?�게 갱신 ?�략
         if (filtersForListUpdate.actor_id != null) return false;
         return true;
       })();

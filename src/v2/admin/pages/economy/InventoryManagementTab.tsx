@@ -92,7 +92,7 @@ export default function InventoryManagementTab() {
   const [isSearchingUser, setIsSearchingUser] = useState(false);
   const [itemType, setItemType] = useState("CHICKEN_GIFTICON_5000");
   const [amount, setAmount] = useState("1");
-  const [reason, setReason] = useState("이벤트 보상");
+  const [reason, setReason] = useState("?�벤??보상");
   const [expiresAt, setExpiresAt] = useState("");
 
   // Selected Log for Edit/Delete
@@ -183,11 +183,11 @@ export default function InventoryManagementTab() {
         setSearchUserId(resolved);
         return;
       }
-      alert("해당 닉네임의 유저를 찾을 수 없습니다.");
+      alert("?�당 ?�네?�의 ?��?�?찾을 ???�습?�다.");
       setSearchUserId(undefined);
     } catch (error) {
       console.error("User search failed", error);
-      alert("유저 검색 중 오류가 발생했습니다.");
+      alert("?��? 검??�??�류가 발생?�습?�다.");
     }
   };
 
@@ -198,7 +198,7 @@ export default function InventoryManagementTab() {
     try {
       const resolved = await resolveUserId(normalized);
       if (!resolved) {
-        setTargetUserNickname("유저를 찾을 수 없음");
+        setTargetUserNickname("?��?�?찾을 ???�음");
         return;
       }
       const response = await getAdminUserList({
@@ -210,10 +210,10 @@ export default function InventoryManagementTab() {
         setTargetUserNickname(foundUser.nickname || "");
         setTargetUserId(foundUser.id.toString());
       } else {
-        setTargetUserNickname("유저를 찾을 수 없음");
+        setTargetUserNickname("?��?�?찾을 ???�음");
       }
     } catch {
-      setTargetUserNickname("검색 오류");
+      setTargetUserNickname("검???�류");
     } finally {
       setIsSearchingUser(false);
     }
@@ -223,7 +223,7 @@ export default function InventoryManagementTab() {
     const uid = await resolveUserId(targetUserId);
     const amt = parseInt(amount);
     if (!uid || isNaN(amt)) {
-      alert("유저 ID/닉네임과 수량을 확인해주세요.");
+      alert("?��? ID/?�네?�과 ?�량???�인?�주?�요.");
       return;
     }
 
@@ -283,7 +283,7 @@ export default function InventoryManagementTab() {
     setTargetUserNickname("");
     setItemType(inventoryItems[0]?.value || "CHICKEN_GIFTICON_5000");
     setAmount("1");
-    setReason("이벤트 보상");
+    setReason("?�벤??보상");
     setExpiresAt("");
     setSelectedLog(null);
   };
@@ -305,10 +305,10 @@ export default function InventoryManagementTab() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1">
-            인벤토리 관리 (Inventory Management)
+            ?�벤?�리 관�?(Inventory Management)
           </h1>
           <p className="text-sm text-zinc-400">
-            유저 아이템 지급/회수 로그를 관리하고 아이템을 지급합니다.
+            ?��? ?�이??지�??�수 로그�?관리하�??�이?�을 지급합?�다.
           </p>
         </div>
 
@@ -319,7 +319,7 @@ export default function InventoryManagementTab() {
           }}
           className="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold shadow-[0_0_20px_rgba(16,185,129,0.2)]"
         >
-          <Plus className="w-4 h-4 mr-2" />새 아이템 지급 (Issue)
+          <Plus className="w-4 h-4 mr-2" />???�이??지�?(Issue)
         </Button>
       </div>
 
@@ -331,7 +331,7 @@ export default function InventoryManagementTab() {
           </div>
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400">
-              총 아이템 로그
+              �??�이??로그
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -339,7 +339,7 @@ export default function InventoryManagementTab() {
               {stats.totalCount.toLocaleString()}
             </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              전체 아이템 거래 기록
+              ?�체 ?�이??거래 기록
             </p>
           </CardContent>
         </Card>
@@ -347,7 +347,7 @@ export default function InventoryManagementTab() {
         <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400 flex justify-between items-center">
-              지급 건수 (Issued)
+              지�?건수 (Issued)
               <Badge
                 variant="outline"
                 className="bg-emerald-500/10 text-emerald-500 border-none scale-75"
@@ -361,7 +361,7 @@ export default function InventoryManagementTab() {
               {stats.totalIssued.toLocaleString()}
             </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              전체 기간 누적 지급
+              ?�체 기간 ?�적 지�?
             </p>
           </CardContent>
         </Card>
@@ -369,28 +369,28 @@ export default function InventoryManagementTab() {
         <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400">
-              사용 건수 (Used)
+              ?�용 건수 (Used)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-zinc-300">
               {stats.totalUsed.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">유저가 소모한 건수</p>
+            <p className="text-[10px] text-zinc-500 mt-1">?��?가 ?�모??건수</p>
           </CardContent>
         </Card>
 
         <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400">
-              회수 건수 (Revoked)
+              ?�수 건수 (Revoked)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-400">
               {stats.totalRevoked.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">관리자 회수 건수</p>
+            <p className="text-[10px] text-zinc-500 mt-1">관리자 ?�수 건수</p>
           </CardContent>
         </Card>
       </div>
@@ -398,12 +398,12 @@ export default function InventoryManagementTab() {
       <div className="flex flex-col md:flex-row gap-4 items-end bg-black/20 p-4 rounded-xl border border-white/5">
         <div className="w-full max-w-sm space-y-2">
           <label className="text-xs text-zinc-400 font-medium ml-1">
-            로그 검색 (유저)
+            로그 검??(?��?)
           </label>
           <div className="relative">
             <Search className="absolute left-3 top-3 w-4 h-4 text-zinc-500" />
             <Input
-              placeholder="닉네임 또는 ID 입력"
+              placeholder="?�네???�는 ID ?�력"
               className="pl-9 bg-black/50 border-white/10 h-11 text-white ring-offset-zinc-950 focus-visible:ring-zinc-800"
               value={inputValue}
               onChange={(e) => handleUserSearch(e.target.value)}
@@ -415,7 +415,7 @@ export default function InventoryManagementTab() {
         <div className="flex gap-2 items-center">
           <div className="space-y-2">
             <label className="text-xs text-zinc-400 font-medium ml-1">
-              시작일
+              ?�작??
             </label>
             <Input
               type="date"
@@ -427,7 +427,7 @@ export default function InventoryManagementTab() {
           <span className="text-zinc-600 pb-3">~</span>
           <div className="space-y-2">
             <label className="text-xs text-zinc-400 font-medium ml-1">
-              종료일
+              종료??
             </label>
             <Input
               type="date"
@@ -443,7 +443,7 @@ export default function InventoryManagementTab() {
           onClick={handleSearchCommit}
           className="h-11 px-8 font-semibold"
         >
-          조회하기
+          조회?�기
         </Button>
 
         <Button
@@ -465,21 +465,21 @@ export default function InventoryManagementTab() {
         <CardHeader className="bg-white/[0.02]">
           <CardTitle className="flex items-center gap-2 text-lg">
             <History className="w-5 h-5 text-zinc-400" />
-            인벤토리 로그 목록 (Inventory Logs)
+            ?�벤?�리 로그 목록 (Inventory Logs)
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader className="bg-black/20">
               <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="w-[180px]">시간</TableHead>
-                <TableHead>유저 닉네임</TableHead>
+                <TableHead className="w-[180px]">?�간</TableHead>
+                <TableHead>?��? ?�네??/TableHead>
                 <TableHead>구분</TableHead>
-                <TableHead>아이템</TableHead>
-                <TableHead>수량</TableHead>
-                <TableHead>잔액 (After)</TableHead>
-                <TableHead className="max-w-[300px]">사유</TableHead>
-                <TableHead className="text-right">액션</TableHead>
+                <TableHead>?�이??/TableHead>
+                <TableHead>?�량</TableHead>
+                <TableHead>?�액 (After)</TableHead>
+                <TableHead className="max-w-[300px]">?�유</TableHead>
+                <TableHead className="text-right">?�션</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -488,7 +488,7 @@ export default function InventoryManagementTab() {
                   <TableCell colSpan={8} className="text-center py-20">
                     <div className="flex flex-col items-center gap-2 text-zinc-500">
                       <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                      로그를 불러오는 중입니다...
+                      로그�?불러?�는 중입?�다...
                     </div>
                   </TableCell>
                 </TableRow>
@@ -497,7 +497,7 @@ export default function InventoryManagementTab() {
                   <TableCell colSpan={8} className="text-center py-20">
                     <div className="flex flex-col items-center gap-2 text-zinc-600">
                       <AlertCircle className="w-8 h-8" />
-                      검색된 인벤토리 로그가 없습니다.
+                      검?�된 ?�벤?�리 로그가 ?�습?�다.
                     </div>
                   </TableCell>
                 </TableRow>
@@ -573,11 +573,11 @@ export default function InventoryManagementTab() {
                           className="bg-[#18181B] border-white/10 text-white"
                         >
                           <DropdownMenuLabel className="text-zinc-500 text-xs">
-                            관리 액션
+                            관�??�션
                           </DropdownMenuLabel>
                           <DropdownMenuItem onClick={() => openEditModal(log)}>
                             <Edit2 className="w-4 h-4 mr-2" />
-                            수정 (Edit)
+                            ?�정 (Edit)
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="bg-white/5" />
                           <DropdownMenuItem
@@ -585,7 +585,7 @@ export default function InventoryManagementTab() {
                             className="text-red-400 focus:text-red-400"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            삭제 (Delete)
+                            ??�� (Delete)
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -603,21 +603,21 @@ export default function InventoryManagementTab() {
         <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[450px] shadow-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-emerald-500" />새 아이템 지급
+              <Plus className="w-5 h-5 text-emerald-500" />???�이??지�?
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-              유저에게 아이템을 수동으로 지급합니다. 지급 즉시 반영됩니다.
+              ?��??�게 ?�이?�을 ?�동?�로 지급합?�다. 지�?즉시 반영?�니??
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="userId" className="text-zinc-400">
-                지급 대상 (User ID 또는 닉네임)
+                지�??�??(User ID ?�는 ?�네??
               </Label>
               <div className="flex gap-2">
                 <Input
                   id="userId"
-                  placeholder="유저 ID 또는 닉네임 입력"
+                  placeholder="?��? ID ?�는 ?�네???�력"
                   className="bg-black/50 border-white/10 text-white"
                   value={targetUserId}
                   onChange={(e) => setTargetUserId(e.target.value)}
@@ -627,13 +627,13 @@ export default function InventoryManagementTab() {
                   onClick={lookupUserInForm}
                   disabled={isSearchingUser}
                 >
-                  {isSearchingUser ? "..." : "검색"}
+                  {isSearchingUser ? "..." : "검??}
                 </Button>
               </div>
               {targetUserNickname && (
                 <div className="text-[10px] text-emerald-500 font-medium ml-1">
-                  검색 결과:{" "}
-                  <span className="underline">{targetUserNickname}</span> 유저
+                  검??결과:{" "}
+                  <span className="underline">{targetUserNickname}</span> ?��?
                 </div>
               )}
             </div>
@@ -654,7 +654,7 @@ export default function InventoryManagementTab() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-zinc-400">수량 (Amount)</Label>
+                <Label className="text-zinc-400">?�량 (Amount)</Label>
                 <Input
                   type="number"
                   className="bg-black/50 border-white/10"
@@ -664,16 +664,16 @@ export default function InventoryManagementTab() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">지급 사유 (Reason)</Label>
+              <Label className="text-zinc-400">지�??�유 (Reason)</Label>
               <Input
-                placeholder="사유를 입력하세요"
+                placeholder="?�유�??�력?�세??
                 className="bg-black/50 border-white/10"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">만료일 (Optional)</Label>
+              <Label className="text-zinc-400">만료??(Optional)</Label>
               <Input
                 type="datetime-local"
                 className="bg-black/50 border-white/10 color-scheme-dark"
@@ -691,7 +691,7 @@ export default function InventoryManagementTab() {
               disabled={createInventoryItemMutation.isPending || !targetUserId}
               className="bg-emerald-500 text-black font-bold"
             >
-              지급 실행
+              지�??�행
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -703,11 +703,11 @@ export default function InventoryManagementTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit2 className="w-5 h-5 text-sky-500" />
-              아이템 로그 수정
+              ?�이??로그 ?�정
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-              발행된 아이템의 내부 로그 정보를 수정합니다. (실제 자산 변동은
-              발생하지 않음)
+              발행???�이?�의 ?��? 로그 ?�보�??�정?�니?? (?�제 ?�산 변?��?
+              발생?��? ?�음)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -720,7 +720,7 @@ export default function InventoryManagementTab() {
               </span>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">수량 수정</Label>
+              <Label className="text-zinc-400">?�량 ?�정</Label>
               <Input
                 type="number"
                 className="bg-black/50 border-white/10"
@@ -729,7 +729,7 @@ export default function InventoryManagementTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">사유 수정</Label>
+              <Label className="text-zinc-400">?�유 ?�정</Label>
               <Input
                 className="bg-black/50 border-white/10"
                 value={reason}
@@ -737,7 +737,7 @@ export default function InventoryManagementTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">만료일 수정 (Optional)</Label>
+              <Label className="text-zinc-400">만료???�정 (Optional)</Label>
               <Input
                 type="datetime-local"
                 className="bg-black/50 border-white/10 color-scheme-dark"
@@ -751,7 +751,7 @@ export default function InventoryManagementTab() {
               취소
             </Button>
             <Button onClick={handleEdit} className="bg-sky-500 text-white">
-              수정 완료
+              ?�정 ?�료
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -763,12 +763,12 @@ export default function InventoryManagementTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trash2 className="w-5 h-5 text-red-500" />
-              로그 삭제 확인
+              로그 ??�� ?�인
             </DialogTitle>
             <DialogDescription className="text-zinc-500">
-              이 로그를 정말로 삭제하시겠습니까? <br />
+              ??로그�??�말�???��?�시겠습?�까? <br />
               <span className="text-red-400/80 font-bold">
-                ※ 이 작업은 시스템 기록에서 로그를 영구히 제거합니다.
+                ?????�업?� ?�스??기록?�서 로그�??�구???�거?�니??
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -795,7 +795,7 @@ export default function InventoryManagementTab() {
               onClick={handleDelete}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              확인 및 삭제
+              ?�인 �???��
             </Button>
           </DialogFooter>
         </DialogContent>

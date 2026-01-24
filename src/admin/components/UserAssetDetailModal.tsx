@@ -142,12 +142,12 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
     const availableVal = parseInt(newAvailable);
 
     if (isNaN(lockedVal) || isNaN(availableVal)) {
-      addToast("올바른 금액을 입력해주세요.", "error");
+      addToast("?�바�?금액???�력?�주?�요.", "error");
       return;
     }
 
     if (
-      !window.confirm(`정말 ID:${userId} 유저의 금고 잔액을 수정하시겠습니까?`)
+      !window.confirm(`?�말 ID:${userId} ?��???금고 ?�액???�정?�시겠습?�까?`)
     ) {
       return;
     }
@@ -159,12 +159,12 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
         available_amount: availableVal,
         reason: "ADMIN_MODAL_MANUAL_SET",
       });
-      addToast("금고 잔액이 수정되었습니다.", "success");
+      addToast("금고 ?�액???�정?�었?�니??", "success");
       vaultQuery.refetch();
       summaryQuery.refetch(); // Refresh wallet summary too if correlated
     } catch (error) {
       console.error("Vault update failed:", error);
-      addToast("잔액 수정 실패", "error");
+      addToast("?�액 ?�정 ?�패", "error");
     } finally {
       setUpdatingVault(false);
     }
@@ -208,8 +208,8 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            title="닫기"
-            aria-label="닫기"
+            title="?�기"
+            aria-label="?�기"
             className="p-2 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
           >
             <X className="h-6 w-6" />
@@ -220,11 +220,11 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
         <div className="flex-none px-6 border-b border-zinc-800 bg-zinc-900/30">
           <div className="flex gap-6">
             {[
-              { id: "summary", label: "자산 요약", icon: Wallet },
-              { id: "playLogs", label: "플레이 로그", icon: ScrollText },
-              { id: "ledger", label: "지갑 원장", icon: History },
-              { id: "inventory", label: "인벤토리", icon: Package },
-              { id: "vault", label: "금고 관리", icon: Lock },
+              { id: "summary", label: "?�산 ?�약", icon: Wallet },
+              { id: "playLogs", label: "?�레??로그", icon: ScrollText },
+              { id: "ledger", label: "지�??�장", icon: History },
+              { id: "inventory", label: "?�벤?�리", icon: Package },
+              { id: "vault", label: "금고 관�?, icon: Lock },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -249,7 +249,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
               {/* Wallet Balances */}
               <div>
                 <h4 className="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider">
-                  티켓 지갑 (Wallet)
+                  ?�켓 지�?(Wallet)
                 </h4>
                 {userSummary ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -271,19 +271,19 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                     })}
                     {sumBalances(userSummary.balances) === 0 && (
                       <div className="col-span-full py-4 text-zinc-500 text-sm italic">
-                        보유한 티켓이 없습니다.
+                        보유???�켓???�습?�다.
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-zinc-500">데이터를 불러오는 중...</div>
+                  <div className="text-zinc-500">?�이?��? 불러?�는 �?..</div>
                 )}
               </div>
 
               {/* Inventory Summary */}
               <div>
                 <h4 className="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider">
-                  인벤토리 (Inventory)
+                  ?�벤?�리 (Inventory)
                 </h4>
                 {inventoryData ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -303,12 +303,12 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                       ))
                     ) : (
                       <div className="col-span-full py-4 text-zinc-500 text-sm italic">
-                        인벤토리 아이템이 없습니다.
+                        ?�벤?�리 ?�이?�이 ?�습?�다.
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="text-zinc-500">데이터를 불러오는 중...</div>
+                  <div className="text-zinc-500">?�이?��? 불러?�는 �?..</div>
                 )}
               </div>
             </div>
@@ -318,13 +318,13 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
             <div className="space-y-4">
               {playLogsQuery.isLoading ? (
                 <div className="text-center py-10 text-zinc-500">
-                  불러오는 중...
+                  불러?�는 �?..
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead className="text-xs text-zinc-500 uppercase border-b border-zinc-800">
                     <tr>
-                      <th className="px-4 py-3">시간</th>
+                      <th className="px-4 py-3">?�간</th>
                       <th className="px-4 py-3">게임</th>
                       <th className="px-4 py-3 text-right">보상</th>
                     </tr>
@@ -354,7 +354,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                           colSpan={3}
                           className="px-4 py-8 text-center text-zinc-500"
                         >
-                          기록이 없습니다.
+                          기록???�습?�다.
                         </td>
                       </tr>
                     )}
@@ -368,17 +368,17 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
             <div className="space-y-4">
               {ledgerQuery.isLoading ? (
                 <div className="text-center py-10 text-zinc-500">
-                  불러오는 중...
+                  불러?�는 �?..
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
                   <thead className="text-xs text-zinc-500 uppercase border-b border-zinc-800">
                     <tr>
-                      <th className="px-4 py-3">시간</th>
-                      <th className="px-4 py-3">티켓</th>
-                      <th className="px-4 py-3 text-right">변동</th>
-                      <th className="px-4 py-3 text-right">잔액</th>
-                      <th className="px-4 py-3">사유</th>
+                      <th className="px-4 py-3">?�간</th>
+                      <th className="px-4 py-3">?�켓</th>
+                      <th className="px-4 py-3 text-right">변??/th>
+                      <th className="px-4 py-3 text-right">?�액</th>
+                      <th className="px-4 py-3">?�유</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800">
@@ -414,7 +414,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                           colSpan={5}
                           className="px-4 py-8 text-center text-zinc-500"
                         >
-                          기록이 없습니다.
+                          기록???�습?�다.
                         </td>
                       </tr>
                     )}
@@ -429,7 +429,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
               {/* Current Items */}
               <div>
                 <h4 className="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider border-b border-zinc-800 pb-2">
-                  보유 아이템
+                  보유 ?�이??
                 </h4>
                 <div className="grid grid-cols-1 gap-2">
                   {(inventoryData?.items || []).map((item) => (
@@ -447,7 +447,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                   ))}
                   {(inventoryData?.items || []).length === 0 && (
                     <div className="text-zinc-500 text-sm py-2">
-                      보유 중인 아이템이 없습니다.
+                      보유 중인 ?�이?�이 ?�습?�다.
                     </div>
                   )}
                 </div>
@@ -456,16 +456,16 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
               {/* Inventory History (Ledger) */}
               <div>
                 <h4 className="text-sm font-bold text-zinc-400 mb-3 uppercase tracking-wider border-b border-zinc-800 pb-2">
-                  인벤토리 기록 (Recent 100)
+                  ?�벤?�리 기록 (Recent 100)
                 </h4>
                 <table className="w-full text-left border-collapse">
                   <thead className="text-xs text-zinc-500 uppercase border-b border-zinc-800">
                     <tr>
-                      <th className="px-4 py-3">시간</th>
-                      <th className="px-4 py-3">아이템</th>
-                      <th className="px-4 py-3 text-right">변동</th>
-                      <th className="px-4 py-3 text-right">잔여</th>
-                      <th className="px-4 py-3">사유</th>
+                      <th className="px-4 py-3">?�간</th>
+                      <th className="px-4 py-3">?�이??/th>
+                      <th className="px-4 py-3 text-right">변??/th>
+                      <th className="px-4 py-3 text-right">?�여</th>
+                      <th className="px-4 py-3">?�유</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800">
@@ -500,7 +500,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                           colSpan={5}
                           className="px-4 py-8 text-center text-zinc-500"
                         >
-                          기록이 없습니다.
+                          기록???�습?�다.
                         </td>
                       </tr>
                     )}
@@ -514,7 +514,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
             <div className="space-y-8">
               {vaultQuery.isLoading ? (
                 <div className="text-center py-10 text-zinc-500">
-                  불러오는 중...
+                  불러?�는 �?..
                 </div>
               ) : vaultQuery.data ? (
                 <div className="space-y-6">
@@ -522,7 +522,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
                       <div className="text-xs text-zinc-500 font-bold mb-1">
-                        총 금고 잔액 (Locked)
+                        �?금고 ?�액 (Locked)
                       </div>
                       <div className="text-2xl font-black text-white font-mono tabular-nums">
                         {vaultQuery.data.locked_balance.toLocaleString()}
@@ -530,7 +530,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                     </div>
                     <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
                       <div className="text-xs text-zinc-500 font-bold mb-1">
-                        잠금 금액 (Locked)
+                        ?�금 금액 (Locked)
                       </div>
                       <div className="text-xl font-bold text-admin-brand font-mono tabular-nums">
                         {vaultQuery.data.locked_balance.toLocaleString()}
@@ -538,7 +538,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                     </div>
                     <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4">
                       <div className="text-xs text-zinc-500 font-bold mb-1">
-                        가용 금액 (Available)
+                        가??금액 (Available)
                       </div>
                       <div className="text-xl font-bold text-emerald-400 font-mono tabular-nums">
                         {vaultQuery.data.available_balance.toLocaleString()}
@@ -551,7 +551,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                     <div className="px-6 py-4 border-b border-red-500/20 bg-red-900/10 flex items-center justify-between">
                       <h3 className="text-sm font-black text-white flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-red-500" />
-                        금고 잔액 강제 수정 (Force Update)
+                        금고 ?�액 강제 ?�정 (Force Update)
                       </h3>
                     </div>
 
@@ -559,7 +559,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">
-                            잠금 금액 (Locked)
+                            ?�금 금액 (Locked)
                           </label>
                           <div className="relative group">
                             <input
@@ -576,7 +576,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
 
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-zinc-500 tracking-widest pl-1">
-                            가용 금액 (Available)
+                            가??금액 (Available)
                           </label>
                           <div className="relative group">
                             <input
@@ -597,8 +597,8 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                           <AlertCircle className="h-5 w-5 text-rose-500" />
                         </div>
                         <div className="text-[11px] text-zinc-400 leading-relaxed">
-                          이 작업은 실시간 원장에 즉시 반영되며 복구할 수
-                          없습니다. 신중하게 진행해주세요.
+                          ???�업?� ?�시�??�장??즉시 반영?�며 복구????
+                          ?�습?�다. ?�중?�게 진행?�주?�요.
                         </div>
                       </div>
 
@@ -618,7 +618,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                         ) : (
                           <Save className="h-4 w-4" />
                         )}
-                        잔액 강제 수정 실행
+                        ?�액 강제 ?�정 ?�행
                       </button>
                     </div>
                   </div>
@@ -628,17 +628,17 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                     <div className="px-6 py-4 border-b border-zinc-700/50 flex items-center justify-between">
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <History className="h-4 w-4 text-zinc-400" />
-                        금고 변동 내역
+                        금고 변???�역
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
                       {vaultHistoryQuery.isLoading ? (
                         <div className="p-8 text-center text-zinc-500">
-                          내역 불러오는 중...
+                          ?�역 불러?�는 �?..
                         </div>
                       ) : vaultHistoryQuery.data?.length === 0 ? (
                         <div className="p-8 text-center text-zinc-500">
-                          기록된 내역이 없습니다.
+                          기록???�역???�습?�다.
                         </div>
                       ) : (
                         <table className="w-full text-left border-collapse">
@@ -704,7 +704,7 @@ const UserAssetDetailModal: React.FC<UserAssetDetailModalProps> = ({
                 </div>
               ) : (
                 <div className="text-center py-10 text-zinc-500">
-                  데이터를 불러올 수 없습니다.
+                  ?�이?��? 불러?????�습?�다.
                 </div>
               )}
             </div>

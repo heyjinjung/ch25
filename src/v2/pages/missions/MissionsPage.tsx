@@ -1,10 +1,10 @@
-// src/v2/pages/missions/MissionsPage.tsx
+// src/pages/missions/MissionsPage.tsx
 import { useV2Missions, useV2ClaimMission } from "../../hooks/useV2Mission";
 import { useSound } from "../../../hooks/useSound";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./MissionRedesign.css";
 
-const ASSET_PATH = "/v2/assets/07mission";
+const ASSET_PATH = "/assets/07mission";
 
 export default function MissionsPage() {
   const { playSmallWin } = useSound();
@@ -34,7 +34,7 @@ export default function MissionsPage() {
   if (error || !data) {
     return (
       <div className="flex h-full items-center justify-center bg-black px-6 text-center">
-        <p className="text-white/40">미션을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.</p>
+        <p className="text-white/40">미션??불러?????�습?�다. ?�시 ???�시 ?�도?�주?�요.</p>
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function MissionsPage() {
           <div key={mission.id} className="mission-promo-card">
             <div className="mission-text-content">
               <span className="mission-title">{mission.title}</span>
-              <span className="mission-desc">진행도: {mission.progress || 0}/{mission.target}</span>
+              <span className="mission-desc">진행?? {mission.progress || 0}/{mission.target}</span>
             </div>
             
             {!mission.is_claimed && mission.is_completed ? (
@@ -100,7 +100,7 @@ export default function MissionsPage() {
         {/* Empty State */}
         {missions.length === 0 && (
           <div className="py-12 text-center opacity-30 italic text-xs">
-            현재 진행 가능한 미션이 없습니다.
+            ?�재 진행 가?�한 미션???�습?�다.
           </div>
         )}
       </div>

@@ -66,7 +66,7 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
         <div className="flex items-center justify-between border-b border-admin-border p-4 sm:p-6 bg-admin-sidebar/80">
           <div>
             <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
-              <Shield size={18} className="text-admin-brand" /> 운영/감사 로그: {headerName}
+              <Shield size={18} className="text-admin-brand" /> ?�영/감사 로그: {headerName}
             </h3>
             <p className="mt-1 text-admin-meta text-admin-text-secondary">
               ID: {user.id}
@@ -74,7 +74,7 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
               {user.external_id ? ` · external_id: ${user.external_id}` : ""}
             </p>
           </div>
-          <button onClick={onClose} aria-label="닫기" className="btn-admin-ghost rounded-full p-2">
+          <button onClick={onClose} aria-label="?�기" className="btn-admin-ghost rounded-full p-2">
             <X size={20} />
           </button>
         </div>
@@ -82,21 +82,21 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
           <div className="admin-card overflow-hidden">
             <div className="px-4 py-3 border-b border-admin-border">
-              <div className="text-admin-body font-bold text-admin-text-primary">최근 운영 조치</div>
-              <div className="mt-1 text-admin-meta text-admin-text-secondary">vault/inventory 등 고위험 액션 위주로 기록됩니다.</div>
+              <div className="text-admin-body font-bold text-admin-text-primary">최근 ?�영 조치</div>
+              <div className="mt-1 text-admin-meta text-admin-text-secondary">vault/inventory ??고위???�션 ?�주�?기록?�니??</div>
             </div>
 
             {logsQuery.isLoading ? (
               <div className="py-12 text-center text-admin-text-secondary">Loading...</div>
             ) : (logsQuery.data ?? []).length === 0 ? (
-              <div className="py-12 text-center text-admin-text-secondary">로그가 없습니다.</div>
+              <div className="py-12 text-center text-admin-text-secondary">로그가 ?�습?�다.</div>
             ) : (
               <table className="admin-table">
                 <thead className="bg-admin-sidebar/60">
                   <tr>
-                    <th className="admin-th">시간</th>
+                    <th className="admin-th">?�간</th>
                     <th className="admin-th">action</th>
-                    <th className="admin-th">요약</th>
+                    <th className="admin-th">?�약</th>
                     <th className="admin-th text-right">admin</th>
                   </tr>
                 </thead>
@@ -116,14 +116,14 @@ const UserAuditLogModal: React.FC<Props> = ({ user, onClose }) => {
             )}
 
             {logsQuery.error && (
-              <div className="p-4 text-xs text-admin-danger">조회 실패: {(logsQuery.error as any)?.message ?? "unknown"}</div>
+              <div className="p-4 text-xs text-admin-danger">조회 ?�패: {(logsQuery.error as any)?.message ?? "unknown"}</div>
             )}
           </div>
         </div>
 
         <div className="p-4 sm:p-6 border-t border-admin-border bg-admin-sidebar/80 flex justify-end">
           <button onClick={onClose} className="btn-admin-secondary">
-            닫기
+            ?�기
           </button>
         </div>
       </div>

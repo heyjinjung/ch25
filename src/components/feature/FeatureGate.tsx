@@ -17,7 +17,7 @@ const FeatureGate: React.FC<FeatureGateProps> = ({ feature, children }) => {
   const { data, isError } = useTodayFeature();
 
   const infoBanner = useMemo(() => {
-    if (isError) return "이벤트 정보 로드에 실패했지만 게임 이용은 계속 가능합니다.";
+    if (isError) return "?�벤???�보 로드???�패?��?�?게임 ?�용?� 계속 가?�합?�다.";
     const activeFeature = normalizeFeature(data?.feature_type);
     if (activeFeature && activeFeature !== feature) return null;
     return null;

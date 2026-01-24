@@ -15,11 +15,11 @@ const DiceEventBanner: React.FC<DiceEventBannerProps> = ({ active, progress, max
     if (!active) {
         const getReasonText = () => {
             switch (ineligibleReason) {
-                case "LOW_DEPOSIT": return "오늘 30만원 이상 입금 시 참여 가능";
-                case "NO_STAKE": return "금고에 자산(Stake)이 있어야 참여 가능";
-                case "CAP_REACHED": return "오늘의 이벤트 참여 횟수 소진 (30/30)";
-                case "BLOCKLISTED": return "이벤트 참여 제한 대상입니다";
-                default: return "현재 이벤트 참여 조건 미달";
+                case "LOW_DEPOSIT": return "?�늘 30만원 ?�상 ?�금 ??참여 가??;
+                case "NO_STAKE": return "금고???�산(Stake)???�어??참여 가??;
+                case "CAP_REACHED": return "?�늘???�벤??참여 ?�수 ?�진 (30/30)";
+                case "BLOCKLISTED": return "?�벤??참여 ?�한 ?�?�입?�다";
+                default: return "?�재 ?�벤??참여 조건 미달";
             }
         };
 

@@ -1,6 +1,6 @@
 import { adminApi } from "./httpClient";
 
-const BASE_PATH = "/admin/api/ops";
+const BASE_PATH = "/api/admin/ops";
 
 export type OpsCampaign = {
   id: number;

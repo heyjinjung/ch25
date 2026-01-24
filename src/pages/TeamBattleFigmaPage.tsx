@@ -63,7 +63,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
   const myNickname = useMemo(() => {
     if (user?.nickname) return user.nickname;
     if (user?.external_id) return user.external_id;
-    return "나";
+    return "??;
   }, [user?.external_id, user?.nickname]);
 
   const joinWindowState = useMemo(() => {
@@ -81,10 +81,10 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
     const joinEndMs = startMs + 24 * 60 * 60 * 1000;
 
     if (nowMs < startMs) {
-      return { canJoin: false, reason: "시즌 시작 전입니다." };
+      return { canJoin: false, reason: "?�즌 ?�작 ?�입?�다." };
     }
     if (nowMs > joinEndMs) {
-      return { canJoin: false, reason: "시즌 시작 후 24시간이 지나 팀 배정이 종료됐습니다." };
+      return { canJoin: false, reason: "?�즌 ?�작 ??24?�간??지???� 배정??종료?�습?�다." };
     }
     return { canJoin: true, reason: null as string | null };
   }, [seasonQuery.data?.starts_at]);
@@ -123,13 +123,13 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         const prevRank = typeof parsed.rank === "number" ? parsed.rank : null;
 
         if (prevRank !== null && myRank < prevRank) {
-          addToast(`역전! 우리 팀이 ${myRank}위로 올라왔어요.`, "success");
+          addToast(`??��! ?�리 ?�??${myRank}?�로 ?�라?�어??`, "success");
         }
 
         if (prevPoints !== null) {
           const delta = myPoints - prevPoints;
           if (delta >= 50) {
-            addToast(`추격 중! 우리 팀 점수 +${delta.toLocaleString()} (현재 ${myPoints.toLocaleString()}점)`, "info");
+            addToast(`추격 �? ?�리 ?� ?�수 +${delta.toLocaleString()} (?�재 ${myPoints.toLocaleString()}??`, "info");
           }
         }
       }
@@ -137,13 +137,13 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
       if (typeof gapToAbovePoints === "number" && gapToAbovePoints >= 50) {
         if (sessionStorage.getItem(behindToastKey) !== "1") {
           sessionStorage.setItem(behindToastKey, "1");
-          addToast(`우리 팀이 바로 위 팀과 ${gapToAbovePoints.toLocaleString()}점 차이예요. 지금 달려요!`, "info");
+          addToast(`?�리 ?�??바로 ???��?${gapToAbovePoints.toLocaleString()}??차이?�요. 지�??�려??`, "info");
         }
       }
 
       localStorage.setItem(snapshotKey, JSON.stringify({ points: myPoints, rank: myRank, capturedAt: Date.now() }));
     } catch {
-      // storage 접근/파싱 실패 시 알림 로직을 스킵합니다.
+      // storage ?�근/?�싱 ?�패 ???�림 로직???�킵?�니??
     }
   }, [addToast, gapToAbove?.aboveTeamId, gapToAbovePoints, leaderboardQuery.isError, leaderboardQuery.isLoading, myLeaderboardIndex, myPoints, myRank, myTeamId, seasonId]);
 
@@ -196,9 +196,9 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                     aria-hidden="true"
                   />
                 </span>
-                <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">팀배틀</p>
+                <p className="text-[clamp(15px,2.8vw,16px)] font-semibold text-white/90">?�배�?</p>
               </div>
-              <p className="mt-1 text-[clamp(13px,2.5vw,14px)] text-white/65">남은 시간</p>
+              <p className="mt-1 text-[clamp(13px,2.5vw,14px)] text-white/65">?��? ?�간</p>
               <p className="mt-1 text-[clamp(20px,3.6vw,24px)] font-semibold text-white">
                 <AnimatedCountdown targetMs={endsAtMs} expiredText="종료" showDays />
               </p>
@@ -219,7 +219,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
               }}
               disabled={refreshing}
             >
-              데이터 새로고침
+              ?�이???�로고침
             </button>
           </div>
         </div>
@@ -230,15 +230,15 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
               {myNickname} · <span style={{ color: baseAccent }}>+{myContributionPoints.toLocaleString()}</span>
             </p>
             <p className="mt-1 text-[clamp(12px,2.6vw,15px)] text-white/65">
-              {showBehindBanner ? "내가 빠지면 팀이 진다. 지금 한 판만 더!" : "내가 빠지면 팀이 흔들린다. 지금 점수 쌓자"}
+              {showBehindBanner ? "?��? 빠�?�??�??진다. 지�????�만 ??" : "?��? 빠�?�??�???�들린다. 지�??�수 ?�자"}
             </p>
           </div>
         ) : null}
 
         {myTeamId === null ? (
           <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
-            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">아직 팀이 없어요</p>
-            <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/65">버튼을 누르면 밸런스 기준으로 자동 배정됩니다.</p>
+            <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">?�직 ?�???�어??/p>
+            <p className="mt-1 text-[clamp(12px,2.6vw,13px)] text-white/65">버튼???�르�?밸런??기�??�로 ?�동 배정?�니??</p>
 
             {!joinWindowState.canJoin && joinWindowState.reason ? (
               <p className="mt-2 text-[clamp(12px,2.6vw,13px)] text-white/55">{joinWindowState.reason}</p>
@@ -258,23 +258,22 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                   try {
                     await autoAssignTeam();
                     await Promise.all([myTeamQuery.refetch(), leaderboardQuery.refetch()]);
-                    addToast("팀 배정이 완료됐어요.", "success");
+                    addToast("?� 배정???�료?�어??", "success");
                   } catch {
-                    addToast("팀 배정에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+                    addToast("?� 배정???�패?�습?�다. ?�시 ???�시 ?�도?�주?�요.", "error");
                   } finally {
                     setAssigning(false);
                   }
                 }}
               >
-                미스터리 팀 배정
+                미스?�리 ?� 배정
               </button>
 
               <Link
                 to="/dice"
                 className="rounded-[6px] border border-white/15 bg-white/5 px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-white/85 hover:bg-white/10"
               >
-                게임하러 가기
-              </Link>
+                게임?�러 가�?              </Link>
             </div>
           </div>
         ) : null}
@@ -282,22 +281,21 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
         {showBehindBanner && myRank !== null && myPoints !== null ? (
           <div className="mt-[12px] rounded-[10px] border border-white/10 bg-[#394508]/20 px-[18px] py-[14px]">
             <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/90">
-              지금 우리 팀이 <span style={{ color: baseAccent }}>#{myRank}</span> ( {myPoints.toLocaleString()}점 ) · 바로 위 팀과{" "}
-              <span style={{ color: baseAccent }}>{gapToAbovePoints?.toLocaleString()}점</span> 차이
+              지�??�리 ?�??<span style={{ color: baseAccent }}>#{myRank}</span> ( {myPoints.toLocaleString()}??) · 바로 ???��?" "}
+              <span style={{ color: baseAccent }}>{gapToAbovePoints?.toLocaleString()}??/span> 차이
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Link
                 to="/dice"
                 className="rounded-[6px] bg-[#d2fd9c] px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-black hover:brightness-95"
               >
-                게임하러 가기
-              </Link>
+                게임?�러 가�?              </Link>
               <button
                 type="button"
                 className="rounded-[6px] border border-white/15 bg-white/5 px-3 py-2 text-[clamp(12px,2.8vw,13px)] font-semibold text-white/85 hover:bg-white/10"
                 onClick={() => leaderboardQuery.refetch()}
               >
-                리더보드 새로고침
+                리더보드 ?�로고침
               </button>
             </div>
           </div>
@@ -305,24 +303,24 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
 
         <div className="mt-[18px] rounded-[12px] border border-white/10 bg-black/70 px-[18px] py-[16px]">
           <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
-            룰 안내 (핵심)
+            �??�내 (?�심)
           </p>
           <ul className="mt-3 space-y-2 text-[clamp(13px,2.8vw,16px)] text-white/85">
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
-              <span>참여: 밸런스 기준 자동 배정 (직접 선택 없음)</span>
+              <span>참여: 밸런??기�? ?�동 배정 (직접 ?�택 ?�음)</span>
             </li>
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
-              <span>팀 선택: 시작 후 24시간 내 1회</span>
+              <span>?� ?�택: ?�작 ??24?�간 ??1??/span>
             </li>
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
-              <span>점수: 게임 1회당 10점 · 1인 하루 최대 500점</span>
+              <span>?�수: 게임 1?�당 10??· 1???�루 최�? 500??/span>
             </li>
             <li className="flex gap-2">
               <span className="mt-[6px] inline-block h-[6px] w-[6px] rounded-full" style={{ backgroundColor: baseAccent }} />
-              <span>보상: 1위 쿠폰 30만 · 2위 쿠폰 20만 · 3위 쿠폰 5만 (전부 수동) · 최소 30회(300점)</span>
+              <span>보상: 1??쿠폰 30�?· 2??쿠폰 20�?· 3??쿠폰 5�?(?��? ?�동) · 최소 30??300??</span>
             </li>
           </ul>
         </div>
@@ -332,21 +330,21 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
             <p className="text-[clamp(15px,2.8vw,16px)] font-semibold" style={{ color: baseAccent }}>
               리더보드
             </p>
-            <p className="text-[clamp(13px,2.8vw,14px)] text-white/55">표시 10</p>
+            <p className="text-[clamp(13px,2.8vw,14px)] text-white/55">?�시 10</p>
           </div>
 
           <div className="mt-[10px] space-y-[10px]">
             {leaderboardQuery.isLoading ? (
               <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
-                불러오는 중...
+                불러?�는 �?..
               </div>
             ) : leaderboardQuery.isError ? (
               <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
-                리더보드를 불러오지 못했습니다.
+                리더보드�?불러?��? 못했?�니??
               </div>
             ) : leaderboard.length === 0 ? (
               <div className="rounded-[12px] border border-white/10 bg-[#394508]/20 px-[18px] py-[18px] text-[clamp(13px,2.8vw,14px)] text-white/70">
-                표시할 데이터가 없습니다.
+                ?�시???�이?��? ?�습?�다.
               </div>
             ) : (
               leaderboard.slice(0, 10).map((row, idx) => {
@@ -374,15 +372,15 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
                               className="rounded-full px-2 py-[3px] text-[clamp(11px,2.6vw,12px)] font-semibold tracking-[-0.2px] text-black"
                               style={{ backgroundColor: baseAccent }}
                             >
-                              내팀
+                              ?��?
                             </span>
                           ) : null}
                         </div>
-                        <p className="mt-1 text-[clamp(13px,2.6vw,16px)] text-white/60">인원 {row.member_count ?? "-"}명</p>
+                        <p className="mt-1 text-[clamp(13px,2.6vw,16px)] text-white/60">?�원 {row.member_count ?? "-"}�?/p>
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <p className="text-[clamp(13px,2.6vw,16px)] text-white/60">점수</p>
+                        <p className="text-[clamp(13px,2.6vw,16px)] text-white/60">?�수</p>
                         <p className="text-[clamp(16px,3.2vw,18px)] font-bold" style={{ color: baseAccent }}>
                           {row.points.toLocaleString()}
                         </p>
@@ -395,7 +393,7 @@ const TeamBattleMainPanel: React.FC<{ variant: ViewportVariant }> = ({ variant }
           </div>
 
           {(seasonQuery.isError || myTeamQuery.isError) && (
-            <p className="mt-3 text-[12px] text-white/50">일부 정보를 불러오지 못했습니다. 새로고침을 눌러주세요.</p>
+            <p className="mt-3 text-[12px] text-white/50">?��? ?�보�?불러?��? 못했?�니?? ?�로고침???�러주세??</p>
           )}
         </div>
       </div>

@@ -31,16 +31,16 @@ export type AdminUiConfigResponse = {
 };
 
 export async function fetchAdminShopProducts(): Promise<AdminShopProduct[]> {
-  const { data } = await adminApi.get<AdminShopProduct[]>("/admin/api/shop/products");
+  const { data } = await adminApi.get<AdminShopProduct[]>("/api/admin/shop/products");
   return data;
 }
 
 export async function fetchAdminShopOverrides(): Promise<AdminUiConfigResponse> {
-  const { data } = await adminApi.get<AdminUiConfigResponse>("/admin/api/shop/products/overrides");
+  const { data } = await adminApi.get<AdminUiConfigResponse>("/api/admin/shop/products/overrides");
   return data;
 }
 
 export async function upsertAdminShopOverrides(value: ShopProductsOverrides): Promise<AdminUiConfigResponse> {
-  const { data } = await adminApi.put<AdminUiConfigResponse>("/admin/api/shop/products/overrides", value);
+  const { data } = await adminApi.put<AdminUiConfigResponse>("/api/admin/shop/products/overrides", value);
   return data;
 }

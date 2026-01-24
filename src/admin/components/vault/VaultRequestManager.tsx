@@ -85,7 +85,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
         if (!approvalModal) return;
         const finalAmount = parseInt(approveAmount);
         if (isNaN(finalAmount) || finalAmount <= 0) {
-            addToast("유효한 금액을 입력해주세요.", "error");
+            addToast("?�효??금액???�력?�주?�요.", "error");
             return;
         }
 
@@ -98,25 +98,25 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
             });
             setApprovalModal(null);
             fetchRequests();
-            addToast("승인 처리 완료", "success");
+            addToast("?�인 처리 ?�료", "success");
         } catch (error) {
             console.error("Approve failed:", error);
-            addToast("승인 처리 실패", "error");
+            addToast("?�인 처리 ?�패", "error");
         }
     };
 
     const handleReject = async (requestId: number) => {
-        if (!window.confirm("정말 반려하시겠습니까?")) return;
+        if (!window.confirm("?�말 반려?�시겠습?�까?")) return;
         try {
             await adminApi.post("/admin/api/vault/admin/process", {
                 request_id: requestId,
                 action: "REJECT"
             });
             fetchRequests();
-            addToast("반려 처리 완료", "success");
+            addToast("반려 처리 ?�료", "success");
         } catch (error) {
             console.error("Reject failed:", error);
-            addToast("반려 처리 실패", "error");
+            addToast("반려 처리 ?�패", "error");
         }
     };
 
@@ -128,14 +128,14 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
             await adminApi.post("/admin/api/vault/admin/adjust-amount", {
                 request_id: requestId,
                 new_amount: amount,
-                admin_memo: "금액 수동 조정"
+                admin_memo: "금액 ?�동 조정"
             });
             setEditingId(null);
             fetchRequests();
-            addToast("금액 조정 완료", "success");
+            addToast("금액 조정 ?�료", "success");
         } catch (error) {
             console.error("Adjust amount failed:", error);
-            addToast("금액 조정 실패", "error");
+            addToast("금액 조정 ?�패", "error");
         }
     };
 
@@ -155,7 +155,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
             setNewAvailable(state.available_balance.toString());
         } catch (error) {
             console.error("Open balance modal failed:", error);
-            addToast("유저 잔액 정보를 가져오지 못했습니다.", "error");
+            addToast("?��? ?�액 ?�보�?가?�오지 못했?�니??", "error");
         }
     };
 
@@ -169,11 +169,11 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                 reason: "ADMIN_MANUAL_SET"
             });
             setBalanceModal(null);
-            addToast?.("잔액이 성공적으로 수정되었습니다.", "success");
+            addToast?.("?�액???�공?�으�??�정?�었?�니??", "success");
             // Optional: refresh if needed, but usually this is standalone
         } catch (error) {
             console.error("Update balance failed:", error);
-            addToast?.("잔액 수정 실패", "error");
+            addToast?.("?�액 ?�정 ?�패", "error");
         } finally {
             setBalanceLoading(false);
         }
@@ -198,7 +198,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                 : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
                                 }`}
                         >
-                            {status === "PENDING" ? "대기" : status === "APPROVED" ? "승인" : "반려"}
+                            {status === "PENDING" ? "?��? : status === "APPROVED" ? "?�인" : "반려"}
                         </button>
                     ))}
                 </div>
@@ -207,7 +207,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-600 group-focus-within:text-indigo-500 transition-colors" />
                     <input
                         type="text"
-                        placeholder="검색..."
+                        placeholder="검??.."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full md:w-60 h-9 bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 text-xs text-zinc-300 focus:border-indigo-500 outline-none transition-all placeholder:text-zinc-700"
@@ -220,20 +220,20 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                 <table className="w-full text-left border-collapse table-fixed">
                     <thead>
                         <tr className="bg-zinc-900/50 border-y border-zinc-800">
-                            <th className="w-[30%] px-4 py-2 text-left text-[11px] font-bold text-zinc-500 uppercase tracking-wider">유저</th>
-                            <th className="w-[25%] px-4 py-2 text-right text-[11px] font-bold text-zinc-500 uppercase tracking-wider">요청액</th>
-                            <th className="w-[20%] px-4 py-2 text-center text-[11px] font-bold text-zinc-500 uppercase tracking-wider">시간</th>
+                            <th className="w-[30%] px-4 py-2 text-left text-[11px] font-bold text-zinc-500 uppercase tracking-wider">?��?</th>
+                            <th className="w-[25%] px-4 py-2 text-right text-[11px] font-bold text-zinc-500 uppercase tracking-wider">?�청??/th>
+                            <th className="w-[20%] px-4 py-2 text-center text-[11px] font-bold text-zinc-500 uppercase tracking-wider">?�간</th>
                             <th className="w-[25%] px-4 py-2 text-right text-[11px] font-bold text-zinc-500 uppercase tracking-wider">처리</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-admin-border">
                         {loading ? (
                             <tr>
-                                <td colSpan={4} className="px-6 py-20 text-center text-admin-meta text-admin-text-secondary">로딩 중...</td>
+                                <td colSpan={4} className="px-6 py-20 text-center text-admin-meta text-admin-text-secondary">로딩 �?..</td>
                             </tr>
                         ) : filteredRequests.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="px-6 py-20 text-center text-admin-body text-admin-text-muted">내역이 없습니다.</td>
+                                <td colSpan={4} className="px-6 py-20 text-center text-admin-body text-admin-text-muted">?�역???�습?�다.</td>
                             </tr>
                         ) : (
                             filteredRequests.map((req) => (
@@ -251,7 +251,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                                     <button
                                                         onClick={() => openBalanceModal(req)}
                                                         className="p-1 rounded bg-zinc-800 hover:bg-admin-brand hover:text-white text-zinc-500 transition-colors"
-                                                        title="잔액 설정"
+                                                        title="?�액 ?�정"
                                                     >
                                                         <CreditCard className="h-3 w-3" />
                                                     </button>
@@ -271,15 +271,15 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                                     onChange={(e) => setEditAmount(e.target.value)}
                                                     className="w-20 h-7 bg-zinc-900 border border-brand-500/50 rounded-md px-1 text-right text-xs text-white outline-none"
                                                     autoFocus
-                                                    aria-label="수정 금액"
+                                                    aria-label="?�정 금액"
                                                     placeholder="금액"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => handleAdjustAmount(req.id)}
                                                     className="p-1 rounded bg-emerald-600 text-white hover:bg-emerald-500"
-                                                    aria-label="금액 저장"
-                                                    title="금액 저장"
+                                                    aria-label="금액 ?�??
+                                                    title="금액 ?�??
                                                 >
                                                     <Save className="h-3 w-3" />
                                                 </button>
@@ -287,8 +287,8 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                                     type="button"
                                                     onClick={() => setEditingId(null)}
                                                     className="p-1 rounded bg-zinc-700 text-zinc-400 hover:text-white"
-                                                    aria-label="수정 취소"
-                                                    title="수정 취소"
+                                                    aria-label="?�정 취소"
+                                                    title="?�정 취소"
                                                 >
                                                     <X className="h-3 w-3" />
                                                 </button>
@@ -303,7 +303,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                                         type="button"
                                                         onClick={() => { setEditingId(req.id); setEditAmount(req.amount.toString()); }}
                                                         className="p-1 rounded hover:bg-zinc-800 text-zinc-600 hover:text-white transition-colors"
-                                                        title="금액 수정"
+                                                        title="금액 ?�정"
                                                     >
                                                         <Edit3 className="h-3 w-3" />
                                                     </button>
@@ -324,7 +324,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-admin-accent/10 text-admin-accent hover:bg-admin-accent hover:text-white transition-all duration-200 border border-admin-accent/20"
                                                 >
                                                     <CheckCircle2 className="h-4 w-4" />
-                                                    <span className="font-bold">승인</span>
+                                                    <span className="font-bold">?�인</span>
                                                 </button>
                                                 <button
                                                     onClick={() => handleReject(req.id)}
@@ -336,7 +336,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                             </div>
                                         ) : (
                                             <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-black uppercase tracking-tight justify-end ${req.status === "APPROVED" ? "bg-admin-accent/10 text-admin-accent border border-admin-accent/30" : "bg-admin-danger/10 text-admin-danger border border-admin-danger/30"}`}>
-                                                {req.status === "APPROVED" ? (<><CheckCircle2 className="h-3 w-3" /> 승인 완료</>) : (<><XCircle className="h-3 w-3" /> 반려 처리</>)}
+                                                {req.status === "APPROVED" ? (<><CheckCircle2 className="h-3 w-3" /> ?�인 ?�료</>) : (<><XCircle className="h-3 w-3" /> 반려 처리</>)}
                                             </div>
                                         )}
                                     </td>
@@ -350,7 +350,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
             <div className="flex items-center gap-4 px-2">
                 <div className="flex items-center gap-2 text-admin-meta text-admin-text-muted">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    <span>승인 시 해당 유저의 가용 잔액이 즉시 차감됩니다. (부분 승인을 원하시면 승인 버튼 후 금액을 수정하세요)</span>
+                    <span>?�인 ???�당 ?��???가???�액??즉시 차감?�니?? (부�??�인???�하?�면 ?�인 버튼 ??금액???�정?�세??</span>
                 </div>
             </div>
 
@@ -362,14 +362,14 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                             <div className="flex justify-between items-start">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     <CheckCircle2 className="text-admin-accent" />
-                                    출금 승인 처리
+                                    출금 ?�인 처리
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setApprovalModal(null)}
                                     className="text-admin-text-muted hover:text-white"
-                                    aria-label="승인 모달 닫기"
-                                    title="닫기"
+                                    aria-label="?�인 모달 ?�기"
+                                    title="?�기"
                                 >
                                     <X className="h-5 w-5" />
                                 </button>
@@ -377,35 +377,35 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
 
                             <div className="space-y-4">
                                 <div className="bg-admin-sidebar p-4 rounded-xl border border-admin-border">
-                                    <div className="text-admin-meta text-admin-text-secondary mb-1">요청 사용자</div>
+                                    <div className="text-admin-meta text-admin-text-secondary mb-1">?�청 ?�용??/div>
                                     <div className="text-lg font-bold text-admin-text-primary">{approvalModal.nickname}</div>
-                                    <div className="text-admin-mono text-admin-text-muted">요청 금액: {approvalModal.amount.toLocaleString()} KRW</div>
+                                    <div className="text-admin-mono text-admin-text-muted">?�청 금액: {approvalModal.amount.toLocaleString()} KRW</div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-admin-meta text-admin-text-secondary font-bold">승인 금액 (변경 가능)</label>
+                                    <label className="text-admin-meta text-admin-text-secondary font-bold">?�인 금액 (변�?가??</label>
                                     <div className="relative">
                                         <input
                                             type="number"
                                             value={approveAmount}
                                             onChange={(e) => setApproveAmount(e.target.value)}
                                             className="w-full h-12 bg-admin-bg border border-admin-border rounded-xl px-4 text-admin-body font-bold focus:border-admin-accent focus:ring-1 focus:ring-admin-accent outline-none"
-                                            aria-label="승인 금액"
-                                            title="승인 금액"
+                                            aria-label="?�인 금액"
+                                            title="?�인 금액"
                                         />
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-admin-text-muted text-sm font-bold">KRW</span>
                                     </div>
                                     <p className="text-xs text-admin-text-muted">
-                                        * 실제 출금 승인할 금액을 입력하세요. 기본값은 요청 금액입니다.
+                                        * ?�제 출금 ?�인??금액???�력?�세?? 기본값�? ?�청 금액?�니??
                                     </p>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-admin-meta text-admin-text-secondary font-bold">관리자 메모 (선택)</label>
+                                    <label className="text-admin-meta text-admin-text-secondary font-bold">관리자 메모 (?�택)</label>
                                     <textarea
                                         value={approveMemo}
                                         onChange={(e) => setApproveMemo(e.target.value)}
-                                        placeholder="처리 사유 등 메모..."
+                                        placeholder="처리 ?�유 ??메모..."
                                         className="w-full h-20 bg-admin-bg border border-admin-border rounded-xl p-3 text-admin-body resize-none focus:border-admin-brand outline-none"
                                     />
                                 </div>
@@ -422,7 +422,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                     onClick={handleConfirmApprove}
                                     className="flex-1 py-3 bg-admin-accent hover:bg-admin-accent/90 text-white rounded-xl font-bold shadow-lg shadow-admin-accent/20 transition-all"
                                 >
-                                    승인 확정
+                                    ?�인 ?�정
                                 </button>
                             </div>
                         </div>
@@ -438,14 +438,14 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                             <div className="flex justify-between items-start">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <CreditCard className="text-admin-brand" />
-                                    잔액 직접 설정
+                                    ?�액 직접 ?�정
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={() => setBalanceModal(null)}
                                     className="text-admin-text-muted hover:text-white"
-                                    aria-label="잔액 설정 모달 닫기"
-                                    title="닫기"
+                                    aria-label="?�액 ?�정 모달 ?�기"
+                                    title="?�기"
                                 >
                                     <X className="h-5 w-5" />
                                 </button>
@@ -460,30 +460,30 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
 
                                 <div className="space-y-4">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-admin-text-secondary">금고 잠금 금액 (Locked)</label>
+                                        <label className="text-xs font-bold text-admin-text-secondary">금고 ?�금 금액 (Locked)</label>
                                         <div className="relative">
                                             <input
                                                 type="number"
                                                 value={newLocked}
                                                 onChange={(e) => setNewLocked(e.target.value)}
                                                 className="w-full h-10 bg-admin-bg border border-admin-border rounded-xl px-3 text-sm font-bold text-admin-brand outline-none focus:border-admin-brand"
-                                                aria-label="금고 잠금 금액(Locked)"
-                                                title="금고 잠금 금액(Locked)"
+                                                aria-label="금고 ?�금 금액(Locked)"
+                                                title="금고 ?�금 금액(Locked)"
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-admin-text-muted font-bold">KRW</span>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-bold text-admin-text-secondary">가용 원화 잔액 (Available)</label>
+                                        <label className="text-xs font-bold text-admin-text-secondary">가???�화 ?�액 (Available)</label>
                                         <div className="relative">
                                             <input
                                                 type="number"
                                                 value={newAvailable}
                                                 onChange={(e) => setNewAvailable(e.target.value)}
                                                 className="w-full h-10 bg-admin-bg border border-admin-border rounded-xl px-3 text-sm font-bold text-admin-accent outline-none focus:border-admin-accent"
-                                                aria-label="가용 원화 잔액(Available)"
-                                                title="가용 원화 잔액(Available)"
+                                                aria-label="가???�화 ?�액(Available)"
+                                                title="가???�화 ?�액(Available)"
                                             />
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-admin-text-muted font-bold">KRW</span>
                                         </div>
@@ -493,8 +493,8 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                 <div className="p-3 bg-admin-danger/10 border border-admin-danger/20 rounded-xl">
                                     <p className="text-[11px] text-admin-danger font-medium leading-relaxed">
                                         <AlertCircle className="inline h-3 w-3 mr-1 align-sub" />
-                                        주의: 이 설정은 현재 잔액을 무시하고 해당 금액으로 강제 셋팅합니다.
-                                        변경 내역은 정산 원장에 기록됩니다.
+                                        주의: ???�정?� ?�재 ?�액??무시?�고 ?�당 금액?�로 강제 ?�팅?�니??
+                                        변�??�역?� ?�산 ?�장??기록?�니??
                                     </p>
                                 </div>
                             </div>
@@ -511,7 +511,7 @@ export const VaultRequestManager: React.FC<VaultRequestManagerProps> = ({ refres
                                     disabled={balanceLoading}
                                     className="flex-1 py-2.5 bg-admin-brand hover:brightness-110 text-white rounded-xl font-bold shadow-lg shadow-admin-brand/20 transition-all text-sm"
                                 >
-                                    {balanceLoading ? "반영 중..." : "설정 반영"}
+                                    {balanceLoading ? "반영 �?.." : "?�정 반영"}
                                 </button>
                             </div>
                         </div>

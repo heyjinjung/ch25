@@ -1,4 +1,4 @@
-﻿// src/components/game/RouletteWheel.tsx
+// src/components/game/RouletteWheel.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import RouletteFrame from "./RouletteFrame";
 

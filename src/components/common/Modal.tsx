@@ -31,7 +31,7 @@ const Modal: React.FC<ModalProps> = ({ title, open, onClose, children }) => {
             className="shrink-0 rounded-full p-2 sm:p-2.5 text-admin-text-muted transition hover:bg-admin-element-hover active:scale-95 text-xl sm:text-base"
             onClick={onClose}
           >
-            ✕
+            ??
           </button>
         </div>
         <div className="mt-3 sm:mt-4 text-sm text-admin-text-base">{children}</div>

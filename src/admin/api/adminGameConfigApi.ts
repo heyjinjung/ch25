@@ -1,4 +1,4 @@
-// src/admin/api/adminGameConfigApi.ts
+// src/api/admin/adminGameConfigApi.ts
 import { adminApi } from "./httpClient";
 
 export interface GameConfig {
@@ -19,9 +19,9 @@ export const fetchGameConfigsSummary = async (): Promise<GameConfigSummary[]> =>
     try {
         // Fetch summary data from each game type
         const [diceConfigs, rouletteConfigs, lotteryConfigs] = await Promise.all([
-            adminApi.get<GameConfig[]>("/admin/api/dice-config/"),
-            adminApi.get<GameConfig[]>("/admin/api/roulette-config/"),
-            adminApi.get<GameConfig[]>("/admin/api/lottery-config/"),
+            adminApi.get<GameConfig[]>("/api/admin/dice-config/"),
+            adminApi.get<GameConfig[]>("/api/admin/roulette-config/"),
+            adminApi.get<GameConfig[]>("/api/admin/lottery-config/"),
         ]);
 
         const summary: GameConfigSummary[] = [

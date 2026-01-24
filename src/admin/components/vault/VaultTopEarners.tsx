@@ -47,7 +47,7 @@ export const VaultTopEarners: React.FC<VaultTopEarnersProps> = ({ refreshKey }) 
                     </div>
                 ) : topUsers.length === 0 ? (
                     <div className="text-center py-12 text-zinc-600 text-xs">
-                        데이터가 없습니다.
+                        ?�이?��? ?�습?�다.
                     </div>
                 ) : (
                     <div className="divide-y divide-zinc-800/50">
@@ -74,7 +74,7 @@ export const VaultTopEarners: React.FC<VaultTopEarnersProps> = ({ refreshKey }) 
                                     <div className="text-sm font-bold text-emerald-500 font-mono tracking-tight">
                                         +{formatCurrency(user.amount || 0)}
                                     </div>
-                                    <div className="text-[10px] text-zinc-600">오늘 적립</div>
+                                    <div className="text-[10px] text-zinc-600">?�늘 ?�립</div>
                                 </div>
                             </div>
                         ))}
@@ -100,7 +100,7 @@ export const VaultTopEarners: React.FC<VaultTopEarnersProps> = ({ refreshKey }) 
                 ) : (
                     <div className="flex items-center gap-2 text-zinc-600 px-2 py-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-xs">현재 감지된 위험 신호 없음</span>
+                        <span className="text-xs">?�재 감�????�험 ?�호 ?�음</span>
                     </div>
                 )}
             </div>

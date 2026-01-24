@@ -71,12 +71,12 @@ const DiceView: React.FC<DiceViewProps> = ({ userDice, dealerDice, result, isRol
   }, [result, isRolling]);
 
   const resultConfig = useMemo(() => {
-    if (!result) return { text: "전투 준비", color: "text-white/40", bg: "bg-white/5", icon: Swords };
+    if (!result) return { text: "?�투 준�?, color: "text-white/40", bg: "bg-white/5", icon: Swords };
     switch (result) {
       case "WIN":
-        return { text: "승리", color: "text-[#30FF75]", bg: "bg-emerald-500/10", icon: Shield };
+        return { text: "?�리", color: "text-[#30FF75]", bg: "bg-emerald-500/10", icon: Shield };
       case "LOSE":
-        return { text: "패배", color: "text-red-500", bg: "bg-red-500/10", icon: Heart };
+        return { text: "?�배", color: "text-red-500", bg: "bg-red-500/10", icon: Heart };
       case "DRAW":
         return { text: "무승부", color: "text-amber-400", bg: "bg-amber-500/10", icon: Swords };
     }

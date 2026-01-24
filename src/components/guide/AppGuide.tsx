@@ -4,17 +4,17 @@ import Joyride, { CallBackProps, STATUS, ACTIONS, Step, Styles, TooltipRenderPro
 import { useGuide } from "../../contexts/GuideContext";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// 시니어 친화적 큰 글씨, 명확한 한글 안내
-// 전체 플로우(최신): 홈 → 게임 → 금고 → 출금조건버튼 → 출금안내 → 상점 → 보상함 → 이벤트 → 미션 → 보상수령
+// ?�니??친화????글?? 명확???��? ?�내
+// ?�체 ?�로??최신): ????게임 ??금고 ??출금조건버튼 ??출금?�내 ???�점 ??보상?????�벤????미션 ??보상?�령
 const guideSteps: Step[] = [
-  // 1. 홈
+  // 1. ??
   {
     target: '[data-tour="nav-home"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🏠 홈</div>
+        <div className="text-lg font-black mb-2">?�� ??/div>
         <div className="text-sm leading-snug break-keep">
-          여기는 <strong>홈</strong>입니다. 게임 목록과 주요 기능을 볼 수 있어요.
+          ?�기??<strong>??/strong>?�니?? 게임 목록�?주요 기능??�????�어??
         </div>
       </div>
     ),
@@ -26,10 +26,10 @@ const guideSteps: Step[] = [
     target: '[data-tour="nav-games"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🎮 게임</div>
+        <div className="text-lg font-black mb-2">?�� 게임</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>룰렛, 주사위, 복권</strong> 게임을 하려면 여기를 누르세요.
-          <div className="mt-2 text-amber-400">💡 티켓이 있어야 게임을 할 수 있어요.</div>
+          <strong>룰렛, 주사?? 복권</strong> 게임???�려�??�기�??�르?�요.
+          <div className="mt-2 text-amber-400">?�� ?�켓???�어??게임???????�어??</div>
         </div>
       </div>
     ),
@@ -41,72 +41,72 @@ const guideSteps: Step[] = [
     target: '[data-tour="nav-vault"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🔐 금고</div>
+        <div className="text-lg font-black mb-2">?�� 금고</div>
         <div className="text-sm leading-snug break-keep">
-          <strong>내 보상 금액</strong>을 확인하려면 여기를 눌러 금고로 가세요.
-          <div className="mt-2 text-emerald-400">✨ 게임에서 얻은 보상이 여기에 쌓여요.</div>
+          <strong>??보상 금액</strong>???�인?�려�??�기�??�러 금고�?가?�요.
+          <div className="mt-2 text-emerald-400">??게임?�서 ?��? 보상???�기???�여??</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 4. 금고 출금 조건 버튼 (금고 페이지 내)
+  // 4. 금고 출금 조건 버튼 (금고 ?�이지 ??
   {
     target: '[data-tour="vault-condition-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">📋 출금 조건</div>
+        <div className="text-lg font-black mb-2">?�� 출금 조건</div>
         <div className="text-sm leading-snug break-keep">
-          상금을 출금하려면 조건이 필요해요.
+          ?�금??출금?�려�?조건???�요?�요.
           <br />
-          <strong>이 버튼</strong>을 눌러 현재 달성 현황을 확인할 수 있습니다.
+          <strong>??버튼</strong>???�러 ?�재 ?�성 ?�황???�인?????�습?�다.
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 5. 출금 안내 (화면 중앙 or 버튼) -> Step 5가 "안내"
+  // 5. 출금 ?�내 (?�면 중앙 or 버튼) -> Step 5가 "?�내"
   {
     target: '[data-tour="vault-condition-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">💡 금고 해제 팁</div>
+        <div className="text-lg font-black mb-2">?�� 금고 ?�제 ??/div>
         <div className="text-sm leading-snug break-keep">
-          출금 조건을 채우기 위해 <strong>게임 플레이</strong>와 <strong>상점 아이템 구매</strong>가 도움이 됩니다.
-          <div className="mt-2 text-emerald-400">이제 상점으로 가볼까요?</div>
+          출금 조건??채우�??�해 <strong>게임 ?�레??/strong>?� <strong>?�점 ?�이??구매</strong>가 ?��????�니??
+          <div className="mt-2 text-emerald-400">?�제 ?�점?�로 가볼까??</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 6. 상점 (하단 네비)
+  // 6. ?�점 (?�단 ?�비)
   {
     target: '[data-tour="nav-shop"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🛒 교환소 (상점)</div>
+        <div className="text-lg font-black mb-2">?�� 교환??(?�점)</div>
         <div className="text-sm leading-snug break-keep">
-          여기서 <strong>티켓과 아이템</strong>을 구매하고 교환할 수 있어요.
-          <div className="mt-2 text-white/70">구매한 아이템은 바로 보상함으로 갑니다!</div>
+          ?�기??<strong>?�켓�??�이??/strong>??구매?�고 교환?????�어??
+          <div className="mt-2 text-white/70">구매???�이?��? 바로 보상?�으�?갑니??</div>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 7. 보상함 (자동이동) -> /rewards 페이지의 탭 타겟
+  // 7. 보상??(?�동?�동) -> /rewards ?�이지?????��?
   {
     target: '[data-tour="inventory-items-tab"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">📦 보상함 (보유 아이템)</div>
+        <div className="text-lg font-black mb-2">?�� 보상??(보유 ?�이??</div>
         <div className="text-sm leading-snug break-keep">
-          구매하거나 선물 받은 아이템은 모두 <strong>보상함</strong>에 보관됩니다.
+          구매?�거???�물 받�? ?�이?��? 모두 <strong>보상??/strong>??보�??�니??
           <br />
-          <span className="text-amber-400">언제든지 꺼내 쓸 수 있어요!</span>
+          <span className="text-amber-400">?�제?��? 꺼내 ?????�어??</span>
         </div>
       </div>
     ),
@@ -114,32 +114,32 @@ const guideSteps: Step[] = [
     disableBeacon: true,
     spotlightPadding: 5,
   },
-  // 8. 이벤트/미션 탭 (Index 7)
+  // 8. ?�벤??미션 ??(Index 7)
   {
     target: '[data-tour="nav-events"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🎉 이벤트/미션</div>
+        <div className="text-lg font-black mb-2">?�� ?�벤??미션</div>
         <div className="text-sm leading-snug break-keep">
-          다양한 <strong>보상과 이벤트</strong>를 확인하려면 여기를 누르세요.
+          ?�양??<strong>보상�??�벤??/strong>�??�인?�려�??�기�??�르?�요.
           <br />
-          <span className="text-emerald-400">미션도 여기서 시작합니다!</span>
+          <span className="text-emerald-400">미션???�기???�작?�니??</span>
         </div>
       </div>
     ),
     placement: "top",
     disableBeacon: true,
   },
-  // 9. 이벤트 대시보드 - 미션 카드 (Index 8)
+  // 9. ?�벤???�?�보??- 미션 카드 (Index 8)
   {
     target: '[data-tour="event-mission-card"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🎯 데일리 미션</div>
+        <div className="text-lg font-black mb-2">?�� ?�일�?미션</div>
         <div className="text-sm leading-snug break-keep">
-          매일 주어지는 미션을 완료하면 <strong>다이아</strong>를 드립니다.
+          매일 주어지??미션???�료?�면 <strong>?�이??/strong>�??�립?�다.
           <br />
-          눌러서 미션을 확인해보세요.
+          ?�러??미션???�인?�보?�요.
         </div>
       </div>
     ),
@@ -151,41 +151,41 @@ const guideSteps: Step[] = [
     target: '[data-tour="mission-claim-btn"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">💰 보상 받기</div>
+        <div className="text-lg font-black mb-2">?�� 보상 받기</div>
         <div className="text-sm leading-snug break-keep">
-          미션을 완료했다면 <strong>이 버튼</strong>을 눌러 보상을 챙기세요.
-          <div className="mt-2 text-amber-400">잊지 말고 꼭 챙겨가세요!</div>
+          미션???�료?�다�?<strong>??버튼</strong>???�러 보상??챙기?�요.
+          <div className="mt-2 text-amber-400">?��? 말고 �?챙겨가?�요!</div>
         </div>
       </div>
     ),
     placement: "bottom",
     disableBeacon: true,
   },
-  // 11. 이벤트 모달 카드 (Index 10) -> /events
+  // 11. ?�벤??모달 카드 (Index 10) -> /events
   {
     target: '[data-tour="event-modals-card"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">🎫 이벤트 모음</div>
+        <div className="text-lg font-black mb-2">?�� ?�벤??모음</div>
         <div className="text-sm leading-snug break-keep">
-          스트릭, 한정 혜택 등 <strong>모든 이벤트 팝업</strong>을 다시 보려면
-          여기를 누르세요.
+          ?�트�? ?�정 ?�택 ??<strong>모든 ?�벤???�업</strong>???�시 보려�?
+          ?�기�??�르?�요.
         </div>
       </div>
     ),
     placement: "bottom",
     disableBeacon: true,
   },
-  // 12. 모달 페이지 (Index 11) -> /events/modals
+  // 12. 모달 ?�이지 (Index 11) -> /events/modals
   {
     target: '[data-tour="event-modal-list"]',
     content: (
       <div className="text-left">
-        <div className="text-lg font-black mb-2">✨ 진행 중인 혜택</div>
+        <div className="text-lg font-black mb-2">??진행 중인 ?�택</div>
         <div className="text-sm leading-snug break-keep">
-          현재 참여 가능한 모든 혜택이 여기에 있습니다.
+          ?�재 참여 가?�한 모든 ?�택???�기???�습?�다.
           <br />
-          <strong>하나씩 눌러서 확인해보세요!</strong>
+          <strong>?�나???�러???�인?�보?�요!</strong>
         </div>
       </div>
     ),
@@ -201,7 +201,7 @@ const scrollToSelector = (selector: string, behavior: ScrollBehavior = "smooth")
   return true;
 };
 
-// 타겟이 실제로 화면에 보일 때까지 폴링 (sr-only 제외)
+// ?�겟이 ?�제�??�면??보일 ?�까지 ?�링 (sr-only ?�외)
 const waitForVisibleTarget = (
   selector: string,
   maxWait = 2000,
@@ -211,7 +211,7 @@ const waitForVisibleTarget = (
     const start = Date.now();
     const check = () => {
       const el = document.querySelector(selector) as HTMLElement | null;
-      // sr-only 클래스가 없고 offsetParent가 있으면 화면에 보이는 것
+      // sr-only ?�래?��? ?�고 offsetParent가 ?�으�??�면??보이??�?
       if (el && !el.classList.contains("sr-only") && el.offsetParent !== null) {
         resolve(el);
         return;
@@ -226,7 +226,7 @@ const waitForVisibleTarget = (
   });
 };
 
-// 시니어 친화적 스타일 (큰 글씨, 높은 대비, 넓은 버튼)
+// ?�니??친화???��???(??글?? ?��? ?��? ?��? 버튼)
 const joyrideStyles: Partial<Styles> = {
   options: {
     backgroundColor: "#1a1a1a",
@@ -270,7 +270,7 @@ const joyrideStyles: Partial<Styles> = {
   },
 };
 
-// 커스텀 툴팁 (시니어 친화적 큰 버튼)
+// 커스?� ?�팁 (?�니??친화????버튼)
 const CustomTooltip: React.FC<TooltipRenderProps> = ({
   continuous,
   index,
@@ -295,7 +295,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
           {...skipProps}
           className="text-xs text-white/40 hover:text-white/60 transition-colors"
         >
-          건너뛰기
+          건너?�기
         </button>
       </div>
 
@@ -311,7 +311,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
             {...backProps}
             className="text-white/60 hover:text-white text-sm font-bold px-3 py-2 transition-colors"
           >
-            ← 이전
+            ???�전
           </button>
         )}
         <div className="flex-1" />
@@ -319,7 +319,7 @@ const CustomTooltip: React.FC<TooltipRenderProps> = ({
           {...primaryProps}
           className="bg-emerald-500 hover:bg-emerald-400 text-black text-base font-black px-6 py-3 rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/30"
         >
-          {continuous && index < size - 1 ? "다음 →" : "완료! ✓"}
+          {continuous && index < size - 1 ? "?�음 ?? : "?�료! ??}
         </button>
       </div>
     </div>
@@ -333,42 +333,42 @@ const AppGuide: React.FC = () => {
   const errorRetryRef = useRef<Set<number>>(new Set());
   const [isTargetReady, setIsTargetReady] = useState(true);
 
-  // 스텝별 페이지 이동 로직 (Flow Control)
-  // 0: 홈, 1: 게임, 2: 금고 Nav, 3: 금고 Page, 4: 금고 버튼, 5: 출금 안내
-  // 6: 상점 Nav, 7: 보상함 Page, 8: 이벤트 Nav, 9: 미션 Page, 10: 미션 보상
+  // ?�텝�??�이지 ?�동 로직 (Flow Control)
+  // 0: ?? 1: 게임, 2: 금고 Nav, 3: 금고 Page, 4: 금고 버튼, 5: 출금 ?�내
+  // 6: ?�점 Nav, 7: 보상??Page, 8: ?�벤??Nav, 9: 미션 Page, 10: 미션 보상
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // Step 3, 4, 5: 금고 페이지 유지
+    // Step 3, 4, 5: 금고 ?�이지 ?��?
     if (stepIndex >= 3 && stepIndex <= 5) {
       if (!location.pathname.startsWith("/vault")) {
         navigate("/vault");
       }
     }
 
-    // Step 7: 보상함 (자동이동) -> Index 6
+    // Step 7: 보상??(?�동?�동) -> Index 6
     if (stepIndex === 6) {
       if (!location.pathname.startsWith("/rewards")) {
         navigate("/rewards");
       }
     }
 
-    // Step 8, 9, 11 (Index 7, 8, 10): 이벤트 대시보드
-    // /events 페이지로 이동 (단, /events/modals는 아님)
+    // Step 8, 9, 11 (Index 7, 8, 10): ?�벤???�?�보??
+    // /events ?�이지�??�동 (?? /events/modals???�님)
     if (stepIndex === 7 || stepIndex === 8 || stepIndex === 10) {
       if (location.pathname !== "/events") {
         navigate("/events");
       }
     }
 
-    // Step 10 (Index 9): 미션 페이지
+    // Step 10 (Index 9): 미션 ?�이지
     if (stepIndex === 9) {
       if (!location.pathname.startsWith("/missions")) {
         navigate("/missions");
       }
     }
 
-    // Step 12 (Index 11): 이벤트 모달 페이지
+    // Step 12 (Index 11): ?�벤??모달 ?�이지
     if (stepIndex === 11) {
       if (!location.pathname.startsWith("/events/modals")) {
         navigate("/events/modals");
@@ -376,12 +376,12 @@ const AppGuide: React.FC = () => {
     }
   }, [stepIndex, isGuideRunning, navigate, location.pathname]);
 
-  // 타겟 대기 로직
+  // ?��??��?로직
   useEffect(() => {
     if (!isGuideRunning) return;
 
-    // 페이지 이동 직후 타겟이 없을 수 있으므로 대기
-    // 이동 그룹 업데이트 (Index 0~11 커버)
+    // ?�이지 ?�동 직후 ?�겟이 ?�을 ???�으므�??��?
+    // ?�동 그룹 ?�데?�트 (Index 0~11 커버)
     const movingSteps = [3, 4, 5, 6, 7, 8, 9, 10, 11]; 
     if (movingSteps.includes(stepIndex)) {
       const selector = guideSteps[stepIndex]?.target;
@@ -391,13 +391,13 @@ const AppGuide: React.FC = () => {
       let cancelled = false;
       
       (async () => {
-        // Body 타겟은 즉시 반환 (Step 9)
+        // Body ?�겟�? 즉시 반환 (Step 9)
         if (selector === "body") {
           setIsTargetReady(true);
           return;
         }
 
-        // 로딩 시간 고려 넉넉히 대기
+        // 로딩 ?�간 고려 ?�넉???��?
         const el = await waitForVisibleTarget(selector, 8000, 100);
         if (cancelled) return;
         if (el) {
@@ -418,7 +418,7 @@ const AppGuide: React.FC = () => {
     (data: CallBackProps) => {
       const { status, action, index, type } = data;
 
-      // 타겟을 못 찾으면 한 번 더 스크롤 후 재시도, 그다음에만 패스
+      // ?�겟을 �?찾으�???�????�크�????�시?? 그다?�에�??�스
       if (type === "error:target_not_found") {
         const selector = guideSteps[index]?.target;
         const alreadyRetried = errorRetryRef.current.has(index);
@@ -437,7 +437,7 @@ const AppGuide: React.FC = () => {
         return;
       }
 
-      // 완료 또는 스킵
+      // ?�료 ?�는 ?�킵
       if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
         errorRetryRef.current.clear();
         stopGuide();
@@ -445,13 +445,13 @@ const AppGuide: React.FC = () => {
         return;
       }
 
-      // 닫기 버튼
+      // ?�기 버튼
       if (action === ACTIONS.CLOSE) {
         stopGuide();
         return;
       }
 
-      // 스텝 변경
+      // ?�텝 변�?
       if (type === "step:after") {
         if (action === ACTIONS.NEXT) {
           setStepIndex(index + 1);
@@ -482,11 +482,11 @@ const AppGuide: React.FC = () => {
       styles={joyrideStyles}
       tooltipComponent={CustomTooltip}
       locale={{
-        back: "이전",
-        close: "닫기",
-        last: "완료",
-        next: "다음",
-        skip: "건너뛰기",
+        back: "?�전",
+        close: "?�기",
+        last: "?�료",
+        next: "?�음",
+        skip: "건너?�기",
       }}
       floaterProps={{
         disableAnimation: false,

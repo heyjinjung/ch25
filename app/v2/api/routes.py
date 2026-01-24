@@ -430,12 +430,14 @@ def use_inventory_item(
     if not resolved_key:
         raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
 
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     result = V2InventoryService.use_voucher(
         db,
         user_id,
         item_type,
         amount,
         idempotency_key=resolved_key,
+        legacy_user_id=legacy_user_id,
     )
     reward_token = result.get("reward_token")
     if isinstance(reward_token, str):
@@ -501,9 +503,10 @@ def purchase_shop_product(
 
     from app.v2.services.idempotency_service import IdempotencyService
 
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     idem_record, existing = IdempotencyService.begin(
         db,
-        user_id=user_id,
+        user_id=legacy_user_id,
         scope="v2_shop_purchase",
         idempotency_key=resolved_key,
         request_payload={"sku": sku},

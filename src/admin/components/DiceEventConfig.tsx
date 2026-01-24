@@ -8,9 +8,9 @@ import { useToast } from "../../components/common/ToastProvider";
 
 const eventSchema = z.object({
     is_active: z.boolean(),
-    p_win: z.number().min(0, "0 이상").max(1, "1 이하"),
-    p_draw: z.number().min(0, "0 이상").max(1, "1 이하"),
-    p_lose: z.number().min(0, "0 이상").max(1, "1 이하"),
+    p_win: z.number().min(0, "0 ?�상").max(1, "1 ?�하"),
+    p_draw: z.number().min(0, "0 ?�상").max(1, "1 ?�하"),
+    p_lose: z.number().min(0, "0 ?�상").max(1, "1 ?�하"),
     win_reward: z.number().int(),
     draw_reward: z.number().int(),
     lose_reward: z.number().int(),
@@ -70,10 +70,10 @@ const DiceEventConfig: React.FC = () => {
         mutationFn: updateEventParams,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "dice", "event-params"] });
-            addToast("이벤트 설정 저장 완료", "success");
+            addToast("?�벤???�정 ?�???�료", "success");
         },
         onError: (err: any) => {
-            const msg = err?.response?.data?.detail ?? "저장 실패";
+            const msg = err?.response?.data?.detail ?? "?�???�패";
             addToast(msg, "error");
         },
     });
@@ -119,9 +119,9 @@ const DiceEventConfig: React.FC = () => {
     return (
         <div className="admin-card p-6">
             <div className="mb-6">
-                <h3 className="text-admin-subtitle text-admin-text-primary">주사위 이벤트 설정</h3>
+                <h3 className="text-admin-subtitle text-admin-text-primary">주사???�벤???�정</h3>
                 <p className="mt-1 text-admin-meta text-admin-text-secondary">
-                    이벤트 확률/보상/제한 조건을 관리합니다. (보상은 금고 잠금 잔고에 반영)
+                    ?�벤???�률/보상/?�한 조건??관리합?�다. (보상?� 금고 ?�금 ?�고??반영)
                 </p>
             </div>
 
@@ -134,16 +134,16 @@ const DiceEventConfig: React.FC = () => {
                         {...form.register("is_active")}
                     />
                     <label htmlFor="event_active" className="text-admin-body font-bold text-admin-text-primary">
-                        이벤트 활성화
+                        ?�벤???�성??
                     </label>
                 </div>
 
                 {/* Probabilities */}
                 <div className="space-y-2">
-                    <h4 className="text-admin-body font-bold text-admin-text-primary">확률 (0.0 ~ 1.0)</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">?�률 (0.0 ~ 1.0)</h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="admin-label">승리 (Win)</label>
+                            <label className="admin-label">?�리 (Win)</label>
                             <input
                                 type="number"
                                 step="0.0001"
@@ -162,7 +162,7 @@ const DiceEventConfig: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="admin-label">패배 (Lose)</label>
+                            <label className="admin-label">?�배 (Lose)</label>
                             <input
                                 type="number"
                                 step="0.0001"
@@ -175,10 +175,10 @@ const DiceEventConfig: React.FC = () => {
 
                 {/* Rewards */}
                 <div className="space-y-2">
-                    <h4 className="text-admin-body font-bold text-admin-text-primary">보상 (금고 잠금)</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">보상 (금고 ?�금)</h4>
                     <div className="grid grid-cols-3 gap-4">
                         <div>
-                            <label className="admin-label">승리 보상</label>
+                            <label className="admin-label">?�리 보상</label>
                             <input
                                 type="number"
                                 className="admin-input w-full"
@@ -194,7 +194,7 @@ const DiceEventConfig: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label className="admin-label">패배 보상 (차감)</label>
+                            <label className="admin-label">?�배 보상 (차감)</label>
                             <input
                                 type="number"
                                 className="admin-input w-full"
@@ -206,33 +206,33 @@ const DiceEventConfig: React.FC = () => {
 
                 {/* Caps & Eligibility */}
                 <div className="space-y-2">
-                    <h4 className="text-admin-body font-bold text-admin-text-primary">제한/조건</h4>
+                    <h4 className="text-admin-body font-bold text-admin-text-primary">?�한/조건</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="admin-label">일일 최대 획득 제한 (코인)</label>
+                            <label className="admin-label">?�일 최�? ?�득 ?�한 (코인)</label>
                             <input
                                 type="number"
                                 className="admin-input w-full"
                                 {...form.register("daily_gain", { valueAsNumber: true })}
-                                placeholder="예: 50000"
+                                placeholder="?? 50000"
                             />
                         </div>
                         <div>
-                            <label className="admin-label">일일 최대 플레이 횟수</label>
+                            <label className="admin-label">?�일 최�? ?�레???�수</label>
                             <input
                                 type="number"
                                 className="admin-input w-full"
                                 {...form.register("daily_plays", { valueAsNumber: true })}
-                                placeholder="예: 30"
+                                placeholder="?? 30"
                             />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="admin-label">차단 태그 (콤마로 구분)</label>
+                            <label className="admin-label">차단 ?�그 (콤마�?구분)</label>
                             <input
                                 type="text"
                                 className="admin-input w-full"
                                 {...form.register("blocklist")}
-                                placeholder="예: BLACKLIST, ABUSER"
+                                placeholder="?? BLACKLIST, ABUSER"
                             />
                         </div>
                     </div>
@@ -244,7 +244,7 @@ const DiceEventConfig: React.FC = () => {
                         disabled={mutation.isPending}
                         className="btn-admin-primary disabled:opacity-50"
                     >
-                        {mutation.isPending ? "저장 중..." : "설정 저장"}
+                        {mutation.isPending ? "?�??�?.." : "?�정 ?�??}
                     </button>
                 </div>
             </form>

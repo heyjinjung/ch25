@@ -54,33 +54,33 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
     const conditions = [
         {
             id: "min-balance",
-            title: "최소 출금액",
-            target: `${minWithdrawal.toLocaleString()}원`,
-            current: `${vaultBalance.toLocaleString()}원`,
+            title: "최소 출금??,
+            target: `${minWithdrawal.toLocaleString()}??,
+            current: `${vaultBalance.toLocaleString()}??,
             status: isBalanceMet,
             icon: Wallet
         },
         {
             id: "plays",
-            title: "플레이 횟수",
-            target: `${dailyPlayTarget}회`,
-            current: `${dailyPlayCount}회`,
+            title: "?�레???�수",
+            target: `${dailyPlayTarget}??,
+            current: `${dailyPlayCount}??,
             status: isPlayMet,
             icon: Gamepad2
         },
         {
             id: "spent",
-            title: "금고 일일 사용",
-            target: `${dailyVaultSpentTarget.toLocaleString()}원`,
-            current: `${dailyVaultSpent.toLocaleString()}원`,
+            title: "금고 ?�일 ?�용",
+            target: `${dailyVaultSpentTarget.toLocaleString()}??,
+            current: `${dailyVaultSpent.toLocaleString()}??,
             status: isSpentMet,
             icon: Coins
         },
         {
             id: "deposit",
-            title: "당일 입금",
-            target: "기록필요",
-            current: isDepositMet ? "확인됨" : "미확인",
+            title: "?�일 ?�금",
+            target: "기록?�요",
+            current: isDepositMet ? "?�인?? : "미확??,
             status: isDepositMet,
             icon: Landmark
         }
@@ -128,7 +128,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                         <Lock className="text-amber-400" size={32} strokeWidth={2.5} />
                     </div>
                     <h2 className="text-2xl font-black text-white tracking-tighter mb-1">출금조건</h2>
-                    <p className="text-zinc-500 text-xs font-semibold">게이지가 다 차면 출금가능</p>
+                    <p className="text-zinc-500 text-xs font-semibold">게이지가 ??차면 출금가??/p>
 
                     <button
                         onClick={onClose}
@@ -228,12 +228,12 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
                                 animate={{ scale: [1, 1.05, 1] }}
                                 transition={{ repeat: Infinity, duration: 1 }}
                             >
-                                <span>지금 바로 출금하기</span>
+                                <span>지�?바로 출금?�기</span>
                                 <ChevronRight size={20} />
                             </motion.div>
                         ) : (
                             <div className="flex flex-col items-center">
-                                <span className="text-sm opacity-50">에너지 충전 중...</span>
+                                <span className="text-sm opacity-50">?�너지 충전 �?..</span>
                                 <span className="text-[10px] font-bold tracking-widest text-amber-500/60 uppercase">Keep Playing</span>
                             </div>
                         )}
@@ -241,7 +241,7 @@ const WithdrawalProgressModal: React.FC<WithdrawalProgressModalProps> = ({
 
                     {!allConditionsMet && (
                         <p className="text-center mt-4 text-[10px] font-bold text-zinc-600 tracking-tighter">
-                            출금 횟수: {withdrawalCount}회 | 최소 {minWithdrawal.toLocaleString()}원부터 가능
+                            출금 ?�수: {withdrawalCount}??| 최소 {minWithdrawal.toLocaleString()}?��???가??
                         </p>
                     )}
                 </div>

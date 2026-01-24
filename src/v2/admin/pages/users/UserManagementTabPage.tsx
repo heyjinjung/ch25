@@ -17,14 +17,14 @@ export default function UserManagementTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Users className="w-4 h-4" />
-              회원 관리
+              ?�원 관�?
             </TabsTrigger>
             <TabsTrigger
               value="segments"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Target className="w-4 h-4" />
-              세그먼트
+              ?�그먼트
             </TabsTrigger>
           </TabsList>
         </div>

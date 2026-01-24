@@ -232,10 +232,10 @@ export default function VaultControlPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
             <Wallet className="w-8 h-8 text-indigo-400" />
-            금고 제어
+            금고 ?�어
           </h1>
           <p className="text-sm text-zinc-400">
-            실시간 금고 통계, 출금 승인, 잔액 조정을 수행합니다.
+            ?�시�?금고 ?�계, 출금 ?�인, ?�액 조정???�행?�니??
           </p>
         </div>
 
@@ -260,18 +260,18 @@ export default function VaultControlPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <Wallet className="w-4 h-4" />
-                당일 금고 총액
+                ?�일 금고 총액
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white flex items-baseline gap-1">
-                ₩{" "}
+                ??" "}
                 <NumberTicker
                   value={stats?.today_total_vault || 0}
                   className="text-indigo-400"
                 />
               </div>
-              <p className="text-xs text-zinc-500 mt-1">실시간 집계</p>
+              <p className="text-xs text-zinc-500 mt-1">?�시�?집계</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -285,19 +285,19 @@ export default function VaultControlPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                출금 대기
+                출금 ?��?
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white flex items-baseline gap-1">
-                ₩{" "}
+                ??" "}
                 <NumberTicker
                   value={stats?.today_withdrawal_pending || 0}
                   className="text-amber-400"
                 />
               </div>
               <p className="text-xs text-zinc-500 mt-1">
-                {stats?.total_pending_count || 0}건 대기 중
+                {stats?.total_pending_count || 0}�??��?�?
               </p>
             </CardContent>
           </Card>
@@ -312,18 +312,18 @@ export default function VaultControlPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
-                출금 승인 (당일)
+                출금 ?�인 (?�일)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white flex items-baseline gap-1">
-                ₩{" "}
+                ??" "}
                 <NumberTicker
                   value={stats?.today_withdrawal_approved || 0}
                   className="text-emerald-400"
                 />
               </div>
-              <p className="text-xs text-zinc-500 mt-1">승인 완료</p>
+              <p className="text-xs text-zinc-500 mt-1">?�인 ?�료</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -337,12 +337,12 @@ export default function VaultControlPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
                 <XCircle className="w-4 h-4" />
-                출금 반려 (당일)
+                출금 반려 (?�일)
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-white flex items-baseline gap-1">
-                ₩{" "}
+                ??" "}
                 <NumberTicker
                   value={stats?.today_withdrawal_rejected || 0}
                   className="text-red-400"
@@ -361,23 +361,23 @@ export default function VaultControlPage() {
             value="withdrawals"
             className="data-[state=active]:bg-indigo-500/20"
           >
-            출금 승인 ({pendingWithdrawals.length})
+            출금 ?�인 ({pendingWithdrawals.length})
           </TabsTrigger>
           <TabsTrigger
             value="users"
             className="data-[state=active]:bg-indigo-500/20"
           >
-            회원별 금고
+            ?�원�?금고
           </TabsTrigger>
         </TabsList>
 
-        {/* 출금 승인 탭 */}
+        {/* 출금 ?�인 ??*/}
         <TabsContent value="withdrawals" className="space-y-4">
           <AnimatePresence mode="popLayout">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {pendingWithdrawals.length === 0 && (
                 <div className="col-span-full h-40 flex items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-xl">
-                  대기 중인 출금 요청이 없습니다.
+                  ?��?중인 출금 ?�청???�습?�다.
                 </div>
               )}
               {pendingWithdrawals.map((item: AdminWithdrawalDto) => (
@@ -396,7 +396,7 @@ export default function VaultControlPage() {
                             Request #{item.id}
                           </div>
                           <div className="text-lg font-bold text-white mt-1">
-                            ₩ {(item.amount || 0).toLocaleString()}
+                            ??{(item.amount || 0).toLocaleString()}
                           </div>
                         </div>
                         <Badge
@@ -414,13 +414,13 @@ export default function VaultControlPage() {
                     </CardHeader>
                     <CardContent className="pt-4 space-y-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-zinc-500">유저</span>
+                        <span className="text-zinc-500">?��?</span>
                         <span className="text-zinc-300">
                           {item.nickname} (ID: {item.userId})
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-zinc-500">요청 시각</span>
+                        <span className="text-zinc-500">?�청 ?�각</span>
                         <span className="text-zinc-300">
                           {item.requestTime}
                         </span>
@@ -434,7 +434,7 @@ export default function VaultControlPage() {
                             disabled
                           >
                             <AlertTriangle className="w-4 h-4 mr-2" />
-                            고위험 - 수동 검토 필요
+                            고위??- ?�동 검???�요
                           </Button>
                         ) : (
                           <Button
@@ -447,7 +447,7 @@ export default function VaultControlPage() {
                             ) : (
                               <CheckCircle className="w-4 h-4 mr-2" />
                             )}
-                            승인 (Approve)
+                            ?�인 (Approve)
                           </Button>
                         )}
                         <Button
@@ -466,13 +466,13 @@ export default function VaultControlPage() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* 회원별 금고 탭 */}
+        {/* ?�원�?금고 ??*/}
         <TabsContent value="users" className="space-y-4">
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
               <Input
-                placeholder="닉네임 또는 텔레그램 검색..."
+                placeholder="?�네???�는 ?�레그램 검??.."
                 className="pl-9 bg-zinc-900 border-zinc-800"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -480,12 +480,12 @@ export default function VaultControlPage() {
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800">
-                <SelectValue placeholder="정렬" />
+                <SelectValue placeholder="?�렬" />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-zinc-800">
-                <SelectItem value="vault_balance">금고 잔액</SelectItem>
-                <SelectItem value="total_deposit">총 입금액</SelectItem>
-                <SelectItem value="last_activity">최근 활동</SelectItem>
+                <SelectItem value="vault_balance">금고 ?�액</SelectItem>
+                <SelectItem value="total_deposit">�??�금??/SelectItem>
+                <SelectItem value="last_activity">최근 ?�동</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -502,7 +502,7 @@ export default function VaultControlPage() {
                       UID
                       {sortField === "user_id" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -512,10 +512,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("nickname")}
                   >
                     <div className="flex items-center gap-1">
-                      닉네임
+                      ?�네??
                       {sortField === "nickname" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -525,10 +525,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("tier")}
                   >
                     <div className="flex items-center gap-1">
-                      등급
+                      ?�급
                       {sortField === "tier" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -538,10 +538,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("vault_balance")}
                   >
                     <div className="flex items-center justify-end gap-1">
-                      금고 잔액
+                      금고 ?�액
                       {sortField === "vault_balance" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -551,10 +551,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("total_deposit")}
                   >
                     <div className="flex items-center justify-end gap-1">
-                      총 입금
+                      �??�금
                       {sortField === "total_deposit" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -564,10 +564,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("total_withdrawal")}
                   >
                     <div className="flex items-center justify-end gap-1">
-                      총 출금
+                      �?출금
                       {sortField === "total_withdrawal" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -577,10 +577,10 @@ export default function VaultControlPage() {
                     onClick={() => handleSort("last_activity")}
                   >
                     <div className="flex items-center gap-1">
-                      최근 활동
+                      최근 ?�동
                       {sortField === "last_activity" && (
                         <span className="text-xs">
-                          {sortOrder === "asc" ? "↑" : "↓"}
+                          {sortOrder === "asc" ? "?? : "??}
                         </span>
                       )}
                     </div>
@@ -626,13 +626,13 @@ export default function VaultControlPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-mono text-emerald-400 font-bold">
-                      ₩{(user.vault_balance || 0).toLocaleString()}
+                      ??(user.vault_balance || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-zinc-300">
-                      ₩{(user.total_deposit || 0).toLocaleString()}
+                      ??(user.total_deposit || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-mono text-zinc-300">
-                      ₩{(user.total_withdrawal || 0).toLocaleString()}
+                      ??(user.total_withdrawal || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-zinc-400 text-xs">
                       {user.last_activity
@@ -655,15 +655,15 @@ export default function VaultControlPage() {
               <ShieldAlert className="w-6 h-6" /> 금고 강제 조정 경고
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-sm">
-              이 작업은 유저의 실제 금고 잔액을 강제로 변경하며, 모든 내역이{" "}
-              <strong className="text-red-400">Audit Log</strong>에 영구히
-              기록됩니다. 오입금 처리 등 비상 상황에서만 사용하십시오.
+              ???�업?� ?��????�제 금고 ?�액??강제�?변경하�? 모든 ?�역??" "}
+              <strong className="text-red-400">Audit Log</strong>???�구??
+              기록?�니?? ?�입�?처리 ??비상 ?�황?�서�??�용?�십?�오.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <span className="text-right text-sm text-zinc-400">
-                대상 유저
+                ?�???��?
               </span>
               <div className="col-span-3 relative">
                 {selectedUser ? (
@@ -689,7 +689,7 @@ export default function VaultControlPage() {
                       value={userSearchTerm}
                       onChange={(e) => setUserSearchTerm(e.target.value)}
                       className="bg-black/50 border-white/10 text-white"
-                      placeholder="닉네임 검색..."
+                      placeholder="?�네??검??.."
                     />
                     {userSearchTerm &&
                       userSearchResults?.users &&
@@ -725,18 +725,18 @@ export default function VaultControlPage() {
                   setForceEditData({ ...forceEditData, amount: e.target.value })
                 }
                 className="col-span-3 bg-black/50 border-white/10 text-white"
-                placeholder="양수=증가, 음수=감소 (예: +50000)"
+                placeholder="?�수=증�?, ?�수=감소 (?? +50000)"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <span className="text-right text-sm text-zinc-400">사유</span>
+              <span className="text-right text-sm text-zinc-400">?�유</span>
               <Input
                 value={forceEditData.reason}
                 onChange={(e) =>
                   setForceEditData({ ...forceEditData, reason: e.target.value })
                 }
                 className="col-span-3 bg-black/50 border-white/10 text-white"
-                placeholder="조정 사유 입력 (필수)"
+                placeholder="조정 ?�유 ?�력 (?�수)"
               />
             </div>
           </div>
@@ -761,10 +761,10 @@ export default function VaultControlPage() {
               {forceEditMutation.isPending ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  처리 중...
+                  처리 �?..
                 </>
               ) : (
-                "강제 실행"
+                "강제 ?�행"
               )}
             </Button>
           </DialogFooter>
@@ -780,11 +780,11 @@ export default function VaultControlPage() {
           <DialogHeader>
             <DialogTitle className="text-white text-xl">
               {ledgerUser
-                ? `${ledgerUser.nickname} 금고 상세 내역`
-                : "금고 상세 내역"}
+                ? `${ledgerUser.nickname} 금고 ?�세 ?�역`
+                : "금고 ?�세 ?�역"}
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-sm">
-              누적/차감 내역 및 잔액 변동 기록입니다.
+              ?�적/차감 ?�역 �??�액 변??기록?�니??
             </DialogDescription>
           </DialogHeader>
 
@@ -794,11 +794,11 @@ export default function VaultControlPage() {
                 <Card className="bg-zinc-900/60 border-zinc-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-zinc-400">
-                      누적
+                      ?�적
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-emerald-400 font-bold text-lg">
-                    ₩{vaultLedger.total_in.toLocaleString()}
+                    ??vaultLedger.total_in.toLocaleString()}
                   </CardContent>
                 </Card>
                 <Card className="bg-zinc-900/60 border-zinc-800">
@@ -808,17 +808,17 @@ export default function VaultControlPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-red-400 font-bold text-lg">
-                    ₩{Math.abs(vaultLedger.total_out).toLocaleString()}
+                    ??Math.abs(vaultLedger.total_out).toLocaleString()}
                   </CardContent>
                 </Card>
                 <Card className="bg-zinc-900/60 border-zinc-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs text-zinc-400">
-                      현재 잔액(유저)
+                      ?�재 ?�액(?��?)
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="text-indigo-300 font-bold text-lg">
-                    ₩{vaultLedger.current_balance.toLocaleString()}
+                    ??vaultLedger.current_balance.toLocaleString()}
                   </CardContent>
                 </Card>
               </div>
@@ -827,14 +827,14 @@ export default function VaultControlPage() {
                 <Table>
                   <TableHeader className="bg-zinc-900">
                     <TableRow className="border-zinc-800 hover:bg-transparent">
-                      <TableHead className="text-zinc-400">시각</TableHead>
-                      <TableHead className="text-zinc-400">사유</TableHead>
+                      <TableHead className="text-zinc-400">?�각</TableHead>
+                      <TableHead className="text-zinc-400">?�유</TableHead>
                       <TableHead className="text-zinc-400">구분</TableHead>
                       <TableHead className="text-zinc-400 text-right">
                         증감
                       </TableHead>
                       <TableHead className="text-zinc-400 text-right">
-                        잔액
+                        ?�액
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -845,7 +845,7 @@ export default function VaultControlPage() {
                           colSpan={5}
                           className="text-center text-zinc-500 py-8"
                         >
-                          내역이 없습니다.
+                          ?�역???�습?�다.
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -871,11 +871,11 @@ export default function VaultControlPage() {
                                 : "text-red-400",
                             )}
                           >
-                            {item.amount >= 0 ? "+" : ""}₩
+                            {item.amount >= 0 ? "+" : ""}??
                             {item.amount.toLocaleString()}
                           </TableCell>
                           <TableCell className="text-right font-mono text-zinc-300">
-                            ₩{item.balance_after.toLocaleString()}
+                            ??item.balance_after.toLocaleString()}
                           </TableCell>
                         </TableRow>
                       ))
@@ -885,7 +885,7 @@ export default function VaultControlPage() {
               </div>
             </div>
           ) : (
-            <div className="text-center text-zinc-500 py-12">로딩 중...</div>
+            <div className="text-center text-zinc-500 py-12">로딩 �?..</div>
           )}
         </DialogContent>
       </Dialog>
@@ -899,13 +899,13 @@ export default function VaultControlPage() {
           <DialogHeader>
             <DialogTitle className="text-white">출금 반려</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              반려 사유를 입력하면 유저에게 알림이 발송됩니다.
+              반려 ?�유�??�력?�면 ?��??�게 ?�림??발송?�니??
             </DialogDescription>
           </DialogHeader>
           <Input
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="예: 부정 플레이 의심, 계좌 정보 불일치 등"
+            placeholder="?? 부???�레???�심, 계좌 ?�보 불일�???
             className="bg-black/50 border-white/10 text-white"
           />
           <DialogFooter>
@@ -921,7 +921,7 @@ export default function VaultControlPage() {
               onClick={confirmReject}
               disabled={!rejectReason}
             >
-              반려 확정
+              반려 ?�정
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -938,27 +938,27 @@ export default function VaultControlPage() {
               {detailsModalStatus === "PENDING" && (
                 <>
                   <Clock className="w-5 h-5 text-amber-400" />
-                  출금 대기 내역
+                  출금 ?��??�역
                 </>
               )}
               {detailsModalStatus === "APPROVED" && (
                 <>
                   <CheckCircle className="w-5 h-5 text-emerald-400" />
-                  출금 승인 내역
+                  출금 ?�인 ?�역
                 </>
               )}
               {detailsModalStatus === "REJECTED" && (
                 <>
                   <XCircle className="w-5 h-5 text-red-400" />
-                  출금 반려 내역
+                  출금 반려 ?�역
                 </>
               )}
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-sm">
-              {detailsModalStatus} 상태의 당일 출금 요청 목록입니다.
+              {detailsModalStatus} ?�태???�일 출금 ?�청 목록?�니??
               {withdrawalDetails && (
                 <span className="ml-2 font-semibold text-white">
-                  총 {withdrawalDetails.count}건, ₩
+                  �?{withdrawalDetails.count}�? ??
                   {withdrawalDetails.total_amount.toLocaleString()}
                 </span>
               )}
@@ -971,21 +971,21 @@ export default function VaultControlPage() {
                 <TableHeader className="bg-zinc-900">
                   <TableRow className="border-zinc-800 hover:bg-transparent">
                     <TableHead className="text-zinc-400">ID</TableHead>
-                    <TableHead className="text-zinc-400">유저</TableHead>
+                    <TableHead className="text-zinc-400">?��?</TableHead>
                     <TableHead className="text-zinc-400 text-right">
                       금액
                     </TableHead>
-                    <TableHead className="text-zinc-400">요청 시각</TableHead>
+                    <TableHead className="text-zinc-400">?�청 ?�각</TableHead>
                     {detailsModalStatus === "APPROVED" && (
-                      <TableHead className="text-zinc-400">승인 시각</TableHead>
+                      <TableHead className="text-zinc-400">?�인 ?�각</TableHead>
                     )}
                     {detailsModalStatus === "REJECTED" && (
                       <>
                         <TableHead className="text-zinc-400">
-                          반려 시각
+                          반려 ?�각
                         </TableHead>
                         <TableHead className="text-zinc-400">
-                          반려 사유
+                          반려 ?�유
                         </TableHead>
                       </>
                     )}
@@ -1016,7 +1016,7 @@ export default function VaultControlPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono font-bold text-emerald-400">
-                        ₩{w.amount.toLocaleString()}
+                        ??w.amount.toLocaleString()}
                       </TableCell>
                       <TableCell className="text-zinc-400 text-xs">
                         {new Date(w.created_at).toLocaleString()}
@@ -1045,7 +1045,7 @@ export default function VaultControlPage() {
             </div>
           ) : (
             <div className="h-40 flex items-center justify-center text-zinc-500 border border-dashed border-white/10 rounded-xl mt-4">
-              데이터가 없습니다.
+              ?�이?��? ?�습?�다.
             </div>
           )}
 
@@ -1055,7 +1055,7 @@ export default function VaultControlPage() {
               onClick={() => setDetailsModalStatus(null)}
               className="border-zinc-700 text-zinc-300"
             >
-              닫기
+              ?�기
             </Button>
           </DialogFooter>
         </DialogContent>

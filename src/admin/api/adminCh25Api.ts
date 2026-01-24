@@ -7,7 +7,7 @@ export type Ch25RawLogImportResponse = {
   file_name?: string | null;
 };
 
-const BASE_PATH = "/admin/api/ch25";
+const BASE_PATH = "/api/admin/ch25";
 
 export async function importCh25RawLogs(file: File) {
   const formData = new FormData();

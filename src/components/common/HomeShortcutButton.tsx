@@ -7,7 +7,7 @@ type Props = {
   label?: string;
 };
 
-const HomeShortcutButton: React.FC<Props> = ({ className, to = "/landing", label = "홈 바로가기" }) => {
+const HomeShortcutButton: React.FC<Props> = ({ className, to = "/landing", label = "??바로가�? }) => {
   const navigate = useNavigate();
   const location = useLocation();
 

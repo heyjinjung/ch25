@@ -1,4 +1,4 @@
-// src/v2/hooks/useV2Golden.ts
+// src/hooks/useV2Golden.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   resolveV2Intervention,

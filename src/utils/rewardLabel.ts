@@ -4,12 +4,12 @@ export type RewardLine = {
 };
 
 const BRAND_LABEL_OVERRIDES: Record<string, string> = {
-  BAEMIN: "배민",
-  COMPOSE: "컴포즈",
-  MEGA: "메가",
-  STARBUCKS: "스타벅스",
-  TWOSOME: "투썸",
-  GIFTICON: "기프티콘",
+  BAEMIN: "배�?",
+  COMPOSE: "컴포�?,
+  MEGA: "메�?",
+  STARBUCKS: "?��?벅스",
+  TWOSOME: "?�썸",
+  GIFTICON: "기프?�콘",
 };
 
 const normalizeBrandLabel = (raw: string) => {
@@ -34,7 +34,7 @@ export const parseGifticonRewardType = (rewardType?: string | null) => {
     const brand = normalizeBrandLabel(match[1]);
     const faceValue = match[2] ? Number(match[2]) : null;
     return {
-      brand: brand || "기프티콘",
+      brand: brand || "기프?�콘",
       faceValue: Number.isFinite(faceValue) ? faceValue : null,
       raw,
     };
@@ -42,7 +42,7 @@ export const parseGifticonRewardType = (rewardType?: string | null) => {
 
   // Fallback for any *GIFTICON* string
   return {
-    brand: "기프티콘",
+    brand: "기프?�콘",
     faceValue: null,
     raw,
   };
@@ -61,62 +61,62 @@ export const formatRewardLine = (rewardType?: string | null, amount?: number | n
   const gifticon = parseGifticonRewardType(type);
   if (gifticon) {
     const labelParts: string[] = [];
-    if (gifticon.brand && gifticon.brand !== "기프티콘") labelParts.push(gifticon.brand);
+    if (gifticon.brand && gifticon.brand !== "기프?�콘") labelParts.push(gifticon.brand);
 
     const faceValue = gifticon.faceValue;
     const valueText = Number.isFinite(faceValue) && (faceValue ?? 0) > 0
-      ? `${(faceValue as number).toLocaleString()}원`
+      ? `${(faceValue as number).toLocaleString()}??
       : safeAmount > 0
-        ? `${safeAmount.toLocaleString()}원`
+        ? `${safeAmount.toLocaleString()}??
         : "";
 
     const inner = [labelParts.join(" "), valueText].filter(Boolean).join(" ");
 
     return {
-      text: inner ? `기프티콘(${inner})` : "기프티콘",
-      fulfillmentHint: "지급대기/보상함",
+      text: inner ? `기프?�콘(${inner})` : "기프?�콘",
+      fulfillmentHint: "지급�?�?보상??,
     };
   }
 
   const upper = type.toUpperCase();
 
   if (upper === "POINT" || upper === "CC_POINT") {
-    if (safeAmount <= 0) return { text: "금고 적립" };
-    return { text: `금고 적립 ${safeAmount.toLocaleString()}원` };
+    if (safeAmount <= 0) return { text: "금고 ?�립" };
+    return { text: `금고 ?�립 ${safeAmount.toLocaleString()}?? };
   }
 
   if (upper === "GAME_XP") {
-    if (safeAmount <= 0) return { text: "시즌 XP" };
-    return { text: `시즌 XP +${safeAmount.toLocaleString()}` };
+    if (safeAmount <= 0) return { text: "?�즌 XP" };
+    return { text: `?�즌 XP +${safeAmount.toLocaleString()}` };
   }
 
   if (upper === "DIAMOND") {
-    if (safeAmount <= 0) return { text: "다이아" };
-    return { text: `다이아 +${safeAmount.toLocaleString()}` };
+    if (safeAmount <= 0) return { text: "?�이?? };
+    return { text: `?�이??+${safeAmount.toLocaleString()}` };
   }
 
   const ticketLabels: Record<string, string> = {
-    TICKET_ROULETTE: "룰렛 티켓",
-    ROULETTE_TICKET: "룰렛 티켓",
-    TICKET_DICE: "주사위 티켓",
-    DICE_TICKET: "주사위 티켓",
-    TICKET_LOTTERY: "복권 티켓",
-    LOTTERY_TICKET: "복권 티켓",
+    TICKET_ROULETTE: "룰렛 ?�켓",
+    ROULETTE_TICKET: "룰렛 ?�켓",
+    TICKET_DICE: "주사???�켓",
+    DICE_TICKET: "주사???�켓",
+    TICKET_LOTTERY: "복권 ?�켓",
+    LOTTERY_TICKET: "복권 ?�켓",
   };
 
   if (ticketLabels[upper]) {
     if (safeAmount <= 0) return { text: ticketLabels[upper] };
-    return { text: `${ticketLabels[upper]} ${safeAmount.toLocaleString()}장` };
+    return { text: `${ticketLabels[upper]} ${safeAmount.toLocaleString()}?? };
   }
 
   const keyLabels: Record<string, string> = {
-    GOLD_KEY: "골드 키",
-    DIAMOND_KEY: "다이아 키",
+    GOLD_KEY: "골드 ??,
+    DIAMOND_KEY: "?�이????,
   };
 
   if (keyLabels[upper]) {
     if (safeAmount <= 0) return { text: keyLabels[upper] };
-    return { text: `${keyLabels[upper]} ${safeAmount.toLocaleString()}개` };
+    return { text: `${keyLabels[upper]} ${safeAmount.toLocaleString()}�? };
   }
 
   if (safeAmount > 0) {

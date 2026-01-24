@@ -107,20 +107,20 @@ export default function UserSegmentPage() {
   const handleRunBatch = async () => {
     try {
       await runBatch.mutateAsync();
-      addToast("AI 세그먼트 배치를 시작했습니다.", "success");
+      addToast("AI ?�그먼트 배치�??�작?�습?�다.", "success");
     } catch (e) {
       console.error("Batch failed", e);
-      addToast("배치 실행 중 오류가 발생했습니다.", "error");
+      addToast("배치 ?�행 �??�류가 발생?�습?�다.", "error");
     }
   };
 
   const handleSyncCheck = async () => {
     try {
       await Promise.all([refetchStats(), refetchRules()]);
-      addToast("전역 동기화 상태를 확인했습니다.", "success");
+      addToast("?�역 ?�기???�태�??�인?�습?�다.", "success");
     } catch (e) {
       console.error("Sync check failed", e);
-      addToast("동기화 확인 중 오류가 발생했습니다.", "error");
+      addToast("?�기???�인 �??�류가 발생?�습?�다.", "error");
     }
   };
 
@@ -151,25 +151,25 @@ export default function UserSegmentPage() {
     try {
       if (editingRule) {
         await updateRule.mutateAsync({ id: editingRule.id, data: formData });
-        addToast("규칙이 수정되었습니다.", "success");
+        addToast("규칙???�정?�었?�니??", "success");
       } else {
         await createRule.mutateAsync(formData);
-        addToast("새 규칙이 생성되었습니다.", "success");
+        addToast("??규칙???�성?�었?�니??", "success");
       }
       setIsRuleDialogOpen(false);
       setIsRuleDialogOpen(false);
     } catch {
-      addToast("규칙 저장에 실패했습니다.", "error");
+      addToast("규칙 ?�?�에 ?�패?�습?�다.", "error");
     }
   };
 
   const handleDeleteRule = async (id: number) => {
-    if (!confirm("정말 이 규칙을 삭제하시겠습니까?")) return;
+    if (!confirm("?�말 ??규칙????��?�시겠습?�까?")) return;
     try {
       await deleteRule.mutateAsync(id);
-      addToast("규칙이 삭제되었습니다.", "success");
+      addToast("규칙????��?�었?�니??", "success");
     } catch {
-      addToast("규칙 삭제에 실패했습니다.", "error");
+      addToast("규칙 ??��???�패?�습?�다.", "error");
     }
   };
 
@@ -180,9 +180,9 @@ export default function UserSegmentPage() {
         id: rule.id,
         data: { status: newStatus },
       });
-      addToast(`규칙 상태가 ${newStatus}로 변경되었습니다.`, "success");
+      addToast(`규칙 ?�태가 ${newStatus}�?변경되?�습?�다.`, "success");
     } catch {
-      addToast("상태 변경에 실패했습니다.", "error");
+      addToast("?�태 변경에 ?�패?�습?�다.", "error");
     }
   };
 
@@ -192,7 +192,7 @@ export default function UserSegmentPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#121214] text-zinc-500">
         <Loader2 className="w-8 h-8 animate-spin mr-3" />
-        분석 엔진 데이터를 불러오는 중...
+        분석 ?�진 ?�이?��? 불러?�는 �?..
       </div>
     );
   }
@@ -205,14 +205,14 @@ export default function UserSegmentPage() {
           <div className="flex items-center gap-2 text-indigo-400 mb-2">
             <BrainCircuit className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              AI 세그먼트 엔진
+              AI ?�그먼트 ?�진
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            유저 세그먼트 (User Segments)
+            ?��? ?�그먼트 (User Segments)
           </h1>
           <p className="text-sm text-zinc-400 mt-1">
-            사용자 행동 데이터를 분석하여 마케팅 및 운영 타겟 그룹을 분류합니다.
+            ?�용???�동 ?�이?��? 분석?�여 마�???�??�영 ?��?그룹??분류?�니??
           </p>
         </div>
         <div className="flex flex-col items-end gap-3">
@@ -221,7 +221,7 @@ export default function UserSegmentPage() {
             className="bg-zinc-900 border border-white/10 text-zinc-300 h-9 px-4 text-xs hover:bg-zinc-800"
             onClick={handleSyncCheck}
           >
-            전역 동기화 점검
+            ?�역 ?�기???��?
           </Button>
           <Button
             className="bg-[#D2FD9C] hover:bg-[#D2FD9C]/90 text-black font-bold h-10 px-6"
@@ -229,11 +229,11 @@ export default function UserSegmentPage() {
             disabled={runBatch.isPending}
           >
             <Play className="w-4 h-4 mr-2" />
-            {runBatch.isPending ? "배치 중..." : "배치 즉시 실행"}
+            {runBatch.isPending ? "배치 �?.." : "배치 즉시 ?�행"}
           </Button>
           {stats?.lastBatchTime && (
             <span className="text-[10px] text-zinc-500 font-mono uppercase">
-              마지막 분석: {stats.lastBatchTime}
+              마�?�?분석: {stats.lastBatchTime}
             </span>
           )}
         </div>
@@ -269,7 +269,7 @@ export default function UserSegmentPage() {
                   size="sm"
                   className="h-7 text-[10px] w-full text-zinc-400 hover:text-white hover:bg-white/5"
                 >
-                  세그먼트 유저 상세 보기
+                  ?�그먼트 ?��? ?�세 보기
                 </Button>
               </div>
             </CardContent>
@@ -283,10 +283,10 @@ export default function UserSegmentPage() {
           <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-white/5 mb-4">
             <div>
               <CardTitle className="text-base font-bold">
-                분류 규칙 (규칙 엔진)
+                분류 규칙 (규칙 ?�진)
               </CardTitle>
               <CardDescription className="text-zinc-500 text-xs mt-1">
-                자동 분류 시스템의 핵심 로직입니다.
+                ?�동 분류 ?�스?�의 ?�심 로직?�니??
               </CardDescription>
             </div>
             <Button
@@ -295,7 +295,7 @@ export default function UserSegmentPage() {
               className="h-8 bg-zinc-800 text-white border-white/5 text-xs hover:bg-zinc-700"
               onClick={handleOpenCreateDialog}
             >
-              <Plus className="w-3 h-3 mr-2" /> 규칙 추가
+              <Plus className="w-3 h-3 mr-2" /> 규칙 추�?
             </Button>
           </CardHeader>
           <CardContent className="pt-0">
@@ -351,7 +351,7 @@ export default function UserSegmentPage() {
                           onClick={() => handleOpenEditDialog(rule)}
                           className="text-xs cursor-pointer focus:bg-zinc-800 focus:text-white"
                         >
-                          <Pencil className="w-3 h-3 mr-2" /> 수정
+                          <Pencil className="w-3 h-3 mr-2" /> ?�정
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleToggleStatus(rule)}
@@ -362,13 +362,13 @@ export default function UserSegmentPage() {
                           ) : (
                             <ToggleRight className="w-3 h-3 mr-2" />
                           )}
-                          {rule.status === "Active" ? "비활성화" : "활성화"}
+                          {rule.status === "Active" ? "비활?�화" : "?�성??}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDeleteRule(rule.id)}
                           className="text-xs text-red-400 cursor-pointer focus:bg-red-950/30 focus:text-red-400"
                         >
-                          <Trash2 className="w-3 h-3 mr-2" /> 삭제
+                          <Trash2 className="w-3 h-3 mr-2" /> ??��
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -377,7 +377,7 @@ export default function UserSegmentPage() {
               ))}
               {(!rules || rules.length === 0) && (
                 <div className="text-center py-8 text-zinc-500 text-xs">
-                  등록된 규칙이 없습니다.
+                  ?�록??규칙???�습?�다.
                 </div>
               )}
             </div>
@@ -388,10 +388,10 @@ export default function UserSegmentPage() {
         <Card className="bg-[#18181B] border-white/8">
           <CardHeader className="pb-4 border-b border-white/5 mb-4">
             <CardTitle className="text-base font-bold">
-              오토메이션 & 마케팅
+              ?�토메이??& 마�???
             </CardTitle>
             <CardDescription className="text-zinc-500 text-xs mt-1">
-              세그먼트 감지 시 자동 실행되는 트리거입니다.
+              ?�그먼트 감�? ???�동 ?�행?�는 ?�리거입?�다.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0 space-y-3">
@@ -401,10 +401,10 @@ export default function UserSegmentPage() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-indigo-400 mb-1">
-                  휴면 유저 복귀 자동 쿠폰
+                  ?�면 ?��? 복�? ?�동 쿠폰
                 </h4>
                 <p className="text-xs text-zinc-400">
-                  DORMANT 상태 진입 즉시 텔레그램 메세지 및 복귀 혜택 발송.
+                  DORMANT ?�태 진입 즉시 ?�레그램 메세지 �?복�? ?�택 발송.
                 </p>
               </div>
             </div>
@@ -414,10 +414,10 @@ export default function UserSegmentPage() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-red-400 mb-1">
-                  고위험군 VIP 전담 실적 배정
+                  고위?�군 VIP ?�담 ?�적 배정
                 </h4>
                 <p className="text-xs text-zinc-400">
-                  HIGH_RISK VIP 감지 시 운영팀 전용 관제실에 실시간 알림 전송.
+                  HIGH_RISK VIP 감�? ???�영?� ?�용 관?�실???�시�??�림 ?�송.
                 </p>
               </div>
             </div>
@@ -429,19 +429,19 @@ export default function UserSegmentPage() {
         <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
-              {editingRule ? "규칙 수정" : "새 규칙 추가"}
+              {editingRule ? "규칙 ?�정" : "??규칙 추�?"}
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-xs">
-              유저를 자동으로 분류할 조건을 정의합니다.
+              ?��?�??�동?�로 분류??조건???�의?�니??
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold text-zinc-400">
-                규칙 이름 (Label)
+                규칙 ?�름 (Label)
               </Label>
               <Input
-                placeholder="예: 7일간 미접속 유저"
+                placeholder="?? 7?�간 미접???��?"
                 value={formData.label}
                 onChange={(e) =>
                   setFormData({ ...formData, label: e.target.value })
@@ -451,7 +451,7 @@ export default function UserSegmentPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-zinc-400">
-                타겟 세그먼트
+                ?��??�그먼트
               </Label>
               <Select
                 value={formData.targetSegment}
@@ -460,12 +460,12 @@ export default function UserSegmentPage() {
                 }
               >
                 <SelectTrigger className="bg-zinc-900 border-white/10">
-                  <SelectValue placeholder="세그먼트 선택" />
+                  <SelectValue placeholder="?�그먼트 ?�택" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#18181B] border-white/10 text-white">
                   {segmentOptions.length === 0 ? (
                     <SelectItem value="__empty" disabled>
-                      세그먼트 없음
+                      ?�그먼트 ?�음
                     </SelectItem>
                   ) : (
                     segmentOptions.map((option) => (
@@ -479,11 +479,11 @@ export default function UserSegmentPage() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-zinc-400">
-                조건식 (Rule Condition)
+                조건??(Rule Condition)
               </Label>
               <div className="relative">
                 <Input
-                  placeholder="예: last_login_days > 7"
+                  placeholder="?? last_login_days > 7"
                   value={formData.rule}
                   onChange={(e) =>
                     setFormData({ ...formData, rule: e.target.value })
@@ -491,19 +491,19 @@ export default function UserSegmentPage() {
                   className="bg-zinc-900 border-white/10 font-mono text-xs text-indigo-300 pr-20"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-zinc-500">
-                  SQL 유사
+                  SQL ?�사
                 </div>
               </div>
               <p className="text-[10px] text-zinc-500">
-                사용 가능한 변수는 백엔드 규칙 엔진 기준으로 자동 동기화됩니다.
+                ?�용 가?�한 변?�는 백엔??규칙 ?�진 기�??�로 ?�동 ?�기?�됩?�다.
               </p>
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-bold text-zinc-400">
-                설명 (Description)
+                ?�명 (Description)
               </Label>
               <Textarea
-                placeholder="규칙에 대한 상세 설명을 입력하세요."
+                placeholder="규칙???�???�세 ?�명???�력?�세??"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -528,7 +528,7 @@ export default function UserSegmentPage() {
               {createRule.isPending || updateRule.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "저장"
+                "?�??
               )}
             </Button>
           </DialogFooter>

@@ -17,14 +17,14 @@ export default function ShopMissionTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Store className="w-4 h-4" />
-              상점 관리
+              ?�점 관�?
             </TabsTrigger>
             <TabsTrigger
               value="mission"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Target className="w-4 h-4" />
-              미션 관리
+              미션 관�?
             </TabsTrigger>
           </TabsList>
         </div>

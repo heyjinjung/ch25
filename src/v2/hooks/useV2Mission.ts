@@ -1,4 +1,4 @@
-// src/v2/hooks/useV2Mission.ts
+// src/hooks/useV2Mission.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getV2Missions,

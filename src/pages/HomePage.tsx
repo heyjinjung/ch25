@@ -1,4 +1,4 @@
-ï»¿import React, { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -128,7 +128,7 @@ const TiltCard: React.FC<GameCardProps> = ({
           </div>
 
           <div className="mt-auto">
-            {/* 'ì§€ê¸ˆ í”Œë ˆì´' ë°°ì§€ ì œê±° per request */}
+            {/* 'Áö±İ ÇÃ·¹ÀÌ' ¹èÁö Á¦°Å per request */}
           </div>
         </div>
       </motion.div>
@@ -142,10 +142,10 @@ const CategoryTabs: React.FC<{
 }> = ({ active, onChange }) => {
   const { playTabTouch } = useSound();
   const tabs = [
-    { id: "hot", label: "ì”¨ì”¨ì¹´ì§€ë…¸", link: "https://ccc-010.com" },
+    { id: "hot", label: "¾¾¾¾Ä«Áö³ë", link: "https://ccc-010.com" },
     {
       id: "new",
-      label: "ì”¨ì”¨ ê³µì‹ì±„ë„",
+      label: "¾¾¾¾ °ø½ÄÃ¤³Î",
       link: "https://t.me/+IE0NYpuze_k1YWZk",
     },
   ];
@@ -234,7 +234,7 @@ const HomePage: React.FC = () => {
         dailyGift.progress.is_completed &&
         !dailyGift.progress.is_claimed
       ) {
-        addToast("ğŸ ì˜¤ëŠ˜ì˜ ì„ ë¬¼ ë„ì°©! ë¯¸ì…˜ íƒ­ì—ì„œ í™•ì¸í•˜ì„¸ìš”.", "success");
+        addToast("?? ¿À´ÃÀÇ ¼±¹° µµÂø! ¹Ì¼Ç ÅÇ¿¡¼­ È®ÀÎÇÏ¼¼¿ä.", "success");
         hasAnnouncedGift.current = true;
       }
     }
@@ -251,7 +251,7 @@ const HomePage: React.FC = () => {
   // Vault Banner Logic
   const vaultAmount = vault.data?.vaultBalance ?? 0;
   const showVaultBanner = !!vault.data?.eligible && vaultAmount > 0;
-  const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}ì›`;
+  const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}¿ø`;
   const [vaultBannerOpen, setVaultBannerOpen] = useState(false);
   const { user } = useAuth();
 
@@ -265,7 +265,7 @@ const HomePage: React.FC = () => {
       title: "ROULETTE",
       to: "/roulette",
       gradient: "bg-gradient-to-br from-purple-600 to-indigo-600",
-      icon: "ğŸ¯",
+      icon: "??",
       bgImage: "/assets/games/thumb_roulette_v2.png",
       badge: "HOT",
     },
@@ -273,21 +273,21 @@ const HomePage: React.FC = () => {
       title: "DICE",
       to: "/dice",
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
-      icon: "ğŸ²",
+      icon: "??",
       bgImage: "/assets/games/thumb_dice_v2.png",
     },
     {
       title: "LOTTERY",
       to: "/lottery",
       gradient: "bg-gradient-to-br from-pink-500 to-rose-600",
-      icon: "ğŸ«",
+      icon: "??",
       bgImage: "/assets/games/thumb_lottery_v2.png",
     },
     {
       title: "TEAM BATTLE",
       to: "/team-battle",
       gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
-      icon: "âš”ï¸",
+      icon: "??",
       bgImage: "/assets/games/thumb_team_battle_v2.png",
       badge: "NEW",
     },
@@ -295,14 +295,14 @@ const HomePage: React.FC = () => {
       title: "EVENTS",
       to: "/events",
       gradient: "bg-gradient-to-br from-indigo-500 to-purple-600",
-      icon: "ğŸ",
+      icon: "??",
       bgImage: "/assets/welcome/event_v2.png",
     },
     {
-      title: "CCì½”ë“œê¸ˆê³ ",
+      title: "CCÄÚµå±İ°í",
       to: "/vault",
       gradient: "bg-gradient-to-br from-amber-500 to-orange-600",
-      icon: "ğŸ”",
+      icon: "??",
       bgImage: "/assets/welcome/my_vault_v2.png",
     },
   ];
@@ -317,7 +317,7 @@ const HomePage: React.FC = () => {
             <div className="relative z-10 flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">
-                  ì ê¸´ ê¸ˆê³ 
+                  Àá±ä ±İ°í
                 </p>
                 <p className="text-xl font-black text-white glow-gold">
                   {formatWon(vaultAmount)}
@@ -328,7 +328,7 @@ const HomePage: React.FC = () => {
                 onClick={() => setVaultBannerOpen(!vaultBannerOpen)}
                 className="!py-1.5 !px-3 !text-xs"
               >
-                {vaultBannerOpen ? "ë‹«ê¸°" : "ì—´ê¸°"}
+                {vaultBannerOpen ? "´İ±â" : "¿­±â"}
               </Button>
             </div>
             {vaultBannerOpen && (
@@ -345,7 +345,7 @@ const HomePage: React.FC = () => {
                       alt="CC"
                       className="inline-block w-4 h-4 mr-2 align-text-bottom"
                     />
-                    1ë§Œì›
+                    1¸¸¿ø
                   </a>
                   <a
                     href="https://ccc-010.com"
@@ -358,7 +358,7 @@ const HomePage: React.FC = () => {
                       alt="CC"
                       className="inline-block w-4 h-4 mr-2 align-text-bottom"
                     />
-                    5ë§Œì›
+                    5¸¸¿ø
                   </a>
                 </div>
               </div>
@@ -388,8 +388,8 @@ const HomePage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm font-bold text-white">
-                  <span className="text-amber-400">í•œ íŒë§Œ ë” í•˜ë©´</span> VIP
-                  ë‹¬ì„±!
+                  <span className="text-amber-400">ÇÑ ÆÇ¸¸ ´õ ÇÏ¸é</span> VIP
+                  ´Ş¼º!
                 </p>
               </div>
             </div>
@@ -436,7 +436,7 @@ const HomePage: React.FC = () => {
               className="flex items-center gap-2 rounded-full px-4 py-1.5 bg-black/60 border border-amber-500/30 backdrop-blur-md shadow-lg cursor-default"
             >
               <span className="text-xs font-black text-amber-400">
-                ğŸ”¥ {streakInfo.streak_days}ì¼ ì—°ì†
+                ?? {streakInfo.streak_days}ÀÏ ¿¬¼Ó
               </span>
             </motion.div>
           )}
@@ -455,7 +455,7 @@ const HomePage: React.FC = () => {
               className="w-5 h-5 object-contain"
               alt=""
             />
-            ì‹¤ì¥ë¬¸ì˜
+            ½ÇÀå¹®ÀÇ
           </motion.a>
         </div>
       </motion.div>
@@ -487,10 +487,10 @@ const HomePage: React.FC = () => {
         </div>
         <div className="relative z-10 flex-1 min-w-0">
           <h4 className="text-white font-black text-sm tracking-tight">
-            ì´ìš© ê°€ì´ë“œ
+            ÀÌ¿ë °¡ÀÌµå
           </h4>
           <p className="text-white/50 text-xs mt-0.5 truncate">
-            ì„œë¹„ìŠ¤ ì´ìš©ë°©ë²•ì„ í™•ì¸í•´ë³´ì„¸ìš”
+            ¼­ºñ½º ÀÌ¿ë¹æ¹ıÀ» È®ÀÎÇØº¸¼¼¿ä
           </p>
         </div>
         <div className="relative z-10 shrink-0">

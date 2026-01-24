@@ -7,45 +7,45 @@ import { fetchEconomyStats } from "../api/adminEconomyApi";
 import { fetchRewardTypes } from "../api/adminRewardTypesApi";
 
 // ============================================================
-// 한글 라벨 상수 (하드코딩 제거)
+// ?��? ?�벨 ?�수 (?�드코딩 ?�거)
 // ============================================================
 const LABELS = {
-  currency: "다이아",
-  active: "활성",
-  inactive: "비활성",
-  loading: "상점 설정을 불러오는 중...",
-  error: "상점 상품을 불러오지 못했습니다.",
-  noData: "데이터 없음",
-  save: "전체 저장",
-  refresh: "새로고침",
-  priceHeader: "가격 (다이아)",
-  grantHeader: "지급",
-  statusHeader: "상태",
-  productName: "상품명",
+  currency: "?�이??,
+  active: "?�성",
+  inactive: "비활??,
+  loading: "?�점 ?�정??불러?�는 �?..",
+  error: "?�점 ?�품??불러?��? 못했?�니??",
+  noData: "?�이???�음",
+  save: "?�체 ?�??,
+  refresh: "?�로고침",
+  priceHeader: "가�?(?�이??",
+  grantHeader: "지�?,
+  statusHeader: "?�태",
+  productName: "?�품�?,
 } as const;
 
 // ============================================================
-// DB 값 → 한글 매핑 (item_type, reason, scope 등)
+// DB �????��? 매핑 (item_type, reason, scope ??
 // ============================================================
 const ITEM_TYPE_LABELS: Record<string, string> = {
   // Fallbacks for types not in the standard Reward API
-  TICKET_FREE: "무료 티켓",
-  TICKET_PREMIUM: "프리미엄 티켓",
-  PREMIUM_KEY: "프리미엄 키",
-  VOUCHER: "바우처",
-  GIFTCON: "기프티콘",
-  GIFTICON: "기프티콘",
+  TICKET_FREE: "무료 ?�켓",
+  TICKET_PREMIUM: "?�리미엄 ?�켓",
+  PREMIUM_KEY: "?�리미엄 ??,
+  VOUCHER: "바우�?,
+  GIFTCON: "기프?�콘",
+  GIFTICON: "기프?�콘",
 };
 
 const COST_TOKEN_LABELS: Record<string, string> = {
-  DIAMOND: "다이아",
+  DIAMOND: "?�이??,
   VAULT: "금고(Vault)",
   ROULETTE_COIN: "룰렛 코인",
-  DICE_TOKEN: "주사위 토큰",
-  LOTTERY_TICKET: "복권 티켓",
-  TRIAL_TOKEN: "체험 토큰",
-  GOLD_KEY: "골드 키",
-  DIAMOND_KEY: "다이아 키",
+  DICE_TOKEN: "주사???�큰",
+  LOTTERY_TICKET: "복권 ?�켓",
+  TRIAL_TOKEN: "체험 ?�큰",
+  GOLD_KEY: "골드 ??,
+  DIAMOND_KEY: "?�이????,
 };
 
 const toSelectOptions = (m: Record<string, string>) =>
@@ -57,8 +57,8 @@ const COST_TOKEN_OPTIONS = toSelectOptions(COST_TOKEN_LABELS);
 const AMOUNT_OPTIONS = [1, 2, 3, 5, 10, 20, 50, 100];
 
 const GIFTICON_BRAND_LABELS: Record<string, string> = {
-  BAEMIN: "배민",
-  CC_COIN: "씨씨코인",
+  BAEMIN: "배�?",
+  CC_COIN: "?�씨코인",
 };
 
 const formatGifticonItemType = (itemType: string): string | null => {
@@ -67,34 +67,34 @@ const formatGifticonItemType = (itemType: string): string | null => {
     const rawBrand = withAmount[1];
     const amount = Number(withAmount[2]);
     const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
-    const amountLabel = Number.isFinite(amount) ? `${amount.toLocaleString()}원` : withAmount[2];
-    return `${brand} 기프티콘 ${amountLabel}`;
+    const amountLabel = Number.isFinite(amount) ? `${amount.toLocaleString()}?? : withAmount[2];
+    return `${brand} 기프?�콘 ${amountLabel}`;
   }
 
   const withoutAmount = itemType.match(/^(.+)_GIFTICON$/);
   if (withoutAmount) {
     const rawBrand = withoutAmount[1];
     const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
-    return `${brand} 기프티콘`;
+    return `${brand} 기프?�콘`;
   }
 
   return null;
 };
 
 const SKU_TOKEN_LABELS: Record<string, string> = {
-  PROD: "상품",
-  SHOP: "상점",
-  TICKET: "티켓",
+  PROD: "?�품",
+  SHOP: "?�점",
+  TICKET: "?�켓",
   FREE: "무료",
-  PREMIUM: "프리미엄",
-  KEY: "키",
-  DIAMOND: "다이아",
+  PREMIUM: "?�리미엄",
+  KEY: "??,
+  DIAMOND: "?�이??,
   GOLD: "골드",
   ROULETTE: "룰렛",
-  DICE: "주사위",
+  DICE: "주사??,
   LOTTERY: "복권",
-  VOUCHER: "바우처",
-  GIFTICON: "기프티콘",
+  VOUCHER: "바우�?,
+  GIFTICON: "기프?�콘",
 };
 
 const formatSkuLabel = (sku: string): string => {
@@ -138,49 +138,49 @@ const buildAutoSku = (params: {
   return `SHOP_${costToken}_${itemType}_${costAmount}_X${itemAmount}_${ymd}`;
 };
 
-// reason 패턴 → 한글 라벨
+// reason ?�턴 ???��? ?�벨
 const formatReason = (reason: string, skuTitleMap?: Record<string, string>): string => {
   if (reason.startsWith("SHOP_PURCHASE:")) {
     const sku = reason.replace("SHOP_PURCHASE:", "");
     const title = skuTitleMap?.[sku];
-    if (title) return `상점 구매: ${title}`;
-    return `상점 구매: ${formatSkuLabel(sku)}`;
+    if (title) return `?�점 구매: ${title}`;
+    return `?�점 구매: ${formatSkuLabel(sku)}`;
   }
-  if (reason.startsWith("ADMIN_GRANT")) return "관리자 지급";
-  if (reason.startsWith("ADMIN_REVOKE")) return "관리자 회수";
+  if (reason.startsWith("ADMIN_GRANT")) return "관리자 지�?;
+  if (reason.startsWith("ADMIN_REVOKE")) return "관리자 ?�수";
   if (reason.startsWith("GAME_REWARD")) return "게임 보상";
   if (reason.startsWith("MISSION_REWARD")) return "미션 보상";
-  if (reason.startsWith("USE_VOUCHER")) return "바우처 사용";
-  if (reason.startsWith("STREAK_REWARD")) return "연속 출석 보상";
-  return reason; // 매핑 없으면 원본
+  if (reason.startsWith("USE_VOUCHER")) return "바우�??�용";
+  if (reason.startsWith("STREAK_REWARD")) return "?�속 출석 보상";
+  return reason; // 매핑 ?�으�??�본
 };
 
-// scope → 한글 라벨
+// scope ???��? ?�벨
 const SCOPE_LABELS: Record<string, string> = {
-  shop_purchase: "상점 구매",
-  game_play: "게임 플레이",
-  mission_claim: "미션 보상 수령",
-  streak_claim: "연속 출석 수령",
-  vault_unlock: "금고 해제",
-  admin_grant: "관리자 지급",
+  shop_purchase: "?�점 구매",
+  game_play: "게임 ?�레??,
+  mission_claim: "미션 보상 ?�령",
+  streak_claim: "?�속 출석 ?�령",
+  vault_unlock: "금고 ?�제",
+  admin_grant: "관리자 지�?,
 };
 
 const formatScope = (scope: string): string => SCOPE_LABELS[scope] ?? scope;
 
-// item_type → 한글 라벨
+// item_type ???��? ?�벨
 const formatItemType = (itemType: string, rewardMap?: Record<string, string>): string => {
   if (!itemType) return itemType;
   return formatGifticonItemType(itemType) ?? rewardMap?.[itemType] ?? ITEM_TYPE_LABELS[itemType] ?? itemType;
 };
 
-// item_type 기반 동적 그룹핑 설정 (하드코딩 PROD_TICKET_ 제거)
+// item_type 기반 ?�적 그룹???�정 (?�드코딩 PROD_TICKET_ ?�거)
 const GROUP_CONFIG: Record<string, { label: string; description: string; icon: React.ReactNode }> = {
-  TICKET: { label: "티켓 상품", description: "게임 참여용 티켓 상품입니다.", icon: <Ticket size={18} className="text-admin-brand" /> },
-  KEY: { label: "프리미엄 키", description: "특별 콘텐츠 해금용 키 상품입니다.", icon: <Gift size={18} className="text-admin-accent" /> },
-  DEFAULT: { label: "기타 상품", description: "일반 상품입니다.", icon: <Package size={18} className="text-admin-text-secondary" /> },
+  TICKET: { label: "?�켓 ?�품", description: "게임 참여???�켓 ?�품?�니??", icon: <Ticket size={18} className="text-admin-brand" /> },
+  KEY: { label: "?�리미엄 ??, description: "?�별 콘텐�??�금?????�품?�니??", icon: <Gift size={18} className="text-admin-accent" /> },
+  DEFAULT: { label: "기�? ?�품", description: "?�반 ?�품?�니??", icon: <Package size={18} className="text-admin-text-secondary" /> },
 };
 
-// item_type에서 그룹 키 추출 (동적 매핑)
+// item_type?�서 그룹 ??추출 (?�적 매핑)
 const getGroupKey = (itemType: string): string => {
   if (itemType.includes("TICKET")) return "TICKET";
   if (itemType.includes("KEY")) return "KEY";
@@ -235,7 +235,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     [reservedSkuSet]
   );
 
-  // 클릭 직전 변경값까지 반영하기 위해 최신 입력값을 ref로 보관
+  // ?�릭 직전 변경값까�? 반영?�기 ?�해 최신 ?�력값을 ref�?보�?
   const latestSkuParamsRef = React.useRef({
     costToken: initialData?.cost_token || "DIAMOND",
     costAmount: Number(initialData?.cost_amount || 1),
@@ -246,7 +246,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const handleAutoGenerateSku = React.useCallback(() => {
     const latest = latestSkuParamsRef.current;
     if (!String(latest.itemType || "").trim()) {
-      addToast("지급 아이템을 먼저 선택하세요.", "error");
+      addToast("지�??�이?�을 먼�? ?�택?�세??", "error");
       return;
     }
     const base = buildAutoSku({
@@ -265,7 +265,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
 
     setFormSku(candidate);
-    addToast(`SKU 자동 생성: ${candidate}`, "success");
+    addToast(`SKU ?�동 ?�성: ${candidate}`, "success");
   }, [addToast, isReserved]);
 
   const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
@@ -282,19 +282,19 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     const trimmedSku = formSku.trim();
     const trimmedTitle = formTitle.trim();
     if (!trimmedSku) {
-      addToast("상품코드를 입력하세요.", "error");
+      addToast("?�품코드�??�력?�세??", "error");
       return;
     }
     if (!trimmedTitle) {
-      addToast("상품명을 입력하세요.", "error");
+      addToast("?�품명을 ?�력?�세??", "error");
       return;
     }
     if (!formItemType) {
-      addToast("지급 아이템을 선택하세요.", "error");
+      addToast("지�??�이?�을 ?�택?�세??", "error");
       return;
     }
     if (!isEdit && isReserved(trimmedSku)) {
-      addToast("이미 존재하는 SKU입니다.", "error");
+      addToast("?��? 존재?�는 SKU?�니??", "error");
       return;
     }
 
@@ -308,14 +308,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       is_active: formIsActive,
     });
 
-    addToast(isEdit ? "수정되었습니다." : "추가되었습니다.", "success");
+    addToast(isEdit ? "?�정?�었?�니??" : "추�??�었?�니??", "success");
 
     if (isEdit || !keepAdding) {
       onClose();
       return;
     }
 
-    // 계속 추가: 선택값 유지 + 타이틀만 초기화 + SKU는 새로 생성
+    // 계속 추�?: ?�택�??��? + ?�?��?�?초기??+ SKU???�로 ?�성
     localReservedSkusRef.current.add(trimmedSku);
     setFormTitle("");
     setFormSku("");
@@ -327,7 +327,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <div className="bg-[#1e1e24] w-full max-w-lg rounded-2xl border border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-white">{isEdit ? "상품 수정" : "새 상품 추가"}</h2>
+            <h2 className="text-xl font-bold text-white">{isEdit ? "?�품 ?�정" : "???�품 추�?"}</h2>
             <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">
               {isEdit ? "Update Product Details" : "Create New Item"}
             </p>
@@ -336,17 +336,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-full transition-all text-zinc-500 hover:text-white"
-            aria-label="닫기"
-            title="닫기"
+            aria-label="?�기"
+            title="?�기"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          {/* 상품 코드 */}
+          {/* ?�품 코드 */}
           <div className="space-y-2">
-            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품코드 (SKU)</label>
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?�품코드 (SKU)</label>
             <div className="flex gap-2">
               <input
                 className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
@@ -360,34 +360,34 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   type="button"
                   onClick={handleAutoGenerateSku}
                   className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-black text-white/80 hover:bg-white/10"
-                  title="입력값 기반으로 SKU 자동 생성"
+                  title="?�력�?기반?�로 SKU ?�동 ?�성"
                 >
-                  자동 생성
+                  ?�동 ?�성
                 </button>
               )}
             </div>
             {!isEdit && (
               <p className="text-[11px] text-white/35">
-                결제 토큰/지급 아이템/가격/수량 기준으로 생성되며, 중복이면 <span className="font-mono">_V2</span> 같은 suffix가 붙습니다.
+                결제 ?�큰/지�??�이??가�??�량 기�??�로 ?�성?�며, 중복?�면 <span className="font-mono">_V2</span> 같�? suffix가 붙습?�다.
               </p>
             )}
           </div>
 
-          {/* 상품명 */}
+          {/* ?�품�?*/}
           <div className="space-y-2">
-            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">상품명 (Title)</label>
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?�품�?(Title)</label>
             <input
               className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="예: 다이아 10개 상품"
+              placeholder="?? ?�이??10�??�품"
             />
           </div>
 
-          {/* 가격 설정 */}
+          {/* 가�??�정 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 토큰</label>
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 ?�큰</label>
               <select
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
                 value={formCostToken}
@@ -405,7 +405,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </select>
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가격 (Amount)</label>
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가�?(Amount)</label>
               <div className="flex flex-col gap-2">
                 <select
                   className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
@@ -426,7 +426,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </option>
                   ))}
                   <option value="__CUSTOM__" className="bg-zinc-900">
-                    직접 입력
+                    직접 ?�력
                   </option>
                 </select>
                 {costAmountMode === "custom" && (
@@ -445,15 +445,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* 지급 아이템 설정 */}
+          {/* 지�??�이???�정 */}
           <div className="p-6 bg-admin-brand/5 rounded-2xl border border-admin-brand/10 space-y-4">
             <div className="flex items-center gap-2 text-admin-brand mb-2">
               <Gift size={14} className="animate-bounce" />
-              <span className="text-xs font-black uppercase tracking-widest">지급 보상 (Reward)</span>
+              <span className="text-xs font-black uppercase tracking-widest">지�?보상 (Reward)</span>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">아이템 종류</label>
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?�이??종류</label>
               <select
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
                 value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
@@ -468,7 +468,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 }}
               >
                 <option value="" className="bg-zinc-900">
-                  선택하세요
+                  ?�택?�세??
                 </option>
                 {rewardTypeOptions.map((o) => (
                   <option key={o.value} value={o.value} className="bg-zinc-900">
@@ -476,7 +476,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </option>
                 ))}
                 <option value="__CUSTOM__" className="bg-zinc-900">
-                  직접 입력
+                  직접 ?�력
                 </option>
               </select>
               {itemTypeMode === "custom" && (
@@ -493,7 +493,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">수량 (Quantity)</label>
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?�량 (Quantity)</label>
               <div className="flex flex-col gap-2">
                 <select
                   className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
@@ -514,7 +514,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </option>
                   ))}
                   <option value="__CUSTOM__" className="bg-zinc-900">
-                    직접 입력
+                    직접 ?�력
                   </option>
                 </select>
                 {itemAmountMode === "custom" && (
@@ -533,17 +533,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* 활성 상태 */}
+          {/* ?�성 ?�태 */}
           <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-bold text-white">판매 활성화</span>
+              <span className="text-sm font-bold text-white">?�매 ?�성??/span>
               <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">ACTIVE STATUS</span>
             </div>
             <button
               type="button"
               onClick={() => setFormIsActive((v) => !v)}
-              aria-label="판매 활성화 토글"
-              title={formIsActive ? "비활성으로 전환" : "활성으로 전환"}
+              aria-label="?�매 ?�성???��?"
+              title={formIsActive ? "비활?�으�??�환" : "?�성?�로 ?�환"}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${formIsActive ? "bg-admin-brand" : "bg-zinc-700"
                 }`}
             >
@@ -564,9 +564,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 ? "bg-admin-brand/10 border-admin-brand/30 text-white"
                 : "bg-zinc-900/20 border-white/10 text-white/70 hover:bg-white/5"
                 }`}
-              title="추가 후 모달을 닫지 않고 계속 생성"
+              title="추�? ??모달???��? ?�고 계속 ?�성"
             >
-              계속 추가: {keepAdding ? "ON" : "OFF"}
+              계속 추�?: {keepAdding ? "ON" : "OFF"}
             </button>
           )}
           <button
@@ -669,10 +669,10 @@ const AdminShopPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "overrides"] });
       setDeletedSkus(new Set());
-      addToast("상점 설정이 저장되었습니다.", "success");
+      addToast("?�점 ?�정???�?�되?�습?�다.", "success");
     },
     onError: (err: Error & { response?: { data?: { detail?: string } } }) => {
-      addToast(`저장 실패: ${err.response?.data?.detail || err.message}`, "error");
+      addToast(`?�???�패: ${err.response?.data?.detail || err.message}`, "error");
     },
   });
 
@@ -788,7 +788,7 @@ const AdminShopPage: React.FC = () => {
     );
   }, [effectiveProducts, searchTerm, rows]);
 
-  // item_type 기반 동적 그룹핑 (하드코딩 제거)
+  // item_type 기반 ?�적 그룹??(?�드코딩 ?�거)
   const groupedProducts = useMemo(() => {
     const groups: Record<string, AdminShopProduct[]> = {};
     for (const p of filteredProducts) {
@@ -799,7 +799,7 @@ const AdminShopPage: React.FC = () => {
     return groups;
   }, [filteredProducts]);
 
-  // 테이블 행 렌더링 함수 (요약 뷰)
+  // ?�이�????�더�??�수 (?�약 �?
   const renderProductRow = (p: AdminShopProduct) => {
     const r = rows.get(p.sku);
     if (!r) return null;
@@ -867,7 +867,7 @@ const AdminShopPage: React.FC = () => {
               type="button"
               onClick={() => handleEditProduct(p.sku)}
               className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-hover text-admin-text-secondary hover:text-admin-brand transition-colors"
-              title="편집"
+              title="?�집"
             >
               <Edit2 size={16} />
             </button>
@@ -885,10 +885,10 @@ const AdminShopPage: React.FC = () => {
                     next.add(p.sku);
                     return next;
                   });
-                  addToast("삭제 예약됨: 저장 시 반영됩니다.", "success");
+                  addToast("??�� ?�약?? ?�????반영?�니??", "success");
                 }}
                 className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-danger/10 text-admin-text-secondary hover:text-admin-danger transition-colors"
-                title="삭제"
+                title="??��"
               >
                 <Trash2 size={16} />
               </button>
@@ -900,7 +900,7 @@ const AdminShopPage: React.FC = () => {
   };
 
   // ============================================================
-  // 모달에서 SKU 중복 체크에 사용
+  // 모달?�서 SKU 중복 체크???�용
   const reservedSkuSet = useMemo(() => {
     const set = new Set<string>();
     for (const p of effectiveProducts) set.add(p.sku);
@@ -910,7 +910,7 @@ const AdminShopPage: React.FC = () => {
   }, [effectiveProducts, rows, deletedSkus]);
 
 
-  // 로딩/에러 상태
+  // 로딩/?�러 ?�태
   const isLoading = productsQuery.isLoading || overridesQuery.isLoading || rewardTypesQuery.isLoading;
   if (isLoading) {
     return <div className="admin-page-container text-admin-text-secondary">{LABELS.loading}</div>;
@@ -921,11 +921,11 @@ const AdminShopPage: React.FC = () => {
 
   return (
     <div className="admin-page-container">
-      {/* 헤더 섹션 */}
+      {/* ?�더 ?�션 */}
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            상점 관리 <span className="text-admin-brand/40">Shop Admin</span>
+            ?�점 관�?<span className="text-admin-brand/40">Shop Admin</span>
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -933,13 +933,13 @@ const AdminShopPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-muted" size={14} />
             <input
               className="admin-input pl-10 w-64 h-10 text-sm"
-              placeholder="상품명 또는 SKU 검색"
+              placeholder="?�품�??�는 SKU 검??
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button type="button" onClick={() => setIsAddingNew(true)} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
-            <Plus size={14} /> 상품 추가
+            <Plus size={14} /> ?�품 추�?
           </button>
           <button type="button" onClick={handleRefresh} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
             <RefreshCw size={14} /> {LABELS.refresh}
@@ -956,9 +956,9 @@ const AdminShopPage: React.FC = () => {
         </div>
       </header>
 
-      {/* 기존 상단 Add Form 제거됨 (모달로 대체 예정) */}
+      {/* 기존 ?�단 Add Form ?�거??(모달�??��??�정) */}
 
-      {/* 동적 그룹별 테이블 (item_type 기반) */}
+      {/* ?�적 그룹�??�이�?(item_type 기반) */}
       {Object.entries(groupedProducts).map(([groupKey, products]) => {
         const config = GROUP_CONFIG[groupKey] ?? GROUP_CONFIG.DEFAULT;
         return (
@@ -970,7 +970,7 @@ const AdminShopPage: React.FC = () => {
                 <p className="text-sm text-admin-text-secondary">{config.description}</p>
               </div>
               <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium bg-admin-sidebar text-admin-text-muted">
-                {products.length}개
+                {products.length}�?
               </span>
             </div>
 
@@ -979,11 +979,11 @@ const AdminShopPage: React.FC = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th className="admin-th w-[300px] text-sm font-bold text-zinc-500 uppercase tracking-wider">상품 정보 (Product Info)</th>
-                      <th className="admin-th w-[140px] text-sm font-bold text-zinc-500 uppercase tracking-wider">가격 (Price)</th>
-                      <th className="admin-th w-[200px] text-sm font-bold text-zinc-500 uppercase tracking-wider">지급 내용 (Grants)</th>
-                      <th className="admin-th w-[120px] text-sm font-bold text-zinc-500 uppercase tracking-wider">상태 (Status)</th>
-                      <th className="admin-th w-[100px] text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">관리 (Actions)</th>
+                      <th className="admin-th w-[300px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?�품 ?�보 (Product Info)</th>
+                      <th className="admin-th w-[140px] text-sm font-bold text-zinc-500 uppercase tracking-wider">가�?(Price)</th>
+                      <th className="admin-th w-[200px] text-sm font-bold text-zinc-500 uppercase tracking-wider">지�??�용 (Grants)</th>
+                      <th className="admin-th w-[120px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?�태 (Status)</th>
+                      <th className="admin-th w-[100px] text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">관�?(Actions)</th>
                     </tr>
                   </thead>
                   <tbody>{products.map(renderProductRow)}</tbody>
@@ -994,18 +994,18 @@ const AdminShopPage: React.FC = () => {
         );
       })}
 
-      {/* 통계 카드 섹션 */}
+      {/* ?�계 카드 ?�션 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">최근 구매 (원장 기반)</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">최근 구매 (?�장 기반)</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러오기 실패</div>
+              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
             ) : (statsQuery.data?.shop_purchases ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1014,7 +1014,7 @@ const AdminShopPage: React.FC = () => {
                   <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.reason}>
                     {formatReason(r.reason, skuTitleMap)}
                   </span>
-                  <span className="text-admin-text-primary font-medium">{r.count}건</span>
+                  <span className="text-admin-text-primary font-medium">{r.count}�?/span>
                 </div>
               ))
             )}
@@ -1023,14 +1023,14 @@ const AdminShopPage: React.FC = () => {
 
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">바우처 사용</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">바우�??�용</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러오기 실패</div>
+              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
             ) : (statsQuery.data?.voucher_uses ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1039,7 +1039,7 @@ const AdminShopPage: React.FC = () => {
                   <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.item_type}>
                     {formatItemType(r.item_type, rewardTypeMap)}
                   </span>
-                  <span className="text-admin-text-primary font-medium">{r.count}건</span>
+                  <span className="text-admin-text-primary font-medium">{r.count}�?/span>
                 </div>
               ))
             )}
@@ -1048,14 +1048,14 @@ const AdminShopPage: React.FC = () => {
 
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">멱등성 상태</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">멱등???�태</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러오기 실패</div>
+              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
             ) : (statsQuery.data?.idempotency ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1074,7 +1074,7 @@ const AdminShopPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 상품 추가/수정 모달 */}
+      {/* ?�품 추�?/?�정 모달 */}
       {isAddingNew && (
         <ProductFormModal
           mode="create"

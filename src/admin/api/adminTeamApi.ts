@@ -25,7 +25,7 @@ export interface TeamScoreLog {
     created_at: string;
 }
 
-const BASE_URL = "/admin/api/team-battle";
+const BASE_URL = "/api/admin/team-battle";
 
 export const fetchTeamSeasons = async (params?: {
     is_active?: boolean;

@@ -72,9 +72,9 @@ const RankingAdminPage: React.FC = () => {
             <Trophy className="h-5 w-5" />
             <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Ranking System Management</span>
           </div>
-          <h1 className="text-admin-title text-admin-text-primary">랭킹 시스템 관리</h1>
+          <h1 className="text-admin-title text-admin-text-primary">??�� ?�스??관�?/h1>
           <p className="text-admin-body text-admin-text-secondary font-medium">
-            날짜별 랭킹 데이터를 조회하고 수동으로 편집합니다.
+            ?�짜�???�� ?�이?��? 조회?�고 ?�동?�로 ?�집?�니??
           </p>
         </div>
         <div className="flex gap-3">
@@ -83,7 +83,7 @@ const RankingAdminPage: React.FC = () => {
             disabled={isLoading}
             className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?�로고침
           </button>
           {editingRanking.length > 0 && (
             <button
@@ -93,11 +93,11 @@ const RankingAdminPage: React.FC = () => {
             >
               {upsertMutation.isPending ? (
                 <>
-                  <RefreshCw className="h-4 w-4 animate-spin" /> 저장 중...
+                  <RefreshCw className="h-4 w-4 animate-spin" /> ?�??�?..
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" /> 변경사항 저장
+                  <Save className="h-4 w-4" /> 변경사???�??
                 </>
               )}
             </button>
@@ -113,7 +113,7 @@ const RankingAdminPage: React.FC = () => {
             htmlFor="ranking-admin-selected-date"
             className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2"
           >
-            조회 날짜
+            조회 ?�짜
           </label>
           <input
             id="ranking-admin-selected-date"
@@ -121,32 +121,32 @@ const RankingAdminPage: React.FC = () => {
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="admin-input h-11 w-full md:w-64"
-            aria-label="조회 날짜"
-            title="조회 날짜"
+            aria-label="조회 ?�짜"
+            title="조회 ?�짜"
           />
         </div>
         <button
           onClick={handleAddRank}
           type="button"
           className="btn-admin-secondary px-4 py-2 h-auto text-xs font-black"
-          aria-label="순위 추가"
-          title="순위 추가"
+          aria-label="?�위 추�?"
+          title="?�위 추�?"
         >
-          + 순위 추가
+          + ?�위 추�?
         </button>
       </div>
 
       {/* Ranking Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총 순위 수</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">�??�위 ??/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-text-primary">{(ranking?.length || 0) + editingRanking.length}</p>
             <Trophy className="h-5 w-5 text-admin-warning mb-1" />
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">최고 점수</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">최고 ?�수</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-accent tabular-nums">
               {Math.max(...(ranking?.map(r => r.score || 0) || [0]), ...editingRanking.map(r => r.score || 0)).toLocaleString()}
@@ -155,7 +155,7 @@ const RankingAdminPage: React.FC = () => {
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32 border-l-4 border-admin-warning">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">선택된 날짜</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�택???�짜</p>
           <p className="text-lg font-black text-admin-text-primary">{selectedDate}</p>
         </div>
       </div>
@@ -165,17 +165,17 @@ const RankingAdminPage: React.FC = () => {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+            <p className="text-admin-meta text-admin-text-secondary">?�이??로딩 �?..</p>
           </div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
             <table className="admin-table">
               <thead>
                 <tr className="admin-th">
-                  <th className="px-4 py-3.5 text-center w-20">순위</th>
-                  <th className="px-4 py-3.5 text-left">사용자명</th>
-                  <th className="px-4 py-3.5 text-right">점수</th>
-                  <th className="px-4 py-3.5 text-center">액션</th>
+                  <th className="px-4 py-3.5 text-center w-20">?�위</th>
+                  <th className="px-4 py-3.5 text-left">?�용?�명</th>
+                  <th className="px-4 py-3.5 text-right">?�수</th>
+                  <th className="px-4 py-3.5 text-center">?�션</th>
                 </tr>
               </thead>
               <tbody>
@@ -206,8 +206,8 @@ const RankingAdminPage: React.FC = () => {
                         }}
                         type="button"
                         className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
-                        aria-label="랭킹 항목 삭제"
-                        title="랭킹 항목 삭제"
+                        aria-label="??�� ??�� ??��"
+                        title="??�� ??�� ??��"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -224,8 +224,8 @@ const RankingAdminPage: React.FC = () => {
                         value={entry.rank}
                         onChange={(e) => handleUpdateRank(index, "rank", Number(e.target.value))}
                         className="admin-input h-10 w-16 text-center font-black"
-                        aria-label="순위"
-                        title="순위"
+                        aria-label="?�위"
+                        title="?�위"
                       />
                     </td>
                     <td className="px-4 py-4">
@@ -233,10 +233,10 @@ const RankingAdminPage: React.FC = () => {
                         type="text"
                         value={entry.user_name}
                         onChange={(e) => handleUpdateRank(index, "user_name", e.target.value)}
-                        placeholder="사용자명"
+                        placeholder="?�용?�명"
                         className="admin-input h-10 w-full"
-                        aria-label="사용자명"
-                        title="사용자명"
+                        aria-label="?�용?�명"
+                        title="?�용?�명"
                       />
                     </td>
                     <td className="px-4 py-4">
@@ -244,10 +244,10 @@ const RankingAdminPage: React.FC = () => {
                         type="number"
                         value={entry.score}
                         onChange={(e) => handleUpdateRank(index, "score", Number(e.target.value))}
-                        placeholder="점수"
+                        placeholder="?�수"
                         className="admin-input h-10 w-full text-right font-black"
-                        aria-label="점수"
-                        title="점수"
+                        aria-label="?�수"
+                        title="?�수"
                       />
                     </td>
                     <td className="px-4 py-4 text-center">
@@ -255,8 +255,8 @@ const RankingAdminPage: React.FC = () => {
                         onClick={() => setEditingRanking(editingRanking.filter((_, i) => i !== index))}
                         type="button"
                         className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
-                        aria-label="편집 행 삭제"
-                        title="편집 행 삭제"
+                        aria-label="?�집 ????��"
+                        title="?�집 ????��"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -267,7 +267,7 @@ const RankingAdminPage: React.FC = () => {
                 {ranking?.length === 0 && editingRanking.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                      선택된 날짜에 랭킹 데이터가 없습니다.
+                      ?�택???�짜????�� ?�이?��? ?�습?�다.
                     </td>
                   </tr>
                 )}

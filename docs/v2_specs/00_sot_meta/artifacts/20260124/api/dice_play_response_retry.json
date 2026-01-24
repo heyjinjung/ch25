@@ -1,0 +1,45 @@
+﻿{
+    "result":  "OK",
+    "game_data":  {
+                      "user_dice":  [
+                                        2,
+                                        1
+                                    ],
+                      "dealer_dice":  [
+                                          3,
+                                          2
+                                      ],
+                      "user_sum":  3,
+                      "dealer_sum":  5,
+                      "outcome":  "LOSE",
+                      "reward_amount":  -50,
+                      "can_double_up":  false
+                  },
+    "season_pass":  null,
+    "vault_earn":  -100,
+    "streak_info":  {
+                        "streak_days":  1,
+                        "current_multiplier":  1.0,
+                        "is_hot":  false,
+                        "is_legend":  false,
+                        "next_milestone":  3,
+                        "claimable_day":  null
+                    },
+    "event_seeded":  false,
+    "event_seed_amount":  0,
+    "game":  {
+                 "user_dice":  [
+                                   2,
+                                   1
+                               ],
+                 "dealer_dice":  [
+                                     3,
+                                     2
+                                 ],
+                 "user_sum":  3,
+                 "dealer_sum":  5,
+                 "outcome":  "LOSE",
+                 "reward_amount":  -50,
+                 "can_double_up":  false
+             }
+}

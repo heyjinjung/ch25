@@ -33,8 +33,8 @@ const DesktopTiles: ModuleTile[] = [
     to: "/dice",
     title: (
       <span className="flex flex-col items-center leading-[1.15]">
-        <span>레벨</span>
-        <span>주사위</span>
+        <span>?�벨</span>
+        <span>주사??/span>
       </span>
     ),
     icon: assets.levelSvg,
@@ -43,7 +43,7 @@ const DesktopTiles: ModuleTile[] = [
   },
   {
     to: "/lottery",
-    title: "랜덤 복권",
+    title: "?�덤 복권",
     icon: assets.lotterySvg,
     fallback: assets.iconLottery,
     widthClassDesktop: "w-[110px]",
@@ -55,8 +55,8 @@ const MobileTiles: ModuleTile[] = [
     to: "/dice",
     title: (
       <span className="flex flex-col items-center leading-[1.15]">
-        <span>레벨</span>
-        <span>주사위</span>
+        <span>?�벨</span>
+        <span>주사??/span>
       </span>
     ),
     icon: assets.levelSvg,
@@ -68,7 +68,7 @@ const MobileTiles: ModuleTile[] = [
     title: (
       <span className="flex flex-col items-center leading-[1.15]">
         <span>복권</span>
-        <span>랜덤뽑기</span>
+        <span>?�덤뽑기</span>
       </span>
     ),
     icon: assets.lotterySvg,
@@ -112,7 +112,7 @@ const GuideButton: React.FC = memo(() => (
     to="/guide"
     className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] tracking-[-0.2px] text-black hover:bg-[#b8e685]"
   >
-    홈페이지 가이드
+    ?�페?��? 가?�드
   </Link>
 ));
 
@@ -133,7 +133,7 @@ const LogoutButton: React.FC = memo(() => {
       onClick={handleLogout}
       className="shrink-0 rounded-[2px] border border-white/25 px-[12px] py-[10px] text-[10px] tracking-[-0.2px] text-white hover:bg-white/10"
     >
-      로그아웃
+      로그?�웃
     </button>
   );
 });
@@ -143,13 +143,13 @@ LogoutButton.displayName = "LogoutButton";
 const UserBadge: React.FC = memo(() => {
   const { user } = useAuth();
   const { data: seasonPass } = useSeasonPassStatus();
-  const name = (user?.nickname || user?.external_id || "지민").toString();
+  const name = (user?.nickname || user?.external_id || "지�?).toString();
   const level = seasonPass?.current_level ?? user?.level ?? 1;
 
   return (
     <div className="rounded-full border border-white/15 bg-white/5 px-3 py-[6px] text-[12px] leading-none text-white/85">
       <span className="max-w-[120px] truncate align-middle">{name}</span>
-      <span className="align-middle">레벨 </span>
+      <span className="align-middle">?�벨 </span>
       <span className="align-middle font-semibold text-[#d2fd9c]">{level}</span>
     </div>
   );
@@ -172,20 +172,20 @@ const DesktopSidebarContent: React.FC = memo(() => {
 
         <div className="flex flex-col gap-[20px]">
           <h1 className="text-[42px] font-medium leading-[1.058] tracking-[-0.84px] text-white">
-            지민코드 전용
+            지민코???�용
             <br />
-            <span className="text-[#d2fd9c]">포인트서비스</span>
+            <span className="text-[#d2fd9c]">?�인?�서비스</span>
           </h1>
           <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">
-            즐거운 연말연시
+            즐거???�말?�시
             <br />
-            지민이와 함께 하세요
+            지민이?� ?�께 ?�세??
           </h2>
         </div>
 
         <div className="flex flex-col gap-[20px]">
           <h3 className="text-[20px] font-medium leading-[1.15] text-[#d2fd9c]">
-            게임 바로가기
+            게임 바로가�?
           </h3>
           <div className="flex gap-[10px]">
             {DesktopTiles.map((tile) => (
@@ -224,13 +224,13 @@ const DesktopSidebarContent: React.FC = memo(() => {
             rel="noreferrer noopener"
             className="leading-[1.15]"
           >
-            CC카지노
+            CC카�???
           </a>
           <Link to="/events" className="leading-[1.15]">
-            이벤트
+            ?�벤??
           </Link>
           <Link to="/vault" className="leading-[1.15]">
-            내금고
+            ?�금�?
           </Link>
         </div>
       </div>
@@ -259,7 +259,7 @@ const DesktopSidebarContent: React.FC = memo(() => {
                   clipRule="evenodd"
                 ></path>
               </svg>
-              CC카지노 바로가기
+              CC카�???바로가�?
             </a>
             <a
               href="https://t.me/jm956"
@@ -278,7 +278,7 @@ const DesktopSidebarContent: React.FC = memo(() => {
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
               </svg>
-              실장텔레그램
+              ?�장?�레그램
             </a>
             <a
               href="https://t.me/+LksI3XlSjLlhZmE0"
@@ -316,7 +316,7 @@ const DesktopSidebarContent: React.FC = memo(() => {
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
               </svg>
-              씨씨카지노 공식채널
+              ?�씨카�???공식채널
             </a>
           </div>
         </div>
@@ -341,14 +341,14 @@ const MobileSidebarContent: React.FC = memo(() => {
         </div>
 
         <h1 className="text-[42px] font-medium leading-[1.058] tracking-[-0.84px] text-white">
-          지민코드 전용
+          지민코???�용
           <br />
-          <span className="text-[#d2fd9c]">포인트 서비스</span>
+          <span className="text-[#d2fd9c]">?�인???�비??/span>
         </h1>
 
         <div className="flex flex-col gap-[6px]">
           <h3 className="text-[20px] font-medium leading-[1.15] text-[#d2fd9c] text-shadow-soft">
-            게임 바로가기
+            게임 바로가�?
           </h3>
           <div className="flex flex-wrap gap-[10px]">
             {MobileTiles.map((tile) => (
@@ -382,13 +382,13 @@ const MobileSidebarContent: React.FC = memo(() => {
             rel="noreferrer noopener"
             className="leading-[1.15]"
           >
-            CC 카지노
+            CC 카�???
           </a>
           <Link to="/events" className="leading-[1.15]">
-            이벤트
+            ?�벤??
           </Link>
           <Link to="/vault" className="leading-[1.15]">
-            내 금고
+            ??금고
           </Link>
         </div>
       </div>
@@ -430,7 +430,7 @@ export const SidebarMobileFooter: React.FC<{ className?: string }> = memo(
                   clipRule="evenodd"
                 ></path>
               </svg>
-              CC카지노 바로가기
+              CC카�???바로가�?
             </a>
             <a
               href="https://t.me/jm956"
@@ -449,7 +449,7 @@ export const SidebarMobileFooter: React.FC<{ className?: string }> = memo(
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
               </svg>
-              실장텔레그램
+              ?�장?�레그램
             </a>
             <a
               href="https://t.me/+LksI3XlSjLlhZmE0"
@@ -487,7 +487,7 @@ export const SidebarMobileFooter: React.FC<{ className?: string }> = memo(
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"></path>
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"></path>
               </svg>
-              씨씨카지노 공식채널
+              ?�씨카�???공식채널
             </a>
           </div>
         </div>

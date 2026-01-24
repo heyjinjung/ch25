@@ -1,4 +1,4 @@
-// src/router/UserRoutes.tsx
+﻿// src/router/UserRoutes.tsx
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import UserLayout from "../components/layout/UserLayout";
@@ -48,7 +48,7 @@ const UserRoutes: React.FC = () => {
         <Route path="/connect" element={<ConnectPage />} />
 
         {/* Primary experience starts at landing/home */}
-        <Route path="/" element={<Navigate to="/landing" replace />} />
+        <Route path="/" element={<Navigate to="/v1/landing" replace />} />
         <Route path="/tablet" element={<Navigate to="/landing/tablet" replace />} />
         <Route path="/mobile" element={<Navigate to="/landing/mobile" replace />} />
 
@@ -79,15 +79,15 @@ const UserRoutes: React.FC = () => {
 
         <Route element={<UserLayout />}>
           <Route element={<RequireAuth />}>
-            <Route path="/home" element={<Navigate to="/landing" replace />} />
+            <Route path="/home" element={<Navigate to="/v1/landing" replace />} />
             <Route path="/ranking" element={<RankingPage />} />
             <Route path="/surveys" element={<SurveyListPage />} />
             <Route path="/surveys/:surveyId" element={<SurveyRunnerPage />} />
-            <Route path="/app" element={<Navigate to="/landing" replace />} />
+            <Route path="/app" element={<Navigate to="/v1/landing" replace />} />
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/landing" replace />} />
+        <Route path="*" element={<Navigate to="/v1/landing" replace />} />
       </Routes>
     </Suspense>
   );

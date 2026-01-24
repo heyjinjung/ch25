@@ -20,10 +20,10 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC 카지노", to: "https://ccc-010.com" },
-  { label: "레벨확인", to: "/season-pass" },
-  { label: "팀배틀", to: "/team-battle" },
-  { label: "내 금고", to: "/landing" },
+  { label: "CC 카�???, to: "https://ccc-010.com" },
+  { label: "?�벨?�인", to: "/season-pass" },
+  { label: "?�배�?", to: "/team-battle" },
+  { label: "??금고", to: "/landing" },
 ];
 
 const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
@@ -31,16 +31,16 @@ const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
 const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const gameTiles = [
-  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
-  { title: "복권 랜덤뽑기", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "?�벨 주사??, to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "복권 ?�덤뽑기", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
   { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
 const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
-  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
-  { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
-  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초�?", icon: assets.iconPeople, href: noticeLink },
+  { title: "?�씨?�용?�기", icon: assets.iconWallet, href: "https://ccc-010.com" },
+  { title: "금고?�비??, icon: assets.iconSecurity, to: "/vault" },
+  { title: "?�인?�게?�하�?, icon: assets.iconGraph, to: randomGameLink },
 ];
 
 const baseAccent = "#d2fd9c";
@@ -73,22 +73,22 @@ const MobileLanding: React.FC = () => {
               href="https://figma.com/sites"
               className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
             >
-              홈페이지 가이드
+              ?�페?��? 가?�드
             </a>
           </div>
         </nav>
 
         <div className="flex flex-col gap-[20px] w-full">
           <h1 className="w-[280px] text-[42px] font-medium leading-[1.06] tracking-[-0.84px]">
-            지민코드 전용
+            지민코???�용
             <br />
-            <span style={{ color: baseAccent }}>포인트 서비스</span>
+            <span style={{ color: baseAccent }}>?�인???�비??/span>
           </h1>
         </div>
 
         <div className="flex flex-col gap-[6px] w-full">
           <h3 className="text-[20px] font-medium" style={{ color: baseAccent }}>
-            게임 바로가기
+            게임 바로가�?
           </h3>
           <div className="flex flex-wrap gap-[10px] w-full">
             {gameTiles.map((tile) => (
@@ -137,12 +137,12 @@ const MobileLanding: React.FC = () => {
       <main className="w-full max-w-[388px] flex flex-col">
         <a href="https://ccc-010.com" className="flex flex-col items-center bg-white px-[20px] py-[20px]">
           <div className="relative w-full max-w-[340px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "323/216" }}>
-            <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
+            <img src={assets.headerImage} alt="?�벤??배너" className="absolute inset-0 h-full w-full object-contain" />
           </div>
         </a>
 
         <section className="bg-white flex flex-col items-center gap-[24px] px-[20px] py-[20px]">
-          <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인금고머니 적립이벤트</h2>
+          <h2 className="w-full text-center text-[32px] font-medium tracking-[-0.64px] text-black">진행중인금고머니 ?�립?�벤??/h2>
           <div className="flex flex-col gap-[20px] w-full items-center">
             <a
               href={noticeLink}
@@ -151,16 +151,16 @@ const MobileLanding: React.FC = () => {
               className="flex flex-col gap-[19px] w-full max-w-[335px] hover:opacity-90"
             >
               <div className="relative w-full overflow-hidden rounded-[10px]" style={{ aspectRatio: "285/221" }}>
-                <img src={assets.benefitImage} alt="신년이벤트 내금고 열기" className="absolute inset-0 h-full w-full object-cover" />
+                <img src={assets.benefitImage} alt="?�년?�벤???�금�??�기" className="absolute inset-0 h-full w-full object-cover" />
               </div>
-              <p className="text-[20px] font-medium leading-[1.15] text-left text-black"> 신년이벤트 내금고 열기</p>
+              <p className="text-[20px] font-medium leading-[1.15] text-left text-black"> ?�년?�벤???�금�??�기</p>
             </a>
           </div>
         </section>
 
         <section className="bg-white flex flex-col items-center gap-[20px] px-[20px] pt-[20px] pb-[29px]">
           <h2 className="text-[32px] font-medium tracking-[-0.64px] text-center" style={{ color: deepOlive }}>
-            지민이벤트 이용하는 법
+            지민이벤트 ?�용?�는 �?
           </h2>
           <div className="flex flex-wrap justify-center gap-[20px] w-full">
             {howToIcons.map((item) => {
@@ -210,9 +210,9 @@ const MobileLanding: React.FC = () => {
           <div className="flex flex-col gap-[12px]">
             <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
             <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-              <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">실장텔레그램</a>
+              <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">?�장?�레그램</a>
               <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-              <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
+              <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">?�씨카�???공식채널</a>
             </div>
           </div>
         </div>

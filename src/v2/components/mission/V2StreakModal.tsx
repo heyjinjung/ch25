@@ -1,4 +1,4 @@
-// src/v2/components/mission/V2StreakModal.tsx
+// src/components/mission/V2StreakModal.tsx
 import React from "react";
 import V2AttendanceStreakModal from "./V2AttendanceStreakModal";
 import type { V2StreakRule } from "../../api/missionApi";

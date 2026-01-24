@@ -13,7 +13,7 @@ import { SoundProvider } from "./contexts/SoundContext";
 // 1. Telegram Mock (dev mode only, when not in Telegram)
 if (import.meta.env.DEV && !window.Telegram?.WebApp?.initData) {
   import("./dev-mock-telegram").then(() => {
-    console.log("ğŸ”§ Telegram WebApp Mock loaded for development");
+    console.log("?”§ Telegram WebApp Mock loaded for development");
   });
 }
 
@@ -33,7 +33,7 @@ if (debugMode) {
   script.src = "https://cdn.jsdelivr.net/npm/eruda";
   script.onload = () => {
     (window as any).eruda?.init();
-    console.log("ğŸ› eruda debug console initialized");
+    console.log("?› eruda debug console initialized");
   };
   document.body.appendChild(script);
   // Persist debug mode

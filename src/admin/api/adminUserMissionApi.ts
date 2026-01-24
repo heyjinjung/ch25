@@ -21,11 +21,11 @@ export interface AdminUserMissionUpdatePayload {
 }
 
 export const fetchUserMissions = async (userId: number): Promise<AdminUserMissionDetail[]> => {
-    const response = await adminApi.get<AdminUserMissionDetail[]>(`/admin/api/user-missions/${userId}`);
+    const response = await adminApi.get<AdminUserMissionDetail[]>(`/api/admin/user-missions/${userId}`);
     return response.data;
 };
 
 export const updateUserMission = async (userId: number, missionId: number, payload: AdminUserMissionUpdatePayload) => {
-    const response = await adminApi.put(`/admin/api/user-missions/${userId}/${missionId}`, payload);
+    const response = await adminApi.put(`/api/admin/user-missions/${userId}/${missionId}`, payload);
     return response.data;
 };

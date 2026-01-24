@@ -1,4 +1,4 @@
-// src/v2/api/ticketZeroApi.ts
+// src/api/ticketZeroApi.ts
 import { v2Client } from "./client";
 
 // ============================================================================
@@ -17,7 +17,7 @@ export interface TicketZeroBailoutResponse {
 
 export const getV2TicketZeroStatus = async (): Promise<TicketZeroStatusResponse> => {
   try {
-    const response = await v2Client.get<TicketZeroStatusResponse>("/api/v2/ticket-zero/status");
+    const response = await v2Client.get<TicketZeroStatusResponse>("/api/ticket-zero/status");
     return response.data;
   } catch (error) {
     console.error("[ticketZeroApi] Failed to fetch V2 ticket zero status", error);
@@ -27,7 +27,7 @@ export const getV2TicketZeroStatus = async (): Promise<TicketZeroStatusResponse>
 
 export const requestV2TicketZeroBailout = async (): Promise<TicketZeroBailoutResponse> => {
   try {
-    const response = await v2Client.post<TicketZeroBailoutResponse>("/api/v2/ticket-zero/bailout");
+    const response = await v2Client.post<TicketZeroBailoutResponse>("/api/ticket-zero/bailout");
     return response.data;
   } catch (error) {
     console.error("[ticketZeroApi] Failed to request V2 ticket zero bailout", error);

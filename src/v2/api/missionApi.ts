@@ -1,4 +1,4 @@
-// src/v2/api/missionApi.ts
+// src/api/missionApi.ts
 import { v2Client } from "./client";
 
 // ============================================================================
@@ -120,7 +120,7 @@ const mapBackendStreakInfo = (
 export const getV2Missions = async (): Promise<MissionListResponse> => {
   try {
     const response =
-      await v2Client.get<BackendMissionListResponse>("/api/v2/mission/");
+      await v2Client.get<BackendMissionListResponse>("/api/mission/");
     const missions = response.data.missions.map(mapBackendMission);
     const streak_info = mapBackendStreakInfo(response.data.streak_info);
     return { missions, streak_info };
@@ -135,7 +135,7 @@ export const claimV2Mission = async (
 ): Promise<ClaimMissionResponse> => {
   try {
     const response = await v2Client.post<ClaimMissionResponse>(
-      `/api/v2/mission/${missionId}/claim`,
+      `/api/mission/${missionId}/claim`,
       null,
       {
         headers: {
@@ -153,7 +153,7 @@ export const claimV2Mission = async (
 export const claimV2DailyGift = async (): Promise<ClaimMissionResponse> => {
   try {
     const response = await v2Client.post<ClaimMissionResponse>(
-      "/api/v2/mission/daily-gift",
+      "/api/mission/daily-gift",
     );
     return response.data;
   } catch (error) {
@@ -177,7 +177,7 @@ export interface V2StreakRule {
 export const getV2StreakRules = async (): Promise<V2StreakRule[]> => {
   try {
     const response = await v2Client.get<V2StreakRule[]>(
-      "/api/v2/mission/streak/rules",
+      "/api/mission/streak/rules",
     );
     return response.data;
   } catch (error) {
@@ -189,7 +189,7 @@ export const getV2StreakRules = async (): Promise<V2StreakRule[]> => {
 export const claimV2StreakReward = async (): Promise<ClaimStreakResponse> => {
   try {
     const response = await v2Client.post<ClaimStreakResponse>(
-      "/api/v2/mission/streak/claim",
+      "/api/mission/streak/claim",
     );
     return response.data;
   } catch (error) {

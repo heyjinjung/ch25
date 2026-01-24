@@ -1,19 +1,19 @@
 /**
  * V2 Haptic Feedback Utility
  *
- * Telegram Mini App 환경에서 햅틱 피드백을 제공합니다.
- * Web 환경에서는 Vibration API를 fallback으로 사용합니다.
+ * Telegram Mini App ?�경?�서 ?�틱 ?�드백을 ?�공?�니??
+ * Web ?�경?�서??Vibration API�?fallback?�로 ?�용?�니??
  */
 
 type HapticStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
 type NotificationType = 'error' | 'success' | 'warning';
 
 /**
- * 햅틱 임팩트 피드백을 트리거합니다.
+ * ?�틱 ?�팩???�드백을 ?�리거합?�다.
  */
 export const triggerHaptic = (style: HapticStyle = 'medium') => {
   try {
-    // Telegram WebApp 햅틱 사용
+    // Telegram WebApp ?�틱 ?�용
     const telegram = (window as any).Telegram;
     if (telegram?.WebApp?.HapticFeedback) {
       telegram.WebApp.HapticFeedback.impactOccurred(style);
@@ -37,11 +37,11 @@ export const triggerHaptic = (style: HapticStyle = 'medium') => {
 };
 
 /**
- * 알림 햅틱 피드백을 트리거합니다.
+ * ?�림 ?�틱 ?�드백을 ?�리거합?�다.
  */
 export const triggerNotification = (type: NotificationType) => {
   try {
-    // Telegram WebApp 햅틱 사용
+    // Telegram WebApp ?�틱 ?�용
     const telegram = (window as any).Telegram;
     if (telegram?.WebApp?.HapticFeedback) {
       telegram.WebApp.HapticFeedback.notificationOccurred(type);
@@ -63,11 +63,11 @@ export const triggerNotification = (type: NotificationType) => {
 };
 
 /**
- * 선택 변경 햅틱 피드백을 트리거합니다. (가벼운 틱 소리)
+ * ?�택 변�??�틱 ?�드백을 ?�리거합?�다. (가벼운 ???�리)
  */
 export const triggerSelectionChanged = () => {
   try {
-    // Telegram WebApp 햅틱 사용
+    // Telegram WebApp ?�틱 ?�용
     const telegram = (window as any).Telegram;
     if (telegram?.WebApp?.HapticFeedback) {
       telegram.WebApp.HapticFeedback.selectionChanged();
@@ -84,7 +84,7 @@ export const triggerSelectionChanged = () => {
 };
 
 /**
- * 커스텀 진동 패턴을 트리거합니다.
+ * 커스?� 진동 ?�턴???�리거합?�다.
  */
 export const triggerVibration = (pattern: number | number[]) => {
   try {

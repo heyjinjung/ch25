@@ -22,7 +22,7 @@ const AdminEconomyStatsPage: React.FC = () => {
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-      <span className="text-admin-meta text-admin-text-secondary">경제 지표 분석 중...</span>
+      <span className="text-admin-meta text-admin-text-secondary">경제 지??분석 �?..</span>
     </div>
   );
 
@@ -30,10 +30,10 @@ const AdminEconomyStatsPage: React.FC = () => {
     <div className="admin-card-premium p-8 flex flex-col items-center gap-4 text-center">
       <AlertCircle className="h-12 w-12 text-admin-danger" />
       <div>
-        <h3 className="text-admin-subtitle font-bold text-admin-text-primary">지표 로드 실패</h3>
-        <p className="text-admin-meta text-admin-text-secondary">서버로부터 경제 데이터를 가져오는 데 실패했습니다.</p>
+        <h3 className="text-admin-subtitle font-bold text-admin-text-primary">지??로드 ?�패</h3>
+        <p className="text-admin-meta text-admin-text-secondary">?�버로�???경제 ?�이?��? 가?�오?????�패?�습?�다.</p>
       </div>
-      <button onClick={() => refetch()} className="btn-admin-primary px-6">다시 시도</button>
+      <button onClick={() => refetch()} className="btn-admin-primary px-6">?�시 ?�도</button>
     </div>
   );
 
@@ -45,8 +45,8 @@ const AdminEconomyStatsPage: React.FC = () => {
             <TrendingUp className="h-5 w-5" />
             <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Economy Watchtower</span>
           </div>
-          <h1 className="text-admin-title text-admin-text-primary">경제 원장 지표</h1>
-          <p className="text-admin-body text-admin-text-secondary font-medium">Inventory ledger 기반 통합 정산 및 멱등성 보장 수준을 모니터링합니다.</p>
+          <h1 className="text-admin-title text-admin-text-primary">경제 ?�장 지??/h1>
+          <p className="text-admin-body text-admin-text-secondary font-medium">Inventory ledger 기반 ?�합 ?�산 �?멱등??보장 ?��???모니?�링?�니??</p>
         </div>
         <button
           type="button"
@@ -55,7 +55,7 @@ const AdminEconomyStatsPage: React.FC = () => {
           className="btn-admin-secondary flex items-center gap-2 px-6 py-3 h-auto"
         >
           <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
-          <span className="font-bold">데이터 동기화</span>
+          <span className="font-bold">?�이???�기??/span>
         </button>
       </header>
 
@@ -67,7 +67,7 @@ const AdminEconomyStatsPage: React.FC = () => {
               <div className="p-2 rounded-lg bg-admin-brand/10 text-admin-brand">
                 <ShoppingCart className="h-5 w-5" />
               </div>
-              <h3 className="text-admin-body font-black text-admin-text-primary">상점 구매 (Ledger Reason)</h3>
+              <h3 className="text-admin-body font-black text-admin-text-primary">?�점 구매 (Ledger Reason)</h3>
             </div>
             <ArrowUpRight className="h-4 w-4 text-admin-text-muted" />
           </div>
@@ -75,15 +75,15 @@ const AdminEconomyStatsPage: React.FC = () => {
             <table className="admin-table">
               <thead>
                 <tr className="bg-admin-sidebar/60">
-                  <th className="admin-th">원인 (Reason)</th>
-                  <th className="admin-th text-right">거래량</th>
-                  <th className="admin-th text-right">누적 변동</th>
+                  <th className="admin-th">?�인 (Reason)</th>
+                  <th className="admin-th text-right">거래??/th>
+                  <th className="admin-th text-right">?�적 변??/th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-admin-border">
                 {(data?.shop_purchases ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">기록된 구매 내역이 없습니다.</td>
+                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">기록??구매 ?�역???�습?�다.</td>
                   </tr>
                 ) : (
                   data?.shop_purchases.map((r, i) => (
@@ -103,7 +103,7 @@ const AdminEconomyStatsPage: React.FC = () => {
           </div>
           <div className="p-4 bg-admin-sidebar/20 border-t border-admin-border text-[10px] text-admin-text-muted italic flex items-center gap-2">
             <BarChart3 className="h-3 w-3" />
-            <span>상점 트랜잭션의 상세 사유별 집계 결과입니다.</span>
+            <span>?�점 ?�랜??��???�세 ?�유�?집계 결과?�니??</span>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ const AdminEconomyStatsPage: React.FC = () => {
               <div className="p-2 rounded-lg bg-admin-accent/10 text-admin-accent">
                 <Ticket className="h-5 w-5" />
               </div>
-              <h3 className="text-admin-body font-black text-admin-text-primary">아이템/바우처 소모</h3>
+              <h3 className="text-admin-body font-black text-admin-text-primary">?�이??바우�??�모</h3>
             </div>
             <ArrowUpRight className="h-4 w-4 text-admin-text-muted" />
           </div>
@@ -122,15 +122,15 @@ const AdminEconomyStatsPage: React.FC = () => {
             <table className="admin-table">
               <thead>
                 <tr className="bg-admin-sidebar/60">
-                  <th className="admin-th">아이템 타입</th>
-                  <th className="admin-th text-right">사용수</th>
-                  <th className="admin-th text-right">유동액 (Abs)</th>
+                  <th className="admin-th">?�이???�??/th>
+                  <th className="admin-th text-right">?�용??/th>
+                  <th className="admin-th text-right">?�동??(Abs)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-admin-border">
                 {(data?.voucher_uses ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">소모 기록이 없습니다.</td>
+                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">?�모 기록???�습?�다.</td>
                   </tr>
                 ) : (
                   data?.voucher_uses.map((r, i) => (
@@ -148,7 +148,7 @@ const AdminEconomyStatsPage: React.FC = () => {
           </div>
           <div className="p-4 bg-admin-sidebar/20 border-t border-admin-border text-[10px] text-admin-text-muted italic flex items-center gap-2">
             <Database className="h-3 w-3" />
-            <span>회원 인벤토리에서 실제 차감된 아이템 가치 합계입니다.</span>
+            <span>?�원 ?�벤?�리?�서 ?�제 차감???�이??가�??�계?�니??</span>
           </div>
         </div>
 
@@ -159,7 +159,7 @@ const AdminEconomyStatsPage: React.FC = () => {
               <div className="p-2 rounded-lg bg-admin-warning/10 text-admin-warning">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <h3 className="text-admin-body font-black text-admin-text-primary">Idempotency 건전성</h3>
+              <h3 className="text-admin-body font-black text-admin-text-primary">Idempotency 건전??/h3>
             </div>
             <ArrowUpRight className="h-4 w-4 text-admin-text-muted" />
           </div>
@@ -167,15 +167,15 @@ const AdminEconomyStatsPage: React.FC = () => {
             <table className="admin-table">
               <thead>
                 <tr className="bg-admin-sidebar/60">
-                  <th className="admin-th">스코프 (Scope)</th>
-                  <th className="admin-th text-right">성공/전체</th>
-                  <th className="admin-th text-right">상태</th>
+                  <th className="admin-th">?�코??(Scope)</th>
+                  <th className="admin-th text-right">?�공/?�체</th>
+                  <th className="admin-th text-right">?�태</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-admin-border">
                 {(data?.idempotency ?? []).length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">보안 로그가 없습니다.</td>
+                    <td colSpan={3} className="px-6 py-10 text-center text-admin-meta text-admin-text-secondary">보안 로그가 ?�습?�다.</td>
                   </tr>
                 ) : (
                   data?.idempotency.map((r, i) => (
@@ -206,7 +206,7 @@ const AdminEconomyStatsPage: React.FC = () => {
           </div>
           <div className="p-4 bg-admin-sidebar/20 border-t border-admin-border text-[10px] text-admin-text-muted italic flex items-center gap-2">
             <AlertCircle className="h-3 w-3" />
-            <span>중복 거래 방지(멱등성) 로직의 실시간 작동 상태입니다.</span>
+            <span>중복 거래 방�?(멱등?? 로직???�시�??�동 ?�태?�니??</span>
           </div>
         </div>
       </div>

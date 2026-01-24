@@ -1,4 +1,4 @@
-// src/admin/api/adminDiceApi.ts
+// src/api/admin/adminDiceApi.ts
 import { adminApi } from "./httpClient";
 import type { AdminRewardType } from "../types/adminReward";
 
@@ -21,17 +21,17 @@ export interface AdminDiceConfig extends AdminDiceConfigPayload {
 }
 
 export async function fetchDiceConfigs() {
-  const { data } = await adminApi.get<AdminDiceConfig[]>("/admin/api/dice-config/");
+  const { data } = await adminApi.get<AdminDiceConfig[]>("/api/admin/dice-config/");
   return data;
 }
 
 export async function createDiceConfig(payload: AdminDiceConfigPayload) {
-  const { data } = await adminApi.post<AdminDiceConfig>("/admin/api/dice-config/", payload);
+  const { data } = await adminApi.post<AdminDiceConfig>("/api/admin/dice-config/", payload);
   return data;
 }
 
 export async function updateDiceConfig(id: number, payload: AdminDiceConfigPayload) {
-  const { data } = await adminApi.put<AdminDiceConfig>(`/admin/api/dice-config/${id}`, payload);
+  const { data } = await adminApi.put<AdminDiceConfig>(`/api/admin/dice-config/${id}`, payload);
   return data;
 }
 
@@ -67,11 +67,11 @@ export interface DiceEventParams {
 }
 
 export async function getEventParams() {
-  const { data } = await adminApi.get<DiceEventParams>("/admin/api/dice-config/event-params");
+  const { data } = await adminApi.get<DiceEventParams>("/api/admin/dice-config/event-params");
   return data;
 }
 
 export async function updateEventParams(payload: DiceEventParams) {
-  const { data } = await adminApi.put<DiceEventParams>("/admin/api/dice-config/event-params", payload);
+  const { data } = await adminApi.put<DiceEventParams>("/api/admin/dice-config/event-params", payload);
   return data;
 }

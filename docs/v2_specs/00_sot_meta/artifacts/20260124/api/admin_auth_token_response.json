@@ -1,0 +1,8 @@
+﻿Invoke-RestMethod : {"detail":"Not Found"}
+위치 줄:1 문자:261
++ ... y { $auth = Invoke-RestMethod -Method Post -Uri "http://localhost:800 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod 
+   ], WebException
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeRestMethodCom 
+   mand

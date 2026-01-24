@@ -62,9 +62,9 @@ const GameTokenLogsPage: React.FC = () => {
             <History className="h-5 w-5" />
             <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Token Transaction Records</span>
           </div>
-          <h1 className="text-admin-title text-admin-text-primary">토큰 트랜잭션 전적</h1>
+          <h1 className="text-admin-title text-admin-text-primary">?�큰 ?�랜??�� ?�적</h1>
           <p className="text-admin-body text-admin-text-secondary font-medium">
-            모든 토큰 지갑 잔액, 게임 플레이 기록 및 원장 데이터를 실시간으로 조회합니다.
+            모든 ?�큰 지�??�액, 게임 ?�레??기록 �??�장 ?�이?��? ?�시간으�?조회?�니??
           </p>
         </div>
         <button
@@ -72,7 +72,7 @@ const GameTokenLogsPage: React.FC = () => {
           disabled={isLoading}
           className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?�로고침
         </button>
       </header>
 
@@ -83,21 +83,21 @@ const GameTokenLogsPage: React.FC = () => {
           className={`px-6 py-2.5 rounded-lg text-xs font-black transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "wallets" ? "bg-admin-brand text-white shadow-admin-glow" : "text-admin-text-secondary hover:text-admin-text-primary"
             }`}
         >
-          <Wallet className="h-3.5 w-3.5" /> 지갑 잔액
+          <Wallet className="h-3.5 w-3.5" /> 지�??�액
         </button>
         <button
           onClick={() => setActiveTab("playLogs")}
           className={`px-6 py-2.5 rounded-lg text-xs font-black transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "playLogs" ? "bg-admin-brand text-white shadow-admin-glow" : "text-admin-text-secondary hover:text-admin-text-primary"
             }`}
         >
-          <ScrollText className="h-3.5 w-3.5" /> 게임 플레이 전적
+          <ScrollText className="h-3.5 w-3.5" /> 게임 ?�레???�적
         </button>
         <button
           onClick={() => setActiveTab("ledger")}
           className={`px-6 py-2.5 rounded-lg text-xs font-black transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === "ledger" ? "bg-admin-brand text-white shadow-admin-glow" : "text-admin-text-secondary hover:text-admin-text-primary"
             }`}
         >
-          <History className="h-3.5 w-3.5" /> 원장 기록
+          <History className="h-3.5 w-3.5" /> ?�장 기록
         </button>
       </div>
 
@@ -117,16 +117,16 @@ const GameTokenLogsPage: React.FC = () => {
           <select
             value={filterTokenType}
             onChange={(e) => setFilterTokenType(e.target.value as GameTokenType | "")}
-            aria-label="토큰 타입 필터"
-            title="토큰 타입 필터"
+            aria-label="?�큰 ?�???�터"
+            title="?�큰 ?�???�터"
             className="admin-input h-10 w-full md:w-48 text-xs"
           >
             <option value="">All Token Types</option>
             <option value="ROULETTE_COIN">룰렛 코인</option>
-            <option value="DICE_TOKEN">주사위 토큰</option>
-            <option value="LOTTERY_TICKET">복권 티켓</option>
-            <option value="GOLD_KEY">골드 키</option>
-            <option value="DIAMOND_KEY">다이아몬드 키</option>
+            <option value="DICE_TOKEN">주사???�큰</option>
+            <option value="LOTTERY_TICKET">복권 ?�켓</option>
+            <option value="GOLD_KEY">골드 ??/option>
+            <option value="DIAMOND_KEY">?�이?�몬????/option>
           </select>
         )}
       </div>
@@ -136,7 +136,7 @@ const GameTokenLogsPage: React.FC = () => {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+            <p className="text-admin-meta text-admin-text-secondary">?�이??로딩 �?..</p>
           </div>
         ) : (
           <>
@@ -155,7 +155,7 @@ const GameTokenLogsPage: React.FC = () => {
                     {wallets?.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                          조회된 지갑 데이터가 없습니다.
+                          조회??지�??�이?��? ?�습?�다.
                         </td>
                       </tr>
                     ) : (
@@ -200,7 +200,7 @@ const GameTokenLogsPage: React.FC = () => {
                     {playLogs?.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                          조회된 플레이 로그가 없습니다.
+                          조회???�레??로그가 ?�습?�다.
                         </td>
                       </tr>
                     ) : (
@@ -242,7 +242,7 @@ const GameTokenLogsPage: React.FC = () => {
                     {ledger?.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                          조회된 원장 기록이 없습니다.
+                          조회???�장 기록???�습?�다.
                         </td>
                       </tr>
                     ) : (

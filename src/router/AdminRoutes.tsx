@@ -1,4 +1,4 @@
-// src/router/AdminRoutes.tsx
+﻿// src/router/AdminRoutes.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLoginPage from "../admin/pages/AdminLoginPage";
@@ -13,9 +13,8 @@ import DiceConfigPage from "../admin/pages/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/LotteryConfigPage";
 import ExternalRankingPage from "../admin/pages/ExternalRankingPage";
 import TicketManagerPage from "../admin/pages/TicketManagerPage";
-import UserAdminPage from "../admin/pages/UserAdminPage";
-import MessageCenterPage from "../admin/pages/MessageCenterPage";
-import MarketingDashboardPage from "../admin/pages/MarketingDashboardPage";
+import { MessageCenterPage } from "../admin/pages/MessageCenterPage";
+import { MarketingDashboardPage } from "../admin/pages/MarketingDashboardPage";
 import AdminTeamBattlePage from "../admin/pages/AdminTeamBattlePage";
 import UserSegmentsPage from "../admin/pages/UserSegmentsPage";
 import SegmentRulesPage from "../admin/pages/SegmentRulesPage";
@@ -23,7 +22,7 @@ import UiConfigTicketZeroPage from "../admin/pages/UiConfigTicketZeroPage";
 import ModalVisibilityPage from "../admin/pages/ModalVisibilityPage";
 import VaultAdminPage from "../admin/pages/VaultAdminPage";
 import AdminMissionPage from "../admin/pages/AdminMissionPage";
-import AdminShopPage from "../admin/pages/AdminShopPage";
+import { AdminShopPage } from "../admin/pages/AdminShopPage";
 import StreakRewardsAdminPage from "../admin/pages/StreakRewardsAdminPage";
 import RewardTypesPage from "../admin/pages/RewardTypesPage";
 import GameHubPage from "../admin/pages/GameHubPage";
@@ -32,7 +31,7 @@ import AdminOpsLogPage from "../admin/pages/AdminOpsLogPage";
 import AdminOpsCsvUploadPage from "../admin/pages/AdminOpsCsvUploadPage";
 import AdminCh25RawLogsUploadPage from "../admin/pages/AdminCh25RawLogsUploadPage";
 import AdminOpsPage from "../admin/pages/AdminOpsPage";
-import AdminOpsPlanPage from "../admin/pages/AdminOpsPlanPage";
+import { AdminOpsPlanPage } from "../admin/pages/AdminOpsPlanPage";
 import AdminSystemHealthPage from "../admin/pages/AdminSystemHealthPage";
 import AdminLayout from "../admin/components/AdminLayout";
 import ProtectedRoute from "../components/routing/ProtectedRoute";
@@ -43,7 +42,6 @@ import VaultControlPage from "@/v2/admin/pages/economy/VaultControlPage";
 import TicketInventoryTabPage from "@/v2/admin/pages/economy/TicketInventoryTabPage";
 import UserManagementTabPage from "@/v2/admin/pages/users/UserManagementTabPage";
 import MarketingTabPage from "@/v2/admin/pages/marketing/MarketingTabPage";
-import OpsDashboard from "@/v2/admin/pages/dashboard/OpsDashboard";
 
 const AdminRoutes: React.FC = () => {
   return (
@@ -96,7 +94,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="config" element={<AdminPlaceholderPage title="시스템 전역 설정" description="전역 변수, 점검 모드, 보안 설정 등을 통합적으로 관리하는 페이지입니다." />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="*" element={<Navigate to="/v1/admin" replace />} />
     </Routes>
   );
 };

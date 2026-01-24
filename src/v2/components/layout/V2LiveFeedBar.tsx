@@ -1,4 +1,4 @@
-// src/v2/components/layout/V2LiveFeedBar.tsx
+// src/components/layout/V2LiveFeedBar.tsx
 import React from "react";
 
 const V2LiveFeedBar: React.FC = () => {
@@ -16,7 +16,7 @@ const V2LiveFeedBar: React.FC = () => {
         }
       `}</style>
       <div className="live-feed-marquee">
-        <span>🎉 CC25 신규 업데이트: 고해상도 V2 인터페이스가 적용되었습니다! • 새로운 게임 보너스 이벤트를 확인하세요! • 지금 미션을 완료하고 특별 티켓을 받아보세요!</span>
+        <span>?�� CC25 ?�규 ?�데?�트: 고해?�도 V2 ?�터?�이?��? ?�용?�었?�니?? ???�로??게임 보너???�벤?��? ?�인?�세?? ??지�?미션???�료?�고 ?�별 ?�켓??받아보세??</span>
       </div>
     </div>
   );

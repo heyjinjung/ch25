@@ -3,8 +3,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 /**
  * V2 Theme System
  *
- * 설날, 프리미엄, 기본 테마 등 다양한 테마를 동적으로 전환할 수 있는 시스템
- */
+ * ?�날, ?�리미엄, 기본 ?�마 ???�양???�마�??�적?�로 ?�환?????�는 ?�스?? */
 
 export type ThemeType = 'default' | 'lunar-new-year' | 'premium' | 'halloween' | 'christmas';
 
@@ -50,7 +49,7 @@ export interface ThemeConfig {
 // ============================================================================
 
 const DEFAULT_THEME: ThemeConfig = {
-  name: '기본 테마',
+  name: '기본 ?�마',
   colors: {
     primary: '#30FF75',
     secondary: '#00D4AA',
@@ -79,7 +78,7 @@ const DEFAULT_THEME: ThemeConfig = {
 };
 
 const LUNAR_NEW_YEAR_THEME: ThemeConfig = {
-  name: '설날 테마',
+  name: '?�날 ?�마',
   colors: {
     primary: '#FF4444',
     secondary: '#FFD700',
@@ -91,11 +90,8 @@ const LUNAR_NEW_YEAR_THEME: ThemeConfig = {
     draw: '#FFA500',
   },
   assets: {
-    diceIcon: '/assets/icon_dice_lunar.png', // 플레이스홀더
-    background: '/assets/bg_lunar_new_year.jpg', // 플레이스홀더
-    particleType: 'lantern',
-    couponImage: '/assets/coupon_lunar.png', // 플레이스홀더
-  },
+    diceIcon: '/assets/icon_dice_lunar.png', // ?�레?�스?�??    background: '/assets/bg_lunar_new_year.jpg', // ?�레?�스?�??    particleType: 'lantern',
+    couponImage: '/assets/coupon_lunar.png', // ?�레?�스?�??  },
   sounds: {
     roll: '/sounds/kkwaenggwari.mp3',
     win: '/sounds/lunar-win.mp3',
@@ -110,7 +106,7 @@ const LUNAR_NEW_YEAR_THEME: ThemeConfig = {
 };
 
 const PREMIUM_THEME: ThemeConfig = {
-  name: '프리미엄 테마',
+  name: '?�리미엄 ?�마',
   colors: {
     primary: '#FFD700',
     secondary: '#FFA500',
@@ -122,9 +118,7 @@ const PREMIUM_THEME: ThemeConfig = {
     draw: '#00BFFF',
   },
   assets: {
-    diceIcon: '/assets/icon_dice_gold.png', // 플레이스홀더
-    background: '/assets/bg_premium.jpg', // 플레이스홀더
-    particleType: 'sparkle',
+    diceIcon: '/assets/icon_dice_gold.png', // ?�레?�스?�??    background: '/assets/bg_premium.jpg', // ?�레?�스?�??    particleType: 'sparkle',
   },
   sounds: {
     roll: '/sounds/premium-roll.mp3',
@@ -143,8 +137,8 @@ const THEMES: Record<ThemeType, ThemeConfig> = {
   default: DEFAULT_THEME,
   'lunar-new-year': LUNAR_NEW_YEAR_THEME,
   premium: PREMIUM_THEME,
-  halloween: DEFAULT_THEME, // TODO: 할로윈 테마 추가
-  christmas: DEFAULT_THEME, // TODO: 크리스마스 테마 추가
+  halloween: DEFAULT_THEME, // TODO: ?�로???�마 추�?
+  christmas: DEFAULT_THEME, // TODO: ?�리?�마???�마 추�?
 };
 
 // ============================================================================

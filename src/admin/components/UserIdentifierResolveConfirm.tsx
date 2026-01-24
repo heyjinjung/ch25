@@ -41,9 +41,9 @@ const UserIdentifierResolveConfirm: React.FC<UserIdentifierResolveConfirmProps> 
           <div className="mx-auto w-16 h-16 rounded-full bg-admin-brand/10 text-admin-brand flex items-center justify-center mb-4 border border-admin-brand/20">
             <UserCheck size={32} />
           </div>
-          <h2 className="text-admin-subtitle text-admin-text-primary">회원 정보 확인</h2>
+          <h2 className="text-admin-subtitle text-admin-text-primary">?�원 ?�보 ?�인</h2>
           <p className="text-admin-meta text-admin-text-muted mt-1">
-            입력하신 식별자로 다음 회원이 조회되었습니다.
+            ?�력?�신 ?�별?�로 ?�음 ?�원??조회?�었?�니??
           </p>
         </div>
 
@@ -51,7 +51,7 @@ const UserIdentifierResolveConfirm: React.FC<UserIdentifierResolveConfirmProps> 
         <div className="px-8 py-6">
           <div className="p-4 rounded-xl bg-admin-sidebar/50 border border-admin-border space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-admin-meta text-admin-text-muted">입력값</span>
+              <span className="text-admin-meta text-admin-text-muted">?�력�?/span>
               <span className="text-admin-body font-mono text-admin-brand bg-admin-brand/10 px-2 py-0.5 rounded">{identifier}</span>
             </div>
 
@@ -98,14 +98,14 @@ const UserIdentifierResolveConfirm: React.FC<UserIdentifierResolveConfirmProps> 
             className="btn-admin-primary flex-1 shadow-admin-glow"
           >
             <Check size={18} />
-            이 회원으로 선택
+            ???�원?�로 ?�택
           </button>
         </div>
 
         {/* Security Note */}
         <div className="px-8 pb-8 flex items-center justify-center gap-2 text-[11px] text-admin-text-muted opacity-60">
           <AlertTriangle size={12} />
-          <span>잘못된 회원에게 지급되지 않도록 한 번 더 확인해 주세요.</span>
+          <span>?�못???�원?�게 지급되지 ?�도�???�????�인??주세??</span>
         </div>
       </div>
     </div>

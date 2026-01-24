@@ -1,0 +1,11 @@
+﻿{
+    "access_token":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxNCIsImlhdCI6MTc2OTIyNjAyNCwiZXhwIjoxNzY5MzEyNDI0LCJ0eXAiOiJhY2Nlc3MifQ.DUZTBz8oyRTKZNSXBakZtIpXY9s2ka7osJfgJ-2ccQY",
+    "token_type":  "bearer",
+    "user":  {
+                 "id":  14,
+                 "cc_id":  "admin",
+                 "nickname":  "Administrator",
+                 "telegram_id":  null,
+                 "telegram_username":  null
+             }
+}

@@ -30,7 +30,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    aria-label="닫기"
+                    aria-label="?�기"
                     className="absolute top-4 right-4 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-black/40 text-white/50 hover:bg-black/60 hover:text-white transition-all backdrop-blur-md"
                 >
                     <X size={16} />
@@ -52,8 +52,8 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                     </div>
 
                     <h2 className="text-lg font-black text-white leading-tight">
-                        시즌패스로<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">초고속 레벨업!</span>
+                        ?�즌?�스�?br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">초고???�벨??</span>
                     </h2>
                 </div>
 
@@ -73,11 +73,11 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                                 className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full"
                             />
                             {/* Particles */}
-                            <div className="absolute top-0 right-[40%] text-[8px]">✨</div>
+                            <div className="absolute top-0 right-[40%] text-[8px]">??/div>
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-[10px] text-zinc-400 font-medium">
                             <TrendingUp size={12} className="text-amber-500" />
-                            <span>남들보다 <b className="text-white">3배</b> 더 빨리 성장합니다.</span>
+                            <span>?�들보다 <b className="text-white">3�?/b> ??빨리 ?�장?�니??</span>
                         </div>
                     </div>
                 </div>
@@ -89,8 +89,8 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                             <Gem size={12} className="text-blue-400" />
                         </div>
                         <div className="text-center leading-tight">
-                            <div className="text-[9px] text-zinc-500 font-bold mb-0.5">매일 지급</div>
-                            <div className="text-[10px] font-bold text-white">다이아몬드 키</div>
+                            <div className="text-[9px] text-zinc-500 font-bold mb-0.5">매일 지�?/div>
+                            <div className="text-[10px] font-bold text-white">?�이?�몬????/div>
                         </div>
                     </div>
 
@@ -99,8 +99,8 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                             <Crown size={12} className="text-amber-500" />
                         </div>
                         <div className="text-center leading-tight">
-                            <div className="text-[9px] text-zinc-500 font-bold mb-0.5">VIP 혜택</div>
-                            <div className="text-[10px] font-bold text-white">전용 프로필</div>
+                            <div className="text-[9px] text-zinc-500 font-bold mb-0.5">VIP ?�택</div>
+                            <div className="text-[10px] font-bold text-white">?�용 ?�로??/div>
                         </div>
                     </div>
                 </div>
@@ -117,7 +117,7 @@ const SeasonPassPromoModal: React.FC<SeasonPassPromoModalProps> = ({ onClose }) 
                         className="relative w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-black font-black text-sm shadow-[0_8px_20px_-8px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2 overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
-                        <span>시즌패스 확인하기</span>
+                        <span>?�즌?�스 ?�인?�기</span>
                     </motion.button>
                 </div>
             </motion.div>

@@ -1,8 +1,8 @@
 // src/components/common/ChristmasDecorations.tsx
-// 크리스마스 아이콘 및 장식 요소 모음
+// ?�리?�마???�이�?�??�식 ?�소 모음
 import React from "react";
 
-// 트리 아이콘
+// ?�리 ?�이�?
 export const TreeIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M32 4L8 36H20L10 52H28V60H36V52H54L44 36H56L32 4Z" fill="#22c55e"/>
@@ -15,7 +15,7 @@ export const TreeIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-
   </svg>
 );
 
-// 별 아이콘
+// �??�이�?
 export const StarIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M32 4L38 24H58L42 36L48 56L32 44L16 56L22 36L6 24H26L32 4Z" fill="#fbbf24"/>
@@ -23,7 +23,7 @@ export const StarIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-
   </svg>
 );
 
-// 선물 상자 아이콘
+// ?�물 ?�자 ?�이�?
 export const GiftIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect x="8" y="24" width="48" height="36" rx="2" fill="#ef4444"/>
@@ -34,7 +34,7 @@ export const GiftIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-
   </svg>
 );
 
-// 눈사람 아이콘
+// ?�사???�이�?
 export const SnowmanIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="32" cy="44" r="16" fill="white"/>
@@ -50,7 +50,7 @@ export const SnowmanIcon: React.FC<{ className?: string }> = ({ className = "w-6
   </svg>
 );
 
-// 지팡이 사탕 아이콘
+// 지?�이 ?�탕 ?�이�?
 export const CandyCaneIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M24 56V24C24 16 28 8 40 8C52 8 52 20 52 24" stroke="white" strokeWidth="8" strokeLinecap="round"/>
@@ -58,7 +58,7 @@ export const CandyCaneIcon: React.FC<{ className?: string }> = ({ className = "w
   </svg>
 );
 
-// 종 아이콘
+// �??�이�?
 export const BellIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M32 8C32 8 36 8 36 12V14C44 16 50 24 50 34V44L54 50H10L14 44V34C14 24 20 16 28 14V12C28 8 32 8 32 8Z" fill="#fbbf24"/>
@@ -68,7 +68,7 @@ export const BellIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-
   </svg>
 );
 
-// 양말 아이콘
+// ?�말 ?�이�?
 export const StockingIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 4H44V20H20V4Z" fill="white"/>
@@ -77,7 +77,7 @@ export const StockingIcon: React.FC<{ className?: string }> = ({ className = "w-
   </svg>
 );
 
-// 리스 아이콘
+// 리스 ?�이�?
 export const WreathIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
   <svg className={className} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
     <circle cx="32" cy="32" r="20" stroke="#22c55e" strokeWidth="12"/>
@@ -91,16 +91,16 @@ export const WreathIcon: React.FC<{ className?: string }> = ({ className = "w-6 
   </svg>
 );
 
-// 크리스마스 장식 배너 컴포넌트
+// ?�리?�마???�식 배너 컴포?�트
 export const ChristmasBanner: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <div className="relative overflow-hidden rounded-2xl border border-emerald-600/40 bg-gradient-to-r from-red-950/40 via-emerald-950/40 to-red-950/40 p-4">
-    {/* 상단 장식 */}
+    {/* ?�단 ?�식 */}
     <div className="absolute top-0 left-0 right-0 flex justify-around opacity-60">
-      <span className="text-lg">🎄</span>
-      <span className="text-lg">⭐</span>
-      <span className="text-lg">🎁</span>
-      <span className="text-lg">❄️</span>
-      <span className="text-lg">🔔</span>
+      <span className="text-lg">?��</span>
+      <span className="text-lg">�?/span>
+      <span className="text-lg">?��</span>
+      <span className="text-lg">?�️</span>
+      <span className="text-lg">?��</span>
     </div>
     <div className="pt-6">
       {children}
@@ -108,7 +108,7 @@ export const ChristmasBanner: React.FC<{ children?: React.ReactNode }> = ({ chil
   </div>
 );
 
-// 크리스마스 카드 래퍼
+// ?�리?�마??카드 ?�퍼
 export const ChristmasCard: React.FC<{ 
   children?: React.ReactNode;
   variant?: "red" | "green" | "gold";
@@ -121,12 +121,12 @@ export const ChristmasCard: React.FC<{
 
   return (
     <div className={`rounded-2xl border bg-gradient-to-br ${variants[variant]} p-5 shadow-lg relative overflow-hidden`}>
-      {/* 코너 장식 */}
+      {/* 코너 ?�식 */}
       <div className="absolute top-2 right-2 opacity-40">
-        <span className="text-2xl">🎄</span>
+        <span className="text-2xl">?��</span>
       </div>
       <div className="absolute bottom-2 left-2 opacity-40">
-        <span className="text-xl">❄️</span>
+        <span className="text-xl">?�️</span>
       </div>
       {children}
     </div>

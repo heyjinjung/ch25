@@ -22,7 +22,7 @@ export const VaultControlPanel: React.FC<VaultControlPanelProps> = ({ onBalanceU
                         : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}
                 >
                     <Settings className="h-3.5 w-3.5" />
-                    규칙 설정 (Rules)
+                    규칙 ?�정 (Rules)
                 </button>
                 <button
                     onClick={() => setActiveTab("UI")}
@@ -31,7 +31,7 @@ export const VaultControlPanel: React.FC<VaultControlPanelProps> = ({ onBalanceU
                         : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}
                 >
                     <Layout className="h-3.5 w-3.5" />
-                    UI 설정 (Display)
+                    UI ?�정 (Display)
                 </button>
                 <button
                     onClick={() => setActiveTab("BALANCE")}
@@ -40,7 +40,7 @@ export const VaultControlPanel: React.FC<VaultControlPanelProps> = ({ onBalanceU
                         : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}
                 >
                     <Wallet className="h-3.5 w-3.5" />
-                    잔액 강제 수정
+                    ?�액 강제 ?�정
                 </button>
             </div>
 

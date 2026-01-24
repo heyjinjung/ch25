@@ -168,7 +168,7 @@ export const useMissionStore = create<MissionState>((set: any, get: any) => ({
                     return item;
                 });
                 set({ missions: currentMissions });
-                return { success: true, message: "이미 수령한 보상입니다." };
+                return { success: true, message: "?��? ?�령??보상?�니??" };
             }
 
             return { success: false, message: message };

@@ -52,7 +52,7 @@ const GameCard: React.FC<GameCardProps> = ({
         </div>
 
         <div className="mt-auto">
-          {/* 'ì§€ê¸ˆ í”Œë ˆì´' ë°°ì§€ ì œê±° per request */}
+          {/* 'ì§€ê¸??Œë ˆ?? ë°°ì? ?œê±° per request */}
         </div>
       </div>
     </Link>
@@ -70,7 +70,7 @@ const GameLobbyPage: React.FC = () => {
       title: "ROULETTE",
       to: "/roulette",
       gradient: "bg-gradient-to-br from-purple-600 to-indigo-600",
-      icon: "ğŸ¯",
+      icon: "?¯",
       bgImage: "/assets/games/thumb_roulette_v2.png",
       badge: "HOT",
     },
@@ -78,21 +78,21 @@ const GameLobbyPage: React.FC = () => {
       title: "DICE",
       to: "/dice",
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
-      icon: "ğŸ²",
+      icon: "?²",
       bgImage: "/assets/games/thumb_dice_v2.png",
     },
     {
       title: "LOTTERY",
       to: "/lottery",
       gradient: "bg-gradient-to-br from-pink-500 to-rose-600",
-      icon: "ğŸ«",
+      icon: "?«",
       bgImage: "/assets/games/thumb_lottery_v2.png",
     },
     {
       title: "TEAM BATTLE",
       to: "/team-battle",
       gradient: "bg-gradient-to-br from-blue-600 to-cyan-600",
-      icon: "âš”ï¸",
+      icon: "?”ï¸",
       bgImage: "/assets/games/thumb_team_battle_v2.png",
       badge: "NEW",
     },

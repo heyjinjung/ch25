@@ -28,7 +28,7 @@ const MobileBottomNav: React.FC = memo(() => {
 
     const navItems = [
         {
-            label: "홈",
+            label: "??,
             to: "/",
             isActive: isActive("/"),
             dataTour: "nav-home",
@@ -62,7 +62,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "교환소",
+            label: "교환??,
             to: "/shop",
             isActive: isActive("/shop"),
             dataTour: "nav-shop",
@@ -73,7 +73,7 @@ const MobileBottomNav: React.FC = memo(() => {
             )
         },
         {
-            label: "이벤트",
+            label: "?�벤??,
             to: "/events",
             isActive: isActive("/events") || isActive("/season-pass") || isActive("/missions"),
             dataTour: "nav-events",

@@ -57,7 +57,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                 console.error("[NewUserWelcomeModal] Reason:", result?.reason);
                 console.error("[NewUserWelcomeModal] Rewards:", result?.rewards);
                 notification("error");
-                addToast(`웰컴 보상 지급에 실패했습니다. ${result?.reason || '잠시 후 다시 시도해주세요.'}`, "error");
+                addToast(`?�컴 보상 지급에 ?�패?�습?�다. ${result?.reason || '?�시 ???�시 ?�도?�주?�요.'}`, "error");
                 return;
             }
 
@@ -70,7 +70,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
             await queryClient.invalidateQueries({ queryKey: ["inventory"] });
             await queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
 
-            addToast("정착 지원금이 지급되었습니다.", "success");
+            addToast("?�착 지?�금??지급되?�습?�다.", "success");
 
             // Trigger next modal if callback provided
             setTimeout(() => {
@@ -88,7 +88,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
             console.error("[NewUserWelcomeModal] Error response:", (error as any)?.response?.data);
             console.error("[NewUserWelcomeModal] Error status:", (error as any)?.response?.status);
             notification("error");
-            const errorMsg = (error as any)?.response?.data?.detail || (error as any)?.message || "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            const errorMsg = (error as any)?.response?.data?.detail || (error as any)?.message || "?�류가 발생?�습?�다. ?�시 ???�시 ?�도?�주?�요.";
             addToast(errorMsg, "error");
         } finally {
             setIsClaiming(false);
@@ -101,7 +101,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
                     <div className="w-full max-w-[340px] rounded-[32px] border border-white/10 bg-zinc-950 p-10 text-center shadow-2xl">
                         <div className="mx-auto mb-6 h-12 w-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                        <p className="text-white/60 font-bold tracking-tight">최고의 혜택을 준비 중...</p>
+                        <p className="text-white/60 font-bold tracking-tight">최고???�택??준�?�?..</p>
                     </div>
                 </div>
             );
@@ -131,7 +131,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                 {/* Close Button (Absolute z-20) */}
                 <button
                     onClick={handleClose}
-                    title="닫기"
+                    title="?�기"
                     className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
                 >
                     <X size={18} />
@@ -147,11 +147,11 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                         </div>
 
                         <h2 className="text-2xl font-black text-white leading-[1.1] tracking-tight mb-2">
-                            사장님,<br />
-                            반가움의 선물입니다
+                            ?�장??<br />
+                            반�??�???�물?�니??
                         </h2>
                         <p className="text-zinc-500 text-xs font-medium tracking-tight">
-                            바로 게임을 시작하실 수 있도록 준비했습니다.
+                            바로 게임???�작?�실 ???�도�?준비했?�니??
                         </p>
                     </div>
 
@@ -164,7 +164,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                                 <div className="relative z-10 w-14 h-14 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
                                     <img src="/assets/asset_coin_gold.png" alt="coin" className="w-full h-full object-contain" />
                                 </div>
-                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">정착 지원금</div>
+                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">?�착 지?�금</div>
                                 <div className="relative z-10 text-xl font-black text-white tabular-nums">
                                     {cashAmount.toLocaleString()}<span className="text-[12px] text-emerald-500 ml-0.5">P</span>
                                 </div>
@@ -176,9 +176,9 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                                 <div className="relative z-10 w-14 h-14 mb-3 bg-black/40 rounded-xl border border-white/5 flex items-center justify-center p-2.5 shadow-inner">
                                     <img src="/assets/asset_ticket_green.png" alt="ticket" className="w-full h-full object-contain" />
                                 </div>
-                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">룰렛 티켓</div>
+                                <div className="relative z-10 text-[12px] font-bold text-zinc-500 mb-1 whitespace-nowrap">룰렛 ?�켓</div>
                                 <div className="relative z-10 text-xl font-black text-white tabular-nums">
-                                    {ticketAmount}<span className="text-[12px] ml-0.5 text-amber-500">장</span>
+                                    {ticketAmount}<span className="text-[12px] ml-0.5 text-amber-500">??/span>
                                 </div>
                             </div>
                         </div>
@@ -199,11 +199,11 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                                     {isClaiming ? (
                                         <>
                                             <div className="w-4 h-4 border-2 border-black/20 border-t-black animate-spin rounded-full" />
-                                            <span>지급 중...</span>
+                                            <span>지�?�?..</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>지금 모두 받기</span>
+                                            <span>지�?모두 받기</span>
                                             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                                         </>
                                     )}
@@ -213,7 +213,7 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                             <div className="space-y-2 animate-fadeIn">
                                 <div className="flex flex-col items-center justify-center py-2 text-emerald-400 gap-1 animate-bounce-subtle">
                                     <CheckCircle2 size={28} />
-                                    <span className="font-black text-sm">지급 완료!</span>
+                                    <span className="font-black text-sm">지�??�료!</span>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
@@ -225,13 +225,13 @@ const NewUserWelcomeModal: React.FC<NewUserWelcomeModalProps> = ({ onClose, onCl
                                         className="w-full py-3.5 rounded-2xl bg-emerald-500 text-black font-black text-sm shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     >
                                         <Gamepad2 size={16} />
-                                        게임 시작
+                                        게임 ?�작
                                     </button>
                                     <button
                                         onClick={handleClose}
                                         className="w-full py-3.5 rounded-2xl bg-white/5 text-white/70 font-black text-sm border border-white/10 hover:bg-white/10 active:scale-95 transition-all"
                                     >
-                                        나중에
+                                        ?�중??
                                     </button>
                                 </div>
                             </div>

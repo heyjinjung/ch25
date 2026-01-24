@@ -9,7 +9,7 @@ import AnimatedCountdown from "../common/AnimatedCountdown";
 import { parseVaultUnlockRules } from "../../utils/vaultUtils";
 
 
-const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}원`;
+const formatWon = (amount: number) => `${amount.toLocaleString("ko-KR")}??;
 
 const parseDate = (iso: string | null | undefined): Date | null => {
   if (!iso) return null;
@@ -61,7 +61,7 @@ const CountdownTimer: React.FC<{ expiresAt: Date }> = React.memo(({ expiresAt })
         targetMs={expiresAt.getTime()}
         warnUnderMs={60 * 60 * 1000}
         expiredText="00:00:00"
-        suffix=" 후 소멸"
+        suffix=" ???�멸"
         className={isWarning ? "font-bold animate-pulse" : ""}
         showDays={false}
       />
@@ -89,7 +89,7 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
             "w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] transition-all",
             eligible && "scale-105"
           )}
-          alt="금고 상태"
+          alt="금고 ?�태"
         />
 
         {/* Dial Overlay */}
@@ -100,7 +100,7 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
                 src="/assets/vault/vault_dial.jpg"
                 className="w-full h-full object-contain animate-spin-slow group-hover:rotate-180 transition-transform duration-[2000ms] ease-in-out"
                 style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.5))', mixBlendMode: 'screen' }}
-                alt="다이얼"
+                alt="?�이??
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-2 h-2 rounded-full bg-figma-accent shadow-[0_0_10px_#30FF75]" />
@@ -118,7 +118,7 @@ const VaultVisual: React.FC<{ eligible: boolean }> = React.memo(({ eligible }) =
           "px-6 py-2 rounded-full border-2 font-black text-xs tracking-[0.2em] uppercase shadow-2xl backdrop-blur-xl transition-all duration-500",
           eligible ? "bg-figma-accent text-black border-white/50 ring-2 ring-white/15 shadow-[0_0_34px_rgba(48,255,117,0.45)] animate-pulse" : "bg-black/80 border-white/10 text-white/40"
         )}>
-          {eligible ? "내돈찾기" : "잠겨있음"}
+          {eligible ? "?�돈찾기" : "?�겨?�음"}
         </div>
       </div>
     </div>
@@ -140,7 +140,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
   const [isWithdrawalProcessing, setIsWithdrawalProcessing] = useState(false);
 
   const handleWithdrawalClick = async () => {
-    if (!window.confirm("현재 출금 가능한 금액을 출금 신청하시겠습니까?")) return;
+    if (!window.confirm("?�재 출금 가?�한 금액??출금 ?�청?�시겠습?�까?")) return;
 
     setIsWithdrawalProcessing(true);
     try {
@@ -156,7 +156,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
       else minLimit = 10000;
 
       if (amount < minLimit) {
-        alert(`현재 회차(${wCount + 1}회차)는 최소 ${minLimit.toLocaleString()}원 이상부터 출금 신청 가능합니다.`);
+        alert(`?�재 ?�차(${wCount + 1}?�차)??최소 ${minLimit.toLocaleString()}???�상부??출금 ?�청 가?�합?�다.`);
         return;
       }
 
@@ -172,7 +172,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
       }
     } catch (e) {
       console.error(e);
-      alert("알 수 없는 오류가 발생했습니다.");
+      alert("?????�는 ?�류가 발생?�습?�다.");
     } finally {
       setIsWithdrawalProcessing(false);
     }
@@ -188,7 +188,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const expiresAt = parseDate(data?.expiresAt ?? null);
     const usedAt = parseDate(data?.vaultFillUsedAt ?? null);
 
-    const statusLabel = vaultBalance > 0 ? (eligible ? "해금 가능" : "잠금") : "적립 없음";
+    const statusLabel = vaultBalance > 0 ? (eligible ? "?�금 가?? : "?�금") : "?�립 ?�음";
     const statusTone = eligible ? "text-cc-lime shadow-[0_0_10px_#d2fd9c44]" : "text-white/40";
 
     const unlockRulesJson = data?.unlockRulesJson;
@@ -223,9 +223,9 @@ const VaultMainPanel: React.FC = React.memo(() => {
     const parsed = parseVaultUnlockRules(view.unlockRulesJson);
     if (parsed.length > 0) return parsed;
     return [
-      "게임/이벤트로 적립된 금액이 금고에 안전하게 보관됩니다.",
-      "조건이 충족되면 출금 신청 가능한 금액으로 반영됩니다.",
-      "출금 신청 시 진행 상태에 따라 출금 가능 금액이 변동될 수 있습니다."
+      "게임/?�벤?�로 ?�립??금액??금고???�전?�게 보�??�니??",
+      "조건??충족?�면 출금 ?�청 가?�한 금액?�로 반영?�니??",
+      "출금 ?�청 ??진행 ?�태???�라 출금 가??금액??변?�될 ???�습?�다."
     ];
   }, [view.unlockRulesJson]);
 
@@ -245,14 +245,14 @@ const VaultMainPanel: React.FC = React.memo(() => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-4">
                 <span className="px-5 py-2 rounded-full bg-emerald-950/80 border border-figma-accent/50 text-figma-accent text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(48,255,117,0.2)] backdrop-blur-md">
-                  보안 금고 시스템
+                  보안 금고 ?�스??
                 </span>
                 <div className="h-px flex-1 bg-white/10" />
               </div>
               <h1 className="text-2xl md:text-[72px] font-black leading-[1] text-white tracking-tighter italic uppercase">
-                <span className="hidden md:block">내 금고</span>
-                <span className="md:hidden inline">내 금고 </span>
-                <span className="text-figma-accent text-2xl md:text-[84px] not-italic">머니보관함</span>
+                <span className="hidden md:block">??금고</span>
+                <span className="md:hidden inline">??금고 </span>
+                <span className="text-figma-accent text-2xl md:text-[84px] not-italic">머니보�???/span>
               </h1>
             </div>
 
@@ -261,15 +261,15 @@ const VaultMainPanel: React.FC = React.memo(() => {
               {view.accrualMultiplier > 1 && (
                 <div className="px-5 py-2 rounded-full bg-gradient-to-r from-red-600 to-orange-500 text-white text-xs font-black animate-pulse shadow-xl flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
-                  금고 적립 {view.accrualMultiplier}배 진행 중
+                  금고 ?�립 {view.accrualMultiplier}�?진행 �?
                 </div>
               )}
             </div>
 
             <div className="flex flex-col gap-4 max-w-md">
               <p className="text-white/60 text-sm md:text-base leading-relaxed font-bold">
-                게임/이벤트로 적립된 금액이 <span className="text-white">금고에 안전하게 보관</span>됩니다.
-                조건이 충족되면 <span className="text-white">출금 신청 가능한 금액으로 반영</span>됩니다.
+                게임/?�벤?�로 ?�립??금액??<span className="text-white">금고???�전?�게 보�?</span>?�니??
+                조건??충족?�면 <span className="text-white">출금 ?�청 가?�한 금액?�로 반영</span>?�니??
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -281,7 +281,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                 >
                   <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform" />
                   <span className="relative z-10 flex items-center justify-center gap-2 tracking-widest uppercase">
-                    상세 정보 확인
+                    ?�세 ?�보 ?�인
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
                   </span>
                 </a>
@@ -289,7 +289,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
                   href="/"
                   className="px-6 py-3 bg-white/5 text-white/70 font-black text-sm rounded-xl hover:bg-white/10 transition-all border border-white/10 backdrop-blur-md flex items-center justify-center gap-2 uppercase tracking-widest"
                 >
-                  씨씨홈으로
+                  ?�씨?�으�?
                 </a>
               </div>
             </div>
@@ -311,12 +311,12 @@ const VaultMainPanel: React.FC = React.memo(() => {
               <img src="/assets/vault/vault_dial.jpg" className="w-24 h-24 animate-spin-slow" style={{ mixBlendMode: 'screen' }} alt="" />
             </div>
             <div className="flex flex-col gap-2 relative z-10">
-              <span className="text-xs font-black text-white/30 tracking-[0.4em] uppercase">현재 보관된 리워드</span>
+              <span className="text-xs font-black text-white/30 tracking-[0.4em] uppercase">?�재 보�???리워??/span>
               <div className="flex items-center justify-center gap-4">
                 <img src="/assets/asset_coin_gold.png" className="w-12 h-12 drop-shadow-[0_0_15px_rgba(255,215,0,0.5)]" alt="Coin" />
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('원', '')}</h3>
-                  <span className="text-figma-accent text-xl font-black italic">원</span>
+                  <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter">{formatWon(view.vaultBalance).replace('??, '')}</h3>
+                  <span className="text-figma-accent text-xl font-black italic">??/span>
                 </div>
               </div>
             </div>
@@ -324,22 +324,22 @@ const VaultMainPanel: React.FC = React.memo(() => {
             <div className="mt-5 relative z-10">
               <div className="grid grid-cols-3 gap-2">
                 <div className="rounded-xl bg-white/[0.03] border border-white/10 p-3">
-                  <div className="text-[10px] font-black text-white/35 uppercase tracking-widest">총 보관금</div>
+                  <div className="text-[10px] font-black text-white/35 uppercase tracking-widest">�?보�?�?/div>
                   <div className="mt-1 text-sm font-black text-white">{formatWon(view.vaultBalance)}</div>
                 </div>
                 <div className="rounded-xl bg-figma-accent/5 border border-figma-accent/20 p-3">
-                  <div className="text-[10px] font-black text-figma-accent/70 uppercase tracking-widest">출금 가능</div>
+                  <div className="text-[10px] font-black text-figma-accent/70 uppercase tracking-widest">출금 가??/div>
                   <div className="mt-1 text-sm font-black text-figma-accent">{formatWon(view.availableBalance)}</div>
                 </div>
                 <div className="rounded-xl bg-amber-500/5 border border-amber-500/20 p-3">
-                  <div className="text-[10px] font-black text-amber-300/70 uppercase tracking-widest">예약됨</div>
+                  <div className="text-[10px] font-black text-amber-300/70 uppercase tracking-widest">?�약??/div>
                   <div className="mt-1 text-sm font-black text-amber-200">{formatWon(view.reservedBalance)}</div>
                 </div>
               </div>
 
               {view.reservedBalance > 0 && (
                 <p className="mt-2 text-white/40 text-[10px] uppercase font-bold tracking-wider">
-                  출금 신청 처리 중인 금액(예약됨)이 있어 출금 가능 금액이 줄어들 수 있습니다.
+                  출금 ?�청 처리 중인 금액(?�약?????�어 출금 가??금액??줄어?????�습?�다.
                 </p>
               )}
             </div>
@@ -353,21 +353,21 @@ const VaultMainPanel: React.FC = React.memo(() => {
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#00FF5F] to-[#70FF95] text-white font-black text-xl uppercase tracking-[0.2em] shadow-[0_20px_50px_rgba(0,255,95,0.4)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 border-2 border-white/40 backdrop-blur-sm"
                 >
                   {isWithdrawalProcessing ? (
-                    <span className="animate-pulse">처리 중...</span>
+                    <span className="animate-pulse">처리 �?..</span>
                   ) : (
                     <>
-                      <span className="drop-shadow-sm">출금 신청</span>
+                      <span className="drop-shadow-sm">출금 ?�청</span>
                       <svg className="w-5 h-5 drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                     </>
                   )}
                 </button>
                 <p className="mt-2 text-white/40 text-[10px] uppercase font-bold tracking-wider">
-                  신청 즉시 관리자 승인 요청이 전송됩니다. (기준: 출금 가능 금액)
+                  ?�청 즉시 관리자 ?�인 ?�청???�송?�니?? (기�?: 출금 가??금액)
                 </p>
 
                 {view.availableBalance > 0 && view.availableBalance < 10000 && (
                   <p className="mt-1 text-red-400/70 text-[10px] uppercase font-bold tracking-wider">
-                    최소 10,000원부터 출금 신청 가능합니다.
+                    최소 10,000?��???출금 ?�청 가?�합?�다.
                   </p>
                 )}
               </div>
@@ -376,7 +376,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
             {!view.eligible && (
               <div className="mt-8 flex items-center justify-center gap-3 relative z-10">
                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-[0_0_10px_rgba(249,121,53,0.8)]" />
-                <p className="text-white/50 text-xs font-bold uppercase tracking-wider">조건 충족 후 출금 신청 가능합니다</p>
+                <p className="text-white/50 text-xs font-bold uppercase tracking-wider">조건 충족 ??출금 ?�청 가?�합?�다</p>
               </div>
             )}
           </div>
@@ -390,7 +390,7 @@ const VaultMainPanel: React.FC = React.memo(() => {
           <div className="p-5 md:p-6 rounded-[1.5rem] border border-emerald-500/20 bg-gradient-to-br from-emerald-950/50 to-black shadow-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-figma-accent" />
             <h4 className="text-white font-black text-base mb-4 flex items-center gap-3 uppercase">
-              이용 안내 및 조건
+              ?�용 ?�내 �?조건
             </h4>
             <div className="grid gap-3">
               {unlockRules.map((rule, i) => (
@@ -407,33 +407,33 @@ const VaultMainPanel: React.FC = React.memo(() => {
           <div className="p-5 md:p-6 rounded-[1.5rem] border border-amber-500/20 bg-gradient-to-br from-amber-950/30 to-black shadow-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500/50" />
             <h4 className="text-white font-black text-base mb-4 flex items-center gap-3 uppercase">
-              최근 활동 내역
+              최근 ?�동 ?�역
             </h4>
             <div className="flex flex-col gap-4">
               {view.eligible ? (
                 <div className="flex items-center justify-between p-5 rounded-2xl bg-figma-accent/5 border border-figma-accent/20">
                   <div className="flex items-center gap-4">
                     <div className="w-2.5 h-2.5 rounded-full bg-figma-accent animate-pulse shadow-[0_0_10px_#30FF75]" />
-                    <p className="text-white font-bold text-sm tracking-tight">씨씨 이용 확인 완료</p>
+                    <p className="text-white font-bold text-sm tracking-tight">?�씨 ?�용 ?�인 ?�료</p>
                   </div>
-                  <span className="text-[10px] font-black text-figma-accent uppercase tracking-widest border border-figma-accent/30 px-3 py-1 rounded-full bg-figma-accent/10">추가 적립 중</span>
+                  <span className="text-[10px] font-black text-figma-accent uppercase tracking-widest border border-figma-accent/30 px-3 py-1 rounded-full bg-figma-accent/10">추�? ?�립 �?/span>
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                   <div className="flex items-center gap-4">
                     <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                    <p className="text-white/40 text-sm font-bold uppercase tracking-tight">이용 확인 대기 중</p>
+                    <p className="text-white/40 text-sm font-bold uppercase tracking-tight">?�용 ?�인 ?��?�?/p>
                   </div>
-                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full">대기</span>
+                  <span className="text-[10px] font-black text-white/20 uppercase tracking-widest border border-white/10 px-3 py-1 rounded-full">?��?/span>
                 </div>
               )}
               {view.usedAt && (
                 <div className="flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5">
                   <div className="flex flex-col gap-1">
-                    <p className="text-white/60 text-xs font-black uppercase tracking-wider">해금 반영 완료</p>
+                    <p className="text-white/60 text-xs font-black uppercase tracking-wider">?�금 반영 ?�료</p>
                     <p className="text-white/30 text-[10px] font-mono">{formatDateTime(view.usedAt)}</p>
                   </div>
-                  <div className="text-figma-accent/40 font-black text-xs uppercase tracking-tighter italic">완료</div>
+                  <div className="text-figma-accent/40 font-black text-xs uppercase tracking-tighter italic">?�료</div>
                 </div>
               )}
             </div>

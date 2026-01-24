@@ -1,4 +1,4 @@
-// src/v2/hooks/useV2Inventory.ts
+// src/hooks/useV2Inventory.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getV2Inventory,

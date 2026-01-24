@@ -1,4 +1,4 @@
-Ôªø// TODO: [VERIFY] Ensure XP Bar DOES NOT move on Game Win/Mission Complete (Ref: L-03 Strict).
+// TODO: [VERIFY] Ensure XP Bar DOES NOT move on Game Win/Mission Complete (Ref: L-03 Strict).
 // TODO: [VERIFY] Ensure XP Bar updates ONLY when Admin inputs Deposit Data (Ref: L-01).
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTodayRanking } from "../hooks/useRanking";
@@ -14,18 +14,18 @@ const ICON_NODE_CLEARED = "/assets/season_pass/icon_node_cleared.png";
 
 const formatCurrency = (value: number) => value.toLocaleString();
 const rewardTypeLabelMap: Record<string, string> = {
-  POINT: "Í∏àÍ≥† Ï†ÅÎ¶Ω",
-  CC_POINT: "Í∏àÍ≥† Ï†ÅÎ¶Ω",
-  GAME_XP: "ÏãúÏ¶å XP",
-  XP: "ÏãúÏ¶å XP",
-  GIFTICON_BAEMIN: "Î∞∞ÎØº Í∏∞ÌîÑÌã∞ÏΩò",
-  CC_COIN_GIFTICON: "Ïî®Ïî®ÏΩîÏù∏ Í∏∞ÌîÑÌã∞ÏΩò",
-  DIAMOND: "Îã§Ïù¥ÏïÑ",
-  GOLD_KEY: "Í≥®Îìú ÌÇ§",
-  DIAMOND_KEY: "Îã§Ïù¥ÏïÑ ÌÇ§",
-  TICKET_ROULETTE: "Î£∞Î†õ Ìã∞Ïºì",
-  TICKET_DICE: "Ï£ºÏÇ¨ÏúÑ Ìã∞Ïºì",
-  TICKET_LOTTERY: "Î≥µÍ∂å Ìã∞Ïºì",
+  POINT: "±›∞Ì ¿˚∏≥",
+  CC_POINT: "±›∞Ì ¿˚∏≥",
+  GAME_XP: "Ω√¡ XP",
+  XP: "Ω√¡ XP",
+  GIFTICON_BAEMIN: "πËπŒ ±‚«¡∆ºƒ‹",
+  CC_COIN_GIFTICON: "ææææƒ⁄¿Œ ±‚«¡∆ºƒ‹",
+  DIAMOND: "¥Ÿ¿Ãæ∆",
+  GOLD_KEY: "∞ÒµÂ ≈∞",
+  DIAMOND_KEY: "¥Ÿ¿Ãæ∆ ≈∞",
+  TICKET_ROULETTE: "∑Í∑ø ∆ºƒœ",
+  TICKET_DICE: "¡÷ªÁ¿ß ∆ºƒœ",
+  TICKET_LOTTERY: "∫π±« ∆ºƒœ",
 };
 
 const formatRewardChip = (rewardType?: string | null, rewardAmount?: number | null) => {
@@ -50,12 +50,12 @@ const SeasonPassPage: React.FC = () => {
     const claimedLevels = season.data.levels.filter((l) => l.is_claimed);
 
     if (lastSeasonLevelRef.current !== null && currentLevel > lastSeasonLevelRef.current) {
-      addToast(`ÏãúÏ¶å Î†àÎ≤® ${currentLevel} Îã¨ÏÑ±!`, "success");
+      addToast(`Ω√¡ ∑π∫ß ${currentLevel} ¥ﬁº∫!`, "success");
     }
 
     if (claimedLevels.length > lastClaimCountRef.current) {
       const latest = claimedLevels.sort((a, b) => a.level - b.level)[claimedLevels.length - 1];
-      if (latest) addToast(`Î†àÎ≤® ${latest.level} Î≥¥ÏÉÅ ÏßÄÍ∏â`, "info");
+      if (latest) addToast(`∑π∫ß ${latest.level} ∫∏ªÛ ¡ˆ±ﬁ`, "info");
     }
 
     lastSeasonLevelRef.current = currentLevel;
@@ -69,8 +69,8 @@ const SeasonPassPage: React.FC = () => {
   const playDone = (external?.play_count ?? 0) > 0;
 
   const seasonLevelSummary = useMemo(() => {
-    if (season.isPending) return { title: "LV.--", detail: "Î†àÎ≤® Î∂àÎü¨Ïò§Îäî Ï§ë", progressPct: 0 };
-    if (season.isError || !season.data) return { title: "LV.ERR", detail: "Îç∞Ïù¥ÌÑ∞ Î°úÎìú Ïã§Ìå®", progressPct: 0 };
+    if (season.isPending) return { title: "LV.--", detail: "∑π∫ß ∫“∑Øø¿¥¬ ¡ﬂ", progressPct: 0 };
+    if (season.isError || !season.data) return { title: "LV.ERR", detail: "µ•¿Ã≈Õ ∑ŒµÂ Ω«∆–", progressPct: 0 };
     const { current_xp, current_level, max_level, levels } = season.data;
     const totalXp = Math.max(0, current_xp ?? 0);
     const maxRequired = Math.max(0, ...levels.map((l) => l.required_xp ?? 0));
@@ -79,7 +79,7 @@ const SeasonPassPage: React.FC = () => {
     if (isMax) {
       return {
         title: "MAX LEVEL",
-        detail: "Î™®Îì† Î≥¥ÏÉÅ Îã¨ÏÑ±!",
+        detail: "∏µÁ ∫∏ªÛ ¥ﬁº∫!",
         progressPct: 100,
       };
     }
@@ -101,35 +101,35 @@ const SeasonPassPage: React.FC = () => {
 
     return {
       title: `Lv.${targetLevel}`,
-      detail: `${remaining.toLocaleString()} XP ÎÇ®Ïùå`,
+      detail: `${remaining.toLocaleString()} XP ≥≤¿Ω`,
       progressPct,
     };
   }, [season.data, season.isError, season.isPending]);
 
   const cards = [
     {
-      icon: "üëë",
-      title: "Îû≠ÌÇπ TOP10 Îã¨ÏÑ±",
-      desc: "ÏàúÏúÑÍ∂å ÏßÑÏûÖ Ïãú Ïä§ÌÉ¨ÌîÑ 1Í∞ú",
-      status: external?.rank ? `ÌòÑÏû¨ ${external.rank}ÏúÑ${top10Needed > 0 ? `, ${top10Needed}ÏúÑ UP ÌïÑÏöî` : " (ÏôÑÎ£å)"}` : "Îû≠ÌÇπ ÏóÜÏùå",
+      icon: "??",
+      title: "∑©≈∑ TOP10 ¥ﬁº∫",
+      desc: "º¯¿ß±« ¡¯¿‘ Ω√ Ω∫≈∆«¡ 1∞≥",
+      status: external?.rank ? `«ˆ¿Á ${external.rank}¿ß${top10Needed > 0 ? `, ${top10Needed}¿ß UP « ø‰` : " (øœ∑·)"}` : "∑©≈∑ æ¯¿Ω",
     },
     {
-      icon: "üìÖ",
-      title: "Îß§Ïùº Ï∂úÏÑù ÌîåÎ†àÏù¥",
-      desc: "Í≤åÏûÑ ÌîåÎ†àÏù¥ Ïãú Îã§Ïù¥ÏïÑ ÏßÄÍ∏â",
-      status: playDone ? "ÏôÑÎ£å" : "ÎØ∏ÏôÑÎ£å",
+      icon: "??",
+      title: "∏≈¿œ √‚ºÆ «√∑π¿Ã",
+      desc: "∞‘¿” «√∑π¿Ã Ω√ ¥Ÿ¿Ãæ∆ ¡ˆ±ﬁ",
+      status: playDone ? "øœ∑·" : "πÃøœ∑·",
     },
     {
-      icon: "üíé",
-      title: "ÏûÖÍ∏à ÎØ∏ÏÖò",
-      desc: "10ÎßåÏõê Îã¨ÏÑ±ÎßàÎã§ XP ÎåÄÎüâ ÏßÄÍ∏â",
-      status: `${formatCurrency(depositRemainder)}Ïõê ÎÇ®Ïùå`,
+      icon: "??",
+      title: "¿‘±› πÃº«",
+      desc: "10∏∏ø¯ ¥ﬁº∫∏∂¥Ÿ XP ¥Î∑Æ ¡ˆ±ﬁ",
+      status: `${formatCurrency(depositRemainder)}ø¯ ≥≤¿Ω`,
     },
     {
-      icon: "üéÆ",
-      title: "Í≤åÏûÑ ÏäπÎ¶¨ 50Ìöå",
-      desc: "ÎàÑÏ†Å 50Ïäπ Ïãú Îã§Ïù¥ÏïÑ/ÌÇ§ ÏßÄÍ∏â",
-      status: internalWins.data ? `ÎÇ®ÏùÄ ÏäπÎ¶¨ ${internalWins.data.remaining}Ìöå` : "...",
+      icon: "??",
+      title: "∞‘¿” Ω¬∏Æ 50»∏",
+      desc: "¥©¿˚ 50Ω¬ Ω√ ¥Ÿ¿Ãæ∆/≈∞ ¡ˆ±ﬁ",
+      status: internalWins.data ? `≥≤¿∫ Ω¬∏Æ ${internalWins.data.remaining}»∏` : "...",
     },
   ];
 
@@ -154,7 +154,7 @@ const SeasonPassPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-3 py-1.5 rounded-full bg-gold-400 text-black text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(251,191,36,0.6)]">
-                    ÎÇ¥ Î†àÎ≤® ÌôïÏù∏
+                    ≥ª ∑π∫ß »Æ¿Œ
                   </span>
                 </div>
                 <h1 className="text-4xl font-black italic text-white leading-none tracking-tighter">
@@ -331,7 +331,7 @@ const SeasonPassPage: React.FC = () => {
                     <p className="text-[10px] text-white/40 font-bold mt-1 truncate">{card.desc}</p>
                     <div className={clsx(
                       "inline-flex text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-wider mt-2",
-                      card.status.includes("ÏôÑÎ£å") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
+                      card.status.includes("øœ∑·") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
                     )}>
                       {card.status}
                     </div>

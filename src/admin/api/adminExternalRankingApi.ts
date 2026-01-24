@@ -1,4 +1,4 @@
-// src/admin/api/adminExternalRankingApi.ts
+// src/api/admin/adminExternalRankingApi.ts
 import { adminApi } from "./httpClient";
 
 export interface ExternalRankingPayload {
@@ -30,22 +30,22 @@ export interface ExternalRankingListResponse {
 }
 
 export async function fetchExternalRankingList() {
-  const { data } = await adminApi.get<ExternalRankingListResponse>("/admin/api/external-ranking/");
+  const { data } = await adminApi.get<ExternalRankingListResponse>("/api/admin/external-ranking/");
   return data;
 }
 
 export async function upsertExternalRanking(payloads: ExternalRankingPayload[]) {
-  const { data } = await adminApi.post<ExternalRankingListResponse>("/admin/api/external-ranking/", payloads);
+  const { data } = await adminApi.post<ExternalRankingListResponse>("/api/admin/external-ranking/", payloads);
   return data;
 }
 
 export async function updateExternalRanking(userId: number, payload: Partial<ExternalRankingPayload>) {
-  // Backend route is `PUT /admin/api/external-ranking/{user_id}` (no trailing slash).
-  const { data } = await adminApi.put<ExternalRankingEntry>(`/admin/api/external-ranking/${userId}`, payload);
+  // Backend route is `PUT /api/admin/external-ranking/{user_id}` (no trailing slash).
+  const { data } = await adminApi.put<ExternalRankingEntry>(`/api/admin/external-ranking/${userId}`, payload);
   return data;
 }
 
 export async function deleteExternalRanking(userId: number) {
-  // Backend route is `DELETE /admin/api/external-ranking/{user_id}` (no trailing slash).
-  await adminApi.delete(`/admin/api/external-ranking/${userId}`);
+  // Backend route is `DELETE /api/admin/external-ranking/{user_id}` (no trailing slash).
+  await adminApi.delete(`/api/admin/external-ranking/${userId}`);
 }

@@ -40,42 +40,42 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    heading: "대시보드",
+    heading: "?�?�보??,
     items: [
-      { label: "운영 대시보드", path: "/admin", icon: <LayoutDashboard size={18} /> },
-      { label: "마케팅 센터", path: "/admin/marketing", icon: <Target size={18} /> },
-      { label: "운영계획(플레이북)", path: "/admin/ops", icon: <ShieldCheck size={18} /> },
-      { label: "운영 로그", path: "/admin/ops/logs", icon: <ClipboardCheck size={18} /> },
-      { label: "운영 로그 CSV 업로드", path: "/admin/ops/import", icon: <UploadCloud size={18} /> },
-      { label: "CH25 로데이터 업로드", path: "/admin/ops/raw-logs", icon: <UploadCloud size={18} /> },
+      { label: "?�영 ?�?�보??, path: "/admin", icon: <LayoutDashboard size={18} /> },
+      { label: "마�????�터", path: "/admin/marketing", icon: <Target size={18} /> },
+      { label: "?�영계획(?�레?�북)", path: "/admin/ops", icon: <ShieldCheck size={18} /> },
+      { label: "?�영 로그", path: "/admin/ops/logs", icon: <ClipboardCheck size={18} /> },
+      { label: "?�영 로그 CSV ?�로??, path: "/admin/ops/import", icon: <UploadCloud size={18} /> },
+      { label: "CH25 로데?�터 ?�로??, path: "/admin/ops/raw-logs", icon: <UploadCloud size={18} /> },
     ],
   },
   {
-    heading: "관리 및 운영",
+    heading: "관�?�??�영",
     items: [
-      { label: "금고 통합 관리", path: "/admin/vault", icon: <Vault size={18} /> },
-      { label: "회원 관리", path: "/admin/users", icon: <Users size={18} /> },
-      { label: "티켓/토큰 관리", path: "/admin/game-tokens", icon: <Ticket size={18} /> },
-      { label: "미션 관리", path: "/admin/missions", icon: <ClipboardCheck size={18} /> },
-      { label: "시즌 패스", path: "/admin/seasons", icon: <Trophy size={18} /> },
-      { label: "상점 레버", path: "/admin/shop", icon: <Store size={18} /> },
-      { label: "세그먼트", path: "/admin/user-segments", icon: <Filter size={18} /> },
-      { label: "설문조사", path: "/admin/surveys", icon: <FileQuestion size={18} /> },
-      { label: "외부 랭킹 입력", path: "/admin/external-ranking", icon: <Trophy size={18} /> },
+      { label: "금고 ?�합 관�?, path: "/admin/vault", icon: <Vault size={18} /> },
+      { label: "?�원 관�?, path: "/admin/users", icon: <Users size={18} /> },
+      { label: "?�켓/?�큰 관�?, path: "/admin/game-tokens", icon: <Ticket size={18} /> },
+      { label: "미션 관�?, path: "/admin/missions", icon: <ClipboardCheck size={18} /> },
+      { label: "?�즌 ?�스", path: "/admin/seasons", icon: <Trophy size={18} /> },
+      { label: "?�점 ?�버", path: "/admin/shop", icon: <Store size={18} /> },
+      { label: "?�그먼트", path: "/admin/user-segments", icon: <Filter size={18} /> },
+      { label: "?�문조사", path: "/admin/surveys", icon: <FileQuestion size={18} /> },
+      { label: "?��? ??�� ?�력", path: "/admin/external-ranking", icon: <Trophy size={18} /> },
     ],
   },
   {
-    heading: "설정 및 시스템",
+    heading: "?�정 �??�스??,
     collapsible: true, // Keep less frequently used items collapsible
     items: [
       { label: "메시지 발송", path: "/admin/messages", icon: <Send size={18} /> },
-      { label: "팀 배틀", path: "/admin/team-battle", icon: <Swords size={18} /> },
-      { label: "스트릭 보상", path: "/admin/streak-rewards", icon: <Flame size={18} /> },
-      { label: "룰렛 설정", path: "/admin/roulette", icon: <CircleDot size={18} /> },
-      { label: "주사위 설정", path: "/admin/dice", icon: <Dice6 size={18} /> },
-      { label: "복권 설정", path: "/admin/lottery", icon: <Ticket size={18} /> },
-      { label: "UI 설정", path: "/admin/ui-config", icon: <Settings size={18} /> },
-      { label: "모달 노출 제어", path: "/admin/modal-visibility", icon: <ToggleRight size={18} /> },
+      { label: "?� 배�?", path: "/admin/team-battle", icon: <Swords size={18} /> },
+      { label: "?�트�?보상", path: "/admin/streak-rewards", icon: <Flame size={18} /> },
+      { label: "룰렛 ?�정", path: "/admin/roulette", icon: <CircleDot size={18} /> },
+      { label: "주사???�정", path: "/admin/dice", icon: <Dice6 size={18} /> },
+      { label: "복권 ?�정", path: "/admin/lottery", icon: <Ticket size={18} /> },
+      { label: "UI ?�정", path: "/admin/ui-config", icon: <Settings size={18} /> },
+      { label: "모달 ?�출 ?�어", path: "/admin/modal-visibility", icon: <ToggleRight size={18} /> },
     ],
   },
 ];
@@ -140,7 +140,7 @@ const AdminLayout: React.FC = () => {
                       type="button"
                       onClick={() => toggleSection(section.heading)}
                       className="w-full px-3 mb-2 flex items-center justify-between text-[11px] font-bold text-admin-text-muted uppercase tracking-wider hover:text-admin-text-secondary transition-colors"
-                      aria-label={`${section.heading} 메뉴 ${isCollapsed ? '펼치기' : '접기'}`}
+                      aria-label={`${section.heading} 메뉴 ${isCollapsed ? '?�치�? : '?�기'}`}
                     >
                       <span className="flex items-center gap-1.5">
                         {hasActiveItem && <span className="w-1 h-1 rounded-full bg-admin-brand" />}
@@ -220,8 +220,8 @@ const AdminLayout: React.FC = () => {
             type="button"
             className="lg:hidden p-2 text-admin-text-secondary hover:bg-admin-hover rounded-lg transition-colors"
             onClick={toggleSidebar}
-            aria-label="사이드바 열기"
-            title="사이드바 열기"
+            aria-label="?�이?�바 ?�기"
+            title="?�이?�바 ?�기"
           >
             <Menu size={24} />
           </button>
@@ -237,8 +237,8 @@ const AdminLayout: React.FC = () => {
           <div className="flex items-center space-x-4">
             <button
               type="button"
-              aria-label="알림"
-              title="알림"
+              aria-label="?�림"
+              title="?�림"
               className="p-2.5 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-brand rounded-full transition-all relative"
             >
               <Bell size={20} />

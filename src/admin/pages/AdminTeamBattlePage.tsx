@@ -38,7 +38,7 @@ const AdminTeamBattlePage: React.FC = () => {
   if (seasonsLoading) return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-      <span className="text-admin-meta text-admin-text-secondary">팀 배틀 엔진 동기화 중...</span>
+      <span className="text-admin-meta text-admin-text-secondary">?� 배�? ?�진 ?�기??�?..</span>
     </div>
   );
 
@@ -47,16 +47,16 @@ const AdminTeamBattlePage: React.FC = () => {
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            팀 배틀 통합 통제소 <span className="text-admin-brand/40">Team Battle</span>
+            ?� 배�? ?�합 ?�제??<span className="text-admin-brand/40">Team Battle</span>
           </h1>
-          <p className="text-admin-body text-admin-text-secondary font-medium">실시간 매칭 시즌 및 팀별 스코어 가중치를 정밀 통제합니다.</p>
+          <p className="text-admin-body text-admin-text-secondary font-medium">?�시�?매칭 ?�즌 �??��??�코??가중치�??��? ?�제?�니??</p>
         </div>
         <div className="flex gap-3">
           <button className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto">
-            <Calendar className="h-4 w-4" /> 신규 시즌 예약
+            <Calendar className="h-4 w-4" /> ?�규 ?�즌 ?�약
           </button>
           <button className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto shadow-admin-glow">
-            <Plus className="h-4 w-4" /> 팀 추가 등록
+            <Plus className="h-4 w-4" /> ?� 추�? ?�록
           </button>
         </div>
       </header>
@@ -67,7 +67,7 @@ const AdminTeamBattlePage: React.FC = () => {
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
             <Activity className="h-16 w-16 text-admin-brand" />
           </div>
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">실시간 운영 상태</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�시�??�영 ?�태</p>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-admin-accent animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
             <span className="text-2xl font-black text-admin-text-primary">ACTIVE</span>
@@ -75,15 +75,15 @@ const AdminTeamBattlePage: React.FC = () => {
         </div>
 
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">현재 활성 시즌</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�재 ?�성 ?�즌</p>
           <div>
-            <p className="text-lg font-black text-admin-brand line-clamp-1">{activeSeason?.name || "시즌 없음"}</p>
-            <p className="text-xs text-admin-text-secondary mt-1">{activeSeason ? `~${activeSeason.end_date.split('T')[0]}` : "비시즌 기간"}</p>
+            <p className="text-lg font-black text-admin-brand line-clamp-1">{activeSeason?.name || "?�즌 ?�음"}</p>
+            <p className="text-xs text-admin-text-secondary mt-1">{activeSeason ? `~${activeSeason.end_date.split('T')[0]}` : "비시�?기간"}</p>
           </div>
         </div>
 
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총 참여 팀</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">�?참여 ?�</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-text-primary">{teamsData?.total || 0}</p>
             <Zap className="h-5 w-5 text-admin-warning mb-1" />
@@ -91,7 +91,7 @@ const AdminTeamBattlePage: React.FC = () => {
         </div>
 
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32 border-l-4 border-admin-accent">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">최고 누적 스코어</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">최고 ?�적 ?�코??/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-accent tabular-nums">1.2M</p>
             <Trophy className="h-5 w-5 text-admin-accent mb-1" />
@@ -104,7 +104,7 @@ const AdminTeamBattlePage: React.FC = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="flex items-center justify-between pl-1">
             <h2 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5" /> 배틀 시즌 전적
+              <Calendar className="h-3.5 w-3.5" /> 배�? ?�즌 ?�적
             </h2>
           </div>
           <div className="space-y-3">
@@ -138,13 +138,13 @@ const AdminTeamBattlePage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between pl-1">
             <h2 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5" /> 소속 팀 및 실시간 스코어링
+              <Shield className="h-3.5 w-3.5" /> ?�속 ?� �??�시�??�코?�링
             </h2>
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-admin-text-muted" />
               <input
                 type="text"
-                placeholder="팀 검색..."
+                placeholder="?� 검??.."
                 className="bg-transparent border-none outline-none text-xs text-admin-text-primary w-32"
               />
             </div>
@@ -154,12 +154,12 @@ const AdminTeamBattlePage: React.FC = () => {
             {teamsLoading ? (
               <div className="col-span-2 py-10 text-center">
                 <RefreshCw className="h-6 w-6 text-admin-brand animate-spin mx-auto mb-2" />
-                <p className="text-xs text-admin-text-secondary">데이터 검색 중...</p>
+                <p className="text-xs text-admin-text-secondary">?�이??검??�?..</p>
               </div>
             ) : teamsData?.items?.length === 0 ? (
               <div className="col-span-2 py-20 admin-card-premium border-dashed flex flex-col items-center justify-center gap-4">
                 <Shield className="h-10 w-10 text-admin-text-muted opacity-20" />
-                <p className="text-admin-meta text-admin-text-muted font-bold">선택된 시즌에 등록된 팀이 없습니다.</p>
+                <p className="text-admin-meta text-admin-text-muted font-bold">?�택???�즌???�록???�???�습?�다.</p>
               </div>
             ) : (
               teamsData?.items?.map((team) => (
@@ -177,8 +177,8 @@ const AdminTeamBattlePage: React.FC = () => {
                     <button
                       type="button"
                       className="p-2 rounded-lg hover:bg-admin-hover text-admin-text-muted hover:text-admin-brand transition-colors"
-                      aria-label="팀 메뉴"
-                      title="팀 메뉴"
+                      aria-label="?� 메뉴"
+                      title="?� 메뉴"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
@@ -195,13 +195,13 @@ const AdminTeamBattlePage: React.FC = () => {
 
                     <div className="flex gap-2">
                       <button className="flex-1 btn-admin-secondary text-[11px] py-2 h-auto font-black hover:bg-admin-brand/10 hover:text-admin-brand hover:border-admin-brand/30">
-                        포인트 수동 조정
+                        ?�인???�동 조정
                       </button>
                       <button
                         type="button"
                         className="btn-admin-secondary p-2 h-auto"
-                        aria-label="팀 설정"
-                        title="팀 설정"
+                        aria-label="?� ?�정"
+                        title="?� ?�정"
                       >
                         <Settings2 className="h-4 w-4" />
                       </button>

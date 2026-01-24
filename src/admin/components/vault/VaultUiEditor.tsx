@@ -15,7 +15,7 @@ const VaultUiEditor: React.FC = () => {
 
     // 1. Vault main UI copy
     const [vaultTitle, setVaultTitle] = useState("금고");
-    const [vaultDesc, setVaultDesc] = useState("적립된 보상 금액을 일정 조건 달성 시 출금 가능한 캐시로 전환합니다.");
+    const [vaultDesc, setVaultDesc] = useState("?�립??보상 금액???�정 조건 ?�성 ??출금 가?�한 캐시�??�환?�니??");
 
     useEffect(() => {
         const load = async () => {
@@ -24,7 +24,7 @@ const VaultUiEditor: React.FC = () => {
                 setProgram(res);
                 if (res.ui_copy_json) {
                     setVaultTitle(res.ui_copy_json.title || "금고");
-                    setVaultDesc(res.ui_copy_json.desc || "적립된 보상 금액을 일정 조건 달성 시 출금 가능한 캐시로 전환합니다.");
+                    setVaultDesc(res.ui_copy_json.desc || "?�립??보상 금액???�정 조건 ?�성 ??출금 가?�한 캐시�??�환?�니??");
                 }
             } catch (e) {
                 console.error(e);
@@ -49,12 +49,12 @@ const VaultUiEditor: React.FC = () => {
     useEffect(() => {
         if (ticketZeroData?.value) {
             const v = ticketZeroData.value as any;
-            setTzTitle(v.title || "티켓이 0일 때 (모두 소진)");
+            setTzTitle(v.title || "?�켓??0????(모두 ?�진)");
             setTzBody(
-                v.body || "티켓을 모두 사용하셨습니다.\n\n20레벨 달성 시 Diamond Key가 자동 지급됩니다!"
+                v.body || "?�켓??모두 ?�용?�셨?�니??\n\n20?�벨 ?�성 ??Diamond Key가 ?�동 지급됩?�다!"
             );
-            setTzPrimaryLabel(v.primaryCta?.label || v.primary_cta_label || "씨카지노 바로가기");
-            setTzSecondaryLabel(v.secondaryCta?.label || v.secondary_cta_label || "매장 텔레 문의");
+            setTzPrimaryLabel(v.primaryCta?.label || v.primary_cta_label || "?�카지??바로가�?);
+            setTzSecondaryLabel(v.secondaryCta?.label || v.secondary_cta_label || "매장 ?�레 문의");
         }
     }, [ticketZeroData]);
 
@@ -83,21 +83,21 @@ const VaultUiEditor: React.FC = () => {
 
             const tzJson = {
                 ...(ticketZeroData?.value as any || {}),
-                title: tzTitle || "티켓이 0일 때 (모두 소진)",
-                body: tzBody || "티켓을 모두 사용하셨습니다.\n\n20레벨 달성 시 Diamond Key가 자동 지급됩니다!",
-                primary_cta_label: tzPrimaryLabel || "씨카지노 바로가기",
-                secondary_cta_label: tzSecondaryLabel || "매장 텔레 문의",
+                title: tzTitle || "?�켓??0????(모두 ?�진)",
+                body: tzBody || "?�켓??모두 ?�용?�셨?�니??\n\n20?�벨 ?�성 ??Diamond Key가 ?�동 지급됩?�다!",
+                primary_cta_label: tzPrimaryLabel || "?�카지??바로가�?,
+                secondary_cta_label: tzSecondaryLabel || "매장 ?�레 문의",
                 primary_cta_url: (ticketZeroData?.value as any)?.primary_cta_url || "https://ccc-010.com",
                 secondary_cta_url: (ticketZeroData?.value as any)?.secondary_cta_url || "https://t.me/jm956",
                 // Keep nested version for TicketZeroPanel compatibility
                 primaryCta: {
                     ...(ticketZeroData?.value as any)?.primaryCta,
-                    label: tzPrimaryLabel || "씨카지노 바로가기",
+                    label: tzPrimaryLabel || "?�카지??바로가�?,
                     url: (ticketZeroData?.value as any)?.primaryCta?.url || (ticketZeroData?.value as any)?.primary_cta_url || "https://ccc-010.com"
                 },
                 secondaryCta: {
                     ...(ticketZeroData?.value as any)?.secondaryCta,
-                    label: tzSecondaryLabel || "매장 텔레 문의",
+                    label: tzSecondaryLabel || "매장 ?�레 문의",
                     url: (ticketZeroData?.value as any)?.secondaryCta?.url || (ticketZeroData?.value as any)?.secondary_cta_url || "https://t.me/jm956"
                 }
             };
@@ -107,9 +107,9 @@ const VaultUiEditor: React.FC = () => {
                 tzMutation.mutateAsync(tzJson)
             ]);
 
-            alert("UI 문구가 성공적으로 저장되었습니다.");
+            alert("UI 문구가 ?�공?�으�??�?�되?�습?�다.");
         } catch (e: any) {
-            alert(`저장 실패: ${e?.message || "알 수 없는 오류"}`);
+            alert(`?�???�패: ${e?.message || "?????�는 ?�류"}`);
         }
     };
 
@@ -124,9 +124,9 @@ const VaultUiEditor: React.FC = () => {
                 <div>
                     <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
                         <Layout className="h-5 w-5 text-admin-brand" />
-                        Vault 메인 패널 문구
+                        Vault 메인 ?�널 문구
                     </h3>
-                    <p className="text-admin-body text-admin-text-secondary">유저가 금고 진입 시 먼저 보는 제목/설명 문구를 설정합니다.</p>
+                    <p className="text-admin-body text-admin-text-secondary">?��?가 금고 진입 ??먼�? 보는 ?�목/?�명 문구�??�정?�니??</p>
                 </div>
                 <button
                     onClick={saveAll}
@@ -134,7 +134,7 @@ const VaultUiEditor: React.FC = () => {
                     className="btn-admin-primary"
                 >
                     <Save className="h-4 w-4" />
-                    모든 변경사항 저장
+                    모든 변경사???�??
                 </button>
             </div>
 
@@ -142,22 +142,22 @@ const VaultUiEditor: React.FC = () => {
                 <div className="admin-card p-6 space-y-4">
                     <div className="space-y-4">
                         <div>
-                            <label className={labelClass}>메인 제목</label>
+                            <label className={labelClass}>메인 ?�목</label>
                             <input
                                 className={inputClass}
                                 value={vaultTitle}
                                 onChange={e => setVaultTitle(e.target.value)}
-                                placeholder="예: 성장형 금고"
+                                placeholder="?? ?�장??금고"
                             />
                         </div>
                         <div>
-                            <label className={labelClass}>메인 설명</label>
+                            <label className={labelClass}>메인 ?�명</label>
                             <textarea
                                 className={inputClass}
                                 rows={3}
                                 value={vaultDesc}
                                 onChange={e => setVaultDesc(e.target.value)}
-                                placeholder="금고 메인 설명 문구를 입력하세요"
+                                placeholder="금고 메인 ?�명 문구�??�력?�세??
                             />
                         </div>
                     </div>
@@ -181,21 +181,21 @@ const VaultUiEditor: React.FC = () => {
                 <div>
                     <h3 className="text-admin-subtitle text-admin-text-primary flex items-center gap-2">
                         <MessageSquare className="h-5 w-5 text-admin-warning" />
-                        금고 모달 & 티켓 안내
+                        금고 모달 & ?�켓 ?�내
                     </h3>
-                    <p className="text-admin-body text-admin-text-secondary">티켓이 0일 때 노출되는 모달의 메시지를 설정합니다.</p>
+                    <p className="text-admin-body text-admin-text-secondary">?�켓??0?????�출?�는 모달??메시지�??�정?�니??</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="admin-card p-6 space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2">
-                                <label className={labelClass}>모달 제목</label>
+                                <label className={labelClass}>모달 ?�목</label>
                                 <input
                                     className={inputClass}
-                                    aria-label="모달 제목"
-                                    title="모달 제목"
-                                    placeholder="예: 티켓이 0일 때 (모두 소진)"
+                                    aria-label="모달 ?�목"
+                                    title="모달 ?�목"
+                                    placeholder="?? ?�켓??0????(모두 ?�진)"
                                     value={tzTitle}
                                     onChange={e => setTzTitle(e.target.value)}
                                 />
@@ -206,7 +206,7 @@ const VaultUiEditor: React.FC = () => {
                                     className={inputClass}
                                     aria-label="모달 본문 메시지"
                                     title="모달 본문 메시지"
-                                    placeholder="티켓이 0일 때 안내 문구를 입력하세요"
+                                    placeholder="?�켓??0?????�내 문구�??�력?�세??
                                     rows={4}
                                     value={tzBody}
                                     onChange={e => setTzBody(e.target.value)}
@@ -216,9 +216,9 @@ const VaultUiEditor: React.FC = () => {
                                 <label className={labelClass}>기본 버튼 (Primary)</label>
                                 <input
                                     className={inputClass}
-                                    aria-label="기본 버튼 라벨"
-                                    title="기본 버튼 라벨"
-                                    placeholder="예: 씨카지노 바로가기"
+                                    aria-label="기본 버튼 ?�벨"
+                                    title="기본 버튼 ?�벨"
+                                    placeholder="?? ?�카지??바로가�?
                                     value={tzPrimaryLabel}
                                     onChange={e => setTzPrimaryLabel(e.target.value)}
                                 />
@@ -227,9 +227,9 @@ const VaultUiEditor: React.FC = () => {
                                 <label className={labelClass}>보조 버튼 (Secondary)</label>
                                 <input
                                     className={inputClass}
-                                    aria-label="보조 버튼 라벨"
-                                    title="보조 버튼 라벨"
-                                    placeholder="예: 매장 텔레 문의"
+                                    aria-label="보조 버튼 ?�벨"
+                                    title="보조 버튼 ?�벨"
+                                    placeholder="?? 매장 ?�레 문의"
                                     value={tzSecondaryLabel}
                                     onChange={e => setTzSecondaryLabel(e.target.value)}
                                 />
@@ -238,12 +238,12 @@ const VaultUiEditor: React.FC = () => {
                     </div>
 
                     <div className="admin-card p-6">
-                        <h4 className="text-admin-meta font-bold text-admin-text-secondary mb-4 uppercase tracking-widest">실제 모달 형태 예시</h4>
+                        <h4 className="text-admin-meta font-bold text-admin-text-secondary mb-4 uppercase tracking-widest">?�제 모달 ?�태 ?�시</h4>
                         <div className="admin-card p-5 space-y-4 shadow-admin-card">
-                            <p className="text-admin-subtitle text-admin-text-primary border-b border-admin-border pb-2">{tzTitle || "티켓이 0일 때"}</p>
+                            <p className="text-admin-subtitle text-admin-text-primary border-b border-admin-border pb-2">{tzTitle || "?�켓??0????}</p>
                             <p className="text-admin-body text-admin-text-secondary leading-relaxed whitespace-pre-wrap">{tzBody || DEFAULT_TZ_BODY}</p>
                             <div className="flex gap-2 pt-2">
-                                <div className="px-3 py-1.5 rounded-admin-lg bg-admin-brand text-white text-[10px] font-bold uppercase">{tzPrimaryLabel || "바로가기"}</div>
+                                <div className="px-3 py-1.5 rounded-admin-lg bg-admin-brand text-white text-[10px] font-bold uppercase">{tzPrimaryLabel || "바로가�?}</div>
                                 <div className="px-3 py-1.5 rounded-admin-lg bg-admin-sidebar border border-admin-border text-admin-text-primary text-[10px] font-bold uppercase">{tzSecondaryLabel || "문의"}</div>
                             </div>
                         </div>
@@ -254,6 +254,6 @@ const VaultUiEditor: React.FC = () => {
     );
 };
 
-const DEFAULT_TZ_BODY = "티켓을 모두 사용하셨습니다.\n\n20레벨 달성 시 Diamond Key가 자동 지급됩니다!";
+const DEFAULT_TZ_BODY = "?�켓??모두 ?�용?�셨?�니??\n\n20?�벨 ?�성 ??Diamond Key가 ?�동 지급됩?�다!";
 
 export default VaultUiEditor;

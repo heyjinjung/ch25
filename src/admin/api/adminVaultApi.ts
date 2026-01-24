@@ -44,12 +44,12 @@ export interface VaultTimerState {
 }
 
 export const getVaultDefaultProgram = async (): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.get<VaultProgramResponse>("/admin/api/vault-programs/default/");
+    const { data } = await adminApi.get<VaultProgramResponse>("/api/admin/vault-programs/default/");
     return data;
 };
 
 export const getVaultProgramByKey = async (programKey: string): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.get<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/`);
+    const { data } = await adminApi.get<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/`);
     return data;
 };
 
@@ -57,7 +57,7 @@ export const updateVaultUnlockRules = async (
     programKey: string,
     unlockRulesJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.put<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/unlock-rules/`, {
+    const { data } = await adminApi.put<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/unlock-rules/`, {
         unlock_rules_json: unlockRulesJson,
     });
     return data;
@@ -67,7 +67,7 @@ export const updateVaultUiCopy = async (
     programKey: string,
     uiCopyJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.put<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/ui-copy/`, {
+    const { data } = await adminApi.put<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/ui-copy/`, {
         ui_copy_json: uiCopyJson,
     });
     return data;
@@ -77,7 +77,7 @@ export const updateVaultConfig = async (
     programKey: string,
     configJson: any
 ): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.put<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/config/`, {
+    const { data } = await adminApi.put<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/config/`, {
         config_json: configJson,
     });
     return data;
@@ -87,7 +87,7 @@ export const toggleVaultGameEarn = async (
     programKey: string,
     enabled: boolean
 ): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.post<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/game-earn-toggle/`, {
+    const { data } = await adminApi.post<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/game-earn-toggle/`, {
         enabled,
     });
     return data;
@@ -97,7 +97,7 @@ export const getVaultEligibility = async (
     programKey: string,
     userId: number
 ): Promise<VaultEligibilityResponse> => {
-    const { data } = await adminApi.get<VaultEligibilityResponse>(`/admin/api/vault-programs/${programKey}/eligibility/${userId}/`);
+    const { data } = await adminApi.get<VaultEligibilityResponse>(`/api/admin/vault-programs/${programKey}/eligibility/${userId}/`);
     return data;
 };
 
@@ -106,14 +106,14 @@ export const setVaultEligibility = async (
     userId: number,
     eligible: boolean
 ): Promise<VaultEligibilityResponse> => {
-    const { data } = await adminApi.post<VaultEligibilityResponse>(`/admin/api/vault-programs/${programKey}/eligibility/${userId}/`, {
+    const { data } = await adminApi.post<VaultEligibilityResponse>(`/api/admin/vault-programs/${programKey}/eligibility/${userId}/`, {
         eligible,
     });
     return data;
 };
 
 export const getVaultTimerState = async (userId: number): Promise<VaultTimerState> => {
-    const { data } = await adminApi.get<VaultTimerState>(`/admin/api/vault/${userId}/`);
+    const { data } = await adminApi.get<VaultTimerState>(`/api/admin/vault/${userId}/`);
     return data;
 };
 
@@ -121,26 +121,26 @@ export const postVaultTimerAction = async (
     userId: number,
     action: "reset" | "expire_now" | "start_now"
 ): Promise<VaultTimerState> => {
-    const { data } = await adminApi.post<VaultTimerState>(`/admin/api/vault/${userId}/timer/`, { action });
+    const { data } = await adminApi.post<VaultTimerState>(`/api/admin/vault/${userId}/timer/`, { action });
     return data;
 };
 
 export const getVaultStats = async (): Promise<VaultStatsResponse> => {
-    const { data } = await adminApi.get<VaultStatsResponse>("/admin/api/vault-programs/stats/");
+    const { data } = await adminApi.get<VaultStatsResponse>("/api/admin/vault-programs/stats/");
     return data;
 };
 
 export const tickVaultTransitions = async (): Promise<{ updated: number }> => {
-    const { data } = await adminApi.post<{ updated: number }>("/admin/api/vault2/tick/");
+    const { data } = await adminApi.post<{ updated: number }>("/api/admin/vault2/tick/");
     return data;
 };
 export const fetchVaultStatsDetails = async (type: string, limit: number = 100): Promise<{ items: any[] }> => {
-    const { data } = await adminApi.get<{ items: any[] }>("/admin/api/vault-programs/stats/details", { params: { type, limit } });
+    const { data } = await adminApi.get<{ items: any[] }>("/api/admin/vault-programs/stats/details", { params: { type, limit } });
     return data;
 };
 
 export const toggleVaultGlobalActive = async (programKey: string, isActive: boolean): Promise<VaultProgramResponse> => {
-    const { data } = await adminApi.post<VaultProgramResponse>(`/admin/api/vault-programs/${programKey}/active-toggle/`, {
+    const { data } = await adminApi.post<VaultProgramResponse>(`/api/admin/vault-programs/${programKey}/active-toggle/`, {
         is_active: isActive,
     });
     return data;
@@ -152,7 +152,7 @@ export const updateVaultUserBalance = async (
     availableDelta: number,
     reason?: string
 ): Promise<void> => {
-    await adminApi.post(`/admin/api/vault-programs/balance/${userId}/`, {
+    await adminApi.post(`/api/admin/vault-programs/balance/${userId}/`, {
         locked_delta: lockedDelta,
         available_delta: availableDelta,
         reason,
@@ -165,7 +165,7 @@ export const setVaultUserBalance = async (
     availableAmount: number | null,
     reason?: string,
 ): Promise<void> => {
-    await adminApi.post(`/admin/api/vault-programs/balance-set/${userId}/`, {
+    await adminApi.post(`/api/admin/vault-programs/balance-set/${userId}/`, {
         locked_amount: lockedAmount,
         available_amount: availableAmount,
         reason,

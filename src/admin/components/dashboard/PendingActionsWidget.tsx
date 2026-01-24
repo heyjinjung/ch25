@@ -33,12 +33,12 @@ const PendingActionsWidget: React.FC = () => {
     const nudgeMutation = useMutation({
         mutationFn: nudgeRiskGroup,
         onSuccess: (data) => {
-            addToast(`${data.nudged_count}명에게 넛지를 발송했습니다.`, "success");
-            // 전역 동기화: 대시보드 관련 쿼리를 한 번에 갱신
+            addToast(`${data.nudged_count}명에�??��?�?발송?�습?�다.`, "success");
+            // ?�역 ?�기?? ?�?�보??관??쿼리�???번에 갱신
             queryClient.invalidateQueries({ queryKey: ["admin", "dashboard"] });
         },
         onError: (error) => {
-            addToast(`넛지 발송 실패: ${error instanceof Error ? error.message : String(error)}`, "error");
+            addToast(`?��? 발송 ?�패: ${error instanceof Error ? error.message : String(error)}`, "error");
         }
     });
 
@@ -50,9 +50,9 @@ const PendingActionsWidget: React.FC = () => {
     });
 
     const detailTitle = useMemo(() => {
-        if (detailKey === "churn_risk") return "이탈 위험 대상자";
-        if (detailKey === "streak_risk") return "스트릭 중단 위기 대상자";
-        return "상세";
+        if (detailKey === "churn_risk") return "?�탈 ?�험 ?�?�자";
+        if (detailKey === "streak_risk") return "?�트�?중단 ?�기 ?�?�자";
+        return "?�세";
     }, [detailKey]);
 
     if (isLoading) {
@@ -79,7 +79,7 @@ const PendingActionsWidget: React.FC = () => {
                     ) : (
                         <div className="h-3 w-3 rounded-full bg-admin-accent/50"></div>
                     )}
-                    <h2 className="text-admin-subtitle text-admin-text-primary">조치 항목</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary">조치 ??��</h2>
                 </div>
 
             </div>
@@ -94,9 +94,9 @@ const PendingActionsWidget: React.FC = () => {
                                     <AlertTriangle className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="text-admin-body font-bold text-white">이탈 위험 감지</h3>
+                                    <h3 className="text-admin-body font-bold text-white">?�탈 ?�험 감�?</h3>
                                     <p className="text-xs text-admin-text-secondary">
-                                        <span className="text-admin-danger font-mono font-bold text-sm">{riskCount}명</span>의 회원이 이탈 징후를 보입니다.
+                                        <span className="text-admin-danger font-mono font-bold text-sm">{riskCount}�?/span>???�원???�탈 징후�?보입?�다.
                                     </p>
                                 </div>
                             </div>
@@ -108,7 +108,7 @@ const PendingActionsWidget: React.FC = () => {
                                 onClick={() => setDetailKey("churn_risk")}
                                 className="mr-2 text-xs flex items-center gap-1 text-admin-text-secondary hover:text-white px-3 py-1.5 rounded-lg hover:bg-admin-hover transition-all font-bold"
                             >
-                                대상자 보기 <ChevronRight className="h-3 w-3" />
+                                ?�?�자 보기 <ChevronRight className="h-3 w-3" />
                             </button>
                             <button
                                 onClick={() => {
@@ -117,7 +117,7 @@ const PendingActionsWidget: React.FC = () => {
                                 disabled={nudgeMutation.isPending}
                                 className="text-xs flex items-center gap-1 text-admin-danger hover:text-white px-3 py-1.5 rounded-lg hover:bg-admin-danger transition-all font-bold"
                             >
-                                {nudgeMutation.isPending ? "처리 중..." : "즉시 넛지 발송"} <ArrowRight className="h-3 w-3" />
+                                {nudgeMutation.isPending ? "처리 �?.." : "즉시 ?��? 발송"} <ArrowRight className="h-3 w-3" />
                             </button>
                         </div>
                     </div>
@@ -132,9 +132,9 @@ const PendingActionsWidget: React.FC = () => {
                                     <AlertOctagon className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h3 className="text-admin-body font-bold text-white">스트릭 중단 위기</h3>
+                                    <h3 className="text-admin-body font-bold text-white">?�트�?중단 ?�기</h3>
                                     <p className="text-xs text-admin-text-secondary">
-                                        <span className="text-admin-warning font-mono font-bold text-sm">{streakRiskCount}명</span>의 회원이 오늘 스트릭을 놓칠 수 있습니다.
+                                        <span className="text-admin-warning font-mono font-bold text-sm">{streakRiskCount}�?/span>???�원???�늘 ?�트�?�� ?�칠 ???�습?�다.
                                     </p>
                                 </div>
                             </div>
@@ -145,7 +145,7 @@ const PendingActionsWidget: React.FC = () => {
                                 onClick={() => setDetailKey("streak_risk")}
                                 className="text-xs flex items-center gap-1 text-admin-warning hover:text-white px-3 py-1.5 rounded-lg hover:bg-admin-warning transition-all font-bold"
                             >
-                                대상자 보기 <ChevronRight className="h-3 w-3" />
+                                ?�?�자 보기 <ChevronRight className="h-3 w-3" />
                             </button>
                         </div>
                     </div>
@@ -162,8 +162,8 @@ const PendingActionsWidget: React.FC = () => {
                             <Bell className="h-5 w-5" />
                         </div>
                         <div>
-                            <h3 className="text-sm font-bold text-admin-text-primary group-hover:text-white">시스템 공지 작성</h3>
-                            <p className="text-[10px] text-admin-text-secondary">전체 회원 대상 푸시 메시지</p>
+                            <h3 className="text-sm font-bold text-admin-text-primary group-hover:text-white">?�스??공�? ?�성</h3>
+                            <p className="text-[10px] text-admin-text-secondary">?�체 ?�원 ?�???�시 메시지</p>
                         </div>
                     </div>
                     <ArrowRight className="h-4 w-4 text-admin-text-muted group-hover:translate-x-1 transition-transform" />
@@ -177,24 +177,24 @@ const PendingActionsWidget: React.FC = () => {
                         <div className="p-4 border-b border-admin-border flex items-center justify-between">
                             <div>
                                 <h3 className="text-admin-subtitle text-admin-text-primary">{detailTitle}</h3>
-                                <p className="text-xs text-admin-text-muted">대상자 목록(최대 50)</p>
+                                <p className="text-xs text-admin-text-muted">?�?�자 목록(최�? 50)</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setDetailKey(null)}
                                 className="btn-admin-secondary"
                             >
-                                닫기
+                                ?�기
                             </button>
                         </div>
 
                         <div className="p-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
                             {detailsQuery.isLoading ? (
-                                <div className="text-sm text-admin-text-muted">불러오는 중...</div>
+                                <div className="text-sm text-admin-text-muted">불러?�는 �?..</div>
                             ) : detailsQuery.isError ? (
-                                <div className="text-sm text-admin-danger">불러오기 실패</div>
+                                <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
                             ) : (detailsQuery.data ?? []).length === 0 ? (
-                                <div className="text-sm text-admin-text-muted">대상자가 없습니다.</div>
+                                <div className="text-sm text-admin-text-muted">?�?�자가 ?�습?�다.</div>
                             ) : (
                                 <div className="space-y-2">
                                     {(detailsQuery.data ?? []).map((it) => (
@@ -241,10 +241,10 @@ const PendingActionsWidget: React.FC = () => {
                                 }}
                                 className="btn-admin-secondary"
                             >
-                                새로고침
+                                ?�로고침
                             </button>
                             <button type="button" onClick={() => setDetailKey(null)} className="btn-admin-primary">
-                                확인
+                                ?�인
                             </button>
                         </div>
                     </div>

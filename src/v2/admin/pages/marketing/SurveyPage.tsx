@@ -34,16 +34,16 @@ export default function SurveyPage() {
     <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
       <div>
         <h1 className="text-2xl font-bold tracking-tight mb-1">
-          설문 관리 (Survey Manager)
+          ?�문 관�?(Survey Manager)
         </h1>
         <p className="text-sm text-zinc-400">
-          유저 대상 설문을 관리하고 결과를 분석합니다.
+          ?��? ?�???�문??관리하�?결과�?분석?�니??
         </p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-[#18181B] border border-white/5">
-          <TabsTrigger value="list">설문 목록</TabsTrigger>
+          <TabsTrigger value="list">?�문 목록</TabsTrigger>
           <TabsTrigger value="results" disabled={!selectedSurveyId}>
             결과 분석
           </TabsTrigger>
@@ -57,7 +57,7 @@ export default function SurveyPage() {
             </div>
           ) : surveys.length === 0 ? (
             <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
-              등록된 설문이 없습니다.
+              ?�록???�문???�습?�다.
             </div>
           ) : (
             surveys.map((survey) => (
@@ -81,7 +81,7 @@ export default function SurveyPage() {
                             variant="outline"
                             className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                           >
-                            진행중
+                            진행�?
                           </Badge>
                         )}
                       </div>
@@ -92,13 +92,13 @@ export default function SurveyPage() {
                       <div className="flex items-center gap-6 text-sm">
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-zinc-500" />
-                          <span className="text-zinc-400">응답 수:</span>
+                          <span className="text-zinc-400">?�답 ??</span>
                           <span className="font-semibold text-emerald-400">
                             {survey.responseCount}
                           </span>
                         </div>
                         <div className="text-zinc-500">
-                          질문 {survey.questions.length}개
+                          질문 {survey.questions.length}�?
                         </div>
                         <div className="text-zinc-500">{survey.createdAt}</div>
                       </div>
@@ -127,7 +127,7 @@ export default function SurveyPage() {
                           variant="outline"
                           className="bg-blue-500/10 text-blue-500 border-blue-500/20"
                         >
-                          선택됨
+                          ?�택??
                         </Badge>
                       )}
                     </div>
@@ -142,7 +142,7 @@ export default function SurveyPage() {
         <TabsContent value="results" className="space-y-4 mt-6">
           {!selectedSurveyId ? (
             <div className="text-center py-20 text-zinc-500">
-              설문을 선택해주세요.
+              ?�문???�택?�주?�요.
             </div>
           ) : (
             <div className="space-y-6">
@@ -167,7 +167,7 @@ export default function SurveyPage() {
                             <span className="text-zinc-300">{res.option}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-zinc-500">
-                                {res.count}명
+                                {res.count}�?
                               </span>
                               <span className="font-bold text-white">
                                 {res.percentage}%
@@ -185,10 +185,10 @@ export default function SurveyPage() {
 
                     {/* Total Summary */}
                     <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-sm">
-                      <span className="text-zinc-400">총 응답 수</span>
+                      <span className="text-zinc-400">�??�답 ??/span>
                       <span className="font-bold text-emerald-400">
                         {result.responses.reduce((sum, r) => sum + r.count, 0)}
-                        명
+                        �?
                       </span>
                     </div>
                   </CardContent>

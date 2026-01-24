@@ -8,7 +8,7 @@ export interface UiConfigResponse {
 
 export const getV2UiConfig = async (key: string): Promise<UiConfigResponse> => {
   const response = await v2Client.get<UiConfigResponse>(
-    `/api/v2/ui-config/${encodeURIComponent(key)}`,
+    `/api/ui-config/${encodeURIComponent(key)}`,
   );
   return response.data;
 };

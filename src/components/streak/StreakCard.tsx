@@ -25,8 +25,8 @@ const StreakCard: React.FC<StreakCardProps> = ({ day, rule, currentStreak, claim
         if (rule.grants.length > 1) return <img src="/assets/lottery/icon_gift.png" alt="Gift" className="w-8 h-8 object-contain" />;
         
         // Single Reward
-        if (g.token_type === "ROULETTE_COIN") return <span className="text-3xl">ðŸŽ¯</span>;
-        if (g.token_type === "DICE_TOKEN") return <span className="text-3xl">ðŸŽ²</span>;
+        if (g.token_type === "ROULETTE_COIN") return <span className="text-3xl">?Ž¯</span>;
+        if (g.token_type === "DICE_TOKEN") return <span className="text-3xl">?Ž²</span>;
         if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") {
             return <img src="/assets/icon_diamond.png" alt="Diamond" className="w-8 h-8 object-contain" />;
         }

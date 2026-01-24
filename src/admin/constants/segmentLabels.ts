@@ -1,11 +1,11 @@
 // src/admin/constants/segmentLabels.ts
 
 export const SEGMENT_LABELS_KO: Record<string, string> = {
-  NEW: "신규",
+  NEW: "?�규",
   VIP: "VIP",
-  DORMANT_SHORT: "단기휴면",
-  DORMANT_LONG: "장기휴면",
-  ACTIVE_RECENT: "최근활동",
+  DORMANT_SHORT: "?�기?�면",
+  DORMANT_LONG: "?�기?�면",
+  ACTIVE_RECENT: "최근?�동",
 };
 
 export function segmentLabelKo(code?: string | null): string {

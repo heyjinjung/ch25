@@ -54,12 +54,12 @@ export interface AdminUserProfile {
 }
 
 export async function fetchCrmStats() {
-    const { data } = await adminApi.get<CrmStats>("/admin/api/crm/stats");
+    const { data } = await adminApi.get<CrmStats>("/api/admin/crm/stats");
     return data;
 }
 
 export async function fetchUsersBySegment(segmentType: string) {
-    const { data } = await adminApi.get<AdminUserProfile[]>("/admin/api/crm/segment-detail", {
+    const { data } = await adminApi.get<AdminUserProfile[]>("/api/admin/crm/segment-detail", {
         params: { segment_type: segmentType }
     });
     return data;

@@ -47,7 +47,7 @@ const DiceConfigPage: React.FC = () => {
     lose_reward_type: string;
     lose_reward_amount: number;
   }>({
-    name: "새로운 주사위 전략",
+    name: "?�로??주사???�략",
     max_daily_plays: 30,
     win_reward_type: "POINT",
     win_reward_amount: 1000,
@@ -80,10 +80,10 @@ const DiceConfigPage: React.FC = () => {
     mutationFn: updateEventParams,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "dice", "event-params"] });
-      addToast("전역 전략 설정이 저장되었습니다.", "success");
+      addToast("?�역 ?�략 ?�정???�?�되?�습?�다.", "success");
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.detail ?? "저장 실패";
+      const msg = err?.response?.data?.detail ?? "?�???�패";
       addToast(msg, "error");
     },
   });
@@ -93,10 +93,10 @@ const DiceConfigPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "dice", "configs"] });
       setEditingConfig(null);
-      addToast("보상 설정이 저장되었습니다.", "success");
+      addToast("보상 ?�정???�?�되?�습?�다.", "success");
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.detail ?? "저장 실패";
+      const msg = err?.response?.data?.detail ?? "?�???�패";
       addToast(msg, "error");
     },
   });
@@ -106,10 +106,10 @@ const DiceConfigPage: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "dice", "configs"] });
       setIsCreating(false);
-      addToast("새로운 전략이 생성되었습니다.", "success");
+      addToast("?�로???�략???�성?�었?�니??", "success");
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.detail ?? "생성 실패";
+      const msg = err?.response?.data?.detail ?? "?�성 ?�패";
       addToast(msg, "error");
     },
   });
@@ -167,7 +167,7 @@ const DiceConfigPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <RefreshCw className="h-10 w-10 text-admin-brand animate-spin" />
-        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">주사위 메커니즘 엔진 준비 중...</span>
+        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">주사??메커?�즘 ?�진 준�?�?..</span>
       </div>
     );
   }
@@ -178,13 +178,13 @@ const DiceConfigPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
-            <span>시스템 관리</span>
+            <span>?�스??관�?/span>
             <ChevronRight size={12} />
-            <span className="text-zinc-300">주사위 설정</span>
+            <span className="text-zinc-300">주사???�정</span>
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
             <Dice6 className="text-admin-brand" size={28} />
-            주사위 메커니즘 엔진
+            주사??메커?�즘 ?�진
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ const DiceConfigPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
           >
             <RefreshCw size={16} />
-            엔진 새로고침
+            ?�진 ?�로고침
           </button>
           {localEventParams && (
             <button
@@ -202,7 +202,7 @@ const DiceConfigPage: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20 disabled:opacity-50"
             >
               <Save size={16} />
-              {updateEventMutation.isPending ? "저장 중..." : "전역 전략 저장"}
+              {updateEventMutation.isPending ? "?�??�?.." : "?�역 ?�략 ?�??}
             </button>
           )}
         </div>
@@ -212,7 +212,7 @@ const DiceConfigPage: React.FC = () => {
       {(configsError || eventError) && (
         <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 flex items-center gap-4 text-rose-400">
           <AlertCircle size={24} />
-          <p className="text-sm font-bold">엔진 데이터를 불러오는 데 실패했습니다. 통신 상태를 확인해주세요.</p>
+          <p className="text-sm font-bold">?�진 ?�이?��? 불러?�는 ???�패?�습?�다. ?�신 ?�태�??�인?�주?�요.</p>
         </div>
       )}
 
@@ -278,7 +278,7 @@ const DiceConfigPage: React.FC = () => {
           <div className="admin-card p-6 space-y-6 border-t-4 border-t-admin-brand">
             <div className="flex items-center gap-2">
               <Settings2 className="text-admin-brand" size={20} />
-              <h2 className="text-sm font-black text-white uppercase tracking-wider">전역 전략 설정 (Global Strategy)</h2>
+              <h2 className="text-sm font-black text-white uppercase tracking-wider">?�역 ?�략 ?�정 (Global Strategy)</h2>
             </div>
 
             {localEventParams && (
@@ -287,13 +287,13 @@ const DiceConfigPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase">
                     <Zap size={14} className="text-amber-400" />
-                    승패 확률 (Probability)
+                    ?�패 ?�률 (Probability)
                   </div>
                   <div className="grid grid-cols-1 gap-4">
                     {[
-                      { label: "승리 확률 (Win)", key: "p_win", color: "text-emerald-400" },
-                      { label: "무승부 확률 (Draw)", key: "p_draw", color: "text-zinc-400" },
-                      { label: "패배 확률 (Lose)", key: "p_lose", color: "text-rose-400" },
+                      { label: "?�리 ?�률 (Win)", key: "p_win", color: "text-emerald-400" },
+                      { label: "무승부 ?�률 (Draw)", key: "p_draw", color: "text-zinc-400" },
+                      { label: "?�배 ?�률 (Lose)", key: "p_lose", color: "text-rose-400" },
                     ].map((p) => (
                       <div key={p.key} className="space-y-1.5">
                         <div className="flex justify-between text-[10px] font-bold text-zinc-500">
@@ -329,11 +329,11 @@ const DiceConfigPage: React.FC = () => {
                 <div className="space-y-4 pt-4 border-t border-zinc-800">
                   <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase">
                     <ShieldAlert size={14} className="text-zinc-400" />
-                    제한 설정 (Global Caps)
+                    ?�한 ?�정 (Global Caps)
                   </div>
                   <div className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-zinc-500">일일 누적 획득 한도 (Daily Gain)</label>
+                      <label className="text-[10px] font-bold text-zinc-500">?�일 ?�적 ?�득 ?�도 (Daily Gain)</label>
                       <input
                         type="number"
                         value={localEventParams.caps?.DICE?.daily_gain || 0}
@@ -353,7 +353,7 @@ const DiceConfigPage: React.FC = () => {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-zinc-500">일일 플레이 횟수 제한 (Daily Plays)</label>
+                      <label className="text-[10px] font-bold text-zinc-500">?�일 ?�레???�수 ?�한 (Daily Plays)</label>
                       <input
                         type="number"
                         value={localEventParams.caps?.DICE?.daily_plays || 0}
@@ -379,7 +379,7 @@ const DiceConfigPage: React.FC = () => {
                 <div className="space-y-4 pt-4 border-t border-zinc-800">
                   <div className="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase">
                     <Tags size={14} className="text-zinc-400" />
-                    접속 제한 대상 (Eligibility Tags)
+                    ?�속 ?�한 ?�??(Eligibility Tags)
                   </div>
                   <div className="p-3 bg-zinc-900/50 rounded-xl border border-zinc-800">
                     <div className="flex justify-between items-center mb-2">
@@ -398,9 +398,9 @@ const DiceConfigPage: React.FC = () => {
           <div className="bg-admin-brand/5 border border-admin-brand/20 rounded-2xl p-4 flex gap-3">
             <Info className="text-admin-brand shrink-0" size={20} />
             <div className="space-y-1">
-              <p className="text-xs font-bold text-admin-brand">참고 사항</p>
+              <p className="text-xs font-bold text-admin-brand">참고 ?�항</p>
               <p className="text-[10px] text-zinc-400 leading-relaxed">
-                전역 전략 설정은 모든 주사위 게임 인스턴스에 공통 적용됩니다. 보상은 유저의 금고 잠금 잔고에 반영되며, 리스크 한도 도달 시 더 이상의 보상 획득이 제한됩니다.
+                ?�역 ?�략 ?�정?� 모든 주사??게임 ?�스?�스??공통 ?�용?�니?? 보상?� ?��???금고 ?�금 ?�고??반영?�며, 리스???�도 ?�달 ?????�상??보상 ?�득???�한?�니??
               </p>
             </div>
           </div>
@@ -411,21 +411,21 @@ const DiceConfigPage: React.FC = () => {
           <div className="flex items-center justify-between px-2">
             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 text-admin-brand" />
-              보상 메커니즘 설정 (Reward Mechanisms)
+              보상 메커?�즘 ?�정 (Reward Mechanisms)
             </h2>
             <button
               onClick={() => setIsCreating(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-admin-brand rounded-lg border border-admin-brand/30 transition-all text-[10px] font-black uppercase tracking-widest"
             >
               <Plus size={14} />
-              전략 추가
+              ?�략 추�?
             </button>
           </div>
 
           {isCreating && (
             <div className="admin-card p-5 border-2 border-dashed border-admin-brand/30 bg-admin-brand/5 animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-sm font-black text-admin-brand uppercase tracking-widest">새 전략 생성</h3>
+                <h3 className="text-sm font-black text-admin-brand uppercase tracking-widest">???�략 ?�성</h3>
                 <div className="flex gap-2">
                   <button onClick={() => setIsCreating(false)} className="text-[10px] font-bold text-zinc-500 hover:text-white transition-colors">CANCEL</button>
                 </div>
@@ -433,22 +433,22 @@ const DiceConfigPage: React.FC = () => {
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">엔진 이름</label>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�진 ?�름</label>
                   <input
                     type="text"
                     value={newConfig.name}
                     onChange={(e) => setNewConfig({ ...newConfig, name: e.target.value })}
                     className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none"
-                    placeholder="예: VIP 고배율 전략"
+                    placeholder="?? VIP 고배???�략"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: "승리 보상", key: "win_reward_amount" },
+                    { label: "?�리 보상", key: "win_reward_amount" },
                     { label: "무승부 보상", key: "draw_reward_amount" },
-                    { label: "패배 보상", key: "lose_reward_amount" },
-                    { label: "플레이 한도", key: "max_daily_plays" },
+                    { label: "?�배 보상", key: "lose_reward_amount" },
+                    { label: "?�레???�도", key: "max_daily_plays" },
                   ].map((field) => (
                     <div key={field.key} className="space-y-2">
                       <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">{field.label}</label>
@@ -468,7 +468,7 @@ const DiceConfigPage: React.FC = () => {
                   className="w-full py-4 bg-admin-brand text-black rounded-2xl font-black text-sm shadow-xl shadow-admin-brand/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   {createConfigMutation.isPending ? <RefreshCw className="animate-spin h-5 w-5" /> : <Plus className="h-5 w-5" />}
-                  새로운 메커니즘 즉시 활성화
+                  ?�로??메커?�즘 즉시 ?�성??
                 </button>
               </div>
             </div>
@@ -478,8 +478,8 @@ const DiceConfigPage: React.FC = () => {
             {configs?.length === 0 && !isCreating && (
               <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-3xl opacity-50 grayscale hover:grayscale-0 transition-all">
                 <Dice6 size={48} className="text-zinc-600 mb-4" />
-                <p className="text-sm font-bold text-zinc-500">등록된 보상 메커니즘이 없습니다.</p>
-                <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">상단의 전략 추가 버튼을 눌러 엔진을 가동하세요.</p>
+                <p className="text-sm font-bold text-zinc-500">?�록??보상 메커?�즘???�습?�다.</p>
+                <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">?�단???�략 추�? 버튼???�러 ?�진??가?�하?�요.</p>
               </div>
             )}
             {(configs ?? []).map((config) => (
@@ -528,7 +528,7 @@ const DiceConfigPage: React.FC = () => {
                           className="h-10 px-4 bg-admin-brand text-black rounded-xl text-xs font-black shadow-lg shadow-admin-brand/20 transition-all flex items-center gap-2"
                         >
                           {updateConfigMutation.isPending ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-                          적용
+                          ?�용
                         </button>
                       </div>
                     ) : (
@@ -537,7 +537,7 @@ const DiceConfigPage: React.FC = () => {
                         className="h-10 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 flex items-center gap-2 transition-all text-sm font-bold"
                       >
                         <Edit3 size={16} />
-                        보상 수정
+                        보상 ?�정
                       </button>
                     )}
                   </div>
@@ -547,7 +547,7 @@ const DiceConfigPage: React.FC = () => {
                   <div className="px-5 pb-5 pt-1 border-t border-zinc-800/50 bg-zinc-900/20 animate-in slide-in-from-top-2 duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 py-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">승리 보상량</label>
+                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�리 보상??/label>
                         <input
                           type="number"
                           value={editingConfig.win_reward_amount}
@@ -556,7 +556,7 @@ const DiceConfigPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">무승부 보상량</label>
+                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">무승부 보상??/label>
                         <input
                           type="number"
                           value={editingConfig.draw_reward_amount}
@@ -565,7 +565,7 @@ const DiceConfigPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">패배 보상량</label>
+                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�배 보상??/label>
                         <input
                           type="number"
                           value={editingConfig.lose_reward_amount}
@@ -574,7 +574,7 @@ const DiceConfigPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">일일 플레이 한도</label>
+                        <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�일 ?�레???�도</label>
                         <input
                           type="number"
                           value={editingConfig.max_daily_plays}

@@ -36,9 +36,9 @@ const Row: React.FC<{
           {claimed ? (
             <CheckCircle2 className="h-5 w-5 text-white/20" />
           ) : done ? (
-            <span className="text-emerald-400">✓</span>
+            <span className="text-emerald-400">??/span>
           ) : (
-            <span className="text-white/40">•</span>
+            <span className="text-white/40">??/span>
           )}
 
           <p className={`font-black ${claimed ? "text-white/40 line-through" : "text-white"}`}>
@@ -51,14 +51,14 @@ const Row: React.FC<{
       {/* Action Area */}
       <div className="shrink-0">
         {claimed ? (
-          <span className="text-xs font-bold text-white/30">완료됨</span>
+          <span className="text-xs font-bold text-white/30">?�료??/span>
         ) : done && onClaim ? (
           <button
             onClick={onClaim}
             disabled={isClaiming}
             className="rounded-xl bg-emerald-500 px-3 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400 disabled:opacity-50"
           >
-            {isClaiming ? "지급 중..." : "보상 받기"}
+            {isClaiming ? "지�?�?.." : "보상 받기"}
           </button>
         ) : (
           action
@@ -92,7 +92,7 @@ const NewUserWelcomePage: React.FC = () => {
       const telegramBotUsername = (import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) || "jm956_bot";
       const telegramWebappShortName = (import.meta.env.VITE_TELEGRAM_WEBAPP_SHORT_NAME as string | undefined) || "ccjm";
       const appUrl = `https://t.me/${telegramBotUsername}/${telegramWebappShortName}`;
-      const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
+      const shareText = "??지�??�� CCJM?�서 ?�께 ?�인?�봐!";
       const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: appUrl, text: shareText }).toString()}`;
 
       const tg = window.Telegram?.WebApp;
@@ -124,7 +124,7 @@ const NewUserWelcomePage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
       useMissionStore.getState().fetchMissions();
     } catch {
-      addToast("공유 처리 중 오류가 발생했습니다.", "error");
+      addToast("공유 처리 �??�류가 발생?�습?�다.", "error");
     }
   };
 
@@ -169,17 +169,17 @@ const NewUserWelcomePage: React.FC = () => {
         // Show success modal or toast?
         // Using toast for inline claims is faster, but modal is "celebratory".
         // Let's use Modal for nicer effect since these are Welcome Missions.
-        setSuccessMessage(`축하합니다!\n[${title}] 미션을 완료했습니다.`);
+        setSuccessMessage(`축하?�니??\n[${title}] 미션???�료?�습?�다.`);
         setShowSuccessModal(true);
 
         // Update Data
         queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
         useMissionStore.getState().fetchMissions(); // Sync global store
       } else {
-        addToast(result.message || "보상 수령 실패", "error");
+        addToast(result.message || "보상 ?�령 ?�패", "error");
       }
     } catch {
-      addToast("오류가 발생했습니다.", "error");
+      addToast("?�류가 발생?�습?�다.", "error");
     } finally {
       setProcessingId(null);
     }
@@ -213,13 +213,13 @@ const NewUserWelcomePage: React.FC = () => {
       // Check viral.py: POST /api/viral/verify/channel
       try {
         await verifyChannelSubscription(missionId);
-        addToast("채널 가입이 확인되었습니다! 보상을 수령하세요.", "success");
+        addToast("채널 가?�이 ?�인?�었?�니?? 보상???�령?�세??", "success");
         queryClient.invalidateQueries({ queryKey: ["new-user-status"] });
       } catch {
         // Fallback or specific error?
         // If verify fails, maybe they didn't join or bot isn't admin.
         // For UX safety in this "Welcome" phase, we might soft-allow or show error.
-        addToast("아직 가입이 확인되지 않았습니다. 잠시 후 다시 시도해주세요.", "error");
+        addToast("?�직 가?�이 ?�인?��? ?�았?�니?? ?�시 ???�시 ?�도?�주?�요.", "error");
       }
 
     } catch (e) {
@@ -236,7 +236,7 @@ const NewUserWelcomePage: React.FC = () => {
   if (status.isLoading) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-10 text-center text-white/60">
-        신규 유저 웰컴 미션을 불러오는 중...
+        ?�규 ?��? ?�컴 미션??불러?�는 �?..
       </div>
     );
   }
@@ -263,9 +263,9 @@ const NewUserWelcomePage: React.FC = () => {
     <div className="mx-auto max-w-2xl px-4 py-6">
       <header className="mb-6 rounded-3xl border border-emerald-700/30 bg-black/60 p-6 backdrop-blur">
         <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">NEW USER ONBOARDING</p>
-        <h1 className="mt-2 text-2xl font-black text-white">신규 유저 전용 웰컴 페이지</h1>
+        <h1 className="mt-2 text-2xl font-black text-white">?�규 ?��? ?�용 ?�컴 ?�이지</h1>
         <p className="mt-2 text-sm text-white/60">
-          이 페이지는 신규 유저에게만 노출됩니다. 기존 유저는 혜택 대상이 아닙니다.
+          ???�이지???�규 ?��??�게�??�출?�니?? 기존 ?��????�택 ?�?�이 ?�닙?�다.
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -286,13 +286,13 @@ const NewUserWelcomePage: React.FC = () => {
           <Row
             done={!!mPlay1.is_completed}
             claimed={!!mPlay1.is_claimed}
-            title="게임 1회 플레이"
-            desc={`현재 누적 플레이 수: ${status.data.total_play_count.toLocaleString()}회`}
+            title="게임 1???�레??
+            desc={`?�재 ?�적 ?�레???? ${status.data.total_play_count.toLocaleString()}??}
             onClaim={() => handleClaim(mPlay1.id, mPlay1.title)}
             isClaiming={processingId === mPlay1.id}
             action={
               <Link className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10" to="/dice">
-                플레이
+                ?�레??
               </Link>
             }
           />
@@ -303,8 +303,8 @@ const NewUserWelcomePage: React.FC = () => {
           <Row
             done={!!mPlay3.is_completed}
             claimed={!!mPlay3.is_claimed}
-            title="게임 3회 플레이"
-            desc="(룰렛/주사위/복권 합산 기준)"
+            title="게임 3???�레??
+            desc="(룰렛/주사??복권 ?�산 기�?)"
             onClaim={() => handleClaim(mPlay3.id, mPlay3.title)}
             isClaiming={processingId === mPlay3.id}
             action={
@@ -320,11 +320,11 @@ const NewUserWelcomePage: React.FC = () => {
           <Row
             done={!!mCommunity.is_completed}
             claimed={!!mCommunity.is_claimed}
-            title={mCommunity.title || "커뮤니티 함께하기"}
+            title={mCommunity.title || "커�??�티 ?�께?�기"}
             desc={
               mCommunity.action_type === "SHARE_WALLET"
-                ? "내 지갑을 친구에게 공유하면 완료됩니다."
-                : "입장 버튼을 누르고 잠시 후 확인됩니다."
+                ? "??지갑을 친구?�게 공유?�면 ?�료?�니??"
+                : "?�장 버튼???�르�??�시 ???�인?�니??"
             }
             onClaim={() => handleClaim(mCommunity.id, mCommunity.title)}
             isClaiming={processingId === mCommunity.id}
@@ -343,7 +343,7 @@ const NewUserWelcomePage: React.FC = () => {
                   onClick={() => handleVerifyChannel(mCommunity.id)}
                   disabled={isVerifyingChannel}
                 >
-                  {isVerifyingChannel ? "확인 중..." : "채널 입장/확인"}
+                  {isVerifyingChannel ? "?�인 �?.." : "채널 ?�장/?�인"}
                 </button>
               )
             }
@@ -355,8 +355,8 @@ const NewUserWelcomePage: React.FC = () => {
           <Row
             done={!!mLogin.is_completed}
             claimed={!!mLogin.is_claimed}
-            title="다음날 재접속(출석)"
-            desc="KST 기준 다음날 접속하면 완료로 처리됩니다."
+            title="?�음???�접??출석)"
+            desc="KST 기�? ?�음???�속?�면 ?�료�?처리?�니??"
             onClaim={() => handleClaim(mLogin.id, mLogin.title)}
             isClaiming={processingId === mLogin.id}
           />
@@ -364,9 +364,9 @@ const NewUserWelcomePage: React.FC = () => {
       </div>
 
       <div className="mt-6 rounded-3xl border border-white/10 bg-black/40 p-5 text-sm text-white/65 backdrop-blur">
-        <p className="font-bold text-white">입금은 필수 조건</p>
+        <p className="font-bold text-white">?�금?� ?�수 조건</p>
         <p className="mt-1">
-          미션 보상은 금고에 즉시 적립됩니다.
+          미션 보상?� 금고??즉시 ?�립?�니??
         </p>
         <div className="mt-3 flex gap-2">
           <a
@@ -375,13 +375,13 @@ const NewUserWelcomePage: React.FC = () => {
             rel="noopener noreferrer"
             className="rounded-xl bg-emerald-500/15 px-4 py-2 text-xs font-black text-emerald-200 hover:bg-emerald-500/20"
           >
-            씨씨카지노 바로가기
+            ?�씨카�???바로가�?
           </a>
         </div>
       </div>
 
       <Modal
-        title="🎉 미션 완료!"
+        title="?�� 미션 ?�료!"
         open={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
       >
@@ -390,17 +390,17 @@ const NewUserWelcomePage: React.FC = () => {
             <Trophy className="h-10 w-10 text-emerald-400" />
           </div>
           <p className="whitespace-pre-wrap text-lg font-bold text-white">
-            {successMessage || "보상이 지급되었습니다."}
+            {successMessage || "보상??지급되?�습?�다."}
           </p>
           <p className="mt-2 text-sm text-white/60">
-            지금 바로 금고 및 지갑을 확인해보세요.
+            지�?바로 금고 �?지갑을 ?�인?�보?�요.
           </p>
 
           <button
             onClick={() => setShowSuccessModal(false)}
             className="mt-6 w-full rounded-xl bg-gray-700 py-3.5 text-sm font-bold text-white hover:bg-gray-600"
           >
-            확인
+            ?�인
           </button>
         </div>
       </Modal>

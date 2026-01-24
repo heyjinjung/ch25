@@ -34,11 +34,11 @@ export interface WithdrawResponse {
 
 export const vaultApi = {
   getStatus: async (): Promise<VaultStatusResponse> => {
-    const response = await v2Client.get<VaultStatusResponse>("/api/v2/vault/status");
+    const response = await v2Client.get<VaultStatusResponse>("/api/vault/status");
     return response.data;
   },
   withdraw: async (data: WithdrawRequest): Promise<WithdrawResponse> => {
-    const response = await v2Client.post<WithdrawResponse>("/api/v2/vault/withdraw", data);
+    const response = await v2Client.post<WithdrawResponse>("/api/vault/withdraw", data);
     return response.data;
   },
 };

@@ -25,7 +25,7 @@ const VaultAdminPage: React.FC = () => {
             <header className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-                        금고 자산 관리 <span className="text-admin-brand/40">Vault</span>
+                        금고 ?�산 관�?<span className="text-admin-brand/40">Vault</span>
                     </h1>
                 </div>
             </header>
@@ -44,8 +44,8 @@ const VaultAdminPage: React.FC = () => {
                 <div className="col-span-12 lg:col-span-8 flex flex-col h-full">
                     <div className="flex-1 bg-admin-card border border-admin-border/50 rounded-xl overflow-hidden flex flex-col">
                         <div className="px-5 py-3 border-b border-admin-border/50 flex items-center justify-between bg-zinc-900/50">
-                            <h2 className="text-lg font-bold text-white">출금 요청 처리</h2>
-                            <span className="text-xs text-zinc-500">실시간 요청 대기열</span>
+                            <h2 className="text-lg font-bold text-white">출금 ?�청 처리</h2>
+                            <span className="text-xs text-zinc-500">?�시�??�청 ?�기열</span>
                         </div>
                         <div className="flex-1 overflow-hidden p-0">
                             <VaultRequestManager refreshKey={refreshKey} />
@@ -58,7 +58,7 @@ const VaultAdminPage: React.FC = () => {
                     {/* Top Earners */}
                     <div className="flex-1 bg-admin-card border border-admin-border/50 rounded-xl overflow-hidden flex flex-col">
                         <div className="px-5 py-3 border-b border-admin-border/50 flex items-center justify-between bg-zinc-900/50">
-                            <h2 className="text-lg font-bold text-white">자산 리스크 모니터링</h2>
+                            <h2 className="text-lg font-bold text-white">?�산 리스??모니?�링</h2>
                         </div>
                         <div className="flex-1 overflow-auto custom-scrollbar p-0">
                             <VaultTopEarners refreshKey={refreshKey} />
@@ -71,7 +71,7 @@ const VaultAdminPage: React.FC = () => {
             <section className="pt-2">
                 <div className="bg-admin-card border border-admin-border/50 rounded-xl overflow-hidden">
                     <div className="px-5 py-3 border-b border-admin-border/50 bg-zinc-900/50">
-                        <h2 className="text-lg font-bold text-white">설정 및 로그</h2>
+                        <h2 className="text-lg font-bold text-white">?�정 �?로그</h2>
                     </div>
                     <div className="p-0">
                         <VaultControlPanel onBalanceUpdate={triggerRefresh} />

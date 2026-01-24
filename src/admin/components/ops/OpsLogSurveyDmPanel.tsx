@@ -18,13 +18,13 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
 
   const handleSubmit = async () => {
     if (!message.trim()) {
-      addToast("메시지 내용을 입력해주세요.", "error");
+      addToast("메시지 ?�용???�력?�주?�요.", "error");
       return;
     }
 
     const piiHits = findPiiHits(message);
     if (piiHits.length > 0) {
-      addToast(`PII 의심 패턴 감지(${piiHits[0].type}): 기록차단`, "error");
+      addToast(`PII ?�심 ?�턴 감�?(${piiHits[0].type}): 기록차단`, "error");
       return;
     }
 
@@ -44,10 +44,10 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
           ref_id: `DM-${date}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
         }
       });
-      addToast("DM 발송 로그가 기록되었습니다.", "success");
+      addToast("DM 발송 로그가 기록?�었?�니??", "success");
       setMessage("");
     } catch (err: any) {
-      addToast("로그 기록 실패: " + err.message, "error");
+      addToast("로그 기록 ?�패: " + err.message, "error");
     }
   };
 
@@ -58,43 +58,43 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
           <MessageSquare className="h-5 w-5" />
         </div>
         <div>
-          <h3 className="text-admin-subtitle text-admin-text-primary">설문/DM 로거</h3>
-          <p className="text-xs text-admin-text-secondary">설문조사 및 공지 DM 발송 기록</p>
+          <h3 className="text-admin-subtitle text-admin-text-primary">?�문/DM 로거</h3>
+          <p className="text-xs text-admin-text-secondary">?�문조사 �?공�? DM 발송 기록</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-1">
           <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider flex items-center gap-2">
-            <Users className="h-3 w-3" /> 대상 그룹
+            <Users className="h-3 w-3" /> ?�??그룹
           </label>
           <select
             id="ops-log-survey-dm-target-group"
             value={targetGroup}
             onChange={(e) => setTargetGroup(e.target.value)}
             className="admin-input w-full"
-            aria-label="대상 그룹"
-            title="대상 그룹"
+            aria-label="?�??그룹"
+            title="?�??그룹"
           >
-            <option value="ALL_ACTIVE">전체 활성 사용자</option>
-            <option value="VIP_ONLY">VIP 전용</option>
-            <option value="NEW_USERS">신규 사용자 (최근 7일)</option>
-            <option value="CHURN_RISK">이탈 위험 세그먼트</option>
+            <option value="ALL_ACTIVE">?�체 ?�성 ?�용??/option>
+            <option value="VIP_ONLY">VIP ?�용</option>
+            <option value="NEW_USERS">?�규 ?�용??(최근 7??</option>
+            <option value="CHURN_RISK">?�탈 ?�험 ?�그먼트</option>
           </select>
         </div>
 
         <div className="space-y-1">
           <label className="text-xs font-bold text-admin-text-secondary uppercase tracking-wider">
-            메시지 내용
+            메시지 ?�용
           </label>
           <textarea
             id="ops-log-survey-dm-message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="발송할 메시지 내용 입력..."
+            placeholder="발송??메시지 ?�용 ?�력..."
             className="admin-input w-full h-32 resize-none"
-            aria-label="메시지 내용"
-            title="메시지 내용"
+            aria-label="메시지 ?�용"
+            title="메시지 ?�용"
           />
         </div>
 
@@ -105,7 +105,7 @@ const OpsLogSurveyDmPanel: React.FC<OpsLogSurveyDmPanelProps> = ({ date }) => {
             className="btn-admin-primary flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
-            <span>설문/DM 로그 기록</span>
+            <span>?�문/DM 로그 기록</span>
           </button>
         </div>
       </div>

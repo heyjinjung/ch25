@@ -30,32 +30,32 @@ const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
 const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
-  { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
-  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
-  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
+  { title: "?�씨?�용?�기", icon: assets.iconWallet, href: "https://ccc-010.com" },
+  { title: "금고?�비??, icon: assets.iconSecurity, to: "/vault" },
+  { title: "?�인?�게?�하�?, icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초�?", icon: assets.iconPeople, href: noticeLink },
 ];
 
 const bento = [
   {
     title: "2x",
-    description: "어디와도 비교불가한 포인트서비스",
+    description: "?�디?�??비교불�????�인?�서비스",
     highlight: true,
     icon: null,
   },
   {
-    title: "빠르고 신속한 고객응대 서비스",
+    title: "빠르�??�속??고객?��? ?�비??,
     description: "",
     icon: assets.bentoEfficiency,
     fallback: assets.vectorBar,
   },
   {
-    title: "안전하고 빠른 환전",
+    title: "?�전?�고 빠른 ?�전",
     icon: assets.bentoFastExchange,
     fallback: assets.vectorStreamline,
   },
   {
-    title: "고객만족도 1위",
+    title: "고객만족??1??,
     icon: assets.bentoCustomerSat,
     fallback: assets.img130,
   },
@@ -71,7 +71,7 @@ const Events: React.FC = () => (
       className="relative block w-full max-w-[624px] overflow-hidden rounded-[20px]"
       style={{ aspectRatio: "624/348" }}
     >
-      <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
+      <img src={assets.headerImage} alt="?�벤??배너" className="absolute inset-0 h-full w-full object-contain" />
     </a>
   </section>
 );
@@ -79,7 +79,7 @@ const Events: React.FC = () => (
 const OngoingEvents: React.FC = () => (
   <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[40px] py-[20px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: "#394508" }}>
-      진행중인 이벤트
+      진행중인 ?�벤??
     </h2>
     <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
       {[1, 2].map((key) => (
@@ -94,7 +94,7 @@ const OngoingEvents: React.FC = () => (
             <img src={key === 1 ? assets.benefitImage1 : assets.benefitImage2} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
-            {key === 1 ? "신년이벤트 내금고 열기" : "금고머니 적립이벤트"}
+            {key === 1 ? "?�년?�벤???�금�??�기" : "금고머니 ?�립?�벤??}
           </p>
         </a>
       ))}
@@ -105,7 +105,7 @@ const OngoingEvents: React.FC = () => (
 const HowToUse: React.FC = () => (
   <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[20px] pb-[20px] lg:px-[40px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
-      지민이벤트 이용하는 법
+      지민이벤트 ?�용?�는 �?
     </h2>
     <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => {
@@ -154,7 +154,7 @@ const BentoGrid: React.FC = () => (
   <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] py-[20px] lg:px-[40px]">
     <div className="text-center">
       <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
-        지민이와 함께하는 씨씨카지노
+        지민이?� ?�께?�는 ?�씨카�???
       </h2>
     </div>
     <div className="flex flex-col gap-[20px] items-center w-full">
@@ -196,7 +196,7 @@ const BentoGrid: React.FC = () => (
           >
             <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
               {item.icon && (
-                <div className="relative" style={{ height: item.title === "고객만족도 1위" ? 67.5 : 112, width: item.title === "고객만족도 1위" ? 199.281 : 124.31 }}>
+                <div className="relative" style={{ height: item.title === "고객만족??1?? ? 67.5 : 112, width: item.title === "고객만족??1?? ? 199.281 : 124.31 }}>
                   <img
                     src={item.icon}
                     alt={item.title}

@@ -105,17 +105,17 @@ const AnimatedCountdown: React.FC<Props> = ({
       {showDays && model.days > 0 ? (
         <>
           <Segment value={String(model.days)} />
-          <span className="mx-1">일</span>
+          <span className="mx-1">??/span>
         </>
       ) : null}
       <Segment value={pad2(model.hours)} />
-      <span className="ml-1">시간</span>
+      <span className="ml-1">?�간</span>
       <span className="mx-1" />
       <Segment value={pad2(model.minutes)} />
-      <span className="ml-1">분</span>
+      <span className="ml-1">�?/span>
       <span className="mx-1" />
       <Segment value={pad2(model.seconds)} />
-      <span className="ml-1">초</span>
+      <span className="ml-1">�?/span>
       {suffix ? <span className="ml-2">{suffix}</span> : null}
     </span>
   );

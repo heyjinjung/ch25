@@ -22,12 +22,12 @@ const InventoryPage: React.FC = () => {
         mutationFn: ({ item_type, amount }: { item_type: string; amount: number }) => useInventoryItem(item_type, amount),
         onSuccess: (data) => {
             tryHaptic(20);
-            addToast(`사용 완료: ${data.reward_token} x${data.reward_amount} 지급됨`, "success");
+            addToast(`?�용 ?�료: ${data.reward_token} x${data.reward_amount} 지급됨`, "success");
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
             queryClient.invalidateQueries({ queryKey: ['vault-status'] });
         },
         onError: (error: any) => {
-            const msg = error.response?.data?.detail || "사용 실패";
+            const msg = error.response?.data?.detail || "?�용 ?�패";
             tryHaptic(50); // Error heavy haptic
             addToast(msg, "error");
         }
@@ -37,11 +37,11 @@ const InventoryPage: React.FC = () => {
         mutationFn: ({ target_token_type }: { target_token_type: string }) => adminApi.post("/api/exchange/craft", { target_token_type }),
         onSuccess: (data: any) => {
             tryHaptic(20);
-            addToast(`제작 완료: ${data.reward_token} x${data.reward_amount}`, "success");
+            addToast(`?�작 ?�료: ${data.reward_token} x${data.reward_amount}`, "success");
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
         },
         onError: (error: any) => {
-            const msg = error.response?.data?.detail || "제작 실패";
+            const msg = error.response?.data?.detail || "?�작 ?�패";
             tryHaptic(50);
             addToast(msg, "error");
         }
@@ -55,8 +55,8 @@ const InventoryPage: React.FC = () => {
         return (
             <div className="mx-auto w-full max-w-lg py-16 flex flex-col items-center justify-center">
                 <Loader2 className="w-10 h-10 animate-spin text-figma-accent" />
-                <p className="mt-4 text-white/50 text-sm font-medium">인벤토리 불러오는 중...</p>
-                {/* Joyride 타겟 프리홀더 (로딩 중에도 크래시 방지) */}
+                <p className="mt-4 text-white/50 text-sm font-medium">?�벤?�리 불러?�는 �?..</p>
+                {/* Joyride ?��??�리?�??(로딩 중에???�래??방�?) */}
                 <div className="sr-only" data-tour="inventory-items-tab" />
                 <div className="sr-only" data-tour="inventory-wallet-tab" />
                 <div className="sr-only" data-tour="inventory-shop-btn" />
@@ -71,8 +71,8 @@ const InventoryPage: React.FC = () => {
                     <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-black/30 ring-1 ring-white/10">
                         <img src="/assets/icons/locker-dynamic-color.png" className="w-10 h-10 object-contain" alt="" />
                     </div>
-                    <div className="text-sm font-black text-white/90">데이터 로딩 실패</div>
-                    <div className="mt-1 text-[11px] font-medium text-white/50">인벤토리 정보를 불러오지 못했습니다.</div>
+                    <div className="text-sm font-black text-white/90">?�이??로딩 ?�패</div>
+                    <div className="mt-1 text-[11px] font-medium text-white/50">?�벤?�리 ?�보�?불러?��? 못했?�니??</div>
                 </div>
             </div>
         );
@@ -83,15 +83,15 @@ const InventoryPage: React.FC = () => {
             {/* Header */}
             <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 h-14 flex items-center justify-between" data-tour="inventory-link">
                 <h1 className="text-[15px] font-bold text-white flex items-center gap-1.5 tracking-tight">
-                    <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain" alt="보상함" />
-                    보상함
+                    <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain" alt="보상?? />
+                    보상??
                 </h1>
                 <button
                     onClick={() => navigate('/shop')}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[15px] font-bold text-white/70 border border-white/5"
                 >
-                    <img src="/assets/icons/icon_cart.png" className="w-5 h-5 object-contain opacity-70" alt="교환소" />
-                    교환소
+                    <img src="/assets/icons/icon_cart.png" className="w-5 h-5 object-contain opacity-70" alt="교환?? />
+                    교환??
                 </button>
             </div>
 
@@ -104,7 +104,7 @@ const InventoryPage: React.FC = () => {
                         disabled
                         className="relative flex-1 py-3.5 text-sm font-black rounded-xl transition-all bg-gradient-to-r from-figma-primary to-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)] overflow-hidden"
                     >
-                        <span className="relative z-10">보유함</span>
+                        <span className="relative z-10">보유??/span>
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shine" />
                     </button>
                     <button
@@ -116,7 +116,7 @@ const InventoryPage: React.FC = () => {
                         }}
                         className="flex-1 py-3.5 text-sm font-black rounded-xl transition-all text-white/60 hover:text-white hover:bg-white/10 active:scale-[0.98] hover:shadow-md"
                     >
-                        상점
+                        ?�점
                     </button>
                 </div>
                 <div className="sr-only" data-tour="inventory-shop-btn" />
@@ -126,7 +126,7 @@ const InventoryPage: React.FC = () => {
             <div className="space-y-6 animate-fadeIn">
                 <div>
                     <div className="mb-3 flex items-baseline justify-between">
-                        <h2 className="text-sm font-black text-white/90">보유 아이템</h2>
+                        <h2 className="text-sm font-black text-white/90">보유 ?�이??/h2>
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {items.filter(it => it.quantity > 0).length === 0 ? (
@@ -139,7 +139,7 @@ const InventoryPage: React.FC = () => {
                                         alt=""
                                     />
                                 </div>
-                                <p className="text-white/20 text-sm font-bold tracking-tight">보유한 아이템이 없습니다</p>
+                                <p className="text-white/20 text-sm font-bold tracking-tight">보유???�이?�이 ?�습?�다</p>
                             </div>
                         ) : (
                             items
@@ -166,7 +166,7 @@ const InventoryPage: React.FC = () => {
 
                 <div>
                     <div className="mb-3 flex items-baseline justify-between">
-                        <h2 className="text-[14px] font-black text-white/90">티켓 지갑</h2>
+                        <h2 className="text-[14px] font-black text-white/90">?�켓 지�?/h2>
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {[
@@ -201,12 +201,12 @@ interface ItemCardProps {
 
 const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
     const GIFTICON_BRAND_LABEL: Record<string, string> = {
-        CC_COIN: "씨씨코인",
-        BAEMIN: "배민",
-        STARBUCKS: "스타벅스",
+        CC_COIN: "?�씨코인",
+        BAEMIN: "배�?",
+        STARBUCKS: "?��?벅스",
         CU: "CU",
         GS25: "GS25",
-        COMPOSE_AMERICANO: "컴포즈 아아",
+        COMPOSE_AMERICANO: "컴포�??�아",
     };
 
     const getGifticonInfo = (itemType: string) => {
@@ -218,16 +218,16 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
         const brandCodeRaw = (amountMatch?.[1] ?? plainMatch?.[1] ?? "").toUpperCase();
         const amount = amountMatch ? Number(amountMatch[2]) : null;
 
-        const brandLabel = GIFTICON_BRAND_LABEL[brandCodeRaw] ?? "기프티콘";
+        const brandLabel = GIFTICON_BRAND_LABEL[brandCodeRaw] ?? "기프?�콘";
         const title = amount
             ? `${brandLabel}`
             : `${brandLabel}`;
 
-        const sub = amount ? `${amount.toLocaleString()}원` : "기프티콘";
+        const sub = amount ? `${amount.toLocaleString()}?? : "기프?�콘";
 
         const desc = brandCodeRaw === "CC_COIN"
-            ? "대기 중"
-            : "수기 지급";
+            ? "?��?�?
+            : "?�기 지�?;
 
         let iconPath = "/assets/icons/icon_cart.png";
         if (brandCodeRaw === "CC_COIN") {
@@ -248,58 +248,58 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
 
     const INFO: Record<string, { title: string; sub: string; desc: string; icon: React.ReactNode; rarity: 'common' | 'rare' | 'epic' | 'legendary' }> = {
         "VOUCHER_GOLD_KEY_1": {
-            title: "골드키",
+            title: "골드??,
             sub: "",
             desc: "즉시 교환",
             icon: <img src="/assets/icons/goldkey.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'epic'
         },
         "VOUCHER_DIAMOND_KEY_1": {
-            title: "다이아키",
+            title: "?�이?�키",
             sub: "",
             desc: "즉시 교환",
             icon: <img src="/assets/icons/diakey.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'legendary'
         },
         "VOUCHER_DICE_TOKEN_1": {
-            title: "주사위",
+            title: "주사??,
             sub: "",
             desc: "즉시 교환",
             icon: <img src="/assets/icon_dice_silver.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'rare'
         },
         "VOUCHER_ROULETTE_COIN_1": {
-            title: "룰렛 티켓",
+            title: "룰렛 ?�켓",
             sub: "",
             desc: "즉시 교환",
             icon: <img src="/assets/asset_ticket_green.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'rare'
         },
         "VOUCHER_LOTTERY_TICKET_1": {
-            title: "복권 티켓",
+            title: "복권 ?�켓",
             sub: "",
             desc: "즉시 교환",
             icon: <img src="/assets/lottery/icon_lotto_ball.webp" className="w-full h-full object-contain" alt="" />,
             rarity: 'rare'
         },
         "DIAMOND": {
-            title: "다이아",
+            title: "?�이??,
             sub: "",
-            desc: "상점 재화",
+            desc: "?�점 ?�화",
             icon: <img src="/assets/icon_diamond.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'legendary'
         },
         "GOLD_KEY_FRAGMENT": {
-            title: "골드키 조각",
-            sub: "10개 모아 제작",
-            desc: "제작 재료",
+            title: "골드??조각",
+            sub: "10�?모아 ?�작",
+            desc: "?�작 ?�료",
             icon: <img src="/assets/icons/gold_key_fragment.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'rare'
         },
         "DIAMOND_KEY_FRAGMENT": {
-            title: "다이아키 조각",
-            sub: "30개 모아 제작",
-            desc: "제작 재료",
+            title: "?�이?�키 조각",
+            sub: "30�?모아 ?�작",
+            desc: "?�작 ?�료",
             icon: <img src="/assets/icons/diamond_key_fragment.png" className="w-full h-full object-contain" alt="" />,
             rarity: 'epic'
         }
@@ -311,7 +311,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
     const info = INFO[item.item_type] || (gifticonInfo ? { ...gifticonInfo, rarity: 'epic' } : {
         title: item.item_type,
         sub: "",
-        desc: "보유 중",
+        desc: "보유 �?,
         icon: <img src="/assets/icons/locker-dynamic-color.png" className="w-full h-full object-contain opacity-50" alt="" />,
         rarity: 'common'
     });
@@ -388,7 +388,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
                         className="w-full h-9 flex items-center justify-center bg-white/10 hover:bg-white/20 disabled:bg-black/20 disabled:text-white/20 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-xl border border-white/5 transition-colors shadow-lg"
                         style={{ transform: "translateZ(20px)" }}
                     >
-                        {item.item_type === "DIAMOND" ? "보유중" : (item.item_type.includes("FRAGMENT") ? "제작하기 (Craft)" : (isPendingFulfillment ? "지급대기" : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "사용하기")))}
+                        {item.item_type === "DIAMOND" ? "보유�? : (item.item_type.includes("FRAGMENT") ? "?�작?�기 (Craft)" : (isPendingFulfillment ? "지급�?�? : (isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "?�용?�기")))}
                     </button>
                 </div>
             </div>
@@ -398,12 +398,12 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, onUse, isPending }) => {
 
 const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType, amount }) => {
     const WALLET_INFO: Record<string, { title: string; icon: string }> = {
-        "ROULETTE_COIN": { title: "룰렛 티켓", icon: "/assets/asset_ticket_green.png" },
-        "DICE_TOKEN": { title: "주사위 티켓", icon: "/assets/icon_dice_silver.png" },
-        "LOTTERY_TICKET": { title: "복권 티켓", icon: "/assets/lottery/icon_lotto_ball.webp" },
-        "GOLD_KEY": { title: "골드 키", icon: "/assets/icons/goldkey.png" },
-        "DIAMOND_KEY": { title: "다이아 키", icon: "/assets/icons/diakey.png" },
-        "TRIAL_TOKEN": { title: "체험 티켓", icon: "/assets/asset_ticket_trial.png" }
+        "ROULETTE_COIN": { title: "룰렛 ?�켓", icon: "/assets/asset_ticket_green.png" },
+        "DICE_TOKEN": { title: "주사???�켓", icon: "/assets/icon_dice_silver.png" },
+        "LOTTERY_TICKET": { title: "복권 ?�켓", icon: "/assets/lottery/icon_lotto_ball.webp" },
+        "GOLD_KEY": { title: "골드 ??, icon: "/assets/icons/goldkey.png" },
+        "DIAMOND_KEY": { title: "?�이????, icon: "/assets/icons/diakey.png" },
+        "TRIAL_TOKEN": { title: "체험 ?�켓", icon: "/assets/asset_ticket_trial.png" }
     };
 
     const info = WALLET_INFO[tokenType] || { title: tokenType, icon: "" };
@@ -429,7 +429,7 @@ const WalletCard: React.FC<{ tokenType: string; amount: number }> = ({ tokenType
                     <span className="text-2xl font-black text-white tracking-tighter tabular-nums">
                         {amount.toLocaleString()}
                     </span>
-                    <span className="text-[10px] font-bold text-white/30">개</span>
+                    <span className="text-[10px] font-bold text-white/30">�?/span>
                 </div>
             </div>
 

@@ -1,4 +1,4 @@
-// src/v2/pages/game/LotteryPage.tsx
+// src/pages/game/LotteryPage.tsx
 import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,7 +9,7 @@ import LotteryCollectionModal from "../../components/lottery/LotteryCollectionMo
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./LotteryRedesign.css";
 
-const ASSET_PATH = "/v2/assets/04lotto";
+const ASSET_PATH = "/assets/04lotto";
 
 const LotteryPage: React.FC = () => {
   const { playLotteryScratch, stopLotteryScratch, playLotteryWin } = useSound();
@@ -202,7 +202,7 @@ const LotteryPage: React.FC = () => {
         />
         <img
           ref={ball4Ref}
-          src="/v2/assets/01home/5.png"
+          src="/assets/01home/5.png"
           className="mixing-ball ball-4 w-[100px] h-[100px]"
           alt=""
         />
@@ -241,7 +241,7 @@ const LotteryPage: React.FC = () => {
       {data && data.prizes && (
         <div className="lottery-prize-section">
           <div className="lottery-prize-header">
-            <h3>당첨 가능 경품 리스트</h3>
+            <h3>?�첨 가??경품 리스??/h3>
             <span className="lottery-prize-count">Total {data.prizes.length} Items</span>
           </div>
 
@@ -252,11 +252,11 @@ const LotteryPage: React.FC = () => {
                 className={`lottery-prize-item ${prize.is_active === false ? "inactive" : ""}`}
               >
                 <div className="prize-item-bg">
-                  <img src="/v2/assets/04lotto/Mix balls 1.png" className="w-full h-full object-cover" alt="" />
+                  <img src="/assets/04lotto/Mix balls 1.png" className="w-full h-full object-cover" alt="" />
                 </div>
 
                 <div className="prize-icon-container">
-                  <img src="/v2/assets/04lotto/Mix balls 2.png" className="prize-icon" alt="" />
+                  <img src="/assets/04lotto/Mix balls 2.png" className="prize-icon" alt="" />
                 </div>
 
                 <div className="prize-info">

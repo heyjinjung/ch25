@@ -1,0 +1,66 @@
+﻿{
+    "id":  2,
+    "name":  "Common Roulette (VIP)",
+    "grade":  "VIP",
+    "ticketType":  "ROULETTE_TICKET",
+    "maxDailySpins":  0,
+    "isActive":  true,
+    "segments":  [
+                     {
+                         "id":  7,
+                         "slotIndex":  0,
+                         "label":  "100 P",
+                         "weight":  30,
+                         "rewardType":  "VAULT",
+                         "rewardAmount":  100,
+                         "isJackpot":  false
+                     },
+                     {
+                         "id":  8,
+                         "slotIndex":  1,
+                         "label":  "200 P",
+                         "weight":  25,
+                         "rewardType":  "VAULT",
+                         "rewardAmount":  200,
+                         "isJackpot":  false
+                     },
+                     {
+                         "id":  9,
+                         "slotIndex":  2,
+                         "label":  "500 P",
+                         "weight":  15,
+                         "rewardType":  "VAULT",
+                         "rewardAmount":  500,
+                         "isJackpot":  false
+                     },
+                     {
+                         "id":  10,
+                         "slotIndex":  3,
+                         "label":  "?",
+                         "weight":  17,
+                         "rewardType":  "NONE",
+                         "rewardAmount":  0,
+                         "isJackpot":  false
+                     },
+                     {
+                         "id":  11,
+                         "slotIndex":  4,
+                         "label":  "200 XP",
+                         "weight":  8,
+                         "rewardType":  "NONE",
+                         "rewardAmount":  200,
+                         "isJackpot":  true
+                     },
+                     {
+                         "id":  12,
+                         "slotIndex":  5,
+                         "label":  "?? 1?P",
+                         "weight":  5,
+                         "rewardType":  "VAULT",
+                         "rewardAmount":  10000,
+                         "isJackpot":  true
+                     }
+                 ],
+    "createdAt":  "2026-01-24T05:52:35+09:00",
+    "updatedAt":  "2026-01-24T13:31:30+09:00"
+}

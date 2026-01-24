@@ -14,7 +14,7 @@ const ConnectPage: React.FC = () => {
 
     const handleConnect = async () => {
         if (!initData) {
-            addToast("텔레그램 연결 정보를 찾을 수 없습니다. 텔레그램 앱 내에서 실행해 주세요.", "error");
+            addToast("?�레그램 ?�결 ?�보�?찾을 ???�습?�다. ?�레그램 ???�에???�행??주세??", "error");
             return;
         }
 
@@ -22,11 +22,11 @@ const ConnectPage: React.FC = () => {
         try {
             const response = await telegramApi.auth(initData, startParam || undefined);
             login(response.access_token, response.user);
-            addToast("성공적으로 연결되었습니다!", "success");
+            addToast("?�공?�으�??�결?�었?�니??", "success");
             navigate("/landing");
         } catch (error) {
             console.error("[CONNECT] Authentication failed", error);
-            addToast("연결에 실패했습니다. 다시 시도해 주세요.", "error");
+            addToast("?�결???�패?�습?�다. ?�시 ?�도??주세??", "error");
         } finally {
             setIsConnecting(false);
         }
@@ -39,11 +39,11 @@ const ConnectPage: React.FC = () => {
             </div>
 
             <h1 className="text-3xl font-bold mb-3 text-center bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                계정 연결하기
+                계정 ?�결?�기
             </h1>
 
             <p className="text-slate-400 text-center mb-10 max-w-xs">
-                게임을 플레이하고 진행 상황을 안전하게 저장하려면 텔레그램 계정을 연결해 주세요.
+                게임???�레?�하�?진행 ?�황???�전?�게 ?�?�하?�면 ?�레그램 계정???�결??주세??
             </p>
 
             <button
@@ -57,15 +57,15 @@ const ConnectPage: React.FC = () => {
                 {isConnecting ? (
                     <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        연결 중...
+                        ?�결 �?..
                     </>
                 ) : (
-                    "텔레그램으로 연결"
+                    "?�레그램?�로 ?�결"
                 )}
             </button>
 
             <p className="mt-8 text-xs text-slate-500 text-center">
-                연결 시 이용약관 및 개인정보 처리방침에 동의하는 것으로 간주됩니다.
+                ?�결 ???�용?��? �?개인?�보 처리방침???�의?�는 것으�?간주?�니??
             </p>
         </div>
     );

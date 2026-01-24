@@ -41,7 +41,7 @@ const SeasonProgressWidget: React.FC = () => {
                         <div>
                             <h3 className="text-white font-bold text-lg leading-none mb-1">Season Pass</h3>
                             <p className="text-indigo-200 text-xs font-medium">
-                                {atMaxLevel ? "최대 레벨 달성" : "Keep growing to unlock rewards"}
+                                {atMaxLevel ? "최�? ?�벨 ?�성" : "Keep growing to unlock rewards"}
                             </p>
                         </div>
                         <div className="text-right">

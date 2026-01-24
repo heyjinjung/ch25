@@ -43,10 +43,10 @@ export default function ModalVisibilityPage() {
   const mutation = useMutation({
     mutationFn: (newVal: any) => upsertAdminUiConfig(CONFIG_KEY, { value: newVal }),
     onSuccess: () => {
-      addToast("저장되었습니다.", "success");
+      addToast("?�?�되?�습?�다.", "success");
       queryClient.invalidateQueries({ queryKey: ["adminUiConfig", CONFIG_KEY] });
     },
-    onError: () => addToast("저장 실패", "error"),
+    onError: () => addToast("?�???�패", "error"),
   });
 
   const handleToggle = (key: string) => {
@@ -63,20 +63,20 @@ export default function ModalVisibilityPage() {
   if (isLoading) return <div className="p-8 text-white">Loading...</div>;
 
   const toggles = [
-      { key: "attendance_streak_enabled", label: "출석 스트릭 (Streak)" },
-      { key: "new_user_welcome_enabled", label: "신규 유저 웰컴 (NewUserWelcome)" },
-      { key: "starter_missions_enabled", label: "스타터 미션 (StarterMissions)" },
-      { key: "golden_hour_enabled", label: "골든 아워 (GoldenHour)" },
-      { key: "vip_promo_enabled", label: "VIP 프로모션 (VipPromo)" },
-      { key: "vip_eligibility_enabled", label: "VIP 자격 확인 (VipEligibility)" },
-      { key: "inbox_enabled", label: "인박스/알림함 (Inbox)" },
-      { key: "vault_info_enabled", label: "금고 정보 (VaultInfo)" },
+      { key: "attendance_streak_enabled", label: "출석 ?�트�?(Streak)" },
+      { key: "new_user_welcome_enabled", label: "?�규 ?��? ?�컴 (NewUserWelcome)" },
+      { key: "starter_missions_enabled", label: "?��???미션 (StarterMissions)" },
+      { key: "golden_hour_enabled", label: "골든 ?�워 (GoldenHour)" },
+      { key: "vip_promo_enabled", label: "VIP ?�로모션 (VipPromo)" },
+      { key: "vip_eligibility_enabled", label: "VIP ?�격 ?�인 (VipEligibility)" },
+      { key: "inbox_enabled", label: "?�박???�림??(Inbox)" },
+      { key: "vault_info_enabled", label: "금고 ?�보 (VaultInfo)" },
       { key: "withdrawal_conditions_enabled", label: "출금 조건 (WithdrawalConditions)" },
       { key: "withdrawal_progress_enabled", label: "출금 진행 (WithdrawalProgress)" },
       { key: "lottery_collection_enabled", label: "복권 모음 (LotteryCollection)" },
-      { key: "limited_offer_enabled", label: "한정 오퍼 (LimitedOffer)" },
-      { key: "season_pass_enabled", label: "시즌 패스 (SeasonPass)" },
-      { key: "ticket_zero_enabled", label: "티켓 제로 (TicketZero)" },
+      { key: "limited_offer_enabled", label: "?�정 ?�퍼 (LimitedOffer)" },
+      { key: "season_pass_enabled", label: "?�즌 ?�스 (SeasonPass)" },
+      { key: "ticket_zero_enabled", label: "?�켓 ?�로 (TicketZero)" },
   ];
 
   return (
@@ -84,14 +84,14 @@ export default function ModalVisibilityPage() {
         <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold flex items-center gap-2">
                 <ToggleRight className="text-admin-brand" />
-                모달 노출 제어 (Global Gate)
+                모달 ?�출 ?�어 (Global Gate)
             </h1>
         </div>
         
         <div className="bg-admin-card rounded-xl p-6 border border-admin-border space-y-6 shadow-xl">
             <p className="text-sm text-admin-text-muted mb-4">
-                이곳에서 앱 전체의 주요 팝업/모달 노출 여부를 강제로 제어할 수 있습니다. <br/>
-                긴급 상황이거나 UX 테스트 시에만 변경하세요. (OFF 시 사용자에게 뜨지 않습니다)
+                ?�곳?�서 ???�체??주요 ?�업/모달 ?�출 ?��?�?강제�??�어?????�습?�다. <br/>
+                긴급 ?�황?�거??UX ?�스???�에�?변경하?�요. (OFF ???�용?�에�??��? ?�습?�다)
             </p>
 
             <div className="flex flex-col gap-4">
@@ -121,10 +121,10 @@ export default function ModalVisibilityPage() {
 
             <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-admin-border/50">
                  <button onClick={() => refetch()} className="px-4 py-2 bg-admin-card-hover rounded hover:bg-white/10 text-sm flex items-center gap-2 transition-colors">
-                    <RefreshCw size={16} /> 새로고침
+                    <RefreshCw size={16} /> ?�로고침
                  </button>
                  <button onClick={onSave} disabled={mutation.isPending} className="btn-admin-primary flex items-center gap-2 px-6 py-2">
-                    <Save size={16} /> 변경사항 저장
+                    <Save size={16} /> 변경사???�??
                  </button>
             </div>
         </div>

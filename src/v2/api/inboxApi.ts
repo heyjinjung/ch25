@@ -1,4 +1,4 @@
-// src/v2/api/inboxApi.ts
+// src/api/inboxApi.ts
 import { v2Client } from "./client";
 
 // ============================================================================
@@ -31,7 +31,7 @@ export interface MarkInboxReadResponse {
 
 export const getV2Inbox = async (): Promise<InboxListResponse> => {
   try {
-    const response = await v2Client.get<InboxListResponse>("/api/v2/inbox");
+    const response = await v2Client.get<InboxListResponse>("/api/inbox");
     return response.data;
   } catch (error) {
     console.error("[inboxApi] Failed to fetch V2 inbox", error);
@@ -41,7 +41,7 @@ export const getV2Inbox = async (): Promise<InboxListResponse> => {
 
 export const markV2InboxRead = async (request: MarkInboxReadRequest): Promise<MarkInboxReadResponse> => {
   try {
-    const response = await v2Client.patch<MarkInboxReadResponse>("/api/v2/inbox/read", request);
+    const response = await v2Client.patch<MarkInboxReadResponse>("/api/inbox/read", request);
     return response.data;
   } catch (error) {
     console.error("[inboxApi] Failed to mark V2 inbox messages as read", error);

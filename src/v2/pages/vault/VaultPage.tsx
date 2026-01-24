@@ -1,4 +1,4 @@
-// src/v2/pages/vault/VaultPage.tsx
+// src/pages/vault/VaultPage.tsx
 import { useLayoutEffect, useRef, useState } from "react";
 import { useV2Vault } from "../../hooks/useV2Vault";
 import { useSound } from "../../../hooks/useSound";
@@ -6,7 +6,7 @@ import gsap from "gsap";
 import "./VaultRedesign.css";
 import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModal";
 
-const ASSET_PATH = "/v2/assets/05valut";
+const ASSET_PATH = "/assets/05valut";
 
 const VaultPage: React.FC = () => {
   const { useVaultStatus, useWithdraw } = useV2Vault();
@@ -52,7 +52,7 @@ const VaultPage: React.FC = () => {
   }, [vault]);
 
   const handleWithdraw = () => {
-    if (window.confirm("출금을 신청하시겠습니까?")) {
+    if (window.confirm("출금???�청?�시겠습?�까?")) {
       withdrawMutation.mutate({ amount: vault?.availableBalance || 0 });
     }
   };
@@ -69,7 +69,7 @@ const VaultPage: React.FC = () => {
     return (
       <div className="flex h-[760px] w-[390px] mx-auto items-center justify-center bg-black px-6 text-center">
         <p className="text-white/40">
-          오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+          ?�류가 발생?�습?�다. ?�시 ???�시 ?�도?�주?�요.
         </p>
       </div>
     );
@@ -124,7 +124,7 @@ const VaultPage: React.FC = () => {
             <div className="card-content">
               <div className="progress-labels">
                 <span className="text-[12px] opacity-80">
-                  {vault.vaultBalance?.toLocaleString() || 0}원 / 10,000원
+                  {vault.vaultBalance?.toLocaleString() || 0}??/ 10,000??
                 </span>
               </div>
               <div className="custom-progress-bar-container">
@@ -143,7 +143,7 @@ const VaultPage: React.FC = () => {
       {/* Action Footer */}
       <div className="vault-action-footer">
         <div className="footer-top-row">
-          <a href="/v2/home" className="vault-footer-btn vault-home-link">
+          <a href="/home" className="vault-footer-btn vault-home-link">
             <img
               src={`${ASSET_PATH}/Frame 16.png`}
               className="casino-logo"
@@ -154,7 +154,7 @@ const VaultPage: React.FC = () => {
             className="vault-footer-btn vault-guide-button"
             onClick={() => setShowGuideModal(true)}
           >
-            출금안내 조건
+            출금?�내 조건
           </button>
         </div>
         <button
@@ -162,7 +162,7 @@ const VaultPage: React.FC = () => {
           onClick={handleWithdraw}
           disabled={withdrawMutation.isPending}
         >
-          {withdrawMutation.isPending ? "처리중..." : "금고 출금하기"}
+          {withdrawMutation.isPending ? "처리�?.." : "금고 출금?�기"}
         </button>
       </div>
 

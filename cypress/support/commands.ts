@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
-Cypress.Commands.add("loginAdmin", (username = "admin", password = "2026") => {
-  cy.visit("/v2/admin/login");
+Cypress.Commands.add("loginAdmin", (username = "admin", password = "2wP?+!Etm8#Qv4Mn") => {
+  cy.visit("/admin/login");
   
   // Try data-testid first, then fallback to placeholders/tags
   cy.get("body").then(($body) => {

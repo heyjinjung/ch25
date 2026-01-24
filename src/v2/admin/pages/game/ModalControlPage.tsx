@@ -11,20 +11,20 @@ import { useV2StreakRules } from "../../../hooks/useV2Mission";
 const CONFIG_KEY = "modal_visibility";
 
 const MODAL_TOGGLES = [
-  { key: "attendance_streak_enabled", label: "출석 스트릭 모달", description: "연속 출석 보상 모달" },
-  { key: "new_user_welcome_enabled", label: "신규 유저 웰컴", description: "신규 가입자 환영 모달" },
-  { key: "starter_missions_enabled", label: "스타터 미션", description: "초보자 미션 안내 모달" },
-  { key: "golden_hour_enabled", label: "골든아워", description: "골든아워 이벤트 모달" },
-  { key: "vip_promo_enabled", label: "VIP 프로모션", description: "VIP 혜택 안내 모달" },
-  { key: "vip_eligibility_enabled", label: "VIP 자격", description: "VIP 승급 안내 모달" },
-  { key: "inbox_enabled", label: "인박스", description: "수신함 알림 모달" },
-  { key: "vault_info_enabled", label: "볼트 정보", description: "볼트 시스템 설명 모달" },
-  { key: "withdrawal_conditions_enabled", label: "출금 조건", description: "출금 요구사항 안내 모달" },
-  { key: "withdrawal_progress_enabled", label: "출금 진행", description: "출금 진행상황 모달" },
-  { key: "lottery_collection_enabled", label: "복권 수집", description: "복권 수집 현황 모달" },
-  { key: "limited_offer_enabled", label: "한정 오퍼", description: "기간 한정 특가 모달" },
-  { key: "season_pass_enabled", label: "시즌패스", description: "시즌 패스 광고 모달" },
-  { key: "ticket_zero_enabled", label: "티켓 제로", description: "티켓 소진 안내 모달" },
+  { key: "attendance_streak_enabled", label: "출석 ?�트�?모달", description: "?�속 출석 보상 모달" },
+  { key: "new_user_welcome_enabled", label: "?�규 ?��? ?�컴", description: "?�규 가?�자 ?�영 모달" },
+  { key: "starter_missions_enabled", label: "?��???미션", description: "초보??미션 ?�내 모달" },
+  { key: "golden_hour_enabled", label: "골든?�워", description: "골든?�워 ?�벤??모달" },
+  { key: "vip_promo_enabled", label: "VIP ?�로모션", description: "VIP ?�택 ?�내 모달" },
+  { key: "vip_eligibility_enabled", label: "VIP ?�격", description: "VIP ?�급 ?�내 모달" },
+  { key: "inbox_enabled", label: "?�박??, description: "?�신???�림 모달" },
+  { key: "vault_info_enabled", label: "볼트 ?�보", description: "볼트 ?�스???�명 모달" },
+  { key: "withdrawal_conditions_enabled", label: "출금 조건", description: "출금 ?�구?�항 ?�내 모달" },
+  { key: "withdrawal_progress_enabled", label: "출금 진행", description: "출금 진행?�황 모달" },
+  { key: "lottery_collection_enabled", label: "복권 ?�집", description: "복권 ?�집 ?�황 모달" },
+  { key: "limited_offer_enabled", label: "?�정 ?�퍼", description: "기간 ?�정 ?��? 모달" },
+  { key: "season_pass_enabled", label: "?�즌?�스", description: "?�즌 ?�스 광고 모달" },
+  { key: "ticket_zero_enabled", label: "?�켓 ?�로", description: "?�켓 ?�진 ?�내 모달" },
 ];
 
 export default function ModalControlPage() {
@@ -93,10 +93,10 @@ export default function ModalControlPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
             <Power className="w-8 h-8 text-indigo-400" />
-            모달 제어 (Modal Control)
+            모달 ?�어 (Modal Control)
           </h1>
           <p className="text-sm text-zinc-400">
-            전체 모달의 노출 여부를 제어합니다. OFF 시 해당 모달은 완전히 차단됩니다.
+            ?�체 모달???�출 ?��?�??�어?�니?? OFF ???�당 모달?� ?�전??차단?�니??
           </p>
         </div>
         <div className="flex gap-2">
@@ -106,7 +106,7 @@ export default function ModalControlPage() {
             onClick={handleRefresh}
           >
             <RefreshCw className="w-4 h-4" />
-            새로고침
+            ?�로고침
           </Button>
           <Button
             variant="outline"
@@ -114,7 +114,7 @@ export default function ModalControlPage() {
             onClick={() => setShowPreview(!showPreview)}
           >
             <Eye className="w-4 h-4" />
-            {showPreview ? "미리보기 닫기" : "모달 미리보기"}
+            {showPreview ? "미리보기 ?�기" : "모달 미리보기"}
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 gap-2"
@@ -122,7 +122,7 @@ export default function ModalControlPage() {
             disabled={!isDirty || updateMutation.isPending}
           >
             <Save className="w-4 h-4" />
-            {updateMutation.isPending ? "저장 중..." : "변경사항 저장"}
+            {updateMutation.isPending ? "?�??�?.." : "변경사???�??}
           </Button>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function ModalControlPage() {
                 <div className="flex items-center gap-2 text-xs">
                   <ToggleLeft className={`w-4 h-4 ${isEnabled ? "text-emerald-500" : "text-red-500"}`} />
                   <span className={isEnabled ? "text-emerald-500" : "text-red-500"}>
-                    {isEnabled ? "활성화됨" : "비활성화됨"}
+                    {isEnabled ? "?�성?�됨" : "비활?�화??}
                   </span>
                 </div>
               </CardContent>
@@ -177,9 +177,9 @@ export default function ModalControlPage() {
       {showPreview && (
         <Card className="bg-[#18181B] border-white/5">
           <CardHeader>
-            <CardTitle className="text-lg">모달 미리보기 - 출석 스트릭</CardTitle>
+            <CardTitle className="text-lg">모달 미리보기 - 출석 ?�트�?/CardTitle>
             <CardDescription>
-              실제 사용자에게 표시되는 모달의 미리보기입니다.
+              ?�제 ?�용?�에�??�시?�는 모달??미리보기?�니??
             </CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center items-center min-h-[400px] bg-black/20 rounded-lg">
@@ -203,7 +203,7 @@ export default function ModalControlPage() {
       {/* Status Footer */}
       {isDirty && (
         <div className="fixed bottom-6 right-6 bg-yellow-900/90 border border-yellow-500/50 rounded-lg px-4 py-2 shadow-xl">
-          <p className="text-sm text-yellow-200">변경사항이 저장되지 않았습니다.</p>
+          <p className="text-sm text-yellow-200">변경사??�� ?�?�되지 ?�았?�니??</p>
         </div>
       )}
     </div>

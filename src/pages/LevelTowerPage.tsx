@@ -6,7 +6,7 @@ import clsx from "clsx";
 import AnimatedNumber from "../components/common/AnimatedNumber";
 import { tryHaptic } from "../utils/haptics";
 
-/* Assets - 기존 시즌패스 아이콘 재사용 */
+/* Assets - 기존 ?�즌?�스 ?�이�??�사??*/
 const ICON_NODE_CURRENT = "/assets/season_pass/icon_node_current.png";
 const ICON_NODE_LOCKED = "/assets/season_pass/icon_node_locked.png";
 const ICON_NODE_CLEARED = "/assets/season_pass/icon_node_cleared.png";
@@ -29,7 +29,7 @@ const LevelTowerPage: React.FC = () => {
         window.open(url, "_blank", "noopener,noreferrer");
     };
 
-    // 페이지 진입 시 진동
+    // ?�이지 진입 ??진동
     useEffect(() => {
         if (!hasTriggeredHaptic.current) {
             tryHaptic(15); // light haptic
@@ -37,7 +37,7 @@ const LevelTowerPage: React.FC = () => {
         }
     }, []);
 
-    // 레벨업 임박 시 (80%+) 알림 진동
+    // ?�벨???�박 ??(80%+) ?�림 진동
     useEffect(() => {
         if (season.data) {
             const { current_level, current_xp, levels } = season.data;
@@ -105,7 +105,7 @@ const LevelTowerPage: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/70 border-t-transparent" />
-                <p className="text-white/60 text-sm">레벨 정보 로딩 중...</p>
+                <p className="text-white/60 text-sm">?�벨 ?�보 로딩 �?..</p>
             </div>
         );
     }
@@ -187,7 +187,7 @@ const LevelTowerPage: React.FC = () => {
                                         {isCurrent && (
                                             <div className="text-right">
                                                 <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                                                    {view.remainingXp} XP 남음
+                                                    {view.remainingXp} XP ?�음
                                                 </p>
                                             </div>
                                         )}
@@ -232,7 +232,7 @@ const LevelTowerPage: React.FC = () => {
                 className="mt-4 w-full max-w-sm mx-auto flex items-center justify-center gap-2 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-black text-base shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-[0.98] transition-all"
             >
                 <Gamepad2 size={20} />
-                게임하고 금고적립
+                게임?�고 금고?�립
             </Link>
 
             {/* Collapsible Missions */}
@@ -241,7 +241,7 @@ const LevelTowerPage: React.FC = () => {
                     onClick={handleMissionToggle}
                     className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-medium"
                 >
-                    <span>📋 XP 획득 방법</span>
+                    <span>?�� XP ?�득 방법</span>
                     {missionsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                 </button>
 
@@ -257,10 +257,10 @@ const LevelTowerPage: React.FC = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <p className="text-sm font-black text-white">CC이동</p>
-                                    <span className="text-[10px] font-bold text-white/30">(외부 충전)</span>
+                                    <p className="text-sm font-black text-white">CC?�동</p>
+                                    <span className="text-[10px] font-bold text-white/30">(?��? 충전)</span>
                                 </div>
-                                <p className="text-xs font-semibold text-white/60">10만원당 +20 XP</p>
+                                <p className="text-xs font-semibold text-white/60">10만원??+20 XP</p>
                             </div>
                         </button>
 
@@ -270,11 +270,11 @@ const LevelTowerPage: React.FC = () => {
                             className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/5 active:bg-white/10"
                         >
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-black/30">
-                                <span className="text-xl">🎁</span>
+                                <span className="text-xl">?��</span>
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm font-black text-white">이벤트 참여</p>
-                                <p className="text-xs font-semibold text-white/60">지민 공지채널</p>
+                                <p className="text-sm font-black text-white">?�벤??참여</p>
+                                <p className="text-xs font-semibold text-white/60">지�?공�?채널</p>
                             </div>
                         </button>
                     </div>

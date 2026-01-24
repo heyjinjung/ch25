@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
     const trimmedId = externalId.trim();
     if (!trimmedId) {
       setLoading(false);
-      setError("ID를 입력해주세요.");
+      setError("ID�??�력?�주?�요.");
       return;
     }
     try {
@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
       navigate(resolvePostLoginPath(), { replace: true });
     } catch (err) {
       console.error("[LoginPage] login error", err);
-      setError("로그인에 실패했습니다. 다시 시도해 주세요.");
+      setError("로그?�에 ?�패?�습?�다. ?�시 ?�도??주세??");
     } finally {
       setLoading(false);
     }
@@ -88,15 +88,15 @@ const LoginPage: React.FC = () => {
 
               <div className="space-y-3">
                 <h1 className="text-2xl font-black tracking-tight text-white">
-                  텔레그램 인증이 필요해요
+                  ?�레그램 ?�증???�요?�요
                 </h1>
                 <p className="text-sm font-medium text-white/65 leading-relaxed">
                   {isTelegramWebView
-                    ? "텔레그램 세션 확인에 실패했어요. 잠시 후 다시 시도하거나, 봇에서 다시 열어주세요."
-                    : "현재 화면은 텔레그램 앱에서 열어야 이용할 수 있어요. 아래 버튼으로 다시 접속해주세요."}
+                    ? "?�레그램 ?�션 ?�인???�패?�어?? ?�시 ???�시 ?�도?�거?? 봇에???�시 ?�어주세??"
+                    : "?�재 ?�면?� ?�레그램 ?�에???�어???�용?????�어?? ?�래 버튼?�로 ?�시 ?�속?�주?�요."}
                 </p>
                 <p className="text-xs text-white/45">
-                  접속 경로: <span className="text-[#30FF75] font-bold">@{telegramBotUsername}</span>
+                  ?�속 경로: <span className="text-[#30FF75] font-bold">@{telegramBotUsername}</span>
                 </p>
               </div>
 
@@ -108,7 +108,7 @@ const LoginPage: React.FC = () => {
                   className="flex items-center justify-center gap-3 w-full py-4 rounded-xl bg-figma-primary text-white font-black shadow-[0_6px_18px_rgba(0,0,0,0.35)] hover:brightness-110 active:scale-[0.98] transition"
                 >
                   <img src="/assets/icon_telegram_button.png" alt="" className="w-8 h-8 object-contain" />
-                  텔레그램으로 열기
+                  ?�레그램?�로 ?�기
                 </a>
 
                 <button
@@ -116,14 +116,14 @@ const LoginPage: React.FC = () => {
                   onClick={() => window.location.reload()}
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm font-black text-white/80 hover:bg-white/10"
                 >
-                  다시 시도
+                  ?�시 ?�도
                 </button>
               </div>
             </div>
           </div>
 
           <div className="mt-6 text-center text-xs text-white/20">
-            문제가 계속되면 텔레그램에서 다시 접속해주세요.
+            문제가 계속?�면 ?�레그램?�서 ?�시 ?�속?�주?�요.
           </div>
         </div>
       </div>
@@ -138,14 +138,14 @@ const LoginPage: React.FC = () => {
 
       <header className="relative z-10 space-y-4 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-300 to-amber-600 shadow-lg shadow-amber-500/20">
-          <span className="text-2xl">👑</span>
+          <span className="text-2xl">?��</span>
         </div>
         <div>
           <h1 className="text-2xl font-black tracking-tight text-white">
             CC CASINO<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">VIP ACCESS</span>
           </h1>
-          <p className="mt-2 text-sm font-medium text-amber-500/80">지민코드 전용 포인트서비스</p>
+          <p className="mt-2 text-sm font-medium text-amber-500/80">지민코???�용 ?�인?�서비스</p>
         </div>
       </header>
 
@@ -158,7 +158,7 @@ const LoginPage: React.FC = () => {
             value={externalId}
             onChange={(e) => setExternalId(e.target.value)}
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 transition focus:border-amber-500/50 focus:bg-white/10 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
-            placeholder="부여받은 ID 입력"
+            placeholder="부?�받?� ID ?�력"
           />
         </div>
         <div className="space-y-1.5">
@@ -168,7 +168,7 @@ const LoginPage: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 transition focus:border-amber-500/50 focus:bg-white/10 focus:outline-none focus:ring-4 focus:ring-amber-500/10"
-            placeholder="패스워드 (Optional)"
+            placeholder="?�스?�드 (Optional)"
           />
         </div>
       </div>

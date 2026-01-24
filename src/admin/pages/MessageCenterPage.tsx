@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,8 +28,8 @@ import {
 import { fetchSegmentRules } from "../api/adminSegmentRulesApi";
 
 const messageSchema = z.object({
-    title: z.string().min(1, "제목을 입력해주세요"),
-    content: z.string().min(1, "내용을 입력해주세요"),
+    title: z.string().min(1, "?쒕ぉ???낅젰?댁＜?몄슂"),
+    content: z.string().min(1, "?댁슜???낅젰?댁＜?몄슂"),
     target_type: z.enum(["ALL", "SEGMENT", "TAG", "USER"] as const),
     target_value: z.string().optional(),
     channels: z.array(z.string()).optional(),
@@ -37,7 +37,7 @@ const messageSchema = z.object({
 
 type MessageFormData = z.infer<typeof messageSchema>;
 
-const MessageCenterPage: React.FC = () => {
+export const MessageCenterPage: React.FC = () => {
     const queryClient = useQueryClient();
     const page = 0;
     const [editingMessage, setEditingMessage] = useState<AdminMessage | null>(null);
@@ -136,11 +136,11 @@ const MessageCenterPage: React.FC = () => {
             <header className="flex flex-col gap-4">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-                        메시지 센터 <span className="text-admin-brand/40">Messages</span>
+                        硫붿떆吏 ?쇳꽣 <span className="text-admin-brand/40">Messages</span>
                     </h1>
                 </div>
                 <p className="text-admin-body text-admin-text-secondary font-medium">
-                    회원에게 메시지를 전송하고 전송 내역을 실시간으로 조회합니다.
+                    ?뚯썝?먭쾶 硫붿떆吏瑜??꾩넚?섍퀬 ?꾩넚 ?댁뿭???ㅼ떆媛꾩쑝濡?議고쉶?⑸땲??
                 </p>
             </header>
 
@@ -153,23 +153,23 @@ const MessageCenterPage: React.FC = () => {
                                 {editingMessage ? (
                                     <>
                                         <Edit3 className="h-5 w-5 text-admin-brand" />
-                                        메시지 내역 수정
+                                        硫붿떆吏 ?댁뿭 ?섏젙
                                     </>
                                 ) : (
                                     <>
                                         <Send className="h-5 w-5 text-admin-brand" />
-                                        메시지 전송 폼
+                                        硫붿떆吏 ?꾩넚 ??
                                     </>
                                 )}
                             </h2>
                             <p className="text-xs text-admin-text-secondary mt-1">
-                                {editingMessage ? "이미 발송된 메시지의 내용을 수정합니다. 유저 인박스에도 즉시 반영됩니다." : "발송 대상과 내용을 정확히 입력한 후 전송하세요."}
+                                {editingMessage ? "?대? 諛쒖넚??硫붿떆吏???댁슜???섏젙?⑸땲?? ?좎? ?몃컯?ㅼ뿉??利됱떆 諛섏쁺?⑸땲??" : "諛쒖넚 ??곴낵 ?댁슜???뺥솗???낅젰?????꾩넚?섏꽭??"}
                             </p>
                         </div>
 
                         {/* Title */}
                         <div className="space-y-3">
-                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">메시지 제목</label>
+                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">硫붿떆吏 ?쒕ぉ</label>
                             <Controller
                                 name="title"
                                 control={control}
@@ -177,7 +177,7 @@ const MessageCenterPage: React.FC = () => {
                                     <input
                                         {...field}
                                         type="text"
-                                        placeholder="메시지 제목을 입력하세요"
+                                        placeholder="硫붿떆吏 ?쒕ぉ???낅젰?섏꽭??
                                         className="admin-input w-full h-11"
                                     />
                                 )}
@@ -192,13 +192,13 @@ const MessageCenterPage: React.FC = () => {
                         {/* Content */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">메시지 내용</label>
+                                <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">硫붿떆吏 ?댁슜</label>
                                 <Controller
                                     name="content"
                                     control={control}
                                     render={({ field }) => (
                                         <span className={`text-[10px] font-bold ${field.value.length > 500 ? "text-admin-danger" : "text-admin-text-muted"}`}>
-                                            {field.value.length} / 1000자
+                                            {field.value.length} / 1000??
                                         </span>
                                     )}
                                 />
@@ -209,7 +209,7 @@ const MessageCenterPage: React.FC = () => {
                                 render={({ field }) => (
                                     <textarea
                                         {...field}
-                                        placeholder="메시지 내용을 입력하세요 (최대 1000자)"
+                                        placeholder="硫붿떆吏 ?댁슜???낅젰?섏꽭??(理쒕? 1000??"
                                         className="admin-textarea w-full resize-none custom-scrollbar"
                                     />
                                 )}
@@ -224,19 +224,19 @@ const MessageCenterPage: React.FC = () => {
                         {/* Target Type */}
                         <div
                             className={`space-y-3 ${editingMessage ? "opacity-80 pointer-events-none" : ""}`}
-                            title={editingMessage ? "수정 시 발송 대상 변경은 불가능합니다." : ""}
+                            title={editingMessage ? "?섏젙 ??諛쒖넚 ???蹂寃쎌? 遺덇??ν빀?덈떎." : ""}
                         >
-                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">발송 대상</label>
+                            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">諛쒖넚 ???/label>
                             <Controller
                                 name="target_type"
                                 control={control}
                                 render={({ field }) => (
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {[
-                                            { value: "ALL" as const, label: "전체", icon: Users },
-                                            { value: "SEGMENT" as const, label: "세그먼트", icon: Users },
-                                            { value: "TAG" as const, label: "태그", icon: Tag },
-                                            { value: "USER" as const, label: "개별", icon: User },
+                                            { value: "ALL" as const, label: "?꾩껜", icon: Users },
+                                            { value: "SEGMENT" as const, label: "?멸렇癒쇳듃", icon: Users },
+                                            { value: "TAG" as const, label: "?쒓렇", icon: Tag },
+                                            { value: "USER" as const, label: "媛쒕퀎", icon: User },
                                         ].map((option) => {
                                             const Icon = option.icon;
                                             return (
@@ -275,7 +275,7 @@ const MessageCenterPage: React.FC = () => {
                                 render={({ field }) => (
                                     <div className="space-y-3">
                                         <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">
-                                            대상 식별자 {editingMessage ? "(변경 불가)" : ""}
+                                            ????앸퀎??{editingMessage ? "(蹂寃?遺덇?)" : ""}
                                         </label>
                                         
                                         {watchedTargetType === "SEGMENT" ? (
@@ -284,7 +284,7 @@ const MessageCenterPage: React.FC = () => {
                                                     {...field}
                                                     className="admin-input w-full h-11 appearance-none cursor-pointer bg-admin-sidebar hover:border-admin-brand/50 transition-colors"
                                                 >
-                                                    <option value="">세그먼트를 선택하세요</option>
+                                                    <option value="">?멸렇癒쇳듃瑜??좏깮?섏꽭??/option>
                                                     {distinctSegments.map((seg) => (
                                                         <option key={seg} value={seg}>{seg}</option>
                                                     ))}
@@ -303,10 +303,10 @@ const MessageCenterPage: React.FC = () => {
                                                 disabled={watchedTargetType === "ALL"}
                                                 placeholder={
                                                     watchedTargetType === "ALL"
-                                                        ? "전체 발송은 대상 식별자가 필요 없습니다."
+                                                        ? "?꾩껜 諛쒖넚? ????앸퀎?먭? ?꾩슂 ?놁뒿?덈떎."
                                                         : watchedTargetType === "TAG" 
-                                                            ? "태그명 입력 (예: VIP, BLACKLIST)"
-                                                            : "사용자 ID (로그인 ID 또는 고유번호)"
+                                                            ? "?쒓렇紐??낅젰 (?? VIP, BLACKLIST)"
+                                                            : "?ъ슜??ID (濡쒓렇??ID ?먮뒗 怨좎쑀踰덊샇)"
                                                 }
                                                 className={`admin-input w-full h-11 ${(!!editingMessage || watchedTargetType === "ALL")
                                                     ? "bg-admin-sidebar/50"
@@ -327,7 +327,7 @@ const MessageCenterPage: React.FC = () => {
                                     onClick={handleCancelEdit}
                                     className="flex-1 btn-admin-secondary h-12 flex items-center justify-center gap-2 text-base font-black"
                                 >
-                                    취소
+                                    痍⑥냼
                                 </button>
                             )}
                             <button
@@ -337,12 +337,12 @@ const MessageCenterPage: React.FC = () => {
                             >
                                 {(sendMutation.isPending || updateMutation.isPending) ? (
                                     <>
-                                        <RefreshCw className="h-5 w-5 animate-spin" /> {editingMessage ? "수정 중..." : "전송 중..."}
+                                        <RefreshCw className="h-5 w-5 animate-spin" /> {editingMessage ? "?섏젙 以?.." : "?꾩넚 以?.."}
                                     </>
                                 ) : (
                                     <>
                                         {editingMessage ? <Edit3 className="h-5 w-5" /> : <Send className="h-5 w-5" />}
-                                        {editingMessage ? "수정 사항 적용" : "메시지 전송"}
+                                        {editingMessage ? "?섏젙 ?ы빆 ?곸슜" : "硫붿떆吏 ?꾩넚"}
                                     </>
                                 )}
                             </button>
@@ -356,9 +356,9 @@ const MessageCenterPage: React.FC = () => {
                         <div className="admin-card-premium p-6 border-l-4 border-admin-accent animate-in slide-in-from-right-4">
                             <div className="flex items-center gap-2 text-admin-accent mb-2">
                                 <CheckCircle2 className="h-5 w-5" />
-                                <h3 className="text-admin-subtitle font-black">전송 완료</h3>
+                                <h3 className="text-admin-subtitle font-black">?꾩넚 ?꾨즺</h3>
                             </div>
-                            <p className="text-xs text-admin-text-secondary">메시지가 성공적으로 발송되었습니다.</p>
+                            <p className="text-xs text-admin-text-secondary">硫붿떆吏媛 ?깃났?곸쑝濡?諛쒖넚?섏뿀?듬땲??</p>
                         </div>
                     )}
 
@@ -366,20 +366,20 @@ const MessageCenterPage: React.FC = () => {
                         <div className="admin-card-premium p-6 border-l-4 border-admin-danger">
                             <div className="flex items-center gap-2 text-admin-danger mb-2">
                                 <AlertCircle className="h-5 w-5" />
-                                <h3 className="text-admin-subtitle font-black">전송 실패</h3>
+                                <h3 className="text-admin-subtitle font-black">?꾩넚 ?ㅽ뙣</h3>
                             </div>
                             <p className="text-xs text-admin-text-secondary">
-                                {sendMutation.error instanceof Error ? sendMutation.error.message : "알 수 없는 오류가 발생했습니다."}
+                                {sendMutation.error instanceof Error ? sendMutation.error.message : "?????녿뒗 ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎."}
                             </p>
                         </div>
                     )}
 
                     <div className="admin-card-premium p-6">
-                        <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">전송 가이드</h4>
+                        <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">?꾩넚 媛?대뱶</h4>
                         <div className="space-y-3 text-xs text-admin-text-secondary leading-relaxed">
-                            <p>• 전체 발송 시 모든 활성 회원에게 메시지가 전송됩니다.</p>
-                            <p>• 세그먼트/태그 발송 시 해당 그룹의 회원만 수신합니다.</p>
-                            <p>• 개별 발송 시 사용자 ID를 정확히 입력해주세요.</p>
+                            <p>???꾩껜 諛쒖넚 ??紐⑤뱺 ?쒖꽦 ?뚯썝?먭쾶 硫붿떆吏媛 ?꾩넚?⑸땲??</p>
+                            <p>???멸렇癒쇳듃/?쒓렇 諛쒖넚 ???대떦 洹몃９???뚯썝留??섏떊?⑸땲??</p>
+                            <p>??媛쒕퀎 諛쒖넚 ???ъ슜??ID瑜??뺥솗???낅젰?댁＜?몄슂.</p>
                         </div>
                     </div>
                 </div>
@@ -389,13 +389,13 @@ const MessageCenterPage: React.FC = () => {
             <div className="space-y-6">
                 <div className="flex items-center justify-between pl-1">
                     <h2 className="text-admin-subtitle font-black text-admin-text-primary flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-admin-brand" /> 메시지 전송 내역
+                        <Clock className="h-5 w-5 text-admin-brand" /> 硫붿떆吏 ?꾩넚 ?댁뿭
                     </h2>
                     <button
                         onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "messages"] })}
                         className="btn-admin-secondary flex items-center gap-2 px-4 py-2 h-auto"
                     >
-                        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+                        <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?덈줈怨좎묠
                     </button>
                 </div>
 
@@ -403,7 +403,7 @@ const MessageCenterPage: React.FC = () => {
                     {isLoading ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4">
                             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-                            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+                            <p className="text-admin-meta text-admin-text-secondary">?곗씠??濡쒕뵫 以?..</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto custom-scrollbar">
@@ -411,19 +411,19 @@ const MessageCenterPage: React.FC = () => {
                                 <thead>
                                     <tr className="admin-th">
                                         <th className="px-4 py-3.5 text-left">ID</th>
-                                        <th className="px-4 py-3.5 text-left">제목</th>
-                                        <th className="px-4 py-3.5 text-left">발송 대상</th>
-                                        <th className="px-4 py-3.5 text-right">대상 수</th>
-                                        <th className="px-4 py-3.5 text-right">읽음 수</th>
-                                        <th className="px-4 py-3.5 text-right">발송 시각</th>
-                                        <th className="px-4 py-3.5 text-center">액션</th>
+                                        <th className="px-4 py-3.5 text-left">?쒕ぉ</th>
+                                        <th className="px-4 py-3.5 text-left">諛쒖넚 ???/th>
+                                        <th className="px-4 py-3.5 text-right">?????/th>
+                                        <th className="px-4 py-3.5 text-right">?쎌쓬 ??/th>
+                                        <th className="px-4 py-3.5 text-right">諛쒖넚 ?쒓컖</th>
+                                        <th className="px-4 py-3.5 text-center">?≪뀡</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {messages?.length === 0 ? (
                                         <tr>
                                             <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                                                조회된 메시지가 없습니다.
+                                                議고쉶??硫붿떆吏媛 ?놁뒿?덈떎.
                                             </td>
                                         </tr>
                                     ) : (
@@ -449,18 +449,18 @@ const MessageCenterPage: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleEdit(msg)}
-                                                            aria-label={`메시지 수정 (ID: ${msg.id})`}
-                                                            title={`메시지 수정 (ID: ${msg.id})`}
+                                                            aria-label={`硫붿떆吏 ?섏젙 (ID: ${msg.id})`}
+                                                            title={`硫붿떆吏 ?섏젙 (ID: ${msg.id})`}
                                                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
                                                         >
                                                             <Edit3 className="h-4 w-4" />
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => { if (confirm("정말 삭제하시겠습니까? (유저 함함에서도 사라집니다)")) deleteMutation.mutate(msg.id); }}
+                                                            onClick={() => { if (confirm("?뺣쭚 ??젣?섏떆寃좎뒿?덇퉴? (?좎? ?⑦븿?먯꽌???щ씪吏묐땲??")) deleteMutation.mutate(msg.id); }}
                                                             disabled={deleteMutation.isPending}
-                                                            aria-label={`메시지 삭제 (ID: ${msg.id})`}
-                                                            title={`메시지 삭제 (ID: ${msg.id})`}
+                                                            aria-label={`硫붿떆吏 ??젣 (ID: ${msg.id})`}
+                                                            title={`硫붿떆吏 ??젣 (ID: ${msg.id})`}
                                                             className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors disabled:opacity-50"
                                                         >
                                                             <Trash2 className="h-4 w-4" />

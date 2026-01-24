@@ -1,4 +1,4 @@
-// src/v2/api/index.ts
+// src/api/index.ts
 // V2 API Client Barrel Export
 
 export * from "./gameApi";

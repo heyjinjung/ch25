@@ -34,13 +34,13 @@ const StreakOverviewPage: React.FC = () => {
         try {
             const res = await claimStreakReward();
             if (res.success) {
-                addToast("보상을 획득했습니다!", "success");
+                addToast("보상???�득?�습?�다!", "success");
                 queryClient.invalidateQueries({ queryKey: ['streak-rules'] });
                 fetchMissions(); // Refresh store
                 return true;
             }
         } catch {
-            addToast("보상 획득 실패", "error");
+            addToast("보상 ?�득 ?�패", "error");
         }
         return false;
     };
@@ -57,11 +57,11 @@ const StreakOverviewPage: React.FC = () => {
                 <button 
                   onClick={() => navigate(-1)}
                   className="p-2 -ml-2 text-white/50 hover:text-white transition-colors"
-                  aria-label="뒤로가기"
+                  aria-label="?�로가�?
                 >
                     <ChevronLeft size={24} />
                 </button>
-                <h1 className="text-lg font-bold text-white">스트릭 모아보기</h1>
+                <h1 className="text-lg font-bold text-white">?�트�?모아보기</h1>
             </div>
 
             <div className="p-4 space-y-6">

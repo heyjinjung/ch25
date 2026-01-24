@@ -1,4 +1,4 @@
-// src/v2/pages/inventory/InventoryPage.tsx
+// src/pages/inventory/InventoryPage.tsx
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,7 +8,7 @@ import {
 import { useV2Vault } from "../../hooks/useV2Vault";
 import "./InventoryPage.css";
 
-const ASSET_PATH = "/v2/assets/06shop";
+const ASSET_PATH = "/assets/06shop";
 
 export default function InventoryPage() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ export default function InventoryPage() {
   const items = data?.items ?? [];
 
   const handleUseItem = (itemType: string) => {
-    if (window.confirm("아이템을 사용하시겠습니까?")) {
+    if (window.confirm("?�이?�을 ?�용?�시겠습?�까?")) {
       useItemMutation.mutate({ item_type: itemType, quantity: 1 });
     }
   };
@@ -76,7 +76,7 @@ export default function InventoryPage() {
   if (error) {
     return (
       <div className="exchange-page-v2 inventory-specific items-center justify-center px-6 text-center">
-        <p className="text-white/40">오류가 발생했습니다.</p>
+        <p className="text-white/40">?�류가 발생?�습?�다.</p>
       </div>
     );
   }
@@ -86,15 +86,15 @@ export default function InventoryPage() {
       <div className="shop-tabs-container">
         <div
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
-          onClick={() => navigate("/v2/shop")}
+          onClick={() => navigate("/shop")}
         >
-          상점
+          ?�점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => setActiveTab("inventory")}
         >
-          인벤토리
+          ?�벤?�리
         </div>
       </div>
 
@@ -102,11 +102,11 @@ export default function InventoryPage() {
         {/* Summary Banner (Mirrors shop banner style) */}
         <div className="inventory-summary-banner">
           <img
-            src="/v2/assets/06shop/banner.png"
+            src="/assets/06shop/banner.png"
             className="summary-banner-img"
             alt="inventory summary"
           />
-          <div className="banner-info-btn">내 인벤토리</div>
+          <div className="banner-info-btn">???�벤?�리</div>
         </div>
 
         {/* Wallet Strip */}
@@ -114,7 +114,7 @@ export default function InventoryPage() {
           <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
             <div className="flex flex-col">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보관금 (VAULT)
+                보�?�?(VAULT)
               </span>
               <span className="text-lg font-black text-white italic">
                 {(vaultStatus?.vaultBalance || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">P</span>
@@ -123,7 +123,7 @@ export default function InventoryPage() {
             <div className="w-px h-8 bg-white/10 mx-2" />
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보유 토큰
+                보유 ?�큰
               </span>
               <span className="text-lg font-black text-[#FF7A00] italic">
                 {(vaultStatus?.ticketCount || 0).toLocaleString()} <span className="text-[10px] not-italic opacity-50 ml-0.5">T</span>
@@ -168,8 +168,8 @@ export default function InventoryPage() {
               Inventory Tip
             </p>
             <p className="text-[11px] text-white/60 leading-relaxed">
-              아이템을 사용하여 게임에서 특별한 보너스를 받을 수 있습니다.<br />
-              사용된 아이템은 즉시 소모되며 효과가 발생합니다.
+              ?�이?�을 ?�용?�여 게임?�서 ?�별??보너?��? 받을 ???�습?�다.<br />
+              ?�용???�이?��? 즉시 ?�모?�며 ?�과가 발생?�니??
             </p>
           </div>
         </div>

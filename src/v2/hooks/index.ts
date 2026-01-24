@@ -1,4 +1,4 @@
-// src/v2/hooks/index.ts
+// src/hooks/index.ts
 // V2 Hooks Barrel Export
 
 export * from "./useV2Game";

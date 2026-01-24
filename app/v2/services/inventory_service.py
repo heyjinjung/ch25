@@ -371,6 +371,7 @@ class V2InventoryService:
         item_type: str,
         amount: int,
         idempotency_key: str | None = None,
+        legacy_user_id: int | None = None,
         *,
         auto_commit: bool = True,
     ) -> dict:
@@ -391,9 +392,10 @@ class V2InventoryService:
         request_payload = {"item_type": item_type, "amount": amount}
         idem_record = None
         if auto_commit and idempotency_key:
+            idem_user_id = legacy_user_id or v2_user_id
             idem_record, existing = IdempotencyService.begin(
                 db,
-                user_id=v2_user_id,
+                user_id=idem_user_id,
                 scope="v2_inventory_use",
                 idempotency_key=idempotency_key,
                 request_payload=request_payload,

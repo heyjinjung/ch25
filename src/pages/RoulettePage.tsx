@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 // Remove createPortal as we use inline Game Toast now
 // TODO: [VERIFY] When playing with Gold/Diamond Key, ensure UI shows Vault Accrual animation, NOT XP.
 // TODO: [VERIFY] If Ticket Reward is won, ensure it flies to Wallet/Header.
@@ -31,30 +31,30 @@ const FALLBACK_SEGMENTS = Array.from({ length: 12 }).map((_, idx) => ({
 const TABS: { type: GameTokenType; label: string; activeColors: string; icon: string; iconImg?: string }[] = [
   {
     type: "ROULETTE_COIN",
-    label: "ì¼ë°˜\në£°ë ›",
+    label: "ÀÏ¹İ\n·ê·¿",
     activeColors: "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]",
-    icon: "ğŸŸï¸",
+    icon: "???",
     iconImg: "/assets/asset_ticket_green.png"
   },
   {
     type: "GOLD_KEY",
-    label: "ê³¨ë“œ\në£°ë ›",
+    label: "°ñµå\n·ê·¿",
     activeColors: "bg-black text-amber-400 shadow-[0_0_20px_rgba(255,215,0,0.5)]",
-    icon: "ğŸ—ï¸",
+    icon: "???",
     iconImg: "/assets/icons/goldkey.png"
   },
   {
     type: "DIAMOND_KEY",
-    label: "ë‹¤ì´ì•„\në£°ë ›",
+    label: "´ÙÀÌ¾Æ\n·ê·¿",
     activeColors: "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.5)] border-blue-300",
-    icon: "ğŸ’",
+    icon: "??",
     iconImg: "/assets/icons/diakey.png"
   },
   {
     type: "TRIAL_TOKEN",
-    label: "ì²´í—˜\në£°ë ›",
+    label: "Ã¼Çè\n·ê·¿",
     activeColors: "bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)] border-gray-400",
-    icon: "ğŸ§ª",
+    icon: "??",
     iconImg: "/assets/asset_ticket_trial.png" // Placeholder or reuse existing
   },
 ];
@@ -101,18 +101,18 @@ const RoulettePage: React.FC = () => {
         (typeof detail === "string" && detail) ||
         (err.response?.data as { error?: { code?: string } } | undefined)?.error?.code;
 
-      if (status === 403) return "í˜„ì¬ ë“±ê¸‰ì—ì„œëŠ” ê³¨ë“œ/ë‹¤ì´ì•„ ë£°ë ›ì„ ì´ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.";
-      if (status === 429) return "ì˜¤ëŠ˜ ì°¸ì—¬ íšŸìˆ˜ë¥¼ ëª¨ë‘ ì‚¬ìš©í–ˆìŠµë‹ˆë‹¤.";
+      if (status === 403) return "ÇöÀç µî±Ş¿¡¼­´Â °ñµå/´ÙÀÌ¾Æ ·ê·¿À» ÀÌ¿ëÇÒ ¼ö ¾ø½À´Ï´Ù.";
+      if (status === 429) return "¿À´Ã Âü¿© È½¼ö¸¦ ¸ğµÎ »ç¿ëÇß½À´Ï´Ù.";
 
-      if (code === "NO_FEATURE_TODAY") return "ì˜¤ëŠ˜ í™œì„±í™”ëœ ì´ë²¤íŠ¸ê°€ ì—†ìŠµë‹ˆë‹¤.";
-      if (code === "INVALID_FEATURE_SCHEDULE") return "ì´ë²¤íŠ¸ ì¼ì •ì´ ë§ì§€ ì•ŠìŠµë‹ˆë‹¤. ìš´ì˜ìì—ê²Œ ë¬¸ì˜í•˜ì„¸ìš”.";
-      if (code === "FEATURE_DISABLED") return "ì´ë²¤íŠ¸ê°€ ë¹„í™œì„±í™”ë˜ì—ˆìŠµë‹ˆë‹¤.";
-      if (code === "DAILY_LIMIT_REACHED") return "ì˜¤ëŠ˜ ì°¸ì—¬ íšŸìˆ˜ë¥¼ ëª¨ë‘ ì‚¬ìš©í–ˆìŠµë‹ˆë‹¤.";
-      if (code === "NOT_ENOUGH_TOKENS") return "í‹°ì¼“ì´ ë¶€ì¡±í•©ë‹ˆë‹¤. ì¶©ì „ í›„ ë‹¤ì‹œ ì‹œë„í•˜ì„¸ìš”.";
+      if (code === "NO_FEATURE_TODAY") return "¿À´Ã È°¼ºÈ­µÈ ÀÌº¥Æ®°¡ ¾ø½À´Ï´Ù.";
+      if (code === "INVALID_FEATURE_SCHEDULE") return "ÀÌº¥Æ® ÀÏÁ¤ÀÌ ¸ÂÁö ¾Ê½À´Ï´Ù. ¿î¿µÀÚ¿¡°Ô ¹®ÀÇÇÏ¼¼¿ä.";
+      if (code === "FEATURE_DISABLED") return "ÀÌº¥Æ®°¡ ºñÈ°¼ºÈ­µÇ¾ú½À´Ï´Ù.";
+      if (code === "DAILY_LIMIT_REACHED") return "¿À´Ã Âü¿© È½¼ö¸¦ ¸ğµÎ »ç¿ëÇß½À´Ï´Ù.";
+      if (code === "NOT_ENOUGH_TOKENS") return "Æ¼ÄÏÀÌ ºÎÁ·ÇÕ´Ï´Ù. ÃæÀü ÈÄ ´Ù½Ã ½ÃµµÇÏ¼¼¿ä.";
 
-      return "ë£°ë › ì •ë³´ë¥¼ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.";
+      return "·ê·¿ Á¤º¸¸¦ ºÒ·¯¿ÀÁö ¸øÇß½À´Ï´Ù.";
     }
-    return "ë£°ë › ì •ë³´ë¥¼ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í–ˆìŠµë‹ˆë‹¤.";
+    return "·ê·¿ Á¤º¸¸¦ ºÒ·¯¿ÀÁö ¸øÇß½À´Ï´Ù.";
   };
 
   const errorMessage = useMemo(() => (error ? mapErrorMessage(error) : undefined), [error]);
@@ -146,7 +146,7 @@ const RoulettePage: React.FC = () => {
         if (axios.isAxiosError(e) && e.response?.status === 403) {
           setPremiumBlockedModal({
             open: true,
-            message: "í˜„ì¬ ë“±ê¸‰ì—ì„œëŠ” ê³¨ë“œ/ë‹¤ì´ì•„ ë£°ë ›ì„ ì´ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤. CCì¹´ì§€ë…¸ì—ì„œ ì¶©ì „ í›„ ë‹¤ì‹œ ì´ìš©í•´ë³´ì„¸ìš”.",
+            message: "ÇöÀç µî±Ş¿¡¼­´Â °ñµå/´ÙÀÌ¾Æ ·ê·¿À» ÀÌ¿ëÇÒ ¼ö ¾ø½À´Ï´Ù. CCÄ«Áö³ë¿¡¼­ ÃæÀü ÈÄ ´Ù½Ã ÀÌ¿ëÇØº¸¼¼¿ä.",
           });
           return;
         }
@@ -199,7 +199,7 @@ const RoulettePage: React.FC = () => {
             open: true,
             message:
               detailText ||
-              "í˜„ì¬ ë“±ê¸‰ì—ì„œëŠ” ê³¨ë“œ/ë‹¤ì´ì•„ ë£°ë ›ì„ ì´ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤. CCì¹´ì§€ë…¸ì—ì„œ ì¶©ì „ í›„ ë‹¤ì‹œ ì´ìš©í•´ë³´ì„¸ìš”.",
+              "ÇöÀç µî±Ş¿¡¼­´Â °ñµå/´ÙÀÌ¾Æ ·ê·¿À» ÀÌ¿ëÇÒ ¼ö ¾ø½À´Ï´Ù. CCÄ«Áö³ë¿¡¼­ ÃæÀü ÈÄ ´Ù½Ã ÀÌ¿ëÇØº¸¼¼¿ä.",
           });
           return;
         }
@@ -368,7 +368,7 @@ const RoulettePage: React.FC = () => {
       return (
         <div className="flex flex-col items-center justify-center gap-4 py-16">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-cc-lime/70 border-t-transparent" />
-          <p className="text-[clamp(14px,3vw,18px)] font-semibold text-white/85">ë£°ë › ì •ë³´ë¥¼ ë¶ˆëŸ¬ì˜¤ëŠ” ì¤‘...</p>
+          <p className="text-[clamp(14px,3vw,18px)] font-semibold text-white/85">·ê·¿ Á¤º¸¸¦ ºÒ·¯¿À´Â Áß...</p>
         </div>
       );
     }
@@ -376,8 +376,8 @@ const RoulettePage: React.FC = () => {
     if (isError || !data) {
       return (
         <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur">
-          <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage ?? "ë°ì´í„°ë¥¼ ë¶ˆëŸ¬ì˜¤ì§€ ëª»í–ˆìŠµë‹ˆë‹¤."}</p>
-          <p className="mt-2 text-sm text-white/60">ì ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•˜ê±°ë‚˜ ìš´ì˜ìì—ê²Œ ë¬¸ì˜í•˜ì„¸ìš”.</p>
+          <p className="text-[clamp(16px,3.2vw,20px)] font-bold text-white">{errorMessage ?? "µ¥ÀÌÅÍ¸¦ ºÒ·¯¿ÀÁö ¸øÇß½À´Ï´Ù."}</p>
+          <p className="mt-2 text-sm text-white/60">Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇÏ°Å³ª ¿î¿µÀÚ¿¡°Ô ¹®ÀÇÇÏ¼¼¿ä.</p>
         </div>
       );
     }
@@ -400,8 +400,8 @@ const RoulettePage: React.FC = () => {
                       const t = rewardToast.type.toUpperCase();
                       if (t.includes("DICE")) return "/assets/icon_dice_silver.png";
                       if (t.includes("BAEMIN") || t.includes("GIFT")) return "/assets/icons/baemin.png";
-                      if (t.includes("POINT") || t.includes("VAULT")) return "/assets/logo_cc_v2.png"; // ê¸ˆê³ ë¨¸ë‹ˆ -> CC Logo
-                      if (t.includes("COIN")) return "/assets/asset_coin_gold.png"; // ì”¨ì”¨ì½”ì¸ -> Coin Asset
+                      if (t.includes("POINT") || t.includes("VAULT")) return "/assets/logo_cc_v2.png"; // ±İ°í¸Ó´Ï -> CC Logo
+                      if (t.includes("COIN")) return "/assets/asset_coin_gold.png"; // ¾¾¾¾ÄÚÀÎ -> Coin Asset
                       return "/assets/asset_ticket_green.png"; // Default fallback
                     })()}
                     alt="Reward"
@@ -417,7 +417,7 @@ const RoulettePage: React.FC = () => {
                       {(() => {
                         const upper = rewardToast.type.toUpperCase();
                         if (upper.includes("GAME_XP")) return "XP";
-                        if (upper.includes("POINT")) return "ì›";
+                        if (upper.includes("POINT")) return "¿ø";
                         return "";
                       })()}
                     </span>
@@ -428,7 +428,7 @@ const RoulettePage: React.FC = () => {
                       const normalized = upper.includes("GAME_XP") ? "GAME_XP" : upper.includes("POINT") ? "POINT" : rewardToast.type;
                       const line = formatRewardLine(normalized, 0);
                       const label = line?.text.replace(/[0-9,\s]/g, "") || rewardToast.type;
-                      if (isGifticonRewardType(normalized)) return `${label} (ë³´ìƒí•¨)`;
+                      if (isGifticonRewardType(normalized)) return `${label} (º¸»óÇÔ)`;
                       return label;
                     })()}
                   </p>
@@ -460,7 +460,7 @@ const RoulettePage: React.FC = () => {
           {usingFallbackSegments && (
             <div className="mt-4 flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/5 px-4 py-1.5 text-sm font-medium text-red-200">
               <span className="block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-              ë¼ì´ë¸Œ ë°ì´í„° ì—°ê²° ì‹¤íŒ¨ (ë°ëª¨ ëª¨ë“œ)
+              ¶óÀÌºê µ¥ÀÌÅÍ ¿¬°á ½ÇÆĞ (µ¥¸ğ ¸ğµå)
             </div>
           )}
 
@@ -492,7 +492,7 @@ const RoulettePage: React.FC = () => {
               <div className="space-y-4">
                 {playErrorMessage && (
                   <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
-                    âš ï¸ {playErrorMessage}
+                    ?? {playErrorMessage}
                   </div>
                 )}
 
@@ -515,7 +515,7 @@ const RoulettePage: React.FC = () => {
 
   return (
     <FeatureGate feature="ROULETTE">
-      <GamePageShell title="ëŸ­ì…”ë¦¬ CCë£°ë ›" px="p-2 sm:p-4">
+      <GamePageShell title="·°¼Å¸® CC·ê·¿" px="p-2 sm:p-4">
         <div className="mb-2 flex justify-center">
           <div className="inline-flex flex-wrap justify-center gap-2 rounded-2xl bg-white/5 p-2 backdrop-blur-md">
             {TABS.map((tab) => (
@@ -570,10 +570,10 @@ const RoulettePage: React.FC = () => {
 
             <div className="relative p-6">
               <div className="text-[10px] font-black tracking-widest uppercase text-white/40">Premium Roulette</div>
-              <h2 className="mt-1 text-2xl font-black text-white tracking-tight">ì´ìš©ì´ ì œí•œë˜ì–´ ìˆì–´ìš”</h2>
+              <h2 className="mt-1 text-2xl font-black text-white tracking-tight">ÀÌ¿ëÀÌ Á¦ÇÑµÇ¾î ÀÖ¾î¿ä</h2>
 
               <p className="mt-4 text-sm font-medium text-white/70 whitespace-pre-wrap leading-relaxed">
-                {premiumBlockedModal.message ?? "í˜„ì¬ ë“±ê¸‰ì—ì„œëŠ” ê³¨ë“œ/ë‹¤ì´ì•„ ë£°ë ›ì„ ì´ìš©í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤."}
+                {premiumBlockedModal.message ?? "ÇöÀç µî±Ş¿¡¼­´Â °ñµå/´ÙÀÌ¾Æ ·ê·¿À» ÀÌ¿ëÇÒ ¼ö ¾ø½À´Ï´Ù."}
               </p>
 
               <div className="mt-6 space-y-2">
@@ -583,7 +583,7 @@ const RoulettePage: React.FC = () => {
                   rel="noreferrer noopener"
                   className="block w-full rounded-xl bg-amber-500/20 py-3 text-center text-sm font-black text-amber-200 border border-amber-500/30 hover:bg-amber-500/30 active:scale-[0.99] transition"
                 >
-                  CC ì¶©ì „í•˜ëŸ¬ ê°€ê¸°
+                  CC ÃæÀüÇÏ·¯ °¡±â
                 </a>
 
                 <button
@@ -594,7 +594,7 @@ const RoulettePage: React.FC = () => {
                   }}
                   className="w-full rounded-xl bg-white/5 py-3 text-sm font-black text-white/80 border border-white/10 hover:bg-white/10 active:scale-[0.99] transition"
                 >
-                  ë©”ì¸(í™ˆ)ìœ¼ë¡œ ëŒì•„ê°€ê¸°
+                  ¸ŞÀÎ(È¨)À¸·Î µ¹¾Æ°¡±â
                 </button>
 
                 <button
@@ -602,7 +602,7 @@ const RoulettePage: React.FC = () => {
                   onClick={() => setPremiumBlockedModal({ open: false })}
                   className="w-full rounded-xl py-3 text-sm font-black text-white/50 hover:text-white/70 transition"
                 >
-                  ë‹«ê¸°
+                  ´İ±â
                 </button>
               </div>
             </div>

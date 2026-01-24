@@ -68,7 +68,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                     </div>
 
                     <h2 className="text-2xl font-black italic tracking-tight text-white uppercase drop-shadow-lg mb-2">
-                        골든아워
+                        골든?�워
                     </h2>
                     
                     {displayMultiplier > 1 ? (
@@ -78,14 +78,13 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                             </div>
 
                             <p className="text-base font-semibold text-white/80 leading-tight mb-2">
-                                지금부터 1시간 동안
+                                지금�???1?�간 ?�안
                             </p>
                             <p className="text-xl font-black text-white leading-tight mb-6">
-                                <span className="text-emerald-300">고액 주사위</span> 적립
+                                <span className="text-emerald-300">고액 주사??/span> ?�립
                                 <span className="ml-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-lime-300 to-emerald-500">
-                                    {displayMultiplier}배
-                                </span>
-                                <span className="text-emerald-200"> 폭발</span>
+                                    {displayMultiplier}�?                                </span>
+                                <span className="text-emerald-200"> ??��</span>
                             </p>
                         </>
                     ) : (
@@ -94,7 +93,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                                 <span className="text-xs font-black text-white/40">WAITING</span>
                             </div>
                             <p className="text-lg font-bold text-white/60 leading-tight mb-10 mt-2">
-                                지금은 골든아워 시간이 아닙니다
+                                지금�? 골든?�워 ?�간???�닙?�다
                             </p>
                         </>
                     )}
@@ -107,8 +106,7 @@ const GoldenHourPopup: React.FC<GoldenHourPopupProps> = ({ onClose, multiplier }
                         className="rounded-xl py-3.5 bg-emerald-950 border border-emerald-800 shadow-none text-base text-emerald-50 font-bold hover:bg-emerald-900 active:scale-[0.98] transition-all"
                         onClick={() => { tryHaptic(30); onClose(); }}
                     >
-                        적립하러 가기
-                    </Button>
+                        ?�립?�러 가�?                    </Button>
 
 
                 </div>

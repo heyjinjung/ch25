@@ -19,7 +19,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     title,
     message,
     type = "primary",
-    confirmText = "확인",
+    confirmText = "?�인",
     cancelText = "취소",
 }) => {
     if (!isOpen) return null;

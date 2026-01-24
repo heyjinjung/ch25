@@ -25,10 +25,10 @@ const TodayMissionCard: React.FC<TodayMissionCardProps> = ({ data }) => {
         setIsClaiming(true);
         const res = await claimReward(mission.id);
         if (res.success) {
-            const rewardMsg = res.amount ? `${res.amount}${res.reward_type || ""}을 수령했습니다!` : "보상을 수령했습니다!";
+            const rewardMsg = res.amount ? `${res.amount}${res.reward_type || ""}???�령?�습?�다!` : "보상???�령?�습?�다!";
             addToast(rewardMsg, "success");
         } else {
-            addToast(res.message || "보상 수령에 실패했습니다.", "error");
+            addToast(res.message || "보상 ?�령???�패?�습?�다.", "error");
         }
         setIsClaiming(false);
     };
@@ -50,7 +50,7 @@ const TodayMissionCard: React.FC<TodayMissionCardProps> = ({ data }) => {
                             Today's One Pick
                         </div>
                         <h3 className="text-2xl font-black text-white tracking-tight mt-2">{mission.title}</h3>
-                        <p className="text-sm font-medium text-white/40">{mission.description || "지금 바로 도전하고 보상을 받으세요."}</p>
+                        <p className="text-sm font-medium text-white/40">{mission.description || "지�?바로 ?�전?�고 보상??받으?�요."}</p>
                     </div>
 
                     <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
@@ -94,7 +94,7 @@ const TodayMissionCard: React.FC<TodayMissionCardProps> = ({ data }) => {
                     {isClaimed ? (
                         <div className="flex items-center gap-1.5 text-emerald-500 font-black text-sm px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                             <CheckCircle2 size={18} />
-                            수령 완료
+                            ?�령 ?�료
                         </div>
                     ) : isCompleted ? (
                         <button
@@ -103,12 +103,12 @@ const TodayMissionCard: React.FC<TodayMissionCardProps> = ({ data }) => {
                             data-tour="mission-claim-btn"
                             className="px-6 py-3 rounded-2xl bg-emerald-500 text-black font-black text-sm shadow-[0_8px_16px_-4px_rgba(16,185,129,0.4)] active:scale-[0.95] transition-all flex items-center gap-2"
                         >
-                            {isClaiming ? "처리 중..." : "보상 받기"}
+                            {isClaiming ? "처리 �?.." : "보상 받기"}
                             {!isClaiming && <ArrowRight size={16} />}
                         </button>
                     ) : (
                         <div className="text-[11px] font-black text-white/30 px-4 py-3 rounded-2xl bg-white/5 border border-white/5">
-                            진행 중...
+                            진행 �?..
                         </div>
                     )}
                 </div>

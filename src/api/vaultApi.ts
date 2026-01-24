@@ -133,17 +133,17 @@ const mapWithdrawalErrorMessage = (detail: unknown): string | null => {
 
   switch (detail) {
     case "DEPOSIT_REQUIRED_TODAY":
-      return "오늘 입금(충전) 내역이 있어야 출금 신청이 가능합니다.";
+      return "?�늘 ?�금(충전) ?�역???�어??출금 ?�청??가?�합?�다.";
     case "NO_DEPOSIT_RECORD_TODAY":
-      return "오늘 입금(충전) 내역이 확인되지 않아 출금 신청이 불가능합니다.";
+      return "?�늘 ?�금(충전) ?�역???�인?��? ?�아 출금 ?�청??불�??�합?�다.";
     case "MIN_PLAY_COUNT_30_REQUIRED":
-        return "최근 3일 이내 게임 플레이 30회 조건을 만족해야 합니다.";
+        return "최근 3???�내 게임 ?�레??30??조건??만족?�야 ?�니??";
     case "MIN_DAILY_SPEND_10000_REQUIRED":
-        return "오늘 금고 사용액이 10,000원 이상이어야 합니다.";
+        return "?�늘 금고 ?�용?�이 10,000???�상?�어???�니??";
     case "NO_DEPOSIT_HISTORY":
-        return "입금 이력이 없는 계정은 출금할 수 없습니다.";
+        return "?�금 ?�력???�는 계정?� 출금?????�습?�다.";
     case "DEPOSIT_REQUIRED_TODAY_SYNC":
-        return "오늘 입금(충전) 기록이 확인되지 않았습니다.";
+        return "?�늘 ?�금(충전) 기록???�인?��? ?�았?�니??";
     default:
       return null;
   }
@@ -152,11 +152,11 @@ const mapWithdrawalErrorMessage = (detail: unknown): string | null => {
 export const requestWithdrawal = async (amount: number): Promise<{ success: boolean; message: string }> => {
   try {
     await userApi.post("/api/vault/withdraw", { amount });
-    return { success: true, message: "출금 신청이 완료되었습니다." };
+    return { success: true, message: "출금 ?�청???�료?�었?�니??" };
   } catch (err: any) {
     // Handle specific errors like 'insufficient_funds', 'daily_limit', etc.
     const detail = err.response?.data?.detail;
-    const msg = mapWithdrawalErrorMessage(detail) ?? detail ?? "신청 중 오류가 발생했습니다.";
+    const msg = mapWithdrawalErrorMessage(detail) ?? detail ?? "?�청 �??�류가 발생?�습?�다.";
     return { success: false, message: msg };
   }
 };

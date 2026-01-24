@@ -30,9 +30,9 @@ const SeasonPassBar: React.FC = () => {
   }, [data]);
 
   const label = useMemo(() => {
-    if (isLoading) return "시즌 패스 정보를 불러오는 중...";
-    if (isError) return "시즌 패스 정보를 가져올 수 없습니다.";
-    if (!data) return "현재 활성화된 시즌 패스가 없습니다.";
+    if (isLoading) return "?�즌 ?�스 ?�보�?불러?�는 �?..";
+    if (isError) return "?�즌 ?�스 ?�보�?가?�올 ???�습?�다.";
+    if (!data) return "?�재 ?�성?�된 ?�즌 ?�스가 ?�습?�다.";
 
     const totalXp = Math.max(0, data.current_xp ?? 0);
     const maxRequired = Math.max(0, ...data.levels.map((l) => l.required_xp ?? 0));
@@ -45,7 +45,7 @@ const SeasonPassBar: React.FC = () => {
     const targetXp = nextRow?.required_xp ?? data.next_level_xp;
     const remaining = Math.max(0, (targetXp ?? 0) - totalXp);
 
-    return `Lv.${data.current_level} → Lv.${targetLevel} · ${remaining.toLocaleString()} XP 남음`;
+    return `Lv.${data.current_level} ??Lv.${targetLevel} · ${remaining.toLocaleString()} XP ?�음`;
   }, [data, isError, isLoading]);
 
   return (
@@ -64,11 +64,11 @@ const SeasonPassBar: React.FC = () => {
       </div>
 
       <span className="text-2xl" role="img" aria-label="season-pass">
-        🎁
+        ?��
       </span>
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-emerald-100">시즌 패스 진행도</p>
+          <p className="text-sm font-semibold text-emerald-100">?�즌 ?�스 진행??/p>
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
         </div>
         <div className="flex items-center justify-between text-xs text-emerald-200">
@@ -81,7 +81,7 @@ const SeasonPassBar: React.FC = () => {
           />
         </div>
       </div>
-      <span className="text-sm font-semibold text-emerald-100 group-hover:translate-x-1 transition-transform">자세히 보기 →</span>
+      <span className="text-sm font-semibold text-emerald-100 group-hover:translate-x-1 transition-transform">?�세??보기 ??/span>
     </button>
   );
 };

@@ -26,13 +26,13 @@ const getWsUrl = () => {
 const getToastMessage = (payload: Ch25EventPayload) => {
   switch (payload.event_type) {
     case "LOSS_STREAK":
-      return "연패 감지: 무료 스핀/미션을 확인하세요.";
+      return "?�패 감�?: 무료 ?��?/미션???�인?�세??";
     case "ASSET_DEPLETION":
-      return "자산 급감 감지: 캐시백/구제 혜택을 확인하세요.";
+      return "?�산 급감 감�?: 캐시�?구제 ?�택???�인?�세??";
     case "SESSION_END":
-      return "세션 종료: 복귀 혜택이 준비되어 있습니다.";
+      return "?�션 종료: 복�? ?�택??준비되???�습?�다.";
     default:
-      return "이벤트 알림이 도착했습니다.";
+      return "?�벤???�림???�착?�습?�다.";
   }
 };
 

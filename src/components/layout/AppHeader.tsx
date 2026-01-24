@@ -217,7 +217,7 @@ const AppHeader: React.FC = () => {
                                         <div className="flex flex-col items-start min-w-0">
                                             <div className="flex items-center gap-1.5">
                                                 <span className="text-sm font-semibold text-white truncate max-w-[80px] sm:max-w-[100px]">
-                                                    {user?.nickname || user?.external_id || "사용자"}
+                                                    {user?.nickname || user?.external_id || "?�용??}
                                                 </span>
                                                 <span className={clsx(
                                                     "text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 transition-colors flex items-center gap-0.5",
@@ -245,7 +245,7 @@ const AppHeader: React.FC = () => {
                         >
                             <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                             <span className="text-sm font-black text-white">
-                                {vaultBalance.toLocaleString()}원
+                                {vaultBalance.toLocaleString()}??
                             </span>
                         </Link>
 
@@ -278,7 +278,7 @@ const AppHeader: React.FC = () => {
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
                                             <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
                                         </div>
-                                        교환소
+                                        교환??
                                     </Link>
                                     <button
                                         onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
@@ -287,7 +287,7 @@ const AppHeader: React.FC = () => {
                                         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5">
                                             <img src="/assets/logo_cc_v2.png" alt="CC" className="w-3.5 h-3.5 object-contain" />
                                         </div>
-                                        씨씨이동
+                                        ?�씨?�동
                                     </button>
                                 </div>
                             )}
@@ -308,7 +308,7 @@ const AppHeader: React.FC = () => {
                         {/* Sound Toggle */}
                         <button
                             onClick={handleSoundToggle}
-                            aria-label={isMuted ? "사운드 켜기" : "사운드 끄기"}
+                            aria-label={isMuted ? "?�운??켜기" : "?�운???�기"}
                             className="w-9 h-9 flex items-center justify-center rounded-lg border border-emerald-800 bg-slate-900 transition-colors relative group shadow-lg active:scale-95"
                         >
                             <img
@@ -336,7 +336,7 @@ const AppHeader: React.FC = () => {
                     >
                         <img src="/assets/asset_coin_gold.webp" alt="Coin" className="w-5 h-5 object-contain" />
                         <span className="text-sm font-black text-white">
-                            {vaultBalance.toLocaleString()}원
+                            {vaultBalance.toLocaleString()}??
                         </span>
                     </Link>
 
@@ -367,7 +367,7 @@ const AppHeader: React.FC = () => {
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
                                         <img src="/assets/icon_inventory_wallet.png" alt="" className="w-full h-full object-contain" />
                                     </div>
-                                    교환소
+                                    교환??
                                 </Link>
                                 <button
                                     onClick={() => handleMenuNavigation("https://ccc-010.com", true)}
@@ -376,7 +376,7 @@ const AppHeader: React.FC = () => {
                                     <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/5 overflow-hidden p-0.5">
                                         <img src="/assets/logo_cc_v2.png" alt="CC" className="w-full h-full object-contain" />
                                     </div>
-                                    씨씨이동
+                                    ?�씨?�동
                                 </button>
                             </div>
                         )}

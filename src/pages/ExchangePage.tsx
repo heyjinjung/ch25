@@ -42,16 +42,16 @@ const ProductCard: React.FC<{ product: ShopProduct; vaultBalance: number; onBuy:
     const canAfford = vaultBalance >= cost;
 
     const MAP: Record<string, { label: string, img: string, rarity: 'common' | 'rare' | 'epic' | 'legendary' }> = {
-        'VOUCHER_ROULETTE_COIN_1': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
-        'VOUCHER_DICE_TOKEN_1': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
-        'VOUCHER_LOTTERY_TICKET_1': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
-        'VOUCHER_GOLD_KEY_1': { label: "골드 키", img: "/assets/icons/goldkey.png", rarity: 'epic' },
-        'VOUCHER_DIAMOND_KEY_1': { label: "다이아 키", img: "/assets/icons/diakey.png", rarity: 'legendary' },
-        'ROULETTE_COIN': { label: "룰렛 티켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
-        'DICE_TOKEN': { label: "주사위 티켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
-        'LOTTERY_TICKET': { label: "복권 티켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
-        'GOLD_KEY': { label: "골드 키", img: "/assets/icons/goldkey.png", rarity: 'epic' },
-        'DIAMOND_KEY': { label: "다이아 키", img: "/assets/icons/diakey.png", rarity: 'legendary' },
+        'VOUCHER_ROULETTE_COIN_1': { label: "룰렛 ?�켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
+        'VOUCHER_DICE_TOKEN_1': { label: "주사???�켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
+        'VOUCHER_LOTTERY_TICKET_1': { label: "복권 ?�켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
+        'VOUCHER_GOLD_KEY_1': { label: "골드 ??, img: "/assets/icons/goldkey.png", rarity: 'epic' },
+        'VOUCHER_DIAMOND_KEY_1': { label: "?�이????, img: "/assets/icons/diakey.png", rarity: 'legendary' },
+        'ROULETTE_COIN': { label: "룰렛 ?�켓", img: "/assets/asset_ticket_green.png", rarity: 'rare' },
+        'DICE_TOKEN': { label: "주사???�켓", img: "/assets/icon_dice_silver.png", rarity: 'rare' },
+        'LOTTERY_TICKET': { label: "복권 ?�켓", img: "/assets/lottery/icon_lotto_ball.webp", rarity: 'rare' },
+        'GOLD_KEY': { label: "골드 ??, img: "/assets/icons/goldkey.png", rarity: 'epic' },
+        'DIAMOND_KEY': { label: "?�이????, img: "/assets/icons/diakey.png", rarity: 'legendary' },
     };
 
     const info = MAP[product.grant.item_type] || MAP[product.cost.token] || { label: product.title, img: "/assets/lottery/icon_gift.png", rarity: 'common' };
@@ -189,13 +189,13 @@ const ExchangePage: React.FC = () => {
         mutationFn: (sku: string) => purchaseProduct(sku),
         onSuccess: (data) => {
             tryHaptic(20);
-            addToast(`교환 완료! ${data?.reward_token ?? "아이템"}이 지급되었습니다.`, "success"); // Simple Toast
+            addToast(`교환 ?�료! ${data?.reward_token ?? "?�이??}??지급되?�습?�다.`, "success"); // Simple Toast
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
             queryClient.invalidateQueries({ queryKey: ['vault-status'] });
         },
         onError: (error: any) => {
             tryHaptic(50);
-            const msg = error.response?.data?.detail || "교환 실패";
+            const msg = error.response?.data?.detail || "교환 ?�패";
             addToast(msg, "error");
         }
     });
@@ -213,8 +213,8 @@ const ExchangePage: React.FC = () => {
     if (isLoading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
     if (isError) return (
         <div className="flex flex-col items-center justify-center h-[50vh] text-white/50 gap-4">
-            <p>상품 정보를 불러올 수 없습니다.</p>
-            <Button onClick={() => refetch()} variant="figma-secondary">다시 시도</Button>
+            <p>?�품 ?�보�?불러?????�습?�다.</p>
+            <Button onClick={() => refetch()} variant="figma-secondary">?�시 ?�도</Button>
         </div>
     );
 
@@ -224,7 +224,7 @@ const ExchangePage: React.FC = () => {
             <div className="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5 px-4 h-14 flex items-center justify-between">
                 <h1 className="text-[15px] font-bold text-white flex items-center gap-1.5 tracking-tight">
                     <img src="/assets/icons/icon_cart.png" className="w-5 h-5 object-contain" alt="" />
-                    교환소
+                    교환??
                 </h1>
 
                 <button
@@ -232,7 +232,7 @@ const ExchangePage: React.FC = () => {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:scale-95 transition-all text-[15px] font-bold text-white/70 border border-white/5"
                 >
                     <img src="/assets/icon_inventory_wallet.png" className="w-5 h-5 object-contain opacity-70" alt="" />
-                    보상함
+                    보상??
                 </button>
             </div>
 
@@ -243,8 +243,8 @@ const ExchangePage: React.FC = () => {
             <div className="px-4">
                 <div className="flex items-center gap-2 mb-3">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
-                    <h2 className="text-sm font-black text-white">티켓 교환</h2>
-                    <span className="text-[10px] text-emerald-400/70 font-medium ml-auto">금고 포인트 사용</span>
+                    <h2 className="text-sm font-black text-white">?�켓 교환</h2>
+                    <span className="text-[10px] text-emerald-400/70 font-medium ml-auto">금고 ?�인???�용</span>
                 </div>
 
                 {vaultProducts.length > 0 ? (
@@ -262,7 +262,7 @@ const ExchangePage: React.FC = () => {
                     </div>
                 ) : (
                     <div className="py-12 text-center text-white/30 text-xs bg-white/5 rounded-2xl border border-white/5">
-                        교환 가능한 상품이 없습니다.
+                        교환 가?�한 ?�품???�습?�다.
                     </div>
                 )}
             </div>
@@ -272,7 +272,7 @@ const ExchangePage: React.FC = () => {
                 <div className="mt-10 px-4 pb-8">
                     <div className="flex items-center gap-2 mb-3 border-t border-white/10 pt-6">
                         <img src="/assets/icon_diamond.png" className="w-4 h-4" alt="" />
-                        <h2 className="text-sm font-black text-white">다이아 샵</h2>
+                        <h2 className="text-sm font-black text-white">?�이????/h2>
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
                         {diamondProducts.map(p => (

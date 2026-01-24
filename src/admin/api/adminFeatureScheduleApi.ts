@@ -1,4 +1,4 @@
-// src/admin/api/adminFeatureScheduleApi.ts
+// src/api/admin/adminFeatureScheduleApi.ts
 import { adminApi } from "./httpClient";
 
 // Types
@@ -20,7 +20,7 @@ export interface FetchFeatureSchedulesParams {
 export const fetchFeatureSchedules = async (
     params: FetchFeatureSchedulesParams
 ): Promise<FeatureSchedule[]> => {
-    const { data } = await adminApi.get<FeatureSchedule[]>("/admin/api/feature-schedule/", { params });
+    const { data } = await adminApi.get<FeatureSchedule[]>("/api/admin/feature-schedule/", { params });
     return data;
 };
 
@@ -28,10 +28,10 @@ export const upsertFeatureSchedule = async (
     date: string,
     payload: Partial<FeatureSchedule>
 ): Promise<FeatureSchedule> => {
-    const { data } = await adminApi.put<FeatureSchedule>(`/admin/api/feature-schedule/${date}`, payload);
+    const { data } = await adminApi.put<FeatureSchedule>(`/api/admin/feature-schedule/${date}`, payload);
     return data;
 };
 
 export const deleteFeatureSchedule = async (date: string): Promise<void> => {
-    await adminApi.delete(`/admin/api/feature-schedule/${date}`);
+    await adminApi.delete(`/api/admin/feature-schedule/${date}`);
 };

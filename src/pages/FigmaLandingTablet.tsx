@@ -26,10 +26,10 @@ const assets = {
 };
 
 const navLinks = [
-  { label: "CC카지노", to: "https://ccc-010.com" },
-  { label: "레벨", to: "/season-pass" },
-  { label: "팀배틀", to: "/team-battle" },
-  { label: "내금고", to: "/landing" },
+  { label: "CC카�???, to: "https://ccc-010.com" },
+  { label: "?�벨", to: "/season-pass" },
+  { label: "?�배�?", to: "/team-battle" },
+  { label: "?�금�?, to: "/landing" },
 ];
 
 const gameLinks = ["/roulette", "/dice", "/lottery"] as const;
@@ -37,37 +37,37 @@ const randomGameLink = gameLinks[Math.floor(Math.random() * gameLinks.length)];
 const noticeLink = "https://t.me/+LksI3XlSjLlhZmE0";
 
 const gameTiles: { title: string; to: string; icon: string; fallback: string }[] = [
-  { title: "레벨 주사위", to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
-  { title: "랜덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
+  { title: "?�벨 주사??, to: "/dice", icon: assets.levelSvg, fallback: assets.iconLevel },
+  { title: "?�덤 복권", to: "/lottery", icon: assets.lotterySvg, fallback: assets.iconLottery },
   { title: "룰렛 경품뽑기", to: "/roulette", icon: assets.rouletteSvg, fallback: assets.iconRoulette },
 ];
 
 const howToIcons: { title: string; icon: string; href?: string; to?: string }[] = [
-  { title: "씨씨이용하기", icon: assets.iconWallet, href: "https://ccc-010.com" },
-  { title: "금고서비스", icon: assets.iconSecurity, to: "/vault" },
-  { title: "포인트게임하기", icon: assets.iconGraph, to: randomGameLink },
-  { title: "친구초대", icon: assets.iconPeople, href: noticeLink },
+  { title: "?�씨?�용?�기", icon: assets.iconWallet, href: "https://ccc-010.com" },
+  { title: "금고?�비??, icon: assets.iconSecurity, to: "/vault" },
+  { title: "?�인?�게?�하�?, icon: assets.iconGraph, to: randomGameLink },
+  { title: "친구초�?", icon: assets.iconPeople, href: noticeLink },
 ];
 
 const bento: { title: string; description?: string; icon?: string | null; fallback?: string }[] = [
   {
     title: "2x",
-    description: "어디와도 비교불가한 포인트서비스",
+    description: "?�디?�??비교불�????�인?�서비스",
     icon: null,
   },
   {
-    title: "빠르고 신속한 고객응대 서비스",
+    title: "빠르�??�속??고객?��? ?�비??,
     description: "",
     icon: assets.bentoEfficiency,
     fallback: assets.vectorBar,
   },
   {
-    title: "안전하고 빠른 환전",
+    title: "?�전?�고 빠른 ?�전",
     icon: assets.bentoFastExchange,
     fallback: assets.vectorStreamline,
   },
   {
-    title: "고객만족도 1위",
+    title: "고객만족??1??,
     icon: assets.bentoCustomerSat,
     fallback: assets.img130,
   },
@@ -101,23 +101,23 @@ const Sidebar: React.FC = () => {
             href="https://figma.com/sites"
             className="shrink-0 rounded-[2px] bg-[#d2fd9c] px-[14px] py-[11px] text-[10px] text-black"
           >
-            홈페이지 가이드
+            ?�페?��? 가?�드
           </a>
         </div>
       </nav>
 
       <div className="flex flex-col gap-5 w-full">
         <h1 className="text-[32px] lg:text-[42px] font-medium leading-[1.06] tracking-[-0.84px]">
-          지민코드 전용
+          지민코???�용
           <br />
-          포인트서비스
+          ?�인?�서비스
         </h1>
-        <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre핵심 캐치문구</h2>
+        <h2 className="text-[16px] font-normal leading-[1.09] text-[#cbcbcb]">No personal cre?�심 캐치문구</h2>
       </div>
 
       <div className="flex flex-col gap-5 w-full">
         <h3 className="text-[20px] font-medium" style={{ color: baseAccent }}>
-          게임 바로가기
+          게임 바로가�?
         </h3>
         <div className="grid w-full gap-[10px] grid-cols-1 sm:grid-cols-3">
           {gameTiles.map((tile) => (
@@ -166,7 +166,7 @@ const Events: React.FC = () => (
     className="bg-white flex flex-col items-center pt-[20px] pb-0 px-[20px] w-full lg:px-[40px] lg:pt-[20px]"
   >
     <div className="relative w-full max-w-[740px] overflow-hidden rounded-[20px]" style={{ aspectRatio: "740/392" }}>
-      <img src={assets.headerImage} alt="이벤트 배너" className="absolute inset-0 h-full w-full object-contain" />
+      <img src={assets.headerImage} alt="?�벤??배너" className="absolute inset-0 h-full w-full object-contain" />
     </div>
   </a>
 );
@@ -174,7 +174,7 @@ const Events: React.FC = () => (
 const OngoingEvents: React.FC = () => (
   <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[27px] pb-[20px] lg:px-[40px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
-      금고머니 적립이벤트
+      금고머니 ?�립?�벤??
     </h2>
     <div className="flex w-full flex-col gap-[20px] md:flex-row md:flex-wrap md:justify-center">
       {[1, 2].map((key) => (
@@ -189,7 +189,7 @@ const OngoingEvents: React.FC = () => (
             <img src={assets.benefitImage} alt="Benefit" className="absolute inset-0 h-full w-full object-cover" />
           </div>
           <p className="text-[18px] lg:text-[20px] font-medium leading-[1.15] text-left" style={{ color: deepOlive }}>
-            신년이벤트 내금고 열기
+            ?�년?�벤???�금�??�기
           </p>
         </a>
       ))}
@@ -200,7 +200,7 @@ const OngoingEvents: React.FC = () => (
 const HowToUse: React.FC = () => (
   <section className="bg-white flex flex-col items-center gap-[30px] w-full px-[20px] pt-[20px] pb-[20px] lg:px-[40px] lg:pt-[20px]">
     <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px] text-center" style={{ color: deepOlive }}>
-      지민이벤트 이용하는 법
+      지민이벤트 ?�용?�는 �?
     </h2>
     <div className="grid w-full gap-[20px] sm:grid-cols-2 lg:grid-cols-4 lg:gap-[40px]">
       {howToIcons.map((item) => {
@@ -249,7 +249,7 @@ const BentoGrid: React.FC = () => (
   <section className="bg-white flex flex-col items-center justify-center gap-[30px] w-full px-[20px] pt-[20px] pb-[30px] lg:px-[40px] lg:pt-[20px]">
     <div className="text-center w-full max-w-[500px]">
       <h2 className="text-[32px] lg:text-[42px] font-medium tracking-[-0.84px]" style={{ color: deepOlive }}>
-        지민이와 함께하는 씨씨카지노
+        지민이?� ?�께?�는 ?�씨카�???
       </h2>
     </div>
     <div className="flex flex-col gap-[20px] items-center w-full">
@@ -293,7 +293,7 @@ const BentoGrid: React.FC = () => (
           >
             <div className="flex flex-col items-center gap-[30px] text-center text-[#394508] w-full">
               {item.icon && (
-                <div className="relative" style={{ height: item.title === "고객만족도 1위" ? 67.5 : 112, width: item.title === "고객만족도 1위" ? 199.281 : 124.31 }}>
+                <div className="relative" style={{ height: item.title === "고객만족??1?? ? 67.5 : 112, width: item.title === "고객만족??1?? ? 199.281 : 124.31 }}>
                   <img
                     src={item.icon}
                     alt={item.title}
@@ -321,9 +321,9 @@ const Footer: React.FC = () => (
       <div className="flex flex-col gap-[12px]">
         <p className="text-[20px] font-medium leading-[1.15]">Contact</p>
         <div className="flex flex-col gap-[2px] text-[20px] font-medium leading-[1.15]">
-          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">실장텔레그램</a>
+          <a href="https://t.me/jm956" target="_blank" rel="noreferrer" className="hover:opacity-90">?�장?�레그램</a>
           <a href="https://t.me/+LksI3XlSjLlhZmE0" target="_blank" rel="noreferrer" className="hover:opacity-90">지민공지채널</a>
-          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">씨씨카지노 공식채널</a>
+          <a href="https://t.me/+IE0NYpuze_k1YWZk" target="_blank" rel="noreferrer" className="hover:opacity-90">?�씨카�???공식채널</a>
         </div>
       </div>
     </div>

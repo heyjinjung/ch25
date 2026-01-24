@@ -274,13 +274,13 @@ export default function CCDepositPage() {
       } else {
         setResolveStatusByKey((prev) => ({
           ...prev,
-          [row.__key]: { state: "error", message: "유저를 찾을 수 없습니다." },
+          [row.__key]: { state: "error", message: "?��?�?찾을 ???�습?�다." },
         }));
       }
     } catch {
       setResolveStatusByKey((prev) => ({
         ...prev,
-        [row.__key]: { state: "error", message: "유저 검색 오류" },
+        [row.__key]: { state: "error", message: "?��? 검???�류" },
       }));
     }
   };
@@ -292,7 +292,7 @@ export default function CCDepositPage() {
       (row) => !row.userId || !row.amount || !row.kstDate,
     );
     if (invalidRows.length > 0) {
-      alert("유저 검증/금액/날짜가 비어 있는 행이 있습니다.");
+      alert("?��? 검�?금액/?�짜가 비어 ?�는 ?�이 ?�습?�다.");
       return;
     }
 
@@ -337,10 +337,10 @@ export default function CCDepositPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
             <UserIcon className="w-8 h-8 text-indigo-400" />
-            CC 입금 관리
+            CC ?�금 관�?
           </h1>
           <p className="text-sm text-zinc-400">
-            수동으로 입금 내역을 생성하거나, 잘못 기입된 내역을 수정/삭제합니다.
+            ?�동?�로 ?�금 ?�역???�성?�거?? ?�못 기입???�역???�정/??��?�니??
           </p>
         </div>
         <div className="flex gap-2">
@@ -352,20 +352,20 @@ export default function CCDepositPage() {
             <RefreshCw
               className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")}
             />
-            새로고침
+            ?�로고침
           </Button>
           <Button
             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
             onClick={addRow}
           >
-            <Plus className="w-4 h-4" />새 행 추가
+            <Plus className="w-4 h-4" />????추�?
           </Button>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 gap-2"
             onClick={handleSaveAll}
             disabled={!isDirty || isSaving}
           >
-            {isSaving ? "저장 중..." : "전체 저장"}
+            {isSaving ? "?�??�?.." : "?�체 ?�??}
           </Button>
         </div>
       </div>
@@ -375,7 +375,7 @@ export default function CCDepositPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="닉네임으로 검색..."
+            placeholder="?�네?�으�?검??.."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 bg-zinc-900/50 border-white/10"
@@ -393,10 +393,10 @@ export default function CCDepositPage() {
                 onClick={() => handleSort("nickname")}
               >
                 <div className="flex items-center">
-                  유저 {getSortIcon("nickname")}
+                  ?��? {getSortIcon("nickname")}
                 </div>
               </TableHead>
-              <TableHead className="text-zinc-400">누적</TableHead>
+              <TableHead className="text-zinc-400">?�적</TableHead>
               <TableHead
                 className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("amount")}
@@ -410,7 +410,7 @@ export default function CCDepositPage() {
                 onClick={() => handleSort("kstDate")}
               >
                 <div className="flex items-center">
-                  입금 날짜 (KST) {getSortIcon("kstDate")}
+                  ?�금 ?�짜 (KST) {getSortIcon("kstDate")}
                 </div>
               </TableHead>
               <TableHead
@@ -418,10 +418,10 @@ export default function CCDepositPage() {
                 onClick={() => handleSort("createdAt")}
               >
                 <div className="flex items-center">
-                  작업일시 {getSortIcon("createdAt")}
+                  ?�업?�시 {getSortIcon("createdAt")}
                 </div>
               </TableHead>
-              <TableHead className="text-zinc-400">검증</TableHead>
+              <TableHead className="text-zinc-400">검�?/TableHead>
               <TableHead className="text-zinc-400 w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -432,7 +432,7 @@ export default function CCDepositPage() {
                   colSpan={7}
                   className="text-center py-20 text-zinc-500"
                 >
-                  {isLoading ? "불러오는 중..." : "입금 내역이 없습니다."}
+                  {isLoading ? "불러?�는 �?.." : "?�금 ?�역???�습?�다."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -455,7 +455,7 @@ export default function CCDepositPage() {
                                 e.target.value,
                               )
                             }
-                            placeholder="닉네임/ID"
+                            placeholder="?�네??ID"
                             className="bg-black/40 border-white/10 h-9"
                           />
                           <Button
@@ -464,17 +464,17 @@ export default function CCDepositPage() {
                             className="border-white/10 h-9"
                             onClick={() => resolveRowUser(row)}
                           >
-                            검증
+                            검�?
                           </Button>
                         </div>
                         <div className="text-xs text-zinc-500">
-                          UID: {row.userId ?? "-"} / {row.nickname ?? "미확인"}
+                          UID: {row.userId ?? "-"} / {row.nickname ?? "미확??}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-[5px]">
                       <span className="font-mono text-zinc-300">
-                        ₩{" "}
+                        ??" "}
                         {(
                           totalByUserId.get(row.userId ?? 0) || 0
                         ).toLocaleString()}
@@ -512,16 +512,16 @@ export default function CCDepositPage() {
                     </TableCell>
                     <TableCell className="text-xs py-[5px]">
                       {status?.state === "loading" && (
-                        <span className="text-zinc-500">검증 중...</span>
+                        <span className="text-zinc-500">검�?�?..</span>
                       )}
                       {status?.state === "ok" && (
-                        <span className="text-emerald-400">확인됨</span>
+                        <span className="text-emerald-400">?�인??/span>
                       )}
                       {status?.state === "error" && (
                         <span className="text-red-400">{status.message}</span>
                       )}
                       {status?.state === "idle" && (
-                        <span className="text-zinc-500">대기</span>
+                        <span className="text-zinc-500">?��?/span>
                       )}
                     </TableCell>
                     <TableCell className="text-right py-[5px]">

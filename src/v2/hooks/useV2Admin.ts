@@ -8,12 +8,14 @@ import {
   rejectWithdrawal,
   getAdminUserDetail,
   getOpsDashboardStatus,
+  getDashboardMetrics,
   runInterventionAction,
   adjustUserWallet,
   adjustUserInventory,
   AdminUserDetailDto,
   AdminWithdrawalDto,
   OpsDashboardResponse,
+  DashboardMetricsResponse,
   AdminWalletAdjustmentRequest,
   AdminInventoryAdjustmentRequest,
   getAdminUserList,
@@ -393,6 +395,14 @@ export function useOpsStatus() {
   });
 }
 
+export function useDashboardMetrics(rangeHours: number = 24) {
+  return useQuery<DashboardMetricsResponse>({
+    queryKey: ["admin", "dashboard", "metrics", rangeHours],
+    queryFn: () => getDashboardMetrics(rangeHours),
+    refetchInterval: 60000,
+  });
+}
+
 // Interventions & Actions
 export function useRunIntervention() {
   const queryClient = useQueryClient();
@@ -637,7 +647,7 @@ export function useVaultStats() {
   return useQuery<VaultStatsDto>({
     queryKey: ["admin", "vault", "stats"],
     queryFn: getVaultStats,
-    refetchInterval: 30000, // 30초마다 자동 새로고침
+    refetchInterval: 30000, // 30초마???�동 ?�로고침
   });
 }
 
@@ -687,6 +697,6 @@ export function useInterventionLogs(userId: number | null, limit: number = 50) {
     queryKey: ["admin", "golden", "interventions", userId, limit],
     queryFn: () => getInterventionLogs(userId!, limit),
     enabled: !!userId && userId > 0,
-    refetchInterval: 10000, // 10초마다 자동 새로고침
+    refetchInterval: 10000, // 10초마???�동 ?�로고침
   });
 }

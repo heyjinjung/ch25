@@ -150,9 +150,9 @@ const VaultPageCompact: React.FC = () => {
             tryHaptic(10);
             addToastNode(
               <div className="text-center space-y-1">
-                <p>배민 2만부터 지급가능</p>
-                <p>씨씨코인 하루 1개 지급가능 (케어방이벤트 중복적용x)</p>
-                <p>컴포즈 아아 1만부터 지급가능</p>
+                <p>배�? 2만�???지급�???/p>
+                <p>?�씨코인 ?�루 1�?지급�???(케?�방?�벤??중복?�용x)</p>
+                <p>컴포�??�아 1만�???지급�???/p>
               </div>,
               { tone: "info" },
             );
@@ -164,7 +164,7 @@ const VaultPageCompact: React.FC = () => {
             className="w-4 h-4 object-contain"
             alt=""
           />
-          안내
+          ?�내
         </button>
       </div>
 
@@ -184,7 +184,7 @@ const VaultPageCompact: React.FC = () => {
                 onClick={() => setShowProgressModal(true)}
                 className="bg-emerald-500 text-black font-black text-[10px] px-2 py-0.5 rounded-full animate-bounce hover:scale-110 active:scale-95 transition-transform"
               >
-                내돈찾기
+                ?�돈찾기
               </button>
             </div>
           </div>
@@ -204,7 +204,7 @@ const VaultPageCompact: React.FC = () => {
                   value={view.availableAmount}
                   onAnimationStart={playVaultJingle}
                 />
-                <span className="text-2xl ml-[-2px]">원</span>
+                <span className="text-2xl ml-[-2px]">??/span>
               </div>
             </div>
           </div>
@@ -212,17 +212,17 @@ const VaultPageCompact: React.FC = () => {
           <button
             onClick={async () => {
               if (view.availableAmount < 10000) {
-                addToast("최소 10,000원부터 출금 가능합니다.", "error");
+                addToast("최소 10,000?��???출금 가?�합?�다.", "error");
                 return;
               }
-              if (!window.confirm("전액 출금 신청하시겠습니까?")) return;
+              if (!window.confirm("?�액 출금 ?�청?�시겠습?�까?")) return;
               tryHaptic(50);
               try {
                 const res = await requestWithdrawal(view.availableAmount);
                 addToast(res.message, res.success ? "success" : "error");
                 vault.refetch();
               } catch {
-                addToast("신청 중 오류가 발생했습니다.", "error");
+                addToast("?�청 �??�류가 발생?�습?�다.", "error");
               }
             }}
             className="w-full max-w-[200px] h-[48px] rounded-2xl bg-emerald-500/80 backdrop-blur-md border border-white/20 text-white font-bold text-[14px] shadow-[0_8px_16px_-4px_rgba(16,185,129,0.5)] hover:bg-emerald-400 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 mb-3"
@@ -232,7 +232,7 @@ const VaultPageCompact: React.FC = () => {
               className="w-5 h-5 object-contain drop-shadow-sm"
               alt=""
             />
-            <span>출금 신청하기</span>
+            <span>출금 ?�청?�기</span>
           </button>
 
           {/* Charge Button */}
@@ -247,7 +247,7 @@ const VaultPageCompact: React.FC = () => {
               className="w-5 h-5 object-contain mix-blend-screen drop-shadow-md"
               alt=""
             />
-            <span className="drop-shadow-sm">씨씨카지노 충전하기</span>
+            <span className="drop-shadow-sm">?�씨카�???충전?�기</span>
           </a>
 
           {/* Secondary Info Link for Unlocked state */}
@@ -257,7 +257,7 @@ const VaultPageCompact: React.FC = () => {
             className="w-full max-w-[200px] h-[48px] rounded-2xl bg-white/5 border border-white/10 text-white/70 font-bold text-[14px] hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <ListChecks size={14} />
-            출금 조건 및 규정 확인
+            출금 조건 �?규정 ?�인
           </button>
         </div>
       ) : (
@@ -281,15 +281,15 @@ const VaultPageCompact: React.FC = () => {
                     className={`w-1.5 h-1.5 rounded-full ${view.depositStatus === "INACTIVE" ? "bg-red-500" : "bg-amber-500"}`}
                   />
                   {view.depositStatus === "INACTIVE"
-                    ? "활동 정지 (적립 불가)"
-                    : "적립 경고 (50% 감소)"}
+                    ? "?�동 ?��? (?�립 불�?)"
+                    : "?�립 경고 (50% 감소)"}
                 </motion.div>
               )}
 
               {/* Limit Warning */}
               {view.showLimitWarning && (
                 <div className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-200 text-[10px] font-bold">
-                  ⚠️ 보관 한도 초과
+                  ?�️ 보�? ?�도 초과
                 </div>
               )}
 
@@ -317,11 +317,11 @@ const VaultPageCompact: React.FC = () => {
                 className="w-8 h-8 object-contain opacity-80"
               />
               <div className="text-4xl font-black text-white/90 tracking-tighter">
-                <AnimatedNumber value={view.vaultBalance} />원
+                <AnimatedNumber value={view.vaultBalance} />??
               </div>
             </div>
             <div className="text-xs text-emerald-300 font-bold">
-              출금 가능액: {view.availableAmount.toLocaleString()}원
+              출금 가?�액: {view.availableAmount.toLocaleString()}??
             </div>
           </div>
 
@@ -335,7 +335,7 @@ const VaultPageCompact: React.FC = () => {
               <span className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.6)]" />
                 <span className="text-white/80 font-bold text-[16px] tracking-widest uppercase drop-shadow-sm">
-                  출금 미션 현황
+                  출금 미션 ?�황
                 </span>
               </span>
               <div
@@ -381,7 +381,7 @@ const VaultPageCompact: React.FC = () => {
               disabled
             >
               <Lock size={14} className="opacity-50" />
-              <span>출금 신청</span>
+              <span>출금 ?�청</span>
             </button>
           </div>
 
@@ -390,9 +390,9 @@ const VaultPageCompact: React.FC = () => {
             <div className="w-full max-w-xs mb-3 px-3 py-2 rounded-xl bg-red-900/20 border border-red-500/30 flex items-center gap-2">
               <Lock size={14} className="text-red-400" />
               <span className="text-[11px] text-red-200 font-bold leading-tight">
-                장기 미활동으로 입금 전까지
+                ?�기 미활?�으�??�금 ?�까지
                 <br />
-                모든 혜택이 일시 정지됩니다.
+                모든 ?�택???�시 ?��??�니??
               </span>
             </div>
           )}
@@ -409,7 +409,7 @@ const VaultPageCompact: React.FC = () => {
               className="w-4 h-4 object-contain mix-blend-screen"
               alt=""
             />
-            씨씨카지노 충전하기
+            ?�씨카�???충전?�기
           </a>
         </div>
       )}

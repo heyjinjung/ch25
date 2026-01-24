@@ -35,63 +35,63 @@ import { GAME_TOKEN_LABELS, type GameTokenType } from "../../types/gameTokens";
 type ActiveTab = "grant" | "playLogs" | "ledger" | "users" | "inventory";
 
 const LABELS = {
-    pageTitle: "코인/티켓 관리",
-    pageDescription: "게임 티켓을 지급/회수하고 플레이 로그 및 원장을 관리합니다.",
-    refresh: "새로고침",
+    pageTitle: "코인/?�켓 관�?,
+    pageDescription: "게임 ?�켓??지�??�수?�고 ?�레??로그 �??�장??관리합?�다.",
+    refresh: "?�로고침",
 
-    tabGrant: "지급/회수",
-    tabPlayLogs: "플레이 로그",
-    tabLedger: "원장 로그",
-    tabUserLookup: "유저 조회",
-    tabInventory: "인벤토리",
+    tabGrant: "지�??�수",
+    tabPlayLogs: "?�레??로그",
+    tabLedger: "?�장 로그",
+    tabUserLookup: "?��? 조회",
+    tabInventory: "?�벤?�리",
 
-    statGrantToday: "오늘 지급",
-    statRevokeToday: "오늘 회수",
-    statActiveHolders: "보유 유저",
+    statGrantToday: "?�늘 지�?,
+    statRevokeToday: "?�늘 ?�수",
+    statActiveHolders: "보유 ?��?",
 
-    labelUserId: "유저 식별자",
-    labelUserIdPlaceholder: "External ID / 닉네임 / @텔레그램",
-    labelTokenType: "티켓 종류",
-    labelAmount: "수량",
-    labelReason: "사유 (선택)",
-    labelReasonPlaceholder: "지급/회수 사유 입력...",
+    labelUserId: "?��? ?�별??,
+    labelUserIdPlaceholder: "External ID / ?�네??/ @?�레그램",
+    labelTokenType: "?�켓 종류",
+    labelAmount: "?�량",
+    labelReason: "?�유 (?�택)",
+    labelReasonPlaceholder: "지�??�수 ?�유 ?�력...",
 
-    btnGrant: "지급",
-    btnRevoke: "회수",
-    btnProcessing: "처리 중..",
-    btnResetFilter: "초기화",
+    btnGrant: "지�?,
+    btnRevoke: "?�수",
+    btnProcessing: "처리 �?.",
+    btnResetFilter: "초기??,
 
-    filterAll: "전체",
-    filterUser: "유저 검색",
+    filterAll: "?�체",
+    filterUser: "?��? 검??,
     filterGameType: "게임 종류",
-    filterTokenType: "티켓 종류",
+    filterTokenType: "?�켓 종류",
     filterRewardType: "보상 종류",
-    filterDeltaDirection: "변동방향",
-    filterDeltaPlus: "지급(+)",
+    filterDeltaDirection: "변?�방??,
+    filterDeltaPlus: "지�?+)",
     filterDeltaMinus: "차감 (-)",
-    sortBy: "정렬",
-    sortTimeDesc: "최신순",
-    sortTimeAsc: "오래된순",
-    sortAmountDesc: "금액높은순",
-    sortAmountAsc: "금액낮은순",
+    sortBy: "?�렬",
+    sortTimeDesc: "최신??,
+    sortTimeAsc: "?�래?�순",
+    sortAmountDesc: "금액?��???,
+    sortAmountAsc: "금액?????,
 
-    colTime: "시간",
-    colUser: "유저",
+    colTime: "?�간",
+    colUser: "?��?",
     colGame: "게임",
     colRewardType: "보상 종류",
-    colRewardAmount: "보상량",
-    colTokenType: "티켓",
-    colDelta: "변동",
-    colBalanceAfter: "잔액",
-    colReason: "사유",
+    colRewardAmount: "보상??,
+    colTokenType: "?�켓",
+    colDelta: "변??,
+    colBalanceAfter: "?�액",
+    colReason: "?�유",
 
     gameRoulette: "룰렛",
-    gameDice: "주사위",
+    gameDice: "주사??,
     gameLottery: "복권",
 
-    loading: "불러오는 중..",
-    noData: "데이터 없음",
-    error: "불러오기 실패",
+    loading: "불러?�는 �?.",
+    noData: "?�이???�음",
+    error: "불러?�기 ?�패",
 } as const;
 
 const TOKEN_TYPES: Array<{ value: GameTokenType; label: string }> = (Object.keys(GAME_TOKEN_LABELS) as GameTokenType[]).map(
@@ -99,21 +99,21 @@ const TOKEN_TYPES: Array<{ value: GameTokenType; label: string }> = (Object.keys
 );
 
 const INVENTORY_ITEM_TYPES = [
-    { value: "VOUCHER_GOLD_KEY_1", label: "교환권: 골드키" },
-    { value: "VOUCHER_DIAMOND_KEY_1", label: "교환권: 다이아키" },
-    { value: "VOUCHER_ROULETTE_COIN_1", label: "교환권: 룰렛티켓" },
-    { value: "VOUCHER_DICE_TOKEN_1", label: "교환권: 주사위티켓" },
-    { value: "VOUCHER_LOTTERY_TICKET_1", label: "교환권: 복권티켓" },
-    { value: "DIAMOND", label: "재화: 다이아" },
-    { value: "BAEMIN_GIFTICON_10000", label: "기프티콘: 배민 1만" },
-    { value: "BAEMIN_GIFTICON_20000", label: "기프티콘: 배민 2만" },
-    { value: "BAEMIN_GIFTICON_30000", label: "기프티콘: 배민 3만" },
-    { value: "BAEMIN_GIFTICON_50000", label: "기프티콘: 배민 5만" },
-    { value: "COMPOSE_AMERICANO_GIFTICON", label: "기프티콘: 컴포즈 아아" },
-    { value: "STARBUCKS_GIFTICON", label: "기프티콘: 스타벅스" },
-    { value: "CU_GIFTICON", label: "기프티콘: CU" },
-    { value: "GS25_GIFTICON", label: "기프티콘: GS25" },
-    { value: "CC_COIN_GIFTICON", label: "기프티콘: 씨씨코인" },
+    { value: "VOUCHER_GOLD_KEY_1", label: "교환�? 골드?? },
+    { value: "VOUCHER_DIAMOND_KEY_1", label: "교환�? ?�이?�키" },
+    { value: "VOUCHER_ROULETTE_COIN_1", label: "교환�? 룰렛?�켓" },
+    { value: "VOUCHER_DICE_TOKEN_1", label: "교환�? 주사?�티�? },
+    { value: "VOUCHER_LOTTERY_TICKET_1", label: "교환�? 복권?�켓" },
+    { value: "DIAMOND", label: "?�화: ?�이?? },
+    { value: "BAEMIN_GIFTICON_10000", label: "기프?�콘: 배�? 1�? },
+    { value: "BAEMIN_GIFTICON_20000", label: "기프?�콘: 배�? 2�? },
+    { value: "BAEMIN_GIFTICON_30000", label: "기프?�콘: 배�? 3�? },
+    { value: "BAEMIN_GIFTICON_50000", label: "기프?�콘: 배�? 5�? },
+    { value: "COMPOSE_AMERICANO_GIFTICON", label: "기프?�콘: 컴포�??�아" },
+    { value: "STARBUCKS_GIFTICON", label: "기프?�콘: ?��?벅스" },
+    { value: "CU_GIFTICON", label: "기프?�콘: CU" },
+    { value: "GS25_GIFTICON", label: "기프?�콘: GS25" },
+    { value: "CC_COIN_GIFTICON", label: "기프?�콘: ?�씨코인" },
 ];
 
 const GAME_LABELS: Record<string, string> = {
@@ -123,9 +123,9 @@ const GAME_LABELS: Record<string, string> = {
 };
 
 const grantRevokeSchema = z.object({
-    userIdentifier: z.string().min(1, "유저 식별자를 입력하세요."),
+    userIdentifier: z.string().min(1, "?��? ?�별?��? ?�력?�세??"),
     tokenType: z.custom<GameTokenType>((v) => typeof v === "string" && (Object.keys(GAME_TOKEN_LABELS) as string[]).includes(v)),
-    amount: z.number().int().min(1, "수량은 1 이상이어야 합니다."),
+    amount: z.number().int().min(1, "?�량?� 1 ?�상?�어???�니??"),
     reason: z.string().optional(),
 });
 
@@ -278,7 +278,7 @@ const TicketManagerPage: React.FC = () => {
 
     const handleRefresh = () => {
         queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens"] });
-        addToast("새로고침 완료", "success");
+        addToast("?�로고침 ?�료", "success");
     };
 
     // Queries
@@ -337,11 +337,11 @@ const TicketManagerPage: React.FC = () => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "inventory"] });
-            addToast("인벤토리 조정 완료", "success");
+            addToast("?�벤?�리 조정 ?�료", "success");
         },
         onError: (err: any) => {
             console.error("Inventory adjustment failed:", err);
-            addToast("인벤토리 조정 실패", "error");
+            addToast("?�벤?�리 조정 ?�패", "error");
         },
     });
 
@@ -366,11 +366,11 @@ const TicketManagerPage: React.FC = () => {
         mutationFn: grantGameTokens,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens"] });
-            addToast("지급 완료", "success");
+            addToast("지�??�료", "success");
         },
         onError: (err: any) => {
             console.error("Grant failed:", err);
-            addToast("지급 실패", "error");
+            addToast("지�??�패", "error");
         },
     });
 
@@ -378,11 +378,11 @@ const TicketManagerPage: React.FC = () => {
         mutationFn: revokeGameTokens,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["admin", "game-tokens"] });
-            addToast("회수 완료", "success");
+            addToast("?�수 ?�료", "success");
         },
         onError: (err: any) => {
             console.error("Revoke failed:", err);
-            addToast("회수 실패", "error");
+            addToast("?�수 ?�패", "error");
         },
     });
 
@@ -393,7 +393,7 @@ const TicketManagerPage: React.FC = () => {
 
         if (quickActionCategory === "INVENTORY") {
             if (!formData.userIdentifier || !inventoryItemType || formData.amount < 1) {
-                addToast("모든 필드를 입력하세요 (유저, 아이템 종류, 수량)", "error");
+                addToast("모든 ?�드�??�력?�세??(?��?, ?�이??종류, ?�량)", "error");
                 return;
             }
             inventoryMutation.mutate({
@@ -407,7 +407,7 @@ const TicketManagerPage: React.FC = () => {
 
         const parsed = grantRevokeSchema.safeParse(formData);
         if (!parsed.success) {
-            addToast(parsed.error.errors[0]?.message ?? "입력값을 확인해주세요.", "error");
+            addToast(parsed.error.errors[0]?.message ?? "?�력값을 ?�인?�주?�요.", "error");
             return;
         }
 
@@ -620,7 +620,7 @@ const TicketManagerPage: React.FC = () => {
                         <p className="text-3xl font-black text-admin-accent tabular-nums">{stats.grantAmount.toLocaleString()}</p>
                         <TrendingUp className="h-5 w-5 text-admin-accent mb-1" />
                     </div>
-                    <p className="text-xs text-admin-text-muted mt-2">KST 기준 최근 300건(원장) 기준</p>
+                    <p className="text-xs text-admin-text-muted mt-2">KST 기�? 최근 300�??�장) 기�?</p>
                 </div>
                 <div
                     onClick={() => {
@@ -634,7 +634,7 @@ const TicketManagerPage: React.FC = () => {
                         <p className="text-3xl font-black text-admin-danger tabular-nums">{stats.revokeAmount.toLocaleString()}</p>
                         <TrendingDown className="h-5 w-5 text-admin-danger mb-1" />
                     </div>
-                    <p className="text-xs text-admin-text-muted mt-2">KST 기준 최근 300건(원장) 기준</p>
+                    <p className="text-xs text-admin-text-muted mt-2">KST 기�? 최근 300�??�장) 기�?</p>
                 </div>
                 <div
                     onClick={() => setActiveTab("users")}
@@ -645,7 +645,7 @@ const TicketManagerPage: React.FC = () => {
                         <p className="text-3xl font-black text-admin-brand tabular-nums">{stats.holderCount.toLocaleString()}</p>
                         <Users className="h-5 w-5 text-admin-brand mb-1" />
                     </div>
-                    <p className="text-xs text-admin-text-muted mt-2">요약 API 기준(잔액 합 &gt; 0)</p>
+                    <p className="text-xs text-admin-text-muted mt-2">?�약 API 기�?(?�액 ??&gt; 0)</p>
                 </div>
             </div>
 
@@ -689,7 +689,7 @@ const TicketManagerPage: React.FC = () => {
                                     onClick={handleApplyPlayLogFilter}
                                     className="btn-admin-secondary h-9 px-4"
                                 >
-                                    검색
+                                    검??
                                 </button>
                                 <div className="w-px h-8 bg-zinc-800 mx-1" />
 
@@ -700,7 +700,7 @@ const TicketManagerPage: React.FC = () => {
                                     value={playLogFilters.gameType}
                                     onChange={(e) => setPlayLogFilters(p => ({ ...p, gameType: e.target.value as any }))}
                                 >
-                                    <option value="ALL">전체 게임</option>
+                                    <option value="ALL">?�체 게임</option>
                                     {Object.entries(GAME_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                                 </select>
                             </div>
@@ -722,7 +722,7 @@ const TicketManagerPage: React.FC = () => {
                                     onClick={handleApplyLedgerFilter}
                                     className="btn-admin-secondary h-9 px-4"
                                 >
-                                    검색
+                                    검??
                                 </button>
                                 <div className="w-px h-8 bg-zinc-800 mx-1" />
 
@@ -733,7 +733,7 @@ const TicketManagerPage: React.FC = () => {
                                     value={ledgerFilters.tokenType}
                                     onChange={(e) => setLedgerFilters(p => ({ ...p, tokenType: e.target.value as any }))}
                                 >
-                                    <option value="ALL">전체</option>
+                                    <option value="ALL">?�체</option>
                                     {TOKEN_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                                 </select>
                             </div>
@@ -746,7 +746,7 @@ const TicketManagerPage: React.FC = () => {
                                         type="text"
                                         value={userSearch}
                                         onChange={(e) => setUserSearch(e.target.value)}
-                                        placeholder="External ID / 닉네임 / @텔레그램"
+                                        placeholder="External ID / ?�네??/ @?�레그램"
                                         className="admin-input w-full h-9 pl-10 pr-3 text-sm"
                                     />
                                 </div>
@@ -758,7 +758,7 @@ const TicketManagerPage: React.FC = () => {
                                     value={userTokenType}
                                     onChange={(e) => setUserTokenType(e.target.value as any)}
                                 >
-                                    <option value="ALL">전체 티켓</option>
+                                    <option value="ALL">?�체 ?�켓</option>
                                     {TOKEN_TYPES.map((t) => (
                                         <option key={t.value} value={t.value}>
                                             {t.label}
@@ -774,8 +774,8 @@ const TicketManagerPage: React.FC = () => {
                                         value={userMinBalanceInput}
                                         onChange={(e) => setUserMinBalanceInput(formatNumberInput(e.target.value))}
                                         className="admin-input h-9 w-24 text-sm text-right font-mono"
-                                        aria-label="최소 잔액"
-                                        title="최소 잔액"
+                                        aria-label="최소 ?�액"
+                                        title="최소 ?�액"
                                     />
                                 </div>
 
@@ -786,7 +786,7 @@ const TicketManagerPage: React.FC = () => {
                                         onChange={(e) => setUserIncludeZero(e.target.checked)}
                                         className="accent-admin-brand"
                                     />
-                                    0 포함
+                                    0 ?�함
                                 </label>
                             </div>
                         )}
@@ -866,12 +866,12 @@ const TicketManagerPage: React.FC = () => {
                                     <tr>
                                         {inventoryTabMode === 'ledger' ? (
                                             <>
-                                                <th className="admin-th">시간</th>
+                                                <th className="admin-th">?�간</th>
                                                 <th className="admin-th">User</th>
                                                 <th className="admin-th">Item</th>
-                                                <th className="admin-th text-right">변동</th>
-                                                <th className="admin-th text-right">잔여</th>
-                                                <th className="admin-th">사유</th>
+                                                <th className="admin-th text-right">변??/th>
+                                                <th className="admin-th text-right">?�여</th>
+                                                <th className="admin-th">?�유</th>
                                             </>
                                         ) : (
                                             <>
@@ -884,7 +884,7 @@ const TicketManagerPage: React.FC = () => {
                                                         else { setInventorySortBy(field); setInventorySortDesc(true); }
                                                     }}
                                                 >
-                                                    Item {inventorySortBy === "item_type" && (inventorySortDesc ? "↓" : "↑")}
+                                                    Item {inventorySortBy === "item_type" && (inventorySortDesc ? "?? : "??)}
                                                 </th>
                                                 <th
                                                     className="admin-th cursor-pointer select-none hover:bg-admin-hover transition-colors text-right"
@@ -894,9 +894,9 @@ const TicketManagerPage: React.FC = () => {
                                                         else { setInventorySortBy(field); setInventorySortDesc(true); }
                                                     }}
                                                 >
-                                                    수량 {inventorySortBy === "quantity" && (inventorySortDesc ? "↓" : "↑")}
+                                                    ?�량 {inventorySortBy === "quantity" && (inventorySortDesc ? "?? : "??)}
                                                 </th>
-                                                <th className="admin-th">업데이트</th>
+                                                <th className="admin-th">?�데?�트</th>
                                             </>
                                         )}
                                     </tr>
@@ -1041,20 +1041,20 @@ const TicketManagerPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                             <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                                 <Wallet className="h-4 w-4 text-admin-brand" />
-                                퀵 액션 (Actions)
+                                ???�션 (Actions)
                             </h3>
                             <div className="flex bg-zinc-900 rounded-lg p-0.5 border border-zinc-800">
                                 <button
                                     onClick={() => setFormMode("grant")}
                                     className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${formMode === 'grant' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                                 >
-                                    지급
+                                    지�?
                                 </button>
                                 <button
                                     onClick={() => setFormMode("revoke")}
                                     className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${formMode === 'revoke' ? 'bg-rose-500/20 text-rose-400' : 'text-zinc-500 hover:text-zinc-300'}`}
                                 >
-                                    회수
+                                    ?�수
                                 </button>
                             </div>
                         </div>
@@ -1066,14 +1066,14 @@ const TicketManagerPage: React.FC = () => {
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${quickActionCategory === 'TOKEN' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-400'}`}
                             >
                                 <Coins className="h-3.5 w-3.5" />
-                                재화 (Tokens)
+                                ?�화 (Tokens)
                             </button>
                             <button
                                 onClick={() => { setQuickActionCategory("INVENTORY"); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold transition-all ${quickActionCategory === 'INVENTORY' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-400'}`}
                             >
                                 <Package className="h-3.5 w-3.5" />
-                                아이템 (Inventory)
+                                ?�이??(Inventory)
                             </button>
                         </div>
 
@@ -1101,7 +1101,7 @@ const TicketManagerPage: React.FC = () => {
                                     className="flex items-center justify-center gap-1.5 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-200 border border-zinc-700 transition-colors"
                                 >
                                     <History className="h-3.5 w-3.5" />
-                                    <span>원장 보기</span>
+                                    <span>?�장 보기</span>
                                     <ExternalLink className="h-3 w-3 opacity-50 ml-0.5" />
                                 </button>
                             </div>
@@ -1109,7 +1109,7 @@ const TicketManagerPage: React.FC = () => {
 
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-zinc-300">대상 유저 (Target User)</label>
+                                <label className="text-sm font-semibold text-zinc-300">?�???��? (Target User)</label>
                                 <input
                                     type="text"
                                     value={formData.userIdentifier}
@@ -1122,7 +1122,7 @@ const TicketManagerPage: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
                                     <label className="text-sm font-semibold text-zinc-300">
-                                        {quickActionCategory === 'TOKEN' ? "토큰 (Token)" : "아이템 (Item Type)"}
+                                        {quickActionCategory === 'TOKEN' ? "?�큰 (Token)" : "?�이??(Item Type)"}
                                     </label>
                                     {quickActionCategory === 'TOKEN' ? (
                                         <select
@@ -1136,19 +1136,19 @@ const TicketManagerPage: React.FC = () => {
                                         </select>
                                     ) : (
                                         <select
-                                            title="아이템 종류"
-                                            aria-label="아이템 종류"
+                                            title="?�이??종류"
+                                            aria-label="?�이??종류"
                                             value={inventoryItemType}
                                             onChange={(e) => setInventoryItemType(e.target.value)}
                                             className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none"
                                         >
-                                            <option value="">아이템 선택...</option>
+                                            <option value="">?�이???�택...</option>
                                             {INVENTORY_ITEM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                         </select>
                                     )}
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-sm font-semibold text-zinc-300">수량 (Amount)</label>
+                                    <label className="text-sm font-semibold text-zinc-300">?�량 (Amount)</label>
                                     <input
                                         title={LABELS.labelAmount}
                                         aria-label={LABELS.labelAmount}
@@ -1161,13 +1161,13 @@ const TicketManagerPage: React.FC = () => {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-zinc-300">사유 (Reason)</label>
+                                <label className="text-sm font-semibold text-zinc-300">?�유 (Reason)</label>
                                 <input
                                     type="text"
                                     value={formData.reason}
                                     onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                                     className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:border-admin-brand outline-none placeholder:text-zinc-500"
-                                    placeholder="지급/회수 사유 입력 (Optional)"
+                                    placeholder="지�??�수 ?�유 ?�력 (Optional)"
                                 />
                             </div>
 

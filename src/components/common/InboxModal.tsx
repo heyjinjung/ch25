@@ -51,7 +51,7 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
                 <header className="border-b border-emerald-900/50 px-6 py-4 shrink-0">
                     <h2 className="flex items-center gap-2 text-xl font-bold text-emerald-100">
                         <img src="/assets/icon_alarm_normal.png" className="w-8 h-8 object-contain" alt="" />
-                        메시지 보관함
+                        메시지 보�???
                     </h2>
                 </header>
 
@@ -59,11 +59,11 @@ const InboxModal: React.FC<InboxModalProps> = ({ onClose }) => {
                     {isLoading ? (
                         <div className="py-12 text-center text-gray-400">
                             <Loader2 className="animate-spin mx-auto mb-2" />
-                            로딩 중...
+                            로딩 �?..
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">
-                            받은 메시지가 없습니다.
+                            받�? 메시지가 ?�습?�다.
                         </div>
                     ) : (
                         <ul className="space-y-3 py-2">

@@ -1,4 +1,4 @@
-// src/v2/components/vault/V2WithdrawalGuideModal.tsx
+// src/components/vault/V2WithdrawalGuideModal.tsx
 import React from "react";
 import { X, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,11 +52,11 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                   <ShieldCheck size={28} className="text-[#25AD82]" />
                 </div>
                 <h2 className="text-xl font-bold text-white text-center">
-                  출금 서비스 안내
+                  출금 ?�비???�내
                 </h2>
                 <p className="text-sm text-white/40 text-center leading-relaxed">
-                  금고 잔액을 안전하게 출금하기 위해<br />
-                  다음의 조건을 먼저 달성해 주세요.
+                  금고 ?�액???�전?�게 출금?�기 ?�해<br />
+                  ?�음??조건??먼�? ?�성??주세??
                 </p>
               </div>
             </div>

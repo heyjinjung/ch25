@@ -74,7 +74,7 @@ const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount, title }) =>
                                     
                                     <div className={`text-5xl font-black italic tracking-tighter ${isDebit ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 via-amber-500 to-yellow-600'}`}>
                                         {isDebit ? "-" : "+"}<AnimatedNumber value={Math.abs(amount)} />
-                                        <span className="text-2xl not-italic ml-1 text-white/50">원</span>
+                                        <span className="text-2xl not-italic ml-1 text-white/50">??/span>
                                     </div>
                                 </motion.div>
                                 
@@ -84,7 +84,7 @@ const VaultAccrualModal: React.FC<Props> = ({ open, onClose, amount, title }) =>
                                     transition={{ delay: 0.4 }}
                                     className="mt-6 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] text-white/40"
                                 >
-                                    터치하여 닫기
+                                    ?�치?�여 ?�기
                                 </motion.div>
                             </div>
                         </motion.div>

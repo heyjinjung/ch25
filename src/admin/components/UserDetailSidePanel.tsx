@@ -22,7 +22,7 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                         <User size={16} />
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <h2 className="text-admin-body font-bold text-admin-text-primary">{user.nickname || "(닉네임 없음)"}</h2>
+                        <h2 className="text-admin-body font-bold text-admin-text-primary">{user.nickname || "(?�네???�음)"}</h2>
                         <span className="text-admin-mono text-admin-text-secondary font-mono">#{user.external_id}</span>
                     </div>
                 </div>
@@ -30,8 +30,8 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                     type="button"
                     onClick={onClose}
                     className="h-9 w-9 inline-flex items-center justify-center rounded-admin-lg border border-transparent hover:border-admin-border hover:bg-admin-hover text-admin-text-secondary hover:text-admin-text-primary transition-all duration-200 active:scale-[0.98]"
-                    aria-label="닫기"
-                    title="닫기"
+                    aria-label="?�기"
+                    title="?�기"
                 >
                     <X size={16} />
                 </button>
@@ -44,7 +44,7 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                     {/* Status Section */}
                     <section className="grid grid-cols-2 gap-3">
                         <div className="admin-card p-4 flex flex-col justify-between h-[92px]">
-                            <p className="text-admin-meta text-admin-text-secondary uppercase tracking-wider font-bold">상태</p>
+                            <p className="text-admin-meta text-admin-text-secondary uppercase tracking-wider font-bold">?�태</p>
                             <div className="flex items-center gap-2">
                                 <span
                                     className={
@@ -65,7 +65,7 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                             </div>
                         </div>
                         <div className="admin-card p-4 flex flex-col justify-between h-[92px]">
-                            <p className="text-admin-meta text-admin-text-secondary uppercase tracking-wider font-bold">시즌 레벨</p>
+                            <p className="text-admin-meta text-admin-text-secondary uppercase tracking-wider font-bold">?�즌 ?�벨</p>
                             <div className="flex items-center gap-2">
                                 <TrendingUp size={16} className="text-admin-brand" />
                                 <span className="text-admin-subtitle text-admin-text-primary font-bold">LV.{user.season_level || user.level || 1}</span>
@@ -77,16 +77,16 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                     <section>
                         <div className="mb-2 flex items-center gap-2 text-admin-text-secondary">
                             <Shield size={12} />
-                            <h3 className="text-admin-meta font-bold uppercase tracking-wider">기본 프로필</h3>
+                            <h3 className="text-admin-meta font-bold uppercase tracking-wider">기본 ?�로??/h3>
                         </div>
                         <div className="admin-card p-5 space-y-3">
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-admin-text-secondary">실명</span>
+                                <span className="text-admin-text-secondary">?�명</span>
                                 <span className="text-admin-text-primary font-semibold">{user.admin_profile?.real_name || "-"}</span>
                             </div>
                             <div className="w-full border-t border-admin-border/50" />
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-admin-text-secondary flex items-center gap-1"><Phone size={10} /> 연락처</span>
+                                <span className="text-admin-text-secondary flex items-center gap-1"><Phone size={10} /> ?�락�?/span>
                                 <span className="text-admin-text-primary font-semibold">{user.admin_profile?.phone_number || "-"}</span>
                             </div>
                             <div className="w-full border-t border-admin-border/50" />
@@ -96,36 +96,36 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                             </div>
                             <div className="w-full border-t border-admin-border/50" />
                             <div className="flex justify-between items-center text-xs">
-                                <span className="text-admin-text-secondary">Telegram 사용자명</span>
+                                <span className="text-admin-text-secondary">Telegram ?�용?�명</span>
                                 <span className="text-admin-brand hover:underline cursor-pointer font-semibold">@{user.telegram_username?.replace(/^@/, "") || "-"}</span>
                             </div>
                         </div>
                     </section>
 
-                    {/* 빠른 실행 */}
+                    {/* 빠른 ?�행 */}
                     <section>
                         <div className="mb-2 flex items-center gap-2 text-admin-text-secondary">
                             <Package size={12} />
-                            <h3 className="text-admin-meta font-bold tracking-wider">빠른 실행</h3>
+                            <h3 className="text-admin-meta font-bold tracking-wider">빠른 ?�행</h3>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <button
                                 type="button"
                                 className="admin-card p-3 flex flex-col items-center justify-center hover:bg-admin-hover transition-all duration-200 active:scale-[0.98] group"
-                                title="지갑"
-                                aria-label="지갑"
+                                title="지�?
+                                aria-label="지�?
                             >
                                 <Ticket size={16} className="text-admin-brand mb-2 group-hover:scale-110 transition-transform" />
-                                <span className="text-admin-meta text-admin-text-primary">지갑</span>
+                                <span className="text-admin-meta text-admin-text-primary">지�?/span>
                             </button>
                             <button
                                 type="button"
                                 className="admin-card p-3 flex flex-col items-center justify-center hover:bg-admin-hover transition-all duration-200 active:scale-[0.98] group"
-                                title="인벤토리"
-                                aria-label="인벤토리"
+                                title="?�벤?�리"
+                                aria-label="?�벤?�리"
                             >
                                 <ClipboardList size={16} className="text-admin-accent mb-2 group-hover:scale-110 transition-transform" />
-                                <span className="text-admin-meta text-admin-text-primary">인벤토리</span>
+                                <span className="text-admin-meta text-admin-text-primary">?�벤?�리</span>
                             </button>
                             <button
                                 type="button"
@@ -143,7 +143,7 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                     <section>
                         <div className="mb-2 flex items-center gap-2 text-admin-text-secondary">
                             <Calendar size={12} />
-                            <h3 className="text-admin-meta font-bold uppercase tracking-wider">운영 메모</h3>
+                            <h3 className="text-admin-meta font-bold uppercase tracking-wider">?�영 메모</h3>
                         </div>
                         <div className="admin-card p-4">
                             <div className="flex flex-wrap gap-1 mb-2">
@@ -158,14 +158,14 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
                                 <button
                                     type="button"
                                     className="px-2 py-1 rounded-full border border-dashed border-admin-border text-admin-meta text-admin-text-secondary hover:text-admin-text-primary hover:bg-admin-hover transition-colors font-bold"
-                                    title="태그 추가"
+                                    title="?�그 추�?"
                                 >
-                                    + 태그
+                                    + ?�그
                                 </button>
                             </div>
                             <textarea
                                 className="w-full bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-3 text-admin-body text-admin-text-primary transition-all focus:outline-none focus:ring-2 focus:ring-admin-brand/40 resize-none h-24 placeholder:text-admin-text-muted"
-                                placeholder="운영 메모를 입력하세요..."
+                                placeholder="?�영 메모�??�력?�세??.."
                                 defaultValue={user.admin_profile?.memo}
                             />
                         </div>
@@ -176,11 +176,11 @@ const UserDetailSidePanel: React.FC<UserDetailSidePanelProps> = ({ user, onClose
 
             {/* Footer */}
             <footer className="p-4 border-t border-admin-border bg-admin-bg/40 backdrop-blur-md flex gap-2">
-                <button type="button" className="btn-admin-secondary flex-1" title="정보 수정">
-                    정보 수정
+                <button type="button" className="btn-admin-secondary flex-1" title="?�보 ?�정">
+                    ?�보 ?�정
                 </button>
-                <button type="button" className="btn-admin-primary flex-1" title="보상 지급">
-                    보상 지급
+                <button type="button" className="btn-admin-primary flex-1" title="보상 지�?>
+                    보상 지�?
                 </button>
             </footer>
         </div>

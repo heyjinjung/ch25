@@ -22,8 +22,8 @@ const RiskMonitorCard: React.FC<RiskMonitorCardProps> = ({ riskCount = 0 }) => {
         mutationFn: async () => {
             // API call to trigger retention messages
             const { data } = await adminApi.post("/admin/api/crm/messages", {
-                title: "특별 혜택 안내",
-                content: "회원님을 위한 특별한 선물이 도착했습니다. 지금 즉시 확인하세요!",
+                title: "?�별 ?�택 ?�내",
+                content: "?�원?�을 ?�한 ?�별???�물???�착?�습?�다. 지�?즉시 ?�인?�세??",
                 target_type: "SEGMENT",
                 target_value: "CHURN_RISK",
                 channels: ["TELEGRAM", "INBOX"]
@@ -44,7 +44,7 @@ const RiskMonitorCard: React.FC<RiskMonitorCardProps> = ({ riskCount = 0 }) => {
                         <AlertTriangle size={24} />
                     </div>
                     <div>
-                        <h3 className="text-admin-subtitle text-admin-text-primary">이탈 위험 관측</h3>
+                        <h3 className="text-admin-subtitle text-admin-text-primary">?�탈 ?�험 관�?/h3>
                         <p className="text-admin-meta text-admin-text-muted">Retention Risk Monitor</p>
                     </div>
                 </div>
@@ -59,7 +59,7 @@ const RiskMonitorCard: React.FC<RiskMonitorCardProps> = ({ riskCount = 0 }) => {
                         {riskCount}
                     </span>
                     <span className="text-admin-body font-bold text-admin-text-muted mb-1.5 underline decoration-admin-danger/40 underline-offset-4">
-                        명 감지됨
+                        �?감�???
                     </span>
                 </div>
 
@@ -67,12 +67,12 @@ const RiskMonitorCard: React.FC<RiskMonitorCardProps> = ({ riskCount = 0 }) => {
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-admin-meta font-bold text-admin-text-secondary">
                             <Users size={14} />
-                            대상 그룹: 이탈 위험 (High)
+                            ?�??그룹: ?�탈 ?�험 (High)
                         </div>
-                        <span className="text-[10px] text-admin-text-muted">72h 미접속 기준</span>
+                        <span className="text-[10px] text-admin-text-muted">72h 미접??기�?</span>
                     </div>
                     <p className="text-admin-meta text-admin-text-muted leading-relaxed">
-                        해당 인원들은 최근 활동이 급격히 저하되었습니다. 즉각적인 리텐션 액션(넛지)이 권장됩니다.
+                        ?�당 ?�원?��? 최근 ?�동??급격???�?�되?�습?�다. 즉각?�인 리텐???�션(?��?)??권장?�니??
                     </p>
                 </div>
 
@@ -91,19 +91,19 @@ const RiskMonitorCard: React.FC<RiskMonitorCardProps> = ({ riskCount = 0 }) => {
                     ) : isNudged ? (
                         <>
                             <CheckCircle2 size={18} />
-                            넛지 발송 완료
+                            ?��? 발송 ?�료
                         </>
                     ) : (
                         <>
                             <Send size={18} />
-                            즉시 넛지 발송 (Nudge Now)
+                            즉시 ?��? 발송 (Nudge Now)
                         </>
                     )}
                 </button>
 
                 {isNudged && (
                     <p className="text-center text-[10px] text-admin-accent font-bold animate-in fade-in slide-in-from-top-2">
-                        방금 텔레그램 및 인박스로 특별 오퍼가 발송되었습니다.
+                        방금 ?�레그램 �??�박?�로 ?�별 ?�퍼가 발송?�었?�니??
                     </p>
                 )}
             </div>

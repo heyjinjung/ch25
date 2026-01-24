@@ -27,21 +27,21 @@ import {
 import { REWARD_TYPES } from "../constants/rewardTypes";
 
 const MISSION_CATEGORIES = [
-    { value: "DAILY", label: "일간 미션" },
+    { value: "DAILY", label: "?�간 미션" },
     { value: "WEEKLY", label: "주간 미션" },
-    { value: "SPECIAL", label: "스페셜 미션" },
-    { value: "NEW_USER", label: "신규 유저 미션" },
+    { value: "SPECIAL", label: "?�페??미션" },
+    { value: "NEW_USER", label: "?�규 ?��? 미션" },
 ];
 
 const ACTION_TYPES = [
-    { value: "PLAY_GAME", label: "플레이 (Game Play)" },
-    { value: "LOGIN", label: "로그인" },
-    { value: "JOIN_CHANNEL", label: "채널입장 (Telegram)" },
-    { value: "INVITE_FRIEND", label: "친구초대" },
-    { value: "DEPOSIT", label: "입금" },
-    { value: "WIN", label: "승리" },
-    { value: "SOCIAL", label: "소셜액션" },
-    { value: "OTHER", label: "기타" },
+    { value: "PLAY_GAME", label: "?�레??(Game Play)" },
+    { value: "LOGIN", label: "로그?? },
+    { value: "JOIN_CHANNEL", label: "채널?�장 (Telegram)" },
+    { value: "INVITE_FRIEND", label: "친구초�?" },
+    { value: "DEPOSIT", label: "?�금" },
+    { value: "WIN", label: "?�리" },
+    { value: "SOCIAL", label: "?�셜?�션" },
+    { value: "OTHER", label: "기�?" },
 ];
 
 const AdminMissionPage: React.FC = () => {
@@ -122,7 +122,7 @@ const AdminMissionPage: React.FC = () => {
 
     const handleSave = () => {
         if (!formValues.title || !formValues.logic_key) {
-            alert("제목과 로직 키는 필수입니다.");
+            alert("?�목�?로직 ?�는 ?�수?�니??");
             return;
         }
 
@@ -152,7 +152,7 @@ const AdminMissionPage: React.FC = () => {
     if (isLoading) return (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Clock className="h-8 w-8 text-admin-brand animate-spin" />
-            <span className="text-admin-meta text-admin-text-secondary">미션 엔진 분석 중...</span>
+            <span className="text-admin-meta text-admin-text-secondary">미션 ?�진 분석 �?..</span>
         </div>
     );
 
@@ -163,7 +163,7 @@ const AdminMissionPage: React.FC = () => {
             <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
                 <div className="space-y-1">
                     <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-                        미션 관리 <span className="text-admin-brand/40">Missions</span>
+                        미션 관�?<span className="text-admin-brand/40">Missions</span>
                     </h1>
                 </div>
                 <button
@@ -171,7 +171,7 @@ const AdminMissionPage: React.FC = () => {
                     className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto text-sm shadow-lg shadow-admin-brand/20 hover:shadow-admin-brand/40 active:scale-95 transition-all"
                 >
                     <Plus className="h-4 w-4" />
-                    <span className="font-bold">신규 미션 등록</span>
+                    <span className="font-bold">?�규 미션 ?�록</span>
                 </button>
             </header>
 
@@ -179,10 +179,10 @@ const AdminMissionPage: React.FC = () => {
             {/* Logic Dashboard Stats - Compact Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 {[
-                    { label: "전체 미션", value: missions?.length || 0, icon: <Activity className="h-4 w-4" />, color: "text-admin-brand", bg: "bg-admin-brand/10 border-admin-brand/20" },
-                    { label: "활성 미션", value: missions?.filter(m => m.is_active).length || 0, icon: <CheckCircle2 className="h-4 w-4" />, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
-                    { label: "일일 미션", value: missions?.filter(m => m.category === "DAILY").length || 0, icon: <Clock className="h-4 w-4" />, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-                    { label: "보상 누적액", value: "8.4M", icon: <Award className="h-4 w-4" />, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
+                    { label: "?�체 미션", value: missions?.length || 0, icon: <Activity className="h-4 w-4" />, color: "text-admin-brand", bg: "bg-admin-brand/10 border-admin-brand/20" },
+                    { label: "?�성 미션", value: missions?.filter(m => m.is_active).length || 0, icon: <CheckCircle2 className="h-4 w-4" />, color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20" },
+                    { label: "?�일 미션", value: missions?.filter(m => m.category === "DAILY").length || 0, icon: <Clock className="h-4 w-4" />, color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
+                    { label: "보상 ?�적??, value: "8.4M", icon: <Award className="h-4 w-4" />, color: "text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-admin-card p-4 rounded-xl border border-white/5 flex items-center justify-between group hover:border-white/10 transition-colors">
                         <div>
@@ -203,7 +203,7 @@ const AdminMissionPage: React.FC = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
                     <input
                         type="text"
-                        placeholder="미션 제목 검..."
+                        placeholder="미션 ?�목 검..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 h-10 bg-zinc-900/50 border border-white/5 rounded-lg text-sm text-zinc-200 focus:outline-none focus:border-admin-brand/50 focus:bg-zinc-900 transition-all placeholder:text-zinc-600"
@@ -235,15 +235,15 @@ const AdminMissionPage: React.FC = () => {
                                 <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">미션 명세 (Details)</th>
                                 <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">카테고리 (Category)</th>
                                 <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">목표 / 보상 (Goal & Rewards)</th>
-                                <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-center">상태 (Status)</th>
-                                <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">액션 (Actions)</th>
+                                <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-center">?�태 (Status)</th>
+                                <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">?�션 (Actions)</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-admin-border">
                             {filteredMissions.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="px-6 py-20 text-center text-admin-body text-admin-text-muted italic">
-                                        조건에 부합하는 미션 데이터가 없습니다.
+                                        조건??부?�하??미션 ?�이?��? ?�습?�다.
                                     </td>
                                 </tr>
                             ) : (
@@ -301,17 +301,17 @@ const AdminMissionPage: React.FC = () => {
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => handleOpenEdit(mission)}
-                                                    aria-label="미션 수정"
-                                                    title="수정"
+                                                    aria-label="미션 ?�정"
+                                                    title="?�정"
                                                     type="button"
                                                     className="p-1.5 rounded text-zinc-500 hover:text-white hover:bg-white/10 transition-colors"
                                                 >
                                                     <Edit3 className="h-3.5 w-3.5" />
                                                 </button>
                                                 <button
-                                                    onClick={() => { if (confirm("삭제하시겠습니까?")) deleteMutation.mutate(mission.id); }}
-                                                    aria-label="미션 삭제"
-                                                    title="삭제"
+                                                    onClick={() => { if (confirm("??��?�시겠습?�까?")) deleteMutation.mutate(mission.id); }}
+                                                    aria-label="미션 ??��"
+                                                    title="??��"
                                                     type="button"
                                                     className="p-1.5 rounded text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                                                 >
@@ -331,7 +331,7 @@ const AdminMissionPage: React.FC = () => {
             <div className="p-4 rounded-xl bg-admin-sidebar/30 border border-admin-border flex items-center gap-3">
                 <AlertCircle className="h-5 w-5 text-admin-brand" />
                 <p className="text-admin-meta text-admin-text-secondary leading-relaxed font-medium">
-                    미션 로직 키는 백엔드 `MissionProcessor`에 정의된 키와 반드시 일치해야 합니다. 새로운 로직이 필요한 경우 시스템 관리자에게 문의하세요.
+                    미션 로직 ?�는 백엔??`MissionProcessor`???�의???��? 반드???�치?�야 ?�니?? ?�로??로직???�요??경우 ?�스??관리자?�게 문의?�세??
                 </p>
             </div>
 
@@ -344,14 +344,14 @@ const AdminMissionPage: React.FC = () => {
                         <div className="sticky top-0 z-10 bg-[#18181b]/95 backdrop-blur border-b border-white/5 px-8 py-6 flex items-center justify-between">
                             <div>
                                 <h2 className="text-xl font-bold tracking-tight text-white uppercase">
-                                    {editingMission ? "미션 정보 수정" : "신규 미션 등록"}
+                                    {editingMission ? "미션 ?�보 ?�정" : "?�규 미션 ?�록"}
                                 </h2>
-                                <p className="text-xs text-zinc-500 font-medium mt-1">미션의 세부 정보와 보상을 설정합니다.</p>
+                                <p className="text-xs text-zinc-500 font-medium mt-1">미션???��? ?�보?� 보상???�정?�니??</p>
                             </div>
                             <button
                                 onClick={() => { setIsAdding(false); setEditingMission(null); }}
-                                aria-label="미션 편집 모달 닫기"
-                                title="닫기"
+                                aria-label="미션 ?�집 모달 ?�기"
+                                title="?�기"
                                 type="button"
                                 className="p-2 rounded-lg hover:bg-white/5 transition-colors"
                             >
@@ -365,27 +365,27 @@ const AdminMissionPage: React.FC = () => {
                             {/* Section 1: Basic Info */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-black text-admin-brand flex items-center gap-2 uppercase tracking-widest">
-                                    <Settings2 className="h-4 w-4" /> 기본 설정 (Basic Config)
+                                    <Settings2 className="h-4 w-4" /> 기본 ?�정 (Basic Config)
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#1e1e24] rounded-xl border border-white/5">
                                     <div className="col-span-2 space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">미션 제목 (Title) <span className="text-rose-500">*</span></label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">미션 ?�목 (Title) <span className="text-rose-500">*</span></label>
                                         <input
                                             type="text"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-700"
                                             value={formValues.title || ""}
                                             onChange={(e) => setFormValues({ ...formValues, title: e.target.value })}
-                                            placeholder="예: 일일 출석 체크"
+                                            placeholder="?? ?�일 출석 체크"
                                             required
                                         />
                                     </div>
                                     <div className="col-span-2 space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">상세 설명 (Description)</label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">?�세 ?�명 (Description)</label>
                                         <textarea
                                             className="w-full min-h-[80px] bg-zinc-900 border border-zinc-800 rounded p-3 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all placeholder:text-zinc-700 resize-none"
                                             value={formValues.description || ""}
                                             onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
-                                            placeholder="유저에게 보여질 설명 문구입니다."
+                                            placeholder="?��??�게 보여�??�명 문구?�니??"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -401,7 +401,7 @@ const AdminMissionPage: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">로직 키 (Logic Key) <span className="text-rose-500">*</span></label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">로직 ??(Logic Key) <span className="text-rose-500">*</span></label>
                                         <div className="relative">
                                             <input
                                                 type="text"
@@ -419,11 +419,11 @@ const AdminMissionPage: React.FC = () => {
                             {/* Section 2: Conditions & Rewards */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-black text-admin-brand flex items-center gap-2 uppercase tracking-widest">
-                                    <Award className="h-4 w-4" /> 목표 및 보상 (Goal & Reward)
+                                    <Award className="h-4 w-4" /> 목표 �?보상 (Goal & Reward)
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#1e1e24] rounded-xl border border-white/5">
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">액션 타입</label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">?�션 ?�??/label>
                                         <select
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500/50"
                                             value={formValues.action_type || "OTHER"}
@@ -435,7 +435,7 @@ const AdminMissionPage: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-zinc-500">목표 횟수/금액</label>
+                                        <label className="text-xs font-semibold text-zinc-500">목표 ?�수/금액</label>
                                         <input
                                             type="number"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-200 font-bold focus:outline-none focus:border-indigo-500/50"
@@ -459,7 +459,7 @@ const AdminMissionPage: React.FC = () => {
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">보상 수량</label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">보상 ?�량</label>
                                         <input
                                             type="number"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-200 font-mono focus:outline-none focus:border-indigo-500/50"
@@ -468,7 +468,7 @@ const AdminMissionPage: React.FC = () => {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">경험치 (XP)</label>
+                                        <label className="text-xs font-black text-zinc-500 uppercase tracking-widest ml-1">경험�?(XP)</label>
                                         <input
                                             type="number"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500/50"
@@ -484,7 +484,7 @@ const AdminMissionPage: React.FC = () => {
                                                 checked={formValues.auto_claim || false}
                                                 onChange={(e) => setFormValues({ ...formValues, auto_claim: e.target.checked })}
                                             />
-                                            <span className="text-sm font-black text-zinc-400 group-hover:text-zinc-200 uppercase tracking-widest transition-colors">자동 수령 (Auto Claim)</span>
+                                            <span className="text-sm font-black text-zinc-400 group-hover:text-zinc-200 uppercase tracking-widest transition-colors">?�동 ?�령 (Auto Claim)</span>
                                         </label>
                                     </div>
                                 </div>
@@ -493,11 +493,11 @@ const AdminMissionPage: React.FC = () => {
                             {/* Section 3: Schedule */}
                             <div className="space-y-4">
                                 <h3 className="text-xs font-black text-admin-brand flex items-center gap-2 uppercase tracking-widest">
-                                    <Clock className="h-4 w-4" /> 일정 설정 (Schedule)
+                                    <Clock className="h-4 w-4" /> ?�정 ?�정 (Schedule)
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-[#1e1e24] rounded-xl border border-white/5">
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-zinc-500">시작 일시</label>
+                                        <label className="text-xs font-semibold text-zinc-500">?�작 ?�시</label>
                                         <input
                                             type="datetime-local"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500/50"
@@ -506,7 +506,7 @@ const AdminMissionPage: React.FC = () => {
                                         />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-semibold text-zinc-500">종료 일시</label>
+                                        <label className="text-xs font-semibold text-zinc-500">종료 ?�시</label>
                                         <input
                                             type="datetime-local"
                                             className="w-full h-10 bg-zinc-900 border border-zinc-800 rounded px-3 text-sm text-zinc-300 focus:outline-none focus:border-indigo-500/50"
@@ -533,7 +533,7 @@ const AdminMissionPage: React.FC = () => {
                                         <RefreshCw className="h-4 w-4 animate-spin" /> :
                                         <Save className="h-4 w-4" />
                                     }
-                                    {editingMission ? "저장하기" : "등록하기"}
+                                    {editingMission ? "?�?�하�? : "?�록?�기"}
                                 </button>
                             </div>
                         </form>

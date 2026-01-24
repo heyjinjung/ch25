@@ -1,4 +1,4 @@
-// src/admin/api/httpClient.ts
+// src/api/admin/httpClient.ts
 import axios from "axios";
 import { clearAdminToken, getAdminToken } from "../../auth/adminAuth";
 
@@ -127,8 +127,8 @@ adminApi.interceptors.response.use(
         clearAdminToken();
         if (typeof window !== "undefined") {
           const pathname = window.location.pathname || "";
-          const target = pathname.startsWith("/v2/admin")
-            ? "/v2/admin/login"
+          const target = pathname.startsWith("/admin")
+            ? "/admin/login"
             : "/admin/login";
           if (pathname !== target) {
             window.location.href = target;

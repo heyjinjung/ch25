@@ -35,7 +35,7 @@ const StreakTrack: React.FC = () => {
                     </span>
                 </div>
                 <div className="text-[10px] font-bold text-white/50 group-hover:text-white/80 transition-colors">
-                    터치해서 자세히 보기 &gt;
+                    ?�치?�서 ?�세??보기 &gt;
                 </div>
             </div>
 
@@ -79,7 +79,7 @@ const StreakTrack: React.FC = () => {
                                     "text-[9px] font-bold",
                                     isCurrentTarget || isClaimable ? "text-amber-500" : "text-zinc-600"
                                 )}>
-                                    {day}일
+                                    {day}??
                                 </span>
                             </div>
                         );

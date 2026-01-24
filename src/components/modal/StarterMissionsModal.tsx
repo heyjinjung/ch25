@@ -35,7 +35,7 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
 
     const handleAction = () => {
         impact("medium");
-        addToast("미션을 완료하면 총 8,000원을 지급해 드려요! 🎁", "success");
+        addToast("미션???�료?�면 �?8,000?�을 지급해 ?�려?? ?��", "success");
         onClose();
         navigate("/missions");
     };
@@ -103,15 +103,15 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                                 Starter Pack
                             </div>
                             <h2 className="text-2xl font-black text-white tracking-tight leading-tight">
-                                미션 달성하고<br />
-                                <span className="text-purple-400">8,000원</span> 받기!
+                                미션 ?�성?�고<br />
+                                <span className="text-purple-400">8,000??/span> 받기!
                             </h2>
                         </div>
                         <button
                             type="button"
                             onClick={onClose}
                             className="p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors"
-                            aria-label="닫기"
+                            aria-label="?�기"
                         >
                             <X size={20} />
                         </button>
@@ -150,7 +150,7 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                                         </p>
                                     </div>
                                     <p className="text-xs text-white/50 truncate mt-0.5">
-                                        {mission.description || "미션 완료하고 보상 받기"}
+                                        {mission.description || "미션 ?�료?�고 보상 받기"}
                                     </p>
                                 </div>
                                 {!mission.is_claimed && (
@@ -167,9 +167,9 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                     {/* Total Reward & Action */}
                     <div className="pt-4 border-t border-white/10">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-xs font-bold text-white/40">완료 시 보상</span>
+                            <span className="text-xs font-bold text-white/40">?�료 ??보상</span>
                             <span className="text-lg font-black text-purple-400">
-                                {totalReward.toLocaleString()}원
+                                {totalReward.toLocaleString()}??
                             </span>
                         </div>
                         
@@ -178,7 +178,7 @@ const StarterMissionsModal: React.FC<StarterMissionsModalProps> = ({ onClose }) 
                             whileTap={{ scale: 0.95 }}
                             className="relative w-full py-3.5 rounded-xl bg-[#1A1A1E] border border-white/10 text-white/60 font-bold text-base flex items-center justify-center gap-2 transition-colors hover:bg-white/5 hover:text-white hover:border-white/20"
                         >
-                            <span>전체 미션 보러가기</span>
+                            <span>?�체 미션 보러가�?/span>
                             <ChevronRight size={16} />
                         </motion.button>
                     </div>

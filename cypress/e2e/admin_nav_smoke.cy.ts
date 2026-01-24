@@ -1,18 +1,18 @@
 // cypress/e2e/admin_nav_smoke.cy.ts
 
 const NAV_ITEMS: Array<{ slug: string; path: string }> = [
-  { slug: "dashboard", path: "/v2/admin/dashboard" },
-  { slug: "marketing/messages", path: "/v2/admin/marketing/messages" },
-  { slug: "users", path: "/v2/admin/users" },
-  { slug: "game/level", path: "/v2/admin/game/level" },
-  { slug: "economy/vault", path: "/v2/admin/economy/vault" },
-  { slug: "economy/deposits", path: "/v2/admin/economy/deposits" },
-  { slug: "inventory/tickets", path: "/v2/admin/inventory/tickets" },
-  { slug: "economy/shop", path: "/v2/admin/economy/shop" },
-  { slug: "game/roulette", path: "/v2/admin/game/roulette" },
-  { slug: "game/dice", path: "/v2/admin/game/dice" },
-  { slug: "game/lottery", path: "/v2/admin/game/lottery" },
-  { slug: "game/team-battle", path: "/v2/admin/game/team-battle" },
+  { slug: "dashboard", path: "/admin/dashboard" },
+  { slug: "marketing/messages", path: "/admin/marketing/messages" },
+  { slug: "users", path: "/admin/users" },
+  { slug: "game/level", path: "/admin/game/level" },
+  { slug: "economy/vault", path: "/admin/economy/vault" },
+  { slug: "economy/deposits", path: "/admin/economy/deposits" },
+  { slug: "inventory/tickets", path: "/admin/inventory/tickets" },
+  { slug: "economy/shop", path: "/admin/economy/shop" },
+  { slug: "game/roulette", path: "/admin/game/roulette" },
+  { slug: "game/dice", path: "/admin/game/dice" },
+  { slug: "game/lottery", path: "/admin/game/lottery" },
+  { slug: "game/team-battle", path: "/admin/game/team-battle" },
 ];
 
 describe("admin nav smoke", () => {
@@ -22,7 +22,7 @@ describe("admin nav smoke", () => {
     // Initial check for /v2 prefix
     cy.loginAdmin();
     
-    cy.visit("/v2/admin/dashboard");
+    cy.visit("/admin/dashboard");
     cy.location("pathname").should("not.include", "/admin/login");
 
     for (const item of NAV_ITEMS) {

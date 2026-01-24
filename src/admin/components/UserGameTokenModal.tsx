@@ -38,26 +38,26 @@ type ActiveTab = "grant" | "history";
 
 const TOKEN_GROUPS: Array<{ label: string; keys: GameTokenType[] }> = [
   {
-    label: "게임 토큰",
+    label: "게임 ?�큰",
     keys: ["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "TRIAL_TOKEN"],
   },
-  { label: "금고 열쇠", keys: ["GOLD_KEY", "DIAMOND_KEY"] },
-  { label: "재화", keys: ["DIAMOND"] },
-  { label: "퍼즐", keys: ["PUZZLE_C1", "PUZZLE_C2", "PUZZLE_J", "PUZZLE_M"] },
+  { label: "금고 ?�쇠", keys: ["GOLD_KEY", "DIAMOND_KEY"] },
+  { label: "?�화", keys: ["DIAMOND"] },
+  { label: "?�즐", keys: ["PUZZLE_C1", "PUZZLE_C2", "PUZZLE_J", "PUZZLE_M"] },
 ];
 
 const TOKEN_LABELS: Partial<Record<GameTokenType, string>> = {
   ROULETTE_COIN: "룰렛 코인",
-  DICE_TOKEN: "주사위 토큰",
-  LOTTERY_TICKET: "복권 티켓",
-  TRIAL_TOKEN: "체험 토큰",
-  GOLD_KEY: "황금 열쇠",
-  DIAMOND_KEY: "다이아 키",
-  DIAMOND: "다이아",
-  PUZZLE_C1: "퍼즐 C1",
-  PUZZLE_C2: "퍼즐 C2",
-  PUZZLE_J: "퍼즐 J",
-  PUZZLE_M: "퍼즐 M",
+  DICE_TOKEN: "주사???�큰",
+  LOTTERY_TICKET: "복권 ?�켓",
+  TRIAL_TOKEN: "체험 ?�큰",
+  GOLD_KEY: "?�금 ?�쇠",
+  DIAMOND_KEY: "?�이????,
+  DIAMOND: "?�이??,
+  PUZZLE_C1: "?�즐 C1",
+  PUZZLE_C2: "?�즐 C2",
+  PUZZLE_J: "?�즐 J",
+  PUZZLE_M: "?�즐 M",
 };
 
 const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
@@ -85,7 +85,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
   const userId = typeof memberId === "number" ? memberId : Number(memberId);
   const isNumericId = Number.isFinite(userId);
   const identifier = String(memberId ?? "").trim();
-  const actionLabel = actionMode === "grant" ? "지급" : "회수";
+  const actionLabel = actionMode === "grant" ? "지�? : "?�수";
 
   const walletsQuery = useQuery({
     queryKey: ["admin", "game-tokens", "wallets", memberId],
@@ -188,7 +188,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
         reason: reason.trim() || undefined,
       }),
     onSuccess: () => {
-      addToast("지급이 완료되었습니다.", "success");
+      addToast("지급이 ?�료?�었?�니??", "success");
       invalidateAll();
       walletsQuery.refetch();
       inventoryQuery.refetch();
@@ -198,7 +198,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
       setActiveTab("history");
     },
     onError: (err: any) => {
-      addToast(err.response?.data?.detail || "지급 실패", "error");
+      addToast(err.response?.data?.detail || "지�??�패", "error");
     },
   });
 
@@ -211,7 +211,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
         reason: reason.trim() || undefined,
       }),
     onSuccess: () => {
-      addToast("회수가 완료되었습니다.", "success");
+      addToast("?�수가 ?�료?�었?�니??", "success");
       invalidateAll();
       walletsQuery.refetch();
       inventoryQuery.refetch();
@@ -221,7 +221,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
       setActiveTab("history");
     },
     onError: (err: any) => {
-      addToast(err.response?.data?.detail || "회수 실패", "error");
+      addToast(err.response?.data?.detail || "?�수 ?�패", "error");
     },
   });
 
@@ -241,18 +241,17 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
             </div>
             <div>
               <h2 className="text-admin-subtitle text-admin-text-primary">
-                게임 코드/토큰 제어
+                게임 코드/?�큰 ?�어
               </h2>
               <p className="text-admin-meta text-admin-text-muted">
-                {nickname || memberId} 회원 자산 관리
-              </p>
+                {nickname || memberId} ?�원 ?�산 관�?              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="닫기"
-            title="닫기"
+            aria-label="?�기"
+            title="?�기"
             className="p-2 text-admin-text-muted hover:text-admin-text-primary hover:bg-admin-hover rounded-lg transition-colors"
           >
             <X size={20} />
@@ -265,13 +264,13 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
             onClick={() => setActiveTab("grant")}
             className={`px-4 py-2 text-admin-meta font-bold border-b-2 transition-all ${activeTab === "grant" ? "border-admin-brand text-admin-brand" : "border-transparent text-admin-text-muted hover:text-admin-text-secondary"}`}
           >
-            지급/회수
+            지�??�수
           </button>
           <button
             onClick={() => setActiveTab("history")}
             className={`px-4 py-2 text-admin-meta font-bold border-b-2 transition-all ${activeTab === "history" ? "border-admin-brand text-admin-brand" : "border-transparent text-admin-text-muted hover:text-admin-text-secondary"}`}
           >
-            변경 이력
+            변�??�력
           </button>
           <div className="ml-auto flex items-center gap-2 pb-2">
             <button
@@ -287,8 +286,8 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                 inventoryQuery.isFetching ||
                 ledgerQuery.isFetching
               }
-              title="새로고침"
-              aria-label="새로고침"
+              title="?�로고침"
+              aria-label="?�로고침"
             >
               <RefreshCw
                 size={14}
@@ -308,8 +307,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
           {!isNumericId && (
             <div className="mb-6 rounded-xl border border-admin-danger/30 bg-admin-danger/10 p-4 text-admin-danger text-sm">
-              숫자 회원 ID를 확인할 수 없습니다. 회원 식별자를 다시 확인해
-              주세요.
+              ?�자 ?�원 ID�??�인?????�습?�다. ?�원 ?�별?��? ?�시 ?�인??              주세??
             </div>
           )}
 
@@ -343,14 +341,13 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                   onClick={() => setActionMode("grant")}
                   className={`px-3 py-1.5 rounded-full text-xs font-black ${actionMode === "grant" ? "bg-admin-brand text-white" : "bg-admin-sidebar text-admin-text-muted"}`}
                 >
-                  지급
-                </button>
+                  지�?                </button>
                 <button
                   type="button"
                   onClick={() => setActionMode("revoke")}
                   className={`px-3 py-1.5 rounded-full text-xs font-black ${actionMode === "revoke" ? "bg-admin-danger text-white" : "bg-admin-sidebar text-admin-text-muted"}`}
                 >
-                  회수
+                  ?�수
                 </button>
               </div>
 
@@ -360,7 +357,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                     htmlFor={`user-game-token-type-${memberId}`}
                     className="admin-label"
                   >
-                    토큰 유형
+                    ?�큰 ?�형
                   </label>
                   <select
                     id={`user-game-token-type-${memberId}`}
@@ -368,8 +365,8 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                     onChange={(e) =>
                       setTokenType(e.target.value as GameTokenType)
                     }
-                    aria-label="토큰 유형"
-                    title="토큰 유형"
+                    aria-label="?�큰 ?�형"
+                    title="?�큰 ?�형"
                     className="w-full h-11 bg-admin-sidebar/50 border border-admin-border rounded-admin-lg px-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/40 outline-none appearance-none"
                   >
                     {TOKEN_GROUPS.map((group) => (
@@ -383,11 +380,11 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                     ))}
                   </select>
                   <p className="text-[11px] text-admin-text-muted">
-                    현재 보유: {getTokenBalance(tokenType).toLocaleString()}
+                    ?�재 보유: {getTokenBalance(tokenType).toLocaleString()}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label className="admin-label">수량</label>
+                  <label className="admin-label">?�량</label>
                   <input
                     type="number"
                     value={amount}
@@ -399,21 +396,20 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
               </div>
 
               <div className="space-y-2">
-                <label className="admin-label">지급 사유</label>
+                <label className="admin-label">지�??�유</label>
                 <textarea
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full h-24 bg-admin-sidebar/50 border border-admin-border rounded-admin-lg p-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/40 outline-none resize-none placeholder:text-admin-text-muted"
-                  placeholder="지급 사유를 입력하세요 (예: 이벤트 보상, 버그 보상 등)"
+                  placeholder="지�??�유�??�력?�세??(?? ?�벤??보상, 버그 보상 ??"
                 />
               </div>
 
               <div className="p-4 rounded-xl bg-admin-brand/5 border border-admin-brand/10 flex items-start gap-3">
                 <AlertCircle size={18} className="text-admin-brand mt-0.5" />
                 <p className="text-admin-meta text-admin-text-secondary leading-relaxed">
-                  토큰을 {actionLabel}하면 즉시 회원의 지갑/인벤토리에 반영되며,
-                  운영 트랜잭션 전적에 영구히 기록됩니다. 신중하게 작업해
-                  주세요.
+                  ?�큰??{actionLabel}?�면 즉시 ?�원??지�??�벤?�리??반영?�며,
+                  ?�영 ?�랜??�� ?�적???�구??기록?�니?? ?�중?�게 ?�업??                  주세??
                 </p>
               </div>
             </div>
@@ -422,7 +418,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
               <div className="flex flex-wrap items-center gap-2">
                 <div className="flex items-center gap-2 text-admin-text-muted text-xs">
                   <History size={14} />
-                  최근 변경 이력
+                  최근 변�??�력
                 </div>
                 <div className="ml-auto">
                   <select
@@ -431,9 +427,9 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                       setLedgerFilter(e.target.value as GameTokenType | "")
                     }
                     className="admin-input h-9 text-xs"
-                    aria-label="토큰 필터"
+                    aria-label="?�큰 ?�터"
                   >
-                    <option value="">전체 토큰</option>
+                    <option value="">?�체 ?�큰</option>
                     {TOKEN_GROUPS.flatMap((group) => group.keys).map((key) => (
                       <option key={key} value={key}>
                         {formatTokenLabel(key)}
@@ -451,13 +447,13 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                       className="animate-spin text-admin-brand"
                     />
                     <p className="text-admin-meta">
-                      변경 이력을 불러오는 중입니다...
+                      변�??�력??불러?�는 중입?�다...
                     </p>
                   </div>
                 ) : combinedLedger.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-admin-text-muted border-2 border-dashed border-admin-border rounded-2xl">
                     <History size={40} className="mb-3 opacity-20" />
-                    <p className="text-admin-meta">변경 이력이 없습니다.</p>
+                    <p className="text-admin-meta">변�??�력???�습?�다.</p>
                   </div>
                 ) : (
                   combinedLedger.map((entry) => (
@@ -500,7 +496,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
                       </div>
                       <div className="text-right">
                         <p className="text-admin-meta text-admin-text-primary mb-1">
-                          잔액: {entry.balance_after.toLocaleString()}
+                          ?�액: {entry.balance_after.toLocaleString()}
                         </p>
                         <p className="text-[11px] text-admin-text-muted font-mono">
                           {new Date(entry.created_at).toLocaleString("ko-KR", {
@@ -527,7 +523,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
             onClick={onClose}
             className="btn-admin-secondary text-admin-meta px-4 border-none"
           >
-            닫기
+            ?�기
           </button>
           {activeTab === "grant" && (
             <button
@@ -544,7 +540,7 @@ const UserGameTokenModal: React.FC<UserGameTokenModalProps> = ({
               ) : (
                 <>
                   <CheckCircle2 size={18} />
-                  {actionLabel} 확정
+                  {actionLabel} ?�정
                 </>
               )}
             </button>

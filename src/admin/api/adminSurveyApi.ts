@@ -69,40 +69,40 @@ export type AdminSurveyResponseList = {
 };
 
 export async function fetchAdminSurveys(): Promise<AdminSurveyListResponse> {
-  const res = await adminApi.get<AdminSurveyListResponse>("/admin/api/surveys/");
+  const res = await adminApi.get<AdminSurveyListResponse>("/api/admin/surveys/");
   return res.data;
 }
 
 export async function fetchAdminSurveyDetail(id: number): Promise<AdminSurveyDetail> {
-  const res = await adminApi.get<AdminSurveyDetail>(`/admin/api/surveys/${id}`);
+  const res = await adminApi.get<AdminSurveyDetail>(`/api/admin/surveys/${id}`);
   return res.data;
 }
 
 export async function createAdminSurvey(payload: AdminSurveyUpsertRequest): Promise<AdminSurveyDetail> {
-  const res = await adminApi.post<AdminSurveyDetail>("/admin/api/surveys/", payload);
+  const res = await adminApi.post<AdminSurveyDetail>("/api/admin/surveys/", payload);
   return res.data;
 }
 
 export async function updateAdminSurvey(id: number, payload: AdminSurveyUpsertRequest): Promise<AdminSurveyDetail> {
-  const res = await adminApi.put<AdminSurveyDetail>(`/admin/api/surveys/${id}`, payload);
+  const res = await adminApi.put<AdminSurveyDetail>(`/api/admin/surveys/${id}`, payload);
   return res.data;
 }
 
 export async function fetchAdminSurveyTriggers(id: number): Promise<{ items: AdminSurveyTrigger[] }> {
-  const res = await adminApi.get<{ items: AdminSurveyTrigger[] }>(`/admin/api/surveys/${id}/triggers`);
+  const res = await adminApi.get<{ items: AdminSurveyTrigger[] }>(`/api/admin/surveys/${id}/triggers`);
   return res.data;
 }
 
 export async function upsertAdminSurveyTriggers(id: number, payload: Array<Omit<AdminSurveyTrigger, "id">>): Promise<{ items: AdminSurveyTrigger[] }> {
-  const res = await adminApi.put<{ items: AdminSurveyTrigger[] }>(`/admin/api/surveys/${id}/triggers`, payload);
+  const res = await adminApi.put<{ items: AdminSurveyTrigger[] }>(`/api/admin/surveys/${id}/triggers`, payload);
   return res.data;
 }
 export async function fetchAdminSurveyStats(id: number): Promise<AdminSurveyStats> {
-  const res = await adminApi.get<AdminSurveyStats>(`/admin/api/surveys/${id}/stats`);
+  const res = await adminApi.get<AdminSurveyStats>(`/api/admin/surveys/${id}/stats`);
   return res.data;
 }
 
 export async function fetchAdminSurveyResponses(id: number): Promise<AdminSurveyResponseList> {
-  const res = await adminApi.get<AdminSurveyResponseList>(`/admin/api/surveys/${id}/responses`);
+  const res = await adminApi.get<AdminSurveyResponseList>(`/api/admin/surveys/${id}/responses`);
   return res.data;
 }

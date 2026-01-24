@@ -1,4 +1,4 @@
-// src/admin/api/adminLotteryApi.ts
+// src/api/admin/adminLotteryApi.ts
 import { adminApi } from "./httpClient";
 import type { AdminRewardType } from "../types/adminReward";
 
@@ -26,16 +26,16 @@ export interface AdminLotteryConfig extends AdminLotteryConfigPayload {
 }
 
 export async function fetchLotteryConfigs() {
-  const { data } = await adminApi.get<AdminLotteryConfig[]>("/admin/api/lottery-config/");
+  const { data } = await adminApi.get<AdminLotteryConfig[]>("/api/admin/lottery-config/");
   return data;
 }
 
 export async function createLotteryConfig(payload: AdminLotteryConfigPayload) {
-  const { data } = await adminApi.post<AdminLotteryConfig>("/admin/api/lottery-config/", payload);
+  const { data } = await adminApi.post<AdminLotteryConfig>("/api/admin/lottery-config/", payload);
   return data;
 }
 
 export async function updateLotteryConfig(id: number, payload: AdminLotteryConfigPayload) {
-  const { data } = await adminApi.put<AdminLotteryConfig>(`/admin/api/lottery-config/${id}`, payload);
+  const { data } = await adminApi.put<AdminLotteryConfig>(`/api/admin/lottery-config/${id}`, payload);
   return data;
 }

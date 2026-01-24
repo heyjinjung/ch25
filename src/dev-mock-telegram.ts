@@ -118,7 +118,7 @@ window.Telegram.WebApp = {
     version: "6.0",
 };
 
-console.log("ðŸ”§ Telegram WebApp Mock loaded for development");
+console.log("?”§ Telegram WebApp Mock loaded for development");
 
 // Export to make it a valid module
 export { };

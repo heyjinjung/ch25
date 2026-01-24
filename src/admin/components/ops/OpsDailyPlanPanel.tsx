@@ -51,10 +51,10 @@ const OpsDailyPlanPanel: React.FC = () => {
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "ops-daily-log", selectedDate] });
-      alert("데일리 플랜이 저장되었습니다.");
+      alert("?�일�??�랜???�?�되?�습?�다.");
     },
     onError: (err) => {
-      alert(`저장 실패: ${err} `);
+      alert(`?�???�패: ${err} `);
     }
   });
 
@@ -66,21 +66,21 @@ const OpsDailyPlanPanel: React.FC = () => {
             <Calendar className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="text-admin-subtitle text-admin-text-primary">운영 데일리 플랜</h2>
-            <p className="text-xs text-admin-text-secondary">일일 테마 및 우선순위 관리</p>
+            <h2 className="text-admin-subtitle text-admin-text-primary">?�영 ?�일�??�랜</h2>
+            <p className="text-xs text-admin-text-secondary">?�일 ?�마 �??�선?�위 관�?/p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <label htmlFor="ops-daily-plan-date" className="sr-only">조회 날짜</label>
+          <label htmlFor="ops-daily-plan-date" className="sr-only">조회 ?�짜</label>
           <input
             id="ops-daily-plan-date"
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
             className="bg-admin-sidebar border border-admin-border rounded-lg px-3 py-1.5 text-sm text-admin-text-primary focus:ring-2 focus:ring-admin-brand/50"
-            aria-label="조회 날짜"
-            title="조회 날짜"
+            aria-label="조회 ?�짜"
+            title="조회 ?�짜"
           />
           <button
             onClick={() => mutation.mutate()}
@@ -88,7 +88,7 @@ const OpsDailyPlanPanel: React.FC = () => {
             className="btn-admin-primary flex items-center gap-2"
           >
             {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            저장
+            ?�??
           </button>
         </div>
       </div>
@@ -102,13 +102,13 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Theme Title */}
           <div className="space-y-2">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <Layout className="h-4 w-4" /> 오늘의 테마
+              <Layout className="h-4 w-4" /> ?�늘???�마
             </label>
             <input
               type="text"
               value={themeTitle}
               onChange={(e) => setThemeTitle(e.target.value)}
-              placeholder="예: 주말 리텐션 부스트"
+              placeholder="?? 주말 리텐??부?�트"
               className="admin-input w-full text-lg font-bold"
             />
           </div>
@@ -116,7 +116,7 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Status Selection */}
           <div className="space-y-2">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" /> 상태
+              <CheckCircle2 className="h-4 w-4" /> ?�태
             </label>
             <div className="flex gap-2">
               {["PLANNING", "ACTIVE", "REVIEW", "CLOSED"].map((s) => (
@@ -138,12 +138,12 @@ const OpsDailyPlanPanel: React.FC = () => {
           {/* Summary / Notes */}
           <div className="space-y-2 flex-1 flex flex-col">
             <label className="text-admin-meta text-admin-text-secondary font-bold uppercase flex items-center gap-2">
-              <AlignLeft className="h-4 w-4" /> 플랜 상세 / 로그
+              <AlignLeft className="h-4 w-4" /> ?�랜 ?�세 / 로그
             </label>
             <textarea
               value={summaryMd}
               onChange={(e) => setSummaryMd(e.target.value)}
-              placeholder="- 우선순위 작업 1..."
+              placeholder="- ?�선?�위 ?�업 1..."
               className="w-full h-64 bg-admin-sidebar/50 border border-admin-border rounded-lg p-4 text-admin-text-primary focus:ring-2 focus:ring-admin-brand/50 resize-none font-mono text-sm leading-relaxed"
             />
           </div>

@@ -29,9 +29,9 @@ type GameOption = {
 };
 
 const BATTLE_GAMES: GameOption[] = [
-  { id: "dice", name: "Dice Battle", desc: "주사위로 승부하세요", path: "/v2/game/dice", icon: ICON_DICE, points: 10 },
-  { id: "roulette", name: "Roulette", desc: "한방 승부 룰렛", path: "/v2/game/roulette", icon: ICON_ROULETTE, points: 10 },
-  { id: "lottery", name: "Lottery", desc: "매일 대박 기회", path: "/v2/game/lottery", icon: ICON_LOTTERY, points: 10 },
+  { id: "dice", name: "Dice Battle", desc: "주사?�로 ?��??�세??, path: "/game/dice", icon: ICON_DICE, points: 10 },
+  { id: "roulette", name: "Roulette", desc: "?�방 ?��? 룰렛", path: "/game/roulette", icon: ICON_ROULETTE, points: 10 },
+  { id: "lottery", name: "Lottery", desc: "매일 ?��?기회", path: "/game/lottery", icon: ICON_LOTTERY, points: 10 },
 ];
 
 const TeamBattlePage: React.FC = () => {
@@ -59,8 +59,8 @@ const TeamBattlePage: React.FC = () => {
     try {
       await autoAssignMutation.mutateAsync();
     } catch (err: any) {
-      const msg = err.response?.data?.detail || "알 수 없는 오류";
-      alert(`팀 배정 실패: ${msg}`);
+      const msg = err.response?.data?.detail || "?????�는 ?�류";
+      alert(`?� 배정 ?�패: ${msg}`);
     }
   };
 
@@ -144,18 +144,18 @@ const TeamBattlePage: React.FC = () => {
         {!myTeam ? (
           <div className="rounded-2xl border border-yellow-500/30 bg-black/80 backdrop-blur-xl p-6 text-center shadow-xl">
             <h2 className="text-amber-400 text-xs font-black uppercase tracking-widest mb-1">{seasonQuery.data?.name || "SEASON BATTLE"}</h2>
-            <h3 className="text-xl font-bold text-white mb-2">어느 팀이 승리할까요?</h3>
-            <p className="text-sm text-white/50 mb-6">팀을 배정받고 승리에 기여하세요.<br />엄청난 보상이 기다립니다.</p>
+            <h3 className="text-xl font-bold text-white mb-2">?�느 ?�???�리?�까??</h3>
+            <p className="text-sm text-white/50 mb-6">?�??배정받고 ?�리??기여?�세??<br />?�청??보상??기다립니??</p>
             <Button
               onClick={handleJoin}
               disabled={autoAssignMutation.isPending}
               variant="figma-primary"
               className="w-full !py-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] bg-[#25AD82] text-white rounded-xl font-bold"
             >
-              {autoAssignMutation.isPending ? "분석 중..." : (
+              {autoAssignMutation.isPending ? "분석 �?.." : (
                 <div className="flex items-center justify-center gap-2">
                   <img src="/assets/icon_dice_silver.png" alt="" className="w-5 h-5 object-contain" />
-                  <span>랜덤 팀 배정받기</span>
+                  <span>?�덤 ?� 배정받기</span>
                 </div>
               )}
             </Button>
@@ -185,7 +185,7 @@ const TeamBattlePage: React.FC = () => {
             {/* Header */}
             <div className="bg-gradient-to-r from-red-900/50 to-blue-900/50 p-4 text-center border-b border-white/5">
               <h3 className="text-lg font-black italic text-white uppercase">CHOOSE YOUR BATTLE</h3>
-              <p className="text-xs text-white/50">게임을 플레이하여 팀 점수를 획득하세요</p>
+              <p className="text-xs text-white/50">게임???�레?�하???� ?�수�??�득?�세??/p>
             </div>
 
             {/* List */}

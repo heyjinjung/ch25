@@ -58,15 +58,15 @@ export default function OpsDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            운영 대시보드 (Ops Dashboard)
+            ?�영 ?�?�보??(Ops Dashboard)
           </h1>
           <p className="text-sm text-zinc-400">
-            시스템 상태, 리스크 유저, 핵심 운영 지표를 실시간으로 관제합니다.
+            ?�스???�태, 리스???��?, ?�심 ?�영 지?��? ?�시간으�?관?�합?�다.
           </p>
         </div>
         <div className="flex gap-2">
           <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
-            긴급 점검 (Maintenance)
+            긴급 ?��? (Maintenance)
           </Button>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function OpsDashboard() {
       {/* Top Row: Critical Status */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <QuickActionCard
-          label="시스템 상태"
+          label="?�스???�태"
           description={
             <div className="flex gap-2 mt-1">
               <span
@@ -94,10 +94,10 @@ export default function OpsDashboard() {
           icon={Server}
         />
         <QuickActionCard
-          label="개발중 (Holding)"
+          label="개발�?(Holding)"
           description={
             <div className="flex items-baseline gap-1">
-              <span className="text-xs text-zinc-500">리텐션 현황 준비중</span>
+              <span className="text-xs text-zinc-500">리텐???�황 준비중</span>
             </div>
           }
           icon={Activity}
@@ -105,7 +105,7 @@ export default function OpsDashboard() {
           onClick={() => {}}
         />
         <QuickActionCard
-          label="골든 레이더"
+          label="골든 ?�이??
           description={
             <div className="flex gap-2">
               <span className="text-red-400">
@@ -119,21 +119,21 @@ export default function OpsDashboard() {
           }
           icon={ShieldAlert}
           className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
-          onClick={() => navigate("/v2/admin/dashboard/golden")}
+          onClick={() => navigate("/admin/dashboard/golden")}
         />
         <QuickActionCard
-          label="금일 접속자 (Active)"
+          label="금일 ?�속??(Active)"
           description={
             <div className="flex items-center gap-1">
               <NumberTicker
                 value={status?.metrics?.activeUsers24h ?? 0}
                 className="text-lg font-bold"
               />
-              <span className="text-xs text-zinc-500">명 (24h)</span>
+              <span className="text-xs text-zinc-500">�?(24h)</span>
             </div>
           }
           icon={Users}
-          onClick={() => navigate("/v2/admin/users")}
+          onClick={() => navigate("/admin/users")}
         />
       </div>
 
@@ -145,17 +145,17 @@ export default function OpsDashboard() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <TriangleAlert className="w-5 h-5 text-amber-400" />
-                골든 레이더 (Risk & Opportunity)
+                골든 ?�이??(Risk & Opportunity)
               </h3>
               <p className="text-zinc-500 text-xs">
-                AI가 탐지한 위기/기회 유저 그룹입니다.
+                AI가 ?��????�기/기회 ?��? 그룹?�니??
               </p>
             </div>
             <Badge
               variant="outline"
               className="border-amber-500/30 text-amber-500 bg-amber-500/5 animate-pulse"
             >
-              실시간 스캔 중
+              ?�시�??�캔 �?
             </Badge>
           </div>
 
@@ -164,7 +164,7 @@ export default function OpsDashboard() {
             <Card className="bg-black/20 border-red-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-red-400 flex items-center gap-2">
-                  <PulsatingDot color="#ef4444" /> Crisis Group (위기)
+                  <PulsatingDot color="#ef4444" /> Crisis Group (?�기)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -196,7 +196,7 @@ export default function OpsDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-zinc-500 text-sm">
-                    감지된 위험 요소 없음
+                    감�????�험 ?�소 ?�음
                   </div>
                 )}
               </CardContent>
@@ -212,8 +212,8 @@ export default function OpsDashboard() {
               <CardContent className="space-y-4">
                 <div className="text-center py-8 text-zinc-500 text-sm">
                   {status?.goldenRadar?.highRollers > 0
-                    ? `${status.goldenRadar.highRollers}명의 고액 유저 활성`
-                    : "활성 고액 사용자 없음"}
+                    ? `${status.goldenRadar.highRollers}명의 고액 ?��? ?�성`
+                    : "?�성 고액 ?�용???�음"}
                 </div>
               </CardContent>
             </Card>
@@ -224,17 +224,17 @@ export default function OpsDashboard() {
         <div className="md:col-span-1 rounded-xl bg-[#18181B] border border-white/5 p-6 relative flex flex-col">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-400" />
-            운영 알림
+            ?�영 ?�림
           </h3>
           <div className="space-y-4 overflow-y-auto pr-2">
             {/* Mock Alerts for now, can be connected to real logs later */}
             <div className="p-3 rounded-lg bg-zinc-800/50 border border-white/5 text-sm">
               <div className="flex justify-between mb-1">
-                <span className="font-bold text-zinc-400">시스템 백업</span>
+                <span className="font-bold text-zinc-400">?�스??백업</span>
                 <span className="text-xs text-zinc-500">1h ago</span>
               </div>
               <p className="text-zinc-500">
-                정기 데이터베이스 백업이 완료되었습니다.
+                ?�기 ?�이?�베?�스 백업???�료?�었?�니??
               </p>
             </div>
           </div>

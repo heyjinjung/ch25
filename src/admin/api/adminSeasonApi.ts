@@ -1,4 +1,4 @@
-// src/admin/api/adminSeasonApi.ts
+// src/api/admin/adminSeasonApi.ts
 import { adminApi } from "./httpClient";
 import type { AdminRewardType } from "../types/adminReward";
 
@@ -25,28 +25,28 @@ export interface AdminSeasonListResponse {
 }
 
 export async function fetchSeasons(params?: { page?: number; size?: number; is_active?: boolean }) {
-  const { data } = await adminApi.get<AdminSeasonListResponse>("/admin/api/seasons/", { params });
+  const { data } = await adminApi.get<AdminSeasonListResponse>("/api/admin/seasons/", { params });
   return data;
 }
 
 export async function fetchSeason(id: number) {
-  const { data } = await adminApi.get<AdminSeason>(`/admin/api/seasons/${id}`);
+  const { data } = await adminApi.get<AdminSeason>(`/api/admin/seasons/${id}`);
   return data;
 }
 
 export async function createSeason(payload: AdminSeasonPayload) {
-  const { data } = await adminApi.post<AdminSeason>("/admin/api/seasons/", payload);
+  const { data } = await adminApi.post<AdminSeason>("/api/admin/seasons/", payload);
   return data;
 }
 
 export async function updateSeason(id: number, payload: AdminSeasonPayload) {
-  const { data } = await adminApi.put<AdminSeason>(`/admin/api/seasons/${id}`, payload);
+  const { data } = await adminApi.put<AdminSeason>(`/api/admin/seasons/${id}`, payload);
   return data;
 }
 
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 // Season Level API (XP requirements and rewards per level)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 
 export interface AdminSeasonLevel {
   id?: number;
@@ -67,14 +67,14 @@ export interface AdminSeasonLevelListResponse {
 
 export async function fetchSeasonLevels(seasonId: number) {
   const { data } = await adminApi.get<AdminSeasonLevelListResponse>(
-    `/admin/api/seasons/${seasonId}/levels`
+    `/api/admin/seasons/${seasonId}/levels`
   );
   return data;
 }
 
 export async function upsertSeasonLevels(seasonId: number, levels: AdminSeasonLevel[]) {
   const { data } = await adminApi.put<AdminSeasonLevelListResponse>(
-    `/admin/api/seasons/${seasonId}/levels`,
+    `/api/admin/seasons/${seasonId}/levels`,
     levels
   );
   return data;

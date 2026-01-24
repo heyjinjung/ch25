@@ -12,9 +12,9 @@ const TABS = ["DAILY", "WEEKLY", "NEW_USER"] as const;
 type MissionTab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<MissionTab, string> = {
-  DAILY: "일일 미션",
+  DAILY: "?�일 미션",
   WEEKLY: "주간 미션",
-  NEW_USER: "신규 미션",
+  NEW_USER: "?�규 미션",
 };
 
 const MissionPage: React.FC = () => {
@@ -126,7 +126,7 @@ const MissionPage: React.FC = () => {
               <img src="/assets/icons/rocket-dynamic-color.png" className="w-10 h-10 object-contain" alt="" />
             </div>
             <div className="text-sm font-black text-white/90">No missions</div>
-            <div className="mt-1 text-[11px] font-semibold text-white/70">현재 카테고리에 활성 미션이 없습니다.</div>
+            <div className="mt-1 text-[11px] font-semibold text-white/70">?�재 카테고리???�성 미션???�습?�다.</div>
           </div>
         )}
       </div>

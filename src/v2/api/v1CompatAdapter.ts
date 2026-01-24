@@ -152,7 +152,7 @@ const emptyLotteryStatus = (): LotteryStatusResponse => ({
 
 export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
   try {
-    const response = await v2Client.get<any>("/api/v2/vault/status");
+    const response = await v2Client.get<any>("/api/vault/status");
     const data = response.data;
 
     return {

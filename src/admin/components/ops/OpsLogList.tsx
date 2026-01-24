@@ -45,14 +45,14 @@ const OpsLogList: React.FC = () => {
             <div className="p-2 rounded-lg bg-admin-sidebar border border-admin-border">
               <FileJson className="h-5 w-5 text-admin-brand" />
             </div>
-            <h2 className="text-admin-subtitle text-admin-text-primary">운영 로그</h2>
+            <h2 className="text-admin-subtitle text-admin-text-primary">?�영 로그</h2>
           </div>
           <button
             type="button"
             onClick={() => refetch()}
             className="p-2 rounded-lg hover:bg-admin-hover text-admin-text-secondary transition-colors"
-            aria-label="로그 새로고침"
-            title="로그 새로고침"
+            aria-label="로그 ?�로고침"
+            title="로그 ?�로고침"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
@@ -66,8 +66,8 @@ const OpsLogList: React.FC = () => {
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
               className="bg-transparent border-none text-sm text-admin-text-primary focus:ring-0 p-0 w-full"
-              aria-label="조회 날짜"
-              title="조회 날짜"
+              aria-label="조회 ?�짜"
+              title="조회 ?�짜"
             />
           </div>
 
@@ -77,10 +77,10 @@ const OpsLogList: React.FC = () => {
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value as OpsLogCategory)}
               className="bg-admin-input border border-admin-border text-sm text-admin-text-primary focus:ring-0 p-0 w-full rounded-md px-2 py-1"
-              aria-label="카테고리 선택"
-              title="카테고리 선택"
+              aria-label="카테고리 ?�택"
+              title="카테고리 ?�택"
             >
-              <option value="">전체 분류</option>
+              <option value="">?�체 분류</option>
               {Object.values(OpsLogCategory).map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -91,12 +91,12 @@ const OpsLogList: React.FC = () => {
             <Search className="h-4 w-4 text-admin-text-muted" />
             <input
               type="text"
-              placeholder="액션 코드로 필터"
+              placeholder="?�션 코드�??�터"
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
               className="bg-transparent border-none text-sm text-admin-text-primary focus:ring-0 p-0 w-full placeholder:text-admin-text-muted"
-              aria-label="액션 코드 필터"
-              title="액션 코드 필터"
+              aria-label="?�션 코드 ?�터"
+              title="?�션 코드 ?�터"
             />
           </div>
         </div>
@@ -107,11 +107,11 @@ const OpsLogList: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-admin-bg/90 backdrop-blur-sm z-10 border-b border-admin-border">
             <tr>
-              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">시간</th>
+              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">?�간</th>
               <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">분류</th>
-              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">액션</th>
-              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">타겟</th>
-              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">메타</th>
+              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">?�션</th>
+              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">?��?/th>
+              <th className="p-4 text-xs font-bold text-admin-text-secondary uppercase">메�?</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-admin-border/50">
@@ -128,7 +128,7 @@ const OpsLogList: React.FC = () => {
             ) : !logs || logs.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-10 text-center text-admin-text-muted">
-                  선택한 조건에 해당하는 로그가 없습니다.
+                  ?�택??조건???�당?�는 로그가 ?�습?�다.
                 </td>
               </tr>
             ) : (

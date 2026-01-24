@@ -12,7 +12,7 @@ export type TargetListSelectorProps = {
 };
 
 const TargetListSelector: React.FC<TargetListSelectorProps> = ({
-  label = "타깃 리스트",
+  label = "?��?리스??,
   value,
   onChange,
   lists,
@@ -31,10 +31,10 @@ const TargetListSelector: React.FC<TargetListSelectorProps> = ({
         disabled={disabled}
         aria-label={label}
       >
-        {allowEmpty && <option value="">(선택 안 함)</option>}
+        {allowEmpty && <option value="">(?�택 ????</option>}
         {lists.map((tl) => (
           <option key={tl.id} value={tl.id}>
-            #{tl.id} {tl.name} ({tl.count_snapshot}명)
+            #{tl.id} {tl.name} ({tl.count_snapshot}�?
           </option>
         ))}
       </select>
@@ -45,10 +45,10 @@ const TargetListSelector: React.FC<TargetListSelectorProps> = ({
               selected.is_processed ? "bg-green-500/20 text-green-700" : "bg-yellow-500/20 text-yellow-700"
             }`}
           >
-            {selected.is_processed ? "처리됨" : "대기중"}
+            {selected.is_processed ? "처리?? : "?�기중"}
           </span>
-          <span>대상 {selected.count_snapshot}명</span>
-          <span>소스 {selected.source_type}</span>
+          <span>?�??{selected.count_snapshot}�?/span>
+          <span>?�스 {selected.source_type}</span>
         </div>
       )}
     </div>

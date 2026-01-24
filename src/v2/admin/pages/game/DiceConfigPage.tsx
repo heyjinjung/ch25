@@ -99,10 +99,10 @@ export default function DiceConfigPage() {
             <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
               <Dice5 className="w-8 h-8 text-indigo-400" />
             </div>
-            주사위 게임 설정
+            주사??게임 ?�정
           </h1>
           <p className="text-zinc-400 mt-2 ml-1">
-            전역 전략, 승률 및 보상 시스템을 관리합니다.
+            ?�역 ?�략, ?�률 �?보상 ?�스?�을 관리합?�다.
           </p>
         </div>
         <Button
@@ -111,7 +111,7 @@ export default function DiceConfigPage() {
           className="btn-admin-primary px-8 h-12 shadow-indigo-500/10"
         >
           <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "저장 중..." : "설정 변경사항 저장"}
+          {updateMutation.isPending ? "?�??�?.." : "?�정 변경사???�??}
         </Button>
       </div>
 
@@ -121,17 +121,17 @@ export default function DiceConfigPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">
               <Settings2 className="w-5 h-5 text-zinc-400" />
-              기본 운영 설정
+              기본 ?�영 ?�정
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 flex-1">
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
               <div className="space-y-0.5">
                 <Label className="text-base text-zinc-200">
-                  게임 서비스 활성화
+                  게임 ?�비???�성??
                 </Label>
                 <p className="text-xs text-zinc-500">
-                  비활성화 시 모든 유저의 진입이 차단됩니다.
+                  비활?�화 ??모든 ?��???진입??차단?�니??
                 </p>
               </div>
               <Switch
@@ -141,17 +141,17 @@ export default function DiceConfigPage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="admin-label">전략 설정명</Label>
+              <Label className="admin-label">?�략 ?�정�?/Label>
               <Input
                 value={localConfig.name}
                 onChange={(e) => handleChange("name", e.target.value)}
                 className="admin-input w-full"
-                placeholder="예: 2026 신년 이벤트 전략"
+                placeholder="?? 2026 ?�년 ?�벤???�략"
               />
             </div>
 
             <div className="space-y-3">
-              <Label className="admin-label">일일 최대 플레이 횟수</Label>
+              <Label className="admin-label">?�일 최�? ?�레???�수</Label>
               <div className="relative">
                 <Input
                   type="number"
@@ -162,11 +162,11 @@ export default function DiceConfigPage() {
                   className="admin-input w-full pr-12"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-zinc-500 font-mono">
-                  회
+                  ??
                 </span>
               </div>
               <p className="text-[11px] text-zinc-500 italic">
-                * 0으로 입력 시 무제한 플레이가 가능합니다.
+                * 0?�로 ?�력 ??무제???�레?��? 가?�합?�다.
               </p>
             </div>
           </CardContent>
@@ -177,10 +177,10 @@ export default function DiceConfigPage() {
             <div>
               <CardTitle className="flex items-center gap-2 text-zinc-100">
                 <Zap className="w-5 h-5 text-amber-400" />
-                승률 전략 (Probability System)
+                ?�률 ?�략 (Probability System)
               </CardTitle>
               <CardDescription className="text-zinc-500 mt-1">
-                확률 총합이 1.0(100%)이 되도록 정밀하게 조정하세요.
+                ?�률 총합??1.0(100%)???�도�??��??�게 조정?�세??
               </CardDescription>
             </div>
             <div className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-[10px] text-amber-400 font-bold uppercase tracking-wider">
@@ -288,7 +288,7 @@ export default function DiceConfigPage() {
               >
                 <TriangleAlert className="w-5 h-5 shrink-0" />
                 <div className="text-sm">
-                  현재 확률 총합:{" "}
+                  ?�재 ?�률 총합:{" "}
                   <span className="font-mono font-bold">
                     {(
                       localConfig.winProbability +
@@ -302,8 +302,8 @@ export default function DiceConfigPage() {
                       localConfig.loseProbability -
                       1.0,
                   ) < 0.001
-                    ? " - 완벽한 비율입니다."
-                    : " - 총합이 1.0이 되도록 조정이 필요합니다."}
+                    ? " - ?�벽??비율?�니??"
+                    : " - 총합??1.0???�도�?조정???�요?�니??"}
                 </div>
               </div>
             </div>
@@ -315,17 +315,17 @@ export default function DiceConfigPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">
               <Trophy className="w-5 h-5 text-emerald-400" />
-              결과별 보상 매트릭스
+              결과�?보상 매트�?��
             </CardTitle>
             <CardDescription className="text-zinc-500">
-              게임 결과에 따른 보상 아이템과 수량을 설정합니다.
+              게임 결과???�른 보상 ?�이?�과 ?�량???�정?�니??
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Reward Row - Refined with Mono colors and glass look */}
             {[
               {
-                label: "승리 (WIN)",
+                label: "?�리 (WIN)",
                 typeField: "winRewardType" as const,
                 amountField: "winRewardAmount" as const,
                 color: "emerald",
@@ -337,7 +337,7 @@ export default function DiceConfigPage() {
                 color: "zinc",
               },
               {
-                label: "패배 (LOSE)",
+                label: "?�배 (LOSE)",
                 typeField: "loseRewardType" as const,
                 amountField: "loseRewardAmount" as const,
                 color: "red",
@@ -394,18 +394,18 @@ export default function DiceConfigPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">
               <Zap className="w-5 h-5 text-amber-400" />
-              골든아워 배율 설정
+              골든?�워 배율 ?�정
             </CardTitle>
             <CardDescription className="text-zinc-500">
-              특정 시간대 보상을 배율만큼 증폭합니다.
+              ?�정 ?�간?� 보상??배율만큼 증폭?�니??
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 flex-1">
             <div className="flex items-center justify-between p-4 bg-amber-500/5 rounded-xl border border-amber-500/10 group hover:border-amber-500/20 transition-colors">
               <div className="space-y-0.5">
-                <Label className="text-base text-zinc-200">골든아워 적용</Label>
+                <Label className="text-base text-zinc-200">골든?�워 ?�용</Label>
                 <p className="text-xs text-zinc-500">
-                  비활성화 시 배율이 적용되지 않습니다.
+                  비활?�화 ??배율???�용?��? ?�습?�다.
                 </p>
               </div>
               <Switch
@@ -440,8 +440,8 @@ export default function DiceConfigPage() {
               <div className="flex items-start gap-2 p-3 bg-amber-500/10 rounded-lg">
                 <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-amber-300/80 leading-relaxed">
-                  골든아워 활성화 시 모든 주사위 보상에 이 배율이 곱해집니다.
-                  (예: 100P × 2.0 = 200P)
+                  골든?�워 ?�성????모든 주사??보상????배율??곱해집니??
+                  (?? 100P × 2.0 = 200P)
                 </p>
               </div>
             </div>
@@ -452,14 +452,14 @@ export default function DiceConfigPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">
               <TrendingUp className="w-5 h-5 text-indigo-400" />
-              경제 안정성 (Global Caps)
+              경제 ?�정??(Global Caps)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 flex-1">
             <div className="p-5 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 space-y-4">
               <div className="flex justify-between items-end">
                 <Label className="text-zinc-300 text-xs font-bold">
-                  일일 누적 획득 한도
+                  ?�일 ?�적 ?�득 ?�도
                 </Label>
                 <span className="text-2xl font-mono font-black text-indigo-400 tracking-tighter">
                   {(localConfig.dailyGainCap ?? 0).toLocaleString()}
@@ -476,8 +476,8 @@ export default function DiceConfigPage() {
               <div className="flex items-start gap-2 p-3 bg-indigo-500/10 rounded-lg">
                 <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-indigo-300/80 leading-relaxed">
-                  유저가 24시간 내에 획득 가능한 총량입니다. 초과 시 보상이
-                  지급되지 않습니다.
+                  ?��?가 24?�간 ?�에 ?�득 가?�한 총량?�니?? 초과 ??보상??
+                  지급되지 ?�습?�다.
                 </p>
               </div>
             </div>

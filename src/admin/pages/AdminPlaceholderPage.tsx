@@ -16,15 +16,15 @@ const AdminPlaceholderPage: React.FC<AdminPlaceholderProps> = ({ title, descript
             <div className="w-16 h-16 rounded-full bg-admin-warning/10 flex items-center justify-center text-admin-warning mb-6 border border-admin-warning/20">
                 <Construction size={32} />
             </div>
-            <h1 className="text-2xl font-bold text-admin-text-base mb-2">{title || "개발 예정 기능"}</h1>
+            <h1 className="text-2xl font-bold text-admin-text-base mb-2">{title || "개발 ?�정 기능"}</h1>
             <p className="text-admin-text-muted mb-8 text-center max-w-md leading-relaxed">
                 {description ? (
                     description
                 ) : (
                     <>
-                        해당 기능은 현재 UI/UX 개선 트랙(로드맵)에 포함되어 있습니다.
+                        ?�당 기능?� ?�재 UI/UX 개선 ?�랙(로드�????�함?�어 ?�습?�다.
                         <br />
-                        곧 구현 예정이니 잠시만 기다려주세요.
+                        �?구현 ?�정?�니 ?�시�?기다?�주?�요.
                     </>
                 )}
             </p>
@@ -33,10 +33,10 @@ const AdminPlaceholderPage: React.FC<AdminPlaceholderProps> = ({ title, descript
                     type="button"
                     onClick={() => window.history.back()}
                     className="btn-admin-secondary px-6 py-2"
-                    aria-label="이전 페이지"
-                    title="이전 페이지"
+                    aria-label="?�전 ?�이지"
+                    title="?�전 ?�이지"
                 >
-                    이전 페이지
+                    ?�전 ?�이지
                 </button>
             </div>
             </div>

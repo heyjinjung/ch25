@@ -95,12 +95,12 @@ export default function RouletteConfigPage() {
       0,
     );
     if (totalWeight <= 0) {
-      alert("총 가중치는 0보다 커야 합니다.");
+      alert("�?가중치??0보다 커야 ?�니??");
       return;
     }
     updateMutation.mutate(activeConfig, {
       onError: () => {
-        alert("설정 저장 실패");
+        alert("?�정 ?�???�패");
       },
     });
   };
@@ -126,10 +126,10 @@ export default function RouletteConfigPage() {
     activeConfig.segments.reduce((sum, s) => sum + s.weight, 0) || 1;
 
   const grades: { value: RouletteGrade; label: string; color: string }[] = [
-    { value: "COMMON", label: "일반 (Common)", color: "text-zinc-400" },
+    { value: "COMMON", label: "?�반 (Common)", color: "text-zinc-400" },
     { value: "VIP", label: "VIP", color: "text-yellow-400" },
     { value: "WHALE", label: "WHALE (고래)", color: "text-purple-400" },
-    { value: "AT_RISK", label: "관리 대상 (At Risk)", color: "text-red-400" },
+    { value: "AT_RISK", label: "관�??�??(At Risk)", color: "text-red-400" },
   ];
 
   return (
@@ -138,10 +138,10 @@ export default function RouletteConfigPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight mb-1 flex items-center gap-2">
             <Settings className="w-6 h-6 text-indigo-400" />
-            룰렛 설정 (Roulette Config SoT)
+            룰렛 ?�정 (Roulette Config SoT)
           </h1>
           <p className="text-sm text-zinc-400">
-            등급별 룰렛 정책 및 세그먼트 가중치를 관리합니다. (V2 Specs: Grade &
+            ?�급�?룰렛 ?�책 �??�그먼트 가중치�?관리합?�다. (V2 Specs: Grade &
             Weight)
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function RouletteConfigPage() {
           className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
         >
           <Save className="w-4 h-4 mr-2" />
-          {updateMutation.isPending ? "저장 중..." : "설정 저장"}
+          {updateMutation.isPending ? "?�??�?.." : "?�정 ?�??}
         </Button>
       </div>
 
@@ -182,15 +182,15 @@ export default function RouletteConfigPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Info className="w-5 h-5 text-blue-400" />
-              기본 정책
+              기본 ?�책
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/5">
               <div className="space-y-0.5">
-                <Label className="text-base">게임 활성화</Label>
+                <Label className="text-base">게임 ?�성??/Label>
                 <p className="text-xs text-zinc-500">
-                  비활성화 시 점검 중 메시지가 표시됩니다.
+                  비활?�화 ???��? �?메시지가 ?�시?�니??
                 </p>
               </div>
               <Switch
@@ -202,7 +202,7 @@ export default function RouletteConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>입장 재화 (Ticket Type)</Label>
+              <Label>?�장 ?�화 (Ticket Type)</Label>
               <Select
                 value={activeConfig.ticketType}
                 onValueChange={(val) => handleConfigChange("ticketType", val)}
@@ -224,7 +224,7 @@ export default function RouletteConfigPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>일일 최대 회전수 (Daily Max)</Label>
+              <Label>?�일 최�? ?�전??(Daily Max)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
@@ -238,7 +238,7 @@ export default function RouletteConfigPage() {
                   className="bg-black/50 border-white/10 text-right h-10 font-mono"
                 />
                 <span className="text-sm text-zinc-500 whitespace-nowrap">
-                  회 / 일
+                  ??/ ??
                 </span>
               </div>
             </div>
@@ -246,11 +246,11 @@ export default function RouletteConfigPage() {
             <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-lg">
               <div className="text-xs text-blue-300 space-y-1">
                 <p className="font-semibold mb-2 flex items-center gap-1">
-                  <Info className="w-3 h-3" /> 등급별 가이드
+                  <Info className="w-3 h-3" /> ?�급�?가?�드
                 </p>
-                <p>• COMMON: 일반 룰렛 (1~3회)</p>
-                <p>• VIP/WHALE: 골드/다이아 룰렛 (고가치 보상)</p>
-                <p>• AT_RISK: 위기 개입용 (당첨 확률 상향 조정 권장)</p>
+                <p>??COMMON: ?�반 룰렛 (1~3??</p>
+                <p>??VIP/WHALE: 골드/?�이??룰렛 (고�?�?보상)</p>
+                <p>??AT_RISK: ?�기 개입??(?�첨 ?�률 ?�향 조정 권장)</p>
               </div>
             </div>
           </CardContent>
@@ -262,10 +262,10 @@ export default function RouletteConfigPage() {
             <div className="space-y-1">
               <CardTitle className="text-lg flex items-center gap-2">
                 <ListOrdered className="w-5 h-5 text-emerald-400" />
-                슬롯 가중치 설정 (6 Slots Fixed)
+                ?�롯 가중치 ?�정 (6 Slots Fixed)
               </CardTitle>
               <CardDescription>
-                가중치(Weight)를 입력하면 확률(%)은 자동 계산됩니다.
+                가중치(Weight)�??�력?�면 ?�률(%)?� ?�동 계산?�니??
               </CardDescription>
             </div>
             <div className="text-right">
@@ -398,7 +398,7 @@ export default function RouletteConfigPage() {
               <div className="mt-4 flex items-center justify-center p-3 bg-red-500/10 border border-red-500/20 rounded text-red-400 gap-2">
                 <TriangleAlert className="w-5 h-5" />
                 <span className="font-semibold">
-                  경고: 가중치 합이 0입니다. 게임이 정상 동작하지 않습니다.
+                  경고: 가중치 ?�이 0?�니?? 게임???�상 ?�작?��? ?�습?�다.
                 </span>
               </div>
             )}

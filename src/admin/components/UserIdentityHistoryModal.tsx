@@ -45,10 +45,10 @@ const formatKst = (iso: string) => {
 };
 
 const fieldLabels: Record<string, string> = {
-    nickname: "닉네임",
-    real_name: "실명",
-    telegram_id: "텔레그램 ID",
-    telegram_username: "텔레그램 핸들",
+    nickname: "?�네??,
+    real_name: "?�명",
+    telegram_id: "?�레그램 ID",
+    telegram_username: "?�레그램 ?�들",
 };
 
 const UserIdentityHistoryModal: React.FC<Props> = ({ user, onClose }) => {
@@ -75,18 +75,18 @@ const UserIdentityHistoryModal: React.FC<Props> = ({ user, onClose }) => {
                     <div className="min-w-0">
                         <h3 id="user-identity-history-title" className="text-admin-subtitle text-admin-text-primary font-bold flex items-center gap-2">
                             <History size={18} className="text-admin-brand" />
-                            신원 정보 변경 이력: <span className="truncate">{headerName}</span>
+                            ?�원 ?�보 변�??�력: <span className="truncate">{headerName}</span>
                         </h3>
                         <p className="text-admin-meta text-admin-text-secondary mt-1">
-                            ID: <span className="text-admin-mono text-admin-text-primary">{String(user.id)}</span> · 닉네임/실명/텔레그램 정보의 변경 이력을 확인합니다.
+                            ID: <span className="text-admin-mono text-admin-text-primary">{String(user.id)}</span> · ?�네???�명/?�레그램 ?�보??변�??�력???�인?�니??
                         </p>
                     </div>
                     <button
                         type="button"
                         onClick={onClose}
                         className="btn-admin-ghost shrink-0"
-                        aria-label="닫기"
-                        title="닫기"
+                        aria-label="?�기"
+                        title="?�기"
                     >
                         <X size={20} />
                     </button>
@@ -95,20 +95,20 @@ const UserIdentityHistoryModal: React.FC<Props> = ({ user, onClose }) => {
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
                     <div className="admin-card overflow-hidden">
                         {historyQuery.isLoading ? (
-                            <div className="py-12 text-center text-admin-text-secondary">불러오는 중...</div>
+                            <div className="py-12 text-center text-admin-text-secondary">불러?�는 �?..</div>
                         ) : (historyQuery.data ?? []).length === 0 ? (
                             <div className="py-12 text-center flex flex-col items-center gap-3">
                                 <Info size={32} className="text-admin-text-muted" />
-                                <p className="text-admin-body text-admin-text-secondary">변경 이력이 없습니다.</p>
+                                <p className="text-admin-body text-admin-text-secondary">변�??�력???�습?�다.</p>
                             </div>
                         ) : (
                             <table className="admin-table">
                                 <thead>
                                     <tr>
-                                        <th className="admin-th">일시(KST)</th>
-                                        <th className="admin-th">항목</th>
-                                        <th className="admin-th">변경 전</th>
-                                        <th className="admin-th">변경 후</th>
+                                        <th className="admin-th">?�시(KST)</th>
+                                        <th className="admin-th">??��</th>
+                                        <th className="admin-th">변�???/th>
+                                        <th className="admin-th">변�???/th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -123,15 +123,15 @@ const UserIdentityHistoryModal: React.FC<Props> = ({ user, onClose }) => {
                                             </td>
                                             <td
                                                 className="admin-td text-admin-danger line-through truncate max-w-[220px]"
-                                                title={entry.old_value || "(없음)"}
+                                                title={entry.old_value || "(?�음)"}
                                             >
-                                                {entry.old_value || "(없음)"}
+                                                {entry.old_value || "(?�음)"}
                                             </td>
                                             <td
                                                 className="admin-td text-admin-brand font-bold truncate max-w-[220px]"
-                                                title={entry.new_value || "(없음)"}
+                                                title={entry.new_value || "(?�음)"}
                                             >
-                                                {entry.new_value || "(없음)"}
+                                                {entry.new_value || "(?�음)"}
                                             </td>
                                         </tr>
                                     ))}
@@ -141,15 +141,15 @@ const UserIdentityHistoryModal: React.FC<Props> = ({ user, onClose }) => {
 
                         {historyQuery.error && (
                             <div className="p-4 text-admin-meta text-admin-danger bg-admin-danger/10">
-                                조회 실패: {(historyQuery.error as any)?.message ?? "unknown"}
+                                조회 ?�패: {(historyQuery.error as any)?.message ?? "unknown"}
                             </div>
                         )}
                     </div>
                 </div>
 
                 <div className="p-4 sm:p-6 border-t border-admin-border bg-admin-sidebar/60 flex justify-end">
-                    <button type="button" onClick={onClose} className="btn-admin-secondary" aria-label="닫기">
-                        닫기
+                    <button type="button" onClick={onClose} className="btn-admin-secondary" aria-label="?�기">
+                        ?�기
                     </button>
                 </div>
             </div>

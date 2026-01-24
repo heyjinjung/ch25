@@ -109,7 +109,7 @@ export default function LotteryConfigPage() {
     createPrizeMutation.mutate({
       configId: localConfig.id,
       data: {
-        label: "새 보상",
+        label: "??보상",
         weight: 100,
         rewardType: "NONE",
         rewardAmount: 0,
@@ -119,7 +119,7 @@ export default function LotteryConfigPage() {
   };
 
   const handleDeletePrize = (prizeId: number) => {
-    if (!localConfig || !confirm("정말 이 보상을 삭제하시겠습니까?")) return;
+    if (!localConfig || !confirm("?�말 ??보상????��?�시겠습?�까?")) return;
     deletePrizeMutation.mutate({ configId: localConfig.id, prizeId });
   };
 
@@ -145,10 +145,10 @@ export default function LotteryConfigPage() {
             <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
               <Ticket className="w-8 h-8 text-purple-400" />
             </div>
-            복권 시스템 제어
+            복권 ?�스???�어
           </h1>
           <p className="text-zinc-400 mt-2 ml-1">
-            즉석 복권의 당첨 확률, 재고 및 이벤트를 실시간으로 관리합니다.
+            즉석 복권???�첨 ?�률, ?�고 �??�벤?��? ?�시간으�?관리합?�다.
           </p>
         </div>
         <Button
@@ -157,7 +157,7 @@ export default function LotteryConfigPage() {
           className="btn-admin-primary px-8 h-12 shadow-purple-500/10"
         >
           <Save className="w-4 h-4 mr-2" />
-          {updateConfigMutation.isPending ? "저장 중..." : "전역 설정 저장"}
+          {updateConfigMutation.isPending ? "?�??�?.." : "?�역 ?�정 ?�??}
         </Button>
       </div>
 
@@ -167,17 +167,17 @@ export default function LotteryConfigPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-zinc-100">
               <Settings className="w-5 h-5 text-zinc-400" />
-              기본 운영 환경
+              기본 ?�영 ?�경
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 flex-1">
             <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
               <div className="space-y-0.5">
                 <Label className="text-base text-zinc-200 font-bold">
-                  복권 서비스 활성화
+                  복권 ?�비???�성??
                 </Label>
                 <p className="text-xs text-zinc-500 italic">
-                  비활성 시 상점에서 상품이 숨겨집니다.
+                  비활?????�점?�서 ?�품???�겨집니??
                 </p>
               </div>
               <Switch
@@ -187,17 +187,17 @@ export default function LotteryConfigPage() {
             </div>
 
             <div className="space-y-3">
-              <Label className="admin-label">전략 식별명</Label>
+              <Label className="admin-label">?�략 ?�별�?/Label>
               <Input
                 value={localConfig.name}
                 onChange={(e) => handleConfigChange("name", e.target.value)}
                 className="admin-input w-full bg-black/40 border-white/5"
-                placeholder="전략 이름 입력..."
+                placeholder="?�략 ?�름 ?�력..."
               />
             </div>
 
             <div className="space-y-3">
-              <Label className="admin-label">유저별 일일 구매 한도</Label>
+              <Label className="admin-label">?��?�??�일 구매 ?�도</Label>
               <div className="relative">
                 <Input
                   type="number"
@@ -244,7 +244,7 @@ export default function LotteryConfigPage() {
                 <div className="flex items-center gap-2 p-2 bg-purple-500/10 rounded-lg">
                   <Info className="w-3 h-3 text-purple-400 shrink-0" />
                   <p className="text-[10px] text-purple-300/80 leading-tight">
-                    복권 플레이 시 보너스 퍼즐 조각이 드랍될 확률입니다.
+                    복권 ?�레????보너???�즐 조각???�랍???�률?�니??
                   </p>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function LotteryConfigPage() {
                 {totalWeight}
               </div>
               <p className="text-[10px] text-zinc-600 mt-2">
-                비활성화된 보상은 계산에서 제외됩니다.
+                비활?�화??보상?� 계산?�서 ?�외?�니??
               </p>
             </div>
           </CardContent>
@@ -273,10 +273,10 @@ export default function LotteryConfigPage() {
             <div>
               <CardTitle className="flex items-center gap-2 text-zinc-100">
                 <Trophy className="w-5 h-5 text-amber-500" />
-                당첨 보상 매트릭스
+                ?�첨 보상 매트�?��
               </CardTitle>
               <CardDescription className="text-zinc-500 mt-1">
-                각 보상의 가중치(확률)와 현재 재고를 정밀하게 제어합니다.
+                �?보상??가중치(?�률)?� ?�재 ?�고�??��??�게 ?�어?�니??
               </CardDescription>
             </div>
             <Button
@@ -284,7 +284,7 @@ export default function LotteryConfigPage() {
               className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 h-9 transition-all active:scale-95"
             >
               <Plus className="w-4 h-4 mr-2" />
-              보상 추가
+              보상 추�?
             </Button>
           </CardHeader>
           <CardContent>
@@ -391,7 +391,7 @@ export default function LotteryConfigPage() {
                           <div className="relative flex justify-center">
                             <Input
                               type="number"
-                              placeholder="∞"
+                              placeholder="??
                               value={prize.stock ?? ""}
                               onChange={(e) => {
                                 const val =
@@ -404,7 +404,7 @@ export default function LotteryConfigPage() {
                             />
                             {prize.stock === undefined && (
                               <span className="absolute inset-0 flex items-center justify-center pointer-events-none text-zinc-600 font-black">
-                                ∞
+                                ??
                               </span>
                             )}
                           </div>
@@ -437,7 +437,7 @@ export default function LotteryConfigPage() {
                               variant="ghost"
                               onClick={() => handleUpdatePrize(prize.id)}
                               className="h-8 w-8 text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10"
-                              title="저장"
+                              title="?�??
                             >
                               <Save className="h-4 w-4" />
                             </Button>
@@ -446,7 +446,7 @@ export default function LotteryConfigPage() {
                               variant="ghost"
                               onClick={() => handleDeletePrize(prize.id)}
                               className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
-                              title="삭제"
+                              title="??��"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -464,11 +464,11 @@ export default function LotteryConfigPage() {
               </div>
               <div className="flex-1">
                 <h4 className="text-xs font-bold text-zinc-200">
-                  데이터 동기화 알림
+                  ?�이???�기???�림
                 </h4>
                 <p className="text-[10px] text-zinc-500 mt-0.5 leading-relaxed">
-                  각 보상 행의 저장 버튼을 누르면 즉시 DB에 반영됩니다. 상단
-                  '전역 설정 저장'은 이름, 활성 상태, 일일 한도 전용입니다.
+                  �?보상 ?�의 ?�??버튼???�르�?즉시 DB??반영?�니?? ?�단
+                  '?�역 ?�정 ?�???� ?�름, ?�성 ?�태, ?�일 ?�도 ?�용?�니??
                 </p>
               </div>
             </div>

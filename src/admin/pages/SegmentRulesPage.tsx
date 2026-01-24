@@ -26,9 +26,9 @@ import {
 type SortKey = "id" | "name" | "segment" | "priority" | "enabled" | "created_at";
 
 const ruleSchema = z.object({
-  name: z.string().min(1, "규칙 이름은 필수입니다"),
-  segment: z.string().min(1, "세그먼트는 필수입니다"),
-  priority: z.number().min(0, "우선순위는 0 이상이어야 합니다"),
+  name: z.string().min(1, "규칙 ?�름?� ?�수?�니??),
+  segment: z.string().min(1, "?�그먼트???�수?�니??),
+  priority: z.number().min(0, "?�선?�위??0 ?�상?�어???�니??),
   enabled: z.boolean(),
   condition_json: z.object({}).passthrough(),
 });
@@ -163,9 +163,9 @@ const SegmentRulesPage: React.FC = () => {
             <Settings className="h-5 w-5" />
             <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Segment Rules Management</span>
           </div>
-          <h1 className="text-admin-title text-admin-text-primary">세그먼트 규칙 관리</h1>
+          <h1 className="text-admin-title text-admin-text-primary">?�그먼트 규칙 관�?/h1>
           <p className="text-admin-body text-admin-text-secondary font-medium">
-            회원 세그먼트 자동 분류 규칙을 생성하고 관리합니다.
+            ?�원 ?�그먼트 ?�동 분류 규칙???�성?�고 관리합?�다.
           </p>
         </div>
         <div className="flex gap-3">
@@ -175,7 +175,7 @@ const SegmentRulesPage: React.FC = () => {
             disabled={isLoading}
             className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?�로고침
           </button>
           {!isCreating && (
             <button
@@ -183,7 +183,7 @@ const SegmentRulesPage: React.FC = () => {
               onClick={() => setIsCreating(true)}
               className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto shadow-admin-glow"
             >
-              <Plus className="h-4 w-4" /> 규칙 생성
+              <Plus className="h-4 w-4" /> 규칙 ?�성
             </button>
           )}
         </div>
@@ -192,21 +192,21 @@ const SegmentRulesPage: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총 규칙 수</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">�?규칙 ??/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-text-primary">{rules?.length || 0}</p>
             <Settings className="h-5 w-5 text-admin-brand mb-1" />
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">활성 규칙</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�성 규칙</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-accent">{rules?.filter(r => r.enabled).length || 0}</p>
             <CheckCircle2 className="h-5 w-5 text-admin-accent mb-1" />
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32 border-l-4 border-admin-warning">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">비활성 규칙</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">비활??규칙</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-warning">{rules?.filter(r => !r.enabled).length || 0}</p>
             <Users className="h-5 w-5 text-admin-warning mb-1" />
@@ -220,35 +220,35 @@ const SegmentRulesPage: React.FC = () => {
           <div className="flex items-center gap-3 border-b border-admin-border pb-6 mb-6">
             <Plus className="h-6 w-6 text-admin-accent" />
             <div>
-              <h2 className="text-admin-subtitle font-black text-admin-text-primary">새 규칙 생성</h2>
-              <p className="text-xs text-admin-text-secondary mt-1">세그먼트 자동 분류 규칙을 만듭니다</p>
+              <h2 className="text-admin-subtitle font-black text-admin-text-primary">??규칙 ?�성</h2>
+              <p className="text-xs text-admin-text-secondary mt-1">?�그먼트 ?�동 분류 규칙??만듭?�다</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                규칙 이름
+                규칙 ?�름
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="예: VIP 회원 자동 분류"
+                placeholder="?? VIP ?�원 ?�동 분류"
                 className="admin-input h-11 w-full"
               />
             </div>
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                세그먼트
+                ?�그먼트
               </label>
               <select
                 value={formData.segment}
                 onChange={(e) => setFormData({ ...formData, segment: e.target.value })}
                 className="admin-input h-11 w-full"
               >
-                <option value="">선택...</option>
+                <option value="">?�택...</option>
                 <option value="VIP">VIP</option>
                 <option value="WHALE">WHALE</option>
                 <option value="ACTIVE">ACTIVE</option>
@@ -259,7 +259,7 @@ const SegmentRulesPage: React.FC = () => {
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                우선순위
+                ?�선?�위
               </label>
               <input
                 type="number"
@@ -272,15 +272,15 @@ const SegmentRulesPage: React.FC = () => {
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                활성 상태
+                ?�성 ?�태
               </label>
               <select
                 value={formData.enabled ? "true" : "false"}
                 onChange={(e) => setFormData({ ...formData, enabled: e.target.value === "true" })}
                 className="admin-input h-11 w-full"
               >
-                <option value="true">활성</option>
-                <option value="false">비활성</option>
+                <option value="true">?�성</option>
+                <option value="false">비활??/option>
               </select>
             </div>
           </div>
@@ -301,11 +301,11 @@ const SegmentRulesPage: React.FC = () => {
             >
               {createMutation.isPending ? (
                 <>
-                  <RefreshCw className="h-4 w-4 animate-spin" /> 저장 중...
+                  <RefreshCw className="h-4 w-4 animate-spin" /> ?�??�?..
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" /> 저장
+                  <Save className="h-4 w-4" /> ?�??
                 </>
               )}
             </button>
@@ -318,7 +318,7 @@ const SegmentRulesPage: React.FC = () => {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+            <p className="text-admin-meta text-admin-text-secondary">?�이??로딩 �?..</p>
           </div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
@@ -332,37 +332,37 @@ const SegmentRulesPage: React.FC = () => {
                   </th>
                   <th className="px-4 py-3.5 text-left cursor-pointer group" onClick={() => handleSort("name")}>
                     <div className="flex items-center gap-1">
-                      규칙 이름 {getSortIcon("name")}
+                      규칙 ?�름 {getSortIcon("name")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-center cursor-pointer group" onClick={() => handleSort("segment")}>
                     <div className="flex items-center justify-center gap-1">
-                      세그먼트 {getSortIcon("segment")}
+                      ?�그먼트 {getSortIcon("segment")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-center cursor-pointer group" onClick={() => handleSort("priority")}>
                     <div className="flex items-center justify-center gap-1">
-                      우선순위 {getSortIcon("priority")}
+                      ?�선?�위 {getSortIcon("priority")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-center cursor-pointer group" onClick={() => handleSort("enabled")}>
                     <div className="flex items-center justify-center gap-1">
-                      상태 {getSortIcon("enabled")}
+                      ?�태 {getSortIcon("enabled")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-center cursor-pointer group" onClick={() => handleSort("created_at")}>
                     <div className="flex items-center justify-center gap-1">
-                      생성일 {getSortIcon("created_at")}
+                      ?�성??{getSortIcon("created_at")}
                     </div>
                   </th>
-                  <th className="px-4 py-3.5 text-center">액션</th>
+                  <th className="px-4 py-3.5 text-center">?�션</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedRules.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                      규칙이 없습니다. 새 규칙을 생성해주세요.
+                      규칙???�습?�다. ??규칙???�성?�주?�요.
                     </td>
                   </tr>
                 ) : (
@@ -383,7 +383,7 @@ const SegmentRulesPage: React.FC = () => {
                       <td className="px-4 py-4 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${rule.enabled ? "bg-admin-accent/20 text-admin-accent" : "bg-admin-text-muted/20 text-admin-text-muted"
                           }`}>
-                          {rule.enabled ? "활성" : "비활성"}
+                          {rule.enabled ? "?�성" : "비활??}
                         </span>
                       </td>
                       <td className="px-4 py-4 text-center text-admin-text-secondary text-xs tabular-nums">
@@ -395,19 +395,19 @@ const SegmentRulesPage: React.FC = () => {
                             type="button"
                             onClick={() => handleEdit(rule)}
                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
-                            aria-label="규칙 수정"
+                            aria-label="규칙 ?�정"
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
                             onClick={() => {
-                              if (confirm(`"${rule.name}" 규칙을 삭제하시겠습니까?`)) {
+                              if (confirm(`"${rule.name}" 규칙????��?�시겠습?�까?`)) {
                                 deleteMutation.mutate(rule.id);
                               }
                             }}
                             className="p-2 rounded-lg hover:bg-admin-danger/10 text-admin-danger transition-colors"
-                            aria-label="규칙 삭제"
+                            aria-label="규칙 ??��"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -428,15 +428,15 @@ const SegmentRulesPage: React.FC = () => {
           <div className="flex items-center gap-3 border-b border-admin-border pb-6 mb-6">
             <Edit3 className="h-6 w-6 text-admin-brand" />
             <div>
-              <h2 className="text-admin-subtitle font-black text-admin-text-primary">규칙 수정</h2>
-              <p className="text-xs text-admin-text-secondary mt-1">기존 규칙을 수정합니다</p>
+              <h2 className="text-admin-subtitle font-black text-admin-text-primary">규칙 ?�정</h2>
+              <p className="text-xs text-admin-text-secondary mt-1">기존 규칙???�정?�니??/p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                규칙 이름
+                규칙 ?�름
               </label>
               <input
                 type="text"
@@ -448,7 +448,7 @@ const SegmentRulesPage: React.FC = () => {
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                세그먼트
+                ?�그먼트
               </label>
               <select
                 value={formData.segment}
@@ -465,7 +465,7 @@ const SegmentRulesPage: React.FC = () => {
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                우선순위
+                ?�선?�위
               </label>
               <input
                 type="number"
@@ -478,15 +478,15 @@ const SegmentRulesPage: React.FC = () => {
 
             <div>
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">
-                활성 상태
+                ?�성 ?�태
               </label>
               <select
                 value={formData.enabled ? "true" : "false"}
                 onChange={(e) => setFormData({ ...formData, enabled: e.target.value === "true" })}
                 className="admin-input h-11 w-full"
               >
-                <option value="true">활성</option>
-                <option value="false">비활성</option>
+                <option value="true">?�성</option>
+                <option value="false">비활??/option>
               </select>
             </div>
           </div>
@@ -507,11 +507,11 @@ const SegmentRulesPage: React.FC = () => {
             >
               {updateMutation.isPending ? (
                 <>
-                  <RefreshCw className="h-4 w-4 animate-spin" /> 저장 중...
+                  <RefreshCw className="h-4 w-4 animate-spin" /> ?�??�?..
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4" /> 저장
+                  <Save className="h-4 w-4" /> ?�??
                 </>
               )}
             </button>

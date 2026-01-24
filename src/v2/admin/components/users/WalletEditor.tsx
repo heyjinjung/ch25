@@ -93,14 +93,14 @@ export function WalletEditor({
       const detail = (e as any)?.response?.data?.detail;
       const nextMessage =
         detail === "INVALID_TOKEN_TYPE"
-          ? "지원하지 않는 재화 타입입니다."
+          ? "지?�하지 ?�는 ?�화 ?�?�입?�다."
           : detail === "INVALID_AMOUNT"
-            ? "수량이 올바르지 않습니다."
+            ? "?�량???�바르�? ?�습?�다."
             : detail === "INSUFFICIENT_TOKEN_BALANCE"
-              ? "보유량이 부족합니다."
+              ? "보유?�이 부족합?�다."
               : detail === "INSUFFICIENT_VAULT_BALANCE"
-                ? "금고 잔액이 부족합니다."
-                : "요청이 실패했습니다. 입력값과 잔액을 확인하세요.";
+                ? "금고 ?�액??부족합?�다."
+                : "?�청???�패?�습?�다. ?�력값과 ?�액???�인?�세??";
       setErrorMessage(nextMessage);
       console.error("Failed to update wallet", e);
     } finally {
@@ -114,12 +114,12 @@ export function WalletEditor({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-indigo-400">
             <Coins className="w-5 h-5" />
-            자산/재화 강제 수정
+            ?�산/?�화 강제 ?�정
           </DialogTitle>
           <DialogDescription className="text-zinc-400">
-            User #{userId}의 자산을 강제로 변경합니다. <br />
+            User #{userId}???�산??강제�?변경합?�다. <br />
             <span className="text-red-400 text-xs">
-              주의: 이 작업은 로그에 영구적으로 기록됩니다.
+              주의: ???�업?� 로그???�구?�으�?기록?�니??
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -131,10 +131,10 @@ export function WalletEditor({
             </div>
           )}
           <div className="space-y-2">
-            <Label>대상 재화 (Asset Type)</Label>
+            <Label>?�???�화 (Asset Type)</Label>
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
-                <SelectValue placeholder="재화 선택" />
+                <SelectValue placeholder="?�화 ?�택" />
               </SelectTrigger>
               <SelectContent className="bg-[#18181B] border-white/10 text-white">
                 {walletTypes.map((item) => {
@@ -148,7 +148,7 @@ export function WalletEditor({
                       value={item.value}
                       className="text-zinc-100 focus:bg-zinc-800"
                     >
-                      {item.label} (현재: {balance})
+                      {item.label} (?�재: {balance})
                     </SelectItem>
                   );
                 })}
@@ -158,9 +158,9 @@ export function WalletEditor({
 
           {selectedType === "VAULT" ? (
             <div className="bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 flex justify-between items-center">
-              <span className="text-xs text-emerald-300">금고잔액 (참고)</span>
+              <span className="text-xs text-emerald-300">금고?�액 (참고)</span>
               <span className="text-sm font-mono font-bold text-emerald-100">
-                ₩ {(currentVaultBalance || 0).toLocaleString()}
+                ??{(currentVaultBalance || 0).toLocaleString()}
               </span>
             </div>
           ) : (
@@ -170,7 +170,7 @@ export function WalletEditor({
               selectedType === "LOTTERY_TICKET") && (
               <div className="bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/20 flex justify-between items-center">
                 <span className="text-xs text-indigo-300">
-                  현재 보유량 (참고)
+                  ?�재 보유??(참고)
                 </span>
                 <span className="text-sm font-mono font-bold text-indigo-100">
                   {(currentTickets || 0).toLocaleString()} T
@@ -180,12 +180,12 @@ export function WalletEditor({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="amount">변동 수량 (+ 지급, - 차감)</Label>
+            <Label htmlFor="amount">변???�량 (+ 지�? - 차감)</Label>
             <div className="relative">
               <Input
                 id="amount"
                 type="number"
-                placeholder="예: 50 또는 -50"
+                placeholder="?? 50 ?�는 -50"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="bg-black/50 border-white/10 text-white font-mono h-11"
@@ -193,9 +193,9 @@ export function WalletEditor({
               {amount && !isNaN(parseInt(amount)) && (
                 <div className="mt-2 p-2 rounded bg-indigo-500/10 border border-indigo-500/20">
                   <p className="text-[11px] text-indigo-300 flex justify-between">
-                    <span>수정 후 예상 잔액:</span>
+                    <span>?�정 ???�상 ?�액:</span>
                     <span className="font-bold font-mono">
-                      {selectedType === "VAULT" ? "₩ " : ""}
+                      {selectedType === "VAULT" ? "??" : ""}
                       {(
                         (selectedType === "VAULT"
                           ? currentVaultBalance
@@ -208,15 +208,15 @@ export function WalletEditor({
               )}
             </div>
             <p className="text-[10px] text-zinc-500">
-              * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
+              * ?�수 ?�력 ??지�? ?�수 ?�력 ??차감?�니??
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reason">변경 사유 (필수)</Label>
+            <Label htmlFor="reason">변�??�유 (?�수)</Label>
             <Textarea
               id="reason"
-              placeholder="예: 보상 미지급 건 처리"
+              placeholder="?? 보상 미�?�?�?처리"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="bg-black/50 border-white/10 text-white min-h-[80px]"
@@ -233,7 +233,7 @@ export function WalletEditor({
             onClick={handleSubmit}
             disabled={!amount || !reason || isLoading}
           >
-            {isLoading ? "처리 중..." : "수정 실행 (Force Modification)"}
+            {isLoading ? "처리 �?.." : "?�정 ?�행 (Force Modification)"}
           </Button>
         </DialogFooter>
       </DialogContent>

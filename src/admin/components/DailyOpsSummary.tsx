@@ -87,9 +87,9 @@ const DailyOpsSummary: React.FC<DailyOpsSummaryProps> = ({ variant = "default" }
     });
 
     const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `₩${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `₩${(value / 1000).toFixed(1)}K`;
-        return `₩${value}`;
+        if (value >= 1000000) return `??{(value / 1000000).toFixed(1)}M`;
+        if (value >= 1000) return `??{(value / 1000).toFixed(1)}K`;
+        return `??{value}`;
     };
 
     const dauValue = metricsQuery.isLoading ? null : metricsQuery.data?.active_users?.value;
@@ -99,30 +99,30 @@ const DailyOpsSummary: React.FC<DailyOpsSummaryProps> = ({ variant = "default" }
 
     const stats = [
         {
-            title: "금일 활성",
+            title: "금일 ?�성",
             value: metricsQuery.isLoading ? "..." : (dauValue?.toLocaleString() || "0"),
             change: metricsQuery.isLoading ? "..." : dauChangeText,
             isPositive: dauIsPositive,
             icon: <Users size={variant === "compact" ? 16 : 20} />,
         },
         {
-            title: "금일 입금",
+            title: "금일 ?�금",
             value: isLoading ? "..." : formatCurrency(data?.today_deposit_sum || 0),
-            change: `${data?.today_deposit_count || 0}건`,
+            change: `${data?.today_deposit_count || 0}�?,
             isPositive: true,
             icon: <Coins size={variant === "compact" ? 16 : 20} />,
         },
         {
-            title: "이탈 리스크",
+            title: "?�탈 리스??,
             value: isLoading ? "..." : (data?.churn_risk_count?.toLocaleString() || "0"),
-            change: data?.welcome_retention_rate ? `${data.welcome_retention_rate.toFixed(1)}% 유지` : "-",
+            change: data?.welcome_retention_rate ? `${data.welcome_retention_rate.toFixed(1)}% ?��?` : "-",
             isPositive: (data?.churn_risk_count || 0) < 10,
             icon: <Target size={variant === "compact" ? 16 : 20} />,
         },
         {
-            title: "게임 플레이",
+            title: "게임 ?�레??,
             value: isLoading ? "..." : (data?.today_game_plays?.toLocaleString() || "0"),
-            change: data?.today_ticket_usage ? `${data.today_ticket_usage} 티켓` : "0 티켓",
+            change: data?.today_ticket_usage ? `${data.today_ticket_usage} ?�켓` : "0 ?�켓",
             isPositive: true,
             icon: <Activity size={variant === "compact" ? 16 : 20} />,
         },
@@ -131,7 +131,7 @@ const DailyOpsSummary: React.FC<DailyOpsSummaryProps> = ({ variant = "default" }
     if (error) {
         return (
             <div className="admin-card p-6 text-center text-admin-danger">
-                <p>데이터 로딩 실패</p>
+                <p>?�이??로딩 ?�패</p>
                 <p className="text-sm text-admin-text-muted mt-2">{error instanceof Error ? error.message : "Unknown error"}</p>
             </div>
         );
@@ -140,7 +140,7 @@ const DailyOpsSummary: React.FC<DailyOpsSummaryProps> = ({ variant = "default" }
     if (variant === "compact") {
         return (
             <div className="admin-card-premium p-4 h-full flex flex-col">
-                <h3 className="text-xs font-bold text-admin-text-muted uppercase tracking-wider mb-4">빠른 통계</h3>
+                <h3 className="text-xs font-bold text-admin-text-muted uppercase tracking-wider mb-4">빠른 ?�계</h3>
                 <div className="flex-1 grid grid-cols-1 gap-3">
                     {stats.map((stat, idx) => (
                         <StatCard key={idx} {...stat} compact />
@@ -154,11 +154,11 @@ const DailyOpsSummary: React.FC<DailyOpsSummaryProps> = ({ variant = "default" }
         <section className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-admin-subtitle text-admin-text-primary">운영 지표 요약</h2>
-                    <p className="text-admin-meta text-admin-text-muted">실시간 주요 운영 현황입니다.</p>
+                    <h2 className="text-admin-subtitle text-admin-text-primary">?�영 지???�약</h2>
+                    <p className="text-admin-meta text-admin-text-muted">?�시�?주요 ?�영 ?�황?�니??</p>
                 </div>
                 <button type="button" className="btn-admin-secondary text-admin-meta py-2">
-                    상세 보고서 보기
+                    ?�세 보고??보기
                 </button>
             </div>
 

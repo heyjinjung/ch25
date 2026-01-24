@@ -210,13 +210,13 @@ const StreakRewardsAdminPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
-            <span>시스템 관리</span>
+            <span>?�스??관�?/span>
             <ChevronRight size={12} />
-            <span className="text-zinc-300">스트릭 보상</span>
+            <span className="text-zinc-300">?�트�?보상</span>
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
             <Flame className="text-admin-brand" size={28} />
-            스트릭 보상 관리
+            ?�트�?보상 관�?
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -225,7 +225,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
           >
             <RefreshCw size={16} />
-            전체 새로고침
+            ?�체 ?�로고침
           </button>
           <button
             disabled={saveRules.isPending}
@@ -233,7 +233,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20 disabled:opacity-50"
           >
             <Save size={16} />
-            {saveRules.isPending ? "저장 중..." : "설정 저장"}
+            {saveRules.isPending ? "?�??�?.." : "?�정 ?�??}
           </button>
         </div>
       </div>
@@ -254,7 +254,7 @@ const StreakRewardsAdminPage: React.FC = () => {
           </div>
           <div className="mt-4 flex items-center gap-2 text-[10px] text-zinc-500 font-medium">
             <Calendar size={12} />
-            <span>{day} 기준</span>
+            <span>{day} 기�?</span>
           </div>
         </div>
         <div className="admin-card p-4 relative overflow-hidden group">
@@ -305,7 +305,7 @@ const StreakRewardsAdminPage: React.FC = () => {
               className="text-[11px] font-black bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-3 py-1.5 rounded-lg border border-zinc-700 flex items-center gap-1.5 transition-all"
             >
               <Plus size={14} />
-              Day 추가
+              Day 추�?
             </button>
           </div>
 
@@ -332,21 +332,21 @@ const StreakRewardsAdminPage: React.FC = () => {
                   {/* Grants Editor */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-zinc-300">지급 보상 (Grants)</p>
+                      <p className="text-sm font-semibold text-zinc-300">지�?보상 (Grants)</p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "WALLET", token_type: "ROULETTE_COIN", amount: 1 }] } : r))}
                           className="text-sm font-bold text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
                         >
                           <Wallet size={12} />
-                          지갑+
+                          지�?
                         </button>
                         <button
                           onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: [...r.grants, { kind: "INVENTORY", item_type: "DIAMOND", amount: 1 }] } : r))}
                           className="text-sm font-bold text-blue-400 hover:bg-blue-500/10 px-2 py-1 rounded transition-colors flex items-center gap-1"
                         >
                           <Package size={12} />
-                          인벤+
+                          ?�벤+
                         </button>
                       </div>
                     </div>
@@ -354,7 +354,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                     <div className="space-y-2">
                       {rule.grants.length === 0 && (
                         <div className="text-xs text-zinc-600 italic py-2 border border-dashed border-zinc-800 rounded-lg text-center">
-                          지정된 보상이 없습니다.
+                          지?�된 보상???�습?�다.
                         </div>
                       )}
                       {rule.grants.map((g, gIdx) => (
@@ -369,12 +369,12 @@ const StreakRewardsAdminPage: React.FC = () => {
                                 }}
                                 className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-sm text-emerald-400 font-bold focus:border-emerald-500 outline-none"
                               >
-                                <option value="ROULETTE_COIN">🪙 Roulette Coin</option>
-                                <option value="DICE_TOKEN">🎲 Dice Token</option>
-                                <option value="LOTTERY_TICKET">🎟️ Lottery Ticket</option>
-                                <option value="GOLD_KEY">🔑 Gold Key</option>
-                                <option value="DIAMOND_KEY">💎 Diamond Key</option>
-                                <option value="DIAMOND">💠 Diamond</option>
+                                <option value="ROULETTE_COIN">?�� Roulette Coin</option>
+                                <option value="DICE_TOKEN">?�� Dice Token</option>
+                                <option value="LOTTERY_TICKET">?���?Lottery Ticket</option>
+                                <option value="GOLD_KEY">?�� Gold Key</option>
+                                <option value="DIAMOND_KEY">?�� Diamond Key</option>
+                                <option value="DIAMOND">?�� Diamond</option>
                               </select>
                             ) : (
                               <input
@@ -383,7 +383,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                                   setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.map((gg, ii) => ii === gIdx ? { ...gg, item_type: e.target.value } as GrantRow : gg) } : r));
                                 }}
                                 className="flex-1 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-sm text-blue-400 font-bold focus:border-blue-500 outline-none"
-                                placeholder="아이템 코드 입력"
+                                placeholder="?�이??코드 ?�력"
                               />
                             )}
                             <input
@@ -400,8 +400,8 @@ const StreakRewardsAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => setRules(prev => prev.map((r, i) => i === idx ? { ...r, grants: r.grants.filter((_, ii) => ii !== gIdx) } : r))}
                             className="p-1 hover:text-rose-400 text-zinc-600 transition-colors opacity-0 group-hover/grant:opacity-100"
-                            aria-label="보상 삭제"
-                            title="삭제"
+                            aria-label="보상 ??��"
+                            title="??��"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -413,7 +413,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                   {/* Actions */}
                   <div className="w-full md:w-24 flex md:flex-col justify-between items-end gap-2 text-sm font-bold">
                     <label className="flex items-center gap-2 cursor-pointer group">
-                      <span className={rule.enabled ? 'text-emerald-400' : 'text-zinc-500'}>{rule.enabled ? '활성' : '비활성'}</span>
+                      <span className={rule.enabled ? 'text-emerald-400' : 'text-zinc-500'}>{rule.enabled ? '?�성' : '비활??}</span>
                       <input
                         type="checkbox"
                         checked={rule.enabled}
@@ -424,7 +424,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                     <button
                       onClick={() => setRules(prev => prev.filter((_, i) => i !== idx))}
                       className="p-2 text-zinc-500 hover:text-rose-400 transition-colors"
-                      title="삭제"
+                      title="??��"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -441,7 +441,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <Search className="h-4 w-4 text-admin-brand" />
-                이벤트 로그 조회 (Logs)
+                ?�벤??로그 조회 (Logs)
               </h2>
               <Info size={14} className="text-zinc-600" />
             </div>
@@ -449,7 +449,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase">사용자 ID</label>
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">?�용??ID</label>
                   <input
                     value={userId}
                     onChange={(e) => setUserId(e.target.value)}
@@ -458,7 +458,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase">최대 결과</label>
+                  <label className="text-[10px] font-bold text-zinc-500 uppercase">최�? 결과</label>
                   <input
                     type="number"
                     value={limit}
@@ -468,7 +468,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-zinc-500 uppercase">조회 대상 날짜</label>
+                <label className="text-[10px] font-bold text-zinc-500 uppercase">조회 ?�???�짜</label>
                 <input
                   type="date"
                   value={filterDay}
@@ -486,7 +486,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                 className="w-full py-2.5 bg-zinc-100 hover:bg-white text-black rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 mt-2"
               >
                 <Search size={16} />
-                이벤트 조회
+                ?�벤??조회
               </button>
             </div>
           </div>
@@ -496,7 +496,7 @@ const StreakRewardsAdminPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
                 <LayoutGrid className="h-4 w-4 text-admin-brand" />
-                금일 현황 날짜 변경
+                금일 ?�황 ?�짜 변�?
               </h2>
             </div>
             <input
@@ -515,7 +515,7 @@ const StreakRewardsAdminPage: React.FC = () => {
           <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/50">
             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
               <History className="h-4 w-4 text-emerald-400" />
-              최근 발생 이벤트 (Recent User Events)
+              최근 발생 ?�벤??(Recent User Events)
             </h2>
             <span className="text-[10px] font-bold text-zinc-500 uppercase">UID: {userEventsQuery.data?.user.id || '-'}</span>
           </div>
@@ -523,9 +523,9 @@ const StreakRewardsAdminPage: React.FC = () => {
             <table className="min-w-full divide-y divide-zinc-800">
               <thead className="bg-zinc-900">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">일시 (KST)</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">이벤트명</th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">메타 데이터</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">?�시 (KST)</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">?�벤?�명</th>
+                  <th className="px-4 py-3 text-left text-[10px] font-bold text-zinc-500 uppercase tracking-widest">메�? ?�이??/th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
@@ -544,7 +544,7 @@ const StreakRewardsAdminPage: React.FC = () => {
                 ))}
                 {userEventsQuery.data?.items.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-xs text-zinc-600">조회된 이벤트가 없습니다.</td>
+                    <td colSpan={3} className="px-4 py-8 text-center text-xs text-zinc-600">조회???�벤?��? ?�습?�다.</td>
                   </tr>
                 )}
               </tbody>

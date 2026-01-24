@@ -1,4 +1,4 @@
-// src/admin/api/adminAuditApi.ts
+// src/api/admin/adminAuditApi.ts
 import { adminApi } from "./httpClient";
 
 export type AdminAuditLogEntry = {
@@ -14,6 +14,6 @@ export type AdminAuditLogEntry = {
 
 export async function fetchAuditLogsByUserId(userId: number, limit: number = 50, offset: number = 0) {
   const params: Record<string, any> = { limit, offset };
-  const { data } = await adminApi.get<AdminAuditLogEntry[]>(`/admin/api/audit/users/${userId}`, { params });
+  const { data } = await adminApi.get<AdminAuditLogEntry[]>(`/api/admin/audit/users/${userId}`, { params });
   return data;
 }

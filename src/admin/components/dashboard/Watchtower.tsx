@@ -65,7 +65,7 @@ const Watchtower: React.FC = () => {
                         <Shield className={`h-5 w-5 ${getThreatColor(threatLevel)}`} />
                         <div className={`absolute inset-0 ${getThreatColor(threatLevel)} animate-ping opacity-20`}></div>
                     </div>
-                    <h2 className="text-admin-subtitle text-admin-text-primary">워치타워</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary">?�치?�??/h2>
                 </div>
 
                 <div className={`px-3 py-1 rounded-full border text-xs font-black tracking-wider flex items-center gap-2 ${getThreatBg(threatLevel)} ${getThreatColor(threatLevel)}`}>
@@ -77,13 +77,13 @@ const Watchtower: React.FC = () => {
             <div className="flex-1 p-0 relative z-10 overflow-hidden flex flex-col">
                 {isLoading ? (
                     <div className="flex-1 flex items-center justify-center text-admin-text-muted gap-2">
-                        <RefreshCw className="h-5 w-5 animate-spin" /> 스캔 초기화 중...
+                        <RefreshCw className="h-5 w-5 animate-spin" /> ?�캔 초기??�?..
                     </div>
                 ) : !securityLogs || securityLogs.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-admin-text-muted gap-3 opacity-60">
                         <ShieldCheck className="h-12 w-12 text-admin-accent" />
-                        <span className="text-sm font-medium">보안 이벤트 없음</span>
-                        <span className="text-xs text-admin-text-secondary">현재 시스템은 안정 상태입니다</span>
+                        <span className="text-sm font-medium">보안 ?�벤???�음</span>
+                        <span className="text-xs text-admin-text-secondary">?�재 ?�스?��? ?�정 ?�태?�니??/span>
                     </div>
                 ) : (
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2">
@@ -119,10 +119,10 @@ const Watchtower: React.FC = () => {
             {/* Footer Status */}
             <div className="p-3 border-t border-admin-border bg-admin-sidebar/30 text-[10px] text-admin-text-muted flex justify-between items-center relative z-10">
                 <span className="flex items-center gap-1">
-                    <Lock className="h-3 w-3" /> 시스템 보호됨
+                    <Lock className="h-3 w-3" /> ?�스??보호??
                 </span>
                 <span className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" /> 모니터링 활성
+                    <Eye className="h-3 w-3" /> 모니?�링 ?�성
                 </span>
             </div>
         </div>

@@ -1,4 +1,4 @@
-// src/admin/api/adminUserApi.ts
+// src/api/admin/adminUserApi.ts
 import { adminApi } from "./httpClient";
 
 import type { AdminUserResolveResponse } from "../types/adminUserSummary";
@@ -46,39 +46,39 @@ export interface ImportResult {
 
 export async function fetchUsers(query?: string) {
   const params = query ? { q: query } : undefined;
-  const { data } = await adminApi.get<AdminUser[]>("/admin/api/users/", { params });
+  const { data } = await adminApi.get<AdminUser[]>("/api/admin/users/", { params });
   return data;
 }
 
 export async function createUser(payload: AdminUserPayload) {
-  const { data } = await adminApi.post<AdminUser>("/admin/api/users/", payload);
+  const { data } = await adminApi.post<AdminUser>("/api/admin/users/", payload);
   return data;
 }
 
 export async function updateUser(userId: number, payload: Partial<AdminUserPayload>) {
-  const { data } = await adminApi.put<AdminUser>(`/admin/api/users/${userId}`, payload);
+  const { data } = await adminApi.put<AdminUser>(`/api/admin/users/${userId}`, payload);
   return data;
 }
 
 export async function deleteUser(userId: number) {
-  await adminApi.delete(`/admin/api/users/${userId}`);
+  await adminApi.delete(`/api/admin/users/${userId}`);
 }
 
 export async function purgeUser(userId: number) {
-  await adminApi.post(`/admin/api/users/${userId}/purge`);
+  await adminApi.post(`/api/admin/users/${userId}/purge`);
 }
 
 export async function importProfiles(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-  const { data } = await adminApi.post<ImportResult>("/admin/api/crm/import-profiles", formData, {
+  const { data } = await adminApi.post<ImportResult>("/api/admin/crm/import-profiles", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
 }
 
 export async function resolveAdminUser(identifier: string) {
-  const { data } = await adminApi.get<AdminUserResolveResponse>("/admin/api/users/resolve", {
+  const { data } = await adminApi.get<AdminUserResolveResponse>("/api/admin/users/resolve", {
     params: { identifier },
   });
   return data;
@@ -99,7 +99,7 @@ export interface VaultEarnEvent {
 }
 
 export async function fetchUserVaultHistory(userId: number) {
-  const { data } = await adminApi.get<VaultEarnEvent[]>(`/admin/api/users/${userId}/vault/history`);
+  const { data } = await adminApi.get<VaultEarnEvent[]>(`/api/admin/users/${userId}/vault/history`);
   return data;
 }
 
@@ -114,7 +114,7 @@ export interface VaultAdminState {
 }
 
 export async function fetchUserVaultState(userId: number) {
-  const { data } = await adminApi.get<VaultAdminState>(`/admin/api/vault/${userId}`);
+  const { data } = await adminApi.get<VaultAdminState>(`/api/admin/vault/${userId}`);
   return data;
 }
 

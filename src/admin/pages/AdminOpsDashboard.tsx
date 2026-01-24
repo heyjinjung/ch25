@@ -30,14 +30,14 @@ export const AdminOpsDashboard: React.FC = () => {
     }, []);
 
     if (loading || !dailyData || !eventsData) {
-        return <div className="admin-page-container text-center text-admin-text-secondary">운영 대시보드를 불러오는 중...</div>;
+        return <div className="admin-page-container text-center text-admin-text-secondary">?�영 ?�?�보?��? 불러?�는 �?..</div>;
     }
 
     return (
         <div className="admin-page-container">
             <div>
-                <h1 className="text-admin-title text-admin-text-primary">운영 대시보드</h1>
-                <p className="text-admin-body text-admin-text-secondary mt-1">트래픽/리스크/정산 지표를 한 화면에서 점검합니다.</p>
+                <h1 className="text-admin-title text-admin-text-primary">?�영 ?�?�보??/h1>
+                <p className="text-admin-body text-admin-text-secondary mt-1">?�래??리스???�산 지?��? ???�면?�서 ?��??�니??</p>
             </div>
 
             {/* Tabs */}
@@ -52,7 +52,7 @@ export const AdminOpsDashboard: React.FC = () => {
                                 : 'border-transparent text-admin-text-secondary hover:border-admin-border hover:text-admin-text-primary'}
                         `}
                     >
-                        데일리 점검 (09:00)
+                        ?�일�??��? (09:00)
                     </button>
                     <button
                         onClick={() => setActiveTab('events')}
@@ -63,7 +63,7 @@ export const AdminOpsDashboard: React.FC = () => {
                                 : 'border-transparent text-admin-text-secondary hover:border-admin-border hover:text-admin-text-primary'}
                         `}
                     >
-                        이벤트 현황 (실시간)
+                        ?�벤???�황 (?�시�?
                     </button>
                 </nav>
             </div>
@@ -71,7 +71,7 @@ export const AdminOpsDashboard: React.FC = () => {
             {/* Tab Panels */}
             {activeTab === 'daily' && (
                 <div className="animate-fadeIn">
-                    <h2 className="text-admin-subtitle text-admin-text-primary mb-4">리텐션 리스크 & 정산</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary mb-4">리텐??리스??& ?�산</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <RiskMonitorCard
                             riskCount={dailyData.risk_count}
@@ -88,7 +88,7 @@ export const AdminOpsDashboard: React.FC = () => {
 
             {activeTab === 'events' && (
                 <div className="animate-fadeIn">
-                    <h2 className="text-admin-subtitle text-admin-text-primary">이벤트 현황 보드</h2>
+                    <h2 className="text-admin-subtitle text-admin-text-primary">?�벤???�황 보드</h2>
                     <EventsStatusBoard
                         welcomeMetrics={eventsData.welcome_metrics}
                         streakCounts={eventsData.streak_counts}

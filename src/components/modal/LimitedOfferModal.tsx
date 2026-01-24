@@ -48,7 +48,7 @@ const LimitedOfferModal: React.FC<LimitedOfferModalProps> = ({ onClose }) => {
                         <button
                             onClick={onClose}
                             className="absolute top-6 right-6 p-1 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                            aria-label="닫기"
+                            aria-label="?�기"
                         >
                             <X size={20} />
                         </button>
@@ -71,13 +71,13 @@ const LimitedOfferModal: React.FC<LimitedOfferModalProps> = ({ onClose }) => {
                             </motion.div>
 
                             <h2 className="text-2xl font-black text-white tracking-tight mb-2">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-white to-purple-200">특별 패키지</span>
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-white to-purple-200">?�별 ?�키지</span>
                                 <br />
-                                <span>준비중입니다</span>
+                                <span>준비중?�니??/span>
                             </h2>
                             <p className="text-white/40 text-sm font-medium leading-relaxed max-w-[240px] mb-8">
-                                오직 당신만을 위한 한정판 혜택,<br />
-                                더 강력해진 구성으로 곧 찾아옵니다.
+                                ?�직 ?�신만을 ?�한 ?�정???�택,<br />
+                                ??강력?�진 구성?�로 �?찾아?�니??
                             </p>
                         </div>
 
@@ -92,7 +92,7 @@ const LimitedOfferModal: React.FC<LimitedOfferModalProps> = ({ onClose }) => {
                             </button>
 
                             <p className="text-center text-[10px] text-white/20 font-medium">
-                                ※ 알림 신청 기능 준비중
+                                ???�림 ?�청 기능 준비중
                             </p>
                         </div>
                     </div>

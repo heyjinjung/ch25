@@ -10,7 +10,7 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
-const ASSET_PATH = "/v2/assets/06shop";
+const ASSET_PATH = "/assets/06shop";
 
 const StarRating = () => (
   <div className="shop-card-stars">
@@ -153,13 +153,13 @@ export default function ExchangePage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => setActiveTab("shop")}
         >
-          상점
+          ?�점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
-          onClick={() => navigate("/v2/inventory")}
+          onClick={() => navigate("/inventory")}
         >
-          인벤토리
+          ?�벤?�리
         </div>
       </div>
 
@@ -167,11 +167,11 @@ export default function ExchangePage() {
         {/* Event Banner */}
         <div className="shop-event-banner">
           <img
-            src="/v2/assets/06shop/banner.png"
+            src="/assets/06shop/banner.png"
             className="event-banner-img"
-            alt="상점 메인 배너"
+            alt="?�점 메인 배너"
           />
-          <div className="banner-info-btn">안내버튼</div>
+          <div className="banner-info-btn">?�내버튼</div>
         </div>
 
         {/* Products Grid */}

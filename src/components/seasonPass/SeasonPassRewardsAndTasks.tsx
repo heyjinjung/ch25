@@ -73,9 +73,9 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
 
     const stamped = season.data?.today?.stamped;
     rows.push({
-      title: "오늘 스탬프",
-      description: "오늘 스탬프를 완료하면 보상이 진행됩니다.",
-      status: stamped == null ? "데이터 없음" : stamped ? "완료" : "미완료",
+      title: "?�늘 ?�탬??,
+      description: "?�늘 ?�탬?��? ?�료?�면 보상??진행?�니??",
+      status: stamped == null ? "?�이???�음" : stamped ? "?�료" : "미완�?,
       progressPct: stamped == null ? null : stamped ? 100 : 0,
     });
 
@@ -84,16 +84,16 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
       const done = Math.max(0, (win.threshold ?? 0) - (win.remaining ?? 0));
       const denom = Math.max(1, win.threshold ?? 1);
       rows.push({
-        title: "겨울 게임 승리",
-        description: "내부 승리 누적 목표 달성",
-        status: `${done.toLocaleString()} / ${denom.toLocaleString()} (남은 ${Math.max(0, win.remaining ?? 0).toLocaleString()})`,
+        title: "겨울 게임 ?�리",
+        description: "?��? ?�리 ?�적 목표 ?�성",
+        status: `${done.toLocaleString()} / ${denom.toLocaleString()} (?��? ${Math.max(0, win.remaining ?? 0).toLocaleString()})`,
         progressPct: clampPct((done / denom) * 100),
       });
     } else {
       rows.push({
-        title: "겨울 게임 승리",
-        description: "내부 승리 누적 목표 달성",
-        status: internalWins.isLoading ? "불러오는 중" : "데이터 없음",
+        title: "겨울 게임 ?�리",
+        description: "?��? ?�리 ?�적 목표 ?�성",
+        status: internalWins.isLoading ? "불러?�는 �? : "?�이???�음",
         progressPct: null,
       });
     }
@@ -101,24 +101,24 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
     const r = roulette.data?.remaining_spins;
     rows.push({
       title: "룰렛 경품",
-      description: "남은 룰렛 이용 횟수",
-      status: r == null ? (roulette.isLoading ? "불러오는 중" : "데이터 없음") : `${r}회`,
+      description: "?��? 룰렛 ?�용 ?�수",
+      status: r == null ? (roulette.isLoading ? "불러?�는 �? : "?�이???�음") : `${r}??,
       progressPct: null,
     });
 
     const d = dice.data?.remaining_plays;
     rows.push({
-      title: "레벨 주사위",
-      description: "남은 주사위 이용 횟수",
-      status: d == null ? (dice.isLoading ? "불러오는 중" : "데이터 없음") : `${d}회`,
+      title: "?�벨 주사??,
+      description: "?��? 주사???�용 ?�수",
+      status: d == null ? (dice.isLoading ? "불러?�는 �? : "?�이???�음") : `${d}??,
       progressPct: null,
     });
 
     const l = lottery.data?.remaining_plays;
     rows.push({
-      title: "랜덤 복권",
-      description: "남은 복권 이용 티켓",
-      status: l == null ? (lottery.isLoading ? "불러오는 중" : "데이터 없음") : `${l}장`,
+      title: "?�덤 복권",
+      description: "?��? 복권 ?�용 ?�켓",
+      status: l == null ? (lottery.isLoading ? "불러?�는 �? : "?�이???�음") : `${l}??,
       progressPct: null,
     });
 
@@ -129,11 +129,11 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
     <div className="w-full">
       <div className="mx-auto flex w-full max-w-[980px] flex-col gap-5 lg:flex-row">
         <div className="w-full lg:w-3/5">
-          <PanelShell title="레벨 보상">
+          <PanelShell title="?�벨 보상">
             {season.isLoading ? (
-              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">불러오는 중...</p>
+              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">불러?�는 �?..</p>
             ) : season.isError ? (
-              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">보상 정보를 불러오지 못했습니다.</p>
+              <p className="text-[clamp(13px,2.8vw,14px)] text-white/65">보상 ?�보�?불러?��? 못했?�니??</p>
             ) : (
               <div className="flex flex-col gap-3">
                 {rewards.map((reward) => {
@@ -151,7 +151,7 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
 
                   // Manual Payout targets: CC Point, CC Coin, Keys, or any non-auto_claim reward
                   const isManualAdmin =
-                    /CC\s*(포인트|코인|POINT|COIN)/i.test(reward.reward_label) ||
+                    /CC\s*(?�인??코인|POINT|COIN)/i.test(reward.reward_label) ||
                     /KEY/i.test(reward.reward_label) ||
                     (!reward.auto_claim && reward.reward_label.length > 0);
 
@@ -169,25 +169,25 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className={`text-[clamp(14px,2.8vw,16px)] font-semibold ${labelTone}`}>레벨 {reward.level}</p>
+                            <p className={`text-[clamp(14px,2.8vw,16px)] font-semibold ${labelTone}`}>?�벨 {reward.level}</p>
                             {reward.isCurrent && (
                               <span className="rounded-full bg-[#d2fd9c] px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] font-bold text-black">
-                                현재
+                                ?�재
                               </span>
                             )}
                             {!reward.isUnlocked && (
                               <span className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-white/65">
-                                잠금
+                                ?�금
                               </span>
                             )}
                             {isManualAdmin && (
                               <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-amber-200">
-                                관리자 지급
+                                관리자 지�?
                               </span>
                             )}
                             {reward.auto_claim && reward.isUnlocked && (
                               <span className="rounded-full border border-cc-lime/30 bg-cc-lime/10 px-2 py-0.5 text-[clamp(11px,2.6vw,12px)] text-cc-lime font-bold">
-                                자동 지급 완료
+                                ?�동 지�??�료
                               </span>
                             )}
                           </div>
@@ -195,7 +195,7 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="text-[clamp(13px,2.6vw,14px)] text-white/65">필요 XP</p>
+                          <p className="text-[clamp(13px,2.6vw,14px)] text-white/65">?�요 XP</p>
                           <p className="text-[clamp(13px,2.6vw,14px)] font-semibold text-white/85">{reward.required_xp.toLocaleString()}</p>
                         </div>
                       </div>
@@ -204,16 +204,16 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                         <div className="flex items-center gap-2">
                           {reward.is_claimed ? (
                             <span className="text-[clamp(13px,2.6vw,14px)] font-semibold" style={{ color: baseAccent }}>
-                              수령 완료
+                              ?�령 ?�료
                             </span>
                           ) : isManualAdmin ? (
-                            <span className="text-[clamp(13px,2.6vw,14px)] text-amber-200">해금 시 관리자 확인 후 지급</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-amber-200">?�금 ??관리자 ?�인 ??지�?/span>
                           ) : reward.auto_claim ? (
-                            <span className="text-[clamp(13px,2.6vw,14px)] text-cc-lime">자동 지급 대상</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-cc-lime">?�동 지�??�??/span>
                           ) : reward.isUnlocked ? (
-                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/75">획득 가능</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/75">?�득 가??/span>
                           ) : (
-                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/55">잠금</span>
+                            <span className="text-[clamp(13px,2.6vw,14px)] text-white/55">?�금</span>
                           )}
                         </div>
 
@@ -231,21 +231,21 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
                               try {
                                 setPendingClaimLevel(reward.level);
                                 const res = await claimReward.mutateAsync(reward.level);
-                                const msg = res.message || `${res.level}레벨 보상 지급 완료`;
+                                const msg = res.message || `${res.level}?�벨 보상 지�??�료`;
                                 addToast(msg, "success");
                               } catch {
-                                addToast("보상 지급에 실패했습니다. 잠시 후 다시 시도해 주세요.", "error");
+                                addToast("보상 지급에 ?�패?�습?�다. ?�시 ???�시 ?�도??주세??", "error");
                               } finally {
                                 setPendingClaimLevel(null);
                               }
                             }}
                           >
-                            {isPending ? "지급 중..." : "보상 받기"}
+                            {isPending ? "지�?�?.." : "보상 받기"}
                           </button>
                         ) : null}
 
                         {isManualAdmin && !reward.is_claimed && reward.isUnlocked ? (
-                          <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200 font-medium">관리자 확인 후 외부 지급됩니다.</p>
+                          <p className="text-[clamp(12px,2.5vw,13px)] text-amber-200 font-medium">관리자 ?�인 ???��? 지급됩?�다.</p>
                         ) : null}
                       </div>
                     </motion.div>
@@ -257,7 +257,7 @@ export const SeasonPassRewardsAndTasks: React.FC = () => {
         </div>
 
         <div className="w-full lg:w-2/5">
-          <PanelShell title="오늘 할 일">
+          <PanelShell title="?�늘 ????>
             <div className="flex flex-col gap-4">
               {tasks.map((task) => (
                 <div key={task.title} className="rounded-[14px] border border-white/10 bg-black/35 p-4">

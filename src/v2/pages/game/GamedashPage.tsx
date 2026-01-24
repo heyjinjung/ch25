@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import "./GamedashPage.css";
 
-const ASSET_PATH = "/v2/assets/02gamedash";
+const ASSET_PATH = "/assets/02gamedash";
 
 const GAMES = [
-  { id: "dice", to: "/v2/game/dice", icon: `${ASSET_PATH}/Group 12.png` },
-  { id: "rocket", to: "/v2/game/roulette", icon: `${ASSET_PATH}/Group 13.png` },
-  { id: "ball", to: "/v2/game/lottery", icon: `${ASSET_PATH}/Group 14.png` },
-  { id: "crown", to: "/v2/team-battle", icon: `${ASSET_PATH}/Group 15.png` },
+  { id: "dice", to: "/game/dice", icon: `${ASSET_PATH}/Group 12.png` },
+  { id: "rocket", to: "/game/roulette", icon: `${ASSET_PATH}/Group 13.png` },
+  { id: "ball", to: "/game/lottery", icon: `${ASSET_PATH}/Group 14.png` },
+  { id: "crown", to: "/team-battle", icon: `${ASSET_PATH}/Group 15.png` },
 ];
 
 export default function GamedashPage() {
@@ -63,13 +63,13 @@ export default function GamedashPage() {
           <div className="notice-container">
             <div className="notice-wrapper">
               {/* Original 3 items */}
-              <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
-              <div className="notice-item"> 업데이트! 🎰 달라진그래픽</div>
-              <div className="notice-item"> 💎골드키를 잡아라! 고액룰렛</div>
+              <div className="notice-item"> ?�번�???��찬스 추�? ?�켓증정</div>
+              <div className="notice-item"> ?�데?�트! ?�� ?�라진그?�픽</div>
+              <div className="notice-item"> ?��골드?��? ?�아?? 고액룰렛</div>
               {/* Duplicated for seamless loop (since 3 are visible, we need them to follow) */}
-              <div className="notice-item"> 이번주 럭키찬스 추가 티켓증정</div>
-              <div className="notice-item"> 업데이트! 🎰 달라진그래픽</div>
-              <div className="notice-item">💎골드키를 잡아라! 고액룰렛</div>
+              <div className="notice-item"> ?�번�???��찬스 추�? ?�켓증정</div>
+              <div className="notice-item"> ?�데?�트! ?�� ?�라진그?�픽</div>
+              <div className="notice-item">?��골드?��? ?�아?? 고액룰렛</div>
             </div>
           </div>
         </div>

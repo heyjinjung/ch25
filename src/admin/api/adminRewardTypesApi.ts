@@ -1,4 +1,4 @@
-// src/admin/api/adminRewardTypesApi.ts
+// src/api/admin/adminRewardTypesApi.ts
 import { adminApi } from "./httpClient";
 
 export interface RewardTypeDefinition {
@@ -15,6 +15,6 @@ export interface RewardTypesListResponse {
 }
 
 export const fetchRewardTypes = async (): Promise<RewardTypeDefinition[]> => {
-    const response = await adminApi.get<RewardTypesListResponse>("/admin/api/reward-types");
+    const response = await adminApi.get<RewardTypesListResponse>("/api/admin/reward-types");
     return response.data.reward_types;
 };

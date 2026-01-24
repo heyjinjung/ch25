@@ -30,7 +30,7 @@ window.devAuth = async () => {
 
         if (!response.ok) {
             const error = await response.json();
-            console.error("❌ Dev auth failed:", error);
+            console.error("??Dev auth failed:", error);
             alert("Dev auth failed. Make sure backend is running in dev mode.");
             return;
         }
@@ -40,15 +40,15 @@ window.devAuth = async () => {
         // Store token in localStorage
         localStorage.setItem("token", data.access_token);
 
-        console.log("✅ Dev auth successful!");
+        console.log("??Dev auth successful!");
         console.log("User:", data.user);
         console.log("Token:", data.access_token);
-        console.log("\n🔄 Refreshing page...");
+        console.log("\n?�� Refreshing page...");
 
         // Refresh to apply auth
         setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-        console.error("❌ Dev auth error:", error);
+        console.error("??Dev auth error:", error);
         alert("Dev auth failed. Make sure backend is running on http://localhost:8000");
     }
 };
@@ -58,30 +58,30 @@ window.devAuth = async () => {
  */
 window.devLogout = () => {
     localStorage.removeItem("token");
-    console.log("✅ Logged out. Refreshing...");
+    console.log("??Logged out. Refreshing...");
     setTimeout(() => window.location.reload(), 500);
 };
 
 // Auto-run on load in development
 if (import.meta.env.DEV) {
     console.log(`
-╔═══════════════════════════════════════════════╗
-║  🛠️  Development Mode Authentication Helper  ║
-╠═══════════════════════════════════════════════╣
-║                                               ║
-║  Quick Login:                                 ║
-║  → await window.devAuth()                     ║
-║                                               ║
-║  Logout:                                      ║
-║  → window.devLogout()                         ║
-║                                               ║
-║  Test User:                                   ║
-║  - Username: 개발 테스트 유저                 ║
-║  - Level: 10                                  ║
-║  - Vault: 100,000원                           ║
-║  - Cash: 25,000원                             ║
-║                                               ║
-╚═══════════════════════════════════════════════╝
+?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═??
+?? ?���? Development Mode Authentication Helper  ??
+?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═??
+??                                              ??
+?? Quick Login:                                 ??
+?? ??await window.devAuth()                     ??
+??                                              ??
+?? Logout:                                      ??
+?? ??window.devLogout()                         ??
+??                                              ??
+?? Test User:                                   ??
+?? - Username: 개발 ?�스???��?                 ??
+?? - Level: 10                                  ??
+?? - Vault: 100,000??                          ??
+?? - Cash: 25,000??                            ??
+??                                              ??
+?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═?�═??
   `);
 }
 

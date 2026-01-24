@@ -84,11 +84,11 @@ const EventDashboardPage: React.FC = () => {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse" />
-                    <div className="truncate text-base font-black text-white tracking-wide">레벨</div>
+                    <div className="truncate text-base font-black text-white tracking-wide">?�벨</div>
                     {seasonUnclaimed && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
                   </div>
                   <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-figma-accent/10 px-4 py-2.5 text-sm font-black text-figma-accent ring-1 ring-inset ring-figma-accent/20">
-                    레벨 확인
+                    ?�벨 ?�인
                   </div>
                 </div>
               </div>
@@ -116,7 +116,7 @@ const EventDashboardPage: React.FC = () => {
                     <div className="truncate text-base font-black text-white tracking-wide">모달모음</div>
                   </div>
                   <div className="shrink-0 inline-flex items-center justify-center rounded-xl bg-orange-500/15 px-4 py-2.5 text-sm font-black text-orange-400 ring-1 ring-inset ring-orange-500/20">
-                    열기
+                    ?�기
                   </div>
                 </div>
               </div>

@@ -39,13 +39,13 @@ const ShopPage: React.FC = () => {
             tryHaptic(20);
             const token = data?.reward_token ?? data?.granted?.item_type;
             const amount = data?.reward_amount ?? data?.granted?.amount;
-            addToast(`구매 완료: ${token} x${amount} 지급됨`, "success");
+            addToast(`구매 ?�료: ${token} x${amount} 지급됨`, "success");
             queryClient.invalidateQueries({ queryKey: ['inventory'] });
             queryClient.invalidateQueries({ queryKey: ['vault-status'] });
         },
         onError: (error: any) => {
             tryHaptic(50);
-            const msg = error.response?.data?.detail || "구매에 실패했습니다";
+            const msg = error.response?.data?.detail || "구매???�패?�습?�다";
             addToast(msg, "error");
         }
     });
@@ -54,7 +54,7 @@ const ShopPage: React.FC = () => {
         return (
             <div className="mx-auto w-full max-w-lg py-16 flex flex-col items-center justify-center">
                 <Loader2 className="w-10 h-10 animate-spin text-emerald-500/70" />
-                <p className="mt-4 text-white/50 text-sm font-medium">상점 불러오는 중...</p>
+                <p className="mt-4 text-white/50 text-sm font-medium">?�점 불러?�는 �?..</p>
             </div>
         );
     }
@@ -66,14 +66,14 @@ const ShopPage: React.FC = () => {
                     <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/10">
                         <ShoppingBag className="h-6 w-6 text-white/40" />
                     </div>
-                    <div className="text-sm font-black text-white/90">연결 실패</div>
-                    <div className="mt-1 text-[11px] font-medium text-white/50">상점 정보를 불러오지 못했습니다.</div>
+                    <div className="text-sm font-black text-white/90">?�결 ?�패</div>
+                    <div className="mt-1 text-[11px] font-medium text-white/50">?�점 ?�보�?불러?��? 못했?�니??</div>
                     <Button
                         onClick={() => { tryHaptic(10); refetch(); }}
                         variant="figma-primary"
                         className="mt-4 !px-6 !py-2.5 !text-sm"
                     >
-                        다시 시도
+                        ?�시 ?�도
                     </Button>
                 </div>
             </div>
@@ -88,7 +88,7 @@ const ShopPage: React.FC = () => {
                     <img src="/assets/icons/icon_cart.webp" alt="Shop" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-black text-white">상점</h1>
+                    <h1 className="text-xl font-black text-white">?�점</h1>
                     <p className="text-[11px] text-white/40 tracking-wide">PREMIUM SHOP</p>
                 </div>
             </div>
@@ -104,14 +104,14 @@ const ShopPage: React.FC = () => {
                         }}
                         className="flex-1 py-3 text-sm font-black rounded-xl transition-all text-white/60 hover:text-white hover:bg-white/5 active:scale-[0.98]"
                     >
-                        보유함
+                        보유??
                     </button>
                     <button
                         type="button"
                         disabled
                         className="flex-1 py-3 text-sm font-black rounded-xl transition-all bg-figma-primary text-white shadow-lg shadow-emerald-900/20"
                     >
-                        상점
+                        ?�점
                     </button>
                 </div>
             </div>
@@ -135,8 +135,8 @@ const ShopPage: React.FC = () => {
                     ))
                 ) : (
                     <div className="col-span-2 rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
-                        <div className="text-sm font-bold text-white/70">상품 준비 중</div>
-                        <div className="mt-1 text-[11px] font-medium text-white/40">곧 새로운 상품이 등록됩니다.</div>
+                        <div className="text-sm font-bold text-white/70">?�품 준�?�?/div>
+                        <div className="mt-1 text-[11px] font-medium text-white/40">�??�로???�품???�록?�니??</div>
                     </div>
                 )}
             </div>
@@ -152,21 +152,21 @@ interface ProductCardProps {
     benefitsSuspended?: boolean;
 }
 
-// 아이템 타입 한글화 매핑
+// ?�이???�???��???매핑
 const ITEM_NAMES: Record<string, string> = {
-    'VOUCHER_GOLD_KEY_1': '골드키',
-    'VOUCHER_DIAMOND_KEY_1': '다이아키',
+    'VOUCHER_GOLD_KEY_1': '골드??,
+    'VOUCHER_DIAMOND_KEY_1': '?�이?�키',
     'VOUCHER_ROULETTE_COIN_1': '룰렛',
-    'VOUCHER_DICE_TOKEN_1': '주사위',
+    'VOUCHER_DICE_TOKEN_1': '주사??,
     'VOUCHER_LOTTERY_TICKET_1': '복권',
-    'GOLD_KEY': '골드키',
-    'DIAMOND_KEY': '다이아키',
+    'GOLD_KEY': '골드??,
+    'DIAMOND_KEY': '?�이?�키',
     'ROULETTE_COIN': '룰렛',
-    'DICE_TOKEN': '주사위',
+    'DICE_TOKEN': '주사??,
     'LOTTERY_TICKET': '복권',
 };
 
-// 아이콘 매핑 (복권 티켓 아이콘 수정)
+// ?�이�?매핑 (복권 ?�켓 ?�이�??�정)
 const ITEM_ICONS: Record<string, string> = {
     'VOUCHER_GOLD_KEY_1': '/assets/asset_ticket_gold.png',
     'VOUCHER_DIAMOND_KEY_1': '/assets/asset_ticket_diamond.png',
@@ -206,14 +206,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
 
             {/* Description */}
             <p className="text-[9px] text-white/40 mb-2 text-center leading-tight">
-                다이아 {product.cost.amount} → {grantItemName} x{product.grant.amount}
-                {isGifticonGrant ? " (지급대기/보상함)" : " (즉시지급/지갑)"}
+                ?�이??{product.cost.amount} ??{grantItemName} x{product.grant.amount}
+                {isGifticonGrant ? " (지급�?�?보상??" : " (즉시지�?지�?"}
             </p>
 
-            {/* Price - 다이아 가격 명확하게 표시 */}
+            {/* Price - ?�이??가�?명확?�게 ?�시 */}
             <div className="mb-2 flex items-center justify-center">
                 <div className="inline-flex min-h-10 select-none items-center justify-center gap-1.5 rounded-full border border-white/10 bg-gradient-to-b from-white/10 to-black/40 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                    <img src="/assets/icon_diamond.png" alt="다이아" className="h-3.5 w-3.5 shrink-0" />
+                    <img src="/assets/icon_diamond.png" alt="?�이?? className="h-3.5 w-3.5 shrink-0" />
                     <span className="text-[13px] font-black tabular-nums tracking-tight text-white/90 leading-none whitespace-nowrap">
                         {costAmount.toLocaleString()}
                     </span>
@@ -224,7 +224,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
             <button
                 onClick={() => { tryHaptic(10); onBuy(); }}
                 disabled={isDisabled}
-                title={benefitsSuspended ? "장기 미활동으로 구매 제한됨 (입금 필요)" : (!hasEnoughDiamond ? "다이아가 부족합니다" : "")}
+                title={benefitsSuspended ? "?�기 미활?�으�?구매 ?�한??(?�금 ?�요)" : (!hasEnoughDiamond ? "?�이?��? 부족합?�다" : "")}
                 className={`w-full min-h-10 rounded-xl border transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-1.5
                     ${benefitsSuspended
                         ? "bg-red-900/40 border-red-500/30 text-red-400"
@@ -237,7 +237,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, diamondBalance, onBu
                     ) : benefitsSuspended ? (
                         <>
                             <Lock className="w-3.5 h-3.5" />
-                            제한됨
+                            ?�한??
                         </>
                     ) : (
                         <>

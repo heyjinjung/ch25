@@ -9,8 +9,8 @@ import { setAdminToken } from "../../../../auth/adminAuth";
 import { v2Client } from "../../../api/client";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "아이디를 입력하세요."),
-  password: z.string().min(1, "비밀번호를 입력하세요."),
+  username: z.string().min(1, "아이디를 입력하세요"),
+  password: z.string().min(1, "비밀번호를 입력하세요"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -64,9 +64,9 @@ const V2AdminLoginPage: FC = () => {
             <ShieldCheck className="h-8 w-8 text-obsidian-accent" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            관리자 로그인 (V2)
+            관리자 로그인(V2)
           </h1>
-          <p className="text-sm text-obsidian-muted">/v2/admin 전용 로그인</p>
+          <p className="text-sm text-obsidian-muted">/admin 전용 로그인</p>
         </header>
 
         <main className="rounded-[2rem] border border-obsidian-border bg-obsidian-surface p-8">
@@ -120,7 +120,7 @@ const V2AdminLoginPage: FC = () => {
               disabled={isLoading}
               className="w-full rounded-xl bg-obsidian-accent px-4 py-3 font-bold text-black hover:opacity-90 disabled:opacity-50"
             >
-              {isLoading ? "로그인 중..." : "로그인"}
+              {isLoading ? "로그인 중.." : "로그인"}
             </button>
           </form>
         </main>

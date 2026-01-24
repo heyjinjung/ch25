@@ -50,7 +50,7 @@ const ModalShell = ({
           type="button"
           onClick={onClose}
           className="p-2 rounded-lg hover:bg-white/5 text-zinc-400 hover:text-white transition-colors"
-          aria-label="닫기"
+          aria-label="?�기"
         >
           <X size={18} />
         </button>
@@ -62,15 +62,15 @@ const ModalShell = ({
 
 const seasonSchema = z
   .object({
-    name: z.string().min(1, "이름은 필수입니다"),
-    start_date: z.string().min(1, "시작일을 입력하세요"),
-    end_date: z.string().min(1, "종료일을 입력하세요"),
-    max_level: z.number().int().positive("최대 레벨은 1 이상"),
-    base_xp_per_stamp: z.number().int().positive("스탬프당 XP는 1 이상"),
+    name: z.string().min(1, "?�름?� ?�수?�니??),
+    start_date: z.string().min(1, "?�작?�을 ?�력?�세??),
+    end_date: z.string().min(1, "종료?�을 ?�력?�세??),
+    max_level: z.number().int().positive("최�? ?�벨?� 1 ?�상"),
+    base_xp_per_stamp: z.number().int().positive("?�탬?�당 XP??1 ?�상"),
     is_active: z.boolean().default(true),
   })
   .refine((value) => new Date(value.start_date) <= new Date(value.end_date), {
-    message: "종료일은 시작일 이후여야 합니다",
+    message: "종료?��? ?�작???�후?�야 ?�니??,
     path: ["end_date"],
   });
 
@@ -161,7 +161,7 @@ const SeasonListPage: React.FC = () => {
       <div className="px-8 max-w-[1600px] mx-auto">
         <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">시즌 관리 (Season Ops)</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-white">?�즌 관�?(Season Ops)</h1>
           </div>
           <button
             type="button"
@@ -173,21 +173,21 @@ const SeasonListPage: React.FC = () => {
             className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 active:scale-95 transition-all"
           >
             <Plus size={16} />
-            새 시즌 생성
+            ???�즌 ?�성
           </button>
         </header>
 
         {isLoading && (
           <div className="h-64 flex items-center justify-center gap-3 text-zinc-500 bg-[#18181b] rounded-2xl border border-white/5">
             <RefreshCw className="animate-spin h-5 w-5" />
-            <span className="text-sm font-medium">데이터 로드 중...</span>
+            <span className="text-sm font-medium">?�이??로드 �?..</span>
           </div>
         )}
 
         {isError && (
           <div className="h-64 flex items-center justify-center gap-3 text-rose-400 bg-[#18181b] rounded-2xl border border-rose-500/20">
             <AlertCircle size={20} />
-            <span className="text-sm font-bold">데이터 로드 실패: {(error as Error).message}</span>
+            <span className="text-sm font-bold">?�이??로드 ?�패: {(error as Error).message}</span>
           </div>
         )}
 
@@ -196,7 +196,7 @@ const SeasonListPage: React.FC = () => {
             <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-600">
               <Layers size={24} />
             </div>
-            <p className="text-sm font-medium">등록된 시즌이 없습니다.</p>
+            <p className="text-sm font-medium">?�록???�즌???�습?�다.</p>
           </div>
         )}
 
@@ -206,12 +206,12 @@ const SeasonListPage: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-zinc-900/50 border-b border-white/5">
-                    <th className="pl-6 pr-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">시즌 명 (ID)</th>
-                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">운영 기간 (Time Gauge)</th>
-                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">최대 LV</th>
+                    <th className="pl-6 pr-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">?�즌 �?(ID)</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">?�영 기간 (Time Gauge)</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">최�? LV</th>
                     <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">XP Rate</th>
-                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">상태</th>
-                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-center">액션</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider">?�태</th>
+                    <th className="px-4 py-3 text-sm font-bold text-zinc-500 uppercase tracking-wider text-center">?�션</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
@@ -277,8 +277,8 @@ const SeasonListPage: React.FC = () => {
                               });
                             }}
                             className="p-1.5 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
-                            title="설정 수정"
-                            aria-label="설정 수정"
+                            title="?�정 ?�정"
+                            aria-label="?�정 ?�정"
                           >
                             <Check className="h-4 w-4" />
                           </button>
@@ -308,7 +308,7 @@ const SeasonListPage: React.FC = () => {
                                 }
                                 setLevels(fullLevels);
                               } catch {
-                                addToast("레벨 정보를 불러오지 못했습니다.", "error");
+                                addToast("?�벨 ?�보�?불러?��? 못했?�니??", "error");
                                 setIsLevelModalOpen(false);
                               } finally {
                                 setIsLevelLoading(false);
@@ -338,7 +338,7 @@ const SeasonListPage: React.FC = () => {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
                     className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
-                    aria-label="이전 페이지"
+                    aria-label="?�전 ?�이지"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
                   </button>
@@ -347,7 +347,7 @@ const SeasonListPage: React.FC = () => {
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page >= totalPages}
                     className="p-1.5 rounded border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-30 transition-colors"
-                    aria-label="다음 페이지"
+                    aria-label="?�음 ?�이지"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
@@ -360,35 +360,35 @@ const SeasonListPage: React.FC = () => {
 
       {/* Main Season Modal */}
       {isModalOpen && (
-        <ModalShell title={editingSeason ? "시즌 기본 설정 수정" : "새 시즌 생성"} onClose={resetAndClose}>
+        <ModalShell title={editingSeason ? "?�즌 기본 ?�정 ?�정" : "???�즌 ?�성"} onClose={resetAndClose}>
           <form className="space-y-6 p-2" onSubmit={onSubmit}>
 
             {/* Safety Zone - Form Area */}
             <div className="bg-[#1e1e24] p-6 rounded-xl border border-white/5 space-y-6">
               <div>
-                <label className={labelClass}>시즌 명칭 <span className="text-rose-500">*</span></label>
-                <input className={inputClass} {...form.register("name")} type="text" placeholder="예: Season 5 Alpha" />
+                <label className={labelClass}>?�즌 명칭 <span className="text-rose-500">*</span></label>
+                <input className={inputClass} {...form.register("name")} type="text" placeholder="?? Season 5 Alpha" />
                 {form.formState.errors.name && <p className="mt-1 text-xs text-rose-400">{form.formState.errors.name.message}</p>}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>시작 일자</label>
+                  <label className={labelClass}>?�작 ?�자</label>
                   <input type="date" className={inputClass} {...form.register("start_date")} />
                 </div>
                 <div>
-                  <label className={labelClass}>종료 일자</label>
+                  <label className={labelClass}>종료 ?�자</label>
                   <input type="date" className={inputClass} {...form.register("end_date")} />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={labelClass}>최대 레벨 (Max Level)</label>
+                  <label className={labelClass}>최�? ?�벨 (Max Level)</label>
                   <input type="number" className={inputClass} {...form.register("max_level", { valueAsNumber: true })} />
                 </div>
                 <div>
-                  <label className={labelClass}>스탬프당 획득 XP</label>
+                  <label className={labelClass}>?�탬?�당 ?�득 XP</label>
                   <input type="number" className={inputClass} {...form.register("base_xp_per_stamp", { valueAsNumber: true })} />
                 </div>
               </div>
@@ -397,8 +397,8 @@ const SeasonListPage: React.FC = () => {
                 <label className="flex items-center gap-3 cursor-pointer group p-3 rounded-lg border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-colors">
                   <input type="checkbox" {...form.register("is_active")} className={checkboxClass} />
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-zinc-200">시즌 활성화 (Active)</span>
-                    <span className="text-xs text-zinc-500 mt-0.5">활성화 시 즉시 사용자에게 노출됩니다.</span>
+                    <span className="text-sm font-bold text-zinc-200">?�즌 ?�성??(Active)</span>
+                    <span className="text-xs text-zinc-500 mt-0.5">?�성????즉시 ?�용?�에�??�출?�니??</span>
                   </div>
                 </label>
               </div>
@@ -418,7 +418,7 @@ const SeasonListPage: React.FC = () => {
                 className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95 transition-all disabled:opacity-50"
               >
                 {mutation.isPending ? <RefreshCw className="animate-spin h-4 w-4" /> : <Save className="h-4 w-4" />}
-                {editingSeason ? "변경사항 저장" : "시즌 생성"}
+                {editingSeason ? "변경사???�?? : "?�즌 ?�성"}
               </button>
             </div>
           </form>
@@ -428,7 +428,7 @@ const SeasonListPage: React.FC = () => {
       {/* Level Editor Modal */}
       {isLevelModalOpen && levelEditingSeason && (
         <ModalShell
-          title={`${levelEditingSeason.name} — 레벨 리워드 설정`}
+          title={`${levelEditingSeason.name} ???�벨 리워???�정`}
           onClose={() => {
             setIsLevelModalOpen(false);
             setLevelEditingSeason(null);
@@ -438,7 +438,7 @@ const SeasonListPage: React.FC = () => {
           {isLevelLoading ? (
             <div className="h-40 flex items-center justify-center gap-3 text-zinc-500">
               <RefreshCw className="animate-spin h-5 w-5" />
-              <span className="text-sm">레벨 구성을 불러오는 중...</span>
+              <span className="text-sm">?�벨 구성??불러?�는 �?..</span>
             </div>
           ) : (
             <div className="space-y-6">
@@ -446,10 +446,10 @@ const SeasonListPage: React.FC = () => {
               {/* Header Stats */}
               <div className="flex items-center justify-between bg-indigo-500/10 p-5 rounded-xl border border-indigo-500/20">
                 <div className="flex flex-col">
-                  <span className="text-xs font-black text-indigo-400 uppercase tracking-widest">설정 대상 (Configuration Target)</span>
+                  <span className="text-xs font-black text-indigo-400 uppercase tracking-widest">?�정 ?�??(Configuration Target)</span>
                   <div className="flex items-baseline gap-2 mt-1">
                     <span className="text-2xl font-black text-white">{levels.length}</span>
-                    <span className="text-sm text-indigo-200/60 font-medium">개 레벨 (Levels)</span>
+                    <span className="text-sm text-indigo-200/60 font-medium">�??�벨 (Levels)</span>
                   </div>
                 </div>
                 <button
@@ -471,7 +471,7 @@ const SeasonListPage: React.FC = () => {
                   className="px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/20 flex items-center gap-2"
                 >
                   {isSavingLevels ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                  <span>전체 레벨 저장</span>
+                  <span>?�체 ?�벨 ?�??/span>
                 </button>
               </div>
 
@@ -497,7 +497,7 @@ const SeasonListPage: React.FC = () => {
                           {lv.level}
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">레벨 보상 (Level Reward)</span>
+                          <span className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">?�벨 보상 (Level Reward)</span>
                           <span className="text-sm text-indigo-400 font-black">
                             {REWARD_TYPES.find(r => r.value === lv.reward_type)?.label || lv.reward_type}
                           </span>
@@ -520,7 +520,7 @@ const SeasonListPage: React.FC = () => {
                     <div className="space-y-3">
                       <div>
                         <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">
-                          필요 XP (Required XP)
+                          ?�요 XP (Required XP)
                         </label>
                         <input
                           type="number"
@@ -549,7 +549,7 @@ const SeasonListPage: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">수량 (Amt)</label>
+                          <label className="text-[11px] font-black text-zinc-500 uppercase tracking-widest block mb-1.5 ml-0.5">?�량 (Amt)</label>
                           <input
                             type="number"
                             value={lv.reward_amount}

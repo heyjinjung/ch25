@@ -40,7 +40,7 @@ const SurveyAdminPage: React.FC = () => {
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            설문 관리 <span className="text-admin-brand/40">Surveys</span>
+            ?�문 관�?<span className="text-admin-brand/40">Surveys</span>
           </h1>
         </div>
         <div className="flex gap-3">
@@ -49,7 +49,7 @@ const SurveyAdminPage: React.FC = () => {
             disabled={isLoading}
             className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?�로고침
           </button>
           <button
             className="btn-admin-primary flex items-center gap-2 px-5 py-2.5 h-auto shadow-admin-glow"
@@ -57,7 +57,7 @@ const SurveyAdminPage: React.FC = () => {
               navigate("/admin/surveys/new");
             }}
           >
-            <Plus className="h-4 w-4" /> 설문 생성
+            <Plus className="h-4 w-4" /> ?�문 ?�성
           </button>
         </div>
       </header>
@@ -65,14 +65,14 @@ const SurveyAdminPage: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">총 설문 수</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">�??�문 ??/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-text-primary">{surveys.length}</p>
             <FileText className="h-5 w-5 text-admin-brand mb-1" />
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">활성 설문</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�성 ?�문</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-accent">
               {surveys.filter(s => s.status === "ACTIVE").length}
@@ -81,7 +81,7 @@ const SurveyAdminPage: React.FC = () => {
           </div>
         </div>
         <div className="admin-card-premium p-6 flex flex-col justify-between h-32">
-          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">작성 중</p>
+          <p className="text-[10px] font-black text-admin-text-muted uppercase tracking-widest">?�성 �?/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-admin-warning">
               {surveys.filter(s => s.status === "DRAFT").length}
@@ -96,7 +96,7 @@ const SurveyAdminPage: React.FC = () => {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+            <p className="text-admin-meta text-admin-text-secondary">?�이??로딩 �?..</p>
           </div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
@@ -104,19 +104,19 @@ const SurveyAdminPage: React.FC = () => {
               <thead>
                 <tr className="admin-th">
                   <th className="px-4 py-3.5 text-left">ID</th>
-                  <th className="px-4 py-3.5 text-left">설문 제목</th>
-                  <th className="px-4 py-3.5 text-center">상태</th>
+                  <th className="px-4 py-3.5 text-left">?�문 ?�목</th>
+                  <th className="px-4 py-3.5 text-center">?�태</th>
                   <th className="px-4 py-3.5 text-center">채널</th>
-                  <th className="px-4 py-3.5 text-center">질문 수</th>
-                  <th className="px-4 py-3.5 text-center">생성일</th>
-                  <th className="px-4 py-3.5 text-center">액션</th>
+                  <th className="px-4 py-3.5 text-center">질문 ??/th>
+                  <th className="px-4 py-3.5 text-center">?�성??/th>
+                  <th className="px-4 py-3.5 text-center">?�션</th>
                 </tr>
               </thead>
               <tbody>
                 {surveys.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                      설문이 없습니다. 새 설문을 생성해주세요.
+                      ?�문???�습?�다. ???�문???�성?�주?�요.
                     </td>
                   </tr>
                 ) : (
@@ -154,8 +154,8 @@ const SurveyAdminPage: React.FC = () => {
                             onClick={() => {
                               navigate(`/admin/surveys/${survey.id}`);
                             }}
-                            aria-label={`설문 상세 보기 (ID: ${survey.id})`}
-                            title={`설문 상세 보기 (ID: ${survey.id})`}
+                            aria-label={`?�문 ?�세 보기 (ID: ${survey.id})`}
+                            title={`?�문 ?�세 보기 (ID: ${survey.id})`}
                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
                           >
                             <Eye className="h-4 w-4" />
@@ -163,8 +163,8 @@ const SurveyAdminPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => navigate(`/admin/surveys/${survey.id}/responses`)}
-                            aria-label={`설문 통계 보기 (ID: ${survey.id})`}
-                            title={`설문 통계 보기 (ID: ${survey.id})`}
+                            aria-label={`?�문 ?�계 보기 (ID: ${survey.id})`}
+                            title={`?�문 ?�계 보기 (ID: ${survey.id})`}
                             className="p-2 rounded-lg hover:bg-admin-accent/10 text-admin-accent transition-colors"
                           >
                             <BarChart3 className="h-4 w-4" />

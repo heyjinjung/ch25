@@ -46,7 +46,7 @@ export const v2Client = axios.create({
 v2Client.interceptors.request.use((config) => {
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : "";
-  const isV2AdminPath = pathname.startsWith("/v2/admin") || pathname.startsWith("/admin");
+  const isV2AdminPath = pathname.startsWith("/v2/admin");
 
   const token = isV2AdminPath
     ? getAdminToken() ||
@@ -61,7 +61,11 @@ v2Client.interceptors.request.use((config) => {
   const url = String(config.url ?? "");
 
   // Skip auth for public endpoints if any (currently mostly auth'd)
-  if (url.endsWith("/api/auth/token") || url.endsWith("/api/v2/auth/token")) {
+  if (
+    url.endsWith("/api/v2/auth/token") ||
+    url.endsWith("/api/v2/dev/login") ||
+    url.endsWith("/api/auth/token")
+  ) {
     return config;
   }
 
@@ -105,8 +109,8 @@ v2Client.interceptors.response.use(
         clearAuth();
         if (typeof window !== "undefined") {
           const pathname = window.location.pathname || "";
-          const isV2AdminPath = pathname.startsWith("/v2/admin");
-          const target = isV2AdminPath ? "/v2/admin/login" : "/v2/login";
+          const isV2AdminPath = pathname.startsWith("/admin");
+          const target = isV2AdminPath ? "/admin/login" : "/login";
           if (pathname !== target) {
             // Basic redirect for now, maybe use a custom event or router later
             window.location.href = target;

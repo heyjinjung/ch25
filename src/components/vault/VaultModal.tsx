@@ -11,10 +11,10 @@ type Props = {
 };
 
 const DEFAULT_COPY = {
-  title: "금고 시스템 이용 안내",
-  body: "지민코드 활동을 통해 적립된 금액은 금고에 안전하게 보관됩니다.\n씨씨카지노 이용 내역 확인 시 해금되어 출금 신청 가능한 금액으로 반영됩니다.",
-  primary_cta_label: "씨씨카지노 바로가기",
-  secondary_cta_label: "실장 텔레 문의",
+  title: "금고 ?�스???�용 ?�내",
+  body: "지민코???�동???�해 ?�립??금액?� 금고???�전?�게 보�??�니??\n?�씨카�????�용 ?�역 ?�인 ???�금?�어 출금 ?�청 가?�한 금액?�로 반영?�니??",
+  primary_cta_label: "?�씨카�???바로가�?,
+  secondary_cta_label: "?�장 ?�레 문의",
 };
 
 const PRIMARY_URL = "https://ccc-010.com";

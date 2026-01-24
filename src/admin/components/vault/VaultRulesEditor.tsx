@@ -117,11 +117,11 @@ export const VaultRulesEditor: React.FC = () => {
             await Promise.all([
                 adminApi.put(`/admin/api/vault-programs/${program.key}/config`, { config_json: program.config_json }),
             ]);
-            alert("설정이 성공적으로 저장되었습니다.");
+            alert("?�정???�공?�으�??�?�되?�습?�다.");
             fetchProgram();
         } catch (e) {
             console.error(e);
-            alert("설장 저장 중 오류가 발생했습니다.");
+            alert("?�장 ?�??�??�류가 발생?�습?�다.");
         } finally {
             setSaving(false);
         }
@@ -138,7 +138,7 @@ export const VaultRulesEditor: React.FC = () => {
     if (loading) return (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <span className="text-admin-meta text-admin-text-secondary text-[14px]">분석 중...</span>
+            <span className="text-admin-meta text-admin-text-secondary text-[14px]">분석 �?..</span>
         </div>
     );
 
@@ -150,29 +150,29 @@ export const VaultRulesEditor: React.FC = () => {
                 <section className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
                         <Settings className="h-5 w-5 text-admin-brand" />
-                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">자산 적립 엔진</h3>
+                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">?�산 ?�립 ?�진</h3>
                     </div>
                     <div className="admin-card-premium p-6 rounded-2xl space-y-6">
                         <div className="flex items-center justify-between p-4 bg-admin-bg/40 rounded-xl border border-admin-border">
                             <div className="flex items-center gap-3">
                                 <Zap className={`h-5 w-5 ${program.config_json.enable_game_earn_events ? "text-admin-brand" : "text-admin-text-muted"}`} />
                                 <div>
-                                    <div className="text-admin-body font-bold text-admin-text-primary text-[14px]">전역 적립 활성화</div>
-                                    <div className="text-admin-meta text-admin-text-secondary italic text-[14px]">게임 플레이 시 실시간 금고 적립 허용</div>
+                                    <div className="text-admin-body font-bold text-admin-text-primary text-[14px]">?�역 ?�립 ?�성??/div>
+                                    <div className="text-admin-meta text-admin-text-secondary italic text-[14px]">게임 ?�레?????�시�?금고 ?�립 ?�용</div>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => handleConfigChange({ enable_game_earn_events: !program.config_json.enable_game_earn_events })}
                                 className="transition-transform active:scale-95"
-                                aria-label="전역 적립 활성화 토글"
-                                title="전역 적립 활성화 토글"
+                                aria-label="?�역 ?�립 ?�성???��?"
+                                title="?�역 ?�립 ?�성???��?"
                             >
                                 {program.config_json.enable_game_earn_events ? <ToggleRight className="h-6 w-6 text-admin-brand" /> : <ToggleLeft className="h-6 w-6 text-admin-text-muted" />}
                             </button>
                         </div>
                         <div className="space-y-4">
-                            <label className="text-admin-meta text-admin-text-muted font-bold uppercase tracking-wider flex items-center gap-2 px-1 text-[14px]"><Target className="h-3 w-3" /> 게임별 보상 규격</label>
+                            <label className="text-admin-meta text-admin-text-muted font-bold uppercase tracking-wider flex items-center gap-2 px-1 text-[14px]"><Target className="h-3 w-3" /> 게임�?보상 규격</label>
                             <div className="grid grid-cols-2 gap-4">
                                 {Object.entries(program.config_json.game_earn_config).map(([game, values]) => (
                                     <div
@@ -184,7 +184,7 @@ export const VaultRulesEditor: React.FC = () => {
                                             {String(game).toUpperCase() === "ROULETTE" || game === "roulette"
                                                 ? "룰렛 (Roulette)"
                                                 : isDiceKey(game)
-                                                    ? "주사위 (Dice)"
+                                                    ? "주사??(Dice)"
                                                     : game}
                                             <ExternalLink className="h-3 w-3 opacity-30 group-hover/card:opacity-100 group-hover/card:text-admin-brand transition-opacity" />
                                         </div>
@@ -197,7 +197,7 @@ export const VaultRulesEditor: React.FC = () => {
                                                 ].map(([type, val]) => (
                                                     <div key={String(type)} className="flex items-center justify-between text-admin-mono text-[14px]">
                                                         <span className="text-admin-text-muted">
-                                                            {type === "WIN" ? "승리" : type === "LOSE" ? "패배" : type === "DRAW" ? "무승부" : String(type)}
+                                                            {type === "WIN" ? "?�리" : type === "LOSE" ? "?�배" : type === "DRAW" ? "무승부" : String(type)}
                                                         </span>
                                                         <span className="text-admin-text-primary font-bold">{formatSignedAmount(Number(val ?? 0))}</span>
                                                     </div>
@@ -206,7 +206,7 @@ export const VaultRulesEditor: React.FC = () => {
                                                 Object.entries(values).map(([type, val]) => (
                                                     <div key={type} className="flex items-center justify-between text-admin-mono text-[14px]">
                                                         <span className="text-admin-text-muted">
-                                                            {type === "WIN" ? "승리" : type === "LOSE" ? "패배" : type === "DRAW" ? "무승부" : type === "BASE" ? "기본" : type}
+                                                            {type === "WIN" ? "?�리" : type === "LOSE" ? "?�배" : type === "DRAW" ? "무승부" : type === "BASE" ? "기본" : type}
                                                         </span>
                                                         <span className="text-admin-text-primary font-bold">{formatSignedAmount(val as any)}</span>
                                                     </div>
@@ -220,44 +220,44 @@ export const VaultRulesEditor: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-3 px-2 mt-10">
                         <ShieldCheck className="h-5 w-5 text-admin-brand" />
-                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">적격 유저 필터링</h3>
+                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">?�격 ?��? ?�터�?/h3>
                     </div>
                     <div className="admin-card-premium p-6 rounded-2xl group overflow-hidden">
                         <div className="space-y-4 pt-4 border-t border-admin-border">
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="h-5 w-5 text-admin-accent" />
-                                <label className="text-admin-label mb-0 text-[14px]">대상자 통제 (Eligibility Mode)</label>
+                                <label className="text-admin-label mb-0 text-[14px]">?�?�자 ?�제 (Eligibility Mode)</label>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1">
-                                    <div className="text-[14px] text-admin-text-muted font-bold uppercase tracking-widest pl-1">접근 모드</div>
+                                    <div className="text-[14px] text-admin-text-muted font-bold uppercase tracking-widest pl-1">?�근 모드</div>
                                     <select
                                         className="admin-input h-9 w-full text-[14px]"
                                         value={program.config_json.eligibility_mode}
                                         onChange={(e) => handleConfigChange({ eligibility_mode: e.target.value as VaultConfig['eligibility_mode'] })}
-                                        aria-label="대상자 통제 접근 모드(Eligibility Mode)"
-                                        title="대상자 통제 접근 모드(Eligibility Mode)"
+                                        aria-label="?�?�자 ?�제 ?�근 모드(Eligibility Mode)"
+                                        title="?�?�자 ?�제 ?�근 모드(Eligibility Mode)"
                                     >
-                                        <option value="all">전체 허용 (All Mode)</option>
+                                        <option value="all">?�체 ?�용 (All Mode)</option>
                                         <option value="allowlist">Allowlist Only</option>
                                         <option value="blocklist">Blocklist Enforced</option>
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <div className="text-[14px] text-admin-text-muted font-bold uppercase tracking-widest pl-1">대상 세그먼트 (Dynamic)</div>
+                                    <div className="text-[14px] text-admin-text-muted font-bold uppercase tracking-widest pl-1">?�???�그먼트 (Dynamic)</div>
                                     <select
                                         className="admin-input h-9 w-full text-[14px]"
                                         value={program.config_json.eligibility_segment_allow || ""}
                                         onChange={(e) => handleConfigChange({ eligibility_segment_allow: e.target.value || undefined })}
-                                        aria-label="대상 세그먼트(Eligibility Segment)"
-                                        title="대상 세그먼트(Eligibility Segment)"
+                                        aria-label="?�???�그먼트(Eligibility Segment)"
+                                        title="?�???�그먼트(Eligibility Segment)"
                                     >
-                                        <option value="">전체 (No Segment Filter)</option>
-                                        <option value="VIP">VIP 유저</option>
-                                        <option value="ACTIVE">활동 유저 (ACTIVE)</option>
-                                        <option value="NEW">신규 유저 (NEW)</option>
-                                        <option value="AT_RISK">이탈 징후 (AT_RISK)</option>
-                                        <option value="DORMANT">휴면 (DORMANT)</option>
+                                        <option value="">?�체 (No Segment Filter)</option>
+                                        <option value="VIP">VIP ?��?</option>
+                                        <option value="ACTIVE">?�동 ?��? (ACTIVE)</option>
+                                        <option value="NEW">?�규 ?��? (NEW)</option>
+                                        <option value="AT_RISK">?�탈 징후 (AT_RISK)</option>
+                                        <option value="DORMANT">?�면 (DORMANT)</option>
                                     </select>
                                 </div>
                             </div>
@@ -266,10 +266,10 @@ export const VaultRulesEditor: React.FC = () => {
                                     onClick={() => navigate("/admin/user-segments")}
                                     className="btn-admin-primary flex-1 py-2 h-auto justify-center bg-admin-sidebar border border-admin-border hover:bg-admin-hover text-admin-text-secondary text-[14px]"
                                 >
-                                    대상자 명단 관리 (Segments)
+                                    ?�?�자 명단 관�?(Segments)
                                 </button>
                                 <div className="flex-1 text-[14px] text-admin-text-muted leading-relaxed">
-                                    * <span className="font-bold text-admin-text-secondary">명단 관리</span> 버튼을 눌러 각 세그먼트별 유저 명단을 확인하거나, 자동 분류 규칙을 설정할 수 있습니다.
+                                    * <span className="font-bold text-admin-text-secondary">명단 관�?/span> 버튼???�러 �??�그먼트�??��? 명단???�인?�거?? ?�동 분류 규칙???�정?????�습?�다.
                                 </div>
                             </div>
                         </div>
@@ -278,19 +278,19 @@ export const VaultRulesEditor: React.FC = () => {
                 <section className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
                         <Clock className="h-5 w-5 text-admin-brand" />
-                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">골든아워 자동화</h3>
+                        <h3 className="text-admin-subtitle font-black text-admin-text-primary text-[15px]">골든?�워 ?�동??/h3>
                     </div>
                     <div className="admin-card-premium p-6 rounded-2xl space-y-6">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label htmlFor="vault-golden-hour-start" className="text-admin-meta text-admin-text-muted font-bold text-[14px]">시작 (KST)</label>
+                                <label htmlFor="vault-golden-hour-start" className="text-admin-meta text-admin-text-muted font-bold text-[14px]">?�작 (KST)</label>
                                 <input
                                     id="vault-golden-hour-start"
                                     type="text"
                                     value={program.config_json.golden_hour_config.start_time_kst}
                                     onChange={(e) => handleGoldenHourChange("start_time_kst", e.target.value)}
                                     className="admin-input"
-                                    aria-label="골든아워 시작 시간(KST)"
+                                    aria-label="골든?�워 ?�작 ?�간(KST)"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -301,12 +301,12 @@ export const VaultRulesEditor: React.FC = () => {
                                     value={program.config_json.golden_hour_config.end_time_kst}
                                     onChange={(e) => handleGoldenHourChange("end_time_kst", e.target.value)}
                                     className="admin-input"
-                                    aria-label="골든아워 종료 시간(KST)"
+                                    aria-label="골든?�워 종료 ?�간(KST)"
                                 />
                             </div>
                         </div>
                         <div className="p-4 bg-admin-brand/5 border border-admin-brand/20 rounded-xl flex items-center justify-between">
-                            <span className="text-admin-meta font-bold text-admin-text-primary text-[14px]">적용 배수</span>
+                            <span className="text-admin-meta font-bold text-admin-text-primary text-[14px]">?�용 배수</span>
                             <div className="flex items-center gap-2">
                                 <span className="text-admin-title text-2xl font-black text-admin-brand">x</span>
                                 <input
@@ -315,8 +315,8 @@ export const VaultRulesEditor: React.FC = () => {
                                     value={program.config_json.golden_hour_config.multiplier}
                                     onChange={(e) => handleGoldenHourChange("multiplier", parseFloat(e.target.value))}
                                     className="admin-input w-24 text-right text-[14px] font-bold"
-                                    aria-label="골든아워 적용 배수"
-                                    title="골든아워 적용 배수"
+                                    aria-label="골든?�워 ?�용 배수"
+                                    title="골든?�워 ?�용 배수"
                                 />
                             </div>
                         </div>
@@ -332,7 +332,7 @@ export const VaultRulesEditor: React.FC = () => {
                     onClick={handleSave}
                 >
                     {saving ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-                    설정 완료 및 저장
+                    ?�정 ?�료 �??�??
                 </button>
             </div>
         </div>

@@ -1,4 +1,4 @@
-// src/v2/api/shopApi.ts
+// src/api/shopApi.ts
 import { v2Client } from "./client";
 
 // ============================================================================

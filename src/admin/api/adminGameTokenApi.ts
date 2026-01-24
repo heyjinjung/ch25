@@ -1,4 +1,4 @@
-// src/admin/api/adminGameTokenApi.ts
+// src/api/admin/adminGameTokenApi.ts
 import { adminApi } from "./httpClient";
 import { GameTokenType } from "../../types/gameTokens";
 import type { AdminRewardType } from "../types/adminReward";
@@ -28,7 +28,7 @@ export async function grantGameTokens(payload: GrantGameTokensPayload) {
     ...payload,
     user_identifier: payload.user_identifier ?? payload.external_id,
   };
-  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/grant", normalizedPayload);
+  const { data } = await adminApi.post<GrantGameTokensResponse>("/api/admin/game-tokens/grant", normalizedPayload);
   return data;
 }
 
@@ -88,13 +88,13 @@ export async function fetchWallets(
   if (externalId) params.external_id = externalId;
   if (hasBalance !== undefined) params.has_balance = hasBalance;
   if (tokenType) params.token_type = tokenType;
-  const { data } = await adminApi.get<TokenBalance[]>("/admin/api/game-tokens/wallets", { params });
+  const { data } = await adminApi.get<TokenBalance[]>("/api/admin/game-tokens/wallets", { params });
   return data;
 }
 
 export async function fetchWalletsByUserId(userId: number, limit: number = 50, offset: number = 0) {
   const params: Record<string, any> = { user_id: userId, limit, offset };
-  const { data } = await adminApi.get<TokenBalance[]>("/admin/api/game-tokens/wallets", { params });
+  const { data } = await adminApi.get<TokenBalance[]>("/api/admin/game-tokens/wallets", { params });
   return data;
 }
 
@@ -103,27 +103,27 @@ export async function revokeGameTokens(payload: RevokeGameTokensPayload) {
     ...payload,
     user_identifier: payload.user_identifier ?? payload.external_id,
   };
-  const { data } = await adminApi.post<GrantGameTokensResponse>("/admin/api/game-tokens/revoke", normalizedPayload);
+  const { data } = await adminApi.post<GrantGameTokensResponse>("/api/admin/game-tokens/revoke", normalizedPayload);
   return data;
 }
 
 export async function fetchRecentPlayLogs(limit: number = 50, externalId?: string, offset: number = 0) {
   const params: Record<string, any> = { limit, offset };
   if (externalId) params.external_id = externalId;
-  const { data } = await adminApi.get<PlayLogEntry[]>("/admin/api/game-tokens/play-logs", { params });
+  const { data } = await adminApi.get<PlayLogEntry[]>("/api/admin/game-tokens/play-logs", { params });
   return data;
 }
 
 export async function fetchLedger(limit: number = 100, externalId?: string, offset: number = 0) {
   const params: Record<string, any> = { limit, offset };
   if (externalId) params.external_id = externalId;
-  const { data } = await adminApi.get<LedgerEntry[]>("/admin/api/game-tokens/ledger", { params });
+  const { data } = await adminApi.get<LedgerEntry[]>("/api/admin/game-tokens/ledger", { params });
   return data;
 }
 
 export async function fetchLedgerByUserId(userId: number, limit: number = 100, offset: number = 0) {
   const params: Record<string, any> = { user_id: userId, limit, offset };
-  const { data } = await adminApi.get<LedgerEntry[]>("/admin/api/game-tokens/ledger", { params });
+  const { data } = await adminApi.get<LedgerEntry[]>("/api/admin/game-tokens/ledger", { params });
   return data;
 }
 
@@ -136,6 +136,6 @@ export interface UserWalletSummary {
 }
 
 export async function fetchWalletSummary() {
-  const { data } = await adminApi.get<UserWalletSummary[]>("/admin/api/game-tokens/summary");
+  const { data } = await adminApi.get<UserWalletSummary[]>("/api/admin/game-tokens/summary");
   return data;
 }

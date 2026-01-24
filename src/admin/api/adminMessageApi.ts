@@ -28,21 +28,21 @@ export interface UpdateMessagePayload {
 }
 
 export async function fetchMessages(skip: number = 0, limit: number = 50) {
-    const { data } = await adminApi.get<AdminMessage[]>(`/admin/api/crm/messages?skip=${skip}&limit=${limit}`);
+    const { data } = await adminApi.get<AdminMessage[]>(`/api/admin/crm/messages?skip=${skip}&limit=${limit}`);
     return data;
 }
 
 export async function sendMessage(payload: SendMessagePayload) {
-    const { data } = await adminApi.post<AdminMessage>("/admin/api/crm/messages", payload);
+    const { data } = await adminApi.post<AdminMessage>("/api/admin/crm/messages", payload);
     return data;
 }
 
 export async function updateMessage(messageId: number, payload: UpdateMessagePayload) {
-    const { data } = await adminApi.put<AdminMessage>(`/admin/api/crm/messages/${messageId}`, payload);
+    const { data } = await adminApi.put<AdminMessage>(`/api/admin/crm/messages/${messageId}`, payload);
     return data;
 }
 
 export async function deleteMessage(messageId: number) {
-    const { data } = await adminApi.delete<{ status: string; message_id: number }>(`/admin/api/crm/messages/${messageId}`);
+    const { data } = await adminApi.delete<{ status: string; message_id: number }>(`/api/admin/crm/messages/${messageId}`);
     return data;
 }

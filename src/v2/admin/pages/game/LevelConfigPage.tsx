@@ -92,7 +92,7 @@ export default function LevelConfigPage() {
         },
         onError: (error) => {
           console.error("Failed to save level:", error);
-          alert("레벨 저장에 실패했습니다. 콘솔을 확인하세요.");
+          alert("?�벨 ?�?�에 ?�패?�습?�다. 콘솔???�인?�세??");
         },
       }
     );
@@ -143,7 +143,7 @@ export default function LevelConfigPage() {
       <div className="h-[calc(100vh-200px)] flex items-center justify-center gap-3 text-zinc-400">
         <RefreshCw className="animate-spin h-5 w-5 text-indigo-500" />
         <span className="text-base font-medium">
-          레벨 설정을 불러오는 중입니다...
+          ?�벨 ?�정??불러?�는 중입?�다...
         </span>
       </div>
     );
@@ -155,9 +155,9 @@ export default function LevelConfigPage() {
         <div className="bg-rose-500/10 p-5 rounded-full border border-rose-500/20">
           <Settings2 size={36} />
         </div>
-        <h3 className="text-xl font-bold">설정을 불러오지 못했습니다.</h3>
+        <h3 className="text-xl font-bold">?�정??불러?��? 못했?�니??</h3>
         <Button onClick={() => refetch()} variant="secondary">
-          다시 시도
+          ?�시 ?�도
         </Button>
       </div>
     );
@@ -169,19 +169,19 @@ export default function LevelConfigPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/10 pb-8">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-zinc-400 text-sm font-medium">
-            <span>게임 설정</span>
+            <span>게임 ?�정</span>
             <span className="text-zinc-600">/</span>
-            <span className="text-zinc-200">레벨 시스템</span>
+            <span className="text-zinc-200">?�벨 ?�스??/span>
           </div>
           <h1 className="text-3xl font-black text-white flex items-center gap-3 tracking-tight">
             <Layers className="text-indigo-500" size={32} />
-            레벨 & 보상 관리
+            ?�벨 & 보상 관�?
           </h1>
           <p className="text-zinc-400 text-base max-w-2xl">
-            사용자 레벨별 경험치 요구량 및 달성 보상을 설정합니다.
+            ?�용???�벨�?경험�??�구??�??�성 보상???�정?�니??
             <br />
             <span className="text-zinc-500 text-sm">
-              보상 종류와 수량을 유동적으로 변경할 수 있습니다.
+              보상 종류?� ?�량???�동?�으�?변경할 ???�습?�다.
             </span>
           </p>
         </div>
@@ -226,7 +226,7 @@ export default function LevelConfigPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-4 w-4" />
             <input
               type="number"
-              placeholder="레벨 검색 (예: 10)"
+              placeholder="?�벨 검??(?? 10)"
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value)}
               className="pl-10 pr-4 h-11 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white focus:border-indigo-500 outline-none w-56 placeholder:text-zinc-600 transition-all font-medium"
@@ -241,7 +241,7 @@ export default function LevelConfigPage() {
             className="border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white"
           >
             <RefreshCw size={16} className="mr-2" />
-            새로고침
+            ?�로고침
           </Button>
         </div>
       </div>
@@ -295,7 +295,7 @@ export default function LevelConfigPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <Zap className="w-4 h-4 text-amber-500" />
                       <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                        필요 경험치 (Required XP)
+                        ?�요 경험�?(Required XP)
                       </Label>
                     </div>
                     <div className="relative">
@@ -325,7 +325,7 @@ export default function LevelConfigPage() {
                       <div className="flex items-center gap-2">
                         <Trophy className="w-4 h-4 text-emerald-400" />
                         <Label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                          달성 보상 (Reward)
+                          ?�성 보상 (Reward)
                         </Label>
                       </div>
                     </div>
@@ -372,7 +372,7 @@ export default function LevelConfigPage() {
                       </div>
                     </div>
                     <p className="text-[10px] text-zinc-500 text-right mt-1">
-                      * 보상은 1회 자동 지급됩니다.
+                      * 보상?� 1???�동 지급됩?�다.
                     </p>
                   </div>
                 </div>
@@ -390,12 +390,12 @@ export default function LevelConfigPage() {
                       className="w-full bg-indigo-600 hover:bg-indigo-700 text-white h-9 text-sm font-bold"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      {updateMutation.isPending ? "저장 중..." : "변경사항 저장"}
+                      {updateMutation.isPending ? "?�??�?.." : "변경사???�??}
                     </Button>
                   ) : (
                     <div className="w-full flex items-center justify-center gap-1.5 text-emerald-500/80 bg-emerald-500/10 px-2 py-2 rounded">
                       <Check size={14} />
-                      <span className="font-bold text-xs">저장됨</span>
+                      <span className="font-bold text-xs">?�?�됨</span>
                     </div>
                   )}
                 </div>
@@ -411,9 +411,9 @@ export default function LevelConfigPage() {
             </div>
             <div className="text-center">
               <p className="text-lg font-bold text-zinc-400">
-                검색 결과가 없습니다.
+                검??결과가 ?�습?�다.
               </p>
-              <p className="text-sm mt-1">다른 레벨 숫자로 검색해보세요.</p>
+              <p className="text-sm mt-1">?�른 ?�벨 ?�자�?검?�해보세??</p>
             </div>
           </div>
         )}
@@ -425,17 +425,17 @@ export default function LevelConfigPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-white">
               <Settings2 className="w-5 h-5 text-indigo-500" />
-              레벨 시스템 전역 설정
+              ?�벨 ?�스???�역 ?�정
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-              전체 레벨의 최대치와 경험치 한도를 설정합니다.
+              ?�체 ?�벨??최�?치�? 경험�??�도�??�정?�니??
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-6 py-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-zinc-300">최대 레벨 (Max Level)</Label>
+                <Label className="text-zinc-300">최�? ?�벨 (Max Level)</Label>
                 <Input
                   type="number"
                   value={newMaxLevel}
@@ -443,12 +443,12 @@ export default function LevelConfigPage() {
                   className="bg-black/50 border-white/10 text-white font-mono text-lg"
                 />
                 <p className="text-xs text-zinc-500">
-                  * 레벨을 줄이면 상위 레벨 데이터가 삭제됩니다. 주의하세요.
+                  * ?�벨??줄이�??�위 ?�벨 ?�이?��? ??��?�니?? 주의?�세??
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-zinc-300">최대 경험치 (Max XP)</Label>
+                <Label className="text-zinc-300">최�? 경험�?(Max XP)</Label>
                 <Input
                   type="number"
                   value={newMaxXp}
@@ -456,7 +456,7 @@ export default function LevelConfigPage() {
                   className="bg-black/50 border-white/10 text-emerald-400 font-mono text-lg font-bold"
                 />
                 <p className="text-xs text-zinc-500">
-                  * 마지막 {newMaxLevel}레벨 달성에 필요한 경험치입니다.
+                  * 마�?�?{newMaxLevel}?�벨 ?�성???�요??경험치입?�다.
                 </p>
               </div>
             </div>
@@ -464,8 +464,8 @@ export default function LevelConfigPage() {
             <div className="rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 flex gap-3">
               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
               <p className="text-xs text-amber-200/80 leading-relaxed">
-                이 설정은 전체 게임 경제에 즉시 영향을 미칩니다. 변경 전 반드시
-                기획팀과 협의하세요.
+                ???�정?� ?�체 게임 경제??즉시 ?�향??미칩?�다. 변�???반드??
+                기획?��??�의?�세??
               </p>
             </div>
           </div>
@@ -483,7 +483,7 @@ export default function LevelConfigPage() {
               className="bg-indigo-600 hover:bg-indigo-700 text-white"
               disabled={globalConfigMutation.isPending}
             >
-              {globalConfigMutation.isPending ? "저장 중..." : "설정 저장"}
+              {globalConfigMutation.isPending ? "?�??�?.." : "?�정 ?�??}
             </Button>
           </DialogFooter>
         </DialogContent>

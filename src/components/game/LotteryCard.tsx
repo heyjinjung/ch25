@@ -1,4 +1,4 @@
-ï»¿import React from "react";
+import React from "react";
 import clsx from "clsx";
 import { formatRewardLine, isGifticonRewardType } from "../../utils/rewardLabel";
 
@@ -57,7 +57,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                     <img src="/assets/lottery/icon_lotto_ball.png" className="w-12 h-12 object-contain filter drop-shadow-lg" alt="" />
                   </div>
                   <h3 className="text-white text-2xl font-black italic tracking-tighter uppercase drop-shadow-lg">
-                    {isScratching ? "ì—´ë¦¬ëŠ” ì¤‘..." : "íƒ­í•˜ì—¬ í™•ì¸"}
+                    {isScratching ? "¿­¸®´Â Áß..." : "ÅÇÇÏ¿© È®ÀÎ"}
                   </h3>
                   <p className="mt-1.5 text-amber-200/90 text-[9px] font-black tracking-[0.2em] uppercase drop-shadow-md">
                     CC CAZINO PREMIUM TICKET
@@ -74,15 +74,15 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
 
                 <div className="relative z-20 flex flex-col items-center">
                   <span className="inline-block px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-widest uppercase mb-4 shadow-lg">
-                    ì¶•í•˜í•©ë‹ˆë‹¤!
+                    ÃàÇÏÇÕ´Ï´Ù!
                   </span>
 
                   {/* Result Logic Fix */}
                   {prize.reward_type === 'NONE' || (Number(prize.reward_amount) === 0 && prize.reward_type.includes('POINT')) ? (
                     <>
-                      <span className="text-6xl mb-4">ğŸ’¨</span>
+                      <span className="text-6xl mb-4">??</span>
                       <h2 className="text-white text-2xl font-black tracking-tight uppercase italic">{prize.label}</h2>
-                      <p className="mt-2 text-white/40 font-bold uppercase tracking-widest text-[10px]">ë‹¤ìŒ ê¸°íšŒì—!</p>
+                      <p className="mt-2 text-white/40 font-bold uppercase tracking-widest text-[10px]">´ÙÀ½ ±âÈ¸¿¡!</p>
                     </>
                   ) : (
                     <div className="flex flex-col items-center">
@@ -153,7 +153,7 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
                   <div className="h-px w-12 bg-white/20 mx-auto my-4" />
 
                   <p className="text-figma-accent text-[10px] font-black tracking-[0.3em] uppercase opacity-70">
-                    {prize.reward_type === 'NONE' ? 'TRY AGAIN' : 'ì§€ê¸‰ ì™„ë£Œ'}
+                    {prize.reward_type === 'NONE' ? 'TRY AGAIN' : 'Áö±Ş ¿Ï·á'}
                   </p>
                 </div>
               </div>
@@ -162,9 +162,9 @@ const LotteryCard: React.FC<LotteryCardProps> = React.memo(({ prize, isRevealed,
             {/* 3. EMPTY STATE */}
             {isRevealed && !prize && (
               <div className="flex flex-col items-center text-center p-5 animate-in zoom-in-95">
-                <span className="text-5xl mb-4">ğŸŒªï¸</span>
-                <h3 className="text-white text-xl sm:text-2xl font-black tracking-tight uppercase italic">ë‹¤ìŒì— ë‹¤ì‹œ!</h3>
-                <p className="mt-2 text-white/40 font-bold text-sm">ìš´ì´ ë”°ë¥´ì§€ ì•Šì•˜ë„¤ìš”.</p>
+                <span className="text-5xl mb-4">???</span>
+                <h3 className="text-white text-xl sm:text-2xl font-black tracking-tight uppercase italic">´ÙÀ½¿¡ ´Ù½Ã!</h3>
+                <p className="mt-2 text-white/40 font-bold text-sm">¿îÀÌ µû¸£Áö ¾Ê¾Ò³×¿ä.</p>
               </div>
             )}
           </div>

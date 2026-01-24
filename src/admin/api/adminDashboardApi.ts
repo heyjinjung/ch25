@@ -41,14 +41,14 @@ export type StreakMetricsResponse = {
 };
 
 export async function fetchDashboardMetrics(rangeHours = 24): Promise<DashboardMetricsResponse> {
-  const res = await httpClient.get<DashboardMetricsResponse>("/admin/api/dashboard/metrics", {
+  const res = await httpClient.get<DashboardMetricsResponse>("/api/admin/dashboard/metrics", {
     params: { range_hours: rangeHours },
   });
   return res.data;
 }
 
 export async function fetchStreakMetrics(days = 7): Promise<StreakMetricsResponse> {
-  const res = await httpClient.get<StreakMetricsResponse>("/admin/api/dashboard/streak", {
+  const res = await httpClient.get<StreakMetricsResponse>("/api/admin/dashboard/streak", {
     params: { days },
   });
   return res.data;
@@ -105,29 +105,29 @@ export interface MetricDetailItem {
 }
 
 export const fetchComprehensiveOverview = async (): Promise<ComprehensiveOverviewResponse> => {
-  const response = await httpClient.get<ComprehensiveOverviewResponse>("/admin/api/dashboard/comprehensive");
+  const response = await httpClient.get<ComprehensiveOverviewResponse>("/api/admin/dashboard/comprehensive");
   return response.data;
 };
 
 export const fetchMetricDetails = async (metricKey: string): Promise<MetricDetailItem[]> => {
-  const response = await httpClient.get<MetricDetailItem[]>("/admin/api/dashboard/details", {
+  const response = await httpClient.get<MetricDetailItem[]>("/api/admin/dashboard/details", {
     params: { metric_key: metricKey }
   });
   return response.data;
 };
 
 export const getDailyOverview = async (): Promise<DailyOverviewResponse> => {
-  const response = await httpClient.get("/admin/api/dashboard/daily-overview");
+  const response = await httpClient.get("/api/admin/dashboard/daily-overview");
   return response.data;
 };
 
 export const getEventsStatus = async (): Promise<EventsStatusResponse> => {
-  const response = await httpClient.get("/admin/api/dashboard/events-status");
+  const response = await httpClient.get("/api/admin/dashboard/events-status");
   return response.data;
 };
 
 export const nudgeRiskGroup = async (): Promise<{ status: string; nudged_count: number }> => {
-  const response = await httpClient.post("/admin/api/dashboard/notifications/nudge");
+  const response = await httpClient.post("/api/admin/dashboard/notifications/nudge");
   return response.data;
 };
 
@@ -135,7 +135,7 @@ export const nudgeRiskGroup = async (): Promise<{ status: string; nudged_count: 
 
 export interface CrisisSignal {
   id: string; // e.g. "SCENARIO_01"
-  name: string; // e.g. "불운한 뉴비"
+  name: string; // e.g. "불운???�비"
   count: number;
   level: "HIGH" | "MEDIUM" | "LOW" | "SPECIAL";
   samples: string[];
@@ -147,7 +147,7 @@ export interface CrisisSignalsResponse {
 }
 
 export const fetchCrisisSignals = async (): Promise<CrisisSignalsResponse> => {
-  const response = await httpClient.get<CrisisSignalsResponse>("/admin/api/ops/dashboard/crisis-signals");
+  const response = await httpClient.get<CrisisSignalsResponse>("/api/admin/ops/dashboard/crisis-signals");
   return response.data;
 };
 
@@ -167,7 +167,7 @@ export const importTargetFromScenario = async (
   payload: OpsTargetImportRequest
 ): Promise<OpsTargetImportResponse> => {
   const response = await httpClient.post<OpsTargetImportResponse>(
-    `/admin/api/ops/plans/${planId}/import-target`,
+    `/api/admin/ops/plans/${planId}/import-target`,
     payload
   );
   return response.data;

@@ -24,7 +24,7 @@ export default function MarketingTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <ClipboardList className="w-4 h-4" />
-              설문 조사
+              ?�문 조사
             </TabsTrigger>
           </TabsList>
         </div>

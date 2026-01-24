@@ -131,14 +131,14 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
             tryHaptic([15, 50, 15]);
             await craft("GOLD_KEY_FROM_PUZZLE");
             triggerFireworks();
-            setSuccessMessage("황금열쇠 교환 성공!");
+            setSuccessMessage("?�금?�쇠 교환 ?�공!");
             setTimeout(() => {
                 setSuccessMessage(null);
                 onClose();
             }, 2000);
         } catch (e) {
             console.error("Craft failed", e);
-            // alert("교환에 실패했습니다."); // Optional: User toast
+            // alert("교환???�패?�습?�다."); // Optional: User toast
         }
     };
 
@@ -179,7 +179,7 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                                 Collection
                             </h2>
                             <p className="text-sm text-zinc-500 mt-2 font-medium">
-                                퍼즐을 모아 <span className="text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4">황금열쇠</span>를 완성하세요!
+                                ?�즐??모아 <span className="text-amber-400 font-bold underline decoration-amber-500/30 underline-offset-4">?�금?�쇠</span>�??�성?�세??
                             </p>
                         </div>
 
@@ -214,7 +214,7 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 py-4 text-center border border-amber-500/30"
                                 >
-                                    <p className="text-lg font-black text-amber-300">🎉 {successMessage}</p>
+                                    <p className="text-lg font-black text-amber-300">?�� {successMessage}</p>
                                 </motion.div>
                             ) : (
                                 <Button
@@ -226,7 +226,7 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                                         canCraft ? "shadow-lg shadow-amber-500/20" : "opacity-50"
                                     )}
                                 >
-                                    {isPending ? "교환 중..." : canCraft ? "🔑 황금열쇠 교환하기" : "조각이 부족합니다"}
+                                    {isPending ? "교환 �?.." : canCraft ? "?�� ?�금?�쇠 교환?�기" : "조각??부족합?�다"}
                                 </Button>
                             )}
                         </div>
@@ -235,7 +235,7 @@ const LotteryCollectionModal: React.FC<LotteryCollectionModalProps> = ({
                         <button
                             onClick={onClose}
                             className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all w-10 h-10 flex items-center justify-center z-50 backdrop-blur-md"
-                            aria-label="닫기"
+                            aria-label="?�기"
                         >
                             <X size={20} />
                         </button>

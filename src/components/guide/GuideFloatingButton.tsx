@@ -22,16 +22,16 @@ const GuideFloatingButton: React.FC = () => {
         bg-white/10 hover:bg-white/20 text-white text-sm font-black
         border border-white/20 shadow-lg shadow-black/30 backdrop-blur-md
         transition-all active:scale-95"
-      aria-label="사용법 가이드 시작"
+      aria-label="?�용�?가?�드 ?�작"
     >
       <HelpCircle className="w-5 h-5" />
-      <span className="hidden sm:inline">처음이세요?</span>
+      <span className="hidden sm:inline">처음?�세??</span>
       <span className="sm:hidden">?</span>
 
       <span
         role="button"
         tabIndex={0}
-        aria-label="가이드 버튼 닫기"
+        aria-label="가?�드 버튼 ?�기"
         onClick={(e) => {
           e.stopPropagation();
           sessionStorage.setItem(dismissKey, "1");

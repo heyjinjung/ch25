@@ -65,15 +65,15 @@ export default function TicketInventoryPage() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
-              <span>인벤토리</span>
+              <span>?�벤?�리</span>
               <span className="text-zinc-700">/</span>
-              <span className="text-zinc-300">티켓 & 아이템 관리</span>
+              <span className="text-zinc-300">?�켓 & ?�이??관�?/span>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">
-              이용권 & 인벤토리 관리
+              ?�용�?& ?�벤?�리 관�?
             </h1>
             <p className="text-sm text-zinc-400">
-              사용자별 티켓 및 인벤토리 아이템 현황을 조회합니다.
+              ?�용?�별 ?�켓 �??�벤?�리 ?�이???�황??조회?�니??
             </p>
           </div>
           <Button
@@ -81,7 +81,7 @@ export default function TicketInventoryPage() {
             className="bg-zinc-800 hover:bg-zinc-700 text-white"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            새로고침
+            ?�로고침
           </Button>
         </div>
       </div>
@@ -94,14 +94,14 @@ export default function TicketInventoryPage() {
             className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
           >
             <Ticket className="w-4 h-4 mr-2" />
-            티켓
+            ?�켓
           </TabsTrigger>
           <TabsTrigger
             value="inventory"
             className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white"
           >
             <Package className="w-4 h-4 mr-2" />
-            인벤토리
+            ?�벤?�리
           </TabsTrigger>
         </TabsList>
 
@@ -111,7 +111,7 @@ export default function TicketInventoryPage() {
           <div>
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
               <Ticket className="w-5 h-5 text-indigo-400" />
-              전체 티켓 조회
+              ?�체 ?�켓 조회
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {ticketStats.map((stat) => (
@@ -127,7 +127,7 @@ export default function TicketInventoryPage() {
                     </div>
                     <div className="flex gap-4 text-xs text-zinc-500">
                       <span>발급: {stat.totalIssued.toLocaleString()}</span>
-                      <span>사용: {stat.totalUsed.toLocaleString()}</span>
+                      <span>?�용: {stat.totalUsed.toLocaleString()}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -138,11 +138,11 @@ export default function TicketInventoryPage() {
           {/* User Ticket Data */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">개별 티켓 조회</h2>
+              <h2 className="text-lg font-bold">개별 ?�켓 조회</h2>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
                 <Input
-                  placeholder="유저 검색 (닉네임, 텔레그램)"
+                  placeholder="?��? 검??(?�네?? ?�레그램)"
                   value={ticketSearch}
                   onChange={(e) => setTicketSearch(e.target.value)}
                   className="pl-9 bg-black/50 border-white/10"
@@ -154,11 +154,11 @@ export default function TicketInventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400">유저</TableHead>
+                    <TableHead className="text-zinc-400">?��?</TableHead>
                     <TableHead className="text-zinc-400">종류</TableHead>
-                    <TableHead className="text-zinc-400 text-right">잔여</TableHead>
-                    <TableHead className="text-zinc-400 text-right">사용</TableHead>
-                    <TableHead className="text-zinc-400">마지막 사용</TableHead>
+                    <TableHead className="text-zinc-400 text-right">?�여</TableHead>
+                    <TableHead className="text-zinc-400 text-right">?�용</TableHead>
+                    <TableHead className="text-zinc-400">마�?�??�용</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -201,7 +201,7 @@ export default function TicketInventoryPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={5} className="h-24 text-center text-zinc-600">
-                        티켓 데이터가 없습니다.
+                        ?�켓 ?�이?��? ?�습?�다.
                       </TableCell>
                     </TableRow>
                   )}
@@ -217,7 +217,7 @@ export default function TicketInventoryPage() {
           <div>
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-indigo-400" />
-              전체 인벤토리 조회
+              ?�체 ?�벤?�리 조회
             </h2>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {inventoryStats.map((stat) => (
@@ -233,7 +233,7 @@ export default function TicketInventoryPage() {
                     </div>
                     <div className="flex gap-4 text-xs text-zinc-500">
                       <span>발급: {stat.totalIssued.toLocaleString()}</span>
-                      <span>사용: {stat.totalUsed.toLocaleString()}</span>
+                      <span>?�용: {stat.totalUsed.toLocaleString()}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -244,11 +244,11 @@ export default function TicketInventoryPage() {
           {/* User Inventory Data */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">개별 인벤토리 조회</h2>
+              <h2 className="text-lg font-bold">개별 ?�벤?�리 조회</h2>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-4 w-4" />
                 <Input
-                  placeholder="유저 검색 (닉네임, 텔레그램)"
+                  placeholder="?��? 검??(?�네?? ?�레그램)"
                   value={inventorySearch}
                   onChange={(e) => setInventorySearch(e.target.value)}
                   className="pl-9 bg-black/50 border-white/10"
@@ -260,12 +260,12 @@ export default function TicketInventoryPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400">유저</TableHead>
+                    <TableHead className="text-zinc-400">?��?</TableHead>
                     <TableHead className="text-zinc-400">종류</TableHead>
-                    <TableHead className="text-zinc-400 text-right">잔여</TableHead>
-                    <TableHead className="text-zinc-400 text-right">사용</TableHead>
-                    <TableHead className="text-zinc-400">만료일</TableHead>
-                    <TableHead className="text-zinc-400">마지막 사용</TableHead>
+                    <TableHead className="text-zinc-400 text-right">?�여</TableHead>
+                    <TableHead className="text-zinc-400 text-right">?�용</TableHead>
+                    <TableHead className="text-zinc-400">만료??/TableHead>
+                    <TableHead className="text-zinc-400">마�?�??�용</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -301,7 +301,7 @@ export default function TicketInventoryPage() {
                         <TableCell className="text-zinc-500 text-sm">
                           {item.expiresAt
                             ? new Date(item.expiresAt).toLocaleDateString()
-                            : "무제한"}
+                            : "무제??}
                         </TableCell>
                         <TableCell className="text-zinc-500 text-sm">
                           {item.lastUsedAt
@@ -313,7 +313,7 @@ export default function TicketInventoryPage() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center text-zinc-600">
-                        인벤토리 데이터가 없습니다.
+                        ?�벤?�리 ?�이?��? ?�습?�다.
                       </TableCell>
                     </TableRow>
                   )}

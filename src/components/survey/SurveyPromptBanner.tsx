@@ -53,7 +53,7 @@ const SurveyPromptBanner: React.FC = () => {
   const reward = primary.reward_json;
   const hasReward = reward && (reward.amount || 0) > 0;
   const rewardAmount = reward?.amount ?? 0;
-  const rewardType = reward?.reward_type === "TICKET" ? "티켓" : "P"; // Simple fallback
+  const rewardType = reward?.reward_type === "TICKET" ? "?�켓" : "P"; // Simple fallback
   const isCash = reward?.reward_type !== "TICKET"; // Basic check
 
   return (
@@ -67,7 +67,7 @@ const SurveyPromptBanner: React.FC = () => {
         {/* Close Button */}
         <button
           onClick={handleDismiss}
-          aria-label="설문 배너 닫기"
+          aria-label="?�문 배너 ?�기"
           className="absolute top-4 right-4 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 transition-all"
         >
           <X size={18} />
@@ -84,7 +84,7 @@ const SurveyPromptBanner: React.FC = () => {
             {primary.title}
           </h3>
           <p className="text-zinc-500 text-xs font-medium tracking-tight mb-8">
-            {primary.description || "잠깐! 설문에 참여하고 보상을 받아가세요."}
+            {primary.description || "?�깐! ?�문??참여?�고 보상??받아가?�요."}
           </p>
 
           {/* Reward Card (Conditional) */}
@@ -116,14 +116,14 @@ const SurveyPromptBanner: React.FC = () => {
                 "w-full py-4 rounded-[18px] bg-emerald-500 text-black font-black text-base shadow-[0_12px_24px_-8px_rgba(16,185,129,0.5)] active:scale-[0.97] hover:brightness-110 transition-all flex items-center justify-center gap-2 group"
               )}
             >
-              <span>지금 참여하기</span>
+              <span>지�?참여?�기</span>
               <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
             </button>
             <button
               onClick={handleDismiss}
               className="w-full py-3 rounded-2xl bg-transparent text-zinc-500 font-bold text-xs hover:text-zinc-300 transition-colors"
             >
-              나중에 하기
+              ?�중???�기
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-Ôªø// src/api/seasonPassApi.ts
+// src/api/seasonPassApi.ts
 import axios from "axios";
 import userApi from "./httpClient";
 import { claimFallbackSeasonReward, getFallbackSeasonPassStatus } from "./fallbackData";
@@ -41,14 +41,14 @@ const formatRewardLabel = (rewardType?: string, rewardAmount?: number, rewardLab
   const type = String(rewardType ?? "").toUpperCase();
   const amount = rewardAmount ?? null;
   if (rewardLabel) return rewardLabel;
-  if (!type) return "Î≥¥ÏÉÅ";
+  if (!type) return "∫∏ªÛ";
 
   const formattedAmount = typeof amount === "number" && !Number.isNaN(amount) ? amount.toLocaleString() : null;
-  if (type === "POINT" || type === "CC_POINT") return `Í∏àÍ≥† ${formattedAmount ?? ""}`.trim();
-  if (type === "GAME_XP" || type === "XP") return `ÏãúÏ¶å XP ${formattedAmount ?? ""}`.trim();
-  if (type === "DIAMOND") return `Îã§Ïù¥ÏïÑ ${formattedAmount ?? ""}`.trim();
-  if (type.includes("TICKET")) return `Ìã∞Ïºì ${formattedAmount ?? ""}`.trim();
-  if (type.includes("GIFTICON")) return `Í∏∞ÌîÑÌã∞ÏΩò ${formattedAmount ?? ""}`.trim();
+  if (type === "POINT" || type === "CC_POINT") return `±›∞Ì ${formattedAmount ?? ""}`.trim();
+  if (type === "GAME_XP" || type === "XP") return `Ω√¡ XP ${formattedAmount ?? ""}`.trim();
+  if (type === "DIAMOND") return `¥Ÿ¿Ãæ∆ ${formattedAmount ?? ""}`.trim();
+  if (type.includes("TICKET")) return `∆ºƒœ ${formattedAmount ?? ""}`.trim();
+  if (type.includes("GIFTICON")) return `±‚«¡∆ºƒ‹ ${formattedAmount ?? ""}`.trim();
   return `${type}${formattedAmount ? ` ${formattedAmount}` : ""}`.trim();
 };
 

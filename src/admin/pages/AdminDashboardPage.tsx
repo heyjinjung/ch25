@@ -46,19 +46,19 @@ const AdminDashboardPage: React.FC = () => {
         {/* Section 1: Metrics Summary */}
         <section className="space-y-6">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            운영 지표 요약 <span className="text-admin-brand/40">Dashboard</span>
+            ?�영 지???�약 <span className="text-admin-brand/40">Dashboard</span>
           </h1>
 
           {/* KPI Grid (4 Cards) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1: Active Users */}
             <div
-              onClick={() => handleCardClick("금일 활성", "today_active")}
+              onClick={() => handleCardClick("금일 ?�성", "today_active")}
               className="flex flex-col p-6 gap-4 bg-zinc-800/60 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden group cursor-pointer hover:bg-zinc-800/80 transition-all"
             >
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">금일 활성</span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">금일 ?�성</span>
                   <span className="text-[30px] font-light text-zinc-200">
                     {isLoading ? "-" : overview?.today_active_users?.toLocaleString()}
                   </span>
@@ -77,15 +77,15 @@ const AdminDashboardPage: React.FC = () => {
 
             {/* Card 2: Revenue */}
             <div
-              onClick={() => handleCardClick("금일 입금", "today_deposit")}
+              onClick={() => handleCardClick("금일 ?�금", "today_deposit")}
               className="flex flex-col p-6 gap-4 bg-zinc-800/60 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden group cursor-pointer hover:bg-zinc-800/80 transition-all"
             >
               <div className="absolute top-0 right-0 p-32 bg-emerald-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
               <div className="flex justify-between items-start relative z-10">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">금일 입금 (Est)</span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">금일 ?�금 (Est)</span>
                   <span className="text-[30px] font-light text-admin-brand">
-                    {isLoading ? "-" : `₩${(overview?.today_deposit_sum || 0).toLocaleString()}`}
+                    {isLoading ? "-" : `??{(overview?.today_deposit_sum || 0).toLocaleString()}`}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-admin-brand/10 border border-admin-brand/20 text-admin-brand group-hover:bg-admin-brand/20 transition-colors">
@@ -101,12 +101,12 @@ const AdminDashboardPage: React.FC = () => {
 
             {/* Card 3: Churn Risk */}
             <div
-              onClick={() => handleCardClick("이탈 리스크", "churn_risk")}
+              onClick={() => handleCardClick("?�탈 리스??, "churn_risk")}
               className="flex flex-col p-6 gap-4 bg-zinc-800/60 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden group cursor-pointer hover:bg-zinc-800/80 transition-all"
             >
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">이탈 리스크</span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">?�탈 리스??/span>
                   <span className="text-[30px] font-light text-orange-400">
                     {isLoading ? "-" : overview?.churn_risk_count?.toLocaleString()}
                   </span>
@@ -122,12 +122,12 @@ const AdminDashboardPage: React.FC = () => {
 
             {/* Card 4: Game Play */}
             <div
-              onClick={() => handleCardClick("게임 플레이", "today_game_plays")}
+              onClick={() => handleCardClick("게임 ?�레??, "today_game_plays")}
               className="flex flex-col p-6 gap-4 bg-zinc-800/60 backdrop-blur-xl border border-white/5 rounded-xl shadow-2xl relative overflow-hidden group cursor-pointer hover:bg-zinc-800/80 transition-all"
             >
               <div className="flex justify-between items-start">
                 <div className="flex flex-col gap-1">
-                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">게임 플레이</span>
+                  <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">게임 ?�레??/span>
                   <span className="text-[30px] font-light text-purple-400">
                     {isLoading ? "-" : overview?.today_game_plays?.toLocaleString()}
                   </span>
@@ -165,16 +165,16 @@ const AdminDashboardPage: React.FC = () => {
             <div className="w-full max-w-4xl max-h-[80vh] flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
               <header className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
                 <div>
-                  <h3 className="text-lg font-bold text-white">{selectedMetric?.title} 상세 내역</h3>
+                  <h3 className="text-lg font-bold text-white">{selectedMetric?.title} ?�세 ?�역</h3>
                   <p className="text-sm text-zinc-500">
-                    {metricDetails?.length ?? 0}건의 내역이 조회되었습니다.
+                    {metricDetails?.length ?? 0}건의 ?�역??조회?�었?�니??
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-full p-2 text-zinc-400 hover:bg-white/5 hover:text-white transition-colors"
-                  aria-label="닫기"
+                  aria-label="?�기"
                 >
                   <X size={24} />
                 </button>
@@ -184,13 +184,13 @@ const AdminDashboardPage: React.FC = () => {
                 {isDetailsLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
                     <Loader2 size={40} className="animate-spin mb-4 text-admin-brand" />
-                    <p>상세 데이터를 불러오는 중...</p>
+                    <p>?�세 ?�이?��? 불러?�는 �?..</p>
                   </div>
                 ) : isDetailsError ? (
                   <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
-                    <div className="font-semibold">조회 실패</div>
+                    <div className="font-semibold">조회 ?�패</div>
                     <div className="mt-1 text-sm opacity-90">
-                      {String((detailsError as any)?.message ?? "서버 오류가 발생했습니다.")}
+                      {String((detailsError as any)?.message ?? "?�버 ?�류가 발생?�습?�다.")}
                     </div>
                   </div>
                 ) : (
@@ -231,7 +231,7 @@ const AdminDashboardPage: React.FC = () => {
                     ))}
                     {metricDetails?.length === 0 && (
                       <div className="text-center py-20 text-zinc-600">
-                        표시할 상세 내역이 없습니다.
+                        ?�시???�세 ?�역???�습?�다.
                       </div>
                     )}
                   </>
@@ -244,7 +244,7 @@ const AdminDashboardPage: React.FC = () => {
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-bold text-white transition-colors"
                 >
-                  닫기
+                  ?�기
                 </button>
               </footer>
             </div>

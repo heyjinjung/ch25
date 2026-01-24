@@ -9,17 +9,17 @@ import { grantGameTokens, GrantGameTokensPayload } from "../api/adminGameTokenAp
 import { GameTokenType } from "../../types/gameTokens";
 
 const tokenOptions: { value: GameTokenType; label: string; icon: string }[] = [
-  { value: "ROULETTE_COIN", label: "룰렛 코인", icon: "🎰" },
-  { value: "DICE_TOKEN", label: "주사위 토큰", icon: "🎲" },
-  { value: "LOTTERY_TICKET", label: "복권 티켓", icon: "🎫" },
-  { value: "GOLD_KEY", label: "골드 키", icon: "🔑" },
-  { value: "DIAMOND_KEY", label: "다이아몬드 키", icon: "💎" },
+  { value: "ROULETTE_COIN", label: "룰렛 코인", icon: "?��" },
+  { value: "DICE_TOKEN", label: "주사???�큰", icon: "?��" },
+  { value: "LOTTERY_TICKET", label: "복권 ?�켓", icon: "?��" },
+  { value: "GOLD_KEY", label: "골드 ??, icon: "?��" },
+  { value: "DIAMOND_KEY", label: "?�이?�몬????, icon: "?��" },
 ];
 
 const grantSchema = z.object({
-  user_identifier: z.string().min(1, "사용자 식별자를 입력해주세요"),
+  user_identifier: z.string().min(1, "?�용???�별?��? ?�력?�주?�요"),
   token_type: z.enum(["ROULETTE_COIN", "DICE_TOKEN", "LOTTERY_TICKET", "GOLD_KEY", "DIAMOND_KEY"] as const),
-  amount: z.number().int().positive("양수를 입력해주세요"),
+  amount: z.number().int().positive("?�수�??�력?�주?�요"),
 });
 
 type GrantFormData = z.infer<typeof grantSchema>;
@@ -57,9 +57,9 @@ const GameTokenGrantPage: React.FC = () => {
           <Coins className="h-5 w-5" />
           <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Token Asset Control</span>
         </div>
-        <h1 className="text-admin-title text-admin-text-primary">토큰 자산 지급 통제소</h1>
+        <h1 className="text-admin-title text-admin-text-primary">?�큰 ?�산 지�??�제??/h1>
         <p className="text-admin-body text-admin-text-secondary font-medium">
-          게임 토큰을 회원에게 직접 지급하고 실시간으로 잔액을 확인합니다.
+          게임 ?�큰???�원?�게 직접 지급하�??�시간으�??�액???�인?�니??
         </p>
       </header>
 
@@ -70,15 +70,15 @@ const GameTokenGrantPage: React.FC = () => {
             <div className="border-b border-admin-border pb-6">
               <h2 className="text-admin-subtitle font-black text-admin-text-primary flex items-center gap-2">
                 <Send className="h-5 w-5 text-admin-brand" />
-                토큰 지급 폼
+                ?�큰 지�???
               </h2>
-              <p className="text-xs text-admin-text-secondary mt-1">모든 필드를 정확히 입력한 후 지급을 실행하세요.</p>
+              <p className="text-xs text-admin-text-secondary mt-1">모든 ?�드�??�확???�력????지급을 ?�행?�세??</p>
             </div>
 
             {/* User Identifier */}
             <div className="space-y-3">
               <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1 flex items-center gap-2">
-                <User className="h-3.5 w-3.5" /> 사용자 식별자
+                <User className="h-3.5 w-3.5" /> ?�용???�별??
               </label>
               <Controller
                 name="user_identifier"
@@ -101,7 +101,7 @@ const GameTokenGrantPage: React.FC = () => {
 
             {/* Token Type */}
             <div className="space-y-3">
-              <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">토큰 타입</label>
+              <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest pl-1">?�큰 ?�??/label>
               <Controller
                 name="token_type"
                 control={control}
@@ -161,11 +161,11 @@ const GameTokenGrantPage: React.FC = () => {
             >
               {mutation.isPending ? (
                 <>
-                  <RefreshCw className="h-5 w-5 animate-spin" /> 처리 중...
+                  <RefreshCw className="h-5 w-5 animate-spin" /> 처리 �?..
                 </>
               ) : (
                 <>
-                  <Send className="h-5 w-5" /> 토큰 지급 실행
+                  <Send className="h-5 w-5" /> ?�큰 지�??�행
                 </>
               )}
             </button>
@@ -179,7 +179,7 @@ const GameTokenGrantPage: React.FC = () => {
             <div className="admin-card-premium p-6 border-l-4 border-admin-accent animate-in slide-in-from-right-4">
               <div className="flex items-center gap-2 text-admin-accent mb-4">
                 <CheckCircle2 className="h-5 w-5" />
-                <h3 className="text-admin-subtitle font-black">지급 완료</h3>
+                <h3 className="text-admin-subtitle font-black">지�??�료</h3>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-xs">
@@ -195,7 +195,7 @@ const GameTokenGrantPage: React.FC = () => {
                   <span className="text-admin-brand font-black">{mutation.data.token_type}</span>
                 </div>
                 <div className="p-3 rounded-lg bg-admin-accent/10 border border-admin-accent/20">
-                  <p className="text-[10px] text-admin-text-secondary font-black uppercase mb-1">현재 잔액</p>
+                  <p className="text-[10px] text-admin-text-secondary font-black uppercase mb-1">?�재 ?�액</p>
                   <p className="text-2xl font-black text-admin-accent tabular-nums">{mutation.data.balance.toLocaleString()}</p>
                 </div>
               </div>
@@ -207,21 +207,21 @@ const GameTokenGrantPage: React.FC = () => {
             <div className="admin-card-premium p-6 border-l-4 border-admin-danger">
               <div className="flex items-center gap-2 text-admin-danger mb-2">
                 <AlertCircle className="h-5 w-5" />
-                <h3 className="text-admin-subtitle font-black">지급 실패</h3>
+                <h3 className="text-admin-subtitle font-black">지�??�패</h3>
               </div>
               <p className="text-xs text-admin-text-secondary">
-                {mutation.error instanceof Error ? mutation.error.message : "알 수 없는 오류가 발생했습니다."}
+                {mutation.error instanceof Error ? mutation.error.message : "?????�는 ?�류가 발생?�습?�다."}
               </p>
             </div>
           )}
 
           {/* Quick Info */}
           <div className="admin-card-premium p-6">
-            <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">지급 가이드</h4>
+            <h4 className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest mb-4">지�?가?�드</h4>
             <div className="space-y-3 text-xs text-admin-text-secondary leading-relaxed">
-              <p>• 사용자 식별자는 Telegram ID, Username, Nickname 또는 External ID를 입력할 수 있습니다.</p>
-              <p>• 지급 후 즉시 해당 회원의 토큰 잔액이 업데이트됩니다.</p>
-              <p>• 모든 토큰 지급 기록은 Ledger에 자동으로 기록됩니다.</p>
+              <p>???�용???�별?�는 Telegram ID, Username, Nickname ?�는 External ID�??�력?????�습?�다.</p>
+              <p>??지�???즉시 ?�당 ?�원???�큰 ?�액???�데?�트?�니??</p>
+              <p>??모든 ?�큰 지�?기록?� Ledger???�동?�로 기록?�니??</p>
             </div>
           </div>
         </div>

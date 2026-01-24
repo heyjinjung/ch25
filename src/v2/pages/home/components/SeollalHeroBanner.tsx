@@ -1,5 +1,5 @@
-// src/v2/pages/home/components/SeollalHeroBanner.tsx
-// 설날 테마 히어로 배너 - 연등 효과 포함
+// src/pages/home/components/SeollalHeroBanner.tsx
+// ?�날 ?�마 ?�어�?배너 - ?�등 ?�과 ?�함
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 
@@ -7,7 +7,7 @@ export function SeollalHeroBanner() {
   const bannerRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
 
-  // 연등 효과 - 은은한 빛 흔들림
+  // ?�등 ?�과 - ?�?�??�??�들�?
   useEffect(
     () => {
       if (!glowRef.current) return;
@@ -35,7 +35,7 @@ export function SeollalHeroBanner() {
         border: "1px solid rgba(212, 175, 55, 0.3)",
       }}
     >
-      {/* 연등 글로우 효과 */}
+      {/* ?�등 글로우 ?�과 */}
       <div
         ref={glowRef}
         className="absolute inset-0 pointer-events-none"
@@ -45,7 +45,7 @@ export function SeollalHeroBanner() {
         }}
       />
 
-      {/* 전통 문양 패턴 (미묘한 배경) */}
+      {/* ?�통 문양 ?�턴 (미묘??배경) */}
       <div
         className="absolute inset-0 pointer-events-none opacity-5"
         style={{
@@ -54,13 +54,13 @@ export function SeollalHeroBanner() {
         }}
       />
 
-      {/* 콘텐츠 */}
+      {/* 콘텐�?*/}
       <div className="relative z-10 p-5">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             {/* 로고 */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">🧧</span>
+              <span className="text-2xl">?��</span>
               <span
                 className="text-xs font-bold tracking-widest"
                 style={{ color: "#D4AF37" }}
@@ -69,18 +69,18 @@ export function SeollalHeroBanner() {
               </span>
             </div>
 
-            {/* 타이틀 */}
+            {/* ?�?��? */}
             <h2
               className="text-xl font-bold mb-1"
               style={{ color: "#F5F5DC" }}
             >
-              설날 특별 이벤트
+              ?�날 ?�별 ?�벤??
             </h2>
             <p className="text-sm text-zinc-400">
-              새해 복 많이 받으세요! 🎊
+              ?�해 �?많이 받으?�요! ?��
             </p>
 
-            {/* XP 표시 */}
+            {/* XP ?�시 */}
             <div className="flex items-center gap-2 mt-3">
               <span
                 className="text-xs px-2 py-0.5 rounded-full"
@@ -103,12 +103,12 @@ export function SeollalHeroBanner() {
               boxShadow: "0 4px 12px rgba(196, 30, 58, 0.4)",
             }}
           >
-            🧧 복주머니 받기
+            ?�� 복주머니 받기
           </button>
         </div>
       </div>
 
-      {/* 금박 테두리 효과 */}
+      {/* 금박 ?�두�??�과 */}
       <div
         className="absolute inset-0 pointer-events-none rounded-2xl"
         style={{

@@ -74,7 +74,7 @@ const formatKstCompact = (value?: string) => {
   const day = Number(d);
   if (!Number.isFinite(month) || !Number.isFinite(day)) return "-";
 
-  return `${month}월${day}일${hh}시${mm}분까지`;
+  return `${month}??{day}??{hh}??{mm}분까지`;
 };
 
 const ExternalRankingPage: React.FC = () => {
@@ -279,7 +279,7 @@ const ExternalRankingPage: React.FC = () => {
       }
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.detail || err?.message || "매칭 실패";
+      const msg = err?.response?.data?.detail || err?.message || "매칭 ?�패";
       if (key) setResolveStatusByKey((prev) => ({ ...prev, [key]: { state: "error", message: String(msg) } }));
       return false;
     }
@@ -374,7 +374,7 @@ const ExternalRankingPage: React.FC = () => {
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            외부 랭킹 관리 <span className="text-admin-brand/40">External Ranking</span>
+            ?��? ??�� 관�?<span className="text-admin-brand/40">External Ranking</span>
           </h1>
         </div>
         <div className="flex items-center gap-3">
@@ -382,7 +382,7 @@ const ExternalRankingPage: React.FC = () => {
             onClick={addRow}
             className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto text-sm"
           >
-            <Plus className="h-4 w-4" /> 행 추가
+            <Plus className="h-4 w-4" /> ??추�?
           </button>
           <button
             onClick={saveAll}
@@ -390,29 +390,29 @@ const ExternalRankingPage: React.FC = () => {
             className="btn-admin-primary flex items-center gap-2 px-6 py-2.5 h-auto text-sm shadow-lg shadow-admin-brand/20 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
-            {upsertMutation.isPending ? "저장 중..." : "전체 저장 (Save All)"}
+            {upsertMutation.isPending ? "?�??�?.." : "?�체 ?�??(Save All)"}
           </button>
         </div>
       </header>
 
       {isLoading && (
-        <div className="admin-card p-4 text-admin-body text-admin-text-secondary">불러오는 중...</div>
+        <div className="admin-card p-4 text-admin-body text-admin-text-secondary">불러?�는 �?..</div>
       )}
       {isError && (
-        <div className="admin-card p-4 text-admin-body text-red-200">불러오기 실패: {(error as Error).message}</div>
+        <div className="admin-card p-4 text-admin-body text-red-200">불러?�기 ?�패: {(error as Error).message}</div>
       )}
 
       {/* Transparent Search & Controls */}
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between px-2">
         <div className="flex-1 max-w-xl">
-          <label className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3 block ml-1">매칭 데이터 검색 (Search)</label>
+          <label className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-3 block ml-1">매칭 ?�이??검??(Search)</label>
           <div className="relative group">
             <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
             <input
               value={rowSearchInput}
               onChange={(e) => setRowSearchInput(e.target.value)}
               className="w-full bg-transparent border-b border-zinc-800 py-2.5 pl-8 text-sm text-zinc-200 focus:outline-none focus:border-admin-brand transition-colors placeholder:text-zinc-600 font-medium"
-              placeholder="식별자 / User ID 검색..."
+              placeholder="?�별??/ User ID 검??.."
               onKeyDown={(e) => {
                 if (e.key === "Enter") applyRowSearch();
               }}
@@ -421,8 +421,8 @@ const ExternalRankingPage: React.FC = () => {
               <button
                 onClick={clearRowSearch}
                 className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
-                aria-label="검색어 지우기"
-                title="검색어 지우기"
+                aria-label="검?�어 지?�기"
+                title="검?�어 지?�기"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -435,14 +435,14 @@ const ExternalRankingPage: React.FC = () => {
             onClick={applyRowSearch}
             className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95"
           >
-            검색 적용 (Search)
+            검???�용 (Search)
           </button>
           {rowSearchApplied && (
             <button
               onClick={clearRowSearch}
               className="px-4 py-2 text-zinc-500 hover:text-zinc-300 text-xs font-bold transition-colors"
             >
-              초기화
+              초기??
             </button>
           )}
         </div>
@@ -481,16 +481,16 @@ const ExternalRankingPage: React.FC = () => {
                 <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest w-[180px]">
                   <button type="button" onClick={() => toggleSort("identifier")} className="flex items-center gap-2 group hover:text-zinc-200 transition-colors">
                     <Hash className="h-4 w-4" />
-                    <span>식별자 (ID)</span>
+                    <span>?�별??(ID)</span>
                   </button>
                 </th>
-                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">텔레그램 정보 (TG Info)</th>
-                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">프로필 (Profile)</th>
-                <th className="px-4 py-3.5 text-left text-sm font-black text-zinc-400 uppercase tracking-widest text-admin-brand">매칭유저 (Matched)</th>
-                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">최종 동기화 (Sync)</th>
-                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("deposit_amount")}>입금액 (Deposit)</th>
-                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("play_count")}>플레이 (Plays)</th>
-                <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400 uppercase tracking-widest">관리 (Action)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">?�레그램 ?�보 (TG Info)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">?�로??(Profile)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-black text-zinc-400 uppercase tracking-widest text-admin-brand">매칭?��? (Matched)</th>
+                <th className="px-4 py-3.5 text-left text-sm font-bold text-zinc-400 uppercase tracking-widest">최종 ?�기??(Sync)</th>
+                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("deposit_amount")}>?�금??(Deposit)</th>
+                <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 uppercase tracking-widest cursor-pointer hover:text-zinc-200" onClick={() => toggleSort("play_count")}>?�레??(Plays)</th>
+                <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400 uppercase tracking-widest">관�?(Action)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-admin-border/30">
@@ -513,7 +513,7 @@ const ExternalRankingPage: React.FC = () => {
                             value={row.external_id ?? ""}
                             onChange={(e) => handleChange(index, "external_id", e.target.value)}
                             className="w-full bg-transparent border-none p-0 text-sm font-mono text-zinc-200 focus:ring-0 placeholder:text-zinc-700"
-                            placeholder="@ID / 닉네임"
+                            placeholder="@ID / ?�네??
                             ref={row.__isNew ? newRowInputRef : null}
                           />
                           {String(row.external_id ?? "").trim() && (
@@ -589,7 +589,7 @@ const ExternalRankingPage: React.FC = () => {
                             Ah, for NEW rows we need inputs. For existing rows, maybe read-only? 
                             The requirement said "Convert... to read-only text". 
                             Let's interpret this as: Display as text, but click-to-edit OR just keep as input but style as text?
-                            "Deposit/Plays 값을 입력창에서 순수 텍스트(Text)로 변경" implies strict read-only look.
+                            "Deposit/Plays 값을 ?�력창에???�수 ?�스??Text)�?변�? implies strict read-only look.
                             But this table IS the input form. 
                             Let's style the INPUT to look like text (transparent, no border) but keep functionality. */}
                       <input
@@ -619,7 +619,7 @@ const ExternalRankingPage: React.FC = () => {
                       <button
                         onClick={() => removeRow(index)}
                         className="p-2 text-zinc-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all active:scale-90"
-                        title="삭제"
+                        title="??��"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -630,7 +630,7 @@ const ExternalRankingPage: React.FC = () => {
               {rows.length === 0 && (
                 <tr>
                   <td className="px-4 py-10 text-center text-admin-text-muted text-sm italic" colSpan={9}>
-                    데이터가 존재하지 않습니다. 행을 추가하여 입력을 시작하세요.
+                    ?�이?��? 존재?��? ?�습?�다. ?�을 추�??�여 ?�력???�작?�세??
                   </td>
                 </tr>
               )}
@@ -646,8 +646,8 @@ const ExternalRankingPage: React.FC = () => {
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={safePage <= 0}
             className="p-2.5 rounded-xl border border-admin-border text-admin-text-secondary hover:bg-admin-sidebar hover:text-white disabled:opacity-20 transition-all active:scale-95"
-            aria-label="이전 페이지"
-            title="이전 페이지"
+            aria-label="?�전 ?�이지"
+            title="?�전 ?�이지"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -668,8 +668,8 @@ const ExternalRankingPage: React.FC = () => {
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={safePage >= totalPages - 1}
             className="p-2.5 rounded-xl border border-admin-border text-admin-text-secondary hover:bg-admin-sidebar hover:text-white disabled:opacity-20 transition-all active:scale-95"
-            aria-label="다음 페이지"
-            title="다음 페이지"
+            aria-label="?�음 ?�이지"
+            title="?�음 ?�이지"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -678,7 +678,7 @@ const ExternalRankingPage: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex flex-col items-end mr-2">
             <span className="text-[10px] text-zinc-600 font-black uppercase tracking-widest">PUBLISH DATA</span>
-            <span className="text-xs text-zinc-500 font-medium">변경된 모든 데이터를 서버에 동기화합니다.</span>
+            <span className="text-xs text-zinc-500 font-medium">변경된 모든 ?�이?��? ?�버???�기?�합?�다.</span>
           </div>
           <button
             onClick={saveAll}
@@ -686,7 +686,7 @@ const ExternalRankingPage: React.FC = () => {
             className="btn-admin-primary px-10 py-3 rounded-xl text-sm font-black shadow-lg shadow-admin-brand/20 active:scale-95 transition-all flex items-center gap-2"
           >
             {upsertMutation.isPending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {upsertMutation.isPending ? "동기화 중..." : "전체 저장 (Save All)"}
+            {upsertMutation.isPending ? "?�기??�?.." : "?�체 ?�??(Save All)"}
           </button>
         </div>
       </div>

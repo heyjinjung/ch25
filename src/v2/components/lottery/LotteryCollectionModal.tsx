@@ -5,7 +5,7 @@ import { X, Check } from 'lucide-react';
 import { triggerHaptic, triggerNotification } from '../../utils/haptic';
 import confetti from 'canvas-confetti';
 
-// 기본 테마 색상 (ThemeProvider 없이 사용)
+// 기본 ?�마 ?�상 (ThemeProvider ?�이 ?�용)
 const THEME_COLORS = {
   accent: '#30E3AA',
   primary: '#30E3AA',
@@ -172,7 +172,7 @@ const LotteryCollectionModal = ({
         colors: [THEME_COLORS.accent, THEME_COLORS.primary, THEME_COLORS.secondary],
       });
 
-      setSuccessMessage('황금열쇠 교환 성공!');
+      setSuccessMessage('?�금?�쇠 교환 ?�공!');
       setTimeout(() => {
         setSuccessMessage(null);
         onClose();
@@ -235,14 +235,14 @@ const LotteryCollectionModal = ({
                 Collection
               </h2>
               <p className="text-sm text-zinc-500 mt-2 font-medium">
-                퍼즐을 모아{' '}
+                ?�즐??모아{' '}
                 <span
                   className="font-bold underline decoration-amber-500/30 underline-offset-4"
                   style={{ color: THEME_COLORS.accent }}
                 >
-                  황금열쇠
+                  ?�금?�쇠
                 </span>
-                를 완성하세요!
+                �??�성?�세??
               </p>
             </div>
 
@@ -267,7 +267,7 @@ const LotteryCollectionModal = ({
                   }}
                 >
                   <p className="text-lg font-black" style={{ color: THEME_COLORS.accent }}>
-                    🎉 {successMessage}
+                    ?�� {successMessage}
                   </p>
                 </motion.div>
               ) : (
@@ -286,7 +286,7 @@ const LotteryCollectionModal = ({
                     boxShadow: canCraft ? `0 0 20px ${THEME_COLORS.accent}20` : undefined,
                   }}
                 >
-                  {isCrafting ? '교환 중...' : canCraft ? '🔑 황금열쇠 교환하기' : '조각이 부족합니다'}
+                  {isCrafting ? '교환 �?..' : canCraft ? '?�� ?�금?�쇠 교환?�기' : '조각??부족합?�다'}
                 </button>
               )}
             </div>
@@ -295,7 +295,7 @@ const LotteryCollectionModal = ({
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all w-10 h-10 flex items-center justify-center z-50 backdrop-blur-md"
-              aria-label="닫기"
+              aria-label="?�기"
             >
               <X size={20} />
             </button>

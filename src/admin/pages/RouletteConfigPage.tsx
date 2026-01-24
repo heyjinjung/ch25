@@ -35,13 +35,13 @@ import { useToast } from "../../components/common/ToastProvider";
 import type { AdminRewardType } from "../types/adminReward";
 
 const gifticonBrands = [
-  { value: "CC_COIN", label: "씨씨코인" },
-  { value: "BAEMIN", label: "배민" },
-  { value: "COMPOSE", label: "컴포즈커피" },
-  { value: "STARBUCKS", label: "스타벅스" },
+  { value: "CC_COIN", label: "?�씨코인" },
+  { value: "BAEMIN", label: "배�?" },
+  { value: "COMPOSE", label: "컴포즈커?? },
+  { value: "STARBUCKS", label: "?��?벅스" },
   { value: "CU", label: "CU" },
   { value: "GS25", label: "GS25" },
-  { value: "CUSTOM", label: "직접 입력" },
+  { value: "CUSTOM", label: "직접 ?�력" },
 ] as const;
 
 const isGifticonType = (value?: string | null) => Boolean(value && value.toUpperCase().includes("GIFTICON"));
@@ -70,23 +70,23 @@ const buildGifticonType = (brand: string) => {
 };
 
 const segmentSchema = z.object({
-  label: z.string().min(1, "라벨을 입력하세요"),
-  weight: z.number().int().nonnegative("가중치는 0 이상"),
-  reward_type: z.string().min(1, "보상 타입을 선택하세요"),
-  reward_value: z.number().int().nonnegative("보상 값은 0 이상"),
+  label: z.string().min(1, "?�벨???�력?�세??),
+  weight: z.number().int().nonnegative("가중치??0 ?�상"),
+  reward_type: z.string().min(1, "보상 ?�?�을 ?�택?�세??),
+  reward_value: z.number().int().nonnegative("보상 값�? 0 ?�상"),
 });
 
 const rouletteSchema = z
   .object({
-    name: z.string().min(1, "이름을 입력하세요"),
+    name: z.string().min(1, "?�름???�력?�세??),
     ticket_type: z.enum(["ROULETTE_COIN", "TRIAL_TOKEN", "GOLD_KEY", "DIAMOND_KEY"]).default("ROULETTE_COIN"),
     grade: z.enum(["COMMON", "WHALE", "NEW"]).default("COMMON"),
     is_active: z.boolean().default(false),
-    max_daily_spins: z.number().int().nonnegative("0이면 무제한"),
-    segments: z.array(segmentSchema).length(6, "세그먼트는 6개가 필요합니다"),
+    max_daily_spins: z.number().int().nonnegative("0?�면 무제??),
+    segments: z.array(segmentSchema).length(6, "?�그먼트??6개�? ?�요?�니??),
   })
   .refine((value) => value.segments.reduce((sum, seg) => sum + seg.weight, 0) > 0, {
-    message: "가중치 합은 0보다 커야 합니다",
+    message: "가중치 ?��? 0보다 커야 ?�니??,
     path: ["segments"],
   });
 
@@ -142,12 +142,12 @@ const mapErrorDetail = (error: unknown): string => {
   const detail = (error as any)?.response?.data?.detail;
   if (typeof detail === "string") {
     const map: Record<string, string> = {
-      INVALID_ROULETTE_CONFIG: "룰렛 설정 값이 올바르지 않습니다.",
-      ROULETTE_CONFIG_NOT_FOUND: "룰렛 설정을 찾을 수 없습니다.",
+      INVALID_ROULETTE_CONFIG: "룰렛 ?�정 값이 ?�바르�? ?�습?�다.",
+      ROULETTE_CONFIG_NOT_FOUND: "룰렛 ?�정??찾을 ???�습?�다.",
     };
     return map[detail] ?? detail;
   }
-  return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
+  return (error as any)?.message ?? "?�청 처리 �??�류가 발생?�습?�다.";
 };
 
 const getProbabilityInfo = (weight: number, totalWeight: number) => {
@@ -244,7 +244,7 @@ const RouletteConfigPage: React.FC = () => {
       editing ? updateRouletteConfig(editing.id, payload) : createRouletteConfig(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "roulette"] });
-      addToast("저장 완료", "success");
+      addToast("?�???�료", "success");
       closeModal();
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
@@ -254,7 +254,7 @@ const RouletteConfigPage: React.FC = () => {
     mutationFn: (id: number) => deleteRouletteConfig(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "roulette"] });
-      addToast("삭제 완료", "success");
+      addToast("??�� ?�료", "success");
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -318,13 +318,13 @@ const RouletteConfigPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-zinc-500 text-xs font-medium">
-            <span>시스템 관리</span>
+            <span>?�스??관�?/span>
             <ChevronRight size={12} />
-            <span className="text-zinc-300">룰렛 설정</span>
+            <span className="text-zinc-300">룰렛 ?�정</span>
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
             <Dices className="text-admin-brand" size={28} />
-            룰렛 환경 설정
+            룰렛 ?�경 ?�정
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -333,14 +333,14 @@ const RouletteConfigPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
           >
             <RefreshCw size={16} />
-            새로고침
+            ?�로고침
           </button>
           <button
             onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20"
           >
             <Plus size={16} />
-            새 룰렛 추가
+            ??룰렛 추�?
           </button>
         </div>
       </div>
@@ -401,13 +401,13 @@ const RouletteConfigPage: React.FC = () => {
       {isLoading ? (
         <div className="admin-card p-12 flex flex-col items-center justify-center space-y-3">
           <RefreshCw className="animate-spin text-zinc-600" size={32} />
-          <p className="text-sm font-medium text-zinc-500">데이터를 불러오는 중입니다...</p>
+          <p className="text-sm font-medium text-zinc-500">?�이?��? 불러?�는 중입?�다...</p>
         </div>
       ) : isError ? (
         <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-6 flex items-center gap-4">
           <AlertCircle className="text-rose-400" size={24} />
           <div>
-            <p className="text-sm font-bold text-rose-400">데이터 로드 실패</p>
+            <p className="text-sm font-bold text-rose-400">?�이??로드 ?�패</p>
             <p className="text-xs text-rose-400/80 mt-0.5">{mapErrorDetail(error)}</p>
           </div>
         </div>
@@ -456,11 +456,11 @@ const RouletteConfigPage: React.FC = () => {
                     className="h-10 px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 flex items-center gap-2 transition-all text-sm font-bold"
                   >
                     <Edit size={16} />
-                    수정
+                    ?�정
                   </button>
                   <button
                     onClick={() => {
-                      if (!window.confirm("이 설정을 삭제할까요?")) return;
+                      if (!window.confirm("???�정????��?�까??")) return;
                       deleteMutation.mutate(config.id);
                     }}
                     disabled={deleteMutation.isPending}
@@ -480,14 +480,14 @@ const RouletteConfigPage: React.FC = () => {
                 <Plus size={40} />
               </div>
               <div className="space-y-1">
-                <p className="text-lg font-bold text-white">등록된 룰렛이 없습니다</p>
-                <p className="text-sm text-zinc-500">새로운 룰렛 설정을 추가하여 운영을 시작하세요.</p>
+                <p className="text-lg font-bold text-white">?�록??룰렛???�습?�다</p>
+                <p className="text-sm text-zinc-500">?�로??룰렛 ?�정??추�??�여 ?�영???�작?�세??</p>
               </div>
               <button
                 onClick={openCreate}
                 className="px-6 py-2.5 bg-admin-brand text-black rounded-xl text-sm font-black mt-4"
               >
-                첫 번째 룰렛 추가
+                �?번째 룰렛 추�?
               </button>
             </div>
           )}
@@ -507,7 +507,7 @@ const RouletteConfigPage: React.FC = () => {
                 </div>
                 <div className="space-y-0.5">
                   <h3 className="text-xl font-black text-white tracking-tight">
-                    {editing ? "룰렛 설정 수정" : "새 룰렛 설정 추가"}
+                    {editing ? "룰렛 ?�정 ?�정" : "??룰렛 ?�정 추�?"}
                   </h3>
                   <p className="text-xs text-zinc-500 font-medium">Rule ID: {editing?.id || 'NEW'}</p>
                 </div>
@@ -524,7 +524,7 @@ const RouletteConfigPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-admin-brand">
                     <Info size={16} />
-                    <h4 className="text-sm font-black uppercase tracking-widest">기본 정보 (Basic Information)</h4>
+                    <h4 className="text-sm font-black uppercase tracking-widest">기본 ?�보 (Basic Information)</h4>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
@@ -532,35 +532,35 @@ const RouletteConfigPage: React.FC = () => {
                       <input
                         type="text"
                         className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors"
-                        placeholder="예: 기간한정 다이아 룰렛"
+                        placeholder="?? 기간?�정 ?�이??룰렛"
                         {...form.register("name")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">소모 티켓 타입</label>
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�모 ?�켓 ?�??/label>
                       <select
                         className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors appearance-none"
                         {...form.register("ticket_type")}
                       >
                         <option value="ROULETTE_COIN">코인 (ROULETTE_COIN)</option>
-                        <option value="TRIAL_TOKEN">체험권 (TRIAL_TOKEN)</option>
-                        <option value="GOLD_KEY">골드키 (GOLD_KEY)</option>
-                        <option value="DIAMOND_KEY">다이아키 (DIAMOND_KEY)</option>
+                        <option value="TRIAL_TOKEN">체험�?(TRIAL_TOKEN)</option>
+                        <option value="GOLD_KEY">골드??(GOLD_KEY)</option>
+                        <option value="DIAMOND_KEY">?�이?�키 (DIAMOND_KEY)</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">타겟 세그먼트 (Grade)</label>
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?��??�그먼트 (Grade)</label>
                       <select
                         className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none transition-colors appearance-none"
                         {...form.register("grade")}
                       >
-                        <option value="COMMON">일반 (COMMON)</option>
-                        <option value="NEW">신규 유저 (NEW)</option>
-                        <option value="WHALE">고액 유저 (WHALE)</option>
+                        <option value="COMMON">?�반 (COMMON)</option>
+                        <option value="NEW">?�규 ?��? (NEW)</option>
+                        <option value="WHALE">고액 ?��? (WHALE)</option>
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">일일 스핀 제한 (0=무제한)</label>
+                      <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�일 ?��? ?�한 (0=무제??</label>
                       <input
                         type="number"
                         className="w-full h-12 bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none transition-colors"
@@ -574,7 +574,7 @@ const RouletteConfigPage: React.FC = () => {
                     </div>
                     <input type="checkbox" className="hidden" {...form.register("is_active")} />
                     <span className={`text-sm font-bold ${form.watch("is_active") ? 'text-white' : 'text-zinc-500'}`}>
-                      시스템 활성화 여부
+                      ?�스???�성???��?
                     </span>
                   </label>
                 </div>
@@ -584,7 +584,7 @@ const RouletteConfigPage: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-admin-brand">
                       <LayoutGrid size={16} />
-                      <h4 className="text-sm font-black uppercase tracking-widest">세그먼트 설정 (Slots & Probability)</h4>
+                      <h4 className="text-sm font-black uppercase tracking-widest">?�그먼트 ?�정 (Slots & Probability)</h4>
                       <button
                         type="button"
                         onClick={onEqualizeWeights}
@@ -717,7 +717,7 @@ const RouletteConfigPage: React.FC = () => {
                 <div className="pt-6 border-t border-zinc-800">
                   <div className="flex items-center justify-between mb-4">
                     <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-admin-brand">
-                      <RefreshCw size={16} /> 검증 시뮬레이션 (Verification)
+                      <RefreshCw size={16} /> 검�??��??�이??(Verification)
                     </h4>
                     <button
                       type="button"
@@ -754,7 +754,7 @@ const RouletteConfigPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="p-6 bg-zinc-800/30 border border-zinc-800 border-dashed rounded-2xl text-center">
-                      <p className="text-xs text-zinc-500 font-medium">위 버튼을 눌러 현재 설정된 확률대로 1,000회 시뮬레이션을 실행하여 결과를 검증합니다.</p>
+                      <p className="text-xs text-zinc-500 font-medium">??버튼???�러 ?�재 ?�정???�률?��?1,000???��??�이?�을 ?�행?�여 결과�?검증합?�다.</p>
                     </div>
                   )}
                 </div>
@@ -764,7 +764,7 @@ const RouletteConfigPage: React.FC = () => {
             {/* Modal Footer */}
             <div className="p-6 border-t border-zinc-800 bg-zinc-900/50 flex flex-col sm:flex-row gap-3 justify-end items-center">
               <div className="flex-1 text-xs text-zinc-500 hidden sm:block">
-                <span className="font-bold text-zinc-400">NOTE:</span> 변경된 설정은 저장 즉시 시스템에 반영됩니다.
+                <span className="font-bold text-zinc-400">NOTE:</span> 변경된 ?�정?� ?�??즉시 ?�스?�에 반영?�니??
               </div>
               <button
                 onClick={closeModal}
@@ -778,7 +778,7 @@ const RouletteConfigPage: React.FC = () => {
                 disabled={mutation.isPending}
                 className="w-full sm:w-auto px-10 py-2.5 bg-admin-brand hover:brightness-110 text-black rounded-xl text-sm font-black transition-all shadow-lg shadow-admin-brand/20 disabled:opacity-50"
               >
-                {mutation.isPending ? "저장 중..." : "설정 저장 (Save Config)"}
+                {mutation.isPending ? "?�??�?.." : "?�정 ?�??(Save Config)"}
               </button>
             </div>
           </div>

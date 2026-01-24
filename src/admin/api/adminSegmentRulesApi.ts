@@ -1,4 +1,4 @@
-// src/admin/api/adminSegmentRulesApi.ts
+// src/api/admin/adminSegmentRulesApi.ts
 import { adminApi } from "./httpClient";
 
 export interface AdminSegmentRule {
@@ -29,21 +29,21 @@ export type UpdateSegmentRulePayload = {
 };
 
 export async function fetchSegmentRules() {
-  const { data } = await adminApi.get<AdminSegmentRule[]>("/admin/api/segment-rules/");
+  const { data } = await adminApi.get<AdminSegmentRule[]>("/api/admin/segment-rules/");
   return data;
 }
 
 export async function createSegmentRule(payload: CreateSegmentRulePayload) {
-  const { data } = await adminApi.post<AdminSegmentRule>("/admin/api/segment-rules/", payload);
+  const { data } = await adminApi.post<AdminSegmentRule>("/api/admin/segment-rules/", payload);
   return data;
 }
 
 export async function updateSegmentRule(ruleId: number, payload: UpdateSegmentRulePayload) {
-  const { data } = await adminApi.put<AdminSegmentRule>(`/admin/api/segment-rules/${ruleId}`, payload);
+  const { data } = await adminApi.put<AdminSegmentRule>(`/api/admin/segment-rules/${ruleId}`, payload);
   return data;
 }
 
 export async function deleteSegmentRule(ruleId: number) {
-  const { data } = await adminApi.delete<{ ok: boolean }>(`/admin/api/segment-rules/${ruleId}`);
+  const { data } = await adminApi.delete<{ ok: boolean }>(`/api/admin/segment-rules/${ruleId}`);
   return data;
 }

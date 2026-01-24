@@ -66,7 +66,7 @@ const EventRemoteControl: React.FC = () => {
                         <Radio size={24} className="animate-pulse" />
                     </div>
                     <div>
-                        <h3 className="text-admin-subtitle text-admin-text-primary">이벤트 리모트 컨트롤</h3>
+                        <h3 className="text-admin-subtitle text-admin-text-primary">?�벤??리모??컨트�?/h3>
                         <p className="text-admin-meta text-admin-text-muted">Real-time Event Overrides</p>
                     </div>
                 </div>
@@ -86,9 +86,9 @@ const EventRemoteControl: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-admin-meta font-bold text-admin-text-primary">
                             <Zap size={16} className="text-admin-warning" />
-                            골든아워 강제 조정 (Golden Hour)
+                            골든?�워 강제 조정 (Golden Hour)
                         </div>
-                        <span className="text-[10px] text-admin-text-muted">보상 1.5x 배율 적용</span>
+                        <span className="text-[10px] text-admin-text-muted">보상 1.5x 배율 ?�용</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -126,17 +126,17 @@ const EventRemoteControl: React.FC = () => {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-admin-meta font-bold text-admin-text-primary">
                             <Layout size={16} className="text-admin-brand" />
-                            전역 팝업 모달 제어 (Modal Override)
+                            ?�역 ?�업 모달 ?�어 (Modal Override)
                         </div>
-                        <span className="text-[10px] text-admin-text-muted">모든 유저 실시간 적용</span>
+                        <span className="text-[10px] text-admin-text-muted">모든 ?��? ?�시�??�용</span>
                     </div>
 
                     <div className="space-y-2">
                         {[
-                            { id: "STREAK_ATTENDANCE", label: "연속 출석 체크 모달", icon: <CheckCircle2 size={14} /> },
-                            { id: "SEASON_PASS_PROMO", label: "시즌패스 홍보 모달", icon: <AlertCircle size={14} /> },
-                            { id: "LIMITED_OFFER", label: "한정 판매 알림", icon: <Zap size={14} /> },
-                            { id: null, label: "강제 오버라이드 해제 (Default)", icon: <XCircle size={14} /> }
+                            { id: "STREAK_ATTENDANCE", label: "?�속 출석 체크 모달", icon: <CheckCircle2 size={14} /> },
+                            { id: "SEASON_PASS_PROMO", label: "?�즌?�스 ?�보 모달", icon: <AlertCircle size={14} /> },
+                            { id: "LIMITED_OFFER", label: "?�정 ?�매 ?�림", icon: <Zap size={14} /> },
+                            { id: null, label: "강제 ?�버?�이???�제 (Default)", icon: <XCircle size={14} /> }
                         ].map((modal) => {
                             const isActive = currentConfig.active_modal_override === modal.id;
                             return (
@@ -168,7 +168,7 @@ const EventRemoteControl: React.FC = () => {
                 <div className="p-4 rounded-xl bg-admin-brand/5 border border-admin-brand/10 flex gap-3 items-start">
                     <Terminal size={16} className="text-admin-brand mt-0.5" />
                     <p className="text-[11px] text-admin-text-muted leading-relaxed">
-                        리모트 컨트롤 명령은 대시보드 웹소켓을 통해 접속 중인 모든 사용자에게 즉각 전파됩니다. 대규모 트래픽 상황에서는 오버라이드 실시간 전환에 따른 서버 부하가 발생할 수 있습니다.
+                        리모??컨트�?명령?� ?�?�보???�소켓을 ?�해 ?�속 중인 모든 ?�용?�에�?즉각 ?�파?�니?? ?�규모 ?�래???�황?�서???�버?�이???�시�??�환???�른 ?�버 부?��? 발생?????�습?�다.
                     </p>
                 </div>
             </div>

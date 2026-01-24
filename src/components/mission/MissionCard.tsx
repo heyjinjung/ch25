@@ -62,18 +62,18 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const normalizedRewardType = result.reward_type === "CASH_UNLOCK" ? "POINT" : (result.reward_type || "");
         const rewardLine = formatRewardLine(normalizedRewardType, result.amount ?? 0);
         const hint = rewardLine?.fulfillmentHint ? ` (${rewardLine.fulfillmentHint})` : "";
-        addToast(`보상 수령 완료: ${rewardLine?.text ?? "보상"}${hint}`, "success");
+        addToast(`보상 ?�령 ?�료: ${rewardLine?.text ?? "보상"}${hint}`, "success");
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         queryClient.invalidateQueries({ queryKey: ["inventory"] });
       } else {
         console.error("[MissionCard] Claim failed with result:", result);
         notification("error");
-        addToast(result.message || "보상 수령 실패", "error");
+        addToast(result.message || "보상 ?�령 ?�패", "error");
       }
     } catch (error) {
       console.error("[MissionCard] Claim exception:", error);
       notification("error");
-      addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+      addToast("?�류가 발생?�습?�다. ?�시 ???�시 ?�도?�주?�요.", "error");
     }
   };
 
@@ -91,7 +91,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const cachedStatus = await getCloudItem(cacheKey);
 
         if (cachedStatus === "VERIFIED") {
-          addToast("이미 인증된 미션입니다.", "success");
+          addToast("?��? ?�증??미션?�니??", "success");
           setIsVerifying(false);
           return;
         }
@@ -102,7 +102,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         const result = await verifyChannelSubscription(mission.id);
         if (result.success) {
           notification("success");
-          addToast("구독 인증 완료!", "success");
+          addToast("구독 ?�증 ?�료!", "success");
           await setCloudItem(cacheKey, "VERIFIED");
           useMissionStore.getState().fetchMissions();
         } else {
@@ -113,12 +113,12 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
           } else {
             window.open(channelLink, "_blank");
           }
-          addToast("채널에 입장하여 구독해 주세요.", "info");
+          addToast("채널???�장?�여 구독??주세??", "info");
         }
         return;
       }
       if (mission.action_type === "SHARE") {
-        const shareText = "CCJM 주간 미션 참여! 여기로 들어오면 바로 시작돼요";
+        const shareText = "CCJM 주간 미션 참여! ?�기�??�어?�면 바로 ?�작?�요";
         const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
@@ -156,23 +156,23 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         if (window.Telegram?.WebApp?.switchInlineQuery) {
           window.Telegram.WebApp.switchInlineQuery("share_ref", ["users", "groups"]);
         } else {
-          addToast("텔레그램 앱에서만 가능한 기능입니다.", "error");
+          addToast("?�레그램 ?�에?�만 가?�한 기능?�니??", "error");
         }
         return;
       }
       if (mission.action_type === "SHARE_STORY") {
         if (window.Telegram?.WebApp?.shareToStory) {
           const storyMediaUrl = `${window.location.origin}/assets/story/ccjm_story_1080x1920.mp4`;
-          const fallbackShareText = "CCJM 오픈 기념 미션! 같이 해보자";
+          const fallbackShareText = "CCJM ?�픈 기념 미션! 같이 ?�보??;
           const fallbackShareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: fallbackShareText }).toString()}`;
 
           if (!window.location.origin.startsWith("https://")) {
-            addToast("스토리 공유는 https 환경에서만 안정적으로 동작합니다.", "error");
+            addToast("?�토�?공유??https ?�경?�서�??�정?�으�??�작?�니??", "error");
           }
           try {
             window.Telegram.WebApp.shareToStory(storyMediaUrl, {
-              text: "CCJM 오픈 기념 미션! 같이 해보자",
-              widget_link: { url: telegramAppUrl, name: "CCJM 열기" },
+              text: "CCJM ?�픈 기념 미션! 같이 ?�보??,
+              widget_link: { url: telegramAppUrl, name: "CCJM ?�기" },
             });
 
             // Record action immediately (Trust Approach)
@@ -198,15 +198,15 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             if (!opened) {
               window.open(fallbackShareUrl, "_blank", "noopener,noreferrer");
             }
-            addToast("스토리 공유에 실패했습니다. 일반 공유로 대체합니다.", "error");
+            addToast("?�토�?공유???�패?�습?�다. ?�반 공유�??�체합?�다.", "error");
           }
         } else {
-          addToast("스토리 공유는 모바일 텔레그램 앱에서만 가능합니다.", "error");
+          addToast("?�토�?공유??모바???�레그램 ?�에?�만 가?�합?�다.", "error");
         }
         return;
       }
       if (mission.action_type === "SHARE_WALLET") {
-        const shareText = "내 지갑 💎 CCJM에서 함께 확인해봐!";
+        const shareText = "??지�??�� CCJM?�서 ?�께 ?�인?�봐!";
         const shareUrl = `https://t.me/share/url?${new URLSearchParams({ url: telegramAppUrl, text: shareText }).toString()}`;
 
         const tg = window.Telegram?.WebApp;
@@ -243,7 +243,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
     } catch (error) {
       console.error("[MissionCard] Action failed:", error);
       notification("error");
-      addToast("오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "error");
+      addToast("?�류가 발생?�습?�다. ?�시 ???�시 ?�도?�주?�요.", "error");
     } finally {
       setIsVerifying(false);
     }
@@ -257,7 +257,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
 
     // Game Specifics
     if (titleLower.includes("룰렛")) return "/assets/asset_ticket_green.webp";
-    if (titleLower.includes("주사위")) return "/assets/icon_dice_silver.webp";
+    if (titleLower.includes("주사??)) return "/assets/icon_dice_silver.webp";
     if (titleLower.includes("복권")) return "/assets/asset_ticket_diamond.webp";
 
     // Action Types
@@ -335,7 +335,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
                 !isClaimed && "drop-shadow-md",
                 isCompleted && !isClaimed ? "text-white" : (isClaimed ? "text-white/40" : "text-white")
               )}>
-                {isDailyGift ? "매일매일 보너스" : mission.title}
+                {isDailyGift ? "매일매일 보너?? : mission.title}
               </span>
               {(timeWindow || mission.auto_claim) && (
                 <span className={clsx(
@@ -352,9 +352,9 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
             {/* Description */}
             {!isClaimed && (
               <p className="text-[11px] font-bold text-white/50 truncate tracking-tight">
-                {mission.action_type === 'JOIN_CHANNEL' ? '공식 채널 구독하고 보상받기' :
-                  mission.action_type === 'PLAY_GAME' ? '게임 플레이 미션' :
-                    isDailyGift ? '오늘의 출석 보상' : '한정 미션'}
+                {mission.action_type === 'JOIN_CHANNEL' ? '공식 채널 구독?�고 보상받기' :
+                  mission.action_type === 'PLAY_GAME' ? '게임 ?�레??미션' :
+                    isDailyGift ? '?�늘??출석 보상' : '?�정 미션'}
               </p>
             )}
           </div>
@@ -400,7 +400,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ data }) => {
         <div className="flex items-center pl-1">
           {isClaimed ? (
             <div className="h-9 min-w-[3.5rem] px-3 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-[11px] font-bold text-white/20">
-              완료
+              ?�료
             </div>
           ) : isCompleted ? (
             <button

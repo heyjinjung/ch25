@@ -1,4 +1,4 @@
-// src/admin/api/adminSegmentsApi.ts
+// src/api/admin/adminSegmentsApi.ts
 import { adminApi } from "./httpClient";
 
 export interface AdminUserSegmentRow {
@@ -25,13 +25,13 @@ export interface AdminUserSegmentRow {
 }
 
 export async function fetchUserSegments(params?: { identifier?: string; external_id?: string; limit?: number }) {
-  const { data } = await adminApi.get<AdminUserSegmentRow[]>("/admin/api/segments/", {
+  const { data } = await adminApi.get<AdminUserSegmentRow[]>("/api/admin/segments/", {
     params,
   });
   return data;
 }
 
 export async function upsertUserSegment(payload: { user_id?: number; external_id?: string; segment: string }) {
-  const { data } = await adminApi.put<AdminUserSegmentRow>("/admin/api/segments/", payload);
+  const { data } = await adminApi.put<AdminUserSegmentRow>("/api/admin/segments/", payload);
   return data;
 }

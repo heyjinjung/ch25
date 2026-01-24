@@ -40,7 +40,7 @@ type SortDirection = "asc" | "desc";
 const mapErrorDetail = (error: unknown): string => {
   const detail = (error as any)?.response?.data?.detail;
   if (typeof detail === "string") return detail;
-  return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
+  return (error as any)?.message ?? "?�청 처리 �??�류가 발생?�습?�다.";
 };
 
 const clampNumber = (value: unknown, fallback: number, minValue: number) => {
@@ -104,7 +104,7 @@ const UserAdminPage: React.FC = () => {
     mutationFn: (payload: AdminUserPayload) => createUser(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      addToast("생성 완료", "success");
+      addToast("?�성 ?�료", "success");
       setShowAddForm(false);
       setNewMember({ nickname: "", level: 1, xp: 0, status: "ACTIVE", password: "", real_name: "", phone_number: "", telegram_id: "", telegram_username: "", memo: "", tags: "" });
     },
@@ -115,7 +115,7 @@ const UserAdminPage: React.FC = () => {
     mutationFn: ({ id, payload }: { id: number; payload: Partial<AdminUserPayload> }) => updateUser(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      addToast("수정 완료", "success");
+      addToast("?�정 ?�료", "success");
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -124,7 +124,7 @@ const UserAdminPage: React.FC = () => {
     mutationFn: (id: number) => deleteUser(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      addToast("삭제 완료", "success");
+      addToast("??�� ?�료", "success");
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -133,7 +133,7 @@ const UserAdminPage: React.FC = () => {
     mutationFn: (id: number) => purgeUser(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
-      addToast("하드 퍼지 완료", "success");
+      addToast("?�드 ?��? ?�료", "success");
     },
     onError: (err) => addToast(mapErrorDetail(err), "error"),
   });
@@ -204,10 +204,10 @@ const UserAdminPage: React.FC = () => {
   const currentMembers = sortedMembers.slice(startIndex, startIndex + itemsPerPage);
 
   const itemCountText = useMemo(() => {
-    if (sortedMembers.length === 0) return "0개 항목 표시";
+    if (sortedMembers.length === 0) return "0�???�� ?�시";
     const from = startIndex + 1;
     const to = Math.min(startIndex + itemsPerPage, sortedMembers.length);
-    return `${from}-${to}/${sortedMembers.length}개 항목 표시`;
+    return `${from}-${to}/${sortedMembers.length}�???�� ?�시`;
   }, [sortedMembers.length, startIndex, itemsPerPage]);
 
   const toggleEdit = (id: number, next: boolean) => {
@@ -294,7 +294,7 @@ const UserAdminPage: React.FC = () => {
   const resetPassword = (row: MemberRow) => {
     const nextPassword = (row.passwordReset ?? "").trim();
     if (nextPassword.length < 4) {
-      addToast("비밀번호는 최소 4자 이상 입력하세요.", "error");
+      addToast("비�?번호??최소 4???�상 ?�력?�세??", "error");
       return;
     }
     updateMutation.mutate({ id: row.id, payload: { password: nextPassword } });
@@ -302,14 +302,14 @@ const UserAdminPage: React.FC = () => {
   };
 
   const removeRow = (row: MemberRow) => {
-    const ok = window.confirm("정말 삭제하시겠습니까?");
+    const ok = window.confirm("?�말 ??��?�시겠습?�까?");
     if (!ok) return;
     deleteMutation.mutate(row.id);
   };
 
   const purgeRow = (row: MemberRow) => {
     const ok = window.confirm(
-      "[하드 퍼지] 유저 및 관련 기록(텔레그램/로그/이벤트 등)을 가능한 범위에서 전부 삭제합니다. 되돌릴 수 없습니다. 진행할까요?"
+      "[?�드 ?��?] ?��? �?관??기록(?�레그램/로그/?�벤??????가?�한 범위?�서 ?��? ??��?�니?? ?�돌�????�습?�다. 진행?�까??"
     );
     if (!ok) return;
     purgeMutation.mutate(row.id);
@@ -322,15 +322,15 @@ const UserAdminPage: React.FC = () => {
     const provided = (newMember.nickname ?? "").trim();
     const nickname = provided || (newMember.telegram_username ?? "").trim();
     if (!nickname) {
-      addToast("닉네임은 필수입니다.", "error");
+      addToast("?�네?��? ?�수?�니??", "error");
       return;
     }
     if (newMember.password && newMember.password.trim().length < 4) {
-      addToast("비밀번호는 최소 4자 이상 입력하세요.", "error");
+      addToast("비�?번호??최소 4???�상 ?�력?�세??", "error");
       return;
     }
 
-    // 스크린샷 UX에 맞춰: 입력 닉네임을 external_id로도 사용
+    // ?�크린샷 UX??맞춰: ?�력 ?�네?�을 external_id로도 ?�용
     const payload: AdminUserPayload = {
       external_id: nickname,
       nickname,
@@ -358,7 +358,7 @@ const UserAdminPage: React.FC = () => {
       <div className="flex-none p-4 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold tracking-tight text-white">회원 관리 (User Admin)</h2>
+            <h2 className="text-xl font-bold tracking-tight text-white">?�원 관�?(User Admin)</h2>
             <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-[10px] text-zinc-400 font-mono">
               Total {data?.length ?? 0}
             </span>
@@ -371,7 +371,7 @@ const UserAdminPage: React.FC = () => {
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 border border-zinc-700 transition-all"
             >
               <Upload size={14} />
-              일괄 등록
+              ?�괄 ?�록
             </button>
             <button
               type="button"
@@ -379,7 +379,7 @@ const UserAdminPage: React.FC = () => {
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-admin-brand hover:brightness-110 text-xs font-bold text-white shadow-lg shadow-admin-brand/20 transition-all"
             >
               <Plus size={14} />
-              회원 추가
+              ?�원 추�?
             </button>
           </div>
         </div>
@@ -390,7 +390,7 @@ const UserAdminPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-admin-brand transition-colors" />
             <input
               type="text"
-              placeholder="ID, 닉네임, TG Username, 실명 검색..."
+              placeholder="ID, ?�네?? TG Username, ?�명 검??.."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
@@ -405,13 +405,13 @@ const UserAdminPage: React.FC = () => {
       {
         showAddForm && (
           <div className="admin-card p-6">
-            <h3 className="text-admin-subtitle text-admin-text-primary">새 회원 추가</h3>
+            <h3 className="text-admin-subtitle text-admin-text-primary">???�원 추�?</h3>
 
             <form onSubmit={submitNewMember} className="mt-4 space-y-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label htmlFor="nickname" className="admin-label">
-                    닉네임
+                    ?�네??
                   </label>
                   <input
                     id="nickname"
@@ -424,7 +424,7 @@ const UserAdminPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="level" className="admin-label">
-                    레벨
+                    ?�벨
                   </label>
                   <input
                     id="level"
@@ -450,7 +450,7 @@ const UserAdminPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="status" className="admin-label">
-                    상태
+                    ?�태
                   </label>
                   <select
                     id="status"
@@ -464,31 +464,31 @@ const UserAdminPage: React.FC = () => {
                 </div>
                 <div>
                   <label htmlFor="password" className="admin-label">
-                    초기 비밀번호 (선택)
+                    초기 비�?번호 (?�택)
                   </label>
                   <input
                     id="password"
                     type="password"
                     value={newMember.password}
                     onChange={(e) => setNewMember((p) => ({ ...p, password: e.target.value }))}
-                    placeholder="최소 4자 이상"
+                    placeholder="최소 4???�상"
                     className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                   />
                 </div>
                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-admin-border">
                   <div className="space-y-1">
-                    <label htmlFor="real_name" className="admin-label">실명</label>
+                    <label htmlFor="real_name" className="admin-label">?�명</label>
                     <input
                       id="real_name"
                       type="text"
                       value={newMember.real_name}
                       onChange={(e) => setNewMember((p) => ({ ...p, real_name: e.target.value }))}
                       className="admin-input w-full"
-                      placeholder="홍길동"
+                      placeholder="?�길??
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="phone_number" className="admin-label">연락처</label>
+                    <label htmlFor="phone_number" className="admin-label">?�락�?/label>
                     <input
                       id="phone_number"
                       type="text"
@@ -499,7 +499,7 @@ const UserAdminPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="telegram_id" className="admin-label">텔레그램 ID (숫자)</label>
+                    <label htmlFor="telegram_id" className="admin-label">?�레그램 ID (?�자)</label>
                     <input
                       id="telegram_id"
                       type="text"
@@ -510,7 +510,7 @@ const UserAdminPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="telegram_username" className="admin-label">텔레그램 닉네임 (@제외)</label>
+                    <label htmlFor="telegram_username" className="admin-label">?�레그램 ?�네??(@?�외)</label>
                     <input
                       id="telegram_username"
                       type="text"
@@ -521,14 +521,14 @@ const UserAdminPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label htmlFor="tags" className="text-xs font-medium text-gray-400">태그 (쉼표 구분)</label>
+                    <label htmlFor="tags" className="text-xs font-medium text-gray-400">?�그 (?�표 구분)</label>
                     <input
                       id="tags"
                       type="text"
                       value={newMember.tags}
                       onChange={(e) => setNewMember((p) => ({ ...p, tags: e.target.value }))}
                       className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
-                      placeholder="VIP, 보너스, 신규"
+                      placeholder="VIP, 보너?? ?�규"
                     />
                   </div>
                   <div className="md:col-span-2 space-y-1">
@@ -538,7 +538,7 @@ const UserAdminPage: React.FC = () => {
                       value={newMember.memo}
                       onChange={(e) => setNewMember((p) => ({ ...p, memo: e.target.value }))}
                       className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-[#91F402]"
-                      placeholder="특이사항 입력"
+                      placeholder="?�이?�항 ?�력"
                       rows={2}
                     />
                   </div>
@@ -561,7 +561,7 @@ const UserAdminPage: React.FC = () => {
                   disabled={createMutation.isPending}
                   className="rounded-md bg-[#2D6B3B] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#91F402] hover:text-black disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {createMutation.isPending ? "저장 중..." : "저장"}
+                  {createMutation.isPending ? "?�??�?.." : "?�??}
                 </button>
               </div>
             </form>
@@ -571,7 +571,7 @@ const UserAdminPage: React.FC = () => {
 
       {
         isLoading && (
-          <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러오는 중...</div>
+          <div className="rounded-lg border border-[#333333] bg-[#111111] p-4 text-gray-200">불러?�는 �?..</div>
         )
       }
       {
@@ -604,14 +604,14 @@ const UserAdminPage: React.FC = () => {
                         } cursor-pointer transition-colors`}
                       onClick={() => handleSort("nickname")}
                     >
-                      <div className="flex items-center gap-1">닉네임{renderSortIcon("nickname")}</div>
+                      <div className="flex items-center gap-1">?�네??renderSortIcon("nickname")}</div>
                     </th>
                     <th
                       className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "level" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
                         } cursor-pointer transition-colors`}
                       onClick={() => handleSort("level")}
                     >
-                      <div className="flex items-center gap-1">레벨{renderSortIcon("level")}</div>
+                      <div className="flex items-center gap-1">?�벨{renderSortIcon("level")}</div>
                     </th>
                     <th
                       className={`px-4 py-3 text-left text-sm font-bold uppercase tracking-wider ${sortKey === "xp" ? "text-white" : "text-zinc-400 hover:text-zinc-300"
@@ -628,11 +628,11 @@ const UserAdminPage: React.FC = () => {
                       <div className="flex items-center gap-1">Streak{renderSortIcon("login_streak")}</div>
                     </th>
 
-                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">실명/연락처</th>
+                    <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">?�명/?�락�?/th>
                     <th className="hidden md:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">TG ID / Username</th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">메모/태그</th>
-                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">비밀번호(V2 리렉)</th>
-                    <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-zinc-400">액션</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">메모/?�그</th>
+                    <th className="hidden lg:table-cell px-4 py-3 text-left text-sm font-bold uppercase tracking-wider text-zinc-400">비�?번호(V2 리렉)</th>
+                    <th className="px-4 py-3 text-center text-sm font-bold uppercase tracking-wider text-zinc-400">?�션</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -660,7 +660,7 @@ const UserAdminPage: React.FC = () => {
                             value={member.draft?.nickname ?? ""}
                             onChange={(e) => updateDraftField(member.id, "nickname", e.target.value)}
                             className="w-full h-8 bg-zinc-900 border border-zinc-700 rounded-md px-2 text-sm text-zinc-200 outline-none focus:border-admin-brand"
-                            placeholder="닉네임"
+                            placeholder="?�네??
                           />
                         ) : (
                           <div className="text-sm font-medium text-zinc-200">{member.nickname || "-"}</div>
@@ -674,8 +674,8 @@ const UserAdminPage: React.FC = () => {
                             value={member.draft?.level ?? 1}
                             onChange={(e) => updateDraftField(member.id, "level", e.target.value)}
                             className="admin-input w-24 h-9 text-right"
-                            title="레벨"
-                            aria-label="레벨"
+                            title="?�벨"
+                            aria-label="?�벨"
                           />
                         ) : (
                           member.season_level ?? member.level ?? 1
@@ -721,14 +721,14 @@ const UserAdminPage: React.FC = () => {
                               type="text"
                               value={member.draft?.real_name ?? ""}
                               onChange={(e) => updateDraftField(member.id, "real_name", e.target.value)}
-                              placeholder="실명"
+                              placeholder="?�명"
                               className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
                             />
                             <input
                               type="text"
                               value={member.draft?.phone_number ?? ""}
                               onChange={(e) => updateDraftField(member.id, "phone_number", e.target.value)}
-                              placeholder="연락처"
+                              placeholder="?�락�?
                               className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
                             />
                           </div>
@@ -780,7 +780,7 @@ const UserAdminPage: React.FC = () => {
                               type="text"
                               value={member.draft?.tags ?? ""}
                               onChange={(e) => updateDraftField(member.id, "tags", e.target.value)}
-                              placeholder="태그 (쉼표 구분)"
+                              placeholder="?�그 (?�표 구분)"
                               className="w-full rounded-md border border-[#333333] bg-[#1A1A1A] p-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-[#2D6B3B]"
                             />
                           </div>
@@ -805,7 +805,7 @@ const UserAdminPage: React.FC = () => {
                             type="password"
                             value={member.passwordReset ?? ""}
                             onChange={(e) => setPasswordReset(member.id, e.target.value)}
-                            placeholder="변경 시 입력"
+                            placeholder="변�????�력"
                             className="w-32 rounded-md border border-[#333333] bg-[#1A1A1A] p-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#2D6B3B]"
                           />
                           <button
@@ -814,7 +814,7 @@ const UserAdminPage: React.FC = () => {
                             disabled={updateMutation.isPending}
                             className="rounded-md border border-[#333333] bg-[#111111] px-3 py-2 text-sm text-gray-200 hover:bg-[#2C2C2E] disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            변경
+                            변�?
                           </button>
                         </div>
                       </td>
@@ -825,8 +825,8 @@ const UserAdminPage: React.FC = () => {
                               type="button"
                               onClick={() => saveRow(member)}
                               className="rounded-md p-2 text-admin-brand hover:text-white"
-                              title="저장"
-                              aria-label="저장"
+                              title="?�??
+                              aria-label="?�??
                             >
                               <Save size={16} />
                             </button>
@@ -835,7 +835,7 @@ const UserAdminPage: React.FC = () => {
                               type="button"
                               onClick={() => toggleEdit(member.id, true)}
                               className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-                              title="수정"
+                              title="?�정"
                             >
                               <Edit2 size={14} />
                             </button>
@@ -845,8 +845,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => setSelectedUserForMissions(member)}
                             className="rounded-md p-2 text-cyan-500 hover:text-white"
-                            title="미션 관리"
-                            aria-label="미션 관리"
+                            title="미션 관�?
+                            aria-label="미션 관�?
                           >
                             <ClipboardList size={16} />
                           </button>
@@ -854,8 +854,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => setSelectedUserForInventory(member)}
                             className="rounded-md p-2 text-admin-brand hover:text-white"
-                            title="인벤 CS"
-                            aria-label="인벤 CS"
+                            title="?�벤 CS"
+                            aria-label="?�벤 CS"
                           >
                             <Package size={16} />
                           </button>
@@ -864,8 +864,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => setSelectedUserForGameTokens({ user: member, tab: "ledger" })}
                             className="rounded-md p-2 text-gray-300 hover:text-white"
-                            title="잔액 로그"
-                            aria-label="잔액 로그"
+                            title="?�액 로그"
+                            aria-label="?�액 로그"
                           >
                             <History size={16} />
                           </button>
@@ -874,8 +874,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => setAssetDetailModal({ user: member, tab: "vault" })}
                             className="rounded-md p-2 text-yellow-500 hover:text-white"
-                            title="금고 관리 (내역/잔액)"
-                            aria-label="금고 관리 (내역/잔액)"
+                            title="금고 관�?(?�역/?�액)"
+                            aria-label="금고 관�?(?�역/?�액)"
                           >
                             <span className="font-bold text-xs">V</span>
                           </button>
@@ -885,8 +885,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => purgeRow(member)}
                             className="rounded-md p-2 text-red-500 hover:text-red-300 hover:bg-red-900/30"
-                            title="하드 퍼지(완전 초기화)"
-                            aria-label="하드 퍼지(완전 초기화)"
+                            title="?�드 ?��?(?�전 초기??"
+                            aria-label="?�드 ?��?(?�전 초기??"
                           >
                             <Skull size={16} />
                           </button>
@@ -894,8 +894,8 @@ const UserAdminPage: React.FC = () => {
                             type="button"
                             onClick={() => removeRow(member)}
                             className="rounded-md p-2 text-red-500 hover:text-red-300"
-                            title="삭제"
-                            aria-label="삭제"
+                            title="??��"
+                            aria-label="??��"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -949,7 +949,7 @@ const UserAdminPage: React.FC = () => {
             )}
 
             {sortedMembers.length === 0 && (
-              <div className="py-8 text-center text-gray-400">검색 결과가 없습니다.</div>
+              <div className="py-8 text-center text-gray-400">검??결과가 ?�습?�다.</div>
             )}
 
             {totalPages > 0 && (
@@ -977,7 +977,7 @@ const UserAdminPage: React.FC = () => {
                     className={`relative inline-flex items-center rounded-l-md border border-[#333333] px-2 py-2 ${safePage === 1 ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
                       }`}
                   >
-                    <span className="sr-only">이전</span>
+                    <span className="sr-only">?�전</span>
                     <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                   </button>
 
@@ -1006,7 +1006,7 @@ const UserAdminPage: React.FC = () => {
                     className={`relative inline-flex items-center rounded-r-md border border-[#333333] px-2 py-2 ${safePage === totalPages ? "cursor-not-allowed bg-[#111111] text-gray-500" : "bg-[#1A1A1A] text-gray-300 hover:bg-[#2D6B3B]"
                       }`}
                   >
-                    <span className="sr-only">다음</span>
+                    <span className="sr-only">?�음</span>
                     <ChevronRight className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </nav>
@@ -1046,11 +1046,11 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
       updateUserMission(user.id, missionId, payload),
     onSuccess: () => {
       refetch();
-      addToast("상태가 업데이트되었습니다.", "success");
+      addToast("?�태가 ?�데?�트?�었?�니??", "success");
       queryClient.invalidateQueries({ queryKey: ["vault-status"] }); // Invalidate vault if rewards are claimed
     },
     onError: (err: any) => {
-      addToast(`수정 실패: ${err.message}`, "error");
+      addToast(`?�정 ?�패: ${err.message}`, "error");
     },
   });
 
@@ -1067,8 +1067,8 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
           <button
             onClick={onClose}
             className="rounded-lg p-2 text-admin-text-secondary hover:bg-admin-hover hover:text-admin-text-primary"
-            title="닫기"
-            aria-label="닫기"
+            title="?�기"
+            aria-label="?�기"
           >
             <X size={20} />
           </button>
@@ -1078,7 +1078,7 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
           {isLoading ? (
             <div className="py-20 text-center text-gray-500 font-medium">Loading mission data...</div>
           ) : missions.length === 0 ? (
-            <div className="py-20 text-center text-gray-500 font-medium">활성화된 미션이 없습니다.</div>
+            <div className="py-20 text-center text-gray-500 font-medium">?�성?�된 미션???�습?�다.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {missions.map((m) => (
@@ -1105,19 +1105,19 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
 
                   <div className="mt-2 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">진행도: {m.current_value} / {m.target_value}</span>
+                      <span className="text-xs text-gray-400">진행?? {m.current_value} / {m.target_value}</span>
                       <div className="flex gap-1">
                         <button
                           onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { current_value: m.target_value, is_completed: true } })}
                           className="text-[10px] font-bold bg-[#333333] hover:bg-[#2D6B3B] text-white px-2 py-1 rounded transition-colors"
                         >
-                          강제 완료
+                          강제 ?�료
                         </button>
                         <button
                           onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { current_value: 0, is_completed: false, is_claimed: false } })}
                           className="text-[10px] font-bold bg-[#333333] hover:bg-red-900/50 text-white px-2 py-1 rounded transition-colors"
                         >
-                          초기화
+                          초기??
                         </button>
                       </div>
                     </div>
@@ -1128,14 +1128,14 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
                         className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_completed ? "bg-[#2D6B3B] text-admin-brand" : "bg-[#333333] text-gray-400 hover:text-white"}`}
                       >
                         <Check size={14} />
-                        {m.is_completed ? "완료됨" : "미완료"}
+                        {m.is_completed ? "?�료?? : "미완�?}
                       </button>
                       <button
                         onClick={() => updateMutation.mutate({ missionId: m.mission_id, payload: { is_claimed: !m.is_claimed } })}
                         className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all ${m.is_claimed ? "bg-amber-600 text-white" : "bg-[#333333] text-gray-400 hover:text-white"}`}
                       >
                         <Plus size={14} />
-                        {m.is_claimed ? "지급 완료" : "수동 지급"}
+                        {m.is_claimed ? "지�??�료" : "?�동 지�?}
                       </button>
                     </div>
                   </div>
@@ -1147,7 +1147,7 @@ const UserMissionModal: React.FC<UserMissionModalProps> = ({ user, onClose }) =>
 
         <div className="p-4 sm:p-6 border-t border-[#333333] bg-[#1A1A1A] flex justify-end">
           <button onClick={onClose} className="rounded-lg bg-[#333333] px-6 py-2 text-sm font-bold text-white hover:bg-[#444444]">
-            닫기
+            ?�기
           </button>
         </div>
       </div>

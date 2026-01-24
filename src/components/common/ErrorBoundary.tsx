@@ -38,9 +38,9 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       }
       return (
         <section className="rounded-xl border border-red-800/40 bg-red-950/60 p-6 text-center text-red-100 shadow-lg shadow-red-900/30">
-          <h2 className="mb-2 text-xl font-bold">문제가 발생했습니다</h2>
+          <h2 className="mb-2 text-xl font-bold">문제가 발생?�습?�다</h2>
           <p className="mb-4 text-sm text-red-200">
-            예기치 않은 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.
+            ?�기�??��? ?�류가 발생?�습?�다. ?�시 ???�시 ?�도??주세??
           </p>
           {this.state.error && (
             <p className="mb-4 text-xs text-red-300/70">{this.state.error.message}</p>
@@ -50,7 +50,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
             onClick={this.handleRetry}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
           >
-            다시 시도
+            ?�시 ?�도
           </button>
         </section>
       );

@@ -117,12 +117,12 @@ const EventModalsPage: React.FC = () => {
   const handleStreakClaim = async () => {
     const success = await claimStreakReward();
     if (success) {
-      addToast("보상을 획득했습니다!", "success");
+      addToast("보상???�득?�습?�다!", "success");
       await queryClient.invalidateQueries({ queryKey: ["streak-rules"] });
       await fetchMissions();
       return true;
     }
-    addToast("보상 획득 실패", "error");
+    addToast("보상 ?�득 ?�패", "error");
     return false;
   };
 
@@ -132,14 +132,14 @@ const EventModalsPage: React.FC = () => {
     try {
       const res = await requestTrialGrant({ token_type: "ROULETTE_COIN" });
       if (res.result === "OK" && res.granted > 0) {
-        addToast(`체험 티켓 ${res.granted}개 지급되었습니다.`, "success");
+        addToast(`체험 ?�켓 ${res.granted}�?지급되?�습?�다.`, "success");
         queryClient.invalidateQueries({ queryKey: ["vault-status"] });
         closeModal();
       } else {
-        addToast("현재는 체험 티켓을 받을 수 없습니다.", "error");
+        addToast("?�재??체험 ?�켓??받을 ???�습?�다.", "error");
       }
     } catch (error: any) {
-      const message = error?.response?.data?.detail || "요청 처리 중 오류가 발생했습니다.";
+      const message = error?.response?.data?.detail || "?�청 처리 �??�류가 발생?�습?�다.";
       addToast(message, "error");
     } finally {
       setIsRequestingTrial(false);
@@ -152,23 +152,23 @@ const EventModalsPage: React.FC = () => {
   );
 
   const badgeOverrides: Partial<Record<ModalKey, string>> = {
-    streak: claimableDay ? "보상 가능" : "진행 중",
-    "golden-hour": vault?.is_golden_hour_active ? "LIVE" : "안내",
+    streak: claimableDay ? "보상 가?? : "진행 �?,
+    "golden-hour": vault?.is_golden_hour_active ? "LIVE" : "?�내",
   };
 
   const metaOverrides: Partial<Record<ModalKey, string>> = {
-    streak: `현재 ${currentStreak}일 연속 · 다음 Day ${Math.min(currentStreak + 1, 7)}`,
-    "golden-hour": `적립 배율 ${goldenHourMultiplier}x`,
-    "vip-promo": user?.segment === "VIP" ? "VIP 전용" : "VIP 안내",
-    "vip-eligibility": "자격 조건 확인",
-    "vault-info": "금고 정보",
+    streak: `?�재 ${currentStreak}???�속 · ?�음 Day ${Math.min(currentStreak + 1, 7)}`,
+    "golden-hour": `?�립 배율 ${goldenHourMultiplier}x`,
+    "vip-promo": user?.segment === "VIP" ? "VIP ?�용" : "VIP ?�내",
+    "vip-eligibility": "?�격 조건 ?�인",
+    "vault-info": "금고 ?�보",
     "withdrawal-conditions": "조건 체크",
-    "withdrawal-progress": "진행 상태",
-    "ticket-zero": "리커버리 플로우",
+    "withdrawal-progress": "진행 ?�태",
+    "ticket-zero": "리커버리 ?�로??,
     "lottery-collection": `C1 ${lotteryCollection.C1} · C2 ${lotteryCollection.C2} · J ${lotteryCollection.J} · M ${lotteryCollection.M}`,
-    "limited-offer": "타임 세일",
-    "season-pass": "프리미엄 혜택",
-    inbox: "수신함",
+    "limited-offer": "?�???�일",
+    "season-pass": "?�리미엄 ?�택",
+    inbox: "?�신??,
   };
 
   const cardDecor: Record<ModalKey, { icon: React.ReactNode; accent: string }> = {
@@ -223,7 +223,7 @@ const EventModalsPage: React.FC = () => {
           <button
             onClick={() => navigate(-1)}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/50 hover:text-white transition-colors"
-            aria-label="뒤로가기"
+            aria-label="?�로가�?
           >
             <ArrowLeft size={18} />
           </button>

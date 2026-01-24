@@ -175,11 +175,11 @@ export default function HomePage() {
             className="quick-card"
             onClick={() => {
               playTabTouch();
-              navigate("/v2/game/dice");
+              navigate("/game/dice");
             }}
           >
             <img
-              src="/v2/assets/01home/1.png"
+              src="/assets/01home/1.png"
               alt="quick access 1"
               className="quick-card-img"
             />
@@ -188,11 +188,11 @@ export default function HomePage() {
             className="quick-card"
             onClick={() => {
               playTabTouch();
-              navigate("/v2/game/roulette");
+              navigate("/game/roulette");
             }}
           >
             <img
-              src="/v2/assets/01home/2.png"
+              src="/assets/01home/2.png"
               alt="quick access 2"
               className="quick-card-img"
             />
@@ -201,11 +201,11 @@ export default function HomePage() {
             className="quick-card"
             onClick={() => {
               playTabTouch();
-              navigate("/v2/game/lottery");
+              navigate("/game/lottery");
             }}
           >
             <img
-              src="/v2/assets/01home/3.png"
+              src="/assets/01home/3.png"
               alt="quick access 3"
               className="quick-card-img"
             />
@@ -214,11 +214,11 @@ export default function HomePage() {
             className="quick-card"
             onClick={() => {
               playTabTouch();
-              navigate("/v2/game");
+              navigate("/game");
             }}
           >
             <img
-              src="/v2/assets/01home/8.png"
+              src="/assets/01home/8.png"
               alt="quick access 4"
               className="quick-card-img"
             />

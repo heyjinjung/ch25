@@ -60,11 +60,11 @@ const SeasonOpsBoard: React.FC = () => {
                     <Calendar className="h-8 w-8 text-admin-text-muted" />
                 </div>
                 <div>
-                    <h3 className="text-admin-subtitle text-admin-text-primary">진행 중인 시즌 없음</h3>
-                    <p className="text-admin-body text-admin-text-secondary mt-1">새로운 시즌을 예약하거나 활성화해주세요.</p>
+                    <h3 className="text-admin-subtitle text-admin-text-primary">진행 중인 ?�즌 ?�음</h3>
+                    <p className="text-admin-body text-admin-text-secondary mt-1">?�로???�즌???�약?�거???�성?�해주세??</p>
                 </div>
                 <button className="btn-admin-primary mt-2">
-                    시즌 관리 바로가기
+                    ?�즌 관�?바로가�?
                 </button>
             </div>
         );
@@ -98,12 +98,12 @@ const SeasonOpsBoard: React.FC = () => {
                                         D-{timeLeft.days}
                                     </span>
                                     <span className="text-lg text-zinc-500 font-light ml-2">
-                                        {timeLeft.hours}시간 남음
+                                        {timeLeft.hours}?�간 ?�음
                                     </span>
                                 </>
                             ) : (
                                 <span className="text-4xl font-light text-zinc-500 tracking-tight">
-                                    시즌 종료
+                                    ?�즌 종료
                                 </span>
                             )}
                         </div>
@@ -124,7 +124,7 @@ const SeasonOpsBoard: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex justify-between text-[10px] font-light text-zinc-500">
-                        <span>시작 {dayjs(activeSeason.start_date).format("YYYY-MM-DD")}</span>
+                        <span>?�작 {dayjs(activeSeason.start_date).format("YYYY-MM-DD")}</span>
                         <span>종료 {dayjs(activeSeason.end_date).format("YYYY-MM-DD")}</span>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ const SeasonOpsBoard: React.FC = () => {
                 <div className="flex flex-col gap-2 p-4 rounded-xl border border-white/5 bg-white/[0.02]">
                     <div className="flex items-center gap-2">
                         <Gift className="w-3.5 h-3.5 text-zinc-400" />
-                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">전체 보상</span>
+                        <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">?�체 보상</span>
                     </div>
                     <span className="text-2xl font-black text-zinc-200">
                         {totalRewardsValue.toLocaleString()}
@@ -151,7 +151,7 @@ const SeasonOpsBoard: React.FC = () => {
                         <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">참여</span>
                     </div>
                     <span className="text-2xl font-black text-zinc-200">--</span>
-                    <span className="text-[10px] text-zinc-600">활성 플레이어</span>
+                    <span className="text-[10px] text-zinc-600">?�성 ?�레?�어</span>
                 </div>
             </div>
         </div>

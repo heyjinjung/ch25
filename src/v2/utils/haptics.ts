@@ -1,4 +1,4 @@
-// Minimal V2 haptics util — keeps parity with V1 `tryHaptic` behaviour.
+// Minimal V2 haptics util ??keeps parity with V1 `tryHaptic` behaviour.
 export const tryHaptic = (duration = 20): void => {
   try {
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {

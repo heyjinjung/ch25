@@ -26,34 +26,34 @@ const normalizeStock = (value: unknown): number | null => {
 
 const prizeSchema = z.object({
   id: z.number().optional(),
-  label: z.string().min(1, "상품명을 입력하세요"),
-  weight: z.number().int().nonnegative("가중치는 0 이상이어야 합니다"),
-  stock: z.preprocess(normalizeStock, z.number().int().nonnegative("재고는 0 이상이어야 합니다").nullable()),
-  reward_type: z.string().min(1, "보상 타입을 선택하세요"),
-  reward_value: z.number().int().nonnegative("보상 값은 0 이상이어야 합니다"),
+  label: z.string().min(1, "?�품명을 ?�력?�세??),
+  weight: z.number().int().nonnegative("가중치??0 ?�상?�어???�니??),
+  stock: z.preprocess(normalizeStock, z.number().int().nonnegative("?�고??0 ?�상?�어???�니??).nullable()),
+  reward_type: z.string().min(1, "보상 ?�?�을 ?�택?�세??),
+  reward_value: z.number().int().nonnegative("보상 값�? 0 ?�상?�어???�니??),
   is_active: z.boolean().default(true),
 });
 
 const lotterySchema = z
   .object({
-    name: z.string().min(1, "이름을 입력하세요"),
+    name: z.string().min(1, "?�름???�력?�세??),
     is_active: z.boolean().default(false),
-    max_daily_plays: z.number().int().nonnegative("0이면 무제한입니다"),
-    prizes: z.array(prizeSchema).min(1, "상품은 1개 이상 추가하세요"),
+    max_daily_plays: z.number().int().nonnegative("0?�면 무제?�입?�다"),
+    prizes: z.array(prizeSchema).min(1, "?�품?� 1�??�상 추�??�세??),
   })
   .refine((value) => {
     const labels = value.prizes.map((p) => p.label.trim());
     return new Set(labels).size === labels.length;
   }, {
-    message: "상품명이 중복될 수 없습니다",
+    message: "?�품명이 중복?????�습?�다",
     path: ["prizes"],
   })
   .refine((value) => value.prizes.some((p) => p.is_active && p.weight > 0), {
-    message: "활성 상품 중 가중치가 0보다 큰 항목이 1개 이상 필요합니다",
+    message: "?�성 ?�품 �?가중치가 0보다 ????��??1�??�상 ?�요?�니??,
     path: ["prizes"],
   })
   .refine((value) => value.prizes.reduce((sum, p) => sum + p.weight, 0) > 0, {
-    message: "전체 가중치 합은 0보다 커야 합니다",
+    message: "?�체 가중치 ?��? 0보다 커야 ?�니??,
     path: ["prizes"],
   });
 
@@ -63,17 +63,17 @@ const mapErrorDetail = (error: unknown): string => {
   const detail = (error as any)?.response?.data?.detail;
   if (typeof detail === "string") {
     const map: Record<string, string> = {
-      LOTTERY_CONFIG_NOT_FOUND: "복권 설정을 찾을 수 없습니다.",
-      INVALID_LOTTERY_WEIGHT: "가중치는 0 이상이어야 합니다.",
-      INVALID_LOTTERY_STOCK: "재고는 0 이상 또는 빈칸(무제한)입니다.",
-      DUPLICATE_PRIZE_LABEL: "상품명이 중복되었습니다.",
-      NO_ACTIVE_PRIZE: "활성 상품(가중치>0)이 1개 이상 필요합니다.",
-      ZERO_TOTAL_WEIGHT: "전체 가중치 합은 0보다 커야 합니다.",
-      INVALID_LOTTERY_CONFIG: "복권 설정 값이 올바르지 않습니다.",
+      LOTTERY_CONFIG_NOT_FOUND: "복권 ?�정??찾을 ???�습?�다.",
+      INVALID_LOTTERY_WEIGHT: "가중치??0 ?�상?�어???�니??",
+      INVALID_LOTTERY_STOCK: "?�고??0 ?�상 ?�는 빈칸(무제???�니??",
+      DUPLICATE_PRIZE_LABEL: "?�품명이 중복?�었?�니??",
+      NO_ACTIVE_PRIZE: "?�성 ?�품(가중치>0)??1�??�상 ?�요?�니??",
+      ZERO_TOTAL_WEIGHT: "?�체 가중치 ?��? 0보다 커야 ?�니??",
+      INVALID_LOTTERY_CONFIG: "복권 ?�정 값이 ?�바르�? ?�습?�다.",
     };
     return map[detail] ?? detail;
   }
-  return (error as any)?.message ?? "요청 처리 중 오류가 발생했습니다.";
+  return (error as any)?.message ?? "?�청 처리 �??�류가 발생?�습?�다.";
 };
 
 const getProbabilityInfo = (weight: number, totalWeight: number) => {
@@ -96,7 +96,7 @@ const getProbabilityInfo = (weight: number, totalWeight: number) => {
   let chipClass: string;
 
   if (percent >= 30) {
-    label = "자주";
+    label = "?�주";
     textClass = "text-emerald-400";
     barClass = "bg-emerald-500";
     chipClass = "bg-emerald-500/10 text-emerald-400";
@@ -106,17 +106,17 @@ const getProbabilityInfo = (weight: number, totalWeight: number) => {
     barClass = "bg-admin-brand";
     chipClass = "bg-admin-brand/10 text-admin-brand";
   } else if (percent >= 5) {
-    label = "희귀";
+    label = "?��?";
     textClass = "text-amber-400";
     barClass = "bg-amber-500";
     chipClass = "bg-amber-500/10 text-amber-400";
   } else if (percent >= 1) {
-    label = "매우 희귀";
+    label = "매우 ?��?";
     textClass = "text-rose-400";
     barClass = "bg-rose-500";
     chipClass = "bg-rose-500/10 text-rose-400";
   } else {
-    label = "전설";
+    label = "?�설";
     textClass = "text-admin-brand";
     barClass = "bg-admin-brand";
     chipClass = "bg-admin-brand/20 text-admin-brand shadow-[0_0_10px_rgba(99,102,241,0.3)]";
@@ -187,7 +187,7 @@ const LotteryConfigPage: React.FC = () => {
       editing ? updateLotteryConfig(editing.id, payload) : createLotteryConfig(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "lottery"] });
-      addToast("저장 완료", "success");
+      addToast("?�???�료", "success");
       closeModal();
     },
     onError: (err) => {
@@ -251,7 +251,7 @@ const LotteryConfigPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32 gap-4">
         <RefreshCw className="h-10 w-10 text-admin-brand animate-spin" />
-        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">복권 시스템 데이터 동기화 중...</span>
+        <span className="text-sm font-bold text-zinc-500 uppercase tracking-widest">복권 ?�스???�이???�기??�?..</span>
       </div>
     );
   }
@@ -261,13 +261,13 @@ const LotteryConfigPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-zinc-500 text-sm font-medium">
-            <span>시스템 관리</span>
+            <span>?�스??관�?/span>
             <ChevronRight size={12} />
-            <span className="text-zinc-300">복권 설정</span>
+            <span className="text-zinc-300">복권 ?�정</span>
           </div>
           <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
             <Trophy className="text-admin-brand" size={28} />
-            복권 운영 커맨드 센터
+            복권 ?�영 커맨???�터
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -276,14 +276,14 @@ const LotteryConfigPage: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl border border-zinc-700 transition-all text-sm font-bold"
           >
             <RefreshCw size={16} />
-            데이터 새로고침
+            ?�이???�로고침
           </button>
           <button
             onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-admin-brand hover:brightness-110 text-black rounded-xl transition-all text-sm font-black shadow-lg shadow-admin-brand/20"
           >
             <Plus size={16} />
-            새 설정 추가
+            ???�정 추�?
           </button>
         </div>
       </div>
@@ -357,7 +357,7 @@ const LotteryConfigPage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center gap-2 px-2">
           <LayoutGrid className="h-4 w-4 text-admin-brand" />
-          <h2 className="text-base font-black text-white uppercase tracking-wider">복권 운영 설정 목록 (Lottery Fleet)</h2>
+          <h2 className="text-base font-black text-white uppercase tracking-wider">복권 ?�영 ?�정 목록 (Lottery Fleet)</h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -387,7 +387,7 @@ const LotteryConfigPage: React.FC = () => {
                   <button
                     onClick={() => openEdit(config)}
                     className="p-2 text-zinc-500 hover:text-admin-brand hover:bg-admin-brand/10 rounded-lg transition-all"
-                    title="설정 편집"
+                    title="?�정 ?�집"
                   >
                     <Edit3 size={20} />
                   </button>
@@ -413,7 +413,7 @@ const LotteryConfigPage: React.FC = () => {
                               {info.percent.toFixed(1)}%
                             </span>
                             <span className="text-sm font-mono text-zinc-500">
-                              Stock: {(prize.stock === null || prize.stock === undefined) ? '∞' : prize.stock.toLocaleString()}
+                              Stock: {(prize.stock === null || prize.stock === undefined) ? '?? : prize.stock.toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -440,8 +440,8 @@ const LotteryConfigPage: React.FC = () => {
           {(configs ?? []).length === 0 && (
             <div className="md:col-span-2 py-24 flex flex-col items-center justify-center border-2 border-dashed border-zinc-800 rounded-[32px] opacity-40 grayscale hover:grayscale-0 transition-all">
               <Trophy size={48} className="text-zinc-600 mb-4" />
-              <p className="text-sm font-bold text-zinc-500">운영 중인 복권 설정이 없습니다.</p>
-              <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">새 설정을 추가하여 엔진을 가동하세요.</p>
+              <p className="text-sm font-bold text-zinc-500">?�영 중인 복권 ?�정???�습?�다.</p>
+              <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">???�정??추�??�여 ?�진??가?�하?�요.</p>
             </div>
           )}
         </div>
@@ -464,16 +464,16 @@ const LotteryConfigPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-white tracking-tight">
-                    {editing ? "복권 엔진 메커니즘 수정" : "신규 복권 메커니즘 구축"}
+                    {editing ? "복권 ?�진 메커?�즘 ?�정" : "?�규 복권 메커?�즘 구축"}
                   </h3>
-                  <p className="text-xs text-zinc-500 font-medium">{editing ? editing.name : "데이터베이스에 동기화될 새로운 구성을 입력하세요"}</p>
+                  <p className="text-xs text-zinc-500 font-medium">{editing ? editing.name : "?�이?�베?�스???�기?�될 ?�로??구성???�력?�세??}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={closeModal}
                 className="p-2 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded-lg transition-all"
-                aria-label="모달 닫기"
+                aria-label="모달 ?�기"
               >
                 <X size={20} />
               </button>
@@ -482,17 +482,17 @@ const LotteryConfigPage: React.FC = () => {
             <form onSubmit={onSubmit} className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">엔진 고유 식별 명칭</label>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">?�진 고유 ?�별 명칭</label>
                   <input
                     type="text"
                     className="w-full h-12 bg-zinc-900/80 border border-zinc-800 rounded-xl px-4 text-sm text-white focus:border-admin-brand focus:ring-1 focus:ring-admin-brand/20 outline-none transition-all"
-                    placeholder="예: 2024 신년 특별 복권"
+                    placeholder="?? 2024 ?�년 ?�별 복권"
                     {...form.register("name")}
                   />
                   {form.formState.errors.name?.message && <p className="text-[10px] text-rose-500 font-bold mt-1 ml-1">{form.formState.errors.name.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">일일 총 참여 제한 (0=무제한)</label>
+                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">?�일 �?참여 ?�한 (0=무제??</label>
                   <input
                     type="number"
                     className="w-full h-12 bg-zinc-900/80 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none transition-all"
@@ -510,14 +510,14 @@ const LotteryConfigPage: React.FC = () => {
                   />
                   <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-admin-brand peer-checked:after:bg-white"></div>
                 </label>
-                <span className="text-xs font-bold text-zinc-300">엔진 즉시 활성화 (Operation Status: Live)</span>
+                <span className="text-xs font-bold text-zinc-300">?�진 즉시 ?�성??(Operation Status: Live)</span>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Package className="text-admin-brand" size={18} />
-                    <h4 className="text-sm font-black text-white uppercase tracking-widest">배출 상품 풀 구성 (Prize Pool)</h4>
+                    <h4 className="text-sm font-black text-white uppercase tracking-widest">배출 ?�품 ?� 구성 (Prize Pool)</h4>
                   </div>
                   <button
                     type="button"
@@ -534,7 +534,7 @@ const LotteryConfigPage: React.FC = () => {
                     className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-admin-brand rounded-xl border border-admin-brand/30 transition-all text-[10px] font-black uppercase tracking-widest"
                   >
                     <Plus size={14} />
-                    상품 슬롯 추가
+                    ?�품 ?�롯 추�?
                   </button>
                 </div>
 
@@ -555,7 +555,7 @@ const LotteryConfigPage: React.FC = () => {
                       <div key={field.id} className="admin-card bg-zinc-900/20 border-zinc-800/80 p-5 space-y-4 hover:border-zinc-700 transition-all group">
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
                           <div className="lg:col-span-3 space-y-1.5">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">상품명</label>
+                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�품�?/label>
                             <input
                               type="text"
                               className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white focus:border-admin-brand outline-none"
@@ -587,7 +587,7 @@ const LotteryConfigPage: React.FC = () => {
                           </div>
 
                           <div className="lg:col-span-2 space-y-1.5">
-                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">재고 (Empty=∞)</label>
+                            <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">?�고 (Empty=??</label>
                             <input
                               type="number"
                               className="w-full h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-4 text-sm text-white font-mono focus:border-admin-brand outline-none"
@@ -597,7 +597,7 @@ const LotteryConfigPage: React.FC = () => {
 
                           <div className="lg:col-span-2 flex items-center gap-2">
                             <div className="flex-1 space-y-1.5">
-                              <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">보상 설정</label>
+                              <label className="text-[10px] font-black text-zinc-500 uppercase ml-1">보상 ?�정</label>
                               <div className="flex gap-2">
                                 <div className="flex-1 relative">
                                   <select
@@ -611,7 +611,7 @@ const LotteryConfigPage: React.FC = () => {
                                   >
                                     {!REWARD_TYPES.some((rt) => rt.value === form.watch(`prizes.${idx}.reward_type`)) && (
                                       <option value={form.getValues(`prizes.${idx}.reward_type`)}>
-                                        ⚠️ 알 수 없음 ({form.getValues(`prizes.${idx}.reward_type`)})
+                                        ?�️ ?????�음 ({form.getValues(`prizes.${idx}.reward_type`)})
                                       </option>
                                     )}
                                     {REWARD_TYPES.map((rt) => (
@@ -626,13 +626,13 @@ const LotteryConfigPage: React.FC = () => {
                                 </div>
                                 <input
                                   type="number"
-                                  placeholder="수량"
+                                  placeholder="?�량"
                                   className="w-20 h-11 bg-zinc-900 border border-zinc-800 rounded-xl px-3 text-xs text-white font-mono focus:border-admin-brand outline-none"
                                   {...form.register(`prizes.${idx}.reward_value`, { valueAsNumber: true })}
                                 />
                               </div>
                               {!REWARD_TYPES.some((rt) => rt.value === form.watch(`prizes.${idx}.reward_type`)) && (
-                                <p className="text-[9px] text-rose-400 font-bold ml-1">전역 동기화되지 않은 타입입니다. 수정이 필요합니다.</p>
+                                <p className="text-[9px] text-rose-400 font-bold ml-1">?�역 ?�기?�되지 ?��? ?�?�입?�다. ?�정???�요?�니??</p>
                               )}
                             </div>
                           </div>
@@ -650,7 +650,7 @@ const LotteryConfigPage: React.FC = () => {
                               type="button"
                               onClick={() => prizesField.remove(idx)}
                               className="p-2 text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all"
-                              title="삭제"
+                              title="??��"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -678,7 +678,7 @@ const LotteryConfigPage: React.FC = () => {
                 className="px-8 py-2.5 bg-admin-brand hover:brightness-110 text-black rounded-xl text-sm font-black shadow-lg shadow-admin-brand/20 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {mutation.isPending ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
-                {editing ? "시스템 구성 업데이트" : "시스템 구성 즉시 배포"}
+                {editing ? "?�스??구성 ?�데?�트" : "?�스??구성 즉시 배포"}
               </button>
             </div>
           </div>

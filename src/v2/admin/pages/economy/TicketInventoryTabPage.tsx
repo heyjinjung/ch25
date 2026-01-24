@@ -17,14 +17,14 @@ export default function TicketInventoryTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Ticket className="w-4 h-4" />
-              티켓 관리
+              ?�켓 관�?
             </TabsTrigger>
             <TabsTrigger
               value="inventory"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Package className="w-4 h-4" />
-              인벤토리 관리
+              ?�벤?�리 관�?
             </TabsTrigger>
           </TabsList>
         </div>

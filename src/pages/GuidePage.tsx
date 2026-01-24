@@ -11,20 +11,20 @@ const Header: React.FC = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#d2fd9c]">
             <span className="text-xl font-bold text-[#394508]">J</span>
           </div>
-          <h1 className="text-xl font-bold md:text-2xl">CC카지노 이벤트</h1>
+          <h1 className="text-xl font-bold md:text-2xl">CC카�????�벤??/h1>
         </div>
         <div className="flex items-center gap-2 text-sm font-bold">
           <Link
             to="/season-pass"
             className="hidden rounded-full bg-[#d2fd9c] px-3 py-2 text-[#394508] transition hover:bg-opacity-90 md:block"
           >
-            내 보상 확인하기
+            ??보상 ?�인?�기
           </Link>
           <Link
             to="/landing"
             className="rounded-full border border-[#d2fd9c] bg-[#394508] px-4 py-2 text-white transition hover:bg-opacity-90"
           >
-            지금 시작하기
+            지�??�작?�기
           </Link>
         </div>
       </div>
@@ -38,31 +38,31 @@ const IntroSection: React.FC = () => {
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-3/5 md:pr-10">
           <h2 className="mb-4 text-2xl font-bold leading-tight md:text-3xl lg:text-4xl">
-            씨씨에 입금(충전)하고
+            ?�씨???�금(충전)?�고
             <br />
-            이 앱에서 보상 받으세요
+            ???�에??보상 받으?�요
           </h2>
           <p className="mb-6 text-lg font-medium">
-            1) 씨씨 충전(입금) → 2) 티켓/레벨 생성 → 3) 게임/미션 → 4) 금고/보상 확인
+            1) ?�씨 충전(?�금) ??2) ?�켓/?�벨 ?�성 ??3) 게임/미션 ??4) 금고/보상 ?�인
           </p>
           <div className="mb-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">결과 즉시</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">입금 기반 누적</span>
-            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">1분 따라하기</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">?�금 기반 ?�적</span>
+            <span className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508]">1�??�라?�기</span>
           </div>
-          <p className="mb-6 text-sm text-gray-300">처음이세요? 1분이면 끝입니다.</p>
+          <p className="mb-6 text-sm text-gray-300">처음?�세?? 1분이�??�입?�다.</p>
           <div className="flex flex-wrap gap-3">
             <Link
               to="/landing"
               className="rounded-full bg-[#d2fd9c] px-6 py-3 text-base font-bold text-[#394508] transition hover:bg-opacity-90"
             >
-              지금 시작하기
+              지�??�작?�기
             </Link>
             <a
               href="#quick-guide"
               className="rounded-full border border-white px-6 py-3 text-base font-bold text-white transition hover:bg-white hover:bg-opacity-10"
             >
-              1분 가이드
+              1�?가?�드
             </a>
           </div>
         </div>
@@ -94,8 +94,8 @@ const CoreActionSection: React.FC = () => {
     <section className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-8 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">초보자 가이드</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">이렇게 하면 됩니다</h2>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">초보??가?�드</span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">?�렇�??�면 ?�니??/h2>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="rounded-xl border-l-4 border-[#394508] bg-gray-50 p-6">
@@ -103,14 +103,14 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(104,255,132)]">
                 1
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">씨씨 이용 내역 연동(선택)</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">?�씨 ?�용 ?�역 ?�동(?�택)</h3>
             </div>
             <p className="mb-4 text-gray-700">
-              씨씨에서 이용한 기록이 있으면, 앱의 누적/레벨/티켓 반영이 더 정확해집니다. 처음에는 체험 티켓으로도 바로 시작할 수 있어요.
+              ?�씨?�서 ?�용??기록???�으�? ?�의 ?�적/?�벨/?�켓 반영?????�확?�집?�다. 처음?�는 체험 ?�켓?�로??바로 ?�작?????�어??
             </p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 금고 화면에 있는 “씨씨카지노 충전하기” 버튼을 이용하면 편합니다.
+                <span className="font-bold text-[#394508]">TIP</span>: 금고 ?�면???�는 ?�씨?�카지??충전?�기??버튼???�용?�면 ?�합?�다.
               </p>
             </div>
           </div>
@@ -119,12 +119,12 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(82,255,133)]">
                 2
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">티켓 확인/체험</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">?�켓 ?�인/체험</h3>
             </div>
-            <p className="mb-4 text-gray-700">티켓이 있어야 게임이 됩니다. 티켓이 0장이면 체험 티켓(TRIAL_TOKEN)으로 먼저 맛볼 수 있어요.</p>
+            <p className="mb-4 text-gray-700">?�켓???�어??게임???�니?? ?�켓??0?�이�?체험 ?�켓(TRIAL_TOKEN)?�로 먼�? 맛볼 ???�어??</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 티켓 0이면 “체험 티켓 3장 받기” 안내가 뜰 수 있어요.
+                <span className="font-bold text-[#394508]">TIP</span>: ?�켓 0?�면 ?�체???�켓 3??받기???�내가 ?????�어??
               </p>
             </div>
           </div>
@@ -133,12 +133,12 @@ const CoreActionSection: React.FC = () => {
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-black text-xl font-bold text-[rgb(82,255,133)]">
                 3
               </div>
-              <h3 className="text-xl font-bold text-[#282d1a]">게임/미션 → 보상</h3>
+              <h3 className="text-xl font-bold text-[#282d1a]">게임/미션 ??보상</h3>
             </div>
-            <p className="mb-4 text-gray-700">게임/미션을 하면 다이아가 쌓이고, 상점에서 교환권을 사서 인벤토리에서 사용하면 티켓/키를 만들 수 있어요.</p>
+            <p className="mb-4 text-gray-700">게임/미션???�면 ?�이?��? ?�이�? ?�점?�서 교환권을 ?�서 ?�벤?�리?�서 ?�용?�면 ?�켓/?��? 만들 ???�어??</p>
             <div className="rounded-lg border border-gray-200 bg-white p-3">
               <p className="text-sm text-gray-600">
-                <span className="font-bold text-[#394508]">TIP</span>: 레벨/금고에서 “오늘 누적이 반영됐는지” 확인해보세요.
+                <span className="font-bold text-[#394508]">TIP</span>: ?�벨/금고?�서 ?�오???�적??반영?�는지???�인?�보?�요.
               </p>
             </div>
           </div>
@@ -176,7 +176,7 @@ const GameCard: React.FC<GameCardProps> = ({ title, description, beginnerTip, ic
         to={to}
         className="w-full rounded-lg bg-[rgb(38,103,44)] py-3 text-center font-bold text-white transition hover:bg-opacity-90"
       >
-        플레이하기
+        ?�레?�하�?
       </Link>
     </motion.div>
   );
@@ -186,8 +186,8 @@ const GamesSection: React.FC = () => {
   const games: GameCardProps[] = [
     {
       title: "룰렛",
-      description: "돌리고 보상 받기. 보상은 룰렛 설정값 기준으로 지급",
-      beginnerTip: "보상은 룰렛 설정값 기준으로 확인",
+      description: "?�리�?보상 받기. 보상?� 룰렛 ?�정�?기�??�로 지�?,
+      beginnerTip: "보상?� 룰렛 ?�정�?기�??�로 ?�인",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -197,9 +197,9 @@ const GamesSection: React.FC = () => {
       to: "/roulette",
     },
     {
-      title: "주사위 배틀",
-      description: "승부 결과에 따라 보상 지급(설정값 + 골든아워 조건 반영)",
-      beginnerTip: "보상은 설정값/골든아워 기준으로 반영",
+      title: "주사??배�?",
+      description: "?��? 결과???�라 보상 지�??�정�?+ 골든?�워 조건 반영)",
+      beginnerTip: "보상?� ?�정�?골든?�워 기�??�로 반영",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -210,8 +210,8 @@ const GamesSection: React.FC = () => {
     },
     {
       title: "복권",
-      description: "긁거나 뽑아서 매일 달라지는 당첨상품/보상포인트 확인",
-      beginnerTip: "당첨 결과는 즉시 공개",
+      description: "긁거??뽑아??매일 ?�라지???�첨?�품/보상?�인???�인",
+      beginnerTip: "?�첨 결과??즉시 공개",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="white">
           <path
@@ -230,9 +230,9 @@ const GamesSection: React.FC = () => {
     <section id="games" className="bg-gray-50 px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">게임 소개</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">씨씨지민 코드만 가능한 보상</h2>
-          <p className="mt-2 mx-auto max-w-2xl text-gray-600">티켓만 있으면 바로 플레이 가능한 게임들로 포인트를 모으세요.</p>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">게임 ?�개</span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">?�씨지�?코드�?가?�한 보상</h2>
+          <p className="mt-2 mx-auto max-w-2xl text-gray-600">?�켓�??�으�?바로 ?�레??가?�한 게임?�로 ?�인?��? 모으?�요.</p>
         </div>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {games.map((game) => (
@@ -241,16 +241,16 @@ const GamesSection: React.FC = () => {
         </div>
 
         <div className="mt-10 rounded-xl border border-[#d2fd9c] bg-[#f3f7eb] p-6 shadow-sm">
-          <h3 className="mb-3 text-lg font-bold text-[#394508]">티켓이 없으면 어떻게 하나요?</h3>
+          <h3 className="mb-3 text-lg font-bold text-[#394508]">?�켓???�으�??�떻�??�나??</h3>
           <p className="mb-4 text-gray-800">
-            씨씨에서 이용한 기록이 있으면 누적/레벨/티켓 반영이 더 안정적입니다. 티켓이 0장이라면 체험 티켓으로 먼저 시작할 수도 있어요.
+            ?�씨?�서 ?�용??기록???�으�??�적/?�벨/?�켓 반영?????�정?�입?�다. ?�켓??0?�이?�면 체험 ?�켓?�로 먼�? ?�작???�도 ?�어??
           </p>
           <div className="flex flex-wrap gap-3">
             <a
               href="#point-system"
               className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
             >
-              연동/티켓 흐름 보기
+              ?�동/?�켓 ?�름 보기
             </a>
             <a
               href="https://t.me/jm956"
@@ -258,7 +258,7 @@ const GamesSection: React.FC = () => {
               rel="noopener noreferrer"
               className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:border-[#d2fd9c] hover:bg-[#d2fd9c] hover:text-[#394508] focus:ring-2 focus:ring-[#d2fd9c] focus:ring-offset-2"
             >
-              운영자에게 문의하기
+              ?�영?�에�?문의?�기
             </a>
           </div>
         </div>
@@ -272,78 +272,78 @@ const NewFeaturesSection: React.FC = () => {
     <section id="new-features" className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">새 기능</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">알아두면 좋은 것들</h2>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">??기능</span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">?�아?�면 좋�? 것들</h2>
         </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* 데일리 미션 */}
+          {/* ?�일�?미션 */}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">데일리 미션</h3>
-            <p className="text-gray-600">매일 주어지는 미션. 완료하면 다이아몬드 보상.</p>
-            <p className="mt-2 text-sm font-bold text-emerald-600">→ 매일 체크하세요</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">?�일�?미션</h3>
+            <p className="text-gray-600">매일 주어지??미션. ?�료?�면 ?�이?�몬??보상.</p>
+            <p className="mt-2 text-sm font-bold text-emerald-600">??매일 체크?�세??/p>
           </div>
 
-          {/* 인벤토리 */}
+          {/* ?�벤?�리 */}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">인벤토리</h3>
-            <p className="text-gray-600">다이아/교환권(바우처)/키를 확인하는 보관함.</p>
-            <p className="mt-2 text-sm font-bold text-blue-600">→ 상단 티켓버튼에서 확인</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">?�벤?�리</h3>
+            <p className="text-gray-600">?�이??교환�?바우�?/?��? ?�인?�는 보�???</p>
+            <p className="mt-2 text-sm font-bold text-blue-600">???�단 ?�켓버튼?�서 ?�인</p>
           </div>
 
-          {/* 상점/교환권 */}
+          {/* ?�점/교환�?*/}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.6 8h13.2L17 13M7 13h10M9 21a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">상점 / 교환권</h3>
-            <p className="text-gray-600">다이아로 교환권을 구매 → 인벤토리에서 사용하면 티켓/키가 지급돼요.</p>
-            <p className="mt-2 text-sm font-bold text-indigo-600">→ 다이아 모아서 교환</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">?�점 / 교환�?/h3>
+            <p className="text-gray-600">?�이?�로 교환권을 구매 ???�벤?�리?�서 ?�용?�면 ?�켓/?��? 지급돼??</p>
+            <p className="mt-2 text-sm font-bold text-indigo-600">???�이??모아??교환</p>
           </div>
 
-          {/* 체험 티켓 */}
+          {/* 체험 ?�켓 */}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">체험 티켓</h3>
-            <p className="text-gray-600">티켓이 0장일 때 TRIAL_TOKEN 3장을 받아 [체험] 탭에서 다이아를 모을 수 있어요.</p>
-            <p className="mt-2 text-sm font-bold text-teal-600">→ 맛보기/연습용</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">체험 ?�켓</h3>
+            <p className="text-gray-600">?�켓??0?�일 ??TRIAL_TOKEN 3?�을 받아 [체험] ??��???�이?��? 모을 ???�어??</p>
+            <p className="mt-2 text-sm font-bold text-teal-600">??맛보�??�습??/p>
           </div>
 
-          {/* 골드키/다이아키 */}
+          {/* 골드???�이?�키 */}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">골드키 / 다이아키</h3>
-            <p className="text-gray-600">특별 보상 열 때 사용. 레벨 보상으로 획득.</p>
-            <p className="mt-2 text-sm font-bold text-yellow-600">→ 레벨 올리면 받음</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">골드??/ ?�이?�키</h3>
+            <p className="text-gray-600">?�별 보상 ?????�용. ?�벨 보상?�로 ?�득.</p>
+            <p className="mt-2 text-sm font-bold text-yellow-600">???�벨 ?�리�?받음</p>
           </div>
 
-          {/* 텔레그램 전용 */}
+          {/* ?�레그램 ?�용 */}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-sky-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 1 0 24 12.056A12.014 12.014 0 0 0 11.944 0Zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635Z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">텔레그램 전용</h3>
-            <p className="text-gray-600">자동 로그인. 알림 받기. 빠른 접속.</p>
-            <p className="mt-2 text-sm font-bold text-sky-600">→ 텔레그램으로만 접속</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">?�레그램 ?�용</h3>
+            <p className="text-gray-600">?�동 로그?? ?�림 받기. 빠른 ?�속.</p>
+            <p className="mt-2 text-sm font-bold text-sky-600">???�레그램?�로�??�속</p>
           </div>
 
-          {/* 메시지 보관함 */}
+          {/* 메시지 보�???*/}
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
             <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-500 text-white">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             </div>
-            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">메시지 보관함</h3>
-            <p className="text-gray-600">운영자 공지, 보상 알림 확인.</p>
-            <p className="mt-2 text-sm font-bold text-purple-600">→ 하단 메뉴에서 확인</p>
+            <h3 className="mb-2 text-lg font-bold text-[#282d1a]">메시지 보�???/h3>
+            <p className="text-gray-600">?�영??공�?, 보상 ?�림 ?�인.</p>
+            <p className="mt-2 text-sm font-bold text-purple-600">???�단 메뉴?�서 ?�인</p>
           </div>
 
           {/* 금고 차감 규칙 */}
@@ -352,8 +352,8 @@ const NewFeaturesSection: React.FC = () => {
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
             </div>
             <h3 className="mb-2 text-lg font-bold text-red-700">주의: 금고 차감</h3>
-            <p className="text-gray-600">룰렛/주사위 보상은 설정값 기준으로 금고에 반영됩니다.</p>
-            <p className="mt-2 text-sm font-bold text-red-600">→ 보상은 각 게임 설정값 기준으로 확인</p>
+            <p className="text-gray-600">룰렛/주사??보상?� ?�정�?기�??�로 금고??반영?�니??</p>
+            <p className="mt-2 text-sm font-bold text-red-600">??보상?� �?게임 ?�정�?기�??�로 ?�인</p>
           </div>
         </div>
       </div>
@@ -366,14 +366,14 @@ const TeamBattleSection: React.FC = () => {
     <section id="team-battle" className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row">
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pr-10">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">새로운 시스템</span>
-          <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">팀 배틀전</h2>
-          <p className="mb-6 text-gray-700">우리 팀이 이길수록 보상이 커집니다. 내 플레이가 팀 점수에 기여돼요.</p>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">?�로???�스??/span>
+          <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">?� 배�???/h2>
+          <p className="mb-6 text-gray-700">?�리 ?�???�길?�록 보상??커집?�다. ???�레?��? ?� ?�수??기여?�요.</p>
           <ul className="mb-6 space-y-3">
             {[
-              "내가 플레이하면 팀 점수가 오릅니다.",
-              "상대 팀과 점수 차가 벌어지면 알림/배너로 알려줍니다.",
-              "시즌제 랭킹 초기화, 최대 5명까지 한 팀 가능",
+              "?��? ?�레?�하�??� ?�수가 ?�릅?�다.",
+              "?��? ?��??�수 차�? 벌어지�??�림/배너�??�려줍니??",
+              "?�즌????�� 초기?? 최�? 5명까지 ???� 가??,
             ].map((text) => (
               <li key={text} className="flex items-start">
                 <svg xmlns="http://www.w3.org/2000/svg" className="mr-2 h-5 w-5 text-[#394508]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -388,23 +388,23 @@ const TeamBattleSection: React.FC = () => {
               to="/team-battle"
               className="rounded-full bg-[#394508] px-4 py-2 text-sm font-bold text-white transition hover:bg-opacity-90"
             >
-              팀배틀 보러가기
+              ?�배�? 보러가�?
             </Link>
             <Link
               to="/team-battle"
               className="rounded-full border border-[#394508] px-4 py-2 text-sm font-bold text-[#394508] transition hover:bg-[#394508] hover:bg-opacity-5"
             >
-              현재 순위 새로고침
+              ?�재 ?�위 ?�로고침
             </Link>
           </div>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#394508] text-xl font-bold text-white md:h-28 md:w-28">A팀</div>
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#5d5d5d] text-xl font-bold text-white md:h-28 md:w-28">B팀</div>
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black text-xl font-bold text-white md:h-28 md:w-28">C팀</div>
-              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#394508] text-xl font-bold text-[#394508] md:h-28 md:w-28">D팀</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#394508] text-xl font-bold text-white md:h-28 md:w-28">A?�</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#5d5d5d] text-xl font-bold text-white md:h-28 md:w-28">B?�</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black text-xl font-bold text-white md:h-28 md:w-28">C?�</div>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#394508] text-xl font-bold text-[#394508] md:h-28 md:w-28">D?�</div>
             </div>
             <motion.div
               className="absolute -right-4 -top-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#d2fd9c] text-xl font-bold text-[#394508] shadow-lg"
@@ -425,45 +425,45 @@ const MyVaultSection: React.FC = () => {
     <section id="my-vault" className="bg-gray-50 px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto flex max-w-screen-xl flex-col items-center md:flex-row-reverse">
         <div className="mb-10 w-full md:mb-0 md:w-1/2 md:pl-10">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추가 동기부여</span>
-          <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">내 금고</h2>
-          <p className="mb-6 text-gray-700">씨씨에서 이용한 기록이 있으면 누적이 더 정확히 반영될 수 있어요. 금고에서 상태를 확인하고, 필요하면 씨씨로 이동할 수 있어요.</p>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">추�? ?�기부??/span>
+          <h2 className="mt-1 mb-4 text-2xl font-bold text-[#282d1a] md:text-3xl">??금고</h2>
+          <p className="mb-6 text-gray-700">?�씨?�서 ?�용??기록???�으�??�적?????�확??반영?????�어?? 금고?�서 ?�태�??�인?�고, ?�요?�면 ?�씨�??�동?????�어??</p>
           <div className="mb-6 space-y-4">
             {[
-              "씨씨 이용 내역 연동(선택) → 이 앱 누적/레벨 반영",
-              "게임 결과에 따라 금고가 변동될 수 있음",
-              "금고에서 ‘씨씨카지노 충전하기’로 이동 가능",
+              "?�씨 ?�용 ?�역 ?�동(?�택) ???????�적/?�벨 반영",
+              "게임 결과???�라 금고가 변?�될 ???�음",
+              "금고?�서 ?�씨?�카지??충전?�기?�로 ?�동 가??,
             ].map((text) => (
               <div key={text} className="rounded-lg bg-white p-4 shadow-sm">
                 <p className="text-gray-700">
-                  <span className="font-bold text-[#394508]">✓</span> {text}
+                  <span className="font-bold text-[#394508]">??/span> {text}
                 </p>
               </div>
             ))}
           </div>
           <Link to="/vault" className="rounded-full bg-[#282d1a] px-6 py-3 text-lg font-bold text-white transition hover:bg-opacity-90">
-            내 금고/충전 안내 보기
+            ??금고/충전 ?�내 보기
           </Link>
         </div>
         <div className="flex w-full justify-center md:w-1/2">
           <div className="relative w-full max-w-sm">
             <div className="rounded-2xl border border-[#d2fd9c] bg-white p-6 shadow-xl">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-[#282d1a]">내 금고머니</h3>
+                <h3 className="text-xl font-bold text-[#282d1a]">??금고머니</h3>
                 <div className="rounded-full bg-[#d2fd9c] px-3 py-1 text-sm font-bold text-[#394508] shadow">Lv.5</div>
               </div>
               <div className="mb-6 rounded-xl bg-[#f3f7eb] p-4">
-                <div className="mb-1 text-sm text-[#394508]">총 보유머니</div>
-                <div className="text-3xl font-bold text-[#282d1a]">12,500원</div>
+                <div className="mb-1 text-sm text-[#394508]">�?보유머니</div>
+                <div className="text-3xl font-bold text-[#282d1a]">12,500??/div>
               </div>
               <div className="mb-6 grid grid-cols-2 gap-4">
                 <div className="rounded-xl bg-[#f3f7eb] p-3">
-                  <div className="mb-1 text-xs text-[#394508]">이번 주 적립</div>
-                  <div className="text-xl font-bold text-[#282d1a]">2,340원</div>
+                  <div className="mb-1 text-xs text-[#394508]">?�번 �??�립</div>
+                  <div className="text-xl font-bold text-[#282d1a]">2,340??/div>
                 </div>
                 <div className="rounded-xl bg-[#f3f7eb] p-3">
-                  <div className="mb-1 text-xs text-[#394508]">다음 레벨까지</div>
-                  <div className="text-xl font-bold text-[#282d1a]">4,500원</div>
+                  <div className="mb-1 text-xs text-[#394508]">?�음 ?�벨까�?</div>
+                  <div className="text-xl font-bold text-[#282d1a]">4,500??/div>
                 </div>
               </div>
               <a
@@ -472,7 +472,7 @@ const MyVaultSection: React.FC = () => {
                 rel="noopener noreferrer"
                 className="w-full rounded-xl bg-[#394508] py-3 text-center font-bold text-white transition hover:bg-opacity-90 focus:ring-2 focus:ring-[#394508] focus:ring-offset-2"
               >
-                씨씨카지노 충전하기
+                ?�씨카�???충전?�기
               </a>
             </div>
             <motion.div
@@ -494,40 +494,40 @@ const PointSystemSection: React.FC = () => {
     <section id="point-system" className="bg-[#282d1a] px-4 py-12 text-white md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#d2fd9c]">보상 시스템</span>
-          <h2 className="mt-1 text-2xl font-bold md:text-3xl">포인트는 이렇게 쌓입니다</h2>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#d2fd9c]">보상 ?�스??/span>
+          <h2 className="mt-1 text-2xl font-bold md:text-3xl">?�인?�는 ?�렇�??�입?�다</h2>
         </div>
 
         <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {["씨씨 이용 내역 연동", "티켓/레벨 반영", "게임/미션 & 보상"].map((title, index) => (
+          {["?�씨 ?�용 ?�역 ?�동", "?�켓/?�벨 반영", "게임/미션 & 보상"].map((title, index) => (
             <div key={title} className="rounded-xl bg-[rgb(0,0,0)] bg-opacity-10 p-6 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#d2fd9c] text-2xl font-bold text-[#394508]">
                 {index + 1}
               </div>
               <h3 className="mb-2 text-xl font-bold">{title}</h3>
               <p className="text-gray-300">
-                {index === 0 && "씨씨에서 이용한 기록이 있으면 이 앱의 누적/레벨 반영이 더 정확해집니다."}
-                {index === 1 && "누적/레벨이 반영되면 티켓/보상 흐름을 더 쉽게 이해하고 따라갈 수 있어요."}
-                {index === 2 && "게임/미션으로 다이아를 모아 상점/인벤토리에서 교환권을 사용하고, 레벨/금고를 확인하세요."}
+                {index === 0 && "?�씨?�서 ?�용??기록???�으�????�의 ?�적/?�벨 반영?????�확?�집?�다."}
+                {index === 1 && "?�적/?�벨??반영?�면 ?�켓/보상 ?�름?????�게 ?�해?�고 ?�라�????�어??"}
+                {index === 2 && "게임/미션?�로 ?�이?��? 모아 ?�점/?�벤?�리?�서 교환권을 ?�용?�고, ?�벨/금고�??�인?�세??"}
               </p>
             </div>
           ))}
         </div>
 
         <div className="rounded-xl bg-white bg-opacity-10 p-6 md:p-8">
-          <h3 className="mb-6 text-xl font-bold">자주 묻는 레벨포인트 질문</h3>
+          <h3 className="mb-6 text-xl font-bold">?�주 묻는 ?�벨?�인??질문</h3>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
-              <h4 className="mb-2 font-bold text-[#d2fd9c]">레벨포인트란?</h4>
-              <p className="text-sm text-gray-300">레벨 진행도에 반영되는 값입니다. 게임 플레이와(필요 시) 씨씨사이트 이용 기록에 따라 반영될 수 있어요.</p>
+              <h4 className="mb-2 font-bold text-[#d2fd9c]">?�벨?�인?��??</h4>
+              <p className="text-sm text-gray-300">?�벨 진행?�에 반영?�는 값입?�다. 게임 ?�레?��?(?�요 ?? ?�씨?�이???�용 기록???�라 반영?????�어??</p>
             </div>
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
-              <h4 className="mb-2 font-bold text-[#d2fd9c]">레벨 보상이란?</h4>
-              <p className="text-sm text-gray-300">레벨 달성 시 받을 수 있는 특별 혜택입니다. 레벨이 높을수록 더 좋은 보상을 받습니다.</p>
+              <h4 className="mb-2 font-bold text-[#d2fd9c]">?�벨 보상?��??</h4>
+              <p className="text-sm text-gray-300">?�벨 ?�성 ??받을 ???�는 ?�별 ?�택?�니?? ?�벨???�을?�록 ??좋�? 보상??받습?�다.</p>
             </div>
             <div className="rounded-lg bg-[rgb(5,39,16)] bg-opacity-10 p-4">
-              <h4 className="mb-2 font-bold text-[#d2fd9c]">팀배틀 점수란?</h4>
-              <p className="text-sm text-gray-300">레벨포인트 기반으로 산정되는 팀 경쟁용 점수입니다. 내 활동이 팀 전체의 순위에 기여합니다.</p>
+              <h4 className="mb-2 font-bold text-[#d2fd9c]">?�배�? ?�수?�?</h4>
+              <p className="text-sm text-gray-300">?�벨?�인??기반?�로 ?�정?�는 ?� 경쟁???�수?�니?? ???�동???� ?�체???�위??기여?�니??</p>
             </div>
           </div>
         </div>
@@ -541,9 +541,9 @@ const QuickGuideSection: React.FC = () => {
     <section id="quick-guide" className="bg-white px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-screen-xl">
         <div className="mb-10 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">빠른 시작</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">1분 따라하기</h2>
-          <p className="mt-2 mx-auto max-w-2xl text-gray-600">순서대로 누르면 됩니다.</p>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">빠른 ?�작</span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">1�??�라?�기</h2>
+          <p className="mt-2 mx-auto max-w-2xl text-gray-600">?�서?��??�르�??�니??</p>
         </div>
 
         <div className="mx-auto max-w-3xl">
@@ -564,7 +564,7 @@ const QuickGuideSection: React.FC = () => {
             to="/landing"
             className="rounded-full bg-[#394508] px-8 py-3 text-lg font-bold text-white transition hover:bg-opacity-90"
           >
-            지금 시작하기
+            지�??�작?�기
           </Link>
         </div>
       </div>
@@ -575,9 +575,9 @@ const QuickGuideSection: React.FC = () => {
 const StepContent: React.FC<{ step: number }> = ({ step }) => {
   const data = {
     1: {
-      title: "씨씨카지노 이용(선택)",
-      desc: "씨씨에서 이용한 기록이 있으면 누적/레벨/티켓 반영이 더 안정적입니다. 다만 필수는 아니며, 처음에는 체험 티켓으로도 시작할 수 있어요.",
-      tip: "금고 페이지에서 ‘씨씨카지노 충전하기’를 누르면 이동할 수 있어요.",
+      title: "?�씨카�????�용(?�택)",
+      desc: "?�씨?�서 ?�용??기록???�으�??�적/?�벨/?�켓 반영?????�정?�입?�다. ?�만 ?�수???�니�? 처음?�는 체험 ?�켓?�로???�작?????�어??",
+      tip: "금고 ?�이지?�서 ?�씨?�카지??충전?�기?��? ?�르�??�동?????�어??",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -589,9 +589,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     2: {
-      title: "티켓 확인(없으면 체험 티켓)",
-      desc: "게임에는 티켓이 필요합니다. 티켓이 0장이면 체험 티켓(TRIAL_TOKEN)으로 먼저 시작할 수 있어요.",
-      tip: "티켓 0이면 ‘체험 티켓 3장 받기’ 안내가 뜰 수 있어요.",
+      title: "?�켓 ?�인(?�으�?체험 ?�켓)",
+      desc: "게임?�는 ?�켓???�요?�니?? ?�켓??0?�이�?체험 ?�켓(TRIAL_TOKEN)?�로 먼�? ?�작?????�어??",
+      tip: "?�켓 0?�면 ?�체???�켓 3??받기???�내가 ?????�어??",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
@@ -599,9 +599,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     3: {
-      title: "체험(또는 일반) 게임 1판 플레이",
-      desc: "버튼 한 번이면 바로 시작됩니다. 결과는 즉시 표시돼요.",
-      tip: "체험은 룰렛의 [체험] 탭에서 TRIAL_TOKEN으로 플레이할 수 있어요.",
+      title: "체험(?�는 ?�반) 게임 1???�레??,
+      desc: "버튼 ??번이�?바로 ?�작?�니?? 결과??즉시 ?�시?�요.",
+      tip: "체험?� 룰렛??[체험] ??��??TRIAL_TOKEN?�로 ?�레?�할 ???�어??",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path
@@ -613,9 +613,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     4: {
-      title: "미션 → 다이아 → 상점 → 교환권",
-      desc: "미션을 하면 다이아를 얻습니다. 다이아로 상점에서 교환권을 사고, 인벤토리에서 사용하면 티켓/키가 생겨요.",
-      tip: "다이아(미션) → 교환권(상점) → 사용(인벤토리) 순서로 기억하세요.",
+      title: "미션 ???�이?????�점 ??교환�?,
+      desc: "미션???�면 ?�이?��? ?�습?�다. ?�이?�로 ?�점?�서 교환권을 ?�고, ?�벤?�리?�서 ?�용?�면 ?�켓/?��? ?�겨??",
+      tip: "?�이??미션) ??교환�??�점) ???�용(?�벤?�리) ?�서�?기억?�세??",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -628,9 +628,9 @@ const StepContent: React.FC<{ step: number }> = ({ step }) => {
       ),
     },
     5: {
-      title: "레벨/금고에서 누적 확인",
-      desc: "레벨과 금고에서 오늘 누적이 잘 반영되는지 확인하세요.",
-      tip: "누적이 이상하면 운영자에게 화면 캡처로 문의해 주세요.",
+      title: "?�벨/금고?�서 ?�적 ?�인",
+      desc: "?�벨�?금고?�서 ?�늘 ?�적????반영?�는지 ?�인?�세??",
+      tip: "?�적???�상?�면 ?�영?�에�??�면 캡처�?문의??주세??",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
           <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
@@ -660,24 +660,24 @@ const FAQSection: React.FC = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const faqs = [
     {
-      question: "씨씨 연동(이용 기록 반영)은 어디서 하나요?",
-      answer: "금고 페이지에서 ‘씨씨카지노 충전하기’ 버튼을 누르면 씨씨 사이트로 이동할 수 있습니다. 이용 후 다시 이 앱으로 돌아오면 반영될 수 있어요.",
+      question: "?�씨 ?�동(?�용 기록 반영)?� ?�디???�나??",
+      answer: "금고 ?�이지?�서 ?�씨?�카지??충전?�기??버튼???�르�??�씨 ?�이?�로 ?�동?????�습?�다. ?�용 ???�시 ???�으�??�아?�면 반영?????�어??",
     },
     {
-      question: "적립된 레벨포인트는 어떻게 확인하나요?",
-      answer: "레벨버튼에서 적립된 레벨포인트와 남은 보상을 확인할 수 있습니다. 레벨별 적립률과 다음 레벨까지 필요한 포인트도 확인 가능합니다.",
+      question: "?�립???�벨?�인?�는 ?�떻�??�인?�나??",
+      answer: "?�벨버튼?�서 ?�립???�벨?�인?��? ?��? 보상???�인?????�습?�다. ?�벨�??�립률과 ?�음 ?�벨까�? ?�요???�인?�도 ?�인 가?�합?�다.",
     },
     {
-      question: "티켓이 0장인데 게임을 못 해요.",
-      answer: "티켓이 0장이면 ‘체험 티켓(TRIAL_TOKEN)’을 받을 수 있는 안내가 뜰 수 있습니다. 체험 티켓으로 [체험] 탭을 먼저 플레이하고, 미션/상점/인벤토리로 이어가 보세요.",
+      question: "?�켓??0?�인??게임??�??�요.",
+      answer: "?�켓??0?�이�??�체???�켓(TRIAL_TOKEN)?�을 받을 ???�는 ?�내가 ?????�습?�다. 체험 ?�켓?�로 [체험] ??�� 먼�? ?�레?�하�? 미션/?�점/?�벤?�리�??�어가 보세??",
     },
     {
-      question: "팀 배틀전은 어떻게 참여하나요?",
-      answer: "팀 배틀전 메뉴에서 미스터리 팀배정에 참여할 수 있습니다. 최대 5명까지 한 팀으로 참여 가능하며, 주간 랭킹에 따라 팀원 모두에게 보상이 지급됩니다.",
+      question: "?� 배�??��? ?�떻�?참여?�나??",
+      answer: "?� 배�???메뉴?�서 미스?�리 ?�배정??참여?????�습?�다. 최�? 5명까지 ???�?�로 참여 가?�하�? 주간 ??��???�라 ?�??모두?�게 보상??지급됩?�다.",
     },
     {
-      question: "금고머니는 어떻게 전환하나요?",
-      answer: "내금고 서비스에서 금고 머니 전환 및 출금 신청을 할 수 있습니다. 최소 전환 가능 머니는 10,000P이며, 신청 후 1일 내에 처리됩니다.",
+      question: "금고머니???�떻�??�환?�나??",
+      answer: "?�금�??�비?�에??금고 머니 ?�환 �?출금 ?�청???????�습?�다. 최소 ?�환 가??머니??10,000P?�며, ?�청 ??1???�에 처리?�니??",
     },
   ];
 
@@ -685,8 +685,8 @@ const FAQSection: React.FC = () => {
     <section className="bg-[rgb(210,210,210)] px-4 py-12 md:px-8 lg:px-12">
       <div className="mx-auto max-w-3xl">
         <div className="mb-10 text-center">
-          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">도움말</span>
-          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">자주 묻는 질문</h2>
+          <span className="text-sm font-bold uppercase tracking-wider text-[#394508]">?��?�?/span>
+          <h2 className="mt-1 text-2xl font-bold text-[#282d1a] md:text-3xl">?�주 묻는 질문</h2>
         </div>
         {faqs.map((faq, index) => (
           <div key={faq.question} className="mb-4 overflow-hidden rounded-lg border border-gray-100 bg-white">
@@ -716,7 +716,7 @@ const FAQSection: React.FC = () => {
 
 const GuidePage: React.FC = () => {
   return (
-    <GamePageShell title="씨씨지민 가이드" subtitle="1분만에 시작">
+    <GamePageShell title="?�씨지�?가?�드" subtitle="1분만???�작">
       <div className="flex flex-col gap-12 text-gray-800">
         <Header />
         <IntroSection />

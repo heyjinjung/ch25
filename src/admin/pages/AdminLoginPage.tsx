@@ -16,8 +16,8 @@ import { setAdminToken } from "../../auth/adminAuth";
 import { adminApi } from "../api/httpClient";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "아이디를 입력하세요."),
-  password: z.string().min(1, "비밀번호를 입력하세요."),
+  username: z.string().min(1, "?�이?��? ?�력?�세??"),
+  password: z.string().min(1, "비�?번호�??�력?�세??"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -53,7 +53,7 @@ const AdminLoginPage: React.FC = () => {
       }
     } catch (err: any) {
       setServerError(
-        err.response?.data?.detail || "인증에 실패했습니다. 자격 증명을 확인하세요."
+        err.response?.data?.detail || "?�증???�패?�습?�다. ?�격 증명???�인?�세??"
       );
     } finally {
       setIsLoading(false);
@@ -71,7 +71,7 @@ const AdminLoginPage: React.FC = () => {
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-admin-sidebar border border-admin-border mb-4 shadow-admin-card">
             <ShieldCheck className="h-8 w-8 text-admin-brand" />
           </div>
-          <h1 className="text-3xl font-black text-admin-text-primary tracking-tight">관리자 로그인</h1>
+          <h1 className="text-3xl font-black text-admin-text-primary tracking-tight">관리자 로그??/h1>
         </header>
 
         <main className="admin-card-premium p-8 rounded-[2rem] border border-admin-border shadow-admin-card relative overflow-hidden">
@@ -88,7 +88,7 @@ const AdminLoginPage: React.FC = () => {
                 <input
                   {...register("username")}
                   type="text"
-                  placeholder="아이디"
+                  placeholder="?�이??
                   className={`admin-input w-full pl-5 pr-4 h-14 bg-admin-sidebar/50 focus:bg-admin-sidebar transition-all ${errors.username ? "border-admin-danger ring-1 ring-admin-danger/20" : ""
                     }`}
                   disabled={isLoading}
@@ -111,7 +111,7 @@ const AdminLoginPage: React.FC = () => {
                 <input
                   {...register("password")}
                   type="password"
-                  placeholder="비밀번호"
+                  placeholder="비�?번호"
                   className={`admin-input w-full pl-5 pr-4 h-14 bg-admin-sidebar/50 focus:bg-admin-sidebar transition-all ${errors.password ? "border-admin-danger ring-1 ring-admin-danger/20" : ""
                     }`}
                   disabled={isLoading}
@@ -141,7 +141,7 @@ const AdminLoginPage: React.FC = () => {
                 <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
                 <>
-                  로그인
+                  로그??
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}

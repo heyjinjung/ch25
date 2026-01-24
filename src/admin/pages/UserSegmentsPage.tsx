@@ -139,14 +139,14 @@ const UserSegmentsPage: React.FC = () => {
     <section className="admin-page-container space-y-10 pb-20">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-admin-title text-admin-text-primary">세그먼트 관리</h1>
+          <h1 className="text-admin-title text-admin-text-primary">?�그먼트 관�?/h1>
         </div>
         <button
           onClick={() => queryClient.invalidateQueries({ queryKey: ["admin", "segments"] })}
           disabled={isLoading}
           className="btn-admin-secondary flex items-center gap-2 px-5 py-2.5 h-auto disabled:opacity-50"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> 새로고침
+          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /> ?�로고침
         </button>
       </header>
 
@@ -154,12 +154,12 @@ const UserSegmentsPage: React.FC = () => {
       <div className="admin-card-premium p-6 flex items-center gap-4 border-b-2 border-admin-brand/30">
         <Search className="h-5 w-5 text-admin-brand" />
         <div className="flex-1">
-          <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">서버 검색 (ID/Nickname)</label>
+          <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">?�버 검??(ID/Nickname)</label>
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="서버에서 특정 회원 한 명을 찾으려면 입력 후 잠시 기다리세요..."
+            placeholder="?�버?�서 ?�정 ?�원 ??명을 찾으?�면 ?�력 ???�시 기다리세??.."
             className="admin-input h-11 w-full bg-zinc-900/50"
           />
         </div>
@@ -171,7 +171,7 @@ const UserSegmentsPage: React.FC = () => {
           onClick={() => setSelectedSegment(null)}
           className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === null ? "ring-2 ring-admin-brand bg-zinc-800/30" : ""}`}
         >
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">총 회원 수</p>
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">�??�원 ??/p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-white">{segments?.length || 0}</p>
             <Users className="h-5 w-5 text-zinc-500 mb-1" />
@@ -181,7 +181,7 @@ const UserSegmentsPage: React.FC = () => {
           onClick={() => setSelectedSegment("VIP")}
           className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === "VIP" ? "ring-2 ring-amber-500 bg-amber-500/5" : ""}`}
         >
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">VIP 회원</p>
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">VIP ?�원</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-amber-500">{segments?.filter(s => s.segment === "VIP").length || 0}</p>
             <TrendingUp className="h-5 w-5 text-amber-500 mb-1" />
@@ -191,7 +191,7 @@ const UserSegmentsPage: React.FC = () => {
           onClick={() => setSelectedSegment("ACTIVE")}
           className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 ${selectedSegment === "ACTIVE" ? "ring-2 ring-emerald-500 bg-emerald-500/5" : ""}`}
         >
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">활성 회원</p>
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">?�성 ?�원</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-emerald-400">{segments?.filter(s => s.segment === "ACTIVE").length || 0}</p>
             <CheckCircle2 className="h-5 w-5 text-emerald-400 mb-1" />
@@ -201,7 +201,7 @@ const UserSegmentsPage: React.FC = () => {
           onClick={() => setSelectedSegment("CHURN")}
           className={`admin-card-premium p-6 flex flex-col justify-between h-32 cursor-pointer transition-all hover:bg-zinc-800/50 border-l-4 border-rose-500 ${selectedSegment === "CHURN" ? "ring-2 ring-rose-500 bg-rose-500/5" : ""}`}
         >
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">이탈 회원</p>
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">?�탈 ?�원</p>
           <div className="flex items-end justify-between">
             <p className="text-3xl font-black text-rose-500">{segments?.filter(s => s.segment === "CHURN").length || 0}</p>
             <AlertCircle className="h-5 w-5 text-rose-500 mb-1" />
@@ -213,39 +213,39 @@ const UserSegmentsPage: React.FC = () => {
       <div className="admin-card-premium p-6 space-y-6">
         <div className="flex flex-wrap items-end gap-6">
           <div className="flex-1 min-w-[240px]">
-            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">로컬 리스트 검색</label>
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">로컬 리스??검??/label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
               <input
                 type="text"
                 value={localSearchTerm}
                 onChange={(e) => setLocalSearchTerm(e.target.value)}
-                placeholder="현재 리스트 내 식별자 검색..."
+                placeholder="?�재 리스?????�별??검??.."
                 className="admin-input h-10 w-full pl-10"
               />
             </div>
           </div>
 
           <div className="w-48">
-            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">현재 세그먼트</label>
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">?�재 ?�그먼트</label>
             <select
               value={selectedSegment || ""}
               onChange={(e) => setSelectedSegment(e.target.value || null)}
               className="admin-input h-10 w-full text-sm"
             >
-              <option value="">전체 보기</option>
+              <option value="">?�체 보기</option>
               {segmentOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
 
           <div className="w-48">
-            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">추천 세그먼트</label>
+            <label className="text-admin-meta font-black text-admin-text-secondary uppercase tracking-widest block mb-2">추천 ?�그먼트</label>
             <select
               value={recommendedSegmentFilter || ""}
               onChange={(e) => setRecommendedSegmentFilter(e.target.value || null)}
               className="admin-input h-10 w-full text-sm"
             >
-              <option value="">전체 보기</option>
+              <option value="">?�체 보기</option>
               {segmentOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
             </select>
           </div>
@@ -254,13 +254,13 @@ const UserSegmentsPage: React.FC = () => {
             onClick={resetFilters}
             className="h-10 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-bold uppercase tracking-wider transition-colors border border-zinc-700"
           >
-            필터 초기화
+            ?�터 초기??
           </button>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-zinc-500">
           <Users className="h-3 w-3" />
-          <span>필터링된 결과: <b className="text-admin-brand">{filteredSegments.length}</b> / {segments?.length || 0} 명</span>
+          <span>?�터링된 결과: <b className="text-admin-brand">{filteredSegments.length}</b> / {segments?.length || 0} �?/span>
         </div>
       </div>
 
@@ -269,7 +269,7 @@ const UserSegmentsPage: React.FC = () => {
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-4">
             <RefreshCw className="h-8 w-8 text-admin-brand animate-spin" />
-            <p className="text-admin-meta text-admin-text-secondary">데이터 로딩 중...</p>
+            <p className="text-admin-meta text-admin-text-secondary">?�이??로딩 �?..</p>
           </div>
         ) : (
           <div className="overflow-x-auto custom-scrollbar">
@@ -283,37 +283,37 @@ const UserSegmentsPage: React.FC = () => {
                   </th>
                   <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("nickname")}>
                     <div className="flex items-center gap-1">
-                      식별자 {getSortIcon("nickname")}
+                      ?�별??{getSortIcon("nickname")}
                     </div>
                   </th>
                   <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("segment")}>
                     <div className="flex items-center gap-1">
-                      현재 세그먼트 {getSortIcon("segment")}
+                      ?�재 ?�그먼트 {getSortIcon("segment")}
                     </div>
                   </th>
                   <th className="px-4 py-3 text-sm font-bold text-zinc-400 uppercase tracking-wider cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("recommended_segment")}>
                     <div className="flex items-center gap-1">
-                      추천 세그먼트 {getSortIcon("recommended_segment")}
+                      추천 ?�그먼트 {getSortIcon("recommended_segment")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("total_plays")}>
                     <div className="flex items-center justify-end gap-1">
-                      게임 플레이 {getSortIcon("total_plays")}
+                      게임 ?�레??{getSortIcon("total_plays")}
                     </div>
                   </th>
                   <th className="px-4 py-3.5 text-right text-sm font-bold text-zinc-400 cursor-pointer group hover:text-zinc-200" onClick={() => handleSort("last_login_at")}>
                     <div className="flex items-center justify-end gap-1">
-                      최근 활동 {getSortIcon("last_login_at")}
+                      최근 ?�동 {getSortIcon("last_login_at")}
                     </div>
                   </th>
-                  <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400">액션</th>
+                  <th className="px-4 py-3.5 text-center text-sm font-bold text-zinc-400">?�션</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSegments.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-admin-text-muted text-sm">
-                      조회된 회원이 없습니다.
+                      조회???�원???�습?�다.
                     </td>
                   </tr>
                 ) : (
@@ -332,7 +332,7 @@ const UserSegmentsPage: React.FC = () => {
                             type="text"
                             value={newSegment}
                             onChange={(e) => setNewSegment(e.target.value)}
-                            placeholder="새 세그먼트"
+                            placeholder="???�그먼트"
                             className="admin-input h-9 w-32 text-xs"
                             autoFocus
                           />
@@ -376,7 +376,7 @@ const UserSegmentsPage: React.FC = () => {
                             <button
                               onClick={() => handleUpdate(seg.user_id)}
                               disabled={updateMutation.isPending}
-                              title="세그먼트 저장"
+                              title="?�그먼트 ?�??
                               className="p-2 rounded-lg hover:bg-admin-accent/10 text-admin-accent transition-colors disabled:opacity-50"
                             >
                               <CheckCircle2 className="h-4 w-4" />
@@ -398,7 +398,7 @@ const UserSegmentsPage: React.FC = () => {
                               setEditingUserId(seg.user_id);
                               setNewSegment(seg.segment);
                             }}
-                            title="세그먼트 수정"
+                            title="?�그먼트 ?�정"
                             className="p-2 rounded-lg hover:bg-admin-brand/10 text-admin-brand transition-colors"
                           >
                             <Edit3 className="h-4 w-4" />

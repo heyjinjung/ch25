@@ -48,13 +48,13 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
     const val = Number(amount) || 0;
 
     if (upper.includes('POINT') || upper === 'CASH' || upper === 'CURRENCY') {
-      return `${val.toLocaleString()} 원`;
+      return `${val.toLocaleString()} ??;
     }
     if (upper.includes('GAME_XP')) {
       return `${val.toLocaleString()} XP`;
     }
     if (upper.includes('TICKET')) {
-      return `${val.toLocaleString()} 티켓`;
+      return `${val.toLocaleString()} ?�켓`;
     }
     return `${val.toLocaleString()}`;
   };
@@ -138,7 +138,7 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
                       />
                     </motion.div>
                     <h3 className="text-white text-2xl font-black italic tracking-tighter uppercase drop-shadow-lg">
-                      {isScratching ? '열리는 중...' : '탭하여 확인'}
+                      {isScratching ? '?�리??�?..' : '??��???�인'}
                     </h3>
                     <p className="mt-1.5 text-amber-200/90 text-[9px] font-black tracking-[0.2em] uppercase drop-shadow-md">
                       {theme.name} PREMIUM TICKET
@@ -177,7 +177,7 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
                     >
-                      축하합니다!
+                      축하?�니??
                     </motion.span>
 
                     {/* No Reward */}
@@ -189,13 +189,13 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.3 }}
                         >
-                          💨
+                          ?��
                         </motion.span>
                         <h2 className="text-white text-2xl font-black tracking-tight uppercase italic">
                           {prize.label}
                         </h2>
                         <p className="mt-2 text-white/40 font-bold uppercase tracking-widest text-[10px]">
-                          다음 기회에!
+                          ?�음 기회??
                         </p>
                       </>
                     ) : (
@@ -256,7 +256,7 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
                       className="text-[10px] font-black tracking-[0.3em] uppercase opacity-70"
                       style={{ color: theme.colors.accent }}
                     >
-                      {isNoReward ? 'TRY AGAIN' : '지급 완료'}
+                      {isNoReward ? 'TRY AGAIN' : '지�??�료'}
                     </p>
                   </div>
                 </motion.div>
@@ -272,11 +272,11 @@ const LotteryCard = ({ prize, isRevealed, isScratching, onScratch }: LotteryCard
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <span className="text-5xl mb-4">🌪️</span>
+                  <span className="text-5xl mb-4">?���?/span>
                   <h3 className="text-white text-xl sm:text-2xl font-black tracking-tight uppercase italic">
-                    다음에 다시!
+                    ?�음???�시!
                   </h3>
-                  <p className="mt-2 text-white/40 font-bold text-sm">운이 따르지 않았네요.</p>
+                  <p className="mt-2 text-white/40 font-bold text-sm">?�이 ?�르지 ?�았?�요.</p>
                 </motion.div>
               )}
             </AnimatePresence>

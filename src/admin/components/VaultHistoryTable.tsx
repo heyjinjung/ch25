@@ -26,22 +26,22 @@ const VaultHistoryTable: React.FC<VaultHistoryTableProps> = ({ user, onClose }) 
                 <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4 bg-zinc-900/50">
                     <div className="space-y-1">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            🏆 금고 적립/사용 내역
+                            ?�� 금고 ?�립/?�용 ?�역
                             <span className="text-sm font-normal text-zinc-400">
                                 (User: {user.nickname || user.telegram_username || user.external_id})
                             </span>
                         </h2>
-                        <p className="text-xs text-zinc-500">최근 100건의 금고 변동 내역을 조회합니다.</p>
+                        <p className="text-xs text-zinc-500">최근 100건의 금고 변???�역??조회?�니??</p>
                         {vaultState && (
                             <div className="flex items-center gap-4 mt-2 pt-2 border-t border-zinc-800/50">
                                 <div className="flex items-center gap-2">
                                     <Vault size={16} className="text-emerald-400" />
                                     <span className="text-sm font-semibold text-emerald-400">
-                                        현재 누적 금고액: {vaultState.locked_balance.toLocaleString()}원
+                                        ?�재 ?�적 금고?? {vaultState.locked_balance.toLocaleString()}??
                                     </span>
                                 </div>
                                 <div className="text-xs text-zinc-500">
-                                    (사용가능: {vaultState.available_balance.toLocaleString()}원)
+                                    (?�용가?? {vaultState.available_balance.toLocaleString()}??
                                 </div>
                             </div>
                         )}
@@ -58,19 +58,19 @@ const VaultHistoryTable: React.FC<VaultHistoryTableProps> = ({ user, onClose }) 
                 <div className="flex-1 overflow-auto p-0 custom-scrollbar bg-zinc-900">
                     {isLoading && (
                         <div className="flex h-64 items-center justify-center text-zinc-500">
-                            데이터를 불러오는 중입니다...
+                            ?�이?��? 불러?�는 중입?�다...
                         </div>
                     )}
 
                     {isError && (
                         <div className="flex h-64 items-center justify-center text-red-400">
-                            내역을 불러오는데 실패했습니다.
+                            ?�역??불러?�는???�패?�습?�다.
                         </div>
                     )}
 
                     {!isLoading && !isError && history && history.length === 0 && (
                         <div className="flex h-64 items-center justify-center text-zinc-500">
-                            기록된 내역이 없습니다.
+                            기록???�역???�습?�다.
                         </div>
                     )}
 

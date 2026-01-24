@@ -1,5 +1,5 @@
-// src/v2/pages/home/components/GameCardGrid.tsx
-// 게임 카드 그리드 (2열 x 3행)
+// src/pages/home/components/GameCardGrid.tsx
+// 게임 카드 그리??(2??x 3??
 import { GameCard } from "./GameCard";
 import type { ComponentProps } from "react";
 
@@ -15,14 +15,14 @@ import lotteryEffect from "../../../assets/svg/10.svg";
 import teamBattleFixed from "../../../assets/svg/11.svg";
 import teamBattleMain from "../../../assets/svg/12.svg";
 
-// 게임 데이터
+// 게임 ?�이??
 const GAMES: ComponentProps<typeof GameCard>[] = [
   {
     id: "roulette",
     title: "룰렛경품",
-    icon: "🎰",
+    icon: "?��",
     gradientClass: "bg-transparent",
-    href: "/v2/game/roulette",
+    href: "/game/roulette",
     layers: {
       main: rouletteMain,
       fixed: rouletteFixed,
@@ -33,10 +33,10 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
   },
   {
     id: "dice",
-    title: "주사위게임",
-    icon: "🎲",
+    title: "주사?�게??,
+    icon: "?��",
     gradientClass: "bg-transparent",
-    href: "/v2/game/dice",
+    href: "/game/dice",
     layers: {
       main: diceMain,
       fixed: diceFixed,
@@ -48,12 +48,12 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
   {
     id: "lottery",
     title: "복권",
-    icon: "🎟️",
+    icon: "?���?,
     gradientClass: "bg-transparent",
     badge: "HOT",
     badgeClass: "bg-[#C41E3A]",
     badgePosition: "top-right",
-    href: "/v2/game/lottery",
+    href: "/game/lottery",
     layers: {
       main: lotteryMain,
       fixed: lotteryFixed,
@@ -64,12 +64,12 @@ const GAMES: ComponentProps<typeof GameCard>[] = [
   },
   {
     id: "team-battle",
-    title: "팀배틀",
-    icon: "🤝",
+    title: "?�배�?",
+    icon: "?��",
     gradientClass: "bg-transparent",
     badge: "NEW",
     badgeClass: "bg-[#22C55E]",
-    href: "/v2/team-battle",
+    href: "/team-battle",
     layers: {
       main: teamBattleMain,
       fixed: teamBattleFixed,

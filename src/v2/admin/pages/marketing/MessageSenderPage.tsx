@@ -46,7 +46,7 @@ export default function MessageSenderPage() {
 
   const segmentOptions = useMemo(() => {
     const segments = segmentStats?.segments ?? [];
-    // 안정성을 위해 name 기준, 빈 값 제외
+    // ?�정?�을 ?�해 name 기�?, �?�??�외
     return segments
       .filter((s) => Boolean(s?.name))
       .map(
@@ -87,7 +87,7 @@ export default function MessageSenderPage() {
             className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
           >
             <CheckCircle2 className="w-3 h-3 mr-1" />
-            발송완료
+            발송?�료
           </Badge>
         );
       case "SCHEDULED":
@@ -97,11 +97,11 @@ export default function MessageSenderPage() {
             className="bg-blue-500/10 text-blue-500 border-blue-500/20"
           >
             <Clock className="w-3 h-3 mr-1" />
-            예약중
+            ?�약�?
           </Badge>
         );
       default:
-        return <Badge variant="secondary">임시저장</Badge>;
+        return <Badge variant="secondary">?�시?�??/Badge>;
     }
   };
 
@@ -112,23 +112,23 @@ export default function MessageSenderPage() {
           메시지 발송 (Message Sender)
         </h1>
         <p className="text-sm text-zinc-400">
-          유저 인박스 메시지를 전송합니다.
+          ?��? ?�박??메시지�??�송?�니??
         </p>
       </div>
 
       <div className="space-y-6">
         <Card className="bg-[#18181B] border-white/5">
           <CardHeader>
-            <CardTitle>메시지 작성</CardTitle>
+            <CardTitle>메시지 ?�성</CardTitle>
             <CardDescription>
-              푸시 알림 또는 인박스 메시지를 작성하세요
+              ?�시 ?�림 ?�는 ?�박??메시지�??�성?�세??
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>제목</Label>
+              <Label>?�목</Label>
               <Input
-                placeholder="메시지 제목 입력"
+                placeholder="메시지 ?�목 ?�력"
                 className="bg-black/50 border-white/10"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -136,9 +136,9 @@ export default function MessageSenderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>내용</Label>
+              <Label>?�용</Label>
               <Textarea
-                placeholder="메시지 내용 입력 (최대 500자)"
+                placeholder="메시지 ?�용 ?�력 (최�? 500??"
                 className="bg-black/50 border-white/10 min-h-[150px] resize-none"
                 maxLength={500}
                 value={content}
@@ -150,13 +150,13 @@ export default function MessageSenderPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>발송 대상</Label>
+              <Label>발송 ?�??/Label>
               <Select value={targetSegment} onValueChange={setTargetSegment}>
                 <SelectTrigger className="bg-black/50 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">전체 유저</SelectItem>
+                  <SelectItem value="ALL">?�체 ?��?</SelectItem>
                   {segmentOptions.map((seg) => (
                     <SelectItem key={seg.value} value={seg.value}>
                       {seg.label} ({seg.count.toLocaleString()})
@@ -165,11 +165,11 @@ export default function MessageSenderPage() {
                 </SelectContent>
               </Select>
               <div className="text-xs text-zinc-500">
-                세그먼트 목록은{" "}
+                ?�그먼트 목록?�{" "}
                 <span className="text-zinc-400">
-                  /api/v2/admin/segments/stats
+                  /api/admin/segments/stats
                 </span>{" "}
-                기준입니다.
+                기�??�니??
               </div>
             </div>
 
@@ -180,7 +180,7 @@ export default function MessageSenderPage() {
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold"
               >
                 <Send className="w-4 h-4 mr-2" />
-                {sendMutation.isPending ? "발송 중..." : "즉시 발송"}
+                {sendMutation.isPending ? "발송 �?.." : "즉시 발송"}
               </Button>
             </div>
           </CardContent>
@@ -190,18 +190,18 @@ export default function MessageSenderPage() {
       {/* History Table */}
       <Card className="bg-[#18181B] border-white/5">
         <CardHeader>
-          <CardTitle>발송 내역</CardTitle>
+          <CardTitle>발송 ?�역</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead>제목</TableHead>
-                <TableHead>대상</TableHead>
-                <TableHead>타입</TableHead>
-                <TableHead>발송 수</TableHead>
-                <TableHead>상태</TableHead>
-                <TableHead>생성일</TableHead>
+                <TableHead>?�목</TableHead>
+                <TableHead>?�??/TableHead>
+                <TableHead>?�??/TableHead>
+                <TableHead>발송 ??/TableHead>
+                <TableHead>?�태</TableHead>
+                <TableHead>?�성??/TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -220,7 +220,7 @@ export default function MessageSenderPage() {
                     colSpan={6}
                     className="text-center py-10 text-zinc-500"
                   >
-                    발송 내역이 없습니다.
+                    발송 ?�역???�습?�다.
                   </TableCell>
                 </TableRow>
               ) : (

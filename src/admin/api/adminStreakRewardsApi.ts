@@ -29,7 +29,7 @@ export type StreakRewardUserEventsResponse = {
 };
 
 export async function fetchStreakRewardDailyCounts(day: string): Promise<StreakRewardDailyCountsResponse> {
-  const res = await httpClient.get<StreakRewardDailyCountsResponse>("/admin/api/streak-rewards/daily-counts", {
+  const res = await httpClient.get<StreakRewardDailyCountsResponse>("/api/admin/streak-rewards/daily-counts", {
     params: { day },
   });
   return res.data;
@@ -41,7 +41,7 @@ export async function fetchStreakRewardUserEvents(params: {
   day?: string;
   limit?: number;
 }): Promise<StreakRewardUserEventsResponse> {
-  const res = await httpClient.get<StreakRewardUserEventsResponse>("/admin/api/streak-rewards/user-events", {
+  const res = await httpClient.get<StreakRewardUserEventsResponse>("/api/admin/streak-rewards/user-events", {
     params,
   });
   return res.data;

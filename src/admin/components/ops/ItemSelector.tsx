@@ -12,9 +12,9 @@ type ItemOption = {
 };
 
 const CATEGORY_LABEL: Record<Exclude<ItemCategory, "ALL">, string> = {
-  CURRENCY: "재화",
-  TICKET: "티켓/키",
-  ITEM: "아이템/기타",
+  CURRENCY: "?�화",
+  TICKET: "?�켓/??,
+  ITEM: "?�이??기�?",
 };
 
 function inferCategory(code: string): Exclude<ItemCategory, "ALL"> {
@@ -62,8 +62,8 @@ const ItemSelector: React.FC<ItemSelectorProps> = ({
   value,
   onChange,
   categoryFilter = "ALL",
-  label = "아이템 선택",
-  placeholder = "아이템 검색",
+  label = "?�이???�택",
+  placeholder = "?�이??검??,
   disabled = false,
 }) => {
   const [query, setQuery] = useState<string>("");
@@ -95,7 +95,7 @@ const ItemSelector: React.FC<ItemSelectorProps> = ({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        aria-label={`${label} 검색`}
+        aria-label={`${label} 검??}
       />
       <select
         className="w-full rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs"
@@ -104,8 +104,8 @@ const ItemSelector: React.FC<ItemSelectorProps> = ({
         disabled={disabled}
         aria-label={label}
       >
-        {showEmpty && <option value="">(선택 안 함)</option>}
-        {showUnknown && <option value={value}>{value} (등록되지 않음)</option>}
+        {showEmpty && <option value="">(?�택 ????</option>}
+        {showUnknown && <option value={value}>{value} (?�록?��? ?�음)</option>}
         {Array.from(optionsByCategory.entries()).map(([category, opts]) => (
           <optgroup key={category} label={CATEGORY_LABEL[category]}>
             {opts.map((opt) => (
@@ -117,7 +117,7 @@ const ItemSelector: React.FC<ItemSelectorProps> = ({
         ))}
       </select>
       {showUnknown && (
-        <div className="text-[11px] text-admin-warning">등록되지 않은 코드입니다. 선택 목록을 확인해주세요.</div>
+        <div className="text-[11px] text-admin-warning">?�록?��? ?��? 코드?�니?? ?�택 목록???�인?�주?�요.</div>
       )}
     </div>
   );

@@ -38,17 +38,17 @@ export default function CrisisRadarPage() {
                <ShieldAlert className="w-4 h-4" />
                <span className="text-xs font-bold uppercase tracking-wider">Golden Hour Radar</span>
            </div>
-           <h1 className="text-2xl font-bold tracking-tight">위기 레이더 (Crisis Radar)</h1>
+           <h1 className="text-2xl font-bold tracking-tight">?�기 ?�이??(Crisis Radar)</h1>
            <p className="text-sm text-zinc-400 mt-1">
-             AI가 실시간으로 분석한 이탈 위기 사용자 목록입니다. 즉각적인 개입이 필요할 수 있습니다.
+             AI가 ?�시간으�?분석???�탈 ?�기 ?�용??목록?�니?? 즉각?�인 개입???�요?????�습?�다.
            </p>
         </div>
         <div className="flex gap-2">
             <Button variant="outline" className="border-white/10 text-zinc-300 hover:text-white hover:bg-white/5">
-                 일괄 개입 (Bulk Action)
+                 ?�괄 개입 (Bulk Action)
             </Button>
             <Button className="bg-red-500 text-white hover:bg-red-600">
-                 레이더 감도 설정
+                 ?�이??감도 ?�정
             </Button>
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function CrisisRadarPage() {
       <div className="grid gap-6 md:grid-cols-4">
           <Card className="bg-[#18181B] border-red-500/20 bg-red-500/5">
               <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-bold text-red-400 uppercase tracking-widest">Urgent (심각)</CardTitle>
+                  <CardTitle className="text-xs font-bold text-red-400 uppercase tracking-widest">Urgent (?�각)</CardTitle>
               </CardHeader>
               <CardContent>
                   <div className="text-3xl font-bold text-red-500">{riskyUsers.filter(u => u.riskLevel === 'HIGH').length}</div>

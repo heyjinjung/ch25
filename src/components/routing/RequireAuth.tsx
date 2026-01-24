@@ -37,8 +37,8 @@ const RequireAuth: React.FC = () => {
       .then(async (response) => {
         login(response.access_token, response.user);
 
-        // "신규/기존" 판별은 Telegram 가입 여부가 아니라 외부랭킹 입금 이력(입금액/입금횟수 여부) 기준으로 처리한다.
-        // 기존에는 /new-user/welcome 으로 리다이렉트했으나, 이제는 Landing 페이지에서 모달로 처리하므로 리다이렉트를 제거한다.
+        // "?�규/기존" ?�별?� Telegram 가???��?가 ?�니???��???�� ?�금 ?�력(?�금???�금?�수 ?��?) 기�??�로 처리?�다.
+        // 기존?�는 /new-user/welcome ?�로 리다?�렉?�했?�나, ?�제??Landing ?�이지?�서 모달�?처리?��?�?리다?�렉?��? ?�거?�다.
 
         // If the user landed on a connect-like URL, move them to the main entry.
         if (location.pathname === "/connect" || location.pathname === "/login" || location.pathname === "/") {
@@ -47,7 +47,7 @@ const RequireAuth: React.FC = () => {
       })
       .catch((err) => {
         console.error("[RequireAuth] telegram auth failed", err);
-        setAuthError("텔레그램 인증에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setAuthError("?�레그램 ?�증???�패?�습?�다. ?�시 ???�시 ?�도?�주?�요.");
         didAttemptRef.current = false;
       })
       .finally(() => {
@@ -126,9 +126,9 @@ const RequireAuth: React.FC = () => {
                 {/* Typography */}
                 <div className="space-y-4">
                   <h1 className="text-4xl font-black tracking-tighter text-white uppercase leading-[0.9]">
-                    CC코드지갑<br />
+                    CC코드지�?br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#30FF75] to-[#20E065]">
-                      지민실장
+                      지민실??
                     </span>
                   </h1>
 
@@ -137,7 +137,7 @@ const RequireAuth: React.FC = () => {
                   <div className="text-slate-400 font-medium leading-relaxed text-sm">
                     <p className="mt-2 text-xs text-slate-500">
                       <span className="text-[#30FF75] font-bold text-sm">@{telegramBotUsername}</span><br />
-                      을 통해 접속해주세요.
+                      ???�해 ?�속?�주?�요.
                     </p>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ const RequireAuth: React.FC = () => {
                   className="group/btn relative flex items-center justify-center gap-3 w-full py-4 rounded-lg bg-figma-primary text-white font-bold shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:brightness-110 active:scale-95 uppercase tracking-wide transition-all"
                 >
                   <img src="/assets/icon_telegram_button.png" alt="" className="w-8 h-8 object-contain drop-shadow-lg" />
-                  <span className="text-sm">텔레그램 접속</span>
+                  <span className="text-sm">?�레그램 ?�속</span>
                 </a>
               </div>
             </div>
@@ -190,7 +190,7 @@ const RequireAuth: React.FC = () => {
                   }}
                   className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-black text-white/80 hover:bg-white/10"
                 >
-                  다시 시도
+                  ?�시 ?�도
                 </button>
               </div>
             ) : null}

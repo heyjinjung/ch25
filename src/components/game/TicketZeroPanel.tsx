@@ -17,13 +17,13 @@ const TicketZeroPanel: React.FC<TicketZeroPanelProps> = ({ tokenType }) => {
   if (isLoading) return null;
 
   const value = (configData?.value as any) || {};
-  const title = value.title || `${tokenType}가 부족해요`;
-  const body = value.body || "이용해 주셔서 감사합니다. 지금 이용하시면 바로 이어서 플레이 가능합니다.";
+  const title = value.title || `${tokenType}가 부족해??;
+  const body = value.body || "?�용??주셔??감사?�니?? 지�??�용?�시�?바로 ?�어???�레??가?�합?�다.";
 
-  const primaryLabel = value.primaryCta?.label || value.primary_cta_label || "씨씨 홈";
+  const primaryLabel = value.primaryCta?.label || value.primary_cta_label || "?�씨 ??;
   const primaryUrl = value.primaryCta?.url || value.primary_cta_url || "https://ccc-010.com";
 
-  const secondaryLabel = value.secondaryCta?.label || value.secondary_cta_label || "실장 텔레 문의";
+  const secondaryLabel = value.secondaryCta?.label || value.secondary_cta_label || "?�장 ?�레 문의";
   const secondaryUrl = value.secondaryCta?.url || value.secondary_cta_url || "https://t.me/jm956";
 
   return (

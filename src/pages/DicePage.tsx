@@ -54,15 +54,15 @@ const DicePage: React.FC = () => {
 
   const mapErrorMessage = (err: any) => {
     const code = err?.response?.data?.error?.code;
-    if (code === "NO_FEATURE_TODAY") return "오늘 설정된 이벤트가 없습니다.";
+    if (code === "NO_FEATURE_TODAY") return "?�늘 ?�정???�벤?��? ?�습?�다.";
     if (code === "INVALID_FEATURE_SCHEDULE")
-      return "이벤트 스케줄이 잘못되었습니다. 지민이에게 문의하세요.";
-    if (code === "FEATURE_DISABLED") return "이벤트가 비활성화되었습니다.";
+      return "?�벤???��?줄이 ?�못?�었?�니?? 지민이?�게 문의?�세??";
+    if (code === "FEATURE_DISABLED") return "?�벤?��? 비활?�화?�었?�니??";
     if (code === "DAILY_LIMIT_REACHED")
-      return "오늘 참여 횟수를 모두 사용했습니다.";
+      return "?�늘 참여 ?�수�?모두 ?�용?�습?�다.";
     if (code === "NOT_ENOUGH_TOKENS")
-      return "티켓이 부족합니다. 지민이에게 충전해달라고 떼써보세요!";
-    return "배틀 준비 중 오류가 발생했습니다. 다시 시도해주세요.";
+      return "?�켓??부족합?�다. 지민이?�게 충전?�달?�고 ?�써보세??";
+    return "배�? 준�?�??�류가 발생?�습?�다. ?�시 ?�도?�주?�요.";
   };
 
   const isUnlimited = data?.remaining_plays === 0;
@@ -107,12 +107,12 @@ const DicePage: React.FC = () => {
           playDiceLose(); // Sound: Defeat (User Requested)
         }
 
-        // [UX FIX] 중복 모달 방지: 보상 획득 시 보상 토스트가 뜨므로 금고 적립 모달은 최소화
+        // [UX FIX] 중복 모달 방�?: 보상 ?�득 ??보상 ?�스?��? ?��?�?금고 ?�립 모달?� 최소??
         if (response.eventSeeded && response.eventSeedAmount) {
           setVaultModal({
             open: true,
             amount: response.eventSeedAmount,
-            title: "이벤트 첫 참여 시드 보너스",
+            title: "?�벤??�?참여 ?�드 보너??,
           });
         } else if ((response.vaultEarn ?? 0) !== 0) {
           setVaultModal({ open: true, amount: response.vaultEarn! });
@@ -156,7 +156,7 @@ const DicePage: React.FC = () => {
             <div className="h-full w-full animate-spin rounded-full border-4 border-figma-accent/70 border-t-transparent" />
           </div>
           <p className="text-lg font-black italic tracking-widest text-white/40 uppercase">
-            전투 데이터 불러오는 중...
+            ?�투 ?�이??불러?�는 �?..
           </p>
         </div>
       );
@@ -172,9 +172,9 @@ const DicePage: React.FC = () => {
               alt="Error"
             />
           </div>
-          <p className="text-2xl font-black text-white">데이터 동기화 실패</p>
+          <p className="text-2xl font-black text-white">?�이???�기???�패</p>
           <p className="mt-2 text-white/40">
-            통신 상태를 확인하고 다시 입장해주세요.
+            ?�신 ?�태�??�인?�고 ?�시 ?�장?�주?�요.
           </p>
         </div>
       );
@@ -256,7 +256,7 @@ const DicePage: React.FC = () => {
         <div className="relative z-20">
           {!!playMutation.error && !isRolling && (
             <div className="mb-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-2 text-center text-xs font-bold text-red-200">
-              <span className="mr-2">🚨</span>{" "}
+              <span className="mr-2">?��</span>{" "}
               {mapErrorMessage(playMutation.error)}
             </div>
           )}
@@ -306,7 +306,7 @@ const DicePage: React.FC = () => {
                     const label =
                       formatRewardLine(normalized, 0)?.text ?? rewardToast.type;
                     const hint = isGifticonRewardType(normalized)
-                      ? "지급대기/보상함"
+                      ? "지급�?�?보상??
                       : undefined;
                     return hint ? `${label} (${hint})` : label;
                   })()}
@@ -321,7 +321,7 @@ const DicePage: React.FC = () => {
 
   return (
     <FeatureGate feature="DICE">
-      <GamePageShell title="주사위 배틀" px="p-3 sm:p-5">
+      <GamePageShell title="주사??배�?" px="p-3 sm:p-5">
         <div className="max-w-5xl mx-auto">{content}</div>
       </GamePageShell>
 
@@ -349,7 +349,7 @@ const DicePage: React.FC = () => {
               const res = await requestTrialGrant({ token_type: "DICE_TOKEN" });
               if (res.result === "OK" && res.granted > 0) {
                 addToast(
-                  `체험 티켓 ${res.granted}개가 지급되었습니다! 🎁`,
+                  `체험 ?�켓 ${res.granted}개�? 지급되?�습?�다! ?��`,
                   "success",
                 );
                 await queryClient.invalidateQueries({
@@ -357,12 +357,12 @@ const DicePage: React.FC = () => {
                 });
                 setTicketZeroModal(false);
               } else {
-                addToast("현재는 체험 티켓을 받을 수 없습니다.", "error");
+                addToast("?�재??체험 ?�켓??받을 ???�습?�다.", "error");
               }
             } catch (error: any) {
               const message =
                 error?.response?.data?.detail ||
-                "요청 처리 중 오류가 발생했습니다.";
+                "?�청 처리 �??�류가 발생?�습?�다.";
               addToast(message, "error");
             } finally {
               setIsRequestingTrial(false);

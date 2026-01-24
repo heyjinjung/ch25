@@ -71,7 +71,7 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
     addToastNode(
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-slate-200">이미지 보기 (클릭하면 닫힘)</p>
+        <p className="text-xs font-semibold text-slate-200">?��?지 보기 (?�릭?�면 ?�힘)</p>
         <img
           src={src}
           alt={alt ?? "toast image"}

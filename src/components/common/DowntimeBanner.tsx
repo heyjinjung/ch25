@@ -58,7 +58,7 @@ const DowntimeBanner: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-amber-200">Notice</p>
-          <p className="text-sm font-semibold text-amber-50">ì ê²€ ì•ˆë‚´</p>
+          <p className="text-sm font-semibold text-amber-50">?ê? ?ˆë‚´</p>
           <p className="text-xs text-amber-100/90">{activeMessage}</p>
         </div>
       </div>

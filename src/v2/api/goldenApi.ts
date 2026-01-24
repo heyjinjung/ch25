@@ -1,4 +1,4 @@
-// src/v2/api/goldenApi.ts
+// src/api/goldenApi.ts
 import { v2Client } from "./client";
 
 // ============================================================================
@@ -36,7 +36,7 @@ export interface ReengagementQueueResponse {
 
 export const resolveV2Intervention = async (request: RetentionInterventionRequest): Promise<RetentionInterventionResponse> => {
   try {
-    const response = await v2Client.post<RetentionInterventionResponse>("/api/v2/golden/intervention/resolve", request);
+    const response = await v2Client.post<RetentionInterventionResponse>("/api/golden/intervention/resolve", request);
     return response.data;
   } catch (error) {
     console.error("[goldenApi] Failed to resolve V2 intervention", error);
@@ -46,7 +46,7 @@ export const resolveV2Intervention = async (request: RetentionInterventionReques
 
 export const queueV2Reengagement = async (request: ReengagementQueueRequest): Promise<ReengagementQueueResponse> => {
   try {
-    const response = await v2Client.post<ReengagementQueueResponse>("/api/v2/golden/reengagement/queue", request);
+    const response = await v2Client.post<ReengagementQueueResponse>("/api/golden/reengagement/queue", request);
     return response.data;
   } catch (error) {
     console.error("[goldenApi] Failed to queue V2 reengagement", error);

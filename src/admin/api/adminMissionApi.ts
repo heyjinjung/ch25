@@ -1,4 +1,4 @@
-// src/admin/api/adminMissionApi.ts
+// src/api/admin/adminMissionApi.ts
 import { adminApi } from "./httpClient";
 import type { AdminRewardType } from "../types/adminReward";
 

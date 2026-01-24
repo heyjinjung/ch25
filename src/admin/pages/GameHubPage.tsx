@@ -18,7 +18,7 @@ const GameHubPage: React.FC = () => {
     });
 
     const GAME_NAMES: Record<string, string> = {
-        DICE: "주사위",
+        DICE: "주사??,
         ROULETTE: "룰렛",
         LOTTERY: "복권",
     };
@@ -45,9 +45,9 @@ const GameHubPage: React.FC = () => {
                         <Gamepad2 className="h-5 w-5" />
                         <span className="text-admin-meta font-black uppercase tracking-[0.2em]">Game Management</span>
                     </div>
-                    <h1 className="text-admin-title text-admin-text-primary">게임 허브 컨트롤 센터</h1>
+                    <h1 className="text-admin-title text-admin-text-primary">게임 ?�브 컨트�??�터</h1>
                     <p className="text-admin-body text-admin-text-secondary font-medium">
-                        라이브 게임의 상태를 모니터링하고 개별 설정을 제어합니다.
+                        ?�이�?게임???�태�?모니?�링?�고 개별 ?�정???�어?�니??
                     </p>
                 </div>
             </header>
@@ -55,7 +55,7 @@ const GameHubPage: React.FC = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 text-admin-text-muted gap-4">
                     <Zap className="h-10 w-10 animate-pulse text-admin-brand" />
-                    <p className="text-admin-meta">게임 데이터를 불러오는 중...</p>
+                    <p className="text-admin-meta">게임 ?�이?��? 불러?�는 �?..</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

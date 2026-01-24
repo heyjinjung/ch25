@@ -27,9 +27,9 @@ interface TicketTab {
 const TABS: TicketTab[] = [
   {
     type: "ROULETTE_TICKET",
-    label: "일반\n룰렛",
+    label: "?�반\n룰렛",
     activeColors: "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.4)]",
-    icon: "🎫️",
+    icon: "?���?,
     iconImg: "/assets/asset_ticket_green.png",
   },
   {
@@ -37,15 +37,15 @@ const TABS: TicketTab[] = [
     label: "골드\n룰렛",
     activeColors:
       "bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-black shadow-[0_0_20px_rgba(255,215,0,0.6)]",
-    icon: "🗝️",
+    icon: "?���?,
     iconImg: "/assets/icons/goldkey.png",
   },
   {
     type: "DIAMOND_TICKET",
-    label: "다이아\n룰렛",
+    label: "?�이??n룰렛",
     activeColors:
       "bg-gradient-to-br from-cyan-300 via-blue-400 to-indigo-500 text-white shadow-[0_0_20px_rgba(0,191,255,0.7)]",
-    icon: "💎",
+    icon: "?��",
     iconImg: "/assets/icons/diakey.png",
   },
   {
@@ -53,7 +53,7 @@ const TABS: TicketTab[] = [
     label: "체험\n룰렛",
     activeColors:
       "bg-gradient-to-br from-gray-400 to-gray-600 text-white shadow-[0_0_15px_rgba(255,255,255,0.2)]",
-    icon: "🧪",
+    icon: "?��",
     iconImg: "/assets/asset_ticket_trial.png",
   },
 ];
@@ -349,7 +349,7 @@ const RoulettePage = () => {
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#30FF75] border-t-transparent" />
           <p className="text-sm font-semibold text-white/80">
-            룰렛 정보를 불러오는 중...
+            룰렛 ?�보�?불러?�는 �?..
           </p>
         </div>
       </div>
@@ -361,10 +361,10 @@ const RoulettePage = () => {
       <div className="flex h-screen items-center justify-center bg-black p-4">
         <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-center backdrop-blur max-w-md">
           <p className="text-xl font-bold text-white">
-            데이터를 불러오지 못했습니다
+            ?�이?��? 불러?��? 못했?�니??
           </p>
           <p className="mt-2 text-sm text-white/60">
-            잠시 후 다시 시도하거나 운영자에게 문의하세요.
+            ?�시 ???�시 ?�도?�거???�영?�에�?문의?�세??
           </p>
           {error && (
             <p className="mt-4 text-xs text-red-400">
@@ -494,7 +494,7 @@ const RoulettePage = () => {
                     <p className="text-3xl font-black text-white leading-none">
                       {rewardToast.value.toLocaleString()}
                       <span className="text-sm font-bold text-white/50 ml-1">
-                        원
+                        ??
                       </span>
                     </p>
                     <p className="text-xs font-bold text-white/60 mt-1">
@@ -561,13 +561,13 @@ const RoulettePage = () => {
                 {/* Spin Info */}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/60">오늘 플레이</span>
+                    <span className="text-white/60">?�늘 ?�레??/span>
                     <span className="font-bold text-white">
                       {data.today_spins} / {data.max_daily_spins}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/60">남은 횟수</span>
+                    <span className="text-white/60">?��? ?�수</span>
                     <span className="font-bold text-[#30FF75]">
                       {data.remaining_spins}
                     </span>
@@ -592,15 +592,15 @@ const RoulettePage = () => {
                   } disabled:opacity-50 disabled:cursor-not-allowed active:scale-95`}
                 >
                   {isSpinning
-                    ? "스핀 중..."
+                    ? "?��? �?.."
                     : playMutation.isPending
-                      ? "준비 중..."
-                      : "스핀 시작"}
+                      ? "준�?�?.."
+                      : "?��? ?�작"}
                 </button>
 
                 {playMutation.isError && (
                   <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-200">
-                    ⚠️ 플레이에 실패했습니다. 다시 시도해주세요.
+                    ?�️ ?�레?�에 ?�패?�습?�다. ?�시 ?�도?�주?�요.
                   </div>
                 )}
               </div>

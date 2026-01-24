@@ -15,7 +15,7 @@ const Snowfall: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(true);
 
   useEffect(() => {
-    // 저장된 설정 불러오기
+    // ?�?�된 ?�정 불러?�기
     const saved = localStorage.getItem("xmas_snow_enabled");
     if (saved !== null) {
       setIsEnabled(saved === "true");
@@ -28,7 +28,7 @@ const Snowfall: React.FC = () => {
       return;
     }
 
-    // 눈송이 생성
+    // ?�송???�성
     const flakes: Snowflake[] = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
@@ -48,18 +48,18 @@ const Snowfall: React.FC = () => {
 
   return (
     <>
-      {/* 눈 토글 버튼 */}
+      {/* ???��? 버튼 */}
       <button
         onClick={toggleSnow}
         className="fixed bottom-4 left-4 z-50 flex items-center justify-center w-12 h-12 rounded-full 
           bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600/50
           shadow-lg transition-all duration-300 hover:scale-110"
-        title={isEnabled ? "눈 효과 끄기" : "눈 효과 켜기"}
+        title={isEnabled ? "???�과 ?�기" : "???�과 켜기"}
       >
-        <span className="text-xl">{isEnabled ? "❄️" : "☀️"}</span>
+        <span className="text-xl">{isEnabled ? "?�️" : "?��?}</span>
       </button>
 
-      {/* 눈송이 컨테이너 */}
+      {/* ?�송??컨테?�너 */}
       {isEnabled && (
         <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
           {snowflakes.map((flake) => (
@@ -73,13 +73,13 @@ const Snowfall: React.FC = () => {
                 animation: `fall ${flake.duration}s linear ${flake.delay}s infinite`,
               }}
             >
-              ❄
+              ??
             </div>
           ))}
         </div>
       )}
 
-      {/* CSS 애니메이션 */}
+      {/* CSS ?�니메이??*/}
       <style>{`
         @keyframes fall {
           0% {

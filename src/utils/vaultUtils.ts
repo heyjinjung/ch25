@@ -28,7 +28,7 @@ export interface VaultUnlockRuleJson {
 }
 
 export const formatWon = (amount: number): string => {
-    return `${amount.toLocaleString("ko-KR")}원`;
+    return `${amount.toLocaleString("ko-KR")}??;
 };
 
 export const parseVaultUnlockRules = (
@@ -39,10 +39,10 @@ export const parseVaultUnlockRules = (
     const messages: string[] = [];
     
     // Updated Rules 2026-01-16
-    messages.push("최근 3일간 게임 30회 이상 플레이");
-    messages.push("금고 사용 실적 당일 10,000원 이상");
-    messages.push("당일 입금 기록 보유");
-    messages.push("최소 출금 가능 금액 10,000원");
+    messages.push("최근 3?�간 게임 30???�상 ?�레??);
+    messages.push("금고 ?�용 ?�적 ?�일 10,000???�상");
+    messages.push("?�일 ?�금 기록 보유");
+    messages.push("최소 출금 가??금액 10,000??);
 
     return messages;
 };

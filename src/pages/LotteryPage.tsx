@@ -56,13 +56,13 @@ const LotteryPage: React.FC = () => {
   const mapErrorMessage = (err: unknown) => {
     const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data?.error?.code;
     const messages: Record<string, string> = {
-      NO_FEATURE_TODAY: "오늘 설정된 이벤트가 없습니다.",
-      INVALID_FEATURE_SCHEDULE: "이벤트 스케줄 오류",
-      FEATURE_DISABLED: "이벤트가 비활성화되었습니다.",
-      DAILY_LIMIT_REACHED: "오늘 참여 횟수 초과",
-      NOT_ENOUGH_TOKENS: "티켓이 부족합니다.",
+      NO_FEATURE_TODAY: "?�늘 ?�정???�벤?��? ?�습?�다.",
+      INVALID_FEATURE_SCHEDULE: "?�벤???��?�??�류",
+      FEATURE_DISABLED: "?�벤?��? 비활?�화?�었?�니??",
+      DAILY_LIMIT_REACHED: "?�늘 참여 ?�수 초과",
+      NOT_ENOUGH_TOKENS: "?�켓??부족합?�다.",
     };
-    return messages[code || ""] || "복권 정보를 불러오지 못했습니다.";
+    return messages[code || ""] || "복권 ?�보�?불러?��? 못했?�니??";
   };
 
   const errorMessage = useMemo(() => {
@@ -154,10 +154,10 @@ const LotteryPage: React.FC = () => {
 
   if (isError || !data) {
     return (
-      <GamePageShell title="지민코드 복권">
+      <GamePageShell title="지민코??복권">
         <div className="rounded-[2rem] border border-white/10 bg-black/40 p-10 text-center backdrop-blur-xl">
           <p className="text-xl font-bold text-white">{errorMessage}</p>
-          <Button variant="figma-primary" onClick={() => window.location.reload()} className="mt-6">다시 시도</Button>
+          <Button variant="figma-primary" onClick={() => window.location.reload()} className="mt-6">?�시 ?�도</Button>
         </div>
       </GamePageShell>
     );
@@ -166,7 +166,7 @@ const LotteryPage: React.FC = () => {
   return (
     <FeatureGate feature="LOTTERY">
       <GamePageShell
-        title="지민코드 복권"
+        title="지민코??복권"
         subtitle="Special Premium Lottery"
         px="px-3 sm:px-6"
         py="py-1"
@@ -178,7 +178,7 @@ const LotteryPage: React.FC = () => {
             <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 px-4 py-1.5 backdrop-blur-md shrink-0">
               <img src="/assets/lottery/icon_lotto_ball.png" alt="Lotto Ball" className="w-5 h-5 object-contain" />
               <div className="flex flex-col">
-                <span className="text-[9px] font-black text-white/40 leading-none uppercase tracking-widest">보유 로또볼</span>
+                <span className="text-[9px] font-black text-white/40 leading-none uppercase tracking-widest">보유 로또�?/span>
                 <span className="text-sm font-black text-white leading-tight">
                   {tokenBalance.toLocaleString()} <span className="text-[10px] opacity-40 italic">PCS</span>
                 </span>
@@ -192,7 +192,7 @@ const LotteryPage: React.FC = () => {
               className="relative flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1.5 hover:bg-white/10 transition-colors"
             >
 
-              <span className="text-xs font-bold text-white/80 pr-1">컬렉션</span>
+              <span className="text-xs font-bold text-white/80 pr-1">컬렉??/span>
 
               {/* Notification Badge */}
               {canCraft && (
@@ -235,7 +235,7 @@ const LotteryPage: React.FC = () => {
               className="!py-[10px] !rounded-2xl transition-all active:scale-95 shadow-lg shadow-emerald-900/30 font-black text-base sm:text-lg italic"
               fullWidth
             >
-              {isRevealed ? "다음 복권 확인" : isScratching ? "결과 확인 중..." : "지금 긁기"}
+              {isRevealed ? "?�음 복권 ?�인" : isScratching ? "결과 ?�인 �?.." : "지�?긁기"}
             </Button>
           </div>
         </div>
@@ -243,7 +243,7 @@ const LotteryPage: React.FC = () => {
         {/* 3. Prize List */}
         <div className="mt-4 mb-6 px-1">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-black italic text-figma-accent tracking-[0.2em] uppercase">당첨 가능 경품 리스트</h3>
+            <h3 className="text-sm font-black italic text-figma-accent tracking-[0.2em] uppercase">?�첨 가??경품 리스??/h3>
             <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Total {data.prizes.length} Items</span>
           </div>
 
@@ -337,14 +337,14 @@ const LotteryPage: React.FC = () => {
             try {
               const res = await requestTrialGrant({ token_type: "LOTTERY_TICKET" });
               if (res.result === "OK" && res.granted > 0) {
-                addToast(`체험 티켓 ${res.granted}개가 지급되었습니다! 🎁`, "success");
+                addToast(`체험 ?�켓 ${res.granted}개�? 지급되?�습?�다! ?��`, "success");
                 await queryClient.invalidateQueries({ queryKey: ["lottery-status"] });
                 setTicketZeroModal(false);
               } else {
-                addToast("현재는 체험 티켓을 받을 수 없습니다.", "error");
+                addToast("?�재??체험 ?�켓??받을 ???�습?�다.", "error");
               }
             } catch (error: any) {
-              const message = error?.response?.data?.detail || "요청 처리 중 오류가 발생했습니다.";
+              const message = error?.response?.data?.detail || "?�청 처리 �??�류가 발생?�습?�다.";
               addToast(message, "error");
             } finally {
               setIsRequestingTrial(false);

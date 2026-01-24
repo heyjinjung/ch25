@@ -43,7 +43,7 @@ const V2AppHeader: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <div className="relative">
               <img
-                src="/v2/assets/01home/icon.svg"
+                src="/assets/01home/icon.svg"
                 className={clsx(
                   "w-9 h-9 rounded-full object-contain border-2 transition-all",
                   segment === "common"
@@ -77,7 +77,7 @@ const V2AppHeader: React.FC = () => {
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15.15-.42.2-.63.08l-1.42-.81c-.24-.13-.44-.1-.58.07l-3.37 3.37c-.17.14-.2.34-.07.58l.81 1.42c.12.21.07.48-.08.63l-.4.4c-.15.15-.42.2-.63.08l-1.42-.81c-.24-.13-.44-.1-.58.07L4.54 13.5c-.35.35-.35.9 0 1.25s.9.35 1.25 0l3.78-3.78c.17-.18.42-.23.64-.12l1.42.81c.21.12.48.07.63-.08l.4-.4c.15-.15.1-.42-.02-.63l-.81-1.42c-.11-.22-.06-.47.12-.64l3.78-3.78c.35-.35.35-.9 0-1.25s-.9-.35-1.25 0l-3.78 3.78c-.17.18-.42.23-.64.12l-1.42-.81c-.21-.12-.48-.07-.63.08l-.4.4c-.15.15-.1.42.02.63l.81 1.42c.11.22.06.47-.12.64L7.54 16.5c-.35.35-.35.9 0 1.25s.9.35 1.25 0l3.78-3.78c.17-.18.42-.23.64-.12l1.42.81c.21.12.48.07.63-.08l.4-.4c.15-.15.1-.42-.02-.63l-.81-1.42c-.11-.22-.06-.47.12-.64l3.78-3.78c.35-.35.35-.9 0-1.25s-.9-.35-1.25 0l-3.25 3.25z" />
                 </svg>
                 <span className="text-[14px] font-black text-white/90 tracking-tight">
-                  {user?.telegram_username || user?.nickname || "사용자"}
+                  {user?.telegram_username || user?.nickname || "?�용??}
                 </span>
               </div>
               <span className="text-[10px] text-zinc-500 font-bold -mt-1">

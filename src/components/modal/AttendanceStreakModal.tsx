@@ -46,8 +46,8 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
         const g = grants[0];
         if (!g) return <Star className={clsx(sizeClass, "text-white/20")} />;
 
-        if (g.token_type === "ROULETTE_COIN") return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🎯</span>;
-        if (g.token_type === "DICE_TOKEN") return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🎲</span>;
+        if (g.token_type === "ROULETTE_COIN") return <span className={isLastDay ? "text-4xl" : "text-3xl"}>?��</span>;
+        if (g.token_type === "DICE_TOKEN") return <span className={isLastDay ? "text-4xl" : "text-3xl"}>?��</span>;
         if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") {
             return <img src="/assets/icon_diamond.png" alt="Diamond" className={clsx(sizeClass, "object-contain")} />;
         }
@@ -62,7 +62,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
             setIsClaiming(false);
             if (success) {
                 // Keep modal open or close? Current logic closes it.
-                // onSuccess 연출이 있으면 좋겠지만 이번엔 간단히 종료.
+                // onSuccess ?�출???�으�?좋겠지�??�번??간단??종료.
                 onClose();
             }
         } else {
@@ -100,14 +100,14 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 Streak Bonus
                             </div>
                             <h2 className="text-3xl font-black text-white tracking-tight">
-                                {isClaimable ? "오늘의 보상 도착!" : `🔥 ${currentStreak}일 출석 중!`}
+                                {isClaimable ? "?�늘??보상 ?�착!" : `?�� ${currentStreak}??출석 �?`}
                             </h2>
                         </div>
                         <button
                             type="button"
                             onClick={onClose}
-                            aria-label="닫기"
-                            title="닫기"
+                            aria-label="?�기"
+                            title="?�기"
                             className="p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors"
                         >
                             <X size={24} />
@@ -125,8 +125,8 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             />
                         </div>
                         <div className="flex justify-between mt-2 px-1">
-                            <span className="text-[10px] font-black text-white/40">0일</span>
-                            <span className="text-[10px] font-black text-amber-500">{currentStreak}/7일</span>
+                            <span className="text-[10px] font-black text-white/40">0??/span>
+                            <span className="text-[10px] font-black text-amber-500">{currentStreak}/7??/span>
                         </div>
                     </div>
 
@@ -238,14 +238,14 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                         {/* Info Pad */}
                         <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
                             <div className="flex justify-between items-center mb-4">
-                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">출석현황</p>
+                                <p className="text-xs font-black text-white/40 uppercase tracking-widest">출석?�황</p>
                                 {/* Active Now indicator removed */}
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="text-4xl font-black text-white tabular-nums">{currentStreak}</div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-bold text-white/80">일 연속 플레이 중!</p>
-                                    <p className="text-[11px] font-medium text-white/40">매일 자정(00:00) 기준 갱신</p>
+                                    <p className="text-sm font-bold text-white/80">???�속 ?�레??�?</p>
+                                    <p className="text-[11px] font-medium text-white/40">매일 ?�정(00:00) 기�? 갱신</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-amber-500">Next Target</p>
@@ -263,8 +263,8 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                             className="shadow-xl"
                         >
                             {isClaiming ? <RefreshCw className="animate-spin" /> :
-                                isClaimable ? "🎁 오늘의 보상 받기" :
-                                    currentStreak === 0 ? "게임 하고 보상 시작하기 🎮" : "내일 다시 만나요!"}
+                                isClaimable ? "?�� ?�늘??보상 받기" :
+                                    currentStreak === 0 ? "게임 ?�고 보상 ?�작?�기 ?��" : "?�일 ?�시 만나??"}
                         </Button>
 
                         {!isClaimable && (
@@ -272,7 +272,7 @@ const AttendanceStreakModal: React.FC<AttendanceStreakModalProps> = ({ onClose, 
                                 onClick={onClose}
                                 className="w-full py-2 text-xs font-bold text-white/20 hover:text-white transition-colors"
                             >
-                                창 닫기
+                                �??�기
                             </button>
                         )}
                     </div>
