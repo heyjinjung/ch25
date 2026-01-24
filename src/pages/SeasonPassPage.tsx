@@ -2,10 +2,15 @@
 // TODO: [VERIFY] Ensure XP Bar updates ONLY when Admin inputs Deposit Data (Ref: L-01).
 import React, { useEffect, useMemo, useRef } from "react";
 import { useTodayRanking } from "../hooks/useRanking";
-import { useSeasonPassStatus, useInternalWinStatus, useClaimSeasonReward } from "../hooks/useSeasonPass";
+import {
+  useSeasonPassStatus,
+  useInternalWinStatus,
+  useClaimSeasonReward,
+} from "../hooks/useSeasonPass";
 import FeatureGate from "../components/feature/FeatureGate";
 import { useToast } from "../components/common/ToastProvider";
 import clsx from "clsx";
+import styles from "./SeasonPassPage.module.css";
 
 /* Assets */
 const ICON_NODE_CURRENT = "/assets/season_pass/icon_node_current.png";
@@ -14,24 +19,32 @@ const ICON_NODE_CLEARED = "/assets/season_pass/icon_node_cleared.png";
 
 const formatCurrency = (value: number) => value.toLocaleString();
 const rewardTypeLabelMap: Record<string, string> = {
-  POINT: "±Ý°í Àû¸³",
-  CC_POINT: "±Ý°í Àû¸³",
-  GAME_XP: "½ÃÁð XP",
-  XP: "½ÃÁð XP",
-  GIFTICON_BAEMIN: "¹è¹Î ±âÇÁÆ¼ÄÜ",
-  CC_COIN_GIFTICON: "¾¾¾¾ÄÚÀÎ ±âÇÁÆ¼ÄÜ",
-  DIAMOND: "´ÙÀÌ¾Æ",
-  GOLD_KEY: "°ñµå Å°",
-  DIAMOND_KEY: "´ÙÀÌ¾Æ Å°",
-  TICKET_ROULETTE: "·ê·¿ Æ¼ÄÏ",
-  TICKET_DICE: "ÁÖ»çÀ§ Æ¼ÄÏ",
-  TICKET_LOTTERY: "º¹±Ç Æ¼ÄÏ",
+  POINT: "ï¿½Ý°ï¿½ ï¿½ï¿½ï¿½ï¿½",
+  CC_POINT: "ï¿½Ý°ï¿½ ï¿½ï¿½ï¿½ï¿½",
+  GAME_XP: "ï¿½ï¿½ï¿½ï¿½ XP",
+  XP: "ï¿½ï¿½ï¿½ï¿½ XP",
+  GIFTICON_BAEMIN: "ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½",
+  CC_COIN_GIFTICON: "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½",
+  DIAMOND: "ï¿½ï¿½ï¿½Ì¾ï¿½",
+  GOLD_KEY: "ï¿½ï¿½ï¿½ Å°",
+  DIAMOND_KEY: "ï¿½ï¿½ï¿½Ì¾ï¿½ Å°",
+  TICKET_ROULETTE: "ï¿½ê·¿ Æ¼ï¿½ï¿½",
+  TICKET_DICE: "ï¿½Ö»ï¿½ï¿½ï¿½ Æ¼ï¿½ï¿½",
+  TICKET_LOTTERY: "ï¿½ï¿½ï¿½ï¿½ Æ¼ï¿½ï¿½",
 };
 
-const formatRewardChip = (rewardType?: string | null, rewardAmount?: number | null) => {
-  const typeLabel = rewardType ? rewardTypeLabelMap[String(rewardType).toUpperCase()] ?? rewardType : null;
+const formatRewardChip = (
+  rewardType?: string | null,
+  rewardAmount?: number | null,
+) => {
+  const typeLabel = rewardType
+    ? (rewardTypeLabelMap[String(rewardType).toUpperCase()] ?? rewardType)
+    : null;
   if (!typeLabel) return null;
-  const amountLabel = typeof rewardAmount === "number" && !Number.isNaN(rewardAmount) ? rewardAmount.toLocaleString() : null;
+  const amountLabel =
+    typeof rewardAmount === "number" && !Number.isNaN(rewardAmount)
+      ? rewardAmount.toLocaleString()
+      : null;
   return amountLabel ? `${typeLabel} ${amountLabel}` : typeLabel;
 };
 
@@ -49,13 +62,18 @@ const SeasonPassPage: React.FC = () => {
     const currentLevel = season.data.current_level;
     const claimedLevels = season.data.levels.filter((l) => l.is_claimed);
 
-    if (lastSeasonLevelRef.current !== null && currentLevel > lastSeasonLevelRef.current) {
-      addToast(`½ÃÁð ·¹º§ ${currentLevel} ´Þ¼º!`, "success");
+    if (
+      lastSeasonLevelRef.current !== null &&
+      currentLevel > lastSeasonLevelRef.current
+    ) {
+      addToast(`ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ${currentLevel} ï¿½Þ¼ï¿½!`, "success");
     }
 
     if (claimedLevels.length > lastClaimCountRef.current) {
-      const latest = claimedLevels.sort((a, b) => a.level - b.level)[claimedLevels.length - 1];
-      if (latest) addToast(`·¹º§ ${latest.level} º¸»ó Áö±Þ`, "info");
+      const latest = claimedLevels.sort((a, b) => a.level - b.level)[
+        claimedLevels.length - 1
+      ];
+      if (latest) addToast(`ï¿½ï¿½ï¿½ï¿½ ${latest.level} ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½`, "info");
     }
 
     lastSeasonLevelRef.current = currentLevel;
@@ -63,14 +81,17 @@ const SeasonPassPage: React.FC = () => {
   }, [season.data, addToast]);
 
   const external = ranking.data?.my_external_entry;
-  const top10Needed = external?.rank && external.rank > 10 ? external.rank - 10 : 0;
+  const top10Needed =
+    external?.rank && external.rank > 10 ? external.rank - 10 : 0;
   const deposit = external?.deposit_amount ?? 0;
   const depositRemainder = 100_000 - (deposit % 100_000 || 100_000);
   const playDone = (external?.play_count ?? 0) > 0;
 
   const seasonLevelSummary = useMemo(() => {
-    if (season.isPending) return { title: "LV.--", detail: "·¹º§ ºÒ·¯¿À´Â Áß", progressPct: 0 };
-    if (season.isError || !season.data) return { title: "LV.ERR", detail: "µ¥ÀÌÅÍ ·Îµå ½ÇÆÐ", progressPct: 0 };
+    if (season.isPending)
+      return { title: "LV.--", detail: "ï¿½ï¿½ï¿½ï¿½ ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½", progressPct: 0 };
+    if (season.isError || !season.data)
+      return { title: "LV.ERR", detail: "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ ï¿½ï¿½ï¿½ï¿½", progressPct: 0 };
     const { current_xp, current_level, max_level, levels } = season.data;
     const totalXp = Math.max(0, current_xp ?? 0);
     const maxRequired = Math.max(0, ...levels.map((l) => l.required_xp ?? 0));
@@ -79,18 +100,23 @@ const SeasonPassPage: React.FC = () => {
     if (isMax) {
       return {
         title: "MAX LEVEL",
-        detail: "¸ðµç º¸»ó ´Þ¼º!",
+        detail: "ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½!",
         progressPct: 100,
       };
     }
 
-    const sortedByReq = [...levels].sort((a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0));
+    const sortedByReq = [...levels].sort(
+      (a, b) => (a.required_xp ?? 0) - (b.required_xp ?? 0),
+    );
     const nextRow = sortedByReq.find((l) => (l.required_xp ?? 0) > totalXp);
-    const prevRow = [...sortedByReq].reverse().find((l) => (l.required_xp ?? 0) <= totalXp);
+    const prevRow = [...sortedByReq]
+      .reverse()
+      .find((l) => (l.required_xp ?? 0) <= totalXp);
 
     const startXp = Math.max(0, prevRow?.required_xp ?? 0);
     const endXp = Math.max(startXp + 1, nextRow?.required_xp ?? maxRequired);
-    const targetLevel = nextRow?.level ?? Math.min(max_level, current_level + 1);
+    const targetLevel =
+      nextRow?.level ?? Math.min(max_level, current_level + 1);
 
     const segmentXp = Math.max(0, totalXp - startXp);
     const segmentTotal = Math.max(1, endXp - startXp);
@@ -101,7 +127,7 @@ const SeasonPassPage: React.FC = () => {
 
     return {
       title: `Lv.${targetLevel}`,
-      detail: `${remaining.toLocaleString()} XP ³²À½`,
+      detail: `${remaining.toLocaleString()} XP ï¿½ï¿½ï¿½ï¿½`,
       progressPct,
     };
   }, [season.data, season.isError, season.isPending]);
@@ -109,31 +135,38 @@ const SeasonPassPage: React.FC = () => {
   const cards = [
     {
       icon: "??",
-      title: "·©Å· TOP10 ´Þ¼º",
-      desc: "¼øÀ§±Ç ÁøÀÔ ½Ã ½ºÅÆÇÁ 1°³",
-      status: external?.rank ? `ÇöÀç ${external.rank}À§${top10Needed > 0 ? `, ${top10Needed}À§ UP ÇÊ¿ä` : " (¿Ï·á)"}` : "·©Å· ¾øÀ½",
+      title: "ï¿½ï¿½Å· TOP10 ï¿½Þ¼ï¿½",
+      desc: "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½",
+      status: external?.rank
+        ? `ï¿½ï¿½ï¿½ï¿½ ${external.rank}ï¿½ï¿½${top10Needed > 0 ? `, ${top10Needed}ï¿½ï¿½ UP ï¿½Ê¿ï¿½` : " (ï¿½Ï·ï¿½)"}`
+        : "ï¿½ï¿½Å· ï¿½ï¿½ï¿½ï¿½",
     },
     {
       icon: "??",
-      title: "¸ÅÀÏ Ãâ¼® ÇÃ·¹ÀÌ",
-      desc: "°ÔÀÓ ÇÃ·¹ÀÌ ½Ã ´ÙÀÌ¾Æ Áö±Þ",
-      status: playDone ? "¿Ï·á" : "¹Ì¿Ï·á",
+      title: "ï¿½ï¿½ï¿½ï¿½ ï¿½â¼® ï¿½Ã·ï¿½ï¿½ï¿½",
+      desc: "ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¾ï¿½ ï¿½ï¿½ï¿½ï¿½",
+      status: playDone ? "ï¿½Ï·ï¿½" : "ï¿½Ì¿Ï·ï¿½",
     },
     {
       icon: "??",
-      title: "ÀÔ±Ý ¹Ì¼Ç",
-      desc: "10¸¸¿ø ´Þ¼º¸¶´Ù XP ´ë·® Áö±Þ",
-      status: `${formatCurrency(depositRemainder)}¿ø ³²À½`,
+      title: "ï¿½Ô±ï¿½ ï¿½Ì¼ï¿½",
+      desc: "10ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¼ï¿½ï¿½ï¿½ï¿½ï¿½ XP ï¿½ë·® ï¿½ï¿½ï¿½ï¿½",
+      status: `${formatCurrency(depositRemainder)}ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½`,
     },
     {
       icon: "??",
-      title: "°ÔÀÓ ½Â¸® 50È¸",
-      desc: "´©Àû 50½Â ½Ã ´ÙÀÌ¾Æ/Å° Áö±Þ",
-      status: internalWins.data ? `³²Àº ½Â¸® ${internalWins.data.remaining}È¸` : "...",
+      title: "ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½ 50È¸",
+      desc: "ï¿½ï¿½ï¿½ï¿½ 50ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¾ï¿½/Å° ï¿½ï¿½ï¿½ï¿½",
+      status: internalWins.data
+        ? `ï¿½ï¿½ï¿½ï¿½ ï¿½Â¸ï¿½ ${internalWins.data.remaining}È¸`
+        : "...",
     },
   ];
 
-  if (season.isPending) return <div className="p-10 text-center text-white/50">Loading Pass...</div>;
+  if (season.isPending)
+    return (
+      <div className="p-10 text-center text-white/50">Loading Pass...</div>
+    );
   if (!season.data) return null;
 
   const data = season.data;
@@ -142,7 +175,6 @@ const SeasonPassPage: React.FC = () => {
     <FeatureGate feature="SEASON_PASS">
       {/* Main Container: Even more distinct Khaki/Moss tint for background */}
       <div className="relative mx-auto max-w-lg min-h-screen bg-[#242714] pb-32 px-4 shadow-[0_0_100px_rgba(0,0,0,0.9)] border-x border-white/10">
-
         {/* --- 1. Premium Header: Darker, deeper gradient for contrast --- */}
         <section className="relative pt-8 group">
           <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-cyan-600 rounded-[2.5rem] blur-xl opacity-30"></div>
@@ -154,35 +186,57 @@ const SeasonPassPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-3 py-1.5 rounded-full bg-gold-400 text-black text-[10px] font-black tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(251,191,36,0.6)]">
-                    ³» ·¹º§ È®ÀÎ
+                    ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
                   </span>
                 </div>
                 <h1 className="text-4xl font-black italic text-white leading-none tracking-tighter">
-                  LEVEL <span className="text-figma-accent text-5xl">{data.current_level}</span>
+                  LEVEL{" "}
+                  <span className="text-figma-accent text-5xl">
+                    {data.current_level}
+                  </span>
                 </h1>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="w-2 h-2 rounded-full bg-figma-accent animate-pulse shadow-[0_0_10px_#30FF75]" />
-                  <p className="text-white font-black uppercase tracking-wider text-xs">{seasonLevelSummary.detail}</p>
+                  <p className="text-white font-black uppercase tracking-wider text-xs">
+                    {seasonLevelSummary.detail}
+                  </p>
                 </div>
               </div>
 
               {/* Central Gauge */}
               <div className="relative w-24 h-24 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
                   <circle
-                    cx="48" cy="48" r="42"
-                    stroke="currentColor" strokeWidth="8" fill="transparent"
-                    className="text-figma-accent"
+                    cx="48"
+                    cy="48"
+                    r="42"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className="text-white/10"
+                  />
+                  <circle
+                    cx="48"
+                    cy="48"
+                    r="42"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className={clsx("text-figma-accent", styles.progressCircle)}
                     strokeDasharray={263.8}
-                    strokeDashoffset={263.8 - (seasonLevelSummary.progressPct / 100) * 263.8}
+                    strokeDashoffset={
+                      263.8 - (seasonLevelSummary.progressPct / 100) * 263.8
+                    }
                     strokeLinecap="round"
-                    style={{ transition: 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)' }}
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center">
-                  <span className="text-2xl font-black text-white">{seasonLevelSummary.progressPct}</span>
-                  <span className="text-[10px] font-extrabold text-white/50 tracking-widest uppercase">%</span>
+                  <span className="text-2xl font-black text-white">
+                    {seasonLevelSummary.progressPct}
+                  </span>
+                  <span className="text-[10px] font-extrabold text-white/50 tracking-widest uppercase">
+                    %
+                  </span>
                 </div>
               </div>
             </div>
@@ -200,62 +254,96 @@ const SeasonPassPage: React.FC = () => {
                 const isLockedState = isLocked(level, data.current_level);
                 const isLast = idx === data.levels.length - 1;
                 const requiredXp = level.required_xp ?? 0;
-                const rewardChip = formatRewardChip(level.reward_type, (level as { reward_amount?: number }).reward_amount);
+                const rewardChip = formatRewardChip(
+                  level.reward_type,
+                  (level as { reward_amount?: number }).reward_amount,
+                );
 
                 return (
                   <div key={level.level} className="relative flex flex-col">
                     {/* Vertical Segment Line - Runs from circle center to next circle center */}
                     {!isLast && (
                       <div className="absolute left-[28px] top-[24px] w-[4px] h-[calc(100%+16px)] z-0">
-                        <div className={clsx(
-                          "w-full h-full rounded-full transition-all duration-700",
-                          isClaimed ? "bg-[#30FF75]" :
-                            isCurrent ? "bg-gradient-to-b from-[#30FF75] to-white/10" : "bg-white/10"
-                        )} />
+                        <div
+                          className={clsx(
+                            "w-full h-full rounded-full transition-all duration-700",
+                            isClaimed
+                              ? "bg-[#30FF75]"
+                              : isCurrent
+                                ? "bg-gradient-to-b from-[#30FF75] to-white/10"
+                                : "bg-white/10",
+                          )}
+                        />
                       </div>
                     )}
 
                     <div className="grid grid-cols-[60px_1fr] gap-0 items-start mb-8 overflow-hidden">
                       {/* Node Column - 60px width */}
                       <div className="relative flex items-center justify-center h-full min-h-[120px] pt-1">
-
                         {/* Connector Arm to Card */}
-                        <div className={clsx(
-                          "absolute left-[42px] top-[24px] h-[2px] w-[20px] z-0 transition-opacity rounded-full",
-                          (isCurrent || isClaimed) ? "bg-[#30FF75]/80 shadow-[0_0_10px_#30FF75]" : "bg-white/10"
-                        )} />
-
-
+                        <div
+                          className={clsx(
+                            "absolute left-[42px] top-[24px] h-[2px] w-[20px] z-0 transition-opacity rounded-full",
+                            isCurrent || isClaimed
+                              ? "bg-[#30FF75]/80 shadow-[0_0_10px_#30FF75]"
+                              : "bg-white/10",
+                          )}
+                        />
 
                         {/* Main Circle Node */}
-                        <div className={clsx(
-                          "relative w-12 h-12 rounded-full border-[3px] flex items-center justify-center transition-all z-20 shrink-0",
-                          isCurrent ? "bg-black border-figma-accent shadow-[0_0_20px_#30FF75] scale-105" :
-                            isClaimed ? "bg-black border-emerald-500" : "bg-[#111] border-white/10 opacity-80"
-                        )}>
+                        <div
+                          className={clsx(
+                            "relative w-12 h-12 rounded-full border-[3px] flex items-center justify-center transition-all z-20 shrink-0",
+                            isCurrent
+                              ? "bg-black border-figma-accent shadow-[0_0_20px_#30FF75] scale-105"
+                              : isClaimed
+                                ? "bg-black border-emerald-500"
+                                : "bg-[#111] border-white/10 opacity-80",
+                          )}
+                        >
                           <img
-                            src={isClaimed ? ICON_NODE_CLEARED : isLockedState ? ICON_NODE_LOCKED : (isCurrent || isNext) ? ICON_NODE_CURRENT : ICON_NODE_LOCKED}
+                            src={
+                              isClaimed
+                                ? ICON_NODE_CLEARED
+                                : isLockedState
+                                  ? ICON_NODE_LOCKED
+                                  : isCurrent || isNext
+                                    ? ICON_NODE_CURRENT
+                                    : ICON_NODE_LOCKED
+                            }
                             alt="Status"
-                            className={clsx("w-6 h-6 object-contain transition-all duration-500", isCurrent && "animate-pulse")}
+                            className={clsx(
+                              "w-6 h-6 object-contain transition-all duration-500",
+                              isCurrent && "animate-pulse",
+                            )}
                           />
                         </div>
                       </div>
 
                       {/* Reward Card: Robust responsive sizing */}
-                      <div className={clsx(
-                        "flex flex-col rounded-[1.75rem] p-5 border transition-all duration-700 relative overflow-hidden group/card shadow-[0_15px_40px_-5px_rgba(0,0,0,0.8)] min-w-0",
-                        isCurrent ? "bg-black border-figma-accent shadow-[0_0_40px_rgba(48,255,117,0.05)] motion-reduce:animate-none animate-elevator-rise" :
-                          isClaimed ? "bg-black/90 border-emerald-500/30 opacity-95" : "bg-black/40 border-white/5 opacity-50"
-                      )}>
+                      <div
+                        className={clsx(
+                          "flex flex-col rounded-[1.75rem] p-5 border transition-all duration-700 relative overflow-hidden group/card shadow-[0_15px_40px_-5px_rgba(0,0,0,0.8)] min-w-0",
+                          isCurrent
+                            ? "bg-black border-figma-accent shadow-[0_0_40px_rgba(48,255,117,0.05)] motion-reduce:animate-none animate-elevator-rise"
+                            : isClaimed
+                              ? "bg-black/90 border-emerald-500/30 opacity-95"
+                              : "bg-black/40 border-white/5 opacity-50",
+                        )}
+                      >
                         {/* Subtle internal shine */}
                         <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
 
                         <div className="flex justify-between items-start mb-4 gap-2">
                           <div className="flex flex-col gap-1 min-w-0 flex-1">
-                            <span className={clsx(
-                              "text-[10px] font-black uppercase tracking-[0.2em] truncate",
-                              isCurrent ? "text-figma-accent" : "text-white/40"
-                            )}>
+                            <span
+                              className={clsx(
+                                "text-[10px] font-black uppercase tracking-[0.2em] truncate",
+                                isCurrent
+                                  ? "text-figma-accent"
+                                  : "text-white/40",
+                              )}
+                            >
                               MILESTONE {level.level}
                             </span>
                             <h3 className="text-xl font-black text-white leading-[1.1] tracking-tight break-keep">
@@ -265,7 +353,9 @@ const SeasonPassPage: React.FC = () => {
                           {level.auto_claim && (
                             <div className="flex-shrink-0 flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full mt-1">
                               <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
-                              <span className="text-[8px] font-black text-emerald-400 tracking-tighter uppercase">AUTO</span>
+                              <span className="text-[8px] font-black text-emerald-400 tracking-tighter uppercase">
+                                AUTO
+                              </span>
                             </div>
                           )}
                           {rewardChip && (
@@ -278,13 +368,33 @@ const SeasonPassPage: React.FC = () => {
                         {/* Progress Tracker Core */}
                         <div className="space-y-1.5 mb-5 mt-auto">
                           <div className="flex justify-between items-end">
-                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">EXP PROGRESS</p>
-                            <p className="text-[10px] font-black text-white/80">{requiredXp.toLocaleString()} <span className="text-white/20">XP</span></p>
+                            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                              EXP PROGRESS
+                            </p>
+                            <p className="text-[10px] font-black text-white/80">
+                              {requiredXp.toLocaleString()}{" "}
+                              <span className="text-white/20">XP</span>
+                            </p>
                           </div>
                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
-                            <div
-                              className={clsx("h-full rounded-full transition-all duration-[2000ms] ease-out shadow-lg", isClaimed ? "bg-emerald-500" : isCurrent ? "bg-figma-accent" : "bg-white/10")}
-                              style={{ width: isClaimed ? '100%' : isCurrent ? `${seasonLevelSummary.progressPct}%` : '0%' }}
+                            <progress
+                              value={
+                                isClaimed
+                                  ? 100
+                                  : isCurrent
+                                    ? seasonLevelSummary.progressPct
+                                    : 0
+                              }
+                              max={100}
+                              className={clsx(
+                                styles.rewardProgress,
+                                isClaimed
+                                  ? styles.progressClaimed
+                                  : isCurrent
+                                    ? styles.progressCurrent
+                                    : styles.progressLocked,
+                              )}
+                              aria-label="ê²½í—˜ì¹˜ ì§„í–‰ë¥ "
                             />
                           </div>
                         </div>
@@ -294,13 +404,32 @@ const SeasonPassPage: React.FC = () => {
                           onClick={() => claimMutation.mutate(level.level)}
                           className={clsx(
                             "w-full py-3.5 rounded-xl font-black text-xs transition-all tracking-[0.05em] relative overflow-hidden active:scale-[0.98] active:brightness-90",
-                            canClaim(level) ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/30" :
-                              isClaimed ? "bg-white/5 text-white/30 border border-white/5" : "bg-white/5 text-white/10 border border-transparent"
+                            canClaim(level)
+                              ? "bg-figma-primary text-white shadow-lg shadow-emerald-900/30"
+                              : isClaimed
+                                ? "bg-white/5 text-white/30 border border-white/5"
+                                : "bg-white/5 text-white/10 border border-transparent",
                           )}
                         >
                           <span className="relative z-10 flex items-center justify-center gap-1.5 uppercase italic">
-                            {isClaimed && <svg className="w-3.5 h-3.5 text-figma-accent" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                            {isClaimed ? "COLLECTED" : canClaim(level) ? "CLAIM REWARD" : "LOCKED"}
+                            {isClaimed && (
+                              <svg
+                                className="w-3.5 h-3.5 text-figma-accent"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                            {isClaimed
+                              ? "COLLECTED"
+                              : canClaim(level)
+                                ? "CLAIM REWARD"
+                                : "LOCKED"}
                           </span>
                         </button>
                       </div>
@@ -316,23 +445,38 @@ const SeasonPassPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-2 h-8 bg-figma-accent rounded-full shadow-[0_0_15px_#30FF75]" />
-                <h3 className="text-2xl font-black italic text-white tracking-tight uppercase">Daily Missions</h3>
+                <h3 className="text-2xl font-black italic text-white tracking-tight uppercase">
+                  Daily Missions
+                </h3>
               </div>
-              <span className="text-[10px] font-bold text-white/30 tracking-[0.2em] uppercase">Refreshes in 4h</span>
+              <span className="text-[10px] font-bold text-white/30 tracking-[0.2em] uppercase">
+                Refreshes in 4h
+              </span>
             </div>
             <div className="grid gap-6">
               {cards.map((card, i) => (
-                <div key={i} className="group flex items-start gap-4 bg-black/50 p-4 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-black/80 transition-all shadow-xl">
+                <div
+                  key={i}
+                  className="group flex items-start gap-4 bg-black/50 p-4 rounded-2xl border border-white/5 hover:border-white/20 hover:bg-black/80 transition-all shadow-xl"
+                >
                   <div className="w-12 h-12 shrink-0 rounded-xl bg-[#111] flex items-center justify-center text-2xl border border-white/10 group-hover:scale-110 transition-all shadow-inner">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-white tracking-wide truncate">{card.title}</p>
-                    <p className="text-[10px] text-white/40 font-bold mt-1 truncate">{card.desc}</p>
-                    <div className={clsx(
-                      "inline-flex text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-wider mt-2",
-                      card.status.includes("¿Ï·á") ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20" : "text-white/40 bg-white/5 border-white/10"
-                    )}>
+                    <p className="text-sm font-black text-white tracking-wide truncate">
+                      {card.title}
+                    </p>
+                    <p className="text-[10px] text-white/40 font-bold mt-1 truncate">
+                      {card.desc}
+                    </p>
+                    <div
+                      className={clsx(
+                        "inline-flex text-[9px] font-black px-2.5 py-1 rounded-lg border uppercase tracking-wider mt-2",
+                        card.status.includes("ï¿½Ï·ï¿½")
+                          ? "text-figma-accent bg-emerald-500/10 border-emerald-500/20"
+                          : "text-white/40 bg-white/5 border-white/10",
+                      )}
+                    >
                       {card.status}
                     </div>
                   </div>
@@ -341,7 +485,6 @@ const SeasonPassPage: React.FC = () => {
             </div>
           </section>
         </div>
-
       </div>
     </FeatureGate>
   );

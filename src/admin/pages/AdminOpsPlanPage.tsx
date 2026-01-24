@@ -1315,7 +1315,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                           <ItemSelector
                                                             label="item_type"
                                                             value={it.item_type}
-                                                            onChange={(value) => {
+                                                            onChange={(value: string) => {
                                                               const nextItems = [...draft.items];
                                                               nextItems[idx] = { ...nextItems[idx], item_type: value };
                                                               saveInventoryGrantAllPayload(t.id, payload, { ...draft, items: nextItems });
@@ -1549,7 +1549,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                               <TargetListSelector
                                                                 label="타깃 리스트(선택)"
                                                                 value={draft.target_list_id ?? null}
-                                                                onChange={(value) =>
+                                                                onChange={(value: number | null) =>
                                                                   setDmDrafts((prev) => ({
                                                                     ...prev,
                                                                     [t.id]: {
@@ -1648,7 +1648,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                                   <ItemSelector
                                                                     label="보상 코드"
                                                                     value={it.item_type}
-                                                                    onChange={(value) =>
+                                                                    onChange={(value: string) =>
                                                                       setGrantDrafts((prev) => {
                                                                         const next = { ...draft, items: [...draft.items] };
                                                                         next.items[idx] = { ...next.items[idx], item_type: value };
@@ -1726,7 +1726,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                           <TargetListSelector
                                                             label="타깃 리스트(선택)"
                                                             value={draft.target_list_id ?? null}
-                                                            onChange={(value) =>
+                                                            onChange={(value: number | null) =>
                                                               setGrantDrafts((prev) => ({
                                                                 ...prev,
                                                                 [t.id]: { ...draft, target_list_id: value ?? undefined },
@@ -1816,7 +1816,7 @@ const AdminOpsPlanPage: React.FC = () => {
                                                           <TargetListSelector
                                                             label="타깃 리스트(선택)"
                                                             value={draft.target_list_id ?? null}
-                                                            onChange={(value) =>
+                                                            onChange={(value: number | null) =>
                                                               setBroadcastDrafts((prev) => ({
                                                                 ...prev,
                                                                 [t.id]: { ...draft, target_list_id: value ?? undefined },

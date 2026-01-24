@@ -1,0 +1,34 @@
+.riskBar {
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  background: transparent;
+}
+
+.riskBar::-webkit-progress-bar {
+  background: transparent;
+}
+
+.riskBar::-webkit-progress-value {
+  border-radius: 9999px;
+}
+
+.riskBar::-moz-progress-bar {
+  border-radius: 9999px;
+}
+
+.riskHigh::-webkit-progress-value {
+  background: #ef4444;
+}
+
+.riskHigh::-moz-progress-bar {
+  background: #ef4444;
+}
+
+.riskMedium::-webkit-progress-value {
+  background: #f59e0b;
+}
+
+.riskMedium::-moz-progress-bar {
+  background: #f59e0b;
+}

@@ -1,0 +1,48 @@
+.progressCircle {
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rewardProgress {
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  background: transparent;
+}
+
+.rewardProgress::-webkit-progress-bar {
+  background: transparent;
+}
+
+.rewardProgress::-moz-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.rewardProgress::-webkit-progress-value {
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.progressClaimed::-webkit-progress-value {
+  background: #10b981;
+}
+
+.progressClaimed::-moz-progress-bar {
+  background: #10b981;
+}
+
+.progressCurrent::-webkit-progress-value {
+  background: #30ff75;
+}
+
+.progressCurrent::-moz-progress-bar {
+  background: #30ff75;
+}
+
+.progressLocked::-webkit-progress-value {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.progressLocked::-moz-progress-bar {
+  background: rgba(255, 255, 255, 0.1);
+}

@@ -38,11 +38,13 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
           >
             {/* Header / Accent */}
             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#25AD82]/20 to-transparent pointer-events-none" />
-            
+
             <div className="relative pt-8 pb-4 px-6">
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-white transition-colors"
+                aria-label="닫기"
+                title="닫기"
               >
                 <X size={18} />
               </button>
@@ -52,11 +54,12 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                   <ShieldCheck size={28} className="text-[#25AD82]" />
                 </div>
                 <h2 className="text-xl font-bold text-white text-center">
-                  출금 ?�비???�내
+                  출금 ?�비???�내
                 </h2>
                 <p className="text-sm text-white/40 text-center leading-relaxed">
-                  금고 ?�액???�전?�게 출금?�기 ?�해<br />
-                  ?�음??조건??먼�? ?�성??주세??
+                  금고 ?�액???�전?�게 출금?�기 ?�해
+                  <br />
+                  ?�음??조건??먼�? ?�성??주세??
                 </p>
               </div>
             </div>
@@ -74,10 +77,12 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                 />
               </div>
             </div>
-            
+
             {/* Footer Tip */}
             <div className="px-6 py-4 bg-white/[0.02] border-t border-white/5 flex items-center justify-center gap-2">
-                <span className="text-[10px] text-white/30 uppercase tracking-widest font-bold">Secure Withdrawal System</span>
+              <span className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
+                Secure Withdrawal System
+              </span>
             </div>
           </motion.div>
         </div>

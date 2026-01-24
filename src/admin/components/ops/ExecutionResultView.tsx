@@ -1,20 +1,20 @@
-import React from "react";
+﻿import React from "react";
 
 const ACTION_LABEL: Record<string, string> = {
-  FORCE_ON: "강제 ON",
-  FORCE_OFF: "강제 OFF",
-  MULTIPLIER_SET: "배수 ?�정",
+  FORCE_ON: "媛뺤젣 ON",
+  FORCE_OFF: "媛뺤젣 OFF",
+  MULTIPLIER_SET: "諛곗닔 ?ㅼ젙",
 };
 const CHANNEL_LABEL: Record<string, string> = {
-  TELEGRAM_DM: "?�레그램 DM",
-  TELEGRAM_BROADCAST: "?�레그램 공�?",
+  TELEGRAM_DM: "?붾젅洹몃옩 DM",
+  TELEGRAM_BROADCAST: "?붾젅洹몃옩 怨듭?",
   DM: "DM",
-  CHANNEL: "공�?",
+  CHANNEL: "怨듭?",
 };
 const AUDIENCE_LABEL: Record<string, string> = {
-  ALL_USERS: "?�체 ?��?",
-  TARGET_LIST: "?��?리스??,
-  SURVEY_COMPLETERS: "?�문 ?�료??,
+  ALL_USERS: "?꾩껜 ?좎?",
+  TARGET_LIST: "?源?由ъ뒪??,
+  SURVEY_COMPLETERS: "?ㅻЦ ?꾨즺??,
 };
 
 type ExecutionResultViewProps = {
@@ -24,16 +24,16 @@ type ExecutionResultViewProps = {
   targetListLabelById?: Map<number, string>;
 };
 
-const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, status, error, targetListLabelById }) => {
+export const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, status, error, targetListLabelById }) => {
   if (error) {
-    return <div className="text-xs font-bold text-admin-danger">?�러: {String(error)}</div>;
+    return <div className="text-xs font-bold text-admin-danger">?먮윭: {String(error)}</div>;
   }
 
   if (!result) {
     if (status === "DOING") {
-      return <div className="text-xs text-admin-text-muted">?�행 �?..</div>;
+      return <div className="text-xs text-admin-text-muted">?ㅽ뻾 以?..</div>;
     }
-    return <div className="text-xs text-admin-text-muted text-center py-2">?�직 ?�행 결과가 ?�습?�다.</div>;
+    return <div className="text-xs text-admin-text-muted text-center py-2">?꾩쭅 ?ㅽ뻾 寃곌낵媛 ?놁뒿?덈떎.</div>;
   }
 
   const kind = result.kind;
@@ -52,13 +52,13 @@ const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, statu
   return (
     <div className="mt-2 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700">
       <div className="flex items-center gap-2 font-bold mb-1">
-        <span>?�행 ?�료</span>
+        <span>?ㅽ뻾 ?꾨즺</span>
       </div>
 
       {(kind === "INVENTORY_GRANT_ALL" || kind === "TARGETED_ITEM_GRANT") && (
         <div className="space-y-1">
           <div>
-            지�??�?? <span className="font-mono">{result.granted_users?.toLocaleString()}</span>�?          </div>
+            吏湲???? <span className="font-mono">{result.granted_users?.toLocaleString()}</span>紐?          </div>
           {Array.isArray(result.items) && (
             <div className="flex flex-wrap gap-1">
               {result.items.map((it: any, idx: number) => (
@@ -76,11 +76,11 @@ const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, statu
 
       {(kind === "MESSAGE_TEMPLATE" || kind === "SURVEY_DM" || kind === "TARGETLIST_BROADCAST") && (
         <div className="space-y-1">
-          {result.channel && <div>채널: {CHANNEL_LABEL[result.channel] || result.channel}</div>}
-          <div>발송(?�태변�?: <span className="font-mono">{result.sent_count?.toLocaleString()}</span>�?/div>
+          {result.channel && <div>梨꾨꼸: {CHANNEL_LABEL[result.channel] || result.channel}</div>}
+          <div>諛쒖넚(?곹깭蹂寃?: <span className="font-mono">{result.sent_count?.toLocaleString()}</span>嫄?/div>
           {(result.audience || targetListLabel) && (
             <div>
-              ?�?? {AUDIENCE_LABEL[result.audience] || result.audience || "?��?} {targetListLabel ? `(${targetListLabel})` : ""}
+              ??? {AUDIENCE_LABEL[result.audience] || result.audience || "?源?} {targetListLabel ? `(${targetListLabel})` : ""}
             </div>
           )}
         </div>
@@ -88,11 +88,11 @@ const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, statu
 
       {kind === "GOLDEN_HOUR" && (
         <div className="space-y-1">
-          <div>?�작: {ACTION_LABEL[result.action] || result.action}</div>
-          {result.enabled !== undefined && <div>?�태: {result.enabled ? "ON (?�성)" : "OFF (비활??"}</div>}
+          <div>?숈옉: {ACTION_LABEL[result.action] || result.action}</div>
+          {result.enabled !== undefined && <div>?곹깭: {result.enabled ? "ON (?쒖꽦)" : "OFF (鍮꾪솢??"}</div>}
           {result.multiplier && (
             <div>
-              배수: <strong>{result.multiplier}x</strong>
+              諛곗닔: <strong>{result.multiplier}x</strong>
             </div>
           )}
         </div>
@@ -101,4 +101,5 @@ const ExecutionResultView: React.FC<ExecutionResultViewProps> = ({ result, statu
   );
 };
 
-export default ExecutionResultView;
+
+

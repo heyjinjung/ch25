@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save, RefreshCw, Package, Ticket, Gift, Check, X, Plus, Trash2, Search, Edit2 } from "lucide-react";
 import { useToast } from "../../components/common/ToastProvider";
@@ -7,45 +7,45 @@ import { fetchEconomyStats } from "../api/adminEconomyApi";
 import { fetchRewardTypes } from "../api/adminRewardTypesApi";
 
 // ============================================================
-// ?��? ?�벨 ?�수 (?�드코딩 ?�거)
+// ?쒓? ?쇰꺼 ?곸닔 (?섎뱶肄붾뵫 ?쒓굅)
 // ============================================================
 const LABELS = {
-  currency: "?�이??,
-  active: "?�성",
-  inactive: "비활??,
-  loading: "?�점 ?�정??불러?�는 �?..",
-  error: "?�점 ?�품??불러?��? 못했?�니??",
-  noData: "?�이???�음",
-  save: "?�체 ?�??,
-  refresh: "?�로고침",
-  priceHeader: "가�?(?�이??",
-  grantHeader: "지�?,
-  statusHeader: "?�태",
-  productName: "?�품�?,
+  currency: "?ㅼ씠??,
+  active: "?쒖꽦",
+  inactive: "鍮꾪솢??,
+  loading: "?곸젏 ?ㅼ젙??遺덈윭?ㅻ뒗 以?..",
+  error: "?곸젏 ?곹뭹??遺덈윭?ㅼ? 紐삵뻽?듬땲??",
+  noData: "?곗씠???놁쓬",
+  save: "?꾩껜 ???,
+  refresh: "?덈줈怨좎묠",
+  priceHeader: "媛寃?(?ㅼ씠??",
+  grantHeader: "吏湲?,
+  statusHeader: "?곹깭",
+  productName: "?곹뭹紐?,
 } as const;
 
 // ============================================================
-// DB �????��? 매핑 (item_type, reason, scope ??
+// DB 媛????쒓? 留ㅽ븨 (item_type, reason, scope ??
 // ============================================================
 const ITEM_TYPE_LABELS: Record<string, string> = {
   // Fallbacks for types not in the standard Reward API
-  TICKET_FREE: "무료 ?�켓",
-  TICKET_PREMIUM: "?�리미엄 ?�켓",
-  PREMIUM_KEY: "?�리미엄 ??,
-  VOUCHER: "바우�?,
-  GIFTCON: "기프?�콘",
-  GIFTICON: "기프?�콘",
+  TICKET_FREE: "臾대즺 ?곗폆",
+  TICKET_PREMIUM: "?꾨━誘몄뾼 ?곗폆",
+  PREMIUM_KEY: "?꾨━誘몄뾼 ??,
+  VOUCHER: "諛붿슦泥?,
+  GIFTCON: "湲고봽?곗퐯",
+  GIFTICON: "湲고봽?곗퐯",
 };
 
 const COST_TOKEN_LABELS: Record<string, string> = {
-  DIAMOND: "?�이??,
-  VAULT: "금고(Vault)",
-  ROULETTE_COIN: "룰렛 코인",
-  DICE_TOKEN: "주사???�큰",
-  LOTTERY_TICKET: "복권 ?�켓",
-  TRIAL_TOKEN: "체험 ?�큰",
-  GOLD_KEY: "골드 ??,
-  DIAMOND_KEY: "?�이????,
+  DIAMOND: "?ㅼ씠??,
+  VAULT: "湲덇퀬(Vault)",
+  ROULETTE_COIN: "猷곕젢 肄붿씤",
+  DICE_TOKEN: "二쇱궗???좏겙",
+  LOTTERY_TICKET: "蹂듦텒 ?곗폆",
+  TRIAL_TOKEN: "泥댄뿕 ?좏겙",
+  GOLD_KEY: "怨⑤뱶 ??,
+  DIAMOND_KEY: "?ㅼ씠????,
 };
 
 const toSelectOptions = (m: Record<string, string>) =>
@@ -57,8 +57,8 @@ const COST_TOKEN_OPTIONS = toSelectOptions(COST_TOKEN_LABELS);
 const AMOUNT_OPTIONS = [1, 2, 3, 5, 10, 20, 50, 100];
 
 const GIFTICON_BRAND_LABELS: Record<string, string> = {
-  BAEMIN: "배�?",
-  CC_COIN: "?�씨코인",
+  BAEMIN: "諛곕?",
+  CC_COIN: "?⑥뵪肄붿씤",
 };
 
 const formatGifticonItemType = (itemType: string): string | null => {
@@ -68,33 +68,33 @@ const formatGifticonItemType = (itemType: string): string | null => {
     const amount = Number(withAmount[2]);
     const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
     const amountLabel = Number.isFinite(amount) ? `${amount.toLocaleString()}?? : withAmount[2];
-    return `${brand} 기프?�콘 ${amountLabel}`;
+    return `${brand} 湲고봽?곗퐯 ${amountLabel}`;
   }
 
   const withoutAmount = itemType.match(/^(.+)_GIFTICON$/);
   if (withoutAmount) {
     const rawBrand = withoutAmount[1];
     const brand = GIFTICON_BRAND_LABELS[rawBrand] ?? rawBrand;
-    return `${brand} 기프?�콘`;
+    return `${brand} 湲고봽?곗퐯`;
   }
 
   return null;
 };
 
 const SKU_TOKEN_LABELS: Record<string, string> = {
-  PROD: "?�품",
-  SHOP: "?�점",
-  TICKET: "?�켓",
-  FREE: "무료",
-  PREMIUM: "?�리미엄",
+  PROD: "?곹뭹",
+  SHOP: "?곸젏",
+  TICKET: "?곗폆",
+  FREE: "臾대즺",
+  PREMIUM: "?꾨━誘몄뾼",
   KEY: "??,
-  DIAMOND: "?�이??,
-  GOLD: "골드",
-  ROULETTE: "룰렛",
-  DICE: "주사??,
-  LOTTERY: "복권",
-  VOUCHER: "바우�?,
-  GIFTICON: "기프?�콘",
+  DIAMOND: "?ㅼ씠??,
+  GOLD: "怨⑤뱶",
+  ROULETTE: "猷곕젢",
+  DICE: "二쇱궗??,
+  LOTTERY: "蹂듦텒",
+  VOUCHER: "諛붿슦泥?,
+  GIFTICON: "湲고봽?곗퐯",
 };
 
 const formatSkuLabel = (sku: string): string => {
@@ -138,49 +138,49 @@ const buildAutoSku = (params: {
   return `SHOP_${costToken}_${itemType}_${costAmount}_X${itemAmount}_${ymd}`;
 };
 
-// reason ?�턴 ???��? ?�벨
+// reason ?⑦꽩 ???쒓? ?쇰꺼
 const formatReason = (reason: string, skuTitleMap?: Record<string, string>): string => {
   if (reason.startsWith("SHOP_PURCHASE:")) {
     const sku = reason.replace("SHOP_PURCHASE:", "");
     const title = skuTitleMap?.[sku];
-    if (title) return `?�점 구매: ${title}`;
-    return `?�점 구매: ${formatSkuLabel(sku)}`;
+    if (title) return `?곸젏 援щℓ: ${title}`;
+    return `?곸젏 援щℓ: ${formatSkuLabel(sku)}`;
   }
-  if (reason.startsWith("ADMIN_GRANT")) return "관리자 지�?;
-  if (reason.startsWith("ADMIN_REVOKE")) return "관리자 ?�수";
-  if (reason.startsWith("GAME_REWARD")) return "게임 보상";
-  if (reason.startsWith("MISSION_REWARD")) return "미션 보상";
-  if (reason.startsWith("USE_VOUCHER")) return "바우�??�용";
-  if (reason.startsWith("STREAK_REWARD")) return "?�속 출석 보상";
-  return reason; // 매핑 ?�으�??�본
+  if (reason.startsWith("ADMIN_GRANT")) return "愿由ъ옄 吏湲?;
+  if (reason.startsWith("ADMIN_REVOKE")) return "愿由ъ옄 ?뚯닔";
+  if (reason.startsWith("GAME_REWARD")) return "寃뚯엫 蹂댁긽";
+  if (reason.startsWith("MISSION_REWARD")) return "誘몄뀡 蹂댁긽";
+  if (reason.startsWith("USE_VOUCHER")) return "諛붿슦泥??ъ슜";
+  if (reason.startsWith("STREAK_REWARD")) return "?곗냽 異쒖꽍 蹂댁긽";
+  return reason; // 留ㅽ븨 ?놁쑝硫??먮낯
 };
 
-// scope ???��? ?�벨
+// scope ???쒓? ?쇰꺼
 const SCOPE_LABELS: Record<string, string> = {
-  shop_purchase: "?�점 구매",
-  game_play: "게임 ?�레??,
-  mission_claim: "미션 보상 ?�령",
-  streak_claim: "?�속 출석 ?�령",
-  vault_unlock: "금고 ?�제",
-  admin_grant: "관리자 지�?,
+  shop_purchase: "?곸젏 援щℓ",
+  game_play: "寃뚯엫 ?뚮젅??,
+  mission_claim: "誘몄뀡 蹂댁긽 ?섎졊",
+  streak_claim: "?곗냽 異쒖꽍 ?섎졊",
+  vault_unlock: "湲덇퀬 ?댁젣",
+  admin_grant: "愿由ъ옄 吏湲?,
 };
 
 const formatScope = (scope: string): string => SCOPE_LABELS[scope] ?? scope;
 
-// item_type ???��? ?�벨
+// item_type ???쒓? ?쇰꺼
 const formatItemType = (itemType: string, rewardMap?: Record<string, string>): string => {
   if (!itemType) return itemType;
   return formatGifticonItemType(itemType) ?? rewardMap?.[itemType] ?? ITEM_TYPE_LABELS[itemType] ?? itemType;
 };
 
-// item_type 기반 ?�적 그룹???�정 (?�드코딩 PROD_TICKET_ ?�거)
+// item_type 湲곕컲 ?숈쟻 洹몃９???ㅼ젙 (?섎뱶肄붾뵫 PROD_TICKET_ ?쒓굅)
 const GROUP_CONFIG: Record<string, { label: string; description: string; icon: React.ReactNode }> = {
-  TICKET: { label: "?�켓 ?�품", description: "게임 참여???�켓 ?�품?�니??", icon: <Ticket size={18} className="text-admin-brand" /> },
-  KEY: { label: "?�리미엄 ??, description: "?�별 콘텐�??�금?????�품?�니??", icon: <Gift size={18} className="text-admin-accent" /> },
-  DEFAULT: { label: "기�? ?�품", description: "?�반 ?�품?�니??", icon: <Package size={18} className="text-admin-text-secondary" /> },
+  TICKET: { label: "?곗폆 ?곹뭹", description: "寃뚯엫 李몄뿬???곗폆 ?곹뭹?낅땲??", icon: <Ticket size={18} className="text-admin-brand" /> },
+  KEY: { label: "?꾨━誘몄뾼 ??, description: "?밸퀎 肄섑뀗痢??닿툑?????곹뭹?낅땲??", icon: <Gift size={18} className="text-admin-accent" /> },
+  DEFAULT: { label: "湲고? ?곹뭹", description: "?쇰컲 ?곹뭹?낅땲??", icon: <Package size={18} className="text-admin-text-secondary" /> },
 };
 
-// item_type?�서 그룹 ??추출 (?�적 매핑)
+// item_type?먯꽌 洹몃９ ??異붿텧 (?숈쟻 留ㅽ븨)
 const getGroupKey = (itemType: string): string => {
   if (itemType.includes("TICKET")) return "TICKET";
   if (itemType.includes("KEY")) return "KEY";
@@ -235,7 +235,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     [reservedSkuSet]
   );
 
-  // ?�릭 직전 변경값까�? 반영?�기 ?�해 최신 ?�력값을 ref�?보�?
+  // ?대┃ 吏곸쟾 蹂寃쎄컪源뚯? 諛섏쁺?섍린 ?꾪빐 理쒖떊 ?낅젰媛믪쓣 ref濡?蹂닿?
   const latestSkuParamsRef = React.useRef({
     costToken: initialData?.cost_token || "DIAMOND",
     costAmount: Number(initialData?.cost_amount || 1),
@@ -246,7 +246,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const handleAutoGenerateSku = React.useCallback(() => {
     const latest = latestSkuParamsRef.current;
     if (!String(latest.itemType || "").trim()) {
-      addToast("지�??�이?�을 먼�? ?�택?�세??", "error");
+      addToast("吏湲??꾩씠?쒖쓣 癒쇱? ?좏깮?섏꽭??", "error");
       return;
     }
     const base = buildAutoSku({
@@ -265,7 +265,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
 
     setFormSku(candidate);
-    addToast(`SKU ?�동 ?�성: ${candidate}`, "success");
+    addToast(`SKU ?먮룞 ?앹꽦: ${candidate}`, "success");
   }, [addToast, isReserved]);
 
   const [itemTypeMode, setItemTypeMode] = useState<"select" | "custom">(
@@ -282,19 +282,19 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
     const trimmedSku = formSku.trim();
     const trimmedTitle = formTitle.trim();
     if (!trimmedSku) {
-      addToast("?�품코드�??�력?�세??", "error");
+      addToast("?곹뭹肄붾뱶瑜??낅젰?섏꽭??", "error");
       return;
     }
     if (!trimmedTitle) {
-      addToast("?�품명을 ?�력?�세??", "error");
+      addToast("?곹뭹紐낆쓣 ?낅젰?섏꽭??", "error");
       return;
     }
     if (!formItemType) {
-      addToast("지�??�이?�을 ?�택?�세??", "error");
+      addToast("吏湲??꾩씠?쒖쓣 ?좏깮?섏꽭??", "error");
       return;
     }
     if (!isEdit && isReserved(trimmedSku)) {
-      addToast("?��? 존재?�는 SKU?�니??", "error");
+      addToast("?대? 議댁옱?섎뒗 SKU?낅땲??", "error");
       return;
     }
 
@@ -308,14 +308,14 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       is_active: formIsActive,
     });
 
-    addToast(isEdit ? "?�정?�었?�니??" : "추�??�었?�니??", "success");
+    addToast(isEdit ? "?섏젙?섏뿀?듬땲??" : "異붽??섏뿀?듬땲??", "success");
 
     if (isEdit || !keepAdding) {
       onClose();
       return;
     }
 
-    // 계속 추�?: ?�택�??��? + ?�?��?�?초기??+ SKU???�로 ?�성
+    // 怨꾩냽 異붽?: ?좏깮媛??좎? + ??댄?留?珥덇린??+ SKU???덈줈 ?앹꽦
     localReservedSkusRef.current.add(trimmedSku);
     setFormTitle("");
     setFormSku("");
@@ -327,7 +327,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
       <div className="bg-[#1e1e24] w-full max-w-lg rounded-2xl border border-white/5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.6)] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/5">
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-white">{isEdit ? "?�품 ?�정" : "???�품 추�?"}</h2>
+            <h2 className="text-xl font-bold text-white">{isEdit ? "?곹뭹 ?섏젙" : "???곹뭹 異붽?"}</h2>
             <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">
               {isEdit ? "Update Product Details" : "Create New Item"}
             </p>
@@ -336,17 +336,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             type="button"
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-full transition-all text-zinc-500 hover:text-white"
-            aria-label="?�기"
-            title="?�기"
+            aria-label="?リ린"
+            title="?リ린"
           >
             <X size={20} />
           </button>
         </div>
 
         <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-          {/* ?�품 코드 */}
+          {/* ?곹뭹 肄붾뱶 */}
           <div className="space-y-2">
-            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?�품코드 (SKU)</label>
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?곹뭹肄붾뱶 (SKU)</label>
             <div className="flex gap-2">
               <input
                 className="flex-1 bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all disabled:opacity-50 font-mono"
@@ -360,34 +360,34 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   type="button"
                   onClick={handleAutoGenerateSku}
                   className="shrink-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-xs font-black text-white/80 hover:bg-white/10"
-                  title="?�력�?기반?�로 SKU ?�동 ?�성"
+                  title="?낅젰媛?湲곕컲?쇰줈 SKU ?먮룞 ?앹꽦"
                 >
-                  ?�동 ?�성
+                  ?먮룞 ?앹꽦
                 </button>
               )}
             </div>
             {!isEdit && (
               <p className="text-[11px] text-white/35">
-                결제 ?�큰/지�??�이??가�??�량 기�??�로 ?�성?�며, 중복?�면 <span className="font-mono">_V2</span> 같�? suffix가 붙습?�다.
+                寃곗젣 ?좏겙/吏湲??꾩씠??媛寃??섎웾 湲곗??쇰줈 ?앹꽦?섎ŉ, 以묐났?대㈃ <span className="font-mono">_V2</span> 媛숈? suffix媛 遺숈뒿?덈떎.
               </p>
             )}
           </div>
 
-          {/* ?�품�?*/}
+          {/* ?곹뭹紐?*/}
           <div className="space-y-2">
-            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?�품�?(Title)</label>
+            <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">?곹뭹紐?(Title)</label>
             <input
               className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              placeholder="?? ?�이??10�??�품"
+              placeholder="?? ?ㅼ씠??10媛??곹뭹"
             />
           </div>
 
-          {/* 가�??�정 */}
+          {/* 媛寃??ㅼ젙 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">결제 ?�큰</label>
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">寃곗젣 ?좏겙</label>
               <select
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
                 value={formCostToken}
@@ -405,7 +405,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
               </select>
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">가�?(Amount)</label>
+              <label className="block text-xs font-black text-zinc-500 uppercase tracking-wider ml-1">媛寃?(Amount)</label>
               <div className="flex flex-col gap-2">
                 <select
                   className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
@@ -426,7 +426,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </option>
                   ))}
                   <option value="__CUSTOM__" className="bg-zinc-900">
-                    직접 ?�력
+                    吏곸젒 ?낅젰
                   </option>
                 </select>
                 {costAmountMode === "custom" && (
@@ -445,15 +445,15 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* 지�??�이???�정 */}
+          {/* 吏湲??꾩씠???ㅼ젙 */}
           <div className="p-6 bg-admin-brand/5 rounded-2xl border border-admin-brand/10 space-y-4">
             <div className="flex items-center gap-2 text-admin-brand mb-2">
               <Gift size={14} className="animate-bounce" />
-              <span className="text-xs font-black uppercase tracking-widest">지�?보상 (Reward)</span>
+              <span className="text-xs font-black uppercase tracking-widest">吏湲?蹂댁긽 (Reward)</span>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?�이??종류</label>
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?꾩씠??醫낅쪟</label>
               <select
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
                 value={itemTypeMode === "custom" ? "__CUSTOM__" : formItemType}
@@ -468,7 +468,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 }}
               >
                 <option value="" className="bg-zinc-900">
-                  ?�택?�세??
+                  ?좏깮?섏꽭??
                 </option>
                 {rewardTypeOptions.map((o) => (
                   <option key={o.value} value={o.value} className="bg-zinc-900">
@@ -476,7 +476,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                   </option>
                 ))}
                 <option value="__CUSTOM__" className="bg-zinc-900">
-                  직접 ?�력
+                  吏곸젒 ?낅젰
                 </option>
               </select>
               {itemTypeMode === "custom" && (
@@ -493,7 +493,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?�량 (Quantity)</label>
+              <label className="block text-[10px] font-black text-admin-brand/60 uppercase tracking-wider">?섎웾 (Quantity)</label>
               <div className="flex flex-col gap-2">
                 <select
                   className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-admin-brand/50 transition-all appearance-none"
@@ -514,7 +514,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                     </option>
                   ))}
                   <option value="__CUSTOM__" className="bg-zinc-900">
-                    직접 ?�력
+                    吏곸젒 ?낅젰
                   </option>
                 </select>
                 {itemAmountMode === "custom" && (
@@ -533,17 +533,17 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
             </div>
           </div>
 
-          {/* ?�성 ?�태 */}
+          {/* ?쒖꽦 ?곹깭 */}
           <div className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5">
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-bold text-white">?�매 ?�성??/span>
+              <span className="text-sm font-bold text-white">?먮ℓ ?쒖꽦??/span>
               <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">ACTIVE STATUS</span>
             </div>
             <button
               type="button"
               onClick={() => setFormIsActive((v) => !v)}
-              aria-label="?�매 ?�성???��?"
-              title={formIsActive ? "비활?�으�??�환" : "?�성?�로 ?�환"}
+              aria-label="?먮ℓ ?쒖꽦???좉?"
+              title={formIsActive ? "鍮꾪솢?깆쑝濡??꾪솚" : "?쒖꽦?쇰줈 ?꾪솚"}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 ${formIsActive ? "bg-admin-brand" : "bg-zinc-700"
                 }`}
             >
@@ -564,9 +564,9 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
                 ? "bg-admin-brand/10 border-admin-brand/30 text-white"
                 : "bg-zinc-900/20 border-white/10 text-white/70 hover:bg-white/5"
                 }`}
-              title="추�? ??모달???��? ?�고 계속 ?�성"
+              title="異붽? ??紐⑤떖???レ? ?딄퀬 怨꾩냽 ?앹꽦"
             >
-              계속 추�?: {keepAdding ? "ON" : "OFF"}
+              怨꾩냽 異붽?: {keepAdding ? "ON" : "OFF"}
             </button>
           )}
           <button
@@ -587,7 +587,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({
   );
 };
 
-const AdminShopPage: React.FC = () => {
+export const AdminShopPage: React.FC = () => {
   const { addToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -669,10 +669,10 @@ const AdminShopPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "products"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "shop", "overrides"] });
       setDeletedSkus(new Set());
-      addToast("?�점 ?�정???�?�되?�습?�다.", "success");
+      addToast("?곸젏 ?ㅼ젙????λ릺?덉뒿?덈떎.", "success");
     },
     onError: (err: Error & { response?: { data?: { detail?: string } } }) => {
-      addToast(`?�???�패: ${err.response?.data?.detail || err.message}`, "error");
+      addToast(`????ㅽ뙣: ${err.response?.data?.detail || err.message}`, "error");
     },
   });
 
@@ -788,7 +788,7 @@ const AdminShopPage: React.FC = () => {
     );
   }, [effectiveProducts, searchTerm, rows]);
 
-  // item_type 기반 ?�적 그룹??(?�드코딩 ?�거)
+  // item_type 湲곕컲 ?숈쟻 洹몃９??(?섎뱶肄붾뵫 ?쒓굅)
   const groupedProducts = useMemo(() => {
     const groups: Record<string, AdminShopProduct[]> = {};
     for (const p of filteredProducts) {
@@ -799,7 +799,7 @@ const AdminShopPage: React.FC = () => {
     return groups;
   }, [filteredProducts]);
 
-  // ?�이�????�더�??�수 (?�약 �?
+  // ?뚯씠釉????뚮뜑留??⑥닔 (?붿빟 酉?
   const renderProductRow = (p: AdminShopProduct) => {
     const r = rows.get(p.sku);
     if (!r) return null;
@@ -867,7 +867,7 @@ const AdminShopPage: React.FC = () => {
               type="button"
               onClick={() => handleEditProduct(p.sku)}
               className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-hover text-admin-text-secondary hover:text-admin-brand transition-colors"
-              title="?�집"
+              title="?몄쭛"
             >
               <Edit2 size={16} />
             </button>
@@ -885,10 +885,10 @@ const AdminShopPage: React.FC = () => {
                     next.add(p.sku);
                     return next;
                   });
-                  addToast("??�� ?�약?? ?�????반영?�니??", "success");
+                  addToast("??젣 ?덉빟?? ?????諛섏쁺?⑸땲??", "success");
                 }}
                 className="p-2 rounded-lg bg-admin-sidebar hover:bg-admin-danger/10 text-admin-text-secondary hover:text-admin-danger transition-colors"
-                title="??��"
+                title="??젣"
               >
                 <Trash2 size={16} />
               </button>
@@ -900,7 +900,7 @@ const AdminShopPage: React.FC = () => {
   };
 
   // ============================================================
-  // 모달?�서 SKU 중복 체크???�용
+  // 紐⑤떖?먯꽌 SKU 以묐났 泥댄겕???ъ슜
   const reservedSkuSet = useMemo(() => {
     const set = new Set<string>();
     for (const p of effectiveProducts) set.add(p.sku);
@@ -910,7 +910,7 @@ const AdminShopPage: React.FC = () => {
   }, [effectiveProducts, rows, deletedSkus]);
 
 
-  // 로딩/?�러 ?�태
+  // 濡쒕뵫/?먮윭 ?곹깭
   const isLoading = productsQuery.isLoading || overridesQuery.isLoading || rewardTypesQuery.isLoading;
   if (isLoading) {
     return <div className="admin-page-container text-admin-text-secondary">{LABELS.loading}</div>;
@@ -921,11 +921,11 @@ const AdminShopPage: React.FC = () => {
 
   return (
     <div className="admin-page-container">
-      {/* ?�더 ?�션 */}
+      {/* ?ㅻ뜑 ?뱀뀡 */}
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold text-admin-text-base tracking-tight uppercase">
-            ?�점 관�?<span className="text-admin-brand/40">Shop Admin</span>
+            ?곸젏 愿由?<span className="text-admin-brand/40">Shop Admin</span>
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -933,13 +933,13 @@ const AdminShopPage: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-admin-text-muted" size={14} />
             <input
               className="admin-input pl-10 w-64 h-10 text-sm"
-              placeholder="?�품�??�는 SKU 검??
+              placeholder="?곹뭹紐??먮뒗 SKU 寃??
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button type="button" onClick={() => setIsAddingNew(true)} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
-            <Plus size={14} /> ?�품 추�?
+            <Plus size={14} /> ?곹뭹 異붽?
           </button>
           <button type="button" onClick={handleRefresh} className="btn-admin-secondary h-10 px-4 flex items-center gap-2">
             <RefreshCw size={14} /> {LABELS.refresh}
@@ -956,9 +956,9 @@ const AdminShopPage: React.FC = () => {
         </div>
       </header>
 
-      {/* 기존 ?�단 Add Form ?�거??(모달�??��??�정) */}
+      {/* 湲곗〈 ?곷떒 Add Form ?쒓굅??(紐⑤떖濡??泥??덉젙) */}
 
-      {/* ?�적 그룹�??�이�?(item_type 기반) */}
+      {/* ?숈쟻 洹몃９蹂??뚯씠釉?(item_type 湲곕컲) */}
       {Object.entries(groupedProducts).map(([groupKey, products]) => {
         const config = GROUP_CONFIG[groupKey] ?? GROUP_CONFIG.DEFAULT;
         return (
@@ -970,7 +970,7 @@ const AdminShopPage: React.FC = () => {
                 <p className="text-sm text-admin-text-secondary">{config.description}</p>
               </div>
               <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-medium bg-admin-sidebar text-admin-text-muted">
-                {products.length}�?
+                {products.length}媛?
               </span>
             </div>
 
@@ -979,11 +979,11 @@ const AdminShopPage: React.FC = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
-                      <th className="admin-th w-[300px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?�품 ?�보 (Product Info)</th>
-                      <th className="admin-th w-[140px] text-sm font-bold text-zinc-500 uppercase tracking-wider">가�?(Price)</th>
-                      <th className="admin-th w-[200px] text-sm font-bold text-zinc-500 uppercase tracking-wider">지�??�용 (Grants)</th>
-                      <th className="admin-th w-[120px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?�태 (Status)</th>
-                      <th className="admin-th w-[100px] text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">관�?(Actions)</th>
+                      <th className="admin-th w-[300px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?곹뭹 ?뺣낫 (Product Info)</th>
+                      <th className="admin-th w-[140px] text-sm font-bold text-zinc-500 uppercase tracking-wider">媛寃?(Price)</th>
+                      <th className="admin-th w-[200px] text-sm font-bold text-zinc-500 uppercase tracking-wider">吏湲??댁슜 (Grants)</th>
+                      <th className="admin-th w-[120px] text-sm font-bold text-zinc-500 uppercase tracking-wider">?곹깭 (Status)</th>
+                      <th className="admin-th w-[100px] text-sm font-bold text-zinc-500 uppercase tracking-wider text-right">愿由?(Actions)</th>
                     </tr>
                   </thead>
                   <tbody>{products.map(renderProductRow)}</tbody>
@@ -994,18 +994,18 @@ const AdminShopPage: React.FC = () => {
         );
       })}
 
-      {/* ?�계 카드 ?�션 */}
+      {/* ?듦퀎 移대뱶 ?뱀뀡 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">최근 구매 (?�장 기반)</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">理쒓렐 援щℓ (?먯옣 湲곕컲)</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
+              <div className="text-sm text-admin-danger">遺덈윭?ㅺ린 ?ㅽ뙣</div>
             ) : (statsQuery.data?.shop_purchases ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1014,7 +1014,7 @@ const AdminShopPage: React.FC = () => {
                   <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.reason}>
                     {formatReason(r.reason, skuTitleMap)}
                   </span>
-                  <span className="text-admin-text-primary font-medium">{r.count}�?/span>
+                  <span className="text-admin-text-primary font-medium">{r.count}嫄?/span>
                 </div>
               ))
             )}
@@ -1023,14 +1023,14 @@ const AdminShopPage: React.FC = () => {
 
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">바우�??�용</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">諛붿슦泥??ъ슜</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
+              <div className="text-sm text-admin-danger">遺덈윭?ㅺ린 ?ㅽ뙣</div>
             ) : (statsQuery.data?.voucher_uses ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1039,7 +1039,7 @@ const AdminShopPage: React.FC = () => {
                   <span className="text-admin-text-secondary truncate max-w-[160px]" title={r.item_type}>
                     {formatItemType(r.item_type, rewardTypeMap)}
                   </span>
-                  <span className="text-admin-text-primary font-medium">{r.count}�?/span>
+                  <span className="text-admin-text-primary font-medium">{r.count}嫄?/span>
                 </div>
               ))
             )}
@@ -1048,14 +1048,14 @@ const AdminShopPage: React.FC = () => {
 
         <div className="admin-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-admin-text-primary">멱등???�태</h3>
+            <h3 className="text-sm font-semibold text-admin-text-primary">硫깅벑???곹깭</h3>
             {statsQuery.isLoading && <RefreshCw size={14} className="animate-spin text-admin-text-muted" />}
           </div>
           <div className="space-y-2">
             {statsQuery.isLoading ? (
               <div className="text-sm text-admin-text-muted">{LABELS.loading}</div>
             ) : statsQuery.error ? (
-              <div className="text-sm text-admin-danger">불러?�기 ?�패</div>
+              <div className="text-sm text-admin-danger">遺덈윭?ㅺ린 ?ㅽ뙣</div>
             ) : (statsQuery.data?.idempotency ?? []).length === 0 ? (
               <div className="text-sm text-admin-text-muted">{LABELS.noData}</div>
             ) : (
@@ -1074,7 +1074,7 @@ const AdminShopPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ?�품 추�?/?�정 모달 */}
+      {/* ?곹뭹 異붽?/?섏젙 紐⑤떖 */}
       {isAddingNew && (
         <ProductFormModal
           mode="create"
@@ -1114,4 +1114,5 @@ const AdminShopPage: React.FC = () => {
   );
 };
 
-export default AdminShopPage;
+
+

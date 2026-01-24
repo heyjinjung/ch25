@@ -6,6 +6,7 @@
             "es5",
             "dom"
         ],
+        "ignoreDeprecations": "6.0",
         "types": [
             "cypress",
             "node"

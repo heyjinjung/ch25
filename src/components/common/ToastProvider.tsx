@@ -28,8 +28,19 @@ type Toast = {
 type ToastContextValue = {
   toasts: Toast[];
   addToast: (message: string, tone?: Toast["tone"]) => void;
-  addToastNode: (content: React.ReactNode, options?: { tone?: Toast["tone"]; durationMs?: number; dismissOnClick?: boolean }) => void;
-  addImageToast: (src: string, alt?: string, options?: { tone?: Toast["tone"]; width?: number; height?: number }) => void;
+  addToastNode: (
+    content: React.ReactNode,
+    options?: {
+      tone?: Toast["tone"];
+      durationMs?: number;
+      dismissOnClick?: boolean;
+    },
+  ) => void;
+  addImageToast: (
+    src: string,
+    alt?: string,
+    options?: { tone?: Toast["tone"]; width?: number; height?: number },
+  ) => void;
   removeToast: (id: string) => void;
 };
 
@@ -41,22 +52,39 @@ const toneClassMap: Record<NonNullable<Toast["tone"]>, string> = {
   info: "bg-slate-800/80 border-slate-500",
 };
 
-const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = (message: string, tone: Toast["tone"] = "info") => {
-    const toast: Toast = { id: generateId(), content: message, tone, durationMs: 3000, dismissOnClick: true };
+    const toast: Toast = {
+      id: generateId(),
+      content: message,
+      tone,
+      durationMs: 3000,
+      dismissOnClick: true,
+    };
     setToasts((prev) => [...prev, toast]);
     if (toast.durationMs && toast.durationMs > 0) {
       setTimeout(() => removeToast(toast.id), toast.durationMs);
     }
   };
 
-  const addToastNode: ToastContextValue["addToastNode"] = (content, options) => {
+  const addToastNode: ToastContextValue["addToastNode"] = (
+    content,
+    options,
+  ) => {
     const tone = options?.tone ?? "info";
     const durationMs = options?.durationMs;
     const dismissOnClick = options?.dismissOnClick ?? true;
-    const toast: Toast = { id: generateId(), content, tone, durationMs, dismissOnClick };
+    const toast: Toast = {
+      id: generateId(),
+      content,
+      tone,
+      durationMs,
+      dismissOnClick,
+    };
 
     setToasts((prev) => [...prev, toast]);
     if (durationMs && durationMs > 0) {
@@ -64,22 +92,29 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     }
   };
 
-  const addImageToast: ToastContextValue["addImageToast"] = (src, alt, options) => {
+  const addImageToast: ToastContextValue["addImageToast"] = (
+    src,
+    alt,
+    options,
+  ) => {
     const width = options?.width ?? 400;
     const height = options?.height ?? 700;
     const tone = options?.tone ?? "info";
 
     addToastNode(
       <div className="space-y-3">
-        <p className="text-xs font-semibold text-slate-200">?��?지 보기 (?�릭?�면 ?�힘)</p>
+        <p className="text-xs font-semibold text-slate-200">
+          ?��?지 보기 (?�릭?�면 ?�힘)
+        </p>
         <img
           src={src}
           alt={alt ?? "toast image"}
-          style={{ width, height, maxWidth: "100%", maxHeight: "70vh" }}
-          className="max-w-full rounded-lg border border-slate-600/50 object-contain"
+          width={width}
+          height={height}
+          className="max-w-full max-h-[70vh] rounded-lg border border-slate-600/50 object-contain"
         />
       </div>,
-      { tone, durationMs: 0, dismissOnClick: true }
+      { tone, durationMs: 0, dismissOnClick: true },
     );
   };
 
@@ -87,7 +122,10 @@ const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
-  const value = useMemo(() => ({ toasts, addToast, addToastNode, addImageToast, removeToast }), [toasts]);
+  const value = useMemo(
+    () => ({ toasts, addToast, addToastNode, addImageToast, removeToast }),
+    [toasts],
+  );
 
   return (
     <ToastContext.Provider value={value}>
@@ -124,4 +162,3 @@ export const useToast = (): ToastContextValue => {
 };
 
 export default ToastProvider;
-
