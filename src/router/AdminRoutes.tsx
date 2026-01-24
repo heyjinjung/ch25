@@ -1,4 +1,4 @@
-﻿// src/router/AdminRoutes.tsx
+// src/router/AdminRoutes.tsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLoginPage from "../admin/pages/AdminLoginPage";

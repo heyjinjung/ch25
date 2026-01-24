@@ -1,0 +1,14 @@
+﻿{
+    "access_token":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwiaWF0IjoxNzY5MjM1MjkxLCJleHAiOjE3NjkzMjE2OTEsInR5cCI6ImFjY2VzcyIsInJvbGUiOiJBRE1JTiIsInJvbGVzIjpbIkFETUlOIl19.tDSf8gOPPXUD8ognIJv2MXkGXSR3mLQPjZ6obQBjais",
+    "token_type":  "bearer",
+    "user":  {
+                 "id":  2,
+                 "external_id":  "admin",
+                 "nickname":  "Administrator",
+                 "status":  "ADMIN",
+                 "level":  1,
+                 "segment":  null,
+                 "telegram_id":  null,
+                 "login_streak":  2
+             }
+}

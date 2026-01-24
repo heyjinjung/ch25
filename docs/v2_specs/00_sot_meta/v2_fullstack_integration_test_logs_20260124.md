@@ -22,6 +22,7 @@ V2 풀스택 연동 검증의 실행 결과와 증거를 단일 로그로 기록
 |---|---|---|
 | **Auth Area** | **PASS ✅** | [v2_fullstack_integration_test_logs_auth_20260124.md](docs/v2_specs/00_sot_meta/v2_fullstack_integration_test_logs_auth_20260124.md) |
 | **Game Area** | **PASS ✅** | [v2_fullstack_integration_test_logs_game_20260124.md](docs/v2_specs/00_sot_meta/v2_fullstack_integration_test_logs_game_20260124.md) |
+| **Shop/Inventory Area** | **PASS ✅** | [v2_fullstack_integration_test_logs_shop_inventory_20260124.md](docs/v2_specs/00_sot_meta/v2_fullstack_integration_test_logs_shop_inventory_20260124.md) |
 | **Admin Area** | **PASS ✅** | [v2_fullstack_integration_test_logs_admin_20260124.md](docs/v2_specs/00_sot_meta/v2_fullstack_integration_test_logs_admin_20260124.md) |
 | **Public Area** | **todo ⏳** | [v2_fullstack_integration_test_logs_public_20260124.md](docs/v2_specs/00_sot_meta/v2_fullstack_integration_test_logs_public_20260124.md) |
 
@@ -67,8 +68,12 @@ npx cypress run --spec "cypress/e2e/admin_nav_smoke.cy.ts"
 | Game (Roulette Play) | /game/roulette | POST /api/v2/roulette/play | passed ✅ | artifacts/20260124/api/roulette_play_response_v2.json | 200 OK |
 | Game (Lottery Status) | /game/lottery | GET /api/v2/lottery/status | passed ✅ | artifacts/20260124/api/lottery_status_response_v2.json | 200 OK |
 | Game (Lottery Play) | /game/lottery | POST /api/v2/lottery/play | passed ✅ | artifacts/20260124/api/lottery_play_response_v2.json | 200 OK |
+| Shop (Products) | /shop | GET /api/v2/shop/products | passed ✅ | artifacts/20260124/api/shop_products_response_v2.json | 200 OK |
+| Shop (Purchase) | /shop | POST /api/v2/shop/purchase | passed ✅ | artifacts/20260124/api/shop_purchase_response_v2.json | 주문/인벤 반영 |
+| Inventory (Use) | /inventory | POST /api/v2/inventory/use | passed ✅ | artifacts/20260124/api/inventory_use_response_v2.json | voucher 소모/토큰 지급 |
 
 ## 6. 변경 이력
+- v1.3 (2026-01-24, GitHub Copilot): Shop/Inventory PASS 반영
 - v1.2 (2026-01-24, GitHub Copilot): Game Area PASS 반영
 - v1.1 (2026-01-24, GitHub Copilot): Roulette/Lottery v2 오류 증거 추가
 - v1.0 (2026-01-24, GitHub Copilot): 최초 작성
