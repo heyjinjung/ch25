@@ -49,7 +49,6 @@ export default function AdminLayout() {
     }
   });
 
-  // Responsive Check
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
     checkMobile();
@@ -80,21 +79,21 @@ export default function AdminLayout() {
   }> = [
     {
       key: "OPS",
-      label: "?�영",
+      label: "운영",
       items: [
         {
           icon: LayoutDashboard,
-          label: "?�?�보??,
+          label: "대시보드",
           path: "/admin/dashboard",
           submenu: [
-            { label: "Ops ?�?�보??, path: "/admin/dashboard" },
-            { label: "Golden ?�시�?, path: "/admin/dashboard/golden" },
-            { label: "?�기 ?�이??, path: "/admin/dashboard/radar" },
+            { label: "Ops 대시보드", path: "/admin/dashboard" },
+            { label: "Golden 레이더", path: "/admin/dashboard/golden" },
+            { label: "이상 탐지", path: "/admin/dashboard/radar" },
           ],
         },
         {
           icon: MessageSquare,
-          label: "?�락관�?,
+          label: "메시지 관리",
           path: "/admin/marketing/messages",
         },
       ],
@@ -103,41 +102,41 @@ export default function AdminLayout() {
       key: "CORE",
       label: "코어",
       items: [
-        { icon: Users, label: "?��??�합", path: "/admin/users" },
-        { icon: Settings, label: "?�벨관�?, path: "/admin/game/level" },
+        { icon: Users, label: "사용자 통합", path: "/admin/users" },
+        { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
         {
           icon: CreditCard,
-          label: "금고?�황",
+          label: "금고 현황",
           path: "/admin/economy/vault",
         },
         {
           icon: CreditCard,
-          label: "?�금관�?,
+          label: "입금 관리",
           path: "/admin/economy/deposits",
         },
         {
           icon: CreditCard,
-          label: "?�켓/?�큰관�?,
+          label: "티켓/토큰 관리",
           path: "/admin/inventory/tickets",
         },
-        { icon: Store, label: "?�점/미션", path: "/admin/economy/shop" },
+        { icon: Store, label: "상점/미션", path: "/admin/economy/shop" },
       ],
     },
     {
       key: "GAME",
-      label: "게임관�?,
+      label: "게임 관리",
       items: [
         { icon: Settings, label: "룰렛", path: "/admin/game/roulette" },
-        { icon: Settings, label: "주사??, path: "/admin/game/dice" },
+        { icon: Settings, label: "주사위", path: "/admin/game/dice" },
         { icon: Settings, label: "복권", path: "/admin/game/lottery" },
-        { icon: Settings, label: "?�배�?", path: "/admin/game/team-battle" },
+        { icon: Settings, label: "팀 배틀", path: "/admin/game/team-battle" },
         {
           icon: Settings,
-          label: "?�벤?�페?��?(골든?�워관�?",
+          label: "이벤트/캠페인(골든아워)",
           path: "/admin/game/golden-hour",
           submenu: [
-            { label: "골든?�워 관�?, path: "/admin/game/golden-hour" },
-            { label: "모달 ?�어", path: "/admin/game/modals" },
+            { label: "골든아워 관리", path: "/admin/game/golden-hour" },
+            { label: "모달 제어", path: "/admin/game/modals" },
           ],
         },
       ],
@@ -148,7 +147,14 @@ export default function AdminLayout() {
     s.items.flatMap((item) => {
       // If item has submenu, include all submenu items
       if (item.submenu) {
-        return [item, ...item.submenu.map((sub) => ({ ...item, label: sub.label, path: sub.path }))];
+        return [
+          item,
+          ...item.submenu.map((sub) => ({
+            ...item,
+            label: sub.label,
+            path: sub.path,
+          })),
+        ];
       }
       return [item];
     }),
@@ -181,7 +187,7 @@ export default function AdminLayout() {
 
           <div className="px-6 py-4">
             <label className="block text-xs font-medium text-obsidian-muted mb-2">
-              메뉴 ?�터
+              메뉴 ?�터
             </label>
             <select
               className="w-full rounded-lg bg-obsidian-bg/60 border border-obsidian-border px-2 py-2 text-sm text-white focus:outline-none"
@@ -191,11 +197,11 @@ export default function AdminLayout() {
                 setActiveSectionFilter(next);
               }}
             >
-              <option value="ALL">?�체</option>
-              <option value="OPS">?�영</option>
+              <option value="ALL">?�체</option>
+              <option value="OPS">?�영</option>
               <option value="CORE">코어</option>
-              <option value="GAME">게임관�?/option>
-              <option value="SYSTEM">?�스??/option>
+              <option value="GAME">게임 관리</option>
+              <option value="SYSTEM">시스템</option>
             </select>
           </div>
 
@@ -214,8 +220,8 @@ export default function AdminLayout() {
                       type="button"
                       onClick={() => toggleSection(section.key)}
                       className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs font-semibold text-obsidian-muted hover:bg-white/5 hover:text-white"
-                      aria-label={`${section.label} ?�션 ${isCollapsed ? "?�치�? : "?�기"}`}
-                      title={`${section.label} ${isCollapsed ? "?�치�? : "?�기"}`}
+                      aria-label={`${section.label} 섹션 ${isCollapsed ? "펼치기" : "접기"}`}
+                      title={`${section.label} ${isCollapsed ? "펼치기" : "접기"}`}
                     >
                       <span>{section.label}</span>
                       {isCollapsed ? (
@@ -284,7 +290,7 @@ export default function AdminLayout() {
               className="flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400 w-full transition-colors"
             >
               <LogOut size={18} />
-              로그?�웃
+              로그?�웃
             </button>
           </div>
         </aside>
@@ -308,7 +314,7 @@ export default function AdminLayout() {
                 <Search size={14} className="text-obsidian-muted" />
                 <input
                   type="text"
-                  placeholder="?��? 검??(Enter)"
+                  placeholder="?��? 검??(Enter)"
                   className="bg-transparent text-sm text-white placeholder-obsidian-muted focus:outline-none w-64"
                 />
               </div>
@@ -318,8 +324,8 @@ export default function AdminLayout() {
             <button
               type="button"
               className="relative rounded-full p-2 text-obsidian-muted hover:bg-white/5 hover:text-white"
-              aria-label="?�림"
-              title="?�림"
+              aria-label="?�림"
+              title="?�림"
             >
               <Bell size={20} />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />

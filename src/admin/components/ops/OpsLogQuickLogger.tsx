@@ -50,31 +50,31 @@ function shortRefId(date: string): string {
 
 const CATEGORY_LABEL: Record<OpsLogCategory, string> = {
   ROUTINE: "루틴",
-  EVENT: "?�벤??,
-  ISSUE: "?�슈",
-  PAYOUT: "지�?,
-  SYSTEM: "?�스??,
+  EVENT: "이벤트",
+  ISSUE: "이슈",
+  PAYOUT: "지급",
+  SYSTEM: "시스템",
   AUDIT: "감사",
-  CS: "고객지??,
-  MARKETING: "마�???,
-  NOTIFICATION: "?�림",
-  EXPERIMENT: "?�험",
+  CS: "고객지원",
+  MARKETING: "마케팅",
+  NOTIFICATION: "알림",
+  EXPERIMENT: "실험",
   ANALYTICS: "분석",
-  GAME_PLAY: "게임 ?�레??,
+  GAME_PLAY: "게임 플레이",
   ECONOMY: "경제",
   SECURITY: "보안",
-  USER_MANAGEMENT: "?�원 관�?,
+  USER_MANAGEMENT: "회원 관리",
 };
 
 const TARGET_MODEL_LABEL: Record<string, string> = {
-  USER: "?�용??,
-  TEAM: "?�",
-  SEASON: "?�즌",
-  ITEM: "?�이??,
+  USER: "사용자",
+  TEAM: "팀",
+  SEASON: "시즌",
+  ITEM: "아이템",
   VAULT: "금고",
   MISSION: "미션",
-  SYSTEM: "?�스??,
-  NONE: "?�음",
+  SYSTEM: "시스템",
+  NONE: "없음",
 };
 
 export type OpsLogQuickLoggerProps = {
@@ -129,15 +129,15 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
 
   const submit = async () => {
     if (!date) {
-      addToast("?�짜???�수?�니??", "error");
+      addToast("?�짜???�수?�니??", "error");
       return;
     }
     if (!actionCode.trim()) {
-      addToast("action_code???�수?�니??", "error");
+      addToast("action_code???�수?�니??", "error");
       return;
     }
     if (!parsedMeta.ok) {
-      addToast(`meta_data JSON ?�류: ${parsedMeta.error}`, "error");
+      addToast(`meta_data JSON ?�류: ${parsedMeta.error}`, "error");
       return;
     }
 
@@ -157,7 +157,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
     // PII guard (client-side minimal)
     const piiHits = findPiiHits(JSON.stringify(payload.meta_data ?? {}));
     if (piiHits.length > 0) {
-      addToast(`PII ?�심 ?�턴 감�?(${piiHits[0].type}): 기록 차단`, "error");
+      addToast(`PII ?�심 ?�턴 감�?(${piiHits[0].type}): 기록 차단`, "error");
       return;
     }
 
@@ -168,7 +168,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
       };
 
       const created = await createMutation.mutateAsync(req);
-      addToast(`기록 ?�료: #${created.id}`, "success");
+      addToast(`기록 ?�료: #${created.id}`, "success");
       setConfirmArmed(false);
 
       // Keep ref_id to encourage idempotency; but refresh to a new one for convenience
@@ -177,7 +177,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
         setMetaText(JSON.stringify(DEFAULT_META, null, 2));
       }
     } catch (err: any) {
-      addToast(err?.response?.data?.detail || err?.message || "기록 ?�패", "error");
+      addToast(err?.response?.data?.detail || err?.message || "기록 ?�패", "error");
     }
   };
 
@@ -194,22 +194,22 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
           </div>
           <div>
             <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-admin-text-base">
-              ?�영 ??로거 <span className="text-admin-brand/50">Quick Logger</span>
+              ?�영 ??로거 <span className="text-admin-brand/50">Quick Logger</span>
             </h3>
-            <p className="mt-0.5 text-[10px] font-bold text-admin-text-muted">관리자 ?�동 ?�력 즉각 추적 �?기록</p>
+            <p className="mt-0.5 text-[10px] font-bold text-admin-text-muted">관리자 ?�동 ?�력 즉각 추적 �?기록</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {isDangerous && (
             <div className="flex items-center gap-2 rounded-full border border-admin-danger/30 bg-admin-danger/10 px-3 py-1 text-[10px] font-bold text-admin-danger animate-pulse">
               <ShieldAlert size={12} />
-              고위???�업
+              고위???�업
             </div>
           )}
           <div className="flex items-center gap-1.5 rounded-full border border-admin-border bg-admin-bg px-3 py-1">
             <div className={`h-1.5 w-1.5 rounded-full ${createMutation.isPending ? "bg-admin-warning animate-spin" : "bg-admin-success"}`} />
             <span className="text-[10px] font-bold text-admin-text-muted uppercase tracking-widest">
-              {createMutation.isPending ? "?�기??�? : "?��?}
+              {createMutation.isPending ? "?�기??�? : "?��?}
             </span>
           </div>
         </div>
@@ -222,13 +222,13 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
           <div className="space-y-4">
             <div className="group/input">
               <label className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-admin-text-muted group-focus-within/input:text-admin-brand transition-colors">
-                <span>발생 ?�짜</span>
+                <span>발생 ?�짜</span>
                 <div className="h-px flex-1 bg-admin-border" />
               </label>
               <input
                 type="date"
-                aria-label="발생 ?�짜"
-                title="발생 ?�짜"
+                aria-label="발생 ?�짜"
+                title="발생 ?�짜"
                 value={date}
                 onChange={(e) => {
                   setDate(e.target.value);
@@ -266,12 +266,12 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
           <div className="space-y-4">
             <div className="group/input">
               <label className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-admin-text-muted group-focus-within/input:text-admin-brand transition-colors">
-                <span>?�션 코드</span>
+                <span>?�션 코드</span>
                 <div className="h-px flex-1 bg-admin-border" />
               </label>
               <input
-                aria-label="?�션 코드"
-                title="?�션 코드"
+                aria-label="?�션 코드"
+                title="?�션 코드"
                 value={actionCode}
                 onChange={(e) => {
                   setActionCode(e.target.value);
@@ -285,11 +285,11 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
             <div className="grid grid-cols-2 gap-3">
               <div className="group/input">
                 <label className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-admin-text-muted group-focus-within/input:text-admin-brand transition-colors">
-                  <span>?��?모델</span>
+                  <span>?��?모델</span>
                 </label>
                 <select
-                  aria-label="?��?모델"
-                  title="?��?모델"
+                  aria-label="?��?모델"
+                  title="?��?모델"
                   value={targetModel}
                   onChange={(e) => {
                     setTargetModel(e.target.value as OpsLogTargetModel);
@@ -306,11 +306,11 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
               </div>
               <div className="group/input">
                 <label className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-admin-text-muted group-focus-within/input:text-admin-brand transition-colors">
-                  <span>?��?ID</span>
+                  <span>?��?ID</span>
                 </label>
                 <input
-                  aria-label="?��?ID"
-                  title="?��?ID"
+                  aria-label="?��?ID"
+                  title="?��?ID"
                   value={targetId}
                   onChange={(e) => {
                     setTargetId(e.target.value);
@@ -340,7 +340,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
                   setRefId(e.target.value);
                   setConfirmArmed(false);
                 }}
-                placeholder="비워?�면 ?�동 ?�성"
+                placeholder="비워?�면 ?�동 ?�성"
                 className="w-full rounded-lg border border-admin-border bg-admin-input pl-4 pr-12 py-2.5 text-xs font-mono text-admin-text-subtle focus:border-admin-brand outline-none"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -352,13 +352,13 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
           {!isCompact ? (
             <div className="group/input">
               <label className="mb-1.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-admin-text-muted group-focus-within/input:text-admin-brand transition-colors">
-                <span>메�? ?�이??(Payload)</span>
+                <span>메�? ?�이??(Payload)</span>
                 <div className="h-px flex-1 bg-admin-border" />
               </label>
               <div className="relative rounded-lg border border-admin-border bg-admin-bg p-1 shadow-inner">
                 <textarea
-                  aria-label="메�? ?�이??
-                  title="메�? ?�이??
+                  aria-label="메�? ?�이??
+                  title="메�? ?�이??
                   value={metaText}
                   onChange={(e) => {
                     setMetaText(e.target.value);
@@ -379,7 +379,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
             <div className="rounded-lg border border-admin-border border-dashed bg-admin-bg/30 p-3">
               <p className="text-[10px] font-bold text-admin-text-muted italic flex items-center gap-2">
                 <Activity size={12} className="text-admin-brand" />
-                컴팩??모드?�서??메�? ?�이?��? 기본값으�?기록?�니??
+                컴팩??모드?�서??메�? ?�이?��? 기본값으�?기록?�니??
               </p>
             </div>
           )}
@@ -405,8 +405,8 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
                 className="hidden"
               />
               <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-admin-text-base uppercase tracking-widest">?�동 ?�행 로직</span>
-                <span className="text-[9px] font-bold text-admin-text-muted italic">?�동 ?�퀀?�로 ?�행?�는 로그?��? ?�인?�니??</span>
+                <span className="text-[11px] font-bold text-admin-text-base uppercase tracking-widest">?�동 ?�행 로직</span>
+                <span className="text-[9px] font-bold text-admin-text-muted italic">?�동 ?�퀀?�로 ?�행?�는 로그?��? ?�인?�니??</span>
               </div>
             </label>
           </div>
@@ -418,9 +418,9 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
                   <ShieldAlert size={20} />
                 </div>
                 <div className="space-y-2 flex-1">
-                  <h4 className="text-xs font-bold text-admin-danger uppercase tracking-widest">2?�계 보안 ?�인 (최종 ?�인)</h4>
+                  <h4 className="text-xs font-bold text-admin-danger uppercase tracking-widest">2?�계 보안 ?�인 (최종 ?�인)</h4>
                   <p className="text-[11px] font-bold text-admin-text-muted leading-relaxed">
-                    민감???�영 ?�션?�로 감�??�었?�니?? ?�래 ?�행 ?�약???�인????[기록 ?�정] 버튼???�러주세??
+                    민감???�영 ?�션?�로 감�??�었?�니?? ?�래 ?�행 ?�약???�인????[기록 ?�정] 버튼???�러주세??
                   </p>
                   <div className="mt-3 rounded-md bg-admin-bg/80 border border-admin-danger/20 p-3 shadow-inner">
                     <pre className="font-mono text-[10px] text-admin-text-base leading-tight">
@@ -454,7 +454,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
               className="group/btn relative flex items-center gap-3 overflow-hidden rounded-lg bg-admin-danger px-8 py-3 text-sm font-bold text-white shadow-[0_0_20px_rgba(244,71,71,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <ShieldAlert size={18} />
-              <span>?�행 ?�인 (ARM LOG)</span>
+              <span>?�행 ?�인 (ARM LOG)</span>
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
             </button>
           ) : (
@@ -465,7 +465,7 @@ const OpsLogQuickLogger: React.FC<OpsLogQuickLoggerProps> = ({ variant = "full",
               className="group/btn relative flex items-center gap-3 overflow-hidden rounded-lg bg-admin-brand px-10 py-3 text-sm font-bold text-black shadow-[0_0_20px_rgba(78,201,176,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
               <Save size={18} />
-              <span>{isDangerous ? "기록 ?�정 (COMMIT)" : "로그 기록 (DEPLOY)"}</span>
+              <span>{isDangerous ? "기록 ?�정 (COMMIT)" : "로그 기록 (DEPLOY)"}</span>
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-1000" />
             </button>
           )}

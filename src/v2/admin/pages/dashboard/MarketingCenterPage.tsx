@@ -45,10 +45,10 @@ export default function MarketingCenterPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            마�????�터 (Marketing Center)
+            마�????�터 (Marketing Center)
           </h1>
           <p className="text-sm text-zinc-400">
-            주요 KPI �?마�????�과 지?��? ?�시�?관?�합?�다.
+            주요 KPI �?마�????�과 지?��? ?�시�?관?�합?�다.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -61,7 +61,7 @@ export default function MarketingCenterPage() {
             />
           </div>
           <button
-            title="?�림 ?�인"
+            title="?�림 ?�인"
             className="h-9 w-9 flex items-center justify-center rounded-md border border-white/10 bg-[#18181B] text-zinc-400 hover:text-white hover:bg-white/5"
           >
             <Bell className="h-4 w-4" />
@@ -75,19 +75,19 @@ export default function MarketingCenterPage() {
             value="overview"
             className="data-[state=active]:bg-[#D2FD9C] data-[state=active]:text-black"
           >
-            종합 ?�약
+            종합 ?�약
           </TabsTrigger>
           <TabsTrigger
             value="acquisition"
             className="data-[state=active]:bg-[#D2FD9C] data-[state=active]:text-black"
           >
-            ?�규 가??
+            ?�규 가??
           </TabsTrigger>
           <TabsTrigger
             value="retention"
             className="data-[state=active]:bg-[#D2FD9C] data-[state=active]:text-black"
           >
-            리텐???�성
+            리텐???�성
           </TabsTrigger>
         </TabsList>
 
@@ -95,17 +95,17 @@ export default function MarketingCenterPage() {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <QuickActionCard
-              label="?�시�?매출"
+              label="?�시�?매출"
               description={
                 <div className="flex items-baseline gap-1">
-                  <span className="text-xs text-zinc-500">??/span>
+                  <span className="text-xs text-zinc-500">원</span>
                   <NumberTicker value={1250000} className="text-lg font-bold" />
                 </div>
               }
               icon={DollarSign}
             />
             <QuickActionCard
-              label="?�규 가?�자"
+              label="?�규 가?�자"
               description={
                 <div className="flex items-center gap-2">
                   <NumberTicker value={42} className="text-lg font-bold" />
@@ -117,17 +117,17 @@ export default function MarketingCenterPage() {
               icon={UserPlus}
             />
             <QuickActionCard
-              label="?�성 ?��? (DAU)"
+              label="?�성 ?��? (DAU)"
               description={
                 <div className="flex items-center gap-1">
                   <NumberTicker value={234} className="text-lg font-bold" />
-                  <span className="text-xs text-zinc-500">�?/span>
+                  <span className="text-xs text-zinc-500">명</span>
                 </div>
               }
               icon={Users}
             />
             <QuickActionCard
-              label="?�환??(CVR)"
+              label="?�환??(CVR)"
               description={
                 <div className="flex items-center gap-1">
                   <span className="text-lg font-bold text-[#D2FD9C]">8.5</span>
@@ -149,7 +149,7 @@ export default function MarketingCenterPage() {
                     매출 추이 (Revenue Trend)
                   </h3>
                   <p className="text-zinc-500 text-xs text-muted-foreground">
-                    지??7?�간???�별 매출 ?�계?�니??
+                    지난 7일간 일별 매출 추계입니다.
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -187,23 +187,27 @@ export default function MarketingCenterPage() {
             {/* Live Feed (Span 1) */}
             <div className="md:col-span-1 rounded-xl bg-[#18181B] border border-white/5 p-6 flex flex-col">
               <h3 className="text-lg font-bold text-white mb-4">
-                ?�이�?캠페??관??
+                라이브 캠페인 현황
               </h3>
               <div className="space-y-4 flex-1">
                 {[
                   {
                     user: "User_102",
-                    action: "?�즌?�스 ?�레??,
-                    time: "방금 ??,
+                    action: "시즌패스 클레임",
+                    time: "방금 전",
                   },
                   {
                     user: "User_044",
-                    action: "룰렛 ?�켓 구매",
-                    time: "2�???,
+                    action: "룰렛 티켓 구매",
+                    time: "2분 전",
                   },
-                  { user: "User_992", action: "?�규 가??, time: "5�??? },
-                  { user: "User_121", action: "복권 1???�첨", time: "8�??? },
-                  { user: "User_550", action: "금고 ???�제", time: "12�??? },
+                  { user: "User_992", action: "신규 가입", time: "5분 전" },
+                  { user: "User_121", action: "복권 1등 당첨", time: "8분 전" },
+                  {
+                    user: "User_550",
+                    action: "금고 보상 해제",
+                    time: "12분 전",
+                  },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -225,7 +229,7 @@ export default function MarketingCenterPage() {
                 ))}
               </div>
               <button className="mt-4 w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-zinc-400 text-center transition-colors">
-                ?�체 ?�동 보기
+                전체 활동 보기
               </button>
             </div>
           </BentoGrid>
@@ -234,9 +238,9 @@ export default function MarketingCenterPage() {
         <TabsContent value="acquisition" className="outline-none">
           <Card className="bg-[#18181B] border-white/5">
             <CardHeader>
-              <CardTitle>?�규 가??분석</CardTitle>
+              <CardTitle>?�규 가??분석</CardTitle>
               <CardDescription>
-                채널�??�입 경로 �?가???�환?�입?�다.
+                채널�??�입 경로 �?가???�환?�입?�다.
               </CardDescription>
             </CardHeader>
             <CardContent className="h-64 flex items-center justify-center text-zinc-600 text-sm italic">
@@ -248,9 +252,9 @@ export default function MarketingCenterPage() {
         <TabsContent value="retention" className="outline-none">
           <Card className="bg-[#18181B] border-white/5">
             <CardHeader>
-              <CardTitle>리텐??리포??/CardTitle>
+              <CardTitle>리텐션 리포트</CardTitle>
               <CardDescription>
-                D+1, D+7, D+30 리텐??벤치마크?�니??
+                D+1, D+7, D+30 리텐??벤치마크?�니??
               </CardDescription>
             </CardHeader>
             <CardContent className="h-64 flex items-center justify-center text-zinc-600 text-sm italic">
@@ -268,10 +272,10 @@ export default function MarketingCenterPage() {
         </div>
         <div className="flex gap-4">
           <button className="hover:text-white transition-colors">
-            보고???�운로드 (CSV)
+            보고???�운로드 (CSV)
           </button>
           <button className="hover:text-white transition-colors">
-            캠페???�성
+            캠페???�성
           </button>
         </div>
       </div>

@@ -27,9 +27,9 @@ export const OpsTaskCard: React.FC<OpsTaskCardProps> = ({
           type="button"
           className="md:hidden rounded-lg border border-admin-border bg-admin-bg px-3 py-2 text-xs font-bold text-admin-text-secondary"
           onClick={onToggleCollapse}
-          aria-label="?�업 카드 ?�기/?�치�?
+          aria-label="작업 카드 펼치기/접기"
         >
-          {collapseLabel ?? (collapsed ? "?�치�? : "?�기")}
+          {collapseLabel ?? (collapsed ? "?�치�? : "?�기")}
         </button>
       )}
     </div>

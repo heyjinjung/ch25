@@ -42,8 +42,8 @@ const QuickActionsBar: React.FC = () => {
     const contextualActions: QuickAction[] = [
         ...(riskCount > 0 ? [{
             id: "risk-users",
-            label: "?�탈 ?�험",
-            description: `${riskCount}�?리스??감�?`,
+            label: "?�탈 ?�험",
+            description: `${riskCount}�?리스??감�?`,
             to: "/admin/marketing",
             icon: <AlertCircle className="h-4 w-4" />,
             badge: riskCount,
@@ -51,8 +51,8 @@ const QuickActionsBar: React.FC = () => {
         }] : []),
         ...(streakRiskCount > 0 ? [{
             id: "streak-risk",
-            label: "?�트�??�험",
-            description: `${streakRiskCount}�??�탈 ?�박`,
+            label: "?�트�??�험",
+            description: `${streakRiskCount}�??�탈 ?�박`,
             to: "/admin/streak-rewards",
             icon: <Clock className="h-4 w-4" />,
             badge: streakRiskCount,
@@ -64,8 +64,8 @@ const QuickActionsBar: React.FC = () => {
     const pinnedActions: QuickAction[] = [
         {
             id: "missions",
-            label: "미션 관�?,
-            description: "미션 ?�인/반려",
+            label: "미션 관리",
+            description: "미션 ?�인/반려",
             to: "/admin/missions",
             icon: <FileCheck className="h-4 w-4" />,
             isPinned: true,
@@ -73,39 +73,39 @@ const QuickActionsBar: React.FC = () => {
         {
             id: "messages",
             label: "메시지 발송",
-            description: "공�?/?�벤???�림",
+            description: "공�?/?�벤???�림",
             to: "/admin/messages",
             icon: <Send className="h-4 w-4" />,
             isPinned: true,
         },
         {
             id: "seasons",
-            label: "?�즌 ?�정",
-            description: "?�즌 ?�스 관�?,
+            description: "시즌 패스 관리",
+            description: "?�즌 ?�스 관�?,
             to: "/admin/seasons",
             icon: <Trophy className="h-4 w-4" />,
             isPinned: true,
         },
         {
             id: "users",
-            label: "?�원 검??,
-            description: "?�원 조회/?�정",
+            label: "?�원 검??,
+            description: "?�원 조회/?�정",
             to: "/admin/users",
             icon: <Users className="h-4 w-4" />,
             isPinned: true,
         },
         {
             id: "streak",
-            label: "?�트�?보상",
-            description: "출석 보상 ?�정",
+            label: "?�트�?보상",
+            description: "출석 보상 ?�정",
             to: "/admin/streak-rewards",
             icon: <Gift className="h-4 w-4" />,
             isPinned: true,
         },
         {
             id: "ui-config",
-            label: "UI ?�정",
-            description: "문구/배치 관�?,
+            label: "UI ?�정",
+            description: "문구/배치 관�?,
             to: "/admin/ui-config",
             icon: <Settings className="h-4 w-4" />,
             isPinned: true,
@@ -165,10 +165,10 @@ const QuickActionsBar: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <Zap className="h-4 w-4 text-admin-brand" />
-                    <h3 className="text-sm font-bold text-admin-text-primary">빠른 ?�업</h3>
+                    <h3 className="text-sm font-bold text-admin-text-primary">빠른 ?�업</h3>
                 </div>
                 <span className="text-[10px] text-admin-text-muted font-mono">
-                    {contextualActions.length > 0 ? `${contextualActions.length}�??��? : "?�상"}
+                    {contextualActions.length > 0 ? `${contextualActions.length}�??��? : "?�상"}
                 </span>
             </div>
 
@@ -176,7 +176,7 @@ const QuickActionsBar: React.FC = () => {
             {contextualActions.length > 0 && (
                 <div className="mb-4 space-y-2">
                     <p className="text-[10px] font-bold text-admin-warning uppercase tracking-wider flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> 즉시 조치 ?�요
+                        <Clock className="h-3 w-3" /> 즉시 조치 ?�요
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {contextualActions.map(action => renderActionCard(action, true))}
@@ -187,7 +187,7 @@ const QuickActionsBar: React.FC = () => {
             {/* Pinned Quick Links */}
             <div>
                 <p className="text-[10px] font-bold text-admin-text-muted uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <Pin className="h-3 w-3" /> 빠른 ?�동
+                    <Pin className="h-3 w-3" /> 빠른 ?�동
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                     {pinnedActions.map(action => renderActionCard(action))}

@@ -48,8 +48,8 @@ export default function OpsLogPage() {
     {
       time: "10:42:23",
       admin: "Manager_A",
-      type: "지�?,
-      desc: "User_1004?�게 룰렛 ?�켓 3??지�?,
+      type: "지급",
+      desc: "User_1004에게 룰렛 티켓 3장 지급",
       status: "Success",
       details: {
         userId: 1004,
@@ -63,7 +63,7 @@ export default function OpsLogPage() {
       time: "10:15:00",
       admin: "System",
       type: "배치",
-      desc: "?�일 미션 리셋 ?�료",
+      desc: "?�일 미션 리셋 ?�료",
       status: "Success",
       details: {
         job: "daily_mission_reset",
@@ -75,8 +75,8 @@ export default function OpsLogPage() {
     {
       time: "09:58:12",
       admin: "Manager_B",
-      type: "?�정",
-      desc: "Shop_001 ?�품 가�?변�?,
+      type: "수정",
+      desc: "Shop_001 상품 가격 변경",
       status: "Warning",
       details: {
         productId: "Shop_001",
@@ -89,7 +89,7 @@ export default function OpsLogPage() {
       time: "09:30:45",
       admin: "Manager_A",
       type: "출금",
-      desc: "User_552 출금 ?�인 (50,000??",
+      desc: "User_552 출금 승인 (50,000원)",
       status: "Success",
       details: {
         userId: 552,
@@ -101,8 +101,8 @@ export default function OpsLogPage() {
     {
       time: "09:00:00",
       admin: "System",
-      type: "?�류",
-      desc: "?��? API ?�동 ?�패 (Timeout)",
+      type: "오류",
+      desc: "외부 API 연동 실패 (Timeout)",
       status: "Error",
       details: {
         endpoint: "/v1/external/verify",
@@ -118,10 +118,10 @@ export default function OpsLogPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            ?�영 로그 (Ops Log)
+            ?�영 로그 (Ops Log)
           </h1>
           <p className="text-sm text-zinc-400">
-            ?�스???�영 기록 조회 �??�???�이??CSV) ?�로?��? 관리합?�다.
+            ?�스???�영 기록 조회 �??�???�이??CSV) ?�로?��? 관리합?�다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -130,11 +130,11 @@ export default function OpsLogPage() {
             className="border-white/10 text-zinc-300 hover:bg-white/5"
           >
             <Download className="mr-2 h-4 w-4" />
-            CSV ?�보?�기
+            CSV ?�보?�기
           </Button>
           <Button className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold">
             <Upload className="mr-2 h-4 w-4" />
-            ?�이???�로??
+            ?�이???�로??
           </Button>
         </div>
       </div>
@@ -145,28 +145,28 @@ export default function OpsLogPage() {
           <Card className="bg-[#18181B] border-white/5">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Filter className="h-4 w-4 text-zinc-500" /> 검???�터
+                <Filter className="h-4 w-4 text-zinc-500" /> 검???�터
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] uppercase text-zinc-500 font-bold">
-                  검?�어
+                  검?�어
                 </label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-zinc-600" />
                   <Input
-                    placeholder="ID, ?�네?? ?�용..."
+                    placeholder="ID, ?�네?? ?�용..."
                     className="pl-9 h-9 border-white/5 bg-black/20 text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] uppercase text-zinc-500 font-bold">
-                  ?�동 ?�형
+                  ?�동 ?�형
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {["?�체", "지�?, "?�정", "??��", "?�류"].map((t) => (
+                  {["전체", "지급", "수정", "환불", "오류"].map((t) => (
                     <Badge
                       key={t}
                       variant="outline"
@@ -183,14 +183,13 @@ export default function OpsLogPage() {
           <Card className="bg-[#18181B] border-white/5 overflow-hidden">
             <div className="p-4 bg-gradient-to-br from-[#D2FD9C]/10 to-transparent">
               <h4 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-[#D2FD9C]" /> ?�???�업 가?�드
+                <FileText className="w-4 h-4 text-[#D2FD9C]" /> ?�???�업 가?�드
               </h4>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                CSV ?�로?????�플 ?�플릿의 ?�식??반드??준?�해 주세?? (UTF-8
-                권장)
+                CSV ?�로?????�플 ?�플릿의 ?�식??반드??준?�해 주세?? (UTF-8 권장)
               </p>
               <button className="mt-4 text-[10px] text-[#D2FD9C] hover:underline">
-                ?�플 ?�일 ?�운로드 (.csv)
+                ?�플 ?�일 ?�운로드 (.csv)
               </button>
             </div>
           </Card>
@@ -200,9 +199,9 @@ export default function OpsLogPage() {
         <Card className="md:col-span-3 bg-[#18181B] border-white/5">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-white">?�동 로그 ?�드</CardTitle>
+              <CardTitle className="text-white">?�동 로그 ?�드</CardTitle>
               <CardDescription className="text-zinc-500 text-xs">
-                최근 1?�간 ?�의 주요 ?�벤?�입?�다.
+                최근 1?�간 ?�의 주요 ?�벤?�입?�다.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 text-[10px] text-zinc-600">
@@ -224,15 +223,15 @@ export default function OpsLogPage() {
               <TableHeader>
                 <TableRow className="border-zinc-800 hover:bg-transparent">
                   <TableHead className="text-zinc-400 w-[100px]">
-                    ?�간
+                    ?�간
                   </TableHead>
                   <TableHead className="text-zinc-400 w-[120px]">
                     관리자
                   </TableHead>
-                  <TableHead className="text-zinc-400 w-[80px]">?�형</TableHead>
-                  <TableHead className="text-zinc-400">?�세 ?�용</TableHead>
+                  <TableHead className="text-zinc-400 w-[80px]">?�형</TableHead>
+                  <TableHead className="text-zinc-400">?�세 ?�용</TableHead>
                   <TableHead className="text-zinc-400 text-right">
-                    ?�태
+                    ?�태
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -292,7 +291,7 @@ export default function OpsLogPage() {
               <Terminal className="w-5 h-5" /> Log Artifact
             </SheetTitle>
             <SheetDescription className="text-zinc-500">
-              ?�당 ?�벤?�의 ?�세 Raw ?�이로드?� 컨텍?�트?�니??
+              ?�당 ?�벤?�의 ?�세 Raw ?�이로드?� 컨텍?�트?�니??
             </SheetDescription>
           </SheetHeader>
 
@@ -334,7 +333,7 @@ export default function OpsLogPage() {
                   로그 복사
                 </Button>
                 <Button className="flex-1 bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90">
-                  ?�당 ?��? 관�?
+                  ?�당 ?��? 관�?
                 </Button>
               </div>
             </div>
