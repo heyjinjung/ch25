@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import RouletteWheel from "../../components/game/RouletteWheel";
-import { getV2RouletteStatus, playV2Roulette } from "../../api/v1CompatAdapter";
-type RouletteTicketType = "ROULETTE_TICKET" | "DICE_TICKET";
+import {
+  getV2RouletteStatus,
+  getV2RouletteStatusStrict,
+  playV2Roulette,
+} from "../../api/v1CompatAdapter";
+type RouletteTicketType =
+  | "ROULETTE_TICKET"
+  | "GOLD_KEY_TICKET"
+  | "DIAMOND_TICKET"
+  | "TRIAL_TICKET";
 import { useTheme } from "../../contexts/ThemeContext";
 import { cn } from "../../lib/utils";
 import { Play, Loader2, Trophy, Coins } from "lucide-react";
+import { getRewardItemLabel } from "../../constants/rewardItems";
 
 const TICKET_TABS: {
   type: RouletteTicketType;
@@ -16,13 +25,23 @@ const TICKET_TABS: {
 }[] = [
   {
     type: "ROULETTE_TICKET",
-    label: "고급 룰렛",
+    label: getRewardItemLabel("ROULETTE_TICKET"),
     color: "from-purple-600 to-indigo-600",
   },
   {
-    type: "DICE_TICKET",
-    label: "일반 룰렛",
-    color: "from-emerald-600 to-teal-600",
+    type: "GOLD_KEY_TICKET",
+    label: getRewardItemLabel("GOLD_KEY_TICKET"),
+    color: "from-amber-500 to-yellow-500",
+  },
+  {
+    type: "DIAMOND_TICKET",
+    label: getRewardItemLabel("DIAMOND_TICKET"),
+    color: "from-cyan-500 to-sky-500",
+  },
+  {
+    type: "TRIAL_TICKET",
+    label: getRewardItemLabel("TRIAL_TICKET"),
+    color: "from-zinc-600 to-zinc-800",
   },
 ];
 
@@ -38,6 +57,34 @@ export default function RoulettePage() {
     queryKey: ["v2-roulette-status", activeTab],
     queryFn: () => getV2RouletteStatus(activeTab),
   });
+
+  const { data: tabStatuses } = useQuery({
+    queryKey: ["v2-roulette-status-tabs"],
+    queryFn: async () => {
+      const results = await Promise.all(
+        TICKET_TABS.map(async (tab) => {
+          try {
+            const data = await getV2RouletteStatusStrict(tab.type);
+            return { tab, data };
+          } catch {
+            return null;
+          }
+        }),
+      );
+      return results.filter(Boolean) as Array<{
+        tab: (typeof TICKET_TABS)[number];
+        data: Awaited<ReturnType<typeof getV2RouletteStatusStrict>>;
+      }>;
+    },
+    staleTime: 1000 * 30,
+  });
+
+  const availableTabs = useMemo(() => {
+    if (!tabStatuses || tabStatuses.length === 0) {
+      return TICKET_TABS.slice(0, 1);
+    }
+    return tabStatuses.map((item) => item.tab);
+  }, [tabStatuses]);
 
   const playMutation = useMutation({
     mutationFn: () =>
@@ -73,9 +120,9 @@ export default function RoulettePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-4 pb-24 flex flex-col items-center">
+    <div className="h-screen w-full max-w-[391px] mx-auto bg-[#0A0A0A] text-white flex flex-col items-center overflow-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)] px-4">
       {/* Header Stats */}
-      <div className="w-full max-w-[500px] grid grid-cols-2 gap-3 mb-8 mt-16">
+      <div className="w-full grid grid-cols-2 gap-3 mb-6">
         <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-4 flex flex-col items-center gap-1 shadow-lg backdrop-blur-md">
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center mb-1">
             <Coins className="w-4 h-4 text-emerald-400" />
@@ -100,25 +147,22 @@ export default function RoulettePage() {
         </div>
       </div>
 
-      {/* Main Wheel Section */}
-      <div className="relative w-full max-w-[400px] aspect-square flex items-center justify-center mb-12">
-        <RouletteWheel
-          segments={status?.segments || []}
-          isSpinning={isSpinning}
-          selectedIndex={winningSegment ?? undefined}
-          onSpinEnd={handleSpinComplete}
-        />
-
-        {/* Center Pointer/Stopper */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-30">
-          <div className="w-6 h-8 bg-white rounded-b-full shadow-[0_0_20px_rgba(255,255,255,0.5)] border-2 border-zinc-900 [clip-path:polygon(0%_0%,_100%_0%,_50%_100%)]" />
+      {/* Main Wheel Section - Fixed for Premium Assets */}
+      <div className="relative w-full flex-1 flex items-center justify-center mb-6 min-h-0">
+        <div className="w-full max-w-[320px] aspect-square">
+          <RouletteWheel
+            segments={status?.segments || []}
+            isSpinning={isSpinning}
+            selectedIndex={winningSegment ?? undefined}
+            onSpinEnd={handleSpinComplete}
+          />
         </div>
       </div>
 
       {/* Control Panel */}
       <div className="w-full max-w-[360px] space-y-6">
         <div className="flex bg-zinc-950 rounded-2xl p-1.5 border border-white/5 shadow-inner">
-          {TICKET_TABS.map((tab) => (
+          {availableTabs.map((tab) => (
             <button
               key={tab.type}
               onClick={() => setActiveTab(tab.type)}

@@ -26,6 +26,7 @@ from app.v2.services.feature_service import FeatureService
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.vault_service import V2VaultService
+from app.v2.services.user_service import V2UserService
 from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.mission_service import V2MissionService
 from app.v2.models.v2_roulette import V2RouletteLog, V2RouletteSegment
@@ -83,7 +84,8 @@ class V2RouletteGameService:
         try:
             from app.models.user_segment import UserSegment
 
-            row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+            row = db.query(UserSegment).filter(UserSegment.user_id == legacy_user_id).first()
             seg = (row.segment if row else "COMMON") or "COMMON"
             seg = str(seg).upper()
             if seg in {"COMMON", "VIP", "WHALE", "AT_RISK"}:

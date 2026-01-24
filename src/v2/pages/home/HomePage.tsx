@@ -6,68 +6,36 @@ import "./HomeRedesign.css";
 
 export default function HomePage() {
   const { playTabTouch } = useSound();
+  const navigate = useNavigate();
   const gridRef = useRef<HTMLDivElement>(null);
+ 
+
 
   const gridCols = 18;
   const gridRows = 14;
 
   const verticalLinePositions = [
-    "left-[0%]",
-    "left-[5.88%]",
-    "left-[11.76%]",
-    "left-[17.65%]",
-    "left-[23.53%]",
-    "left-[29.41%]",
-    "left-[35.29%]",
-    "left-[41.18%]",
-    "left-[47.06%]",
-    "left-[52.94%]",
-    "left-[58.82%]",
-    "left-[64.71%]",
-    "left-[70.59%]",
-    "left-[76.47%]",
-    "left-[82.35%]",
-    "left-[88.24%]",
-    "left-[94.12%]",
-    "left-[100%]",
+    "left-[0%]", "left-[5.88%]", "left-[11.76%]", "left-[17.65%]", "left-[23.53%]",
+    "left-[29.41%]", "left-[35.29%]", "left-[41.18%]", "left-[47.06%]", "left-[52.94%]",
+    "left-[58.82%]", "left-[64.71%]", "left-[70.59%]", "left-[76.47%]", "left-[82.35%]",
+    "left-[88.24%]", "left-[94.12%]", "left-[100%]"
   ];
 
   const horizontalLinePositions = [
-    "top-[0%]",
-    "top-[7.69%]",
-    "top-[15.38%]",
-    "top-[23.08%]",
-    "top-[30.77%]",
-    "top-[38.46%]",
-    "top-[46.15%]",
-    "top-[53.85%]",
-    "top-[61.54%]",
-    "top-[69.23%]",
-    "top-[76.92%]",
-    "top-[84.62%]",
-    "top-[92.31%]",
-    "top-[100%]",
+    "top-[0%]", "top-[7.69%]", "top-[15.38%]", "top-[23.08%]", "top-[30.77%]",
+    "top-[38.46%]", "top-[46.15%]", "top-[53.85%]", "top-[61.54%]", "top-[69.23%]",
+    "top-[76.92%]", "top-[84.62%]", "top-[92.31%]", "top-[100%]"
   ];
 
-  const verticalLines = useMemo(
-    () => Array.from({ length: gridCols }, (_, idx) => idx),
-    [],
-  );
-  const horizontalLines = useMemo(
-    () => Array.from({ length: gridRows }, (_, idx) => idx),
-    [],
-  );
+  const verticalLines = useMemo(() => Array.from({ length: gridCols }, (_, idx) => idx), []);
+  const horizontalLines = useMemo(() => Array.from({ length: gridRows }, (_, idx) => idx), []);
 
   useLayoutEffect(() => {
     if (!gridRef.current) return;
 
     const root = gridRef.current;
-    const vLines = Array.from(
-      root.querySelectorAll<HTMLElement>(".gridwave-line--v"),
-    );
-    const hLines = Array.from(
-      root.querySelectorAll<HTMLElement>(".gridwave-line--h"),
-    );
+    const vLines = Array.from(root.querySelectorAll<HTMLElement>(".gridwave-line--v"));
+    const hLines = Array.from(root.querySelectorAll<HTMLElement>(".gridwave-line--h"));
     const allLines = [...vLines, ...hLines];
 
     let rafId = 0;
@@ -99,9 +67,7 @@ export default function HomePage() {
         });
 
         gsap.to(allLines, {
-          filter: `drop-shadow(0 0 ${glow}px rgba(182, 255, 0, 0.55)) drop-shadow(0 0 ${
-            glow * 0.45
-          }px rgba(37, 173, 130, 0.45))`,
+          filter: `drop-shadow(0 0 ${glow}px rgba(182, 255, 0, 0.55)) drop-shadow(0 0 ${glow * 0.45}px rgba(37, 173, 130, 0.45))`,
           duration: 0.55,
           ease: "sine.out",
         });
@@ -134,95 +100,73 @@ export default function HomePage() {
     return () => ctx.revert();
   }, []);
 
-  const navigate = useNavigate();
-
   return (
     <div className="home-container-v2">
       <div className="home-bg-overlay" />
 
       <div className="home-gridwave" ref={gridRef} aria-hidden="true">
         {verticalLines.map((idx) => (
-          <div
-            key={`v-${idx}`}
-            className={`gridwave-line gridwave-line--v ${verticalLinePositions[idx]}`}
-          />
+          <div key={`v-${idx}`} className={`gridwave-line gridwave-line--v ${verticalLinePositions[idx]}`} />
         ))}
         {horizontalLines.map((idx) => (
-          <div
-            key={`h-${idx}`}
-            className={`gridwave-line gridwave-line--h ${horizontalLinePositions[idx]}`}
-          />
+          <div key={`h-${idx}`} className={`gridwave-line gridwave-line--h ${horizontalLinePositions[idx]}`} />
         ))}
       </div>
 
       <div className="home-content">
-        {/* Featured Section (Now at top) */}
         <div className="home-featured-section">
-          <div className="featured-header">
-            {/* STREAK EVENT label removed */}
-          </div>
-          <div className="featured-card">
-            <div className="featured-content-inner">
-              <span className="featured-sub-text">CC CASINO</span>
-              <h2 className="featured-main-title">NEW UPDATE 2026 FEB</h2>
+          <div className="featured-header" />
+          <div className="featured-card overflow-hidden">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <img src="/assets/logo_cc_v2.png" alt="CC Logo" className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(210,253,156,0.4)]" />
+              <span className="featured-sub-text !mb-0 text-white font-black tracking-[0.2em]">CC CASINO ONLINE</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Access Tiles */}
-        <div className="home-quick-grid">
-          <div
-            className="quick-card"
-            onClick={() => {
-              playTabTouch();
-              navigate("/game/dice");
-            }}
-          >
-            <img
-              src="/assets/01home/1.png"
-              alt="quick access 1"
-              className="quick-card-img"
-            />
+        <div className="home-bento-grid">
+          <div className="bento-tile bento-tile--wide" onClick={() => { playTabTouch(); navigate("/game/dice"); }}>
+            <div className="tile-content">
+              <span className="tile-title">DICE BATTLE</span>
+              <img src="/assets/01home/1.png" alt="dice" className="tile-img" />
+            </div>
+            <div className="tile-shine" />
           </div>
-          <div
-            className="quick-card"
-            onClick={() => {
-              playTabTouch();
-              navigate("/game/roulette");
-            }}
-          >
-            <img
-              src="/assets/01home/2.png"
-              alt="quick access 2"
-              className="quick-card-img"
-            />
+
+          <div className="bento-tile bento-tile--tall" onClick={() => { playTabTouch(); navigate("/game/roulette"); }}>
+            <div className="tile-content vertical">
+              <span className="tile-title">ROULETTE</span>
+              <img src="/assets/01home/2.png" alt="roulette" className="tile-img" />
+            </div>
           </div>
-          <div
-            className="quick-card"
-            onClick={() => {
-              playTabTouch();
-              navigate("/game/lottery");
-            }}
-          >
-            <img
-              src="/assets/01home/3.png"
-              alt="quick access 3"
-              className="quick-card-img"
-            />
+
+          <div className="bento-tile bento-tile--square" onClick={() => { playTabTouch(); navigate("/game/lottery"); }}>
+            <img src="/assets/01home/3.png" alt="lottery" className="tile-img-small" />
           </div>
+
+          {/* Item 4: Square Card (All Games) */}
           <div
-            className="quick-card"
-            onClick={() => {
-              playTabTouch();
-              navigate("/game");
-            }}
+            className="bento-tile bento-tile--square"
+            onClick={() => { playTabTouch(); navigate("/game"); }}
           >
-            <img
-              src="/assets/01home/8.png"
-              alt="quick access 4"
-              className="quick-card-img"
-            />
+            <img src="/assets/01home/8.png" alt="all" className="tile-img-small" />
           </div>
+        </div>
+
+        {/* New 3D CTA Buttons Row */}
+        <div className="home-cta-row">
+          <button 
+            onClick={() => { playTabTouch(); window.open("https://t.me/example_casino", "_blank"); }}
+            className="cta-button cta-button--primary"
+          >
+            CC카지노
+          </button>
+          <button 
+            onClick={() => { playTabTouch(); window.open("https://t.me/example_official", "_blank"); }}
+            className="cta-button cta-button--secondary"
+          >
+            CC텔레공식채널
+          </button>
         </div>
       </div>
     </div>

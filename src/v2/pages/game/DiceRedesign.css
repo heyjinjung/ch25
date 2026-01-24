@@ -2,21 +2,21 @@
 
 .dice-page-v2 {
     display: flex;
-    width: 390px;
-    height: auto;
-    min-height: 500px;
-    /* Reduced for compact view */
-    padding: 80px 0 0 0;
-    /* Clear Live Feed and handle user request */
+    width: 100%;
+    max-width: 391px;
+    height: 100vh;
+    /* Strictly 100vh */
+    padding-top: var(--header-offset);
+    padding-bottom: var(--nav-offset);
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 0;
     margin: 0 auto;
     background-color: #000;
     color: #fff;
     position: relative;
-    overflow-x: hidden;
+    overflow: hidden;
+    /* No scroll as per guide */
     --aurora-1: #ff2a6d;
     --aurora-2: #b1002a;
     --aurora-3: #120006;

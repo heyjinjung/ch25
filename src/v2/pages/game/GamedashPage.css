@@ -1,7 +1,8 @@
 /* src/v2/pages/game/GamedashPage.css */
 
 .gamedash-container {
-    background: linear-gradient(180deg, rgba(80, 153, 110, 0.4) 0%, rgba(68, 127, 85, 0.5) 100%);
+    background: #121214;
+    /* Pure dark for background image emphasis */
     height: 100vh;
     /* Strictly 100vh */
     width: 100%;
@@ -67,9 +68,8 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px !important;
-    /* Fixed 8px all around as requested */
-    gap: 8px;
-    /* Reduced from 10px to increase notice width */
+    gap: 6.5px;
+    /* Precision adjustment for 140px left-offset */
     margin: 0 auto;
     box-sizing: border-box;
 }
@@ -104,17 +104,20 @@
 }
 
 .notice-container {
-    height: 96px;
-    /* 32px * 3 lines visible */
+    width: 200px;
+    /* Requested width 200 */
+    height: 100px;
+    /* Requested height 100 */
     overflow: hidden;
     position: relative;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.4);
+    /* Slightly deeper overlay for text clarity */
     border-radius: 20px;
     display: flex;
     align-items: center;
-    padding: 8px 16px;
-    flex: 1;
-    min-width: 0;
+    padding: 4px !important;
+    /* Requested padding 4 */
+    flex-shrink: 0;
 }
 
 .notice-wrapper {

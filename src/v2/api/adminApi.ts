@@ -339,7 +339,7 @@ export interface AdminUiConfigUpsertRequest {
 export const getAdminUserList = async (
   params: UserSearchParams = {},
 ): Promise<UserListResponse> => {
-  const response = await v2Client.get<UserListResponse>("/api/admin/users", {
+  const response = await v2Client.get<UserListResponse>("/api/v2/admin/users", {
     params,
   });
   return response.data;
@@ -349,7 +349,7 @@ export const getUserActivityLogs = async (
   userId: number,
 ): Promise<UserActivityLogDto[]> => {
   const response = await v2Client.get<UserActivityLogDto[]>(
-    `/api/admin/users/${userId}/activity-logs`,
+    `/api/v2/admin/users/${userId}/activity-logs`,
   );
   return response.data;
 };
@@ -358,14 +358,14 @@ export const getUserInventory = async (
   userId: number,
 ): Promise<UserInventoryItemDto[]> => {
   const response = await v2Client.get<UserInventoryItemDto[]>(
-    `/api/admin/users/${userId}/inventory`,
+    `/api/v2/admin/users/${userId}/inventory`,
   );
   return response.data;
 };
 
 export const getUserNotes = async (userId: number): Promise<UserNoteDto[]> => {
   const response = await v2Client.get<UserNoteDto[]>(
-    `/api/admin/users/${userId}/notes`,
+    `/api/v2/admin/users/${userId}/notes`,
   );
   return response.data;
 };
@@ -373,7 +373,7 @@ export const getUserNotes = async (userId: number): Promise<UserNoteDto[]> => {
 export const createUserNote = async (
   data: CreateUserNoteRequest,
 ): Promise<void> => {
-  await v2Client.post("/api/admin/users/notes", data);
+  await v2Client.post("/api/v2/admin/users/notes", data);
 };
 
 export const createAdminUser = async (
@@ -395,7 +395,7 @@ export const createAdminUser = async (
     payload.telegram_username = data.telegramUsername;
 
   const response = await v2Client.post<AdminUserListDto>(
-    "/api/admin/users",
+    "/api/v2/admin/users",
     payload,
   );
   return response.data;
@@ -405,7 +405,7 @@ export const getUserMissionHistory = async (
   userId: number,
 ): Promise<UserMissionHistoryDto[]> => {
   const response = await v2Client.get<UserMissionHistoryDto[]>(
-    `/api/admin/users/${userId}/missions`,
+    `/api/v2/admin/users/${userId}/missions`,
   );
   return response.data;
 };
@@ -415,7 +415,7 @@ export const forceCompleteMission = async (
   missionId: number,
 ): Promise<void> => {
   await v2Client.post(
-    `/api/admin/users/${userId}/missions/${missionId}/complete`,
+    `/api/v2/admin/users/${userId}/missions/${missionId}/complete`,
   );
 };
 
@@ -423,7 +423,7 @@ export const getUserSegment = async (
   userId: number,
 ): Promise<{ segment: string; label: string }> => {
   const response = await v2Client.get<{ segment: string; label: string }>(
-    `/api/admin/users/${userId}/segment`,
+    `/api/v2/admin/users/${userId}/segment`,
   );
   return response.data;
 };
@@ -436,7 +436,7 @@ export const getAdminWithdrawals = async (
   status: string = "PENDING",
 ): Promise<AdminWithdrawalDto[]> => {
   const response = await v2Client.get<AdminWithdrawalDto[]>(
-    "/api/admin/withdrawals",
+    "/api/v2/admin/withdrawals",
     {
       params: { status },
     },
@@ -445,14 +445,14 @@ export const getAdminWithdrawals = async (
 };
 
 export const approveWithdrawal = async (id: number): Promise<void> => {
-  await v2Client.post(`/api/admin/withdrawals/${id}/approve`); // Note: Assuming approved endpoint structure
+  await v2Client.post(`/api/v2/admin/withdrawals/${id}/approve`);
 };
 
 export const rejectWithdrawal = async (
   id: number,
   reason: string,
 ): Promise<void> => {
-  await v2Client.post(`/api/admin/withdrawals/${id}/reject`, { reason });
+  await v2Client.post(`/api/v2/admin/withdrawals/${id}/reject`, { reason });
 };
 
 // ============================================================================
@@ -463,7 +463,7 @@ export const getAdminUserDetail = async (
   userId: number,
 ): Promise<AdminUserDetailDto> => {
   const response = await v2Client.get<AdminUserDetailDto>(
-    `/api/admin/users/${userId}`,
+    `/api/v2/admin/users/${userId}`,
   );
   return response.data;
 };
@@ -495,7 +495,7 @@ export const runInterventionAction = async (
   actionId: string,
 ): Promise<InterventionExecutionResponse> => {
   const response = await v2Client.post<InterventionExecutionResponse>(
-    `/api/admin/users/${userId}/intervention/${actionId}`,
+    `/api/v2/admin/users/${userId}/intervention/${actionId}`,
   );
   return response.data;
 };
@@ -505,7 +505,7 @@ export const adjustUserWallet = async (
   request: AdminWalletAdjustmentRequest,
 ): Promise<InterventionExecutionResponse> => {
   const response = await v2Client.post<InterventionExecutionResponse>(
-    `/api/admin/users/${userId}/wallet/adjust`,
+    `/api/v2/admin/users/${userId}/wallet/adjust`,
     request,
   );
   return response.data;
@@ -516,7 +516,7 @@ export const getInterventionLogs = async (
   limit: number = 50,
 ): Promise<InterventionLogDto[]> => {
   const response = await v2Client.get<InterventionLogDto[]>(
-    `/api/admin/ops/interventions`,
+    `/api/v2/admin/ops/interventions`,
     {
       params: { user_id: userId, limit },
     },
@@ -562,7 +562,7 @@ export const adjustUserInventory = async (
     user_id: number;
     item_type: string;
     quantity: number;
-  }>(`/api/admin/users/${userId}/inventory/adjust`, request);
+  }>(`/api/v2/admin/users/${userId}/inventory/adjust`, request);
   return response.data;
 };
 
@@ -598,7 +598,7 @@ export const createTicket = async (
   data: TicketCreateRequest,
 ): Promise<TicketLogDto> => {
   const response = await v2Client.post<TicketLogDto>(
-    "/api/admin/inventory/tickets",
+    "/api/v2/admin/inventory/tickets",
     data,
   );
   return response.data;
@@ -609,21 +609,21 @@ export const updateTicket = async (
   data: TicketUpdateRequest,
 ): Promise<TicketLogDto> => {
   const response = await v2Client.put<TicketLogDto>(
-    `/api/admin/inventory/tickets/${id}`,
+    `/api/v2/admin/inventory/tickets/${id}`,
     data,
   );
   return response.data;
 };
 
 export const deleteTicket = async (id: number): Promise<void> => {
-  await v2Client.delete(`/api/admin/inventory/tickets/${id}`);
+  await v2Client.delete(`/api/v2/admin/inventory/tickets/${id}`);
 };
 
 export const createInventoryItem = async (
   data: InventoryItemCreateRequest,
 ): Promise<TicketLogDto> => {
   const response = await v2Client.post<TicketLogDto>(
-    "/api/admin/inventory/items",
+    "/api/v2/admin/inventory/items",
     data,
   );
   return response.data;
@@ -634,14 +634,14 @@ export const updateInventoryItem = async (
   data: InventoryItemUpdateRequest,
 ): Promise<TicketLogDto> => {
   const response = await v2Client.put<TicketLogDto>(
-    `/api/admin/inventory/items/${id}`,
+    `/api/v2/admin/inventory/items/${id}`,
     data,
   );
   return response.data;
 };
 
 export const deleteInventoryItem = async (id: number): Promise<void> => {
-  await v2Client.delete(`/api/admin/inventory/items/${id}`);
+  await v2Client.delete(`/api/v2/admin/inventory/items/${id}`);
 };
 
 export interface WalletTransactionTypeDto {
@@ -654,7 +654,7 @@ export const getWalletTransactionTypes = async (): Promise<
   WalletTransactionTypeDto[]
 > => {
   const response = await v2Client.get<WalletTransactionTypeDto[]>(
-    "/api/admin/economy/transaction-types",
+    "/api/v2/admin/economy/transaction-types",
   );
   return response.data;
 };
@@ -665,13 +665,13 @@ export const getWalletTransactionTypes = async (): Promise<
 
 export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
   const response = await v2Client.get<AdminDepositDto[]>(
-    "/api/admin/economy/deposits/pending",
+    "/api/v2/admin/economy/deposits/pending",
   );
   return response.data;
 };
 
 export const confirmDeposit = async (id: number): Promise<void> => {
-  await v2Client.post(`/api/admin/economy/deposits/${id}/confirm`);
+  await v2Client.post(`/api/v2/admin/economy/deposits/${id}/confirm`);
 };
 
 export interface AdminDepositLogDto {
@@ -700,7 +700,7 @@ export const getAdminDepositLogs = async (params?: {
   limit?: number;
 }): Promise<AdminDepositLogDto[]> => {
   const response = await v2Client.get<AdminDepositLogDto[]>(
-    "/api/admin/economy/deposits",
+    "/api/v2/admin/economy/deposits",
     { params },
   );
   return response.data;
@@ -710,7 +710,7 @@ export const createAdminDepositLog = async (
   data: AdminDepositCreateRequest,
 ): Promise<AdminDepositLogDto> => {
   const response = await v2Client.post<AdminDepositLogDto>(
-    "/api/admin/economy/deposits",
+    "/api/v2/admin/economy/deposits",
     data,
   );
   return response.data;
@@ -721,14 +721,14 @@ export const updateAdminDepositLog = async (
   data: AdminDepositUpdateRequest,
 ): Promise<AdminDepositLogDto> => {
   const response = await v2Client.put<AdminDepositLogDto>(
-    `/api/admin/economy/deposits/${id}`,
+    `/api/v2/admin/economy/deposits/${id}`,
     data,
   );
   return response.data;
 };
 
 export const deleteAdminDepositLog = async (id: number): Promise<void> => {
-  await v2Client.delete(`/api/admin/economy/deposits/${id}`);
+  await v2Client.delete(`/api/v2/admin/economy/deposits/${id}`);
 };
 
 // ============================================================================
@@ -778,7 +778,7 @@ export interface AdminProductUpdateRequest {
 
 export const getAdminProducts = async (): Promise<AdminProductDto[]> => {
   const response = await v2Client.get<AdminProductDto[]>(
-    "/api/admin/shop/products",
+    "/api/v2/admin/shop/products",
   );
   return response.data;
 };
@@ -787,7 +787,7 @@ export const createAdminProduct = async (
   data: AdminProductCreateRequest,
 ): Promise<AdminProductDto> => {
   const response = await v2Client.post<AdminProductDto>(
-    "/api/admin/shop/products",
+    "/api/v2/admin/shop/products",
     data,
   );
   return response.data;
@@ -798,7 +798,7 @@ export const updateAdminProduct = async (
   data: AdminProductUpdateRequest,
 ): Promise<{ success: boolean }> => {
   const response = await v2Client.put<{ success: boolean }>(
-    `/api/admin/shop/products/${productId}`,
+    `/api/v2/admin/shop/products/${productId}`,
     data,
   );
   return response.data;
@@ -808,7 +808,7 @@ export const deleteAdminProduct = async (
   productId: number,
 ): Promise<{ success: boolean }> => {
   const response = await v2Client.delete<{ success: boolean }>(
-    `/api/admin/shop/products/${productId}`,
+    `/api/v2/admin/shop/products/${productId}`,
   );
   return response.data;
 };
@@ -817,19 +817,19 @@ export const updateProductStatus = async (
   id: number,
   isVisible: boolean,
 ): Promise<void> => {
-  await v2Client.put(`/api/admin/shop/products/${id}/status`, { isVisible });
+  await v2Client.put(`/api/v2/admin/shop/products/${id}/status`, { isVisible });
 };
 
 export const updateProductPrice = async (
   id: number,
   price: number,
 ): Promise<void> => {
-  await v2Client.put(`/api/admin/shop/products/${id}/price`, { price });
+  await v2Client.put(`/api/v2/admin/shop/products/${id}/price`, { price });
 };
 
 export const syncAdminProducts = async (): Promise<AdminProductDto[]> => {
   const response = await v2Client.post<AdminProductDto[]>(
-    "/api/admin/shop/products/sync",
+    "/api/v2/admin/shop/products/sync",
   );
   return response.data;
 };
@@ -850,7 +850,7 @@ export const getInventoryLogs = async (
   if (endDate) params.end_date = endDate;
 
   const response = await v2Client.get<TicketLogDto[]>(
-    "/api/admin/inventory/logs",
+    "/api/v2/admin/inventory/logs",
     { params },
   );
   return response.data;
@@ -861,19 +861,19 @@ export const getInventoryLogs = async (
 // ============================================================================
 
 export const runV2SegmentBatch = async (): Promise<void> => {
-  await v2Client.post("/api/admin/segments/batch/run");
+  await v2Client.post("/api/v2/admin/segments/batch/run");
 };
 
 export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
   const response = await v2Client.get<SegmentStatsResponse>(
-    "/api/admin/segments/stats",
+    "/api/v2/admin/segments/stats",
   );
   return response.data;
 };
 
 export const getAdminSegmentRules = async (): Promise<SegmentRuleDto[]> => {
   const response = await v2Client.get<SegmentRuleDto[]>(
-    "/api/admin/segments/rules",
+    "/api/v2/admin/segments/rules",
   );
   return response.data;
 };
@@ -881,24 +881,34 @@ export const getAdminSegmentRules = async (): Promise<SegmentRuleDto[]> => {
 export const createSegmentRule = async (
   data: CreateSegmentRuleRequest,
 ): Promise<void> => {
-  await v2Client.post("/api/admin/segments/rules", data);
+  await v2Client.post("/api/v2/admin/segments/rules", data);
 };
 
 export const updateSegmentRule = async (
   id: number,
   data: Partial<SegmentRuleDto>,
 ): Promise<void> => {
-  await v2Client.put(`/api/admin/segments/rules/${id}`, data);
+  await v2Client.put(`/api/v2/admin/segments/rules/${id}`, data);
 };
 
 export const deleteSegmentRule = async (id: number): Promise<void> => {
-  await v2Client.delete(`/api/admin/segments/rules/${id}`);
+  await v2Client.delete(`/api/v2/admin/segments/rules/${id}`);
 };
 
 export const createV2AdminMessage = async (
   request: CreateMessageRequest,
 ): Promise<void> => {
-  await v2Client.post("/api/admin/messages", request);
+  const target_type = request.targetSegment === "ALL" ? "ALL" : "SEGMENT";
+  const target_value =
+    request.targetSegment === "ALL" ? null : request.targetSegment;
+  const channels = ["INBOX"];
+  await v2Client.post("/api/v2/admin/marketing/messages", {
+    title: request.title,
+    content: request.body,
+    target_type,
+    target_value,
+    channels,
+  });
 };
 
 // ============================================================================
@@ -907,7 +917,7 @@ export const createV2AdminMessage = async (
 
 export const getAdminMissions = async (): Promise<AdminMissionDto[]> => {
   const response = await v2Client.get<AdminMissionDto[]>(
-    "/api/admin/game/missions",
+    "/api/v2/admin/game/missions",
   );
   return response.data;
 };
@@ -916,7 +926,7 @@ export const updateMission = async (
   id: number,
   data: Partial<AdminMissionDto>,
 ): Promise<void> => {
-  await v2Client.put(`/api/admin/game/missions/${id}`, data);
+  await v2Client.put(`/api/v2/admin/game/missions/${id}`, data);
 };
 
 export const createAdminMission = async (
@@ -924,11 +934,11 @@ export const createAdminMission = async (
     isActive?: boolean;
   },
 ): Promise<void> => {
-  await v2Client.post("/api/admin/game/missions", data);
+  await v2Client.post("/api/v2/admin/game/missions", data);
 };
 
 export const deleteAdminMission = async (id: number): Promise<void> => {
-  await v2Client.delete(`/api/admin/game/missions/${id}`);
+  await v2Client.delete(`/api/v2/admin/game/missions/${id}`);
 };
 
 // Level Management
@@ -946,7 +956,7 @@ export interface AdminLevelGlobalConfig {
 
 export const getAdminLevels = async (): Promise<AdminLevelDto[]> => {
   const response = await v2Client.get<AdminLevelDto[]>(
-    "/api/admin/game/levels",
+    "/api/v2/admin/game/levels",
   );
   return response.data;
 };
@@ -956,7 +966,7 @@ export const updateAdminLevel = async (
   data: Partial<AdminLevelDto>,
 ) => {
   const response = await v2Client.put<AdminLevelDto>(
-    `/api/admin/game/levels/${level}`,
+    `/api/v2/admin/game/levels/${level}`,
     data,
   );
   return response.data;
@@ -965,7 +975,7 @@ export const updateAdminLevel = async (
 export const updateAdminLevelGlobalConfig = async (
   data: AdminLevelGlobalConfig,
 ) => {
-  const response = await v2Client.put("/api/admin/game/levels/config", data);
+  const response = await v2Client.put("/api/v2/admin/game/levels/config", data);
   return response.data;
 };
 // ============================================================================
@@ -985,7 +995,7 @@ export const getTicketLogs = async (
   if (limit !== undefined) params.limit = limit;
 
   const response = await v2Client.get<TicketLogDto[]>(
-    "/api/admin/inventory/logs",
+    "/api/v2/admin/inventory/logs",
     { params },
   );
   return response.data;
@@ -1081,7 +1091,7 @@ export interface UserInventoryDto {
 
 export const getTicketStats = async (): Promise<TicketStatDto[]> => {
   const response = await v2Client.get<TicketStatDto[]>(
-    "/api/admin/inventory/tickets/stats",
+    "/api/v2/admin/inventory/tickets/stats",
   );
   return response.data;
 };
@@ -1093,7 +1103,7 @@ export const getUserTickets = async (params?: {
   limit?: number;
 }): Promise<UserTicketDto[]> => {
   const response = await v2Client.get<UserTicketDto[]>(
-    "/api/admin/inventory/tickets/users",
+    "/api/v2/admin/inventory/tickets/users",
     { params },
   );
   return response.data;
@@ -1101,7 +1111,7 @@ export const getUserTickets = async (params?: {
 
 export const getInventoryStats = async (): Promise<InventoryStatDto[]> => {
   const response = await v2Client.get<InventoryStatDto[]>(
-    "/api/admin/inventory/items/stats",
+    "/api/v2/admin/inventory/items/stats",
   );
   return response.data;
 };
@@ -1113,7 +1123,7 @@ export const getUserInventoryList = async (params?: {
   limit?: number;
 }): Promise<UserInventoryDto[]> => {
   const response = await v2Client.get<UserInventoryDto[]>(
-    "/api/admin/inventory/items/users",
+    "/api/v2/admin/inventory/items/users",
     { params },
   );
   return response.data;
@@ -1256,7 +1266,7 @@ export const sendAdminMessage = async (
 
 export const getSurveys = async (): Promise<SurveyDto[]> => {
   const response = await v2Client.get<V2AdminSurveyDtoBackend[]>(
-    "/api/admin/marketing/surveys",
+    "/api/v2/admin/marketing/surveys",
   );
   return (response.data ?? []).map((s) => ({
     id: s.id,
@@ -1279,7 +1289,7 @@ export const getSurveyResults = async (
   _surveyId: number,
 ): Promise<SurveyResultDto[]> => {
   const response = await v2Client.get<V2AdminSurveyResultDtoBackend[]>(
-    `/api/admin/marketing/surveys/${_surveyId}/results`,
+    `/api/v2/admin/marketing/surveys/${_surveyId}/results`,
   );
 
   return (response.data ?? []).map((r) => ({
@@ -1294,7 +1304,7 @@ export const toggleSurvey = async (
   surveyId: number,
   isActive: boolean,
 ): Promise<void> => {
-  await v2Client.put(`/api/admin/marketing/surveys/${surveyId}/toggle`, {
+  await v2Client.put(`/api/v2/admin/marketing/surveys/${surveyId}/toggle`, {
     is_active: isActive,
   });
 };
@@ -1417,7 +1427,7 @@ export const getRouletteConfigs = async (): Promise<
   AdminRouletteConfigDto[]
 > => {
   const response = await v2Client.get<RouletteConfigBackend[]>(
-    "/api/admin/game/roulette/configs",
+    "/api/v2/admin/game/roulette/configs",
   );
 
   return response.data.map((config) => ({
@@ -1467,7 +1477,7 @@ export const updateRouletteConfig = async (
     }));
   }
 
-  await v2Client.put(`/api/admin/game/roulette/config/${data.id}`, payload);
+  await v2Client.put(`/api/v2/admin/game/roulette/config/${data.id}`, payload);
 };
 
 // Dice API
@@ -1512,7 +1522,7 @@ interface DiceConfigBackend {
 
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
   const response = await v2Client.get<DiceConfigBackend>(
-    "/api/admin/game/dice/config",
+    "/api/v2/admin/game/dice/config",
   );
   const config = response.data;
 
@@ -1573,7 +1583,7 @@ export const updateDiceConfig = async (
   if (data.goldenHourMultiplier !== undefined)
     payload.golden_hour_multiplier = data.goldenHourMultiplier;
 
-  await v2Client.put(`/api/admin/game/dice/config/${data.id}`, payload);
+  await v2Client.put(`/api/v2/admin/game/dice/config/${data.id}`, payload);
 };
 
 // Lottery API
@@ -1606,7 +1616,7 @@ const PRIZE_COLORS = [
 
 export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
   const response = await v2Client.get<LotteryConfigBackend[]>(
-    "/api/admin/game/lottery/configs",
+    "/api/v2/admin/game/lottery/configs",
   );
 
   // Get first config (usually only one)
@@ -1646,7 +1656,7 @@ export const updateLotteryConfig = async (
   if (data.puzzlePieceProbability !== undefined)
     payload.puzzle_piece_probability = data.puzzlePieceProbability;
 
-  await v2Client.put(`/api/admin/game/lottery/config/${data.id}`, payload);
+  await v2Client.put(`/api/v2/admin/game/lottery/config/${data.id}`, payload);
 };
 
 export const updateLotteryPrize = async (
@@ -1665,7 +1675,7 @@ export const updateLotteryPrize = async (
   if (data.isActive !== undefined) payload.is_active = data.isActive;
 
   await v2Client.put(
-    `/api/admin/game/lottery/config/${configId}/prize/${prizeId}`,
+    `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
     payload,
   );
 };
@@ -1683,7 +1693,7 @@ export const createLotteryPrize = async (
     is_active: data.isActive !== undefined ? data.isActive : true,
   };
   const response = await v2Client.post<AdminLotteryPrizeDto>(
-    `/api/admin/game/lottery/config/${configId}/prize`,
+    `/api/v2/admin/game/lottery/config/${configId}/prize`,
     payload,
   );
   return response.data;
@@ -1694,7 +1704,7 @@ export const deleteLotteryPrize = async (
   prizeId: number,
 ): Promise<void> => {
   await v2Client.delete(
-    `/api/admin/game/lottery/config/${configId}/prize/${prizeId}`,
+    `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
   );
 };
 
@@ -1757,7 +1767,9 @@ export interface VaultLedgerResponseDto {
 }
 
 export const getVaultStats = async (): Promise<VaultStatsDto> => {
-  const response = await v2Client.get<VaultStatsDto>("/api/admin/vault/stats");
+  const response = await v2Client.get<VaultStatsDto>(
+    "/api/v2/admin/vault/stats",
+  );
   return response.data;
 };
 
@@ -1767,7 +1779,7 @@ export const getVaultUsers = async (
   sortBy: string = "vault_balance",
 ): Promise<UserVaultDto[]> => {
   const response = await v2Client.get<UserVaultDto[]>(
-    "/api/admin/vault/users",
+    "/api/v2/admin/vault/users",
     {
       params: { limit, offset, sort_by: sortBy },
     },
@@ -1781,7 +1793,7 @@ export const getVaultUserLedger = async (
   offset: number = 0,
 ): Promise<VaultLedgerResponseDto> => {
   const response = await v2Client.get<VaultLedgerResponseDto>(
-    `/api/admin/vault/users/${userId}/ledger`,
+    `/api/v2/admin/vault/users/${userId}/ledger`,
     { params: { limit, offset } },
   );
   return response.data;
@@ -1791,7 +1803,7 @@ export const getVaultTrend = async (
   days: number = 30,
 ): Promise<VaultDailyTrendDto[]> => {
   const response = await v2Client.get<VaultDailyTrendDto[]>(
-    "/api/admin/vault/trend",
+    "/api/v2/admin/vault/trend",
     {
       params: { days },
     },
@@ -1802,7 +1814,10 @@ export const getVaultTrend = async (
 export const forceEditVault = async (
   request: VaultForceEditRequest,
 ): Promise<any> => {
-  const response = await v2Client.post("/api/admin/vault/force-edit", request);
+  const response = await v2Client.post(
+    "/api/v2/admin/vault/force-edit",
+    request,
+  );
   return response.data;
 };
 
@@ -1830,7 +1845,7 @@ export const getWithdrawalDetails = async (
   status: string,
 ): Promise<WithdrawalDetailsResponse> => {
   const response = await v2Client.get<WithdrawalDetailsResponse>(
-    `/api/admin/vault/withdrawals/${status}`,
+    `/api/v2/admin/vault/withdrawals/${status}`,
   );
   return response.data;
 };

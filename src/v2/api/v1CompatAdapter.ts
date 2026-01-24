@@ -41,6 +41,20 @@ const isNoFeatureToday = (error: unknown): boolean => {
   return code === "NO_FEATURE_TODAY" || detail === "NO_FEATURE_TODAY";
 };
 
+const isRouletteConfigFallback = (error: unknown): boolean => {
+  if (!axios.isAxiosError(error)) return false;
+  if (error.response?.status !== 400) return false;
+  const code = error.response?.data?.error?.code;
+  const detail = error.response?.data?.detail;
+  const candidates = new Set([
+    "INVALID_CONFIG",
+    "INVALID_ROULETTE_CONFIG",
+    "FEATURE_NOT_ACTIVE",
+    "V2_ROULETTE_CONFIG_MISSING",
+  ]);
+  return candidates.has(code) || candidates.has(detail);
+};
+
 const toNumber = (value: unknown, fallback = 0): number => {
   if (typeof value === "number" && !Number.isNaN(value)) return value;
   if (typeof value === "string") {
@@ -256,9 +270,50 @@ export const getV2RouletteStatus = async (
         throw fallbackError;
       }
     }
+    if (isRouletteConfigFallback(error)) {
+      console.warn(
+        "[V2Adapter] V2 roulette status invalid config; falling back to V1",
+      );
+      try {
+        const v1Data = await getV1RouletteStatus(ticketType);
+        return mapV1RouletteToV2(v1Data);
+      } catch (fallbackError) {
+        if (isNoFeatureToday(fallbackError)) {
+          return emptyRouletteStatus(ticketType);
+        }
+        throw fallbackError;
+      }
+    }
     console.error("[V2Adapter] Failed to fetch roulette status", error);
     throw error;
   }
+};
+
+export const getV2RouletteStatusStrict = async (
+  ticketType: string,
+): Promise<RouletteStatusResponse> => {
+  const response = await v2Client.get<any>("/api/v2/roulette/status", {
+    params: { ticket_type: ticketType },
+  });
+  const data = response.data;
+
+  return {
+    config_id: data.config_id || 1,
+    name: data.name || "Roulette",
+    max_daily_spins: data.max_daily_spins || 0,
+    today_spins: data.today_spins || 0,
+    remaining_spins: data.remaining_spins || 0,
+    token_type: data.token_type || ticketType || "ROULETTE_TICKET",
+    token_balance: data.token_balance || 0,
+    segments: (data.segments || []).map((seg: any) => ({
+      id: seg.id,
+      label: seg.label,
+      reward_type: seg.reward_type,
+      reward_amount: seg.reward_amount,
+      slot_index: seg.slot_index,
+      is_fever_reward: seg.is_fever_reward ?? false,
+    })),
+  };
 };
 
 export const playV2Roulette = async (

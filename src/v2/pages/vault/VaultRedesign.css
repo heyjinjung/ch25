@@ -1,19 +1,21 @@
 /* src/v2/pages/vault/VaultRedesign.css */
 
-.vault-redesign-container {
-    height: auto;
-    min-height: 600px;
-    /* Compact height */
-    width: 390px;
+.vault-redesign.vault-container {
+    background-color: #121214;
+    height: 100vh;
+    /* Strictly 100vh */
+    width: 100%;
+    max-width: 391px;
     margin: 0 auto;
     position: relative;
+    overflow: hidden;
+    /* Prevent all scrolls */
+    color: #fff;
+    padding-top: var(--header-offset);
+    padding-bottom: var(--nav-offset);
     display: flex;
     flex-direction: column;
-    color: #fff;
     font-family: 'Inter', sans-serif;
-    overflow-x: hidden;
-    padding-top: 72px;
-    /* Header Offset */
     --aurora-1: #0f2f25;
     --aurora-2: #0b3c2d;
     --aurora-3: #0a2a21;

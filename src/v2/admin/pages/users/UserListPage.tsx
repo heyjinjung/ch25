@@ -86,7 +86,7 @@ export default function UserListPage() {
   >("ACTIVE");
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [minLevel, setMinLevel] = useState<string>("");
   const [maxLevel, setMaxLevel] = useState<string>("");
   const [sortBy, setSortBy] = useState<
@@ -99,7 +99,7 @@ export default function UserListPage() {
   // Build search params
   const searchParams: UserSearchParams = {
     search: searchTerm || undefined,
-    status: statusFilter || undefined,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
     minLevel: minLevel ? parseInt(minLevel) : undefined,
     maxLevel: maxLevel ? parseInt(maxLevel) : undefined,
     sortBy,
@@ -223,10 +223,10 @@ export default function UserListPage() {
                     <SelectValue placeholder="?�체" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800">
-                    <SelectItem value="">?�체</SelectItem>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                    <SelectItem value="Suspended">Suspended</SelectItem>
+                    <SelectItem value="ALL">전체</SelectItem>
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="INACTIVE">INACTIVE</SelectItem>
+                    <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
