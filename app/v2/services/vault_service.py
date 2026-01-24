@@ -18,6 +18,10 @@ from app.models.user_activity import UserActivity
 from app.models.vault_earn_event import VaultEarnEvent
 from app.v2.services.user_service import V2UserService
 from app.v2.services.vault2_service import Vault2Service
+from app.v2.services.vault_legacy_bridge import (
+    record_game_play_earn_event as _record_game_play_earn_event,
+    handle_deposit_increase_signal as _handle_deposit_increase_signal,
+)
 
 
 class V2VaultService:
@@ -187,11 +191,10 @@ class V2VaultService:
             ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
         ).scalar() or 0
 
-        from app.services.user_segment_service import UserSegmentService
         from app.v2.models.v2_user_segment import V2UserSegment
         
-        segments = UserSegmentService.get_computed_segments(db, legacy_user_id)
         current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
+        segments = [str(current_segment).upper()] if current_segment else []
 
         play_target = 30
         spend_target = 10000
@@ -299,9 +302,7 @@ class V2VaultService:
         now: datetime | None = None,
     ) -> int:
         """Delegate to legacy VaultService.record_game_play_earn_event to keep game logic shared."""
-        from app.services.vault_service import VaultService as _V1VaultService
-        v1 = _V1VaultService()
-        return v1.record_game_play_earn_event(
+        return _record_game_play_earn_event(
             db,
             user_id=user_id,
             game_type=game_type,
@@ -324,16 +325,14 @@ class V2VaultService:
         commit: bool = True,
     ) -> int:
         """Process external ranking "deposit increased" signal."""
-        from app.services.vault_service import VaultService as _V1VaultService
-        v1 = _V1VaultService()
-        return v1.handle_deposit_increase_signal(
-             db,
-             user_id=user_id,
-             deposit_delta=deposit_delta,
-             prev_amount=prev_amount,
-             new_amount=new_amount,
-             now=now,
-             commit=commit
+        return _handle_deposit_increase_signal(
+            db,
+            user_id=user_id,
+            deposit_delta=deposit_delta,
+            prev_amount=prev_amount,
+            new_amount=new_amount,
+            now=now,
+            commit=commit,
         )
 
     # =========================================================================

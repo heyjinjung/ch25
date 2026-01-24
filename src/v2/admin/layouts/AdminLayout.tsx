@@ -169,8 +169,8 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-obsidian-bg text-obsidian-text font-sans selection:bg-obsidian-accent selection:text-white">
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <aside className="fixed left-0 top-0 h-screen w-64 border-r border-obsidian-border bg-obsidian-surface p-6">
-          <div className="mb-10 flex items-center gap-2">
+        <aside className="fixed left-0 top-0 h-screen w-64 border-r border-obsidian-border bg-obsidian-surface flex flex-col">
+          <div className="p-6 pb-0 flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-obsidian-accent/20 flex items-center justify-center">
               <div className="h-4 w-4 rounded-sm bg-obsidian-accent" />
             </div>
@@ -179,7 +179,7 @@ export default function AdminLayout() {
             </span>
           </div>
 
-          <div className="mb-4">
+          <div className="px-6 py-4">
             <label className="block text-xs font-medium text-obsidian-muted mb-2">
               메뉴 필터
             </label>
@@ -199,7 +199,7 @@ export default function AdminLayout() {
             </select>
           </div>
 
-          <nav className="space-y-4">
+          <nav className="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar">
             {navSections
               .filter(
                 (section) =>
@@ -278,13 +278,15 @@ export default function AdminLayout() {
               })}
           </nav>
 
-          <button
-            type="button"
-            className="absolute bottom-6 left-6 flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400"
-          >
-            <LogOut size={18} />
-            로그아웃
-          </button>
+          <div className="p-6 border-t border-obsidian-border mt-auto">
+            <button
+              type="button"
+              className="flex items-center gap-2 text-sm text-obsidian-muted hover:text-red-400 w-full transition-colors"
+            >
+              <LogOut size={18} />
+              로그아웃
+            </button>
+          </div>
         </aside>
       )}
 

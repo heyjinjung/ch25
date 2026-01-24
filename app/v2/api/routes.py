@@ -25,8 +25,7 @@ from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.feature_service import FeatureService
 from app.v2.services.retention_intervention_service import V2RetentionInterventionService
-from app.services.shop_service import ShopService
-from app.services.game_wallet_service import GameWalletService
+from app.v2.services.shop_service import V2ShopService
 from app.v2.services.v2_roulette_game_service import V2RouletteGameService
 from app.v2.services.v2_dice_game_service import V2DiceGameService
 from app.v2.services.v2_lottery_game_service import V2LotteryGameService
@@ -64,7 +63,7 @@ _v2_roulette_game_service = V2RouletteGameService()
 _v2_dice_game_service = V2DiceGameService()
 _v2_lottery_game_service = V2LotteryGameService()
 _retention_service = V2RetentionInterventionService()
-_wallet_service = GameWalletService()
+
 
 from app.v2.services.team_battle_service import V2TeamBattleService
 
@@ -531,8 +530,6 @@ def purchase_shop_product(
         raise HTTPException(status_code=400, detail="INVALID_COST_TYPE")
 
     # Deduct vault balance (SoT) and record order.
-    from app.v2.services.shop_service import V2ShopService
-
     try:
         order = V2ShopService.purchase(
             db,
@@ -640,14 +637,17 @@ def ticket_zero_status(
     point_balance = int(user.vault_locked_balance or 0)
 
     ticket_token_types = [
+        GameTokenType.ROULETTE_TICKET,
+        GameTokenType.DICE_TICKET,
+        GameTokenType.LOTTERY_TICKET,
+        GameTokenType.TRIAL_TICKET,
         GameTokenType.ROULETTE_COIN,
         GameTokenType.DICE_TOKEN,
-        GameTokenType.LOTTERY_TICKET,
         GameTokenType.TRIAL_TOKEN,
     ]
     ticket_balance = 0
     for token in ticket_token_types:
-        ticket_balance += _wallet_service.get_balance(db, user_id, token)
+        ticket_balance += V2InventoryService.get_wallet_balance(db, user_id, token)
 
     inventory_rows = (
         db.query(UserInventoryItem)
@@ -712,12 +712,13 @@ def ticket_zero_bailout(
         return V2TicketZeroBailoutResponse(granted=False, ticket_type="ROULETTE_TICKET", ticket_amount=0)
 
     ticket_amount = 1
-    _wallet_service.grant_tokens(
+    V2InventoryService.grant_wallet_tokens(
         db,
-        user_id=user_id,
-        token_type=GameTokenType.ROULETTE_COIN,
-        amount=ticket_amount,
+        user_id,
+        GameTokenType.ROULETTE_TICKET,
+        ticket_amount,
         reason="TICKET_ZERO",
+        label="AUTO_GRANT",
         auto_commit=True,
     )
 

@@ -17,8 +17,8 @@ from app.models.season_pass import SeasonPassStampLog
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositUpdate
 from app.models.user import User
 from app.v2.services.vault_service import V2VaultService
-from app.services.season_pass_service import SeasonPassService
-from app.services.level_xp_service import LevelXPService
+from app.v2.services.season_pass_service import V2SeasonPassService
+from app.v2.services.level_xp_service import V2LevelXPService
 from app.core.config import get_settings
 
 
@@ -155,9 +155,9 @@ class V2AdminCCDepositService:
     @staticmethod
     def upsert_many(db: Session, data: Iterable[CCDepositCreate], now: datetime | None = None) -> list[ExternalRankingData]:
         from zoneinfo import ZoneInfo
-        season_pass = SeasonPassService()
+        season_pass = V2SeasonPassService()
         vault_service = V2VaultService()
-        level_xp = LevelXPService()
+        level_xp = V2LevelXPService()
         settings = get_settings()
 
         if now is None:
@@ -454,8 +454,8 @@ class V2AdminCCDepositService:
             tags = list(profile.tags or [])
             if "#WHALE_REWARDED" not in tags:
                 # Reward: +500 XP
-                from app.services.season_pass_service import SeasonPassService
-                SeasonPassService().add_bonus_xp(db, user_id=user.id, xp_amount=500, now=now, commit=False)
+                from app.v2.services.season_pass_service import V2SeasonPassService
+                V2SeasonPassService().add_bonus_xp(db, user_id=user.id, xp_amount=500, now=now, commit=False)
                 
                 tags.append("#WHALE_REWARDED")
                 profile.tags = tags

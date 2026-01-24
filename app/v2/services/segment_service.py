@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.services.segment_rules_engine import SegmentContext, matches_condition
+from app.v2.services.segment_rules_engine import SegmentContext, matches_condition
 from app.v2.models.v2_segment_rule import V2SegmentRule
 from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.v2_roulette import V2RouletteLog

@@ -11,8 +11,8 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.event import EventParticipationLog
 from app.models.user import User
-from app.services.ops_log_service import OpsLogService
-from app.services.reward_scheduler import RewardScheduler
+from app.v2.services.ops_log_service import OpsLogService
+from app.v2.services.reward_scheduler import RewardScheduler
 from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
 from app.v2.models.v2_user_retention_state import V2UserRetentionState
 

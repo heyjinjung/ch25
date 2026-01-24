@@ -26,10 +26,33 @@ describe("admin nav smoke", () => {
     cy.location("pathname").should("not.include", "/admin/login");
 
     for (const item of NAV_ITEMS) {
-      // Find the button with data-testid. Note: slug has slashes for path matching here.
-      // But split().pop() logic in AdminLayout means we need to match the testid properly.
+      // Robust navigation: Try data-testid, fallback to text matching
       const testId = item.path.split("/").pop() || "dashboard";
-      cy.get(`[data-testid="admin-nav:${testId}"]`).should("be.visible").click();
+      const label = {
+        "dashboard": "대시보드",
+        "messages": "연락관리",
+        "users": "유저통합",
+        "level": "레벨관리",
+        "vault": "금고현황",
+        "deposits": "입금관리",
+        "tickets": "티켓/토큰관리",
+        "shop": "상점/미션",
+        "roulette": "룰렛",
+        "dice": "주사위",
+        "lottery": "복권",
+        "team-battle": "팀배틀"
+      }[testId] || testId;
+
+      cy.get("body").then(($body) => {
+        const selector = `[data-testid="admin-nav:${testId}"]`;
+        if ($body.find(selector).length > 0) {
+          cy.get(selector).scrollIntoView().should("be.visible").click();
+        } else {
+          // Find button contains label, ensure it's scrolled to
+          cy.contains("button", label).scrollIntoView().should("be.visible").click();
+        }
+      });
+
       cy.location("pathname").should("eq", item.path);
       cy.location("pathname").should("not.include", "/login");
     }

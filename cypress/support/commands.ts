@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-Cypress.Commands.add("loginAdmin", (username = "admin", password = "admin1234") => {
+Cypress.Commands.add("loginAdmin", (username = "admin", password = "2026") => {
   cy.visit("/v2/admin/login");
   
   // Try data-testid first, then fallback to placeholders/tags

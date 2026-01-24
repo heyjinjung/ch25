@@ -22,7 +22,7 @@ from app.models.vault_earn_event import VaultEarnEvent
 from app.models.user_cash_ledger import UserCashLedger
 from app.models.user import User
 from sqlalchemy import func, select
-from app.services.audit_service import AuditService
+from app.v2.services.audit_service import AuditService
 
 
 # Default config knobs for Vault program operations

@@ -74,11 +74,11 @@ class V2RewardService:
             return
 
         if reward_type == "GAME_XP":
-            from app.services.season_pass_service import SeasonPassService
+            from app.v2.services.season_pass_service import V2SeasonPassService
 
             xp_amount = int(reward_amount)
             if xp_amount > 0:
-                SeasonPassService().add_bonus_xp(db, user_id=user_id, xp_amount=xp_amount, commit=commit)
+                V2SeasonPassService().add_bonus_xp(db, user_id=user_id, xp_amount=xp_amount, commit=commit)
             return
 
         if reward_type in {"POINT", "CC_POINT"}:
