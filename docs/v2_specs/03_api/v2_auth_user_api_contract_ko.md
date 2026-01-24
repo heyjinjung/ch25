@@ -19,7 +19,7 @@
 
 ## 3. API 계약 (Contract)
 ### 3.1 토큰 발급
-- Endpoint: `POST /api/v2/auth/token`
+- Endpoint: `POST /api/auth/token`
 - Request:
 ```json
 {
@@ -54,7 +54,7 @@
 - FE 권한 판별 우선순위: `roles[0]` → `role` → (없으면) `ADMIN` 기본값
 
 ### 3.2 활동 기록
-- Endpoint: `POST /api/v2/activity/record`
+- Endpoint: `POST /api/activity/record`
 - Request:
 ```json
 {
@@ -73,7 +73,7 @@
 ```
 
 ### 3.3 텔레그램 연동
-- Endpoint: `POST /api/v2/telegram/auth`
+- Endpoint: `POST /api/telegram/auth`
 - Request:
 ```json
 {
@@ -101,7 +101,7 @@
 ```
 
 ### 3.4 텔레그램 링크용 토큰 발급
-- Endpoint: `POST /api/v2/telegram/link-token`
+- Endpoint: `POST /api/telegram/link-token`
 - Response:
 ```json
 {
@@ -112,7 +112,7 @@
 ```
 
 ### 3.5 텔레그램 연결 해제 요청
-- Endpoint: `POST /api/v2/telegram/unlink-request`
+- Endpoint: `POST /api/telegram/unlink-request`
 - Request:
 ```json
 {
@@ -121,8 +121,8 @@
 ```
 
 ### 3.6 신규 유저 상태/웰컴 보상
-- Endpoint: `GET /api/v2/new-user/status`
-- Endpoint: `POST /api/v2/new-user/claim-welcome`
+- Endpoint: `GET /api/new-user/status`
+- Endpoint: `POST /api/new-user/claim-welcome`
 
 ### 3.7 DevLogin (개발환경)
 - Endpoint: `POST /api/v2/dev/login`
