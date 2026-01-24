@@ -1,4 +1,4 @@
-import { InterventionLogDto } from "@/api/adminApi";
+import { InterventionLogDto } from "../../../api/adminApi";
 
 interface InterventionLogTableProps {
   logs: InterventionLogDto[];

@@ -68,12 +68,13 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
             <div className="px-5 pb-8">
               <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-4 overflow-y-auto max-h-[400px]">
                 <WithdrawalRulesChecklist
-                  vaultBalance={vaultData.vaultBalance}
                   playCount={vaultData.daily_play_count}
                   playTarget={vaultData.daily_play_target}
+                  isPlayMet={vaultData.daily_play_count >= vaultData.daily_play_target}
                   spendAmount={vaultData.daily_vault_spent}
                   spendTarget={vaultData.daily_vault_spent_target}
-                  depositConfirmed={vaultData.daily_deposit_confirmed}
+                  isSpendMet={vaultData.daily_vault_spent >= vaultData.daily_vault_spent_target}
+                  isAccountVerified={vaultData.daily_deposit_confirmed}
                 />
               </div>
             </div>

@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Badge } from "../../../components/ui/badge";
-import { Loader2, Save, RefreshCw, TriangleAlert } from "lucide-react";
+import { Loader2, Save, RefreshCw, AlertTriangle } from "lucide-react";
 
 export default function DiceConfigPage() {
   const { data: config, isLoading, refetch } = useDiceConfig();

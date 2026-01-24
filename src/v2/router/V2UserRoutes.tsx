@@ -14,6 +14,7 @@ const ExchangePage = lazy(() => import("../pages/shop/ExchangePage"));
 const InventoryPage = lazy(() => import("../pages/inventory/InventoryPage"));
 const MissionsPage = lazy(() => import("../pages/missions/MissionsPage"));
 const TeamBattlePage = lazy(() => import("../pages/game/TeamBattlePage"));
+const LevelTowerPage = lazy(() => import("../pages/game/LevelTowerPage"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -51,6 +52,7 @@ export const V2UserRoutes = () => {
           {/* Missions & Events */}
           <Route path="/missions" element={<MissionsPage />} />
           <Route path="/team-battle" element={<TeamBattlePage />} />
+          <Route path="/level" element={<LevelTowerPage />} />
         </Route>
 
         {/* Default redirect to Home */}

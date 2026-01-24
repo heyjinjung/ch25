@@ -4,7 +4,7 @@ import {
   Server,
   ShieldAlert,
   Users,
-  TriangleAlert,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -144,7 +144,7 @@ export default function OpsDashboard() {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <TriangleAlert className="w-5 h-5 text-amber-400" />
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
                 골든 ?�이??(Risk & Opportunity)
               </h3>
               <p className="text-zinc-500 text-xs">

@@ -36,7 +36,7 @@ import {
   Trash2,
   RefreshCw,
   Info,
-  TriangleAlert,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 
@@ -333,7 +333,7 @@ export default function LotteryConfigPage() {
                           className="h-8 bg-black/20 border-white/10 font-mono"
                         />
                         {prize.weight === 0 && (
-                          <TriangleAlert className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
+                          <AlertTriangle className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
                         )}
                       </div>
                     </div>

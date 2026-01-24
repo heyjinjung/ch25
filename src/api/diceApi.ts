@@ -2,7 +2,6 @@
 import axios from "axios";
 import { GameTokenType } from "../types/gameTokens";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
-import { getFallbackDiceStatus, playFallbackDice } from "./fallbackData";
 import userApi from "./httpClient";
 import type { StreakInfo } from "../types/streak";
 
@@ -84,7 +83,6 @@ export const getDiceStatus = async (): Promise<DiceStatusResponse> => {
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[diceApi] Falling back to demo data", error.message);
-        return getFallbackDiceStatus();
       }
       throw error;
     }
@@ -114,7 +112,6 @@ export const playDice = async (): Promise<DicePlayResponse> => {
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
         console.warn("[diceApi] Falling back to demo play", error.message);
-        return playFallbackDice();
       }
       throw error;
     }

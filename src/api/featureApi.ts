@@ -2,7 +2,6 @@
 import axios from "axios";
 import userApi from "./httpClient";
 import { isDemoFallbackEnabled } from "../config/featureFlags";
-import { getFallbackTodayFeature } from "./fallbackData";
 import { NullableFeatureType, normalizeFeature } from "../types/features";
 
 export interface TodayFeatureResponse {
@@ -16,8 +15,7 @@ export const getTodayFeature = async (): Promise<TodayFeatureResponse> => {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (isDemoFallbackEnabled) {
-        console.warn("[featureApi] Falling back to demo data", error.message);
-        return getFallbackTodayFeature();
+          console.warn("[featureApi] Falling back to demo data", error.message)
       }
       // Gracefully degrade when today-feature API is not available (e.g., 404)
       console.warn("[featureApi] today-feature unavailable, defaulting to no feature", error.message);

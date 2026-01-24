@@ -8,4 +8,6 @@ export const REWARD_TYPES = {
   XP: "XP",
 } as const;
 
+export const SOT_REWARD_TYPES = REWARD_TYPES;
+
 export type RewardType = keyof typeof REWARD_TYPES;

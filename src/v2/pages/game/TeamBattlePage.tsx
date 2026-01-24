@@ -6,7 +6,7 @@ import {
   useV2JoinableTeams,
   useV2AutoAssignTeam,
 } from "../../hooks/useV2TeamBattle";
-import Button from "../../../components/common/Button";
+import Button from "../../components/common/Button";
 import clsx from "clsx";
 import { useSound } from "../../../hooks/useSound";
 
@@ -244,7 +244,6 @@ const TeamBattlePage: React.FC = () => {
             <Button
               onClick={handleJoin}
               disabled={autoAssignMutation.isPending}
-              variant="figma-primary"
               className="w-full !py-4 shadow-[0_0_20px_rgba(16,185,129,0.3)] bg-[#25AD82] text-white rounded-xl font-bold"
             >
               {autoAssignMutation.isPending ? (
@@ -272,7 +271,6 @@ const TeamBattlePage: React.FC = () => {
               </p>
             </div>
             <Button
-              variant="figma-secondary"
               className="!px-6 shadow-[0_0_15px_rgba(255,255,255,0.2)] bg-white text-black rounded-xl font-black"
               onClick={() => setShowGameModal(true)}
             >

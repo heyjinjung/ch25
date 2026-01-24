@@ -37,7 +37,7 @@ import {
 } from "../../../components/ui/table";
 import { Badge } from "../../../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { Loader2, Save, RefreshCw, TriangleAlert } from "lucide-react";
+import { Loader2, Save, RefreshCw, AlertTriangle } from "lucide-react";
 
 export default function RouletteConfigPage() {
   const { data: configs, isLoading, refetch } = useRouletteConfigs();
@@ -284,7 +284,7 @@ export default function RouletteConfigPage() {
                                                 className={`bg-black/20 border-white/10 h-8 font-mono ${segment.weight === 0 ? "text-zinc-500" : "text-emerald-400"}`}
                                             />
                                             {segment.weight === 0 && (
-                                                <TriangleAlert className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
+                                                <AlertTriangle className="absolute right-2 top-2 w-4 h-4 text-amber-500 opacity-50" />
                                             )}
                                           </div>
                                      </TableCell>
