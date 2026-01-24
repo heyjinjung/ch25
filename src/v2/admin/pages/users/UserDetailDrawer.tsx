@@ -138,9 +138,7 @@ export function UserDetailDrawer({
           <div className="h-full flex flex-col items-center justify-center text-zinc-500 gap-4">
             <SheetHeader className="sr-only">
               <SheetTitle>Loading User Details</SheetTitle>
-              <SheetDescription>
-                ?��? ?�보�?불러?�는 중입?�다.
-              </SheetDescription>
+              <SheetDescription>?��? ?�보�?불러?�는 중입?�다.</SheetDescription>
             </SheetHeader>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500" />
             <span>Loading User Details...</span>
@@ -155,7 +153,7 @@ export function UserDetailDrawer({
                   </div>
                   <div>
                     <SheetTitle className="text-white text-lg font-bold flex items-center gap-2">
-                      {user.nickname || "(미설??"} (#{userId})
+                      {user.nickname || "(미설정)"} (#{userId})
                       {user.vipLevel === "VIP" && (
                         <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] h-5">
                           VIP
@@ -163,13 +161,13 @@ export function UserDetailDrawer({
                       )}
                     </SheetTitle>
                     <SheetDescription className="text-zinc-400 text-xs">
-                      가?�일 {new Date(user.createdAt).toLocaleDateString()} ??
-                      ?�벨 {user.level || 1}
+                      가?�일 {new Date(user.createdAt).toLocaleDateString()} ??
+                      ?�벨 {user.level || 1}
                     </SheetDescription>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {/* ?��? 버튼 ?�거??(Placeholder) */}
+                  {/* ?��? 버튼 ?�거??(Placeholder) */}
                 </div>
               </div>
             </SheetHeader>
@@ -177,10 +175,10 @@ export function UserDetailDrawer({
             <Tabs defaultValue={defaultTab} className="h-full">
               <TabsList className="w-full grid grid-cols-3 gap-2 bg-[#18181B] p-4 h-auto">
                 <TabsTrigger value="wallet" className="tab-trigger">
-                  ?�켓
+                  ?�켓
                 </TabsTrigger>
                 <TabsTrigger value="inventory" className="tab-trigger">
-                  ?�벤?�리
+                  ?�벤?�리
                 </TabsTrigger>
                 <TabsTrigger value="vault" className="tab-trigger">
                   금고
@@ -189,11 +187,11 @@ export function UserDetailDrawer({
 
               <ScrollArea className="h-[calc(100vh-160px)] bg-[#121214]">
                 <div className="p-6 space-y-6" ref={contentRef}>
-                  {/* 1. ?�켓 (Wallet) */}
+                  {/* 1. ?�켓 (Wallet) */}
                   <TabsContent value="wallet" className="m-0 space-y-4">
                     <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
                       <div>
-                        <div className="text-sm text-zinc-500">?�여 ?�켓</div>
+                        <div className="text-sm text-zinc-500">?�여 ?�켓</div>
                         <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
                           <Ticket className="w-6 h-6 text-indigo-400" />
                           {(user.ticketBalance || 0).toLocaleString()} T
@@ -209,14 +207,14 @@ export function UserDetailDrawer({
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        ?�켓 지�??�수
+                        ?�켓 지�??�수
                       </Button>
                     </div>
 
                     <Card className="bg-[#18181B] border-white/5">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-bold text-zinc-200">
-                          최근 ?�켓 로그
+                          최근 ?�켓 로그
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
@@ -257,37 +255,37 @@ export function UserDetailDrawer({
                           ))
                         ) : (
                           <div className="text-xs text-zinc-500">
-                            ?�시??로그가 ?�습?�다.
+                            ?�시??로그가 ?�습?�다.
                           </div>
                         )}
                       </CardContent>
                     </Card>
                   </TabsContent>
 
-                  {/* 2. ?�벤?�리 (Inventory) */}
+                  {/* 2. ?�벤?�리 (Inventory) */}
                   <TabsContent value="inventory" className="m-0 space-y-4">
                     <div className="flex items-center gap-2 mb-4">
                       <Package className="w-5 h-5 text-indigo-400" />
-                      <h3 className="text-lg font-bold">보유 ?�이??/h3>
+                      <h3 className="text-lg font-bold">보유 아이템</h3>
                     </div>
                     <Card className="bg-[#18181B] border-white/5">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-bold text-zinc-200">
-                          ?�벤?�리 강제 ?�정
+                          ?�벤?�리 강제 ?�정
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-[1.6fr_1fr] gap-3">
                           <div className="space-y-2">
                             <Label className="text-xs text-zinc-400">
-                              ?�이???�??
+                              ?�이???�??
                             </Label>
                             <Select
                               value={inventoryAdjustItemType}
                               onValueChange={setInventoryAdjustItemType}
                             >
                               <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
-                                <SelectValue placeholder="?�이???�택" />
+                                <SelectValue placeholder="?�이???�택" />
                               </SelectTrigger>
                               <SelectContent className="bg-[#18181B] border-white/10 text-white">
                                 {inventoryAdjustItems.map((item) => (
@@ -304,11 +302,11 @@ export function UserDetailDrawer({
                           </div>
                           <div className="space-y-2">
                             <Label className="text-xs text-zinc-400">
-                              ?�량 (+지�? -차감)
+                              ?�량 (+지�? -차감)
                             </Label>
                             <Input
                               type="number"
-                              placeholder="?? 10 ?�는 -10"
+                              placeholder="?? 10 ?�는 -10"
                               value={inventoryAdjustDelta}
                               onChange={(e) =>
                                 setInventoryAdjustDelta(e.target.value)
@@ -318,9 +316,9 @@ export function UserDetailDrawer({
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-xs text-zinc-400">?�유</Label>
+                          <Label className="text-xs text-zinc-400">?�유</Label>
                           <Textarea
-                            placeholder="?? ?�영??조정"
+                            placeholder="?? ?�영??조정"
                             value={inventoryAdjustNote}
                             onChange={(e) =>
                               setInventoryAdjustNote(e.target.value)
@@ -338,8 +336,8 @@ export function UserDetailDrawer({
                             }
                           >
                             {adjustInventory.isPending
-                              ? "처리 �?.."
-                              : "?�정 ?�행"}
+                              ? "처리 �?.."
+                              : "?�정 ?�행"}
                           </Button>
                         </div>
                       </CardContent>
@@ -375,7 +373,7 @@ export function UserDetailDrawer({
                       </div>
                     ) : (
                       <div className="text-center text-zinc-500 py-10">
-                        보유 중인 ?�이?�이 ?�습?�다.
+                        보유 중인 ?�이?�이 ?�습?�다.
                       </div>
                     )}
                   </TabsContent>
@@ -384,9 +382,9 @@ export function UserDetailDrawer({
                   <TabsContent value="vault" className="m-0 space-y-4">
                     <div className="flex justify-between items-center bg-[#18181B] p-4 rounded-xl border border-white/5">
                       <div>
-                        <div className="text-sm text-zinc-500">?�여 금고??/div>
+                        <div className="text-sm text-zinc-500">보유 금고</div>
                         <div className="text-2xl font-mono text-white font-bold flex items-center gap-2">
-                          <Vault className="w-6 h-6 text-emerald-400" />??" "}
+                          <Vault className="w-6 h-6 text-emerald-400" />₩{" "}
                           {(user.vaultBalance || 0).toLocaleString()} P
                         </div>
                       </div>
@@ -400,7 +398,7 @@ export function UserDetailDrawer({
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        금고 지�?차감
+                        금고 지�?차감
                       </Button>
                     </div>
                   </TabsContent>

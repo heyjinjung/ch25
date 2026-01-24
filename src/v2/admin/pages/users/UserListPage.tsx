@@ -171,11 +171,10 @@ export default function UserListPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            ?�원 관�?
+            ?�원 관�?
           </h1>
           <p className="text-sm text-zinc-400">
-            �?{total.toLocaleString()}명의 ?�원??관리하�??�세 ?�보�?
-            조회?�니??
+            �?{total.toLocaleString()}명의 ?�원??관리하�??�세 ?�보�? 조회?�니??
           </p>
         </div>
         <Button
@@ -183,7 +182,7 @@ export default function UserListPage() {
           onClick={() => setIsCreateOpen(true)}
         >
           <UserPlus className="w-4 h-4 mr-2" />
-          ?�원 ?�록
+          ?�원 ?�록
         </Button>
       </div>
 
@@ -192,7 +191,7 @@ export default function UserListPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
           <Input
-            placeholder="?�네?? CC_id, telegram_id, telegram_username 검??.."
+            placeholder="?�네?? CC_id, telegram_id, telegram_username 검??.."
             className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-200 focus:ring-[#D2FD9C]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -207,7 +206,7 @@ export default function UserListPage() {
               className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 gap-2"
             >
               <Filter className="h-4 w-4" />
-              ?�터
+              ?�터
               {(statusFilter || minLevel || maxLevel) && (
                 <Badge className="ml-1 h-5 px-1.5 bg-[#D2FD9C] text-black">
                   {[statusFilter, minLevel, maxLevel].filter(Boolean).length}
@@ -218,13 +217,13 @@ export default function UserListPage() {
           <PopoverContent className="w-80 bg-[#18181B] border-white/10 text-white">
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-zinc-400 mb-2 block">?�태</label>
+                <label className="text-sm text-zinc-400 mb-2 block">?�태</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="bg-zinc-900 border-zinc-800">
-                    <SelectValue placeholder="?�체" />
+                    <SelectValue placeholder="?�체" />
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-900 border-zinc-800">
-                    <SelectItem value="">?�체</SelectItem>
+                    <SelectItem value="">?�체</SelectItem>
                     <SelectItem value="Active">Active</SelectItem>
                     <SelectItem value="Inactive">Inactive</SelectItem>
                     <SelectItem value="Suspended">Suspended</SelectItem>
@@ -233,7 +232,7 @@ export default function UserListPage() {
               </div>
               <div>
                 <label className="text-sm text-zinc-400 mb-2 block">
-                  ?�벨 범위
+                  ?�벨 범위
                 </label>
                 <div className="flex items-center gap-2">
                   <Input
@@ -263,7 +262,7 @@ export default function UserListPage() {
                   setMaxLevel("");
                 }}
               >
-                ?�터 초기??
+                ?�터 초기??
               </Button>
             </div>
           </PopoverContent>
@@ -273,7 +272,7 @@ export default function UserListPage() {
         {selectedUserIds.length > 0 && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
             <span className="text-sm text-indigo-400 font-medium">
-              {selectedUserIds.length}�??�택
+              {selectedUserIds.length}�??�택
             </span>
             <Button
               size="sm"
@@ -289,7 +288,7 @@ export default function UserListPage() {
               className="h-7 text-xs text-red-400 hover:text-red-300"
             >
               <Ban className="w-3 h-3 mr-1" />
-              ?��?
+              ?��?
             </Button>
           </div>
         )}
@@ -316,14 +315,14 @@ export default function UserListPage() {
                   />
                 </TableHead>
                 <TableHead className="w-[100px] text-zinc-400">UID</TableHead>
-                <TableHead className="text-zinc-400">?�네??/TableHead>
-                <TableHead className="text-zinc-400">?�레그램 ID</TableHead>
+                <TableHead className="text-zinc-400">닉네임</TableHead>
+                <TableHead className="text-zinc-400">?�레그램 ID</TableHead>
                 <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("level")}
                   >
-                    ?�벨
+                    ?�벨
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
@@ -332,7 +331,7 @@ export default function UserListPage() {
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("vault_balance")}
                   >
-                    금고 ?�액
+                    금고 ?�액
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
@@ -341,12 +340,12 @@ export default function UserListPage() {
                     className="flex items-center gap-1 hover:text-white transition-colors"
                     onClick={() => handleSort("last_active")}
                   >
-                    최근 ?�속??
+                    최근 ?�속??
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
                 <TableHead className="text-center text-zinc-400 w-[80px]">
-                  관�?
+                  관�?
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -367,7 +366,7 @@ export default function UserListPage() {
                     #{user.cc_id}
                   </TableCell>
                   <TableCell className="font-medium text-white">
-                    {user.nickname || "(미설??"}
+                    {user.nickname || "(미설정)"}
                   </TableCell>
                   <TableCell className="text-zinc-400 text-xs">
                     {user.telegram_username ? (
@@ -384,7 +383,7 @@ export default function UserListPage() {
                     Lv.{user.level}
                   </TableCell>
                   <TableCell className="text-zinc-300">
-                    ??(user.vaultBalance || 0).toLocaleString()}
+                    ₩{(user.vaultBalance || 0).toLocaleString()}
                   </TableCell>
                   <TableCell className="text-zinc-400 text-xs">
                     {user.last_active}
@@ -399,7 +398,7 @@ export default function UserListPage() {
                         setSelectedDrawerTab("overview");
                       }}
                     >
-                      관�?
+                      관�?
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -412,8 +411,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / �?{total}
-          �?
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / �?{total}
+          �?
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -424,10 +423,10 @@ export default function UserListPage() {
             onClick={() => setPage(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
-            ?�전
+            ?�전
           </Button>
           <span className="text-sm text-zinc-400">
-            {page} / {totalPages} ?�이지
+            {page} / {totalPages} ?�이지
           </span>
           <Button
             variant="outline"
@@ -436,7 +435,7 @@ export default function UserListPage() {
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
           >
-            ?�음
+            ?�음
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -452,9 +451,9 @@ export default function UserListPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-[#121214] border border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-white">?�원 ?�록</DialogTitle>
+            <DialogTitle className="text-white">?�원 ?�록</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              external_id???�수?�니?? ?�머지???�택 ?�력?�니??
+              external_id???�수?�니?? ?�머지???�택 ?�력?�니??
             </DialogDescription>
           </DialogHeader>
 
@@ -469,17 +468,17 @@ export default function UserListPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-zinc-300">?�네??/label>
+              <label className="text-sm text-zinc-300">닉네임</label>
               <Input
                 value={createNickname}
                 onChange={(e) => setCreateNickname(e.target.value)}
                 className="bg-zinc-900 border-zinc-800 text-zinc-200"
-                placeholder="?? ?�길??
+                placeholder="예: 홍길동"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <label className="text-sm text-zinc-300">?�벨</label>
+                <label className="text-sm text-zinc-300">?�벨</label>
                 <Input
                   type="number"
                   value={createLevel}
@@ -488,7 +487,7 @@ export default function UserListPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm text-zinc-300">?�태</label>
+                <label className="text-sm text-zinc-300">?�태</label>
                 <Select
                   value={createStatus}
                   onValueChange={(v) =>
@@ -514,7 +513,7 @@ export default function UserListPage() {
                   value={createTelegramId}
                   onChange={(e) => setCreateTelegramId(e.target.value)}
                   className="bg-zinc-900 border-zinc-800 text-zinc-200"
-                  placeholder="?�택"
+                  placeholder="?�택"
                 />
               </div>
               <div className="space-y-2">
@@ -547,7 +546,7 @@ export default function UserListPage() {
                 createUserMutation.isPending || !createExternalId.trim()
               }
             >
-              {createUserMutation.isPending ? "?�록 �?.." : "?�록"}
+              {createUserMutation.isPending ? "?�록 �?.." : "?�록"}
             </Button>
           </DialogFooter>
         </DialogContent>

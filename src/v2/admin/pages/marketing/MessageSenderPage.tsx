@@ -1,20 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  useAdminMessages,
-  useSendMessage,
-} from "../../../hooks/useAdminMarketing";
-import { useAdminSegmentStats } from "../../../hooks/useV2Admin";
-import type { AdminMessageDto } from "../../../api/adminApi";
+  createV2AdminMessage,
+  getAdminSegmentStats,
+  type CreateMessageRequest,
+} from "../../../api/adminApi";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "../../../components/ui/card";
-import { Textarea } from "../../../components/ui/textarea";
-import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,238 +23,176 @@ import {
   SelectValue,
 } from "../../../components/ui/select";
 import { Label } from "../../../components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../../components/ui/table";
-import { Badge } from "../../../components/ui/badge";
-import { Send, Clock, CheckCircle2 } from "lucide-react";
+import { Send, Users, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function MessageSenderPage() {
-  const { data: messages = [] as AdminMessageDto[], isLoading } =
-    useAdminMessages();
-  const sendMutation = useSendMessage();
-  const { data: segmentStats } = useAdminSegmentStats();
-
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [body, setBody] = useState("");
   const [targetSegment, setTargetSegment] = useState("ALL");
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const segmentOptions = useMemo(() => {
-    const segments = segmentStats?.segments ?? [];
-    // ?�정?�을 ?�해 name 기�?, �?�??�외
-    return segments
-      .filter((s) => Boolean(s?.name))
-      .map(
-        (s) =>
-          ({
-            value: s.name,
-            label: s.label || s.name,
-            count: s.count,
-          }) as { value: string; label: string; count: number },
-      );
-  }, [segmentStats?.segments]);
+  const { data: segmentStats } = useQuery({
+    queryKey: ["segmentStats"],
+    queryFn: getAdminSegmentStats,
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: (data: CreateMessageRequest) => createV2AdminMessage(data),
+    onSuccess: () => {
+      setIsSuccess(true);
+      setTitle("");
+      setBody("");
+      setTimeout(() => setIsSuccess(false), 3000);
+    },
+  });
 
   const handleSend = () => {
-    if (!title || !content) return;
+    if (!title || !body) return;
+    if (!confirm("정말 메시지를 발송하시겠습니까?")) return;
 
-    sendMutation.mutate(
-      {
-        title,
-        content,
-        targetSegment,
-      },
-      {
-        onSuccess: () => {
-          setTitle("");
-          setContent("");
-          setTargetSegment("ALL");
-        },
-      },
-    );
+    sendMutation.mutate({
+      title,
+      body,
+      targetSegment,
+    });
   };
 
-  const getStatusBadge = (status: AdminMessageDto["status"]) => {
-    switch (status) {
-      case "SENT":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-          >
-            <CheckCircle2 className="w-3 h-3 mr-1" />
-            발송?�료
-          </Badge>
-        );
-      case "SCHEDULED":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-500/10 text-blue-500 border-blue-500/20"
-          >
-            <Clock className="w-3 h-3 mr-1" />
-            ?�약�?
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">?�시?�??/Badge>;
-    }
-  };
+  const selectedSegmentStat = segmentStats?.segments.find(
+    (s) => s.name === targetSegment,
+  );
 
   return (
-    <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
+    <div className="max-w-4xl mx-auto space-y-6 text-white p-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight mb-1">
+        <h1 className="text-3xl font-black text-white tracking-tight mb-2">
           메시지 발송 (Message Sender)
         </h1>
-        <p className="text-sm text-zinc-400">
-          ?��? ?�박??메시지�??�송?�니??
+        <p className="text-zinc-400">
+          특정 세그먼트 또는 전체 유저에게 인박스(Inbox) 메시지를 발송합니다.
         </p>
       </div>
 
-      <div className="space-y-6">
-        <Card className="bg-[#18181B] border-white/5">
-          <CardHeader>
-            <CardTitle>메시지 ?�성</CardTitle>
-            <CardDescription>
-              ?�시 ?�림 ?�는 ?�박??메시지�??�성?�세??
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>?�목</Label>
-              <Input
-                placeholder="메시지 ?�목 ?�력"
-                className="bg-black/50 border-white/10"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>?�용</Label>
-              <Textarea
-                placeholder="메시지 ?�용 ?�력 (최�? 500??"
-                className="bg-black/50 border-white/10 min-h-[150px] resize-none"
-                maxLength={500}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
-              <div className="text-xs text-zinc-500 text-right">
-                {content.length}/500
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-6">
+          <Card className="bg-zinc-900 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">메시지 작성</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-zinc-400">수신 대상 (Target)</Label>
+                <Select
+                  value={targetSegment}
+                  onValueChange={setTargetSegment}
+                >
+                  <SelectTrigger className="bg-black/20 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
+                    <SelectItem value="ALL">전체 유저 (All Users)</SelectItem>
+                    {segmentStats?.segments.map((seg) => (
+                      <SelectItem key={seg.name} value={seg.name}>
+                        {seg.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedSegmentStat && (
+                  <p className="text-xs text-indigo-400 mt-1 flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    예상 수신자: {selectedSegmentStat.count.toLocaleString()}명
+                  </p>
+                )}
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>발송 ?�??/Label>
-              <Select value={targetSegment} onValueChange={setTargetSegment}>
-                <SelectTrigger className="bg-black/50 border-white/10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">?�체 ?��?</SelectItem>
-                  {segmentOptions.map((seg) => (
-                    <SelectItem key={seg.value} value={seg.value}>
-                      {seg.label} ({seg.count.toLocaleString()})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="text-xs text-zinc-500">
-                ?�그먼트 목록?�{" "}
-                <span className="text-zinc-400">
-                  /api/admin/segments/stats
-                </span>{" "}
-                기�??�니??
+              <div className="space-y-2">
+                <Label className="text-zinc-400">제목 (Title)</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="메시지 제목을 입력하세요"
+                  className="bg-black/20 border-white/10"
+                />
               </div>
-            </div>
 
-            <div className="pt-4">
-              <Button
-                onClick={handleSend}
-                disabled={!title || !content || sendMutation.isPending}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold"
-              >
-                <Send className="w-4 h-4 mr-2" />
-                {sendMutation.isPending ? "발송 �?.." : "즉시 발송"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="space-y-2">
+                <Label className="text-zinc-400">내용 (Content)</Label>
+                <Textarea
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="메시지 본문을 입력하세요"
+                  className="bg-black/20 border-white/10 min-h-[200px]"
+                />
+              </div>
 
-      {/* History Table */}
-      <Card className="bg-[#18181B] border-white/5">
-        <CardHeader>
-          <CardTitle>발송 ?�역</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead>?�목</TableHead>
-                <TableHead>?�??/TableHead>
-                <TableHead>?�??/TableHead>
-                <TableHead>발송 ??/TableHead>
-                <TableHead>?�태</TableHead>
-                <TableHead>?�성??/TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-10 text-zinc-500"
-                  >
-                    Loading...
-                  </TableCell>
-                </TableRow>
-              ) : messages.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-10 text-zinc-500"
-                  >
-                    발송 ?�역???�습?�다.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                messages.map((msg) => (
-                  <TableRow
-                    key={msg.id}
-                    className="border-white/5 hover:bg-white/5"
-                  >
-                    <TableCell className="font-medium">{msg.title}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="bg-zinc-800 border-zinc-700"
-                      >
-                        {msg.targetSegment}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-zinc-400">
-                      {msg.messageType}
-                    </TableCell>
-                    <TableCell className="text-emerald-400 font-semibold">
-                      {msg.sentCount.toLocaleString()}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(msg.status)}</TableCell>
-                    <TableCell className="text-zinc-500 text-xs">
-                      {msg.createdAt}
-                    </TableCell>
-                  </TableRow>
-                ))
+              {isSuccess && (
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 text-emerald-400">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>메시지가 성공적으로 발송되었습니다.</span>
+                </div>
               )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+
+              {sendMutation.isError && (
+                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-400">
+                  <AlertCircle className="w-5 h-5" />
+                  <span>발송 실패: {sendMutation.error.message}</span>
+                </div>
+              )}
+
+              <Button
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                onClick={handleSend}
+                disabled={sendMutation.isPending || !title || !body}
+              >
+                {sendMutation.isPending ? (
+                  "발송중..."
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    메시지 발송
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          <Card className="bg-zinc-900 border-white/10">
+             <CardHeader>
+              <CardTitle className="text-white text-sm">작성 가이드</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-zinc-400">
+              <ul className="space-y-2 list-disc pl-4">
+                <li>
+                  <strong className="text-white">명확한 제목:</strong> 유저가 한눈에 알아볼 수 있는 제목을 사용하세요.
+                </li>
+                <li>
+                  <strong className="text-white">대상 확인:</strong> 전체 발송 시 모든 유저에게 알림이 갈 수 있으니 주의하세요.
+                </li>
+                <li>
+                  <strong className="text-white">이모지 활용:</strong> 적절한 이모지 사용은 주목도를 높입니다. 🎁 ✨
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+           <Card className="bg-zinc-900 border-white/10">
+             <CardHeader>
+              <CardTitle className="text-white text-sm">세그먼트 현황</CardTitle>
+              <CardDescription>실시간 타겟팅 모수</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+               {segmentStats?.segments.slice(0, 5).map(seg => (
+                   <div key={seg.name} className="flex justify-between items-center text-sm">
+                       <span className="text-zinc-400">{seg.label}</span>
+                       <span className="font-mono text-white">{seg.count.toLocaleString()}</span>
+                   </div>
+               ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

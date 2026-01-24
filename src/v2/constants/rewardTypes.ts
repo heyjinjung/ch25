@@ -1,24 +1,11 @@
-// SoT 20�??�화 목록
-export const SOT_REWARD_TYPES = [
-  { value: "ROULETTE_TICKET", label: "룰렛 ?�켓" },
-  { value: "DICE_TICKET", label: "?�이???�켓" },
-  { value: "LOTTERY_TICKET", label: "복권 ?�켓" },
-  { value: "VAULT", label: "금고 ?�인?? },
-  { value: "GOLD_KEY_TICKET", label: "골드 ?�쇠 ?�켓" },
-  { value: "DIAMOND_TICKET", label: "?�이?�몬???�켓" },
-  { value: "GOLD_KEY_FRAGMENT", label: "골드 ?�쇠 조각" },
-  { value: "DIAMOND_FRAGMENT", label: "?�이?�몬??조각" },
-  { value: "PUZZLE_C1", label: "?�즐 조각 C1" },
-  { value: "PUZZLE_C2", label: "?�즐 조각 C2" },
-  { value: "PUZZLE_J", label: "?�즐 조각 J" },
-  { value: "PUZZLE_M", label: "?�즐 조각 M" },
-  { value: "DIAMOND", label: "?�이?�몬?? },
-  { value: "CHICKEN_GIFTICON_5000", label: "치킨 기프?�콘 5천원" },
-  { value: "CHICKEN_GIFTICON_10000", label: "치킨 기프?�콘 1만원" },
-  { value: "STARBUCKS_GIFTICON_2000", label: "?��?벅스 기프?�콘 2천원" },
-  { value: "STARBUCKS_GIFTICON_10000", label: "?��?벅스 기프?�콘 1만원" },
-  { value: "PIZZA_GIFTICON_5000", label: "?�자 기프?�콘 5천원" },
-  { value: "PIZZA_GIFTICON_10000", label: "?�자 기프?�콘 1만원" },
-  { value: "GOOGLE_GIFTICON_5000", label: "구�? 기프?�카??5천원" },
-  { value: "GOOGLE_GIFTICON_10000", label: "구�? 기프?�카??1만원" },
-] as const;
+export const REWARD_TYPES = {
+  NONE: "NONE",
+  POINT: "POINT",
+  TICKET: "TICKET", // Generic
+  ROULETTE_TICKET: "ROULETTE_TICKET",
+  DIAMOND_TICKET: "DIAMOND_TICKET",
+  GOLDEN_TICKET: "GOLDEN_TICKET",
+  XP: "XP",
+} as const;
+
+export type RewardType = keyof typeof REWARD_TYPES;

@@ -9,8 +9,8 @@ import { setAuth } from "../../../auth/authStore";
 import { v2Client } from "../../api/client";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "?�이?��? ?�력?�세??"),
-  password: z.string().min(1, "비�?번호�??�력?�세??"),
+  username: z.string().min(1, "아이디를 입력하세요"),
+  password: z.string().min(1, "비밀번호를 입력하세요"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -58,11 +58,11 @@ const V2UserLoginPage: FC = () => {
       const detail = err?.response?.data?.detail;
       if (detail === "USER_NOT_FOUND") {
         setServerError(
-          "test 계정???�직 ?�습?�다. ?�래 'test 계정 ?�성(개발?�경)'???�러주세??",
+          "test 계정이 아직 없습니다. 아래 'test 계정 생성(개발환경)'을 눌러주세요",
         );
       } else {
         setServerError(
-          detail || "?�증???�패?�습?�다. ?�격 증명???�인?�세??",
+          detail || "인증에 실패했습니다. 자격 증명을 확인하세요",
         );
       }
     } finally {
@@ -87,8 +87,8 @@ const V2UserLoginPage: FC = () => {
         err?.response?.data?.detail || err?.response?.data || err?.message;
       const fallback =
         detail === "DEV_LOGIN_DISABLED"
-          ? "?�재 ?�버 ?�경?�서 DEV_LOGIN??꺼져 ?�습?�다. scripts/�?test ?��?�??�드?�세??"
-          : "test 계정 ?�성???�패?�습?�다.";
+          ? "현재 서버 환경에서 DEV_LOGIN이 꺼져 있습니다. scripts/ 로 test 로드를 하세요"
+          : "test 계정 생성에 실패했습니다.";
       setServerError(typeof detail === "string" ? detail : fallback);
     } finally {
       setIsLoading(false);
@@ -103,16 +103,16 @@ const V2UserLoginPage: FC = () => {
             <ShieldCheck className="h-8 w-8 text-obsidian-accent" />
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">
-            ?��? 로그??(V2)
+            유저 로그인 (V2)
           </h1>
-          <p className="text-sm text-obsidian-muted">개발???�시 로그??/p>
+          <p className="text-sm text-obsidian-muted">개발용 임시 로그인</p>
         </header>
 
         <main className="rounded-[2rem] border border-obsidian-border bg-obsidian-surface p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="block text-sm text-obsidian-muted mb-2">
-                ?�이??
+                아이디
               </label>
               <input
                 {...register("username")}
@@ -130,7 +130,7 @@ const V2UserLoginPage: FC = () => {
 
             <div>
               <label className="block text-sm text-obsidian-muted mb-2">
-                비�?번호
+                비밀번호
               </label>
               <input
                 {...register("password")}
@@ -157,7 +157,7 @@ const V2UserLoginPage: FC = () => {
                 }}
                 disabled={isLoading}
               >
-                test/1234 채우�?
+                test/1234 채우기
               </button>
 
               <button
@@ -166,7 +166,7 @@ const V2UserLoginPage: FC = () => {
                 onClick={handleCreateTestUser}
                 disabled={isLoading}
               >
-                test 계정 ?�성(개발?�경)
+                test 계정 생성(개발환경)
               </button>
             </div>
 
@@ -181,13 +181,13 @@ const V2UserLoginPage: FC = () => {
               disabled={isLoading}
               className="w-full rounded-xl bg-obsidian-accent px-4 py-3 font-bold text-black hover:opacity-90 disabled:opacity-50"
             >
-              {isLoading ? "로그??�?.." : "로그??}
+              {isLoading ? "로그인중.." : "로그인"}
             </button>
           </form>
         </main>
 
         <footer className="mt-10 text-center text-xs text-obsidian-muted">
-          /login ???�공 ??/home
+          /login 성공 후 /home
         </footer>
       </div>
     </div>

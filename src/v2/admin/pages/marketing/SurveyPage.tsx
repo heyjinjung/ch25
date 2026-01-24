@@ -12,192 +12,181 @@ import {
 } from "../../../components/ui/card";
 import { Switch } from "../../../components/ui/switch";
 import { Badge } from "../../../components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../../../components/ui/tabs";
-import { ClipboardList, BarChart3, Users } from "lucide-react";
+import { 
+  ClipboardList, 
+  BarChart3, 
+  Users, 
+  RefreshCw,
+  MessageSquare
+} from "lucide-react";
+import { Button } from "../../../components/ui/button";
+import { format } from "date-fns";
+import { cn } from "../../../lib/utils";
 
 export default function SurveyPage() {
-  const { data: surveys = [], isLoading } = useAdminSurveys();
+  const { data: surveys = [], isLoading, refetch } = useAdminSurveys();
   const toggleMutation = useToggleSurvey();
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
-  const { data: results = [] } = useSurveyResults(selectedSurveyId || 0);
 
-  const handleToggle = (surveyId: number, isActive: boolean) => {
-    toggleMutation.mutate({ surveyId, isActive });
+  const { data: results = [], isLoading: isLoadingResults } = useSurveyResults(
+    selectedSurveyId || 0
+  );
+
+  const handleToggle = async (surveyId: number, isActive: boolean) => {
+    await toggleMutation.mutateAsync({ surveyId, isActive });
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <RefreshCw className="w-8 h-8 animate-spin text-zinc-500" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight mb-1">
-          ?�문 관�?(Survey Manager)
-        </h1>
-        <p className="text-sm text-zinc-400">
-          ?��? ?�???�문??관리하�?결과�?분석?�니??
-        </p>
+    <div className="space-y-8 p-6 pb-24 max-w-[1400px] mx-auto text-white">
+      {/* Header */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-2">
+            설문 조사 관리 (Surveys)
+          </h1>
+          <p className="text-zinc-400">
+            유저들의 피드백을 수집하고 통계를 분석합니다.
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          className="border-white/10 hover:bg-white/5"
+          onClick={() => refetch()}
+        >
+          <RefreshCw className="w-4 h-4 mr-2" />
+          새로고침
+        </Button>
       </div>
 
-      <Tabs defaultValue="list" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-[#18181B] border border-white/5">
-          <TabsTrigger value="list">?�문 목록</TabsTrigger>
-          <TabsTrigger value="results" disabled={!selectedSurveyId}>
-            결과 분석
-          </TabsTrigger>
-        </TabsList>
-
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Survey List */}
-        <TabsContent value="list" className="space-y-4 mt-6">
-          {isLoading ? (
-            <div className="text-center py-20 text-zinc-500">
-              Loading surveys...
-            </div>
-          ) : surveys.length === 0 ? (
-            <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
-              ?�록???�문???�습?�다.
+        <div className="lg:col-span-1 space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <ClipboardList className="w-5 h-5 text-indigo-400" />
+            <h2 className="text-lg font-bold">설문 목록</h2>
+          </div>
+          
+          {surveys.length === 0 ? (
+            <div className="bg-zinc-900/50 border border-white/5 border-dashed rounded-2xl p-8 text-center text-zinc-500 italic">
+              등록된 설문이 없습니다.
             </div>
           ) : (
             surveys.map((survey) => (
-              <Card
+              <Card 
                 key={survey.id}
-                className={`bg-[#18181B] border-white/5 transition-all hover:border-white/10 cursor-pointer ${
-                  selectedSurveyId === survey.id
-                    ? "border-emerald-500/30 bg-emerald-500/5"
-                    : ""
-                }`}
+                className={cn(
+                  "bg-zinc-900 border-white/10 cursor-pointer transition-all hover:border-indigo-500/50",
+                  selectedSurveyId === survey.id && "ring-2 ring-indigo-500 border-transparent shadow-[0_0_20px_rgba(79,70,229,0.2)]"
+                )}
                 onClick={() => setSelectedSurveyId(survey.id)}
               >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <ClipboardList className="w-5 h-5 text-emerald-400" />
-                        <h3 className="font-bold text-lg">{survey.title}</h3>
-                        {survey.isActive && (
-                          <Badge
-                            variant="outline"
-                            className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                          >
-                            진행�?
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-zinc-400 mb-4">
-                        {survey.description}
-                      </p>
-
-                      <div className="flex items-center gap-6 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-zinc-500" />
-                          <span className="text-zinc-400">?�답 ??</span>
-                          <span className="font-semibold text-emerald-400">
-                            {survey.responseCount}
-                          </span>
-                        </div>
-                        <div className="text-zinc-500">
-                          질문 {survey.questions.length}�?
-                        </div>
-                        <div className="text-zinc-500">{survey.createdAt}</div>
-                      </div>
-
-                      {/* Questions Preview */}
-                      <div className="mt-4 space-y-2 bg-black/20 p-3 rounded-lg border border-white/5">
-                        {survey.questions.map((q, idx) => (
-                          <div key={q.id} className="text-xs text-zinc-400">
-                            <span className="text-zinc-600">Q{idx + 1}.</span>{" "}
-                            {q.question}
-                          </div>
-                        ))}
-                      </div>
+                <CardContent className="p-5">
+                  <div className="flex justify-between items-start mb-3">
+                    <Badge variant={survey.isActive ? "default" : "secondary"} className={survey.isActive ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-800 text-zinc-500"}>
+                      {survey.isActive ? "진행 중" : "일시 중지"}
+                    </Badge>
+                    <Switch 
+                      checked={survey.isActive}
+                      onCheckedChange={(checked) => handleToggle(survey.id, checked)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{survey.title}</h3>
+                  <p className="text-xs text-zinc-500 mb-4 line-clamp-2">{survey.description}</p>
+                  
+                  <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-wider border-t border-white/5 pt-4">
+                    <div className="flex items-center gap-1.5 text-indigo-400">
+                      <Users className="w-3.5 h-3.5" />
+                      {survey.responseCount.toLocaleString()} 명 참여
                     </div>
-
-                    <div className="flex flex-col items-end gap-4 ml-6">
-                      <Switch
-                        checked={survey.isActive}
-                        onCheckedChange={(checked) =>
-                          handleToggle(survey.id, checked)
-                        }
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      {selectedSurveyId === survey.id && (
-                        <Badge
-                          variant="outline"
-                          className="bg-blue-500/10 text-blue-500 border-blue-500/20"
-                        >
-                          ?�택??
-                        </Badge>
-                      )}
-                    </div>
+                    <div>{format(new Date(survey.createdAt), "yyyy.MM.dd")}</div>
                   </div>
                 </CardContent>
               </Card>
             ))
           )}
-        </TabsContent>
+        </div>
 
-        {/* Results Tab */}
-        <TabsContent value="results" className="space-y-4 mt-6">
+        {/* Survey Analysis */}
+        <div className="lg:col-span-2">
           {!selectedSurveyId ? (
-            <div className="text-center py-20 text-zinc-500">
-              ?�문???�택?�주?�요.
+            <div className="h-full flex flex-col items-center justify-center bg-zinc-900/30 border border-white/5 rounded-3xl gap-4 p-20 text-center">
+              <div className="w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center">
+                <BarChart3 className="w-8 h-8 text-zinc-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-zinc-400 mb-2">분석할 설문을 선택하세요</h3>
+                <p className="text-sm text-zinc-500">목록에서 설문을 클릭하면 상세 결과와 통계를 확인할 수 있습니다.</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-6">
-              {results.map((result) => (
-                <Card
-                  key={result.questionId}
-                  className="bg-[#18181B] border-white/5"
-                >
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-blue-400" />
-                      <CardTitle className="text-lg">
-                        {result.question}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {result.responses.map((res, idx) => (
-                        <div key={idx} className="space-y-1">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-zinc-300">{res.option}</span>
-                            <div className="flex items-center gap-3">
-                              <span className="text-zinc-500">
-                                {res.count}�?
-                              </span>
-                              <span className="font-bold text-white">
-                                {res.percentage}%
-                              </span>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-5 h-5 text-emerald-400" />
+                <h2 className="text-lg font-bold">응답 통계 및 분석</h2>
+              </div>
+
+              {isLoadingResults ? (
+                <div className="flex flex-col items-center justify-center h-64 gap-3">
+                  <RefreshCw className="w-8 h-8 animate-spin text-zinc-700" />
+                  <p className="text-zinc-600 text-sm">데이터를 불러오는 중...</p>
+                </div>
+              ) : (
+                <div className="grid gap-6">
+                  {results.map((qResult) => (
+                    <Card key={qResult.questionId} className="bg-zinc-900 border-white/10 overflow-hidden shadow-xl">
+                      <CardHeader className="bg-white/5 border-b border-white/5 py-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                            <span className="text-sm font-black text-indigo-400">Q</span>
+                          </div>
+                          <div>
+                            <CardTitle className="text-base text-zinc-200 leading-snug">{qResult.question}</CardTitle>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-6 space-y-6">
+                        {qResult.responses.map((resp, idx) => (
+                          <div key={idx} className="space-y-2">
+                            <div className="flex justify-between text-sm font-bold">
+                              <span className="text-zinc-300">{resp.option}</span>
+                              <div className="flex gap-2">
+                                <span className="text-zinc-500 font-mono">{resp.count}명</span>
+                                <span className="text-emerald-400 font-mono">{resp.percentage}%</span>
+                              </div>
+                            </div>
+                            <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000"
+                                style={{ width: `${resp.percentage}%` }}
+                              />
                             </div>
                           </div>
-                          <progress
-                            value={res.percentage}
-                            max={100}
-                            className="h-2 w-full appearance-none rounded-full overflow-hidden bg-zinc-800 [&::-webkit-progress-bar]:bg-zinc-800 [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-emerald-500 [&::-webkit-progress-value]:to-blue-500 [&::-moz-progress-bar]:bg-emerald-500"
-                          />
-                        </div>
-                      ))}
+                        ))}
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {results.length === 0 && (
+                    <div className="bg-zinc-900/50 border border-white/5 border-dashed rounded-3xl p-20 text-center gap-4 flex flex-col items-center">
+                        <MessageSquare className="w-12 h-12 text-zinc-800" />
+                        <p className="text-zinc-500">아직 수집된 응답 데이터가 없습니다.</p>
                     </div>
-
-                    {/* Total Summary */}
-                    <div className="mt-6 pt-4 border-t border-white/5 flex justify-between items-center text-sm">
-                      <span className="text-zinc-400">�??�답 ??/span>
-                      <span className="font-bold text-emerald-400">
-                        {result.responses.reduce((sum, r) => sum + r.count, 0)}
-                        �?
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                  )}
+                </div>
+              )}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 }

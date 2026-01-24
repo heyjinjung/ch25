@@ -3,7 +3,8 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 /**
  * V2 Theme System
  *
- * ?�날, ?�리미엄, 기본 ?�마 ???�양???�마�??�적?�로 ?�환?????�는 ?�스?? */
+ * 매직, 프리미엄, 기본 테마 등 다양한 테마를 동적으로 전환할 수 있는 시스템입니다.
+ */
 
 export type ThemeType = 'default' | 'lunar-new-year' | 'premium' | 'halloween' | 'christmas';
 
@@ -19,10 +20,10 @@ export interface ThemeColors {
 }
 
 export interface ThemeAssets {
-  diceIcon: string;
-  background?: string;
-  particleType: 'default' | 'fireworks' | 'lantern' | 'snow' | 'sparkle';
+  bgImage?: string;
+  diceIcon?: string;
   couponImage?: string;
+  particleType: 'none' | 'snow' | 'sparkle' | 'lantern';
 }
 
 export interface ThemeSounds {
@@ -32,40 +33,42 @@ export interface ThemeSounds {
   draw: string;
 }
 
+export interface ThemeAnimations {
+  diceRollDuration: number;
+  shakeIntensity: number;
+  particleCount: number;
+}
+
 export interface ThemeConfig {
   name: string;
   colors: ThemeColors;
   assets: ThemeAssets;
   sounds: ThemeSounds;
-  animations: {
-    diceRollDuration: number;
-    shakeIntensity: number;
-    particleCount: number;
-  };
+  animations: ThemeAnimations;
 }
 
 // ============================================================================
-// Theme Configurations
+// Default Theme
 // ============================================================================
 
 const DEFAULT_THEME: ThemeConfig = {
-  name: '기본 ?�마',
+  name: '기본 테마',
   colors: {
-    primary: '#30FF75',
+    primary: '#4F46E5', // Indigo 600
     secondary: '#00D4AA',
-    accent: '#FFD700',
-    background: '#000000',
+    accent: '#FACC15',
+    background: '#0A0A0A',
     text: '#FFFFFF',
-    win: '#30FF75',
-    lose: '#FF4444',
+    win: '#10B981',
+    lose: '#EF4444',
     draw: '#FFA500',
   },
   assets: {
     diceIcon: '/assets/icon_dice_silver.png',
-    particleType: 'default',
+    particleType: 'none',
   },
   sounds: {
-    roll: '/sounds/dice-roll.mp3',
+    roll: '/sounds/roll.mp3',
     win: '/sounds/win.mp3',
     lose: '/sounds/lose.mp3',
     draw: '/sounds/draw.mp3',
@@ -73,52 +76,30 @@ const DEFAULT_THEME: ThemeConfig = {
   animations: {
     diceRollDuration: 2000,
     shakeIntensity: 10,
-    particleCount: 30,
-  },
-};
-
-const LUNAR_NEW_YEAR_THEME: ThemeConfig = {
-  name: '?�날 ?�마',
-  colors: {
-    primary: '#FF4444',
-    secondary: '#FFD700',
-    accent: '#FF6B6B',
-    background: '#1A0000',
-    text: '#FFFFFF',
-    win: '#FFD700',
-    lose: '#FF4444',
-    draw: '#FFA500',
-  },
-  assets: {
-    diceIcon: '/assets/icon_dice_lunar.png', // ?�레?�스?�??    background: '/assets/bg_lunar_new_year.jpg', // ?�레?�스?�??    particleType: 'lantern',
-    couponImage: '/assets/coupon_lunar.png', // ?�레?�스?�??  },
-  sounds: {
-    roll: '/sounds/kkwaenggwari.mp3',
-    win: '/sounds/lunar-win.mp3',
-    lose: '/sounds/lunar-lose.mp3',
-    draw: '/sounds/lunar-draw.mp3',
-  },
-  animations: {
-    diceRollDuration: 2500,
-    shakeIntensity: 15,
     particleCount: 50,
   },
 };
 
+// ============================================================================
+// Premium Theme
+// ============================================================================
+
 const PREMIUM_THEME: ThemeConfig = {
-  name: '?�리미엄 ?�마',
+  name: '프리미엄 골드',
   colors: {
-    primary: '#FFD700',
-    secondary: '#FFA500',
-    accent: '#FFEB3B',
-    background: '#0A0A0A',
-    text: '#FFFFFF',
+    primary: '#D4AF37', // Gold
+    secondary: '#1A1A1A',
+    accent: '#FFFFFF',
+    background: '#121212',
+    text: '#E5C100',
     win: '#FFD700',
-    lose: '#FF6B6B',
-    draw: '#00BFFF',
+    lose: '#FF4444',
+    draw: '#FFFFFF',
   },
   assets: {
-    diceIcon: '/assets/icon_dice_gold.png', // ?�레?�스?�??    background: '/assets/bg_premium.jpg', // ?�레?�스?�??    particleType: 'sparkle',
+    bgImage: '/assets/bg_premium.jpg',
+    diceIcon: '/assets/icon_dice_gold.png',
+    particleType: 'sparkle',
   },
   sounds: {
     roll: '/sounds/premium-roll.mp3',
@@ -129,6 +110,39 @@ const PREMIUM_THEME: ThemeConfig = {
   animations: {
     diceRollDuration: 3000,
     shakeIntensity: 20,
+    particleCount: 80,
+  },
+};
+
+// ============================================================================
+// Lunar New Year Theme (Event)
+// ============================================================================
+
+const LUNAR_NEW_YEAR_THEME: ThemeConfig = {
+  name: '설날 대축제',
+  colors: {
+    primary: '#C41E3A', // Cardinal Red
+    secondary: '#FFD700', // Gold
+    accent: '#FFD700',
+    background: '#1A0000',
+    text: '#FFFFFF',
+    win: '#FFD700',
+    lose: '#4A0000',
+    draw: '#FFFFFF',
+  },
+  assets: {
+    couponImage: '/assets/coupon_lunar.png',
+    particleType: 'lantern',
+  },
+  sounds: {
+    roll: '/sounds/lunar-roll.mp3',
+    win: '/sounds/lunar-win.mp3',
+    lose: '/sounds/lunar-lose.mp3',
+    draw: '/sounds/lunar-draw.mp3',
+  },
+  animations: {
+    diceRollDuration: 2500,
+    shakeIntensity: 15,
     particleCount: 60,
   },
 };
@@ -137,8 +151,8 @@ const THEMES: Record<ThemeType, ThemeConfig> = {
   default: DEFAULT_THEME,
   'lunar-new-year': LUNAR_NEW_YEAR_THEME,
   premium: PREMIUM_THEME,
-  halloween: DEFAULT_THEME, // TODO: ?�로???�마 추�?
-  christmas: DEFAULT_THEME, // TODO: ?�리?�마???�마 추�?
+  halloween: DEFAULT_THEME, // TODO
+  christmas: DEFAULT_THEME, // TODO
 };
 
 // ============================================================================
@@ -155,7 +169,6 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [themeType, setThemeType] = useState<ThemeType>('default');
-
   const theme = THEMES[themeType];
 
   return (

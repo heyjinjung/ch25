@@ -250,7 +250,7 @@ const LotteryCollectionModal = ({
                   className={clsx(
                     "w-full py-4 text-lg font-black transition-all rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed active:scale-95",
                     canCraft
-                      ? "shadow-lg bg-gradient-to-br from-[#30E3AA] to-[#14D49E] text-black shadow-[0_0_20px_rgba(48,227,170,0.12)]"
+                      ? "bg-gradient-to-br from-[#30E3AA] to-[#14D49E] text-black shadow-[0_0_20px_rgba(48,227,170,0.12)]"
                       : "bg-white/5 text-white/30",
                   )}
                 >
