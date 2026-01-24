@@ -696,6 +696,31 @@ class V2VaultService:
              if int(earn_event_count) < 1:
                  raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CC_DEPOSIT_REQUIRED_TODAY")
 
+        user = db.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
+        # Tiered minimum balance requirement (SoT: 10k -> 10k -> 30k -> 50k)
+        approved_count = (
+            db.query(func.count(VaultWithdrawalRequest.id))
+            .filter(
+                VaultWithdrawalRequest.user_id == user_id,
+                VaultWithdrawalRequest.status == "APPROVED",
+            )
+            .scalar()
+            or 0
+        )
+        tier_minimums = [10_000, 10_000, 30_000, 50_000]
+        tier_index = min(int(approved_count), len(tier_minimums) - 1)
+        required_min_balance = tier_minimums[tier_index]
+
+        total = int(getattr(user, "vault_locked_balance", 0) or 0)
+        if total < required_min_balance:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"MIN_WITHDRAWAL_AMOUNT_{required_min_balance}",
+            )
+
         # Concurrency & Balance checks
         pending_exists = (
             db.query(func.count(VaultWithdrawalRequest.id))
@@ -705,10 +730,7 @@ class V2VaultService:
         )
         if int(pending_exists) > 0:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="WITHDRAWAL_REQUEST_ALREADY_PENDING")
-
-        user = db.get(User, user_id)
         reserved = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
-        total = int(getattr(user, "vault_locked_balance", 0) or 0)
         if total - reserved < amount:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
 

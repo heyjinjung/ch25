@@ -1,5 +1,5 @@
 문서 타입: 가이드
-버전: v1.30
+버전: v1.32
 작성일: 2026-01-24
 작성자: GitHub Copilot
 대상: V2 배포/검증 담당자
@@ -64,7 +64,8 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 - [x] 어드민 강제조정(-) 시 출금 승인 생성
 	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
-- [x] 출금 회차 기준(1/1/3/5) 적용 여부: 10,000 요청이 승인됨 → **현행 미적용 확인**
+- [x] 출금 회차 기준(1/1/3/5) 적용 여부: 3건 승인 상태에서 50,000 미만 차단 확인
+	- 커맨드: Invoke-WebRequest -Uri "http://localhost:8000/api/v2/vault/withdraw" -Method Post -Headers @{Authorization="Bearer <redacted>"} -ContentType "application/json" -Body '{"amount":10000}'
 	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 - [x] v2-only 기준 충족 (V1 VaultService import 제거 + V2VaultService 사용 확인)
 	- 검증 실행: Antigravity 실행(2026-01-23) — 통과 (Exit Code: 0)
@@ -132,6 +133,11 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [ ] 미수령 상태에서 중복 방지 오탐 재현/로그 확보
 	- 근거 필요 (운영 로그/재현 스크립트/티켓)
 
+#### 3.2.10 Progression/Level XP
+- [x] 레벨 XP 적립 및 레벨 보상 로그 생성
+	- 커맨드: python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
+
 #### 3.2.7 Team Battle
 - [x] 단위 테스트 추가
 - [x] 통합 테스트 추가
@@ -164,6 +170,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 - [x] 인벤토리 조회 → 아이템 사용
 - [x] 미션 조회 → 클레임
 - [x] 금고 상태 조회
+- [x] Phase 5 Full Scenario (New User / Gambler's Loop / Admin Intervention)
+	- 커맨드: python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s
+	- 근거: [docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md)
 
 ### 3.4 로컬/스테이징 트래픽 샘플
 - [ ] 핵심 API 요청 50~100건 샘플 수집
@@ -213,8 +222,9 @@ V2 배포 전/후 필수 검증 항목을 표준화한다.
 
 ---
 
-버전: v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
 ## 5. 변경 이력
+- v1.33 (2026-01-24, GitHub Copilot): 출금 회차 기준 적용 재검증 반영
+- v1.32 (2026-01-24, GitHub Copilot): Phase 5 시나리오/레벨 XP 검증 항목 추가
 - v1.31 (2026-01-24, Antigravity): XP Exploit/CC Deposit Critical Fix 검증 완료
 - v1.30 (2026-01-24, GitHub Copilot): 주사위 패배 골든아워 배수 적용 검증 추가
 - v1.29 (2026-01-24, GitHub Copilot): Mission 목록/클레임/중복 차단 검증 기록 추가

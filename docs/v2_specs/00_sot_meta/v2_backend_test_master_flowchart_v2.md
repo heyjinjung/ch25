@@ -99,6 +99,8 @@ graph TD
 - [ ] CC Deposit Idempotency (Delta 기반 포인트/XP 지급)
 - [ ] Shop Purchase → Inventory 적재 원자성 검증
 - [ ] TicketZero Eligibility 및 쿨다운 검증
+- [x] Withdrawal Tier (1/1/3/5) 적용 검증
+  - 실행: `pytest -q tests/v2_tests/phase2_core/test_v2_vault_withdrawal_tiers.py`
 
 ### Phase 3: 게임 엔진 (V2)
 - [ ] Dice/Roulette/Lottery V2 로직 단위 테스트
@@ -111,9 +113,10 @@ graph TD
 - [ ] Admin UI Config(Shop) 변경 시 AppUiConfig 반영 검증
 
 ### Phase 5: 통합 시나리오 (V2 E2E)
-- [ ] New User Journey (SignUp → Welcome → Play → Reward)
-- [ ] Gambler's Loop (Lose → Bailout → Play)
-- [ ] Admin Intervention (Admin 지급 → Inbox → 유저 확인)
+- [x] New User Journey (SignUp → Welcome → Play → Reward)
+- [x] Gambler's Loop (Lose → Bailout → Play)
+- [x] Admin Intervention (Admin 지급 → Inbox → 유저 확인)
+  - 실행: `python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s`
 
 ---
 
@@ -121,7 +124,14 @@ graph TD
 
 - 최소 회귀: `docker compose exec backend pytest -q tests/v2_tests/phase4_admin`
 - 파이썬 컴파일 체크: `docker compose exec backend python -m compileall -q app/v2`
+- Phase 5 E2E: `python -m pytest -q tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py -s`
 - 결과 규칙: `실행일`, `커맨드`, `결과(pass/fail)`, `핵심 경고/특이사항(한 줄)` 기록
+
+---
+
+## 5. 변경 이력
+- v2.2 (2026-01-24, GitHub Copilot): 출금 회차 기준(1/1/3/5) 적용 검증 추가
+- v2.1 (2026-01-24, GitHub Copilot): Phase 5 E2E 실행 및 체크리스트 완료 반영
 
 ---
 
