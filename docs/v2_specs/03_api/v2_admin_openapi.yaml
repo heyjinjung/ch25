@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+openapi: 3.0.3
+info:
+  title: XMAS Event System V2 + Admin API
+  version: v2.0
+  description: |
+    V2 및 Admin API 스웨거(OpenAPI) 스펙.
+    기준: docs/v2_specs/03_api/v2_legacy_openapi.yaml
+servers:
+  - url: /
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: System
+    description: 시스템 헬스 체크 및 기능 조회
+  - name: Auth
+    description: 인증 및 토큰 관리
+  - name: User
+    description: 유저 정보 조회
+  - name: Vault
+    description: 금고 (Vault) 관련 API
+  - name: Game
+    description: 룰렛, 주사위, 복권 게임 API
+  - name: Mission
+    description: 미션 및 스트릭 관련 API
+  - name: Inventory
+    description: 인벤토리 및 아이템 관리
+  - name: Shop
+    description: 상점 API
+  - name: TeamBattle
+    description: 팀 배틀 API
+  - name: Survey
+    description: 설문 API
+  - name: Feed
+    description: 피드 API
+  - name: Inbox
+    description: 인박스 메시지 API
+  - name: TicketZero
+    description: 티켓 제로 구제 API
+  - name: Golden
+    description: 골든 개입 및 리인게이지먼트 API
+  - name: Telegram
+    description: 텔레그램 연동 API
+  - name: NewUser
+    description: 신규 유저 관련 API
+  - name: Activity
+    description: 활동 기록 API
+  - name: UiConfig
+    description: UI 설정 API
+  - name: Dev
+    description: 개발 환경 전용 API
+  - name: Admin
+    description: 관리자 API
+  - name: AdminUsers
+    description: 관리자 - 유저 관리
+  - name: AdminEconomy
+    description: 관리자 - 경제 관리 (입금, 출금, 금고)
+  - name: AdminShop
+    description: 관리자 - 상점 관리
+  - name: AdminGame
+    description: 관리자 - 게임 설정
+  - name: AdminInventory
+    description: 관리자 - 인벤토리/티켓 관리
+  - name: AdminSegment
+    description: 관리자 - 세그먼트 관리
+  - name: AdminMarketing
+    description: 관리자 - 마케팅 (메시지, 설문)
+  - name: AdminOps
+    description: 관리자 - 운영 대시보드
+
+paths:
+  $ref: ./v2_legacy_openapi.yaml#/paths
+
+components:
+  $ref: ./v2_legacy_openapi.yaml#/components

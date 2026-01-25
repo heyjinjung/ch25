@@ -13,6 +13,7 @@ from app.core.exceptions import (
     InvalidConfigError,
     LockAcquisitionError,
     NoFeatureTodayError,
+    NotEnoughTokensError,
 )
 
 
@@ -22,6 +23,7 @@ ERROR_MAP = {
     InvalidConfigError: "INVALID_CONFIG",
     DailyLimitReachedError: "DAILY_LIMIT_REACHED",
     LockAcquisitionError: "LOCK_NOT_ACQUIRED",
+    NotEnoughTokensError: "NOT_ENOUGH_TOKENS",
 }
 
 # HTTPException.detail values we surface directly as error codes for consistency with docs.

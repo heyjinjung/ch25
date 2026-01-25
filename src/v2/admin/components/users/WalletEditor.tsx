@@ -67,7 +67,7 @@ export default function WalletEditor({
       },
       {
         label: "황금 티켓",
-        value: "GOLDEN_TICKET",
+        value: "GOLD_KEY_TICKET",
         category: "GAME_TICKET" as const,
       },
       {
@@ -155,7 +155,11 @@ export default function WalletEditor({
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-white/10">
                 {walletTypes.map((t) => (
-                  <SelectItem key={t.value} value={t.value} className="text-white hover:bg-white/10 focus:bg-white/10">
+                  <SelectItem
+                    key={t.value}
+                    value={t.value}
+                    className="text-white hover:bg-white/10 focus:bg-white/10"
+                  >
                     {t.label}
                   </SelectItem>
                 ))}

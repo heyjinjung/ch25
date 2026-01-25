@@ -15,7 +15,7 @@ type RouletteTicketType =
   | "TRIAL_TICKET";
 // import { useTheme } from "../../contexts/ThemeContext";
 import { cn } from "../../lib/utils";
-import { Play, Loader2, Trophy, Coins } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { getRewardItemLabel } from "../../constants/rewardItems";
 
 const TICKET_TABS: {
@@ -143,29 +143,15 @@ export default function RoulettePage() {
       />
 
       {/* Header Stats - Premium Glassmorphism */}
-      <div className="w-full grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-[#1C1C1E]/60 border border-white/5 rounded-[24px] p-4 flex flex-col items-center gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="w-10 h-10 rounded-full bg-[#1A2E26] border border-emerald-500/20 flex items-center justify-center mb-1">
-            <Coins className="w-5 h-5 text-emerald-400" />
-          </div>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            Available Tickets
-          </span>
-          <span className="text-xl font-black font-mono text-white tracking-tight drop-shadow-md">
+      <div className="w-full flex justify-center gap-3 mb-6">
+        <div className="w-[130px] h-[45px] bg-[#1C1C1E]/80 border border-white/5 rounded-[12px] flex items-center justify-center shadow-lg backdrop-blur-md">
+          <span className="text-lg font-black font-mono text-emerald-400 tracking-tight drop-shadow-md">
             {status?.token_balance?.toLocaleString() ?? 0}
           </span>
         </div>
-        <div className="bg-[#1C1C1E]/60 border border-white/5 rounded-[24px] p-4 flex flex-col items-center gap-2 shadow-xl backdrop-blur-md relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="w-10 h-10 rounded-full bg-[#1E1B2E] border border-indigo-500/20 flex items-center justify-center mb-1">
-            <Trophy className="w-5 h-5 text-indigo-400" />
-          </div>
-          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            Today's Spins
-          </span>
-          <span className="text-xl font-black font-mono text-white tracking-tight drop-shadow-md">
-            {status?.today_spins ?? 0} <span className="text-zinc-600 text-sm">/</span> {status?.max_daily_spins ?? 0}
+        <div className="w-[130px] h-[45px] bg-[#1C1C1E]/80 border border-white/5 rounded-[12px] flex items-center justify-center shadow-lg backdrop-blur-md">
+          <span className="text-lg font-black font-mono text-indigo-400 tracking-tight drop-shadow-md">
+            {status?.today_spins ?? 0} <span className="text-zinc-600 text-sm mx-1">/</span> {status?.max_daily_spins ?? 0}
           </span>
         </div>
       </div>

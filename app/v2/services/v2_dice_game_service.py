@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
-from app.schemas.dice import DiceGameData, DicePlayResponse, DiceStatusResponse
+from app.schemas.dice import DiceGameData, DicePlayResponse, DiceRewardConfig, DiceStatusResponse
 from app.v2.services.feature_service import FeatureService
 from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.inventory_service import V2InventoryService
@@ -140,6 +140,15 @@ class V2DiceGameService:
         unlimited = 0
         remaining = 0
 
+        reward_config = DiceRewardConfig(
+            win_reward_type=str(getattr(config, "win_reward_type", "POINT")),
+            win_reward_amount=int(getattr(config, "win_reward_amount", 0) or 0),
+            draw_reward_type=str(getattr(config, "draw_reward_type", "POINT")),
+            draw_reward_amount=int(getattr(config, "draw_reward_amount", 0) or 0),
+            lose_reward_type=str(getattr(config, "lose_reward_type", "POINT")),
+            lose_reward_amount=int(getattr(config, "lose_reward_amount", 0) or 0),
+        )
+
         return DiceStatusResponse(
             config_id=config.id,
             name=config.name,
@@ -153,6 +162,7 @@ class V2DiceGameService:
             event_plays_done=None,
             event_plays_max=None,
             event_ineligible_reason=None,
+            reward_config=reward_config,
         )
 
     def play(
@@ -160,6 +170,8 @@ class V2DiceGameService:
         db: Session,
         *,
         user_id: int,
+        bet_amount: int = 1,
+        prediction: str | None = None,
         now: datetime | date | None = None,
     ) -> DicePlayResponse:
         if now is None:

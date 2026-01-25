@@ -25,12 +25,12 @@ class V2RouletteConfig(Base):
 
 
 class V2RouletteSegment(Base):
-    """Six fixed roulette slots per config with weights and rewards."""
+    """Eight fixed roulette slots per config with weights and rewards."""
 
     __tablename__ = "v2_roulette_segment"
     __table_args__ = (
         UniqueConstraint("config_id", "slot_index", name="uq_v2_roulette_segment_slot"),
-        CheckConstraint("slot_index >= 0 AND slot_index <= 5", name="ck_v2_roulette_segment_slot_range"),
+        CheckConstraint("slot_index >= 0 AND slot_index <= 7", name="ck_v2_roulette_segment_slot_range"),
         CheckConstraint("weight >= 0", name="ck_v2_roulette_segment_weight_non_negative"),
     )
 

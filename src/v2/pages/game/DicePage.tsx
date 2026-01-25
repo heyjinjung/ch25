@@ -16,11 +16,17 @@ const ASSET_PATH = "/v2/assets/03dice";
 
 const DicePage = () => {
   const { user } = useAuth();
-  const { playDiceShake, playDiceThrow, playDiceReveal, playSmallWin, playBigWin, playDiceLose } = useSound();
+  const {
+    playDiceShake,
+    playDiceThrow,
+    playDiceReveal,
+    playSmallWin,
+    playBigWin,
+    playDiceLose,
+  } = useSound();
   const [playerDice, setPlayerDice] = useState(1);
   const [opponentDice, setOpponentDice] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
-
 
   const containerRef = useRef<HTMLDivElement>(null);
   const auroraRef = useRef<HTMLDivElement>(null);
@@ -75,17 +81,18 @@ const DicePage = () => {
     return (data.token_balance ?? 0) > 0;
   }, [data]);
 
-
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [lastOutcome, setLastOutcome] = useState<"WIN" | "LOAD" | "DRAW" | "LOSE" | null>(null);
+  const [lastOutcome, setLastOutcome] = useState<
+    "WIN" | "LOAD" | "DRAW" | "LOSE" | null
+  >(null);
   const [lastVaultEarn, setLastVaultEarn] = useState(0);
 
   const rollDice = async () => {
     if (isRolling || !isPlayable) return;
     setIsRolling(true);
     // Removed old badge text update
-    // setResultText("ROLLING..."); 
+    // setResultText("ROLLING...");
     triggerHaptic("medium");
     playDiceShake();
 
@@ -95,18 +102,18 @@ const DicePage = () => {
     try {
       const result = await playMutation.mutateAsync();
       const game = result.game_data;
-      
+
       playDiceThrow();
 
       if (game) {
-        // Delay slightly to ensure layout update before landing starts if needed, 
+        // Delay slightly to ensure layout update before landing starts if needed,
         // but React state update is usually enough.
-        
+
         // We set the final values, and turn off rolling.
         // The ThreeDDice component will see isRolling=false + new value, and animate landing.
         setPlayerDice(game.user_dice[0]);
         setOpponentDice(game.dealer_dice[0]);
-        
+
         // Let's keep isRolling true for a tiny bit longer if we want guaranteed spin time,
         // but the API latency usually provides that "suspense" time.
         // we prepare the modal data now
@@ -116,35 +123,35 @@ const DicePage = () => {
 
         // Add 1 second delay for suspense before landing
         setTimeout(() => {
-           setIsRolling(false); // This triggers the landing animation in ThreeDDice
-           
-           // Sound effects synchronization
-            // Land animation takes about 0.8s in ThreeDDice
-            setTimeout(() => {
-                 playDiceReveal();
-                 if (game.outcome === "WIN") {
-                    if (result.vault_earn > 50000) playBigWin();
-                    else playSmallWin();
-                 } else if (game.outcome === "LOSE") {
-                    playDiceLose();
-                 }
-                 
-                 // Open Modal after reveal animation
-                 setTimeout(() => {
-                     setIsModalOpen(true);
-                 }, 500);
-            }, 800);
-        }, 1000);
+          setIsRolling(false); // This triggers the landing animation in ThreeDDice
 
+          // Sound effects synchronization
+          // Land animation takes about 0.8s in ThreeDDice
+          setTimeout(() => {
+            playDiceReveal();
+            if (game.outcome === "WIN") {
+              if (result.vault_earn > 50000) playBigWin();
+              else playSmallWin();
+            } else if (game.outcome === "LOSE") {
+              playDiceLose();
+            }
+
+            // Open Modal after reveal animation
+            setTimeout(() => {
+              setIsModalOpen(true);
+            }, 500);
+          }, 800);
+        }, 1000);
       } else {
         // Fallback for error state
         setIsRolling(false);
       }
       queryClient.invalidateQueries({ queryKey: ["v2-dice-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
       triggerNotification("success");
     } catch {
       setIsRolling(false);
-    } 
+    }
   };
 
   return (
@@ -161,11 +168,7 @@ const DicePage = () => {
           {/* Player Card */}
           <div className="battle-card">
             <div className="dice-display">
-               <ThreeDDice 
-                  value={playerDice} 
-                  isRolling={isRolling} 
-                  size={80} 
-                />
+              <ThreeDDice value={playerDice} isRolling={isRolling} size={80} />
             </div>
             <div className="dice-sub-button">
               <span className="player-nick">{user?.nickname || "YOU"}</span>
@@ -175,11 +178,11 @@ const DicePage = () => {
           {/* Opponent Card */}
           <div className="battle-card">
             <div className="dice-display">
-                <ThreeDDice 
-                  value={opponentDice} 
-                  isRolling={isRolling} 
-                  size={80} 
-                />
+              <ThreeDDice
+                value={opponentDice}
+                isRolling={isRolling}
+                size={80}
+              />
             </div>
             <div className="dice-sub-button">
               <img
@@ -191,7 +194,18 @@ const DicePage = () => {
           </div>
         </div>
 
-        {/* Removed Outcome Badge */}
+        {/* New Reward Grid - Moved here as requested */}
+        {/* New Reward Grid - Explicit Wrapper */}
+        <div className="w-full flex flex-col items-center justify-center shrink-0">
+          <DiceRewardGrid status={data} />
+        </div>
+
+        {/* Item Board (Preparing) - Explicitly added as separate section */}
+        <div className="w-full mt-2">
+          <div className="item-board-card">
+            <span className="item-board-text">아이템 준비중...</span>
+          </div>
+        </div>
 
         {/* Action Buttons */}
         <div className="dice-action-area">
@@ -202,14 +216,11 @@ const DicePage = () => {
           >
             {isRolling ? "ROLLING..." : "SPIN"}
           </button>
-          
-          {/* New Reward Grid */}
-          <DiceRewardGrid status={data} />
         </div>
       </div>
 
       {/* Result Modal */}
-      <DiceResultModal 
+      <DiceResultModal
         isOpen={isModalOpen}
         outcome={lastOutcome as any}
         vaultEarn={lastVaultEarn}

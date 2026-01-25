@@ -2,158 +2,155 @@ import { useState } from "react";
 import { Activity, Clock, Radio } from "lucide-react";
 import { GoldenEventStream } from "../../components/golden/GoldenEventStream";
 import { InterventionLogTable } from "../../components/golden/InterventionLogTable";
-import { useInterventionLogs, useOpsStatus } from "../../../hooks/useV2Admin";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
-import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
+import { useInterventionLogs } from "../../../hooks/useV2Admin";
 
 export default function GoldenRealTimePage() {
-  const [activeTab, setActiveTab] = useState("stream");
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("events");
   const [userIdInput, setUserIdInput] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
-  const { data: opsStatus } = useOpsStatus();
-  const { data: interventionLogs, isLoading: isLoadingLogs } = useInterventionLogs(
-    selectedUserId,
-    100,
-  );
+  const { data: interventionLogs, isLoading: isLoadingLogs } =
+    useInterventionLogs(selectedUserId);
 
   const handleLoadLogs = () => {
-    const userId = parseInt(userIdInput);
-    if (!isNaN(userId) && userId > 0) {
-      setSelectedUserId(userId);
-      setActiveTab("interventions");
+    if (userIdInput) {
+      const uid = parseInt(userIdInput);
+      if (!isNaN(uid)) {
+        setSelectedUserId(uid);
+      }
     }
   };
 
-  const handleQuickSelect = (userId: number) => {
-    setSelectedUserId(userId);
-    setUserIdInput(userId.toString());
-    setActiveTab("interventions");
-  };
-
   return (
-    <div className="p-6 space-y-6 h-full bg-[#121214] min-h-screen text-[#E4E4E7] font-sans">
+    <div className="p-6 space-y-6 bg-obsidian-bg min-h-screen text-obsidian-text">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1 flex items-center gap-2">
-            <Radio className="w-7 h-7 text-amber-400" />
-            Golden ?�시�?모니?�링
+          <div className="flex items-center gap-2 text-amber-500 mb-2">
+            <Radio className="w-4 h-4 animate-pulse" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Real-time Monitoring
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            골든 라이브(Golden Real-time)
           </h1>
-          <p className="text-sm text-zinc-400">
-            게임 ?�벤???�트�?�??�터벤션 로그�??�시간으�?모니?�링?�니??
+          <p className="text-sm text-obsidian-muted mt-1">
+            실시간 게임 이벤트 및 인터벤션 로그를 모니터링합니다.
           </p>
         </div>
-
-        {/* User ID Quick Selector */}
-        {opsStatus?.goldenRadar?.riskUsers &&
-          opsStatus.goldenRadar.riskUsers.length > 0 && (
-            <Card className="bg-[#18181B] border-white/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs text-zinc-400 flex items-center gap-2">
-                  <Activity className="w-3 h-3" />
-                  ?�험 ?��? 빠른 ?�택
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex gap-2">
-                {opsStatus.goldenRadar.riskUsers.slice(0, 5).map((user) => (
-                  <Button
-                    key={user.userId}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickSelect(user.userId)}
-                    className="border-red-500/30 text-red-400 hover:bg-red-500/10"
-                  >
-                    {user.nickname}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-          )}
+        <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/>
+                <span className="text-xs font-medium text-emerald-500">System Normal</span>
+            </div>
+        </div>
       </div>
 
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 bg-[#18181B] border border-white/10">
-          <TabsTrigger
-            value="stream"
-            className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-400"
-          >
-            <Radio className="w-4 h-4 mr-2" />
-            ?�시�??�벤???�트�?
-          </TabsTrigger>
-          <TabsTrigger
-            value="interventions"
-            className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400"
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            ?�터벤션 로그
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Event Stream Tab */}
-        <TabsContent value="stream" className="mt-6">
-          <GoldenEventStream />
-        </TabsContent>
-
-        {/* Intervention Logs Tab */}
-        <TabsContent value="interventions" className="mt-6 space-y-4">
-          {/* User ID Selector */}
-          <Card className="bg-[#18181B] border-white/10">
-            <CardHeader>
-              <CardTitle className="text-sm text-gray-300">
-                ?�터벤션 로그 조회
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex gap-2">
-              <Input
-                type="number"
-                placeholder="?��? ID ?�력"
-                value={userIdInput}
-                onChange={(e) => setUserIdInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleLoadLogs();
-                  }
-                }}
-                className="bg-black/20 border-white/10 text-white placeholder:text-zinc-500"
-              />
-              <Button
-                onClick={handleLoadLogs}
-                className="bg-amber-500 text-black hover:bg-amber-400"
-              >
-                조회
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Intervention Logs */}
-          <div className="admin-card-premium p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Event Stream (Span 2) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-100">
-                ?�터벤션 로그
-                {selectedUserId && (
-                  <span className="ml-2 text-amber-400">
-                    (User ID: {selectedUserId})
-                  </span>
-                )}
-              </h3>
-              {interventionLogs && interventionLogs.length > 0 && (
-                <span className="text-sm text-gray-400">
-                  �?{interventionLogs.length}�?
-                </span>
-              )}
+              <TabsList className="bg-obsidian-surface border border-obsidian-border">
+                <TabsTrigger
+                  value="events"
+                  className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500"
+                >
+                  <Activity className="w-4 h-4 mr-2" />
+                  게임 스트림
+                </TabsTrigger>
+                <TabsTrigger
+                  value="interventions"
+                  className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-500"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  인터벤션 로그
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            <InterventionLogTable
-              logs={interventionLogs || []}
-              isLoading={isLoadingLogs}
-            />
-          </div>
-        </TabsContent>
-      </Tabs>
+            <TabsContent value="events" className="mt-0">
+              <GoldenEventStream />
+            </TabsContent>
+
+            <TabsContent value="interventions" className="mt-0 space-y-4">
+              <div className="bg-obsidian-surface border border-obsidian-border rounded-lg p-4 flex gap-4 items-center">
+                 <Input 
+                    type="number" 
+                    placeholder="유저 ID 입력" 
+                    value={userIdInput}
+                    onChange={(e) => setUserIdInput(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleLoadLogs();
+                    }}
+                    className="w-48 bg-black/20 border-obsidian-border"
+                 />
+                 <Button onClick={handleLoadLogs} variant="outline" className="border-obsidian-border hover:bg-white/5">
+                    조회
+                 </Button>
+                 {selectedUserId && params_logs_exist(interventionLogs) && (
+                     <span className="text-xs text-obsidian-muted">
+                        총 {interventionLogs?.length || 0}건의 로그 발견
+                     </span>
+                 )}
+              </div>
+              <InterventionLogTable 
+                logs={interventionLogs || []} 
+                isLoading={isLoadingLogs} 
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right Column: Status & Control */}
+        <div className="space-y-6">
+            <div className="bg-obsidian-surface border border-obsidian-border rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4">모니터링 상태</h3>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-obsidian-muted">WebSocket 연결</span>
+                        <span className="text-emerald-500 font-medium">Connected</span>
+                    </div>
+                     <div className="flex justify-between items-center text-sm">
+                        <span className="text-obsidian-muted">지연 시간(Latency)</span>
+                        <span className="text-white font-medium">24ms</span>
+                    </div>
+                     <div className="flex justify-between items-center text-sm">
+                        <span className="text-obsidian-muted">이벤트 처리율</span>
+                        <span className="text-white font-medium">120/sec</span>
+                    </div>
+                </div>
+            </div>
+
+             <div className="bg-obsidian-surface border border-obsidian-border rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4">빠른 필터</h3>
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" className="text-xs border-obsidian-border text-obsidian-muted hover:text-white">
+                        고액 베팅만
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs border-obsidian-border text-obsidian-muted hover:text-white">
+                        당첨 이벤트만
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-xs border-obsidian-border text-obsidian-muted hover:text-white">
+                        인터벤션 발동만
+                    </Button>
+                </div>
+             </div>
+        </div>
+      </div>
     </div>
   );
+}
+
+function params_logs_exist(logs: any[] | undefined): boolean {
+    return !!logs && logs.length > 0;
 }

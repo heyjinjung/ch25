@@ -7,9 +7,12 @@ interface DiceRewardGridProps {
 
 export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
   // If no config is loaded yet, show "Item Preparing" (아이템 준비중)
-  if (!status?.reward_config) {
+  // Ensure we check strict existence
+  const hasConfig = status && status.reward_config;
+
+  if (!hasConfig) {
     return (
-      <div className="w-full mt-2 p-4 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md flex flex-col items-center justify-center min-h-[100px]">
+      <div className="w-full mt-2 p-4 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md flex flex-col items-center justify-center min-h-[80px]">
         <div className="text-zinc-400 text-sm font-bold animate-pulse">
           아이템 준비중...
         </div>
@@ -17,7 +20,7 @@ export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
     );
   }
 
-  const cfg = status.reward_config;
+  const cfg = status!.reward_config!;
   
   const rewards = [
     {

@@ -28,6 +28,35 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+def _ensure_v2_roulette_segments(
+    db: Session,
+    config: RouletteConfig,
+    *,
+    target_count: int = 8,
+) -> bool:
+    existing = {seg.slot_index for seg in config.segments}
+    added = False
+    for slot_index in range(target_count):
+        if slot_index in existing:
+            continue
+        new_seg = RouletteSegment(
+            config_id=config.id,
+            slot_index=slot_index,
+            label=f"빈 슬롯 {slot_index + 1}",
+            weight=0,
+            reward_type="NONE",
+            reward_amount=0,
+            is_jackpot=False,
+        )
+        db.add(new_seg)
+        config.segments.append(new_seg)
+        added = True
+    if added:
+        db.commit()
+        db.refresh(config)
+    return added
+
+
 def _map_lottery_prize_integrity_error(exc: IntegrityError) -> str:
     raw = str(getattr(exc, "orig", exc))
     if "uq_v2_lottery_prize_label" in raw or "Duplicate entry" in raw:
@@ -196,6 +225,7 @@ def get_roulette_configs(
 
     result = []
     for config in configs:
+        _ensure_v2_roulette_segments(db, config)
         try:
             segments_dto = [
                 RouletteSegmentDto(
@@ -248,6 +278,8 @@ def get_roulette_config(
 
     if not config:
         raise HTTPException(status_code=404, detail="ROULETTE_CONFIG_NOT_FOUND")
+
+    _ensure_v2_roulette_segments(db, config)
 
     segments_dto = [
         RouletteSegmentDto(

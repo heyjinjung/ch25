@@ -14,9 +14,10 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
+from fastapi import HTTPException, status
 
 from app.core.config import get_settings
-from app.core.exceptions import InvalidConfigError, LockAcquisitionError
+from app.core.exceptions import InvalidConfigError, LockAcquisitionError, NotEnoughTokensError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
@@ -213,15 +214,40 @@ class V2LotteryGameService:
         weights = [max(int(p.weight or 0), 0) for p in prizes]
         chosen = random.choices(prizes, weights=weights, k=1)[0]
 
-        consumed = False
-        last_token_type = None
-        for candidate in self._ticket_type_aliases(normalized_ticket_type):
-            try:
-                token_type_enum = GameTokenType(candidate)
-            except Exception:
-                continue
-            last_token_type = token_type_enum
-            try:
+        try:
+            consumed = False
+            last_token_type = None
+            for candidate in self._ticket_type_aliases(normalized_ticket_type):
+                try:
+                    token_type_enum = GameTokenType(candidate)
+                except Exception:
+                    continue
+                last_token_type = token_type_enum
+                try:
+                    V2InventoryService.require_and_consume_wallet_token(
+                        db,
+                        user_id,
+                        token_type_enum,
+                        amount=1,
+                        reason="V2_LOTTERY_PLAY",
+                        label=chosen.label,
+                        meta={"v2_prize_id": chosen.id, "v2_config_id": config.id},
+                        auto_commit=False,
+                    )
+                    consumed = True
+                    break
+                except NotEnoughTokensError:
+                    # Specific token type might be empty, try next
+                    continue
+                except Exception:
+                    # Other errors?
+                    continue
+
+            if not consumed:
+                # Fallback to LOTTERY_TICKET if nothing else consumed
+                # This call will raise NotEnoughTokensError if it fails
+                token_type_enum = GameTokenType.LOTTERY_TICKET
+                last_token_type = token_type_enum
                 V2InventoryService.require_and_consume_wallet_token(
                     db,
                     user_id,
@@ -232,24 +258,11 @@ class V2LotteryGameService:
                     meta={"v2_prize_id": chosen.id, "v2_config_id": config.id},
                     auto_commit=False,
                 )
-                consumed = True
-                break
-            except Exception:
-                continue
-
-        if not consumed:
-            token_type_enum = GameTokenType.LOTTERY_TICKET
-            last_token_type = token_type_enum
-            V2InventoryService.require_and_consume_wallet_token(
-                db,
-                user_id,
-                token_type_enum,
-                amount=1,
-                reason="V2_LOTTERY_PLAY",
-                label=chosen.label,
-                meta={"v2_prize_id": chosen.id, "v2_config_id": config.id},
-                auto_commit=False,
-            )
+        except NotEnoughTokensError:
+            raise
+        except ValueError as e:
+            # Likely from ensure_legacy_user_id or similar
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         if chosen.stock is not None:
             chosen.stock = int(chosen.stock) - 1

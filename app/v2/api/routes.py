@@ -16,7 +16,7 @@ from app.models.game_wallet import GameTokenType
 from app.models.inventory import UserInventoryItem
 from app.models.user import User
 from app.v2.models.user import V2User
-from app.schemas.dice import DicePlayResponse, DiceStatusResponse
+from app.schemas.dice import DicePlayResponse, DiceStatusResponse, DicePlayRequest
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.v2.schemas.v2_mission import MissionListResponse
 from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
@@ -215,10 +215,11 @@ def dice_status(
 
 @router.post("/dice/play", response_model=DicePlayResponse)
 def dice_play(
+    payload: DicePlayRequest,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DicePlayResponse:
-    return _v2_dice_game_service.play(db=db, user_id=user_id)
+    return _v2_dice_game_service.play(db=db, user_id=user_id, bet_amount=payload.bet_amount, prediction=payload.prediction)
 
 
 @router.get("/lottery/status", response_model=LotteryStatusResponse)

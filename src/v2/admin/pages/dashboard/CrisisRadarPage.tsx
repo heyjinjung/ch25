@@ -35,7 +35,7 @@ export default function CrisisRadarPage() {
   const riskyUsers = status?.goldenRadar.riskUsers || [];
 
   return (
-    <div className="p-6 space-y-8 bg-[#121214] min-h-screen text-white">
+    <div className="p-6 space-y-8 bg-obsidian-bg min-h-screen text-white">
       {/* Header */}
       <div className="flex justify-between items-end">
         <div>
@@ -46,32 +46,31 @@ export default function CrisisRadarPage() {
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            ?�기 ?�이??(Crisis Radar)
+            위기 레이더(Crisis Radar)
           </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            AI가 ?�시간으�?분석???�탈 ?�기 ?�용??목록?�니?? 즉각?�인
-            개입???�요?????�습?�다.
+          <p className="text-sm text-obsidian-muted mt-1">
+            AI가 실시간으로 분석한 이탈 위기 사용자 목록입니다. 즉각적인 개입이 필요한 시점입니다.
           </p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            className="border-white/10 text-zinc-300 hover:text-white hover:bg-white/5"
+            className="border-obsidian-border text-obsidian-muted hover:text-white hover:bg-white/5"
           >
-            ?�괄 개입 (Bulk Action)
+            일괄 개입 (Bulk Action)
           </Button>
           <Button className="bg-red-500 text-white hover:bg-red-600">
-            ?�이??감도 ?�정
+            레이더 감도 설정
           </Button>
         </div>
       </div>
 
       {/* Main Analysis Cards */}
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="bg-[#18181B] border-red-500/20 bg-red-500/5">
+        <Card className="bg-obsidian-surface border-red-500/20 bg-red-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-red-400 uppercase tracking-widest">
-              Urgent (?�각)
+              Urgent (심각)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -83,7 +82,7 @@ export default function CrisisRadarPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-[#18181B] border-amber-500/20 bg-amber-500/5">
+        <Card className="bg-obsidian-surface border-amber-500/20 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-amber-400 uppercase tracking-widest">
               Warning (주의)
@@ -98,9 +97,9 @@ export default function CrisisRadarPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-[#18181B] border-zinc-500/20">
+        <Card className="bg-obsidian-surface border-obsidian-muted/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+            <CardTitle className="text-xs font-bold text-obsidian-muted uppercase tracking-widest">
               Avg Churn Score
             </CardTitle>
           </CardHeader>
@@ -111,7 +110,7 @@ export default function CrisisRadarPage() {
             </p>
           </CardContent>
         </Card>
-        <Card className="bg-[#18181B] border-indigo-500/20 bg-indigo-500/5">
+        <Card className="bg-obsidian-surface border-indigo-500/20 bg-indigo-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
               Today Interventions
@@ -127,7 +126,7 @@ export default function CrisisRadarPage() {
       </div>
 
       {/* User Table / List */}
-      <Card className="bg-[#18181B] border-white/5">
+      <Card className="bg-obsidian-surface border-obsidian-border">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="text-lg">Risk User List</CardTitle>
           <div className="flex gap-2">
@@ -135,12 +134,12 @@ export default function CrisisRadarPage() {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <Input
                 placeholder="Search users..."
-                className="bg-black/20 border-white/10 pl-9 h-9 w-[200px] text-sm"
+                className="bg-black/20 border-obsidian-border pl-9 h-9 w-[200px] text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" className="h-9 border-white/10">
+            <Button variant="outline" size="sm" className="h-9 border-obsidian-border">
               <Filter className="w-4 h-4 mr-2" /> Filter
             </Button>
           </div>
@@ -148,7 +147,7 @@ export default function CrisisRadarPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-[10px] text-zinc-500 uppercase tracking-wider border-y border-white/5 bg-white/5">
+              <thead className="text-[10px] text-zinc-500 uppercase tracking-wider border-y border-obsidian-border bg-white/5">
                 <tr>
                   <th className="px-6 py-3 font-medium">Username</th>
                   <th className="px-6 py-3 font-medium">Risk Score</th>
@@ -159,7 +158,7 @@ export default function CrisisRadarPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-obsidian-border">
                 {riskyUsers
                   .filter((u) =>
                     u.nickname.toLowerCase().includes(search.toLowerCase()),
@@ -185,7 +184,7 @@ export default function CrisisRadarPage() {
                               aria-label="이탈 위험 점수"
                             />
                           </div>
-                          <span className="text-[10px] font-mono text-zinc-400">
+                          <span className="text-[10px] font-mono text-obsidian-muted">
                             {(u.churnScore * 100).toFixed(0)}%
                           </span>
                         </div>

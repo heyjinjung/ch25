@@ -12,6 +12,20 @@ GameResult = Literal["WIN", "LOSE", "DRAW"]
 DiceResult = GameResult
 
 
+class DicePlayRequest(BaseModel):
+    bet_amount: int = 1
+    prediction: Optional[str] = None
+
+
+class DiceRewardConfig(BaseModel):
+    win_reward_type: str
+    win_reward_amount: int
+    draw_reward_type: str
+    draw_reward_amount: int
+    lose_reward_type: str
+    lose_reward_amount: int
+
+
 class DiceStatusResponse(BaseModel):
     config_id: int
     name: str
@@ -25,6 +39,7 @@ class DiceStatusResponse(BaseModel):
     event_plays_done: Optional[int] = None
     event_plays_max: Optional[int] = None
     event_ineligible_reason: Optional[str] = None  # "NO_STAKE", "LOW_DEPOSIT", "CAP_REACHED", etc.
+    reward_config: Optional[DiceRewardConfig] = None
 
 
 class DiceGameData(BaseModel):

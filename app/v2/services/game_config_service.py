@@ -50,7 +50,7 @@ class V2GameConfigService:
     @staticmethod
     def _validate_roulette(config: V2RouletteConfig, segments: Iterable[V2RouletteSegment]) -> None:
         segment_list = list(segments)
-        if len(segment_list) != 6:
+        if len(segment_list) not in {6, 8}:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         total_weight = sum(seg.weight for seg in segment_list if seg.weight > 0)
         if total_weight <= 0:

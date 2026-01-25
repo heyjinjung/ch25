@@ -1,10 +1,9 @@
-// src/v2/pages/game/LotteryPage.tsx
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
+import LotteryResultModal from "../../components/game/LotteryResultModal";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import "./LotteryRedesign.css";
 
@@ -111,6 +110,7 @@ const LotteryPage: React.FC = () => {
         }
 
         queryClient.invalidateQueries({ queryKey: ["v2-lottery-status"] });
+        queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
       }, 2000);
     } catch (err) {
       console.error("[LotteryPage] Play error:", err);
@@ -145,25 +145,25 @@ const LotteryPage: React.FC = () => {
         <img
           ref={ball1Ref}
           src={`${ASSET_PATH}/Mix balls 3.png`}
-          className="mixing-ball ball-1 w-[173px]"
+          className="mixing-ball ball-1 w-[173px] blur-[2px]"
           alt=""
         />
         <img
           ref={ball2Ref}
           src={`${ASSET_PATH}/Mix balls 1.png`}
-          className="mixing-ball ball-2 w-[128px]"
+          className="mixing-ball ball-2 w-[128px] blur-[2px]"
           alt=""
         />
         <img
           ref={ball3Ref}
           src={`${ASSET_PATH}/Mix balls 4.png`}
-          className="mixing-ball ball-3 w-[77px]"
+          className="mixing-ball ball-3 w-[77px] blur-[2px]"
           alt=""
         />
         <img
           ref={ball4Ref}
           src={`${ASSET_PATH}/Mix balls 2.png`}
-          className="mixing-ball ball-4 w-[100px]"
+          className="mixing-ball ball-4 w-[100px] blur-[2px]"
           alt=""
         />
       </div>
@@ -197,26 +197,13 @@ const LotteryPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Result Layer */}
-      <AnimatePresence>
-        {isRevealed && revealedPrize && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"
-          >
-            <div className="bg-black/80 backdrop-blur-xl px-10 py-6 rounded-3xl border border-white/10 flex flex-col items-center gap-2">
-              <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">
-                Game Result
-              </span>
-              <span className="text-3xl font-black text-white text-center">
-                {revealedPrize.label}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Result Modal - Using the new component */}
+      <LotteryResultModal
+        isOpen={isRevealed && !!revealedPrize}
+        onClose={handleReset}
+        onReset={handleReset}
+        prizeLabel={revealedPrize?.label ?? "Try Again"}
+      />
 
       <LotteryCollectionModal
         open={collectionModalOpen}

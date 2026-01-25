@@ -56,7 +56,7 @@ RewardType = Literal[
 class RouletteSegmentDto(BaseModel):
     """룰렛 슬롯 정보 (클라이언트용 DTO)"""
     id: int | None = None
-    slot_index: int = Field(..., ge=0, le=5, description="슬롯 인덱스 (0-5)", alias="slotIndex", serialization_alias="slotIndex")
+    slot_index: int = Field(..., ge=0, le=7, description="슬롯 인덱스 (0-7)", alias="slotIndex", serialization_alias="slotIndex")
     label: str
     weight: int = Field(..., ge=0, description="가중치 (확률 계산용)")
     reward_type: RewardType = Field(alias="rewardType", serialization_alias="rewardType")
@@ -100,7 +100,7 @@ class RouletteConfigUpdateRequest(BaseModel):
 
 class RouletteSegmentUpdateRequest(BaseModel):
     """룰렛 슬롯 수정 요청"""
-    slot_index: int = Field(..., ge=0, le=5)
+    slot_index: int = Field(..., ge=0, le=7)
     label: str
     weight: int = Field(..., ge=0)
     reward_type: RewardType

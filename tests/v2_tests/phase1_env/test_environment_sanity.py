@@ -4,6 +4,7 @@ import ast
 import pytest
 from app.main import app
 from fastapi.routing import APIRoute
+from pathlib import Path
 
 PROJECT_ROOT = os.path.join(os.path.dirname(__file__), "../../../")
 ALEMBIC_VERSIONS_DIR = os.path.join(PROJECT_ROOT, "alembic/versions")
@@ -98,3 +99,64 @@ def test_module_import_sanity():
             pytest.fail(f"Failed to import {module_name}: {e}")
         except Exception as e:
             pytest.fail(f"Runtime error importing {module_name}: {e}")
+
+
+TEXT_EXTENSIONS = {
+    ".py", ".ts", ".tsx", ".js", ".jsx", ".md", ".json", ".yaml", ".yml",
+    ".sql", ".txt", ".css", ".html", ".csv", ".ini", ".toml", ".env",
+}
+
+EXCLUDED_DIRS = {
+    ".git", ".venv", "node_modules", "dist", "build", "coverage",
+    "logs", "__pycache__",
+}
+
+
+def _iter_text_files(root: Path):
+    for path in root.rglob("*"):
+        if path.is_dir():
+            if path.name in EXCLUDED_DIRS:
+                # Skip entire directory
+                continue
+            continue
+
+        if path.suffix.lower() in TEXT_EXTENSIONS:
+            # Skip large artifacts if any
+            if any(part in EXCLUDED_DIRS for part in path.parts):
+                continue
+            yield path
+
+
+def test_utf8_decode_docs_and_src():
+    """Ensure docs/ and src/ files are UTF-8 decodable (prevent mojibake regressions)."""
+    project_root = Path(__file__).resolve().parents[3]
+    targets = [project_root / "docs", project_root / "src"]
+
+    decode_failures = []
+    for target in targets:
+        if not target.exists():
+            continue
+        for file_path in _iter_text_files(target):
+            try:
+                file_path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                decode_failures.append(str(file_path))
+
+    assert not decode_failures, f"UTF-8 decode failed for: {decode_failures}"
+
+
+def test_no_mojibake_replacement_char_in_docs_and_src():
+    """Detect common mojibake replacement char () in docs/ and src/."""
+    project_root = Path(__file__).resolve().parents[3]
+    targets = [project_root / "docs", project_root / "src"]
+
+    offending_files = []
+    for target in targets:
+        if not target.exists():
+            continue
+        for file_path in _iter_text_files(target):
+            content = file_path.read_text(encoding="utf-8")
+            if "" in content:
+                offending_files.append(str(file_path))
+
+    assert not offending_files, f"Mojibake replacement char found in: {offending_files}"

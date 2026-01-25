@@ -77,8 +77,8 @@ class AdminRouletteSegmentV2(BaseModel):
     @field_validator("slot_index")
     @classmethod
     def validate_slot_index(cls, value: int) -> int:
-        if value < 0 or value > 5:
-            raise ValueError("slot_index must be between 0 and 5")
+        if value < 0 or value > 7:
+            raise ValueError("slot_index must be between 0 and 7")
         return value
 
     @field_validator("weight")

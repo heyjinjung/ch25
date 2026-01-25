@@ -207,6 +207,53 @@
 - 인증 검증 로직: [app/api/deps.py](app/api/deps.py)
 - DEV 로그인 토큰 발급: [app/v2/api/dev_login.py](app/v2/api/dev_login.py)
 
+## 12) 2026-01-25 추가 트러블슈팅 (DEV 로그인 후 금고/게임토큰 동기화 지연)
+### 12.1 증상
+- DEV 로그인 후 /home 헤더의 금고/티켓 수치가 즉시 갱신되지 않음.
+- 상점/인벤토리는 정상 동기화되나, 게임 플레이 후 헤더 금고/티켓이 늦게 반영됨.
+
+### 12.2 원인
+- 헤더에서 사용하는 V2 금고 상태 호출이 `/api/v2/vault/status`가 아닌 경로로 호출됨.
+- 주사위/복권 플레이 후 `v2-vault-status` 쿼리 무효화가 누락되어 즉시 갱신되지 않음.
+
+### 12.3 조치 (PATCH)
+- FE: `getV2VaultStatus()`를 `/api/v2/vault/status`로 정합화.
+  - [src/v2/api/v1CompatAdapter.ts](src/v2/api/v1CompatAdapter.ts)
+- FE: 주사위/복권 플레이 성공 후 `v2-vault-status` invalidate 추가.
+  - [src/v2/pages/game/DicePage.tsx](src/v2/pages/game/DicePage.tsx)
+  - [src/v2/pages/game/LotteryPage.tsx](src/v2/pages/game/LotteryPage.tsx)
+
+### 12.4 정합성 체크
+- DEV 로그인 후 /home 헤더 금고/티켓 즉시 갱신 확인.
+- 주사위/복권 플레이 직후 헤더 금고/티켓 갱신 확인.
+- 네트워크에서 `/api/v2/vault/status` 호출 확인.
+
+### 12.5 증거
+- 금고 상태 어댑터: [src/v2/api/v1CompatAdapter.ts](src/v2/api/v1CompatAdapter.ts)
+- 주사위 플레이 후 갱신: [src/v2/pages/game/DicePage.tsx](src/v2/pages/game/DicePage.tsx)
+- 복권 플레이 후 갱신: [src/v2/pages/game/LotteryPage.tsx](src/v2/pages/game/LotteryPage.tsx)
+
+## 13) 2026-01-25 추가 트러블슈팅 (Dice Config Sync Fix)
+### 13.1 증상
+- 어드민에서 설정한 주사위 보상(확률/금액)이 유저 게임 화면에 반영되지 않음.
+- 프론트가 기본값으로 표시되어 실제 설정과 불일치.
+
+### 13.2 원인
+- Dice 상태 응답에 보상 표시용 설정이 명시적으로 내려오지 않아 동기화 누락.
+
+### 13.3 조치 (PATCH)
+- BE: Dice 상태 응답에 `reward_config`를 명시적으로 포함.
+  - [app/schemas/dice.py](app/schemas/dice.py)
+  - [app/v2/services/v2_dice_game_service.py](app/v2/services/v2_dice_game_service.py)
+
+### 13.4 정합성 체크
+- `/api/v2/dice/status` 응답에 `reward_config` 포함 확인.
+- 어드민 설정 값과 동일하게 표시되는지 확인.
+
+### 13.5 증거
+- Dice 상태 스키마: [app/schemas/dice.py](app/schemas/dice.py)
+- Dice 상태 응답 로직: [app/v2/services/v2_dice_game_service.py](app/v2/services/v2_dice_game_service.py)
+
 ## 6) 증거/테스트
 - 요청에 따라 **터미널/자동 테스트 미실행**.
 - 필요한 증거:
@@ -238,6 +285,34 @@
 
 ### 9.5 비고
 - **Docker 빌드 주의**: 로컬 `npm run build`는 컨테이너에 반영되지 않음. 반드시 `docker-compose build` 또는 `npm run dev` 확인 필요.
+
+---
+## 13) 2026-01-25 추가 트러블슈팅 (주사위 500 에러 및 애니메이션 개선)
+### 13.1 증상
+- `/api/v2/dice/play` 호출 시 500 Internal Server Error 발생.
+- 주사위 애니메이션이 단순 블러 이미지 교체 방식으로 부자연스러움 (사용자 경험 저하).
+
+### 13.2 원인
+- BE: `routes.py`의 `dice_play` 엔드포인트가 `DicePlayRequest` Payload를 인자로 받지 않음 (Signature Mismatch).
+- FE: `ThreeDDice` 컴포넌트가 CSS Blur Filter 트릭을 사용하여 리얼한 3D 회전이 아님.
+
+### 13.3 조치 (PATCH)
+- BE: `DicePlayRequest` 스키마 추가 및 `dice_play` 라우터에 payload 인자 추가.
+  - [app/schemas/dice.py](app/schemas/dice.py)
+  - [app/v2/api/routes.py](app/v2/api/routes.py)
+- BE: `V2DiceGameService.play` 메소드가 `bet_amount`, `prediction` 인자를 허용하도록 수정.
+  - [app/v2/services/v2_dice_game_service.py](app/v2/services/v2_dice_game_service.py)
+- FE: `ThreeDDice`를 GSAP 기반 3D Physics 애니메이션(회전/바운스)으로 전면 리팩토링.
+  - [src/v2/components/game/ThreeDDice.tsx](src/v2/components/game/ThreeDDice.tsx)
+  - [src/v2/components/game/ThreeDDice.css](src/v2/components/game/ThreeDDice.css)
+
+### 13.4 정합성 체크
+- `/api/v2/dice/play` 호출 시 200 OK 및 게임 결과 반환 확인.
+- 주사위가 실제로 3D로 회전하며 결과 값에 맞춰 자연스럽게 착지하는지 확인.
+
+### 13.5 증거
+- 라우터 수정: [app/v2/api/routes.py](app/v2/api/routes.py)
+- 3D 컴포넌트: [src/v2/components/game/ThreeDDice.tsx](src/v2/components/game/ThreeDDice.tsx)
 
 ---
 끝

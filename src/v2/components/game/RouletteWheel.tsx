@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import RouletteFrame from "./RouletteFrame";
+import RouletteTextureOverlay from "./RouletteTextureOverlay";
 
 interface Segment {
   readonly label: string;
@@ -54,27 +55,9 @@ const FIGMA_SLICE_LAYOUT = [
   },
 ] as const;
 
-const LABEL_ROTATE_CLASSES = [
-  "rotate-[22.5deg]",
-  "rotate-[67.5deg]",
-  "rotate-[112.5deg]",
-  "rotate-[157.5deg]",
-  "rotate-[202.5deg]",
-  "rotate-[247.5deg]",
-  "rotate-[292.5deg]",
-  "rotate-[337.5deg]",
-] as const;
 
-const LABEL_UNROTATE_CLASSES = [
-  "rotate-[-22.5deg]",
-  "rotate-[-67.5deg]",
-  "rotate-[-112.5deg]",
-  "rotate-[-157.5deg]",
-  "rotate-[-202.5deg]",
-  "rotate-[-247.5deg]",
-  "rotate-[-292.5deg]",
-  "rotate-[-337.5deg]",
-] as const;
+
+
 
 interface RouletteWheelProps {
   readonly segments: Segment[];
@@ -143,8 +126,11 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           ref={wheelRef}
           className="relative h-full w-full rounded-full transition-transform will-change-transform"
         >
+          {/* User Requested Texture Overlay - Clean Black Pattern */}
+          <RouletteTextureOverlay />
+
           {/* Figma overlay: 12 (multiply) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-multiply">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-multiply z-10">
             <img
               src="/assets/roulette/12.svg"
               alt="Overlay 12"
@@ -167,7 +153,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           </div>
 
           {/* Figma overlay: 14/15 (overlay) */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay z-10">
             <img
               src="/assets/roulette/14.svg"
               alt="Overlay 14"
@@ -175,7 +161,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
               className="w-[86.33%] h-[86.33%]"
             />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay z-10">
             <img
               src="/assets/roulette/15.svg"
               alt="Overlay 15"
@@ -185,22 +171,24 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           </div>
 
           {/* Soft overlay for depth */}
-          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.10)_0%,rgba(0,0,0,0.35)_70%,rgba(0,0,0,0.55)_100%)] mix-blend-overlay" />
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.10)_0%,rgba(0,0,0,0.35)_70%,rgba(0,0,0,0.55)_100%)] mix-blend-overlay z-10" />
 
-          {/* Labels */}
+          {/* Labels - Mathematically positioned */}
           {Array.from({ length: segmentCount }).map((_, index) => {
             const segment = segments[index];
+            // Calculate rotation: start from top (0deg) + segment offset
+            const rotateDeg = (360 / segmentCount) * index + (360 / segmentCount / 2);
+            
             return (
               <div
                 key={`lbl-${index}`}
-                className={`absolute inset-0 flex items-center justify-center pointer-events-none ${LABEL_ROTATE_CLASSES[index]}`}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                style={{ transform: `rotate(${rotateDeg}deg)` }}
               >
-                <div className="translate-y-[-72px]">
-                  <div className={LABEL_UNROTATE_CLASSES[index]}>
-                    <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
-                      {segment?.label ?? ""}
-                    </span>
-                  </div>
+                <div className="translate-y-[-100px]">
+                  <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
+                    {segment?.label ?? ""}
+                  </span>
                 </div>
               </div>
             );
