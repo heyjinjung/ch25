@@ -7,8 +7,12 @@ import { useSound } from "../../../hooks/useSound";
 import { useAuth } from "../../../auth/authStore";
 import gsap from "gsap";
 import "./DiceRedesign.css";
+// Import the new 3D component
+import ThreeDDice from "../../components/game/ThreeDDice";
+import DiceRewardGrid from "../../components/game/DiceRewardGrid";
+import DiceResultModal from "../../components/game/DiceResultModal";
 
-const ASSET_PATH = "/assets/03dice";
+const ASSET_PATH = "/v2/assets/03dice";
 
 const DicePage = () => {
   const { user } = useAuth();
@@ -16,10 +20,8 @@ const DicePage = () => {
   const [playerDice, setPlayerDice] = useState(1);
   const [opponentDice, setOpponentDice] = useState(1);
   const [isRolling, setIsRolling] = useState(false);
-  const [resultText, setResultText] = useState("WAITING...");
 
-  const playerDiceRef = useRef<HTMLImageElement>(null);
-  const opponentDiceRef = useRef<HTMLImageElement>(null);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const auroraRef = useRef<HTMLDivElement>(null);
 
@@ -73,76 +75,76 @@ const DicePage = () => {
     return (data.token_balance ?? 0) > 0;
   }, [data]);
 
-  const getDiceImage = (val: number) =>
-    `${ASSET_PATH}/img_dice_side_{[${val}]}.png`;
+
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lastOutcome, setLastOutcome] = useState<"WIN" | "LOAD" | "DRAW" | "LOSE" | null>(null);
+  const [lastVaultEarn, setLastVaultEarn] = useState(0);
 
   const rollDice = async () => {
     if (isRolling || !isPlayable) return;
     setIsRolling(true);
-    setResultText("ROLLING...");
+    // Removed old badge text update
+    // setResultText("ROLLING..."); 
     triggerHaptic("medium");
     playDiceShake();
 
-    // GSAP Animation Sequence
-    const tl = gsap.timeline({ repeat: -1 });
-    tl.to([playerDiceRef.current, opponentDiceRef.current], {
-      rotation: "+=360",
-      y: -20,
-      scale: 1.1,
-      duration: 0.15,
-      ease: "power1.inOut",
-      onRepeat: () => {
-        setPlayerDice(Math.floor(Math.random() * 6) + 1);
-        setOpponentDice(Math.floor(Math.random() * 6) + 1);
-      },
-    });
+    // Note: The rolling animation is now handled internally by the ThreeDDice component
+    // based on the isRolling prop.
 
     try {
       const result = await playMutation.mutateAsync();
       const game = result.game_data;
-
-      tl.kill(); // Stop the fast rolling
+      
       playDiceThrow();
 
       if (game) {
-        // Final "Land" Animation
-        gsap.to([playerDiceRef.current, opponentDiceRef.current], {
-          rotation: 0,
-          y: 0,
-          scale: 1,
-          duration: 0.4,
-          ease: "back.out(1.7)",
-          onComplete: () => {
-            playDiceReveal();
-            setPlayerDice(game.user_dice[0]);
-            setOpponentDice(game.dealer_dice[0]);
-            setResultText(
-              game.outcome === "WIN"
-                ? "WIN"
-                : game.outcome === "DRAW"
-                  ? "DRAW"
-                  : "LOSE",
-            );
-            
-            if (game.outcome === "WIN") {
-              if (result.vault_earn > 50000) playBigWin();
-              else playSmallWin();
-            } else if (game.outcome === "LOSE") {
-              playDiceLose();
-            }
-          },
-        });
+        // Delay slightly to ensure layout update before landing starts if needed, 
+        // but React state update is usually enough.
+        
+        // We set the final values, and turn off rolling.
+        // The ThreeDDice component will see isRolling=false + new value, and animate landing.
+        setPlayerDice(game.user_dice[0]);
+        setOpponentDice(game.dealer_dice[0]);
+        
+        // Let's keep isRolling true for a tiny bit longer if we want guaranteed spin time,
+        // but the API latency usually provides that "suspense" time.
+        // we prepare the modal data now
+        const finalOutcome = game.outcome as "WIN" | "DRAW" | "LOSE";
+        setLastOutcome(finalOutcome);
+        setLastVaultEarn(result.vault_earn);
+
+        // Add 1 second delay for suspense before landing
+        setTimeout(() => {
+           setIsRolling(false); // This triggers the landing animation in ThreeDDice
+           
+           // Sound effects synchronization
+            // Land animation takes about 0.8s in ThreeDDice
+            setTimeout(() => {
+                 playDiceReveal();
+                 if (game.outcome === "WIN") {
+                    if (result.vault_earn > 50000) playBigWin();
+                    else playSmallWin();
+                 } else if (game.outcome === "LOSE") {
+                    playDiceLose();
+                 }
+                 
+                 // Open Modal after reveal animation
+                 setTimeout(() => {
+                     setIsModalOpen(true);
+                 }, 500);
+            }, 800);
+        }, 1000);
+
       } else {
-        setResultText("NO RESULT");
+        // Fallback for error state
+        setIsRolling(false);
       }
       queryClient.invalidateQueries({ queryKey: ["v2-dice-status"] });
       triggerNotification("success");
     } catch {
-      tl.kill();
-      setResultText("ERROR");
-    } finally {
       setIsRolling(false);
-    }
+    } 
   };
 
   return (
@@ -159,12 +161,11 @@ const DicePage = () => {
           {/* Player Card */}
           <div className="battle-card">
             <div className="dice-display">
-              <img
-                ref={playerDiceRef}
-                src={getDiceImage(playerDice)}
-                alt="player dice"
-                className="dice-img"
-              />
+               <ThreeDDice 
+                  value={playerDice} 
+                  isRolling={isRolling} 
+                  size={80} 
+                />
             </div>
             <div className="dice-sub-button">
               <span className="player-nick">{user?.nickname || "YOU"}</span>
@@ -174,12 +175,11 @@ const DicePage = () => {
           {/* Opponent Card */}
           <div className="battle-card">
             <div className="dice-display">
-              <img
-                ref={opponentDiceRef}
-                src={getDiceImage(opponentDice)}
-                alt="opponent dice"
-                className="dice-img"
-              />
+                <ThreeDDice 
+                  value={opponentDice} 
+                  isRolling={isRolling} 
+                  size={80} 
+                />
             </div>
             <div className="dice-sub-button">
               <img
@@ -191,8 +191,7 @@ const DicePage = () => {
           </div>
         </div>
 
-        {/* Status/Outcome Display */}
-        <div className="dice-outcome-badge">{resultText}</div>
+        {/* Removed Outcome Badge */}
 
         {/* Action Buttons */}
         <div className="dice-action-area">
@@ -203,12 +202,19 @@ const DicePage = () => {
           >
             {isRolling ? "ROLLING..." : "SPIN"}
           </button>
-
-          <div className="item-board-card">
-            <span className="item-board-text">아이템준비중</span>
-          </div>
+          
+          {/* New Reward Grid */}
+          <DiceRewardGrid status={data} />
         </div>
       </div>
+
+      {/* Result Modal */}
+      <DiceResultModal 
+        isOpen={isModalOpen}
+        outcome={lastOutcome as any}
+        vaultEarn={lastVaultEarn}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

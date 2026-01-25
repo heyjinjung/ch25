@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.exceptions import InvalidConfigError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.roulette import (
@@ -29,7 +30,7 @@ from app.v2.services.vault_service import V2VaultService
 from app.v2.services.user_service import V2UserService
 from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.mission_service import V2MissionService
-from app.v2.models.v2_roulette import V2RouletteLog, V2RouletteSegment
+from app.v2.models.v2_roulette import V2RouletteConfig, V2RouletteLog, V2RouletteSegment
 from app.v2.services.game_config_service import V2GameConfigService
 
 
@@ -120,11 +121,33 @@ class V2RouletteGameService:
         grade = self._resolve_grade(db, user_id)
         normalized_ticket_type = self._normalize_ticket_type(ticket_type)
 
-        config, segments = V2GameConfigService.get_active_roulette_config(
-            db,
-            ticket_type=normalized_ticket_type,
-            grade=grade,
-        )
+        segments: list[V2RouletteSegment] = []
+        config: V2RouletteConfig | None = None
+        try:
+            config, segments = V2GameConfigService.get_active_roulette_config(
+                db,
+                ticket_type=normalized_ticket_type,
+                grade=grade,
+            )
+        except InvalidConfigError:
+            config = (
+                db.query(V2RouletteConfig)
+                .filter(
+                    V2RouletteConfig.is_active.is_(True),
+                    V2RouletteConfig.ticket_type.in_(
+                        self._ticket_type_aliases(normalized_ticket_type)
+                    ),
+                )
+                .order_by(V2RouletteConfig.id.desc())
+                .first()
+            )
+            if config is not None:
+                segments = (
+                    db.query(V2RouletteSegment)
+                    .filter(V2RouletteSegment.config_id == config.id)
+                    .order_by(V2RouletteSegment.slot_index)
+                    .all()
+                )
 
         token_type_for_balance = None
         token_balance = 0
@@ -141,22 +164,24 @@ class V2RouletteGameService:
             token_type_for_balance = GameTokenType.ROULETTE_TICKET
             token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
 
-        today_spins = db.execute(
-            select(func.count())
-            .select_from(V2RouletteLog)
-            .where(
-                V2RouletteLog.user_id == user_id,
-                V2RouletteLog.config_id == config.id,
-                func.date(V2RouletteLog.created_at) == today,
-            )
-        ).scalar_one()
+        today_spins = 0
+        if config is not None:
+            today_spins = db.execute(
+                select(func.count())
+                .select_from(V2RouletteLog)
+                .where(
+                    V2RouletteLog.user_id == user_id,
+                    V2RouletteLog.config_id == config.id,
+                    func.date(V2RouletteLog.created_at) == today,
+                )
+            ).scalar_one()
 
         unlimited = 0
         remaining = 0
 
         return RouletteStatusResponse(
-            config_id=config.id,
-            name=config.name,
+            config_id=config.id if config else 0,
+            name=config.name if config else "UNCONFIGURED",
             max_daily_spins=unlimited,
             today_spins=int(today_spins),
             remaining_spins=remaining,
@@ -186,11 +211,21 @@ class V2RouletteGameService:
 
         grade = self._resolve_grade(db, user_id)
         normalized_ticket_type = self._normalize_ticket_type(ticket_type)
-        config, segments = V2GameConfigService.get_active_roulette_config(
-            db,
-            ticket_type=normalized_ticket_type,
-            grade=grade,
-        )
+        try:
+            config, segments = V2GameConfigService.get_active_roulette_config(
+                db,
+                ticket_type=normalized_ticket_type,
+                grade=grade,
+            )
+        except InvalidConfigError:
+            if normalized_ticket_type != "ROULETTE_TICKET":
+                config, segments = V2GameConfigService.get_active_roulette_config(
+                    db,
+                    ticket_type="ROULETTE_TICKET",
+                    grade=grade,
+                )
+            else:
+                raise
 
         chosen = self._pick_weighted_segment(segments)
         reward_type = str(chosen.reward_type)

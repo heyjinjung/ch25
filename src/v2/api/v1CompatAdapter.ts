@@ -100,6 +100,8 @@ const mapV1DiceToV2 = (data: V1DiceStatusResponse): DiceStatusResponse => ({
   event_plays_done: data.event_plays_done ?? 0,
   event_plays_max: data.event_plays_max ?? 0,
   event_ineligible_reason: data.event_ineligible_reason,
+  // Reward Config (V1 does not have this, so we use defaults or undefined)
+  reward_config: undefined,
 });
 
 const mapV1LotteryToV2 = (
@@ -377,6 +379,32 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
       event_plays_done: data.event_plays_done || 0,
       event_plays_max: data.event_plays_max || 0,
       event_ineligible_reason: data.event_ineligible_reason,
+      reward_config: {
+        win_reward_type:
+          data.reward_config?.win_reward_type ??
+          data.win_reward_type ??
+          "POINT",
+        win_reward_amount:
+          data.reward_config?.win_reward_amount ??
+          data.win_reward_amount ??
+          100,
+        draw_reward_type:
+          data.reward_config?.draw_reward_type ??
+          data.draw_reward_type ??
+          "POINT",
+        draw_reward_amount:
+          data.reward_config?.draw_reward_amount ??
+          data.draw_reward_amount ??
+          10,
+        lose_reward_type:
+          data.reward_config?.lose_reward_type ??
+          data.lose_reward_type ??
+          "NONE",
+        lose_reward_amount:
+          data.reward_config?.lose_reward_amount ??
+          data.lose_reward_amount ??
+          0,
+      },
     };
   } catch (error) {
     if (isNoFeatureToday(error)) {

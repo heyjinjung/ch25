@@ -16,7 +16,7 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import LockAcquisitionError
+from app.core.exceptions import InvalidConfigError, LockAcquisitionError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
@@ -26,7 +26,7 @@ from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.vault_service import V2VaultService
-from app.v2.models.v2_lottery import V2LotteryLog, V2LotteryPrize
+from app.v2.models.v2_lottery import V2LotteryConfig, V2LotteryLog, V2LotteryPrize
 from app.v2.services.game_config_service import V2GameConfigService
 
 
@@ -110,7 +110,24 @@ class V2LotteryGameService:
         today = self._operational_date_kst(now)
         self.feature_service.validate_feature_active(db, today, FeatureType.LOTTERY)
 
-        config, _ = V2GameConfigService.get_active_lottery_config(db)
+        prizes: list[V2LotteryPrize] = []
+        try:
+            config, _ = V2GameConfigService.get_active_lottery_config(db)
+            prizes = self._eligible_prizes(db, config.id)
+        except InvalidConfigError as exc:
+            logger.warning(
+                "Lottery config invalid for status; returning empty prize preview. detail=%s",
+                getattr(exc, "detail", str(exc)),
+            )
+            config = (
+                db.query(V2LotteryConfig)
+                .filter(V2LotteryConfig.is_active.is_(True))
+                .order_by(V2LotteryConfig.id.desc())
+                .first()
+            )
+            if config is None:
+                raise
+
         normalized_ticket_type = self._normalize_ticket_type(getattr(config, "ticket_type", "LOTTERY_TICKET"))
 
         token_type_for_balance = None
@@ -127,8 +144,6 @@ class V2LotteryGameService:
         if token_type_for_balance is None:
             token_type_for_balance = GameTokenType.LOTTERY_TICKET
             token_balance = V2InventoryService.get_wallet_balance(db, user_id, token_type_for_balance)
-
-        prizes = self._eligible_prizes(db, config.id)
 
         today_tickets = db.execute(
             select(func.count())
@@ -289,6 +304,9 @@ class V2LotteryGameService:
         collection_piece = None
         try:
             prob = float(getattr(config, "puzzle_piece_probability", 0.0) or 0.0)
+            if prob > 1:
+                prob = prob / 100.0
+            prob = max(0.0, min(prob, 1.0))
             if prob > 0 and random.random() < prob:
                 token = random.choice([GameTokenType.PUZZLE_C, GameTokenType.PUZZLE_J, GameTokenType.PUZZLE_M])
                 V2InventoryService.grant_wallet_tokens(

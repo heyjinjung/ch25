@@ -140,12 +140,6 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="lottery-redesign-container" ref={containerRef}>
-      <img
-        src={`${ASSET_PATH}/game-L.svg`}
-        className="lottery-bg-overlay"
-        alt=""
-      />
-
       {/* Ball Arena Section */}
       <div className="ball-arena-container mt-4">
         <img

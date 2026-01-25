@@ -1421,6 +1421,7 @@ export interface AdminLotteryConfigDto {
   name: string;
   isActive: boolean;
   maxDailyPlays: number;
+  ticketType: string;
   puzzlePieceProbability: number; // SoT: ?�즐 조각 ?�랍 ?�률 (0~100%)
   prizes: AdminLotteryPrizeDto[];
 }
@@ -1637,6 +1638,8 @@ interface LotteryConfigBackend {
   name: string;
   is_active: boolean;
   max_daily_plays: number;
+  ticketType?: string;
+  ticket_type?: string;
   puzzle_piece_probability: number;
   prizes: Array<{
     id: number;
@@ -1674,6 +1677,7 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
     name: config.name,
     isActive: config.is_active,
     maxDailyPlays: config.max_daily_plays,
+    ticketType: config.ticketType ?? config.ticket_type ?? "LOTTERY_TICKET",
     puzzlePieceProbability: config.puzzle_piece_probability,
     prizes: config.prizes.map((prize, index) => ({
       id: prize.id,

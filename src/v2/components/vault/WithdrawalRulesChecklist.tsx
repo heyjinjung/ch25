@@ -106,24 +106,33 @@ export const WithdrawalRulesChecklist: React.FC<
   isSpendMet,
   isAccountVerified,
 }) => {
+  const toNumber = (value: number) =>
+    Number.isFinite(value) ? Number(value) : 0;
+  const toLocale = (value: number) => toNumber(value).toLocaleString();
+
+  const safePlayTarget = toNumber(playTarget);
+  const safePlayCount = toNumber(playCount);
+  const safeSpendTarget = toNumber(spendTarget);
+  const safeSpendAmount = toNumber(spendAmount);
+
   const conditions = [
     {
       id: "play",
       title: "게임 플레이 횟수",
-      description: `최근 24시간 내 게임 ${playTarget.toLocaleString()}회 이상 플레이`,
+      description: `최근 24시간 내 게임 ${toLocale(safePlayTarget)}회 이상 플레이`,
       icon: Gamepad2,
       status: isPlayMet,
-      progressText: `${playCount} / ${playTarget}`,
-      percent: Math.min(100, (playCount / (playTarget || 1)) * 100),
+      progressText: `${toLocale(safePlayCount)} / ${toLocale(safePlayTarget)}`,
+      percent: Math.min(100, (safePlayCount / (safePlayTarget || 1)) * 100),
     },
     {
       id: "spent",
       title: "누적 사용 금액",
-      description: `누적 ${spendTarget.toLocaleString()} 포인트 이상 사용`,
+      description: `누적 ${toLocale(safeSpendTarget)} 포인트 이상 사용`,
       icon: Coins,
       status: isSpendMet,
-      progressText: `${spendAmount.toLocaleString()} / ${spendTarget.toLocaleString()}`,
-      percent: Math.min(100, (spendAmount / (spendTarget || 1)) * 100),
+      progressText: `${toLocale(safeSpendAmount)} / ${toLocale(safeSpendTarget)}`,
+      percent: Math.min(100, (safeSpendAmount / (safeSpendTarget || 1)) * 100),
     },
     {
       id: "verify",

@@ -103,8 +103,8 @@
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -145,6 +145,7 @@
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     display: flex;
     align-items: center;
@@ -229,54 +230,111 @@
     }
 }
 
-/* 5. 3D CTA Buttons - Solid & High Readability */
+/* 5. 3D CTA Buttons - Neo-Obsidian Premium Series (2026 Trend) */
 .home-cta-row {
     width: 100%;
     max-width: 350px;
     display: flex;
     gap: 12px;
-    margin-top: 20px;
+    margin-top: 24px;
+    /* More breathing room */
     z-index: 100;
 }
 
 .cta-button {
     flex: 1;
-    height: 52px;
-    border-radius: 16px;
-    font-size: 16px;
-    font-weight: 900;
+    height: 56px;
+    /* Larger touch target */
+    border-radius: 18px;
+    /* More modern curve */
+    font-size: 15px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     position: relative;
-    top: 0;
     outline: none;
+    overflow: hidden;
+    letter-spacing: -0.01em;
+
+    /* Base Neo-Plate Style */
+    background: linear-gradient(180deg, rgba(30, 30, 35, 0.9) 0%, rgba(18, 18, 20, 0.95) 100%);
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    /* Soft Bezel */
 }
 
+/* Primary: Casino (Green Accent) */
 .cta-button--primary {
-    background: #D2FD9C;
-    color: #0c1a05;
-    /* Deep green for max contrast/readability */
-    box-shadow: 0 4px 0 #9ebe6b, 0 8px 15px rgba(210, 253, 156, 0.2);
+    color: #D2FD9C;
+    /* Neon Green Text */
+    border-color: rgba(210, 253, 156, 0.15);
 }
 
+.cta-button--primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(210, 253, 156, 0.15), transparent 70%);
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+/* Secondary: Telegram (Silver/Blue Accent) */
 .cta-button--secondary {
-    background: #1e293b;
-    /* Dark slate for premium feel */
-    color: #D2FD9C;
-    /* Lime text for contrast */
-    box-shadow: 0 4px 0 #0f172a, 0 8px 15px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(210, 253, 156, 0.2);
+    color: #E2E8F0;
+    /* Cool White Text */
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.cta-button--secondary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.08), transparent 70%);
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+/* Hover & Active Effects */
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cta-button:hover::before {
+    opacity: 1;
 }
 
 .cta-button:active {
-    top: 4px;
-    box-shadow: 0 0 0 transparent;
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.cta-button:hover {
-    filter: brightness(1.05);
+/* Shine Animation Layer */
+.cta-button::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.5s;
+    pointer-events: none;
+}
+
+.cta-button:hover::after {
+    left: 200%;
+    transition: left 1s;
 }

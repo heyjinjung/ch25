@@ -1,0 +1,17 @@
+.team-battle-gauge {
+  --red-percent: 0;
+  --blue-percent: 0;
+}
+
+.team-battle-gauge__red {
+  width: calc(var(--red-percent) * 1%);
+}
+
+.team-battle-gauge__blue {
+  width: calc(var(--blue-percent) * 1%);
+}
+
+.team-battle-gauge__spark {
+  left: calc(var(--red-percent) * 1%);
+  transition: left 1s ease-in-out;
+}

@@ -9,6 +9,7 @@ import {
 import Button from "../../components/common/Button";
 import clsx from "clsx";
 import { useSound } from "../../../hooks/useSound";
+import "./TeamBattlePage.css";
 
 /* Assets - Inherited from V1 */
 const BG_SPLIT = "/assets/team_battle/bg_battle_split.png";
@@ -16,7 +17,7 @@ const ICON_VS = "/assets/team_battle/icon_vs.png";
 const AVATAR_RED = "/assets/team_battle/avatar_red.png";
 const AVATAR_BLUE = "/assets/team_battle/avatar_blue.png";
 const ICON_DICE = "/assets/icon_dice_silver.png";
-const ICON_ROULETTE = "/assets/roulette/icon_slot_machine.png";
+const ICON_ROULETTE = "/assets/figma/icon-roulette.png";
 const ICON_LOTTERY = "/assets/lottery/icon_lotto_ball.png";
 
 type GameOption = {
@@ -66,15 +67,14 @@ const TeamBattlePage: React.FC = () => {
 
   const myTeam = myTeamQuery.data?.team;
   const teams = teamsQuery.data || [];
-  const entries = Array.isArray(leaderboardQuery.data?.entries)
-    ? leaderboardQuery.data?.entries
-    : [];
-  const leaderboard = entries.map((entry) => ({
+  const entries = leaderboardQuery.data?.entries ?? [];
+  const leaderboard = (Array.isArray(entries) ? entries : []).map((entry) => ({
     team_id: entry.team.id,
     team_name: entry.team.name,
     points: entry.season_score,
   }));
   const [showGameModal, setShowGameModal] = React.useState(false);
+  const gaugeRef = React.useRef<HTMLDivElement>(null);
 
   const loading =
     seasonQuery.isLoading || myTeamQuery.isLoading || teamsQuery.isLoading;
@@ -105,6 +105,12 @@ const TeamBattlePage: React.FC = () => {
   const totalScore = redScore + blueScore || 1;
   const redPercent = Math.round((redScore / totalScore) * 100);
   const bluePercent = 100 - redPercent;
+
+  React.useEffect(() => {
+    if (!gaugeRef.current) return;
+    gaugeRef.current.style.setProperty("--red-percent", `${redPercent}`);
+    gaugeRef.current.style.setProperty("--blue-percent", `${bluePercent}`);
+  }, [redPercent, bluePercent]);
 
   if (loading)
     return (
@@ -206,23 +212,14 @@ const TeamBattlePage: React.FC = () => {
               <span>{redPercent}% Domination</span>
               <span>{bluePercent}% Domination</span>
             </div>
-            <div className="relative h-4 w-full overflow-hidden rounded-full bg-black/50 ring-1 ring-white/10">
-              <div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000"
-                style={{ width: `${redPercent}%` }}
-              />
-              <div
-                className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000"
-                style={{ width: `${bluePercent}%` }}
-              />
+            <div
+              ref={gaugeRef}
+              className="relative h-4 w-full overflow-hidden rounded-full bg-black/50 ring-1 ring-white/10 team-battle-gauge"
+            >
+              <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000 team-battle-gauge__red" />
+              <div className="absolute right-0 top-0 h-full bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000 team-battle-gauge__blue" />
               {/* Center Spark */}
-              <div
-                className="absolute top-0 bottom-0 w-1 bg-white blur-[2px]"
-                style={{
-                  left: `${redPercent}%`,
-                  transition: "left 1s ease-in-out",
-                }}
-              />
+              <div className="absolute top-0 bottom-0 w-1 bg-white blur-[2px] team-battle-gauge__spark" />
             </div>
           </div>
         </div>

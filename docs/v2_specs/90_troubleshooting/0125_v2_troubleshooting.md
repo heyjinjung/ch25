@@ -4,12 +4,6 @@
 - 작성자: GitHub Copilot
 - 범위: v2 어드민 및 게임(주사위/룰렛/복권)/금고/회원관리 관련 문제 요약 및 우선순위화
 
----
-
-## 🧾 요약
-2026-01-24~25 사이에 v2 어드민에서 다수의 기능 이상이 보고됨. 주요 증상은 주사위 게임 로직 의심·어드민 메시지 전송 로그 부재·회원관리 일부 필드 미노출·UI 스타일/컴포넌트 문제·레벨/레벨보상 DB 데이터 이상·금고(수정/카드 미표시)·미션 CRUD/저장 오류·룰렛/티켓/주사위/복권 관련 API 오류 등입니다. 본 문서는 각 항목에 대한 간단한 증상, 재현/증거(요약), 우선 순위, 권장 다음 단계(조치)를 기록합니다.
-
----
 
 ## 🔢 사건 목록 (사용자 신고 순서 및 원문 요약)
 1
@@ -100,36 +94,99 @@
    - 조치: 바우처 타입만 사용 허용 + detail 기반 사용자 안내
    - 우선순위: P0
 
-
-
-8. **복권 페이지 SVG 삽입 에러**
+8. ✅**복권 페이지 SVG 삽입 에러**
    - 증상: SVG 삽입 시 렌더 에러 발생(콘솔 스택 확인 필요)
    - 우선순위: P2
    - 권장조치: SVG 인라인/컴포넌트 변환 검토 및 React 안전 렌더링(권장 라이브러리 사용).
 
+✅---. **v2 주사위 게임 요청** 구글 3 작업중 
+   정적이고 재미없고 억지스러워 보임. 개선할것 
+
+2.✅ ?�점 관�? / 미션 관� - 상점/미션 탭 수정 - 구글3 완료 
 
 
-10. **팀배틀 페이지 연동 요청, 인박스 모달 등 추가 기능 요청**
-    - 증상: 팀배틀 미연동, 인박스(메시지) 모달 미구현 등 기능 요청사항
-    - 우선순위: P2~P3(기능 요구도에 따름)
-    - 권장조치: 요구사항 수집 후 스토리화하여 우선순위 결정(기능 정의 → API 계약 → 구현).
+✅1. 티켓관리/ 인벤토리 - 구글 3 작업중 
+?�켓 관�?
+?�벤?�리 관�?
+?�벤?�리 관�?(Inventory Management)
+?��? ?�이??지�??�수 로그�?관리하�??�이?�을 지급합?�다.
 
----. **v2 주사위 게임로직 재검토 요청**
-   - 증상: 주사위 애니메이션이 너무 정적이고 재미없고 억지스러워 보임. 개선할것 
+
+
+
+3.
+8.  ✅현재 미션관리에 dtet - 코덱스작업완료
+스타벅스 기프티콘 1만원12개 test
+tet포인트 (P)\100개 이렇게 설정했는데 유저에 대한 미션관리 기능/ 미션보상 지급기능이 없음
+- 조치: 유저 미션 관리 액션(진행값 수정/리셋/강제 완료/보상 지급) 추가
+
+1) ✅ 레벨관리에서 포인트 / cc포인트 지급시 어떻게 누적되는지 알려줘 - 코덱스작업중
+2) ✅ 금고관리 페이지에 아직 강제조정 가능한 기능 없어1! - 코텍스 작업중
+
+3) ✅룰렛에 이제 체험티켓은 열렸지만 체험티켓 설정탭이 없어상단에 3개 탭만 존재해서 설정이 안돼
+   체험티켓용 탭도 만들어줘  - 코덱스 작업완료
+ 
+----- 유저
+1) ✅ ncaught TypeError: Cannot read properties of undefined (reading 'toLocaleString') -코덱스 작업완료 
+    at Ze (WithdrawalRulesChecklist.tsx:113:47)
+    at Vg (react-dom.production.min.js:160:137)
+    at H1 (react-dom.production.min.js:289:337)
+    at B1 (react-dom.production.min.js:279:389)
+    at oD (react-dom.production.min.js:279:320)
+    at ah (react-dom.production.min.js:279:180)
+    this error2
+
+
+2. ✅[V2Adapter] Failed to fetch lottery status   
+[V2Adapter] Failed to fetch lottery status 
+response.config
+st {message: 'Request failed with status code 400', name: 'AxiosError',name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+
+- 조치: 복권 상태 조회에서 INVALID_LOTTERY_CONFIG 발생 시 빈 prize_preview로 200 반환
+
+3. ✅[V2Adapter] Failed to fetch roulette status (DIAMOND/ROULETTE/TRIAL/GOLD_KEY)
+- 조치: 룰렛 상태 조회에서 INVALID_ROULETTE_CONFIG/V2_ROULETTE_CONFIG_MISSING 발생 시 빈 segments로 200 반환
+4. ✅룰렛 플레이 400 (INVALID_ROULETTE_CONFIG)
+- 조치: 특정 ticket_type 설정이 없으면 ROULETTE_TICKET 설정으로 fallback 후 플레이
+281
+
+8.✅ **금고페이지 프론트: 당일금고잔액 / 당일금고적립액 / 당일금고출금신청내역 카드가 없음** - 구3 
+   - 증상: 관련 카드 컴포넌트가 화면에서 렌더되지 않음(데이터 없음 또는 조건부 렌더링 누락).
+   - 우선순위: P1
+
+
+4. ✅ 금고 출금 모달caught TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+    at Ze (WithdrawalRulesChecklist.tsx:113:47)
+    at Vg (react-dom.production.min.js:160:137)
+    at H1 (react-dom.production.min.js:289:337)
+    at B1 (react-dom.production.min.js:279:389)
+    at oD (react-dom.production.min.js:279:320)
+    at ah (react-dom.production.min.js:279:180)
+    at fx (react-dom.production.min.js:270:88)
+    at F1 (react-dom.production.min.js:272:300)
+    at Ji (react-dom.production.min.js:127:105)
+    at react-dom.production.min.js:266:273
+Ze @ WithdrawalRulesChecklist.tsx:113
+Vg @ react-dom.production.min.js:160
+H1 @ react-dom.production.min.js:289
+B1 @ react-dom.production.min.js:279
+oD @ react-dom.production.min.js:279
+ah @ react-dom.production.min.js:279
+fx @ react-dom.production.min.js:270
+F1 @ react-dom.production.min.js:272
+Ji @ react-dom.production.min.js:127
+(anonymous) @ react-dom.production.min.js:266Understand this error
+
+
+
+-----------------
+인박스 모달
+연속스트릭모달
+골든아워 모달
+
 
 2. **어드민에서 메시지 발송했는데 네트워크/서버 로그 미존재**
    - 증상: 어드민에서 발송 작업을 수행했으나 프론트/서버(access/nginx/backend) 어디에도 관련 요청/로그가 남지 않음.
    - 우선순위: P0
 
 
-8. **금고페이지 프론트: 당일금고잔액 / 당일금고적립액 / 당일금고출금신청내역 카드가 없음**
-   - 증상: 관련 카드 컴포넌트가 화면에서 렌더되지 않음(데이터 없음 또는 조건부 렌더링 누락).
-   - 우선순위: P1
-
-
-
-
-
-문서 저장 완료: `docs/v2_specs/90_troubleshooting/0125_v2_troubleshooting.md`
-
-원하시면 위 P0 항목(룰렛/복권/상점/인벤토리)을 우선으로 재현 및 로그 수집을 시작하겠습니다. 어느 항목부터 진행할까요? 

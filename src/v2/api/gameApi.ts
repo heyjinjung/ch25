@@ -123,6 +123,14 @@ export interface DiceStatusResponse {
   readonly event_plays_done: number;
   readonly event_plays_max: number;
   readonly event_ineligible_reason?: string;
+  readonly reward_config?: {
+    win_reward_type?: string;
+    win_reward_amount?: number;
+    draw_reward_type?: string;
+    draw_reward_amount?: number;
+    lose_reward_type?: string;
+    lose_reward_amount?: number;
+  };
 }
 
 export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {

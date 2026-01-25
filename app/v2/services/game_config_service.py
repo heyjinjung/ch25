@@ -21,6 +21,33 @@ class V2GameConfigService:
     """Centralized config validation for V2 games."""
 
     @staticmethod
+    def _normalize_ticket_type(value: object, *, default: str) -> str:
+        raw = str(value or "").strip().upper()
+        if not raw:
+            raw = default
+        mapping = {
+            "ROULETTE_COIN": "ROULETTE_TICKET",
+            "DICE_TOKEN": "DICE_TICKET",
+            "GOLD_KEY": "GOLD_KEY_TICKET",
+            "DIAMOND_KEY": "DIAMOND_TICKET",
+            "TRIAL_TOKEN": "TRIAL_TICKET",
+        }
+        return mapping.get(raw, raw)
+
+    @staticmethod
+    def _normalize_reward_type(value: object) -> str:
+        raw = str(value or "").strip().upper()
+        mapping = {
+            "VAULT": "POINT",
+            "ROULETTE_COIN": "ROULETTE_TICKET",
+            "DICE_TOKEN": "DICE_TICKET",
+            "GOLD_KEY": "GOLD_KEY_TICKET",
+            "DIAMOND_KEY": "DIAMOND_TICKET",
+            "TRIAL_TOKEN": "TRIAL_TICKET",
+        }
+        return mapping.get(raw, raw)
+
+    @staticmethod
     def _validate_roulette(config: V2RouletteConfig, segments: Iterable[V2RouletteSegment]) -> None:
         segment_list = list(segments)
         if len(segment_list) != 6:
@@ -30,7 +57,9 @@ class V2GameConfigService:
             raise InvalidConfigError("INVALID_ROULETTE_CONFIG")
         data = {
             "name": config.name,
-            "ticket_type": config.ticket_type,
+            "ticket_type": V2GameConfigService._normalize_ticket_type(
+                config.ticket_type, default="ROULETTE_TICKET"
+            ),
             "is_active": config.is_active,
             "max_daily_spins": config.max_daily_spins,
             "grade": config.grade,
@@ -39,7 +68,7 @@ class V2GameConfigService:
                     "slot_index": seg.slot_index,
                     "label": seg.label,
                     "weight": seg.weight,
-                    "reward_type": seg.reward_type,
+                    "reward_type": V2GameConfigService._normalize_reward_type(seg.reward_type),
                     "reward_amount": seg.reward_amount,
                     "is_jackpot": seg.is_jackpot,
                 }
@@ -55,14 +84,16 @@ class V2GameConfigService:
     def _validate_dice(config: V2DiceConfig) -> None:
         data = {
             "name": config.name,
-            "ticket_type": config.ticket_type,
+            "ticket_type": V2GameConfigService._normalize_ticket_type(
+                config.ticket_type, default="DICE_TICKET"
+            ),
             "is_active": config.is_active,
             "max_daily_plays": config.max_daily_plays,
-            "win_reward_type": config.win_reward_type,
+            "win_reward_type": V2GameConfigService._normalize_reward_type(config.win_reward_type),
             "win_reward_amount": config.win_reward_amount,
-            "draw_reward_type": config.draw_reward_type,
+            "draw_reward_type": V2GameConfigService._normalize_reward_type(config.draw_reward_type),
             "draw_reward_amount": config.draw_reward_amount,
-            "lose_reward_type": config.lose_reward_type,
+            "lose_reward_type": V2GameConfigService._normalize_reward_type(config.lose_reward_type),
             "lose_reward_amount": config.lose_reward_amount,
         }
         try:
@@ -75,7 +106,9 @@ class V2GameConfigService:
         prize_list = list(prizes)
         data = {
             "name": config.name,
-            "ticket_type": config.ticket_type,
+            "ticket_type": V2GameConfigService._normalize_ticket_type(
+                config.ticket_type, default="LOTTERY_TICKET"
+            ),
             "is_active": config.is_active,
             "max_daily_plays": config.max_daily_tickets,
             "prizes": [
@@ -83,7 +116,7 @@ class V2GameConfigService:
                     "label": prize.label,
                     "weight": prize.weight,
                     "stock": prize.stock,
-                    "reward_type": prize.reward_type,
+                    "reward_type": V2GameConfigService._normalize_reward_type(prize.reward_type),
                     "reward_amount": prize.reward_amount,
                     "is_active": prize.is_active,
                 }

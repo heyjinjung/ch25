@@ -134,7 +134,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
         src="/assets/roulette/13.svg"
         alt="Pointer Highlight"
         draggable={false}
-        className="absolute inset-0 z-50 pointer-events-none"
+        className="absolute left-1/2 top-0 z-50 -translate-x-1/2 -translate-y-7 h-10 w-auto pointer-events-none"
       />
 
       <RouletteFrame>
@@ -144,12 +144,14 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           className="relative h-full w-full rounded-full transition-transform will-change-transform"
         >
           {/* Figma overlay: 12 (multiply) */}
-          <img
-            src="/assets/roulette/12.svg"
-            alt="Overlay 12"
-            draggable={false}
-            className="absolute inset-0 pointer-events-none mix-blend-multiply"
-          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-multiply">
+            <img
+              src="/assets/roulette/12.svg"
+              alt="Overlay 12"
+              draggable={false}
+              className="w-[98.4%] h-[98.4%]"
+            />
+          </div>
 
           {/* Figma slices (Vector4~Vector11) */}
           <div className="absolute inset-0">
@@ -165,18 +167,22 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           </div>
 
           {/* Figma overlay: 14/15 (overlay) */}
-          <img
-            src="/assets/roulette/14.svg"
-            alt="Overlay 14"
-            draggable={false}
-            className="absolute inset-0 pointer-events-none mix-blend-overlay"
-          />
-          <img
-            src="/assets/roulette/15.svg"
-            alt="Overlay 15"
-            draggable={false}
-            className="absolute inset-0 pointer-events-none mix-blend-overlay"
-          />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay">
+            <img
+              src="/assets/roulette/14.svg"
+              alt="Overlay 14"
+              draggable={false}
+              className="w-[86.33%] h-[86.33%]"
+            />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay">
+            <img
+              src="/assets/roulette/15.svg"
+              alt="Overlay 15"
+              draggable={false}
+              className="w-[26.98%] h-[26.98%]"
+            />
+          </div>
 
           {/* Soft overlay for depth */}
           <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.10)_0%,rgba(0,0,0,0.35)_70%,rgba(0,0,0,0.55)_100%)] mix-blend-overlay" />

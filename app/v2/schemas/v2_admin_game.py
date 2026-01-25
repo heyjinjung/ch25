@@ -198,6 +198,7 @@ class LotteryConfigDto(BaseModel):
     name: str
     is_active: bool = Field(default=True, alias="isActive", serialization_alias="isActive")
     max_daily_plays: int = Field(..., ge=0, alias="maxDailyPlays", serialization_alias="maxDailyPlays")
+    ticket_type: str = Field(alias="ticketType", serialization_alias="ticketType")
     puzzle_piece_probability: float = Field(..., ge=0, le=100, description="퍼즐 조각 드랍 확률 (0-100%)", alias="puzzlePieceProbability", serialization_alias="puzzlePieceProbability")
     prizes: list[LotteryPrizeDto] = []
 
@@ -210,6 +211,7 @@ class LotteryConfigDto(BaseModel):
 class LotteryConfigUpdateRequest(BaseModel):
     """복권 설정 수정 요청"""
     name: str | None = None
+    ticket_type: str | None = None
     is_active: bool | None = None
     max_daily_plays: int | None = Field(None, ge=0)
     puzzle_piece_probability: float | None = Field(None, ge=0, le=100)

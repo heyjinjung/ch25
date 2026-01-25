@@ -7,9 +7,15 @@ import {
   getAdminLevels,
   updateAdminLevel,
   updateAdminLevelGlobalConfig,
+  getUserMissionHistory,
+  forceCompleteMission,
+  updateUserMissionProgress,
+  resetUserMissionProgress,
+  claimUserMissionReward,
   type AdminMissionDto,
   type AdminLevelDto,
   type AdminLevelGlobalConfig,
+  type UserMissionProgressUpdateRequest,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -26,10 +32,17 @@ export function useAdminMissions() {
 export function useAdminUpdateMission() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<AdminMissionDto> }) =>
-      updateMission(id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<AdminMissionDto>;
+    }) => updateMission(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "game", "missions"],
+      });
     },
   });
 }
@@ -39,7 +52,9 @@ export function useAdminCreateMission() {
   return useMutation({
     mutationFn: (data: any) => createAdminMission(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "game", "missions"],
+      });
     },
   });
 }
@@ -49,7 +64,91 @@ export function useAdminDeleteMission() {
   return useMutation({
     mutationFn: (id: number) => deleteAdminMission(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "game", "missions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "game", "missions"],
+      });
+    },
+  });
+}
+
+export function useAdminUserMissionHistory(userId?: number) {
+  return useQuery({
+    queryKey: ["admin", "users", userId, "missions"],
+    queryFn: () => getUserMissionHistory(userId as number),
+    enabled: !!userId,
+  });
+}
+
+export function useAdminForceCompleteMission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      missionId,
+    }: {
+      userId: number;
+      missionId: number;
+    }) => forceCompleteMission(userId, missionId),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", vars.userId, "missions"],
+      });
+    },
+  });
+}
+
+export function useAdminUpdateUserMissionProgress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      missionId,
+      payload,
+    }: {
+      userId: number;
+      missionId: number;
+      payload: UserMissionProgressUpdateRequest;
+    }) => updateUserMissionProgress(userId, missionId, payload),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", vars.userId, "missions"],
+      });
+    },
+  });
+}
+
+export function useAdminResetUserMissionProgress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      missionId,
+    }: {
+      userId: number;
+      missionId: number;
+    }) => resetUserMissionProgress(userId, missionId),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", vars.userId, "missions"],
+      });
+    },
+  });
+}
+
+export function useAdminClaimUserMissionReward() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      missionId,
+    }: {
+      userId: number;
+      missionId: number;
+    }) => claimUserMissionReward(userId, missionId),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", vars.userId, "missions"],
+      });
     },
   });
 }
@@ -74,12 +173,13 @@ export function useAdminUpdateLevel() {
       queryClient.invalidateQueries({ queryKey: ["admin", "game", "levels"] });
     },
   });
-};
+}
 
 export const useAdminUpdateLevelGlobalConfig = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: AdminLevelGlobalConfig) => updateAdminLevelGlobalConfig(data),
+    mutationFn: (data: AdminLevelGlobalConfig) =>
+      updateAdminLevelGlobalConfig(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "game", "levels"] });
     },

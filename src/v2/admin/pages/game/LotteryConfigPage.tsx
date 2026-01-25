@@ -189,6 +189,21 @@ export default function LotteryConfigPage() {
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
+            <Label className="text-zinc-400">티켓 타입</Label>
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="outline"
+                className="border-white/10 text-zinc-200"
+              >
+                LOTTERY_TICKET (고정)
+              </Badge>
+              <span className="text-xs text-zinc-500">
+                복권은 1종 고정입니다.
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label className="text-zinc-400">활성화 상태</Label>
             <div className="flex items-center space-x-2">
               <Switch

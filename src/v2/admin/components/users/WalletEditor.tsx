@@ -150,12 +150,12 @@ export default function WalletEditor({
           <div className="space-y-2">
             <Label>재화 종류</Label>
             <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="bg-black/50 border-white/10">
+              <SelectTrigger className="bg-black/50 border-white/10 text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-zinc-900 border-white/10">
                 {walletTypes.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
+                  <SelectItem key={t.value} value={t.value} className="text-white hover:bg-white/10 focus:bg-white/10">
                     {t.label}
                   </SelectItem>
                 ))}
@@ -179,7 +179,7 @@ export default function WalletEditor({
               placeholder="Ex. 100 or -50"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="bg-black/50 border-white/10 font-mono"
+              className="bg-black/50 border-white/10 font-mono text-white placeholder:text-zinc-600"
             />
             <p className="text-[10px] text-zinc-500">
               * 양수 입력 시 지급, 음수 입력 시 차감됩니다.
@@ -193,7 +193,7 @@ export default function WalletEditor({
               placeholder="Ex. 이벤트 보상 미지급 건 처리"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="bg-black/50 border-white/10 min-h-[80px]"
+              className="bg-black/50 border-white/10 min-h-[80px] text-white placeholder:text-zinc-600"
             />
           </div>
         </div>

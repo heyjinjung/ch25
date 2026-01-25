@@ -24,6 +24,7 @@ const V2UserLoginPage: FC = () => {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -44,6 +45,35 @@ const V2UserLoginPage: FC = () => {
     }
 
     setAuth(token, user);
+    navigate("/home");
+  };
+
+  const loginWithDevExternalId = async (externalId: string) => {
+    const trimmed = externalId.trim();
+    if (!trimmed) {
+      throw new Error("MISSING_EXTERNAL_ID");
+    }
+
+    const res = await v2Client.post("/api/v2/dev/login", {
+      external_id: trimmed,
+      nickname: trimmed,
+      create_if_missing: true,
+    });
+
+    const token = res?.data?.access_token;
+    const devUser = res?.data?.user ?? null;
+
+    if (!token) {
+      throw new Error("NO_TOKEN");
+    }
+
+    setAuth(token, {
+      id: devUser?.id ?? 0,
+      external_id: devUser?.cc_id ?? trimmed,
+      nickname: devUser?.nickname ?? trimmed,
+      telegram_id: devUser?.telegram_id ?? null,
+      telegram_username: devUser?.telegram_username ?? null,
+    });
     navigate("/home");
   };
 
@@ -87,6 +117,27 @@ const V2UserLoginPage: FC = () => {
         detail === "DEV_LOGIN_DISABLED"
           ? "현재 서버 환경에서 DEV_LOGIN이 꺼져 있습니다. scripts/ 로 test 로드를 하세요"
           : "test 계정 생성에 실패했습니다.";
+      setServerError(typeof detail === "string" ? detail : fallback);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDevExternalLogin = async () => {
+    setIsLoading(true);
+    setServerError(null);
+
+    try {
+      const externalId = String(getValues("username") || "").trim();
+      await loginWithDevExternalId(externalId || "test");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail || err?.message;
+      const fallback =
+        detail === "DEV_LOGIN_DISABLED"
+          ? "현재 서버 환경에서 DEV_LOGIN이 꺼져 있습니다."
+          : detail === "MISSING_EXTERNAL_ID"
+            ? "external_id를 입력하세요."
+            : "DEV 로그인에 실패했습니다.";
       setServerError(typeof detail === "string" ? detail : fallback);
     } finally {
       setIsLoading(false);
@@ -167,6 +218,15 @@ const V2UserLoginPage: FC = () => {
                 test 계정 생성(개발환경)
               </button>
             </div>
+
+            <button
+              type="button"
+              className="w-full rounded-xl border border-obsidian-border px-4 py-3 text-sm font-bold text-white hover:bg-obsidian-bg/60 transition-colors"
+              onClick={handleDevExternalLogin}
+              disabled={isLoading}
+            >
+              DEV 외부ID 로그인 (비번 없음)
+            </button>
 
             {serverError && (
               <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">

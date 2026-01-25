@@ -149,7 +149,7 @@ export default function RoulettePage() {
 
       {/* Main Wheel Section - Fixed for Premium Assets */}
       <div className="relative w-full flex-1 flex items-center justify-center mb-6 min-h-0">
-        <div className="w-full max-w-[320px] aspect-square">
+        <div className="w-full max-w-[320px] aspect-[292/293]">
           <RouletteWheel
             segments={status?.segments || []}
             isSpinning={isSpinning}

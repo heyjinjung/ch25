@@ -23,6 +23,7 @@ from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.vault_service import V2VaultService
+from app.v2.services.event_service import V2EventService
 from app.v2.models.v2_dice import V2DiceLog
 from app.v2.services.game_config_service import V2GameConfigService
 
@@ -189,6 +190,16 @@ class V2DiceGameService:
             reward_type = str(config.lose_reward_type)
             reward_amount = int(config.lose_reward_amount or 0)
 
+        golden_active = False
+        golden_multiplier = 1.0
+        if bool(getattr(config, "enable_golden_hour", False)):
+            golden_active = V2EventService().is_golden_hour(db=db, now=now_dt)
+            if golden_active:
+                golden_multiplier = float(getattr(config, "golden_hour_multiplier", 1.0) or 1.0)
+
+        if reward_amount > 0 and golden_multiplier != 1.0:
+            reward_amount = int(round(reward_amount * golden_multiplier))
+
         user_dice, dealer_dice = self._generate_dice_for_outcome(outcome)
         user_sum = sum(user_dice)
         dealer_sum = sum(dealer_dice)
@@ -270,6 +281,8 @@ class V2DiceGameService:
                 "reward_type": reward_type,
                 "reward_amount": vault_reward_amount,
                 "mode": "PROBABILITY",
+                "golden_hour": golden_active,
+                "golden_multiplier": golden_multiplier,
             },
         )
 
@@ -292,6 +305,8 @@ class V2DiceGameService:
                 "reward_amount": reward_amount,
                 "reward_label": f"{config.name} - {outcome}",
                 "mode": "PROBABILITY",
+                "golden_hour": golden_active,
+                "golden_multiplier": golden_multiplier,
             },
         )
 

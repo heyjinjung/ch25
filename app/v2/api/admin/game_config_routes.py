@@ -509,6 +509,7 @@ def get_lottery_configs(
                 name=config.name,
                 is_active=config.is_active,
                 max_daily_plays=config.max_daily_tickets,
+                ticket_type=config.ticket_type,
                 puzzle_piece_probability=config.puzzle_piece_probability,
                 prizes=prizes_dto,
                 created_at=config.created_at,
@@ -553,6 +554,7 @@ def get_lottery_config(
         name=config.name,
         is_active=config.is_active,
         max_daily_plays=config.max_daily_tickets,
+        ticket_type=config.ticket_type,
         puzzle_piece_probability=config.puzzle_piece_probability,
         prizes=prizes_dto,
         created_at=config.created_at,
@@ -586,10 +588,13 @@ def update_lottery_config(
         "name": config.name,
         "is_active": config.is_active,
         "max_daily_tickets": config.max_daily_tickets,
+        "ticket_type": config.ticket_type,
     }
 
     if payload.name is not None:
         config.name = payload.name
+    if payload.ticket_type is not None:
+        config.ticket_type = payload.ticket_type
     if payload.is_active is not None:
         config.is_active = payload.is_active
     if payload.max_daily_plays is not None:
@@ -603,6 +608,7 @@ def update_lottery_config(
         "name": config.name,
         "is_active": config.is_active,
         "max_daily_tickets": config.max_daily_tickets,
+        "ticket_type": config.ticket_type,
     }
     V2AdminAuditService.log(
         db,
@@ -635,6 +641,7 @@ def update_lottery_config(
         name=config.name,
         is_active=config.is_active,
         max_daily_plays=config.max_daily_tickets,
+        ticket_type=config.ticket_type,
         puzzle_piece_probability=config.puzzle_piece_probability,
         prizes=prizes_dto,
         created_at=config.created_at,
