@@ -290,7 +290,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                     }`}
                   >
                     <span
-                      className={`block text-[15px] leading-[1.02] font-black text-white uppercase text-center line-clamp-2 [overflow-wrap:anywhere] bg-[rgba(0,0,0,0.35)] px-1 rounded [-webkit-text-stroke:1px_#000] [text-shadow:0_0_2px_rgba(0,0,0,0.7),0_2px_3px_rgba(0,0,0,0.4)] tracking-normal ${
+                      className={`block text-[13.8px] leading-[1.02] font-black text-white uppercase text-center line-clamp-2 [overflow-wrap:anywhere] px-1 rounded tracking-normal ${
                         LABEL_MAX_WIDTH_CLASSES[labelLayout.maxWidthIdx]
                       }`}
                     >

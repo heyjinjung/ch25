@@ -41,7 +41,7 @@ export const VaultHero: React.FC<VaultHeroProps> = ({
         <motion.img
           src="/assets/vault/vault_closed.webp"
           alt="금고"
-          className="relative w-64 h-64 object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+          className="relative w-[310px] h-[310px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
           animate={{
             rotateY: [0, 5, -5, 0],
           }}

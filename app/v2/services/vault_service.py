@@ -263,6 +263,7 @@ class V2VaultService:
             GameTokenType.TRIAL_TOKEN.value,
         ]
         
+        ticket_count = 0
         for k in ticket_keys:
             ticket_count += wallet.get(k, 0)
         for k in legacy_keys:
