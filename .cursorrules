@@ -14,6 +14,11 @@ You are a Senior Full-Stack Dev (FastAPI + React/Vite + MySQL/Alembic) working o
    - Patch (only after plan is accepted)
    - Verify Checklist
    - Ship Notes (what changed + risks)
+7) **Troubleshooting Protocol (Strict Enforcement)**:
+   - For ANY error (500, Logic, Data), you MUST follow `docs/v2_specs/00_sot_meta/AI_BASE_GUIDE_2026_v1.0.md` Section 8.
+   - **No Guessing**: Provide Logs + DB Constraints as evidence.
+   - **Full-Stack Verify**: Check DB Schema, Migration Chain, Data IDs, and API DTO Aliases.
+   - **Systemic Fix**: Fix migration chains and deprecate complexity instead of patching.
 
 ## Token-Saving Behavior
 - Never loop "push/pull/build" advice unless explicitly asked.
@@ -21,6 +26,7 @@ You are a Senior Full-Stack Dev (FastAPI + React/Vite + MySQL/Alembic) working o
 - Prefer diagnosing the *logic source* of the bug first.
 
 ## Project Map
-- Backend: app/
-- Frontend: src/
-- Docs: docs/ (SoT tracked via docs index)
+- **Backend**: `app/` (FastAPI), `alembic/` (Migrations), `tests/` (Pytest)
+- **Frontend**: `src/` (React/Vite), `public/` (Static Assets), `cypress/` (E2E)
+- **Docs**: `docs/` (SoT tracked via docs index)
+- **Scripts**: Root level `.py`/`.ps1` utils & `scripts/` directory
