@@ -10,18 +10,71 @@ interface Segment {
   readonly is_fever_reward?: boolean;
 }
 
-const COLOR_MAP: Record<string, string> = {
-  red: "/assets/roulette/triangle_red.png",
-  orange: "/assets/roulette/triangle_orange.png",
-  yellow: "/assets/roulette/triangle_yellow.png",
-  teal: "/assets/roulette/triangle_teal.png",
-  blue: "/assets/roulette/triangle_blue.png",
-  purple: "/assets/roulette/triangle_purple.png",
-  pink: "/assets/roulette/triangle_pink.png",
-  gray: "/assets/roulette/triangle_gray.png",
-};
+const FIGMA_SLICE_LAYOUT = [
+  // Figma (1189:616) relative coords, converted to Tailwind arbitrary % classes.
+  {
+    src: "/assets/roulette/Vector4.svg",
+    alt: "Slice Vector4",
+    className: "left-[50%] top-[50%] w-[38.32%] h-[38.31%]",
+  },
+  {
+    src: "/assets/roulette/Vector5.svg",
+    alt: "Slice Vector5",
+    className: "left-[11.69%] top-[50%] w-[38.32%] h-[38.31%]",
+  },
+  {
+    src: "/assets/roulette/Vector6.svg",
+    alt: "Slice Vector6",
+    className: "left-[11.69%] top-[11.69%] w-[38.32%] h-[38.31%]",
+  },
+  {
+    src: "/assets/roulette/Vector7.svg",
+    alt: "Slice Vector7",
+    className: "left-[50%] top-[11.69%] w-[38.32%] h-[38.31%]",
+  },
+  {
+    src: "/assets/roulette/Vector8.svg",
+    alt: "Slice Vector8",
+    className: "left-[50.00%] top-[31.89%] w-[41.64%] h-[36.21%]",
+  },
+  {
+    src: "/assets/roulette/Vector9.svg",
+    alt: "Slice Vector9",
+    className: "left-[8.36%] top-[31.89%] w-[41.64%] h-[36.21%]",
+  },
+  {
+    src: "/assets/roulette/Vector10.svg",
+    alt: "Slice Vector10",
+    className: "left-[31.89%] top-[8.35%] w-[36.21%] h-[41.64%]",
+  },
+  {
+    src: "/assets/roulette/Vector11.svg",
+    alt: "Slice Vector11",
+    className: "left-[31.89%] top-[50.00%] w-[36.21%] h-[41.64%]",
+  },
+] as const;
 
-const COLOR_SEQUENCE = ["purple", "orange", "teal", "yellow", "red", "blue", "pink", "gray"];
+const LABEL_ROTATE_CLASSES = [
+  "rotate-[22.5deg]",
+  "rotate-[67.5deg]",
+  "rotate-[112.5deg]",
+  "rotate-[157.5deg]",
+  "rotate-[202.5deg]",
+  "rotate-[247.5deg]",
+  "rotate-[292.5deg]",
+  "rotate-[337.5deg]",
+] as const;
+
+const LABEL_UNROTATE_CLASSES = [
+  "rotate-[-22.5deg]",
+  "rotate-[-67.5deg]",
+  "rotate-[-112.5deg]",
+  "rotate-[-157.5deg]",
+  "rotate-[-202.5deg]",
+  "rotate-[-247.5deg]",
+  "rotate-[-292.5deg]",
+  "rotate-[-337.5deg]",
+] as const;
 
 interface RouletteWheelProps {
   readonly segments: Segment[];
@@ -43,7 +96,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const wheelRef = useRef<HTMLDivElement | null>(null);
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const segmentCount = segments.length || 8;
+  const segmentCount = 8;
   const anglePerSegment = useMemo(() => 360 / segmentCount, [segmentCount]);
 
   useEffect(() => {
@@ -55,7 +108,8 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
     const baseTurns = 12 + spinCountRef.current * 4;
     const spinTo =
       selectedIndex !== undefined
-        ? 360 * baseTurns + (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
+        ? 360 * baseTurns +
+          (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
         : 360 * baseTurns;
 
     setRotation(spinTo);
@@ -75,44 +129,71 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center">
-      {/* Premium Pointer - Banner Style */}
-      <div className="absolute top-0 left-1/2 z-50 -translate-x-1/2 -translate-y-8 pointer-events-none scale-125">
-        <img src="/assets/roulette/gradient_banner.png" alt="Pointer" className="h-10 w-auto drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]" />
-      </div>
+      {/* Pointer highlight (Figma: 1189:758) */}
+      <img
+        src="/assets/roulette/13.svg"
+        alt="Pointer Highlight"
+        draggable={false}
+        className="absolute inset-0 z-50 pointer-events-none"
+      />
 
       <RouletteFrame>
         {/* Rotating Wheel Container */}
-        <div 
+        <div
           ref={wheelRef}
           className="relative h-full w-full rounded-full transition-transform will-change-transform"
         >
-          {segments.map((segment, index) => {
-            const startAngle = anglePerSegment * index;
-            const colorName = COLOR_SEQUENCE[index % COLOR_SEQUENCE.length];
-            const triangleAsset = COLOR_MAP[colorName];
+          {/* Figma overlay: 12 (multiply) */}
+          <img
+            src="/assets/roulette/12.svg"
+            alt="Overlay 12"
+            draggable={false}
+            className="absolute inset-0 pointer-events-none mix-blend-multiply"
+          />
 
+          {/* Figma slices (Vector4~Vector11) */}
+          <div className="absolute inset-0">
+            {FIGMA_SLICE_LAYOUT.map((slice) => (
+              <img
+                key={slice.src}
+                src={slice.src}
+                alt={slice.alt}
+                draggable={false}
+                className={`absolute ${slice.className}`}
+              />
+            ))}
+          </div>
+
+          {/* Figma overlay: 14/15 (overlay) */}
+          <img
+            src="/assets/roulette/14.svg"
+            alt="Overlay 14"
+            draggable={false}
+            className="absolute inset-0 pointer-events-none mix-blend-overlay"
+          />
+          <img
+            src="/assets/roulette/15.svg"
+            alt="Overlay 15"
+            draggable={false}
+            className="absolute inset-0 pointer-events-none mix-blend-overlay"
+          />
+
+          {/* Soft overlay for depth */}
+          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.10)_0%,rgba(0,0,0,0.35)_70%,rgba(0,0,0,0.55)_100%)] mix-blend-overlay" />
+
+          {/* Labels */}
+          {Array.from({ length: segmentCount }).map((_, index) => {
+            const segment = segments[index];
             return (
-              <div 
-                key={`seg-${index}`}
-                className="absolute inset-0 flex items-start justify-center origin-center"
-                style={{ transform: `rotate(${startAngle}deg)` }}
+              <div
+                key={`lbl-${index}`}
+                className={`absolute inset-0 flex items-center justify-center pointer-events-none ${LABEL_ROTATE_CLASSES[index]}`}
               >
-                {/* Triangle Base */}
-                <div className="relative w-full h-1/2 flex items-center justify-center">
-                  <img 
-                    src={triangleAsset} 
-                    alt={segment.label}
-                    className="w-full h-full object-contain"
-                  />
-                  
-                  {/* Label (Positioned mid-triangle) */}
-                  <div 
-                     className="absolute inset-0 flex flex-col items-center pt-8 pointer-events-none"
-                     style={{ transform: `rotate(${anglePerSegment / 2}deg)`, transformOrigin: 'bottom center' }}
-                  >
-                     <span className="text-[11px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
-                        {segment.label}
-                     </span>
+                <div className="translate-y-[-38%]">
+                  <div className={LABEL_UNROTATE_CLASSES[index]}>
+                    <span className="text-[11px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
+                      {segment?.label ?? ""}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -121,9 +202,12 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
           {/* Center Hubcap */}
           <div className="absolute inset-0 flex items-center justify-center z-30">
-             <div className="w-16 h-16 rounded-full bg-black/20 backdrop-blur-sm flex items-center justify-center p-1">
-               <img src="/assets/roulette/white_hub.png" alt="Hub" className="w-full h-full object-contain" />
-             </div>
+            <img
+              src="/assets/roulette/16.svg"
+              alt="Center Cap"
+              draggable={false}
+              className="w-[20.2%] h-[20.2%] pointer-events-none"
+            />
           </div>
         </div>
       </RouletteFrame>

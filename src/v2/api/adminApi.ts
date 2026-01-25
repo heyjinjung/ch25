@@ -273,6 +273,17 @@ export interface UserMissionHistoryDto {
   rewardClaimed: boolean;
 }
 
+export interface UserMissionProgressUpdateRequest {
+  currentValue: number;
+}
+
+export interface UserMissionRewardClaimResponse {
+  success: boolean;
+  message: string;
+  rewardType?: string | null;
+  rewardAmount?: number | null;
+}
+
 // User Activity Log Types
 export interface UserActivityLogDto {
   id: number;
@@ -417,6 +428,36 @@ export const forceCompleteMission = async (
   await v2Client.post(
     `/api/v2/admin/users/${userId}/missions/${missionId}/complete`,
   );
+};
+
+export const updateUserMissionProgress = async (
+  userId: number,
+  missionId: number,
+  payload: UserMissionProgressUpdateRequest,
+): Promise<void> => {
+  await v2Client.post(
+    `/api/v2/admin/users/${userId}/missions/${missionId}/progress`,
+    payload,
+  );
+};
+
+export const resetUserMissionProgress = async (
+  userId: number,
+  missionId: number,
+): Promise<void> => {
+  await v2Client.post(
+    `/api/v2/admin/users/${userId}/missions/${missionId}/reset`,
+  );
+};
+
+export const claimUserMissionReward = async (
+  userId: number,
+  missionId: number,
+): Promise<UserMissionRewardClaimResponse> => {
+  const response = await v2Client.post<UserMissionRewardClaimResponse>(
+    `/api/v2/admin/users/${userId}/missions/${missionId}/claim`,
+  );
+  return response.data;
 };
 
 export const getUserSegment = async (

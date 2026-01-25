@@ -44,18 +44,30 @@ export default function RouletteConfigPage() {
   const updateConfig = useUpdateRouletteConfig();
 
   const [selectedGrade, setSelectedGrade] = useState<RouletteGrade>("COMMON");
+  const [selectedTicketType, setSelectedTicketType] =
+    useState("ROULETTE_TICKET");
   const [localConfig, setLocalConfig] = useState<AdminRouletteConfigDto | null>(
     null,
   );
   const [isDirty, setIsDirty] = useState(false);
 
+  const ticketTabs = [
+    { value: "ROULETTE_TICKET", label: "일반" },
+    { value: "TRIAL_TICKET", label: "체험" },
+    { value: "DIAMOND_TICKET", label: "다이아" },
+    { value: "GOLDEN_TICKET", label: "황금" },
+  ];
+
   useEffect(() => {
     if (configs) {
-      const config = configs.find((c) => c.grade === selectedGrade);
-      setLocalConfig(config || null);
+      const config = configs.find(
+        (c) => c.grade === selectedGrade && c.ticketType === selectedTicketType,
+      );
+      const fallback = configs.find((c) => c.grade === selectedGrade);
+      setLocalConfig(config || fallback || null);
       setIsDirty(false);
     }
-  }, [configs, selectedGrade]);
+  }, [configs, selectedGrade, selectedTicketType]);
 
   const handleConfigChange = (
     field: keyof AdminRouletteConfigDto,
@@ -111,7 +123,7 @@ export default function RouletteConfigPage() {
             룰렛(Roulette) 설정
           </h1>
           <p className="text-zinc-400">
-            등급별(Common, VIP, Whale) 룰렛의 확률과 보상을 설정합니다.
+            등급/티켓 타입별 룰렛의 확률과 보상을 설정합니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -153,13 +165,31 @@ export default function RouletteConfigPage() {
         </TabsList>
       </Tabs>
 
+      <Tabs
+        value={selectedTicketType}
+        onValueChange={setSelectedTicketType}
+        className="w-full"
+      >
+        <TabsList className="bg-zinc-900 border border-white/10 p-1">
+          {ticketTabs.map((ticket) => (
+            <TabsTrigger
+              key={ticket.value}
+              value={ticket.value}
+              className="px-4 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+            >
+              {ticket.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       {localConfig ? (
         <div className="space-y-6">
           {/* Basic Settings */}
           <Card className="bg-zinc-900 border-white/10">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                기본 설정 ({selectedGrade})
+                기본 설정 ({selectedGrade} · {selectedTicketType})
                 {isDirty && (
                   <Badge
                     variant="outline"

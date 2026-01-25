@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle2, Search, Wallet } from "lucide-react";
+import { CheckCircle2, Search, Wallet, TrendingUp, ArrowUpRight } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -43,6 +43,7 @@ import {
   useAdminRejectWithdrawal,
   useVaultUsers,
   useForceEditVault,
+  useVaultStats,
 } from "../../../hooks/useV2Admin";
 import { AdminWithdrawalDto, UserVaultDto } from "../../../api/adminApi";
 
@@ -123,6 +124,9 @@ export default function VaultControlPage() {
         String(u.user_id).includes(searchTerm),
     ) ?? [];
 
+  // Dashboard Stats
+  const { data: stats } = useVaultStats();
+
   return (
     <div className="space-y-6 min-h-screen p-6 text-white pb-20">
       {/* Header */}
@@ -134,6 +138,62 @@ export default function VaultControlPage() {
         <p className="text-zinc-400">
           유저 금고 현황을 조회하고 출금 신청을 승인/반려합니다.
         </p>
+      </div>
+
+      {/* Dashboard Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="bg-zinc-900 border-white/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              오늘 금고 잔액
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              ₩ {stats?.today_total_vault?.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">
+              현재 금고에 예치된 총 금액
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-white/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              오늘 금고 누적
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              ₩ {stats?.today_total_vault?.toLocaleString() ?? 0}
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">
+              오늘 누적된 금고 금액
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-zinc-900 border-white/10">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              오늘 출금 신청
+            </CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-rose-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-white">
+              {(
+                (stats?.today_withdrawal_pending ?? 0) +
+                (stats?.today_withdrawal_approved ?? 0) +
+                (stats?.today_withdrawal_rejected ?? 0)
+              ).toLocaleString()} 건
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">
+              승인: {stats?.today_withdrawal_approved ?? 0} / 대기: {stats?.today_withdrawal_pending ?? 0} / 반려: {stats?.today_withdrawal_rejected ?? 0}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

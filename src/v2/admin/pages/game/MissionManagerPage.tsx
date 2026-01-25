@@ -4,6 +4,11 @@ import {
   useAdminUpdateMission,
   useAdminCreateMission,
   useAdminDeleteMission,
+  useAdminUserMissionHistory,
+  useAdminForceCompleteMission,
+  useAdminUpdateUserMissionProgress,
+  useAdminResetUserMissionProgress,
+  useAdminClaimUserMissionReward,
 } from "../../../hooks/useAdminGame";
 import { type AdminMissionDto } from "../../../api/adminApi";
 import {
@@ -50,6 +55,17 @@ export default function MissionManagerPage() {
   const updateMutation = useAdminUpdateMission();
   const createMutation = useAdminCreateMission();
   const deleteMutation = useAdminDeleteMission();
+  const [userMissionUserIdInput, setUserMissionUserIdInput] = useState("");
+  const [userMissionUserId, setUserMissionUserId] = useState<number | null>(
+    null,
+  );
+  const [userMissionError, setUserMissionError] = useState<string | null>(null);
+  const [userMissionNotice, setUserMissionNotice] = useState<string | null>(
+    null,
+  );
+  const [progressEdits, setProgressEdits] = useState<Record<number, string>>(
+    {},
+  );
 
   const [activeTab, setActiveTab] = useState("DAILY");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -66,6 +82,13 @@ export default function MissionManagerPage() {
   }));
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const { data: userMissions = [], isLoading: isUserMissionsLoading } =
+    useAdminUserMissionHistory(userMissionUserId ?? undefined);
+  const forceCompleteMutation = useAdminForceCompleteMission();
+  const updateProgressMutation = useAdminUpdateUserMissionProgress();
+  const resetProgressMutation = useAdminResetUserMissionProgress();
+  const claimRewardMutation = useAdminClaimUserMissionReward();
 
   const logicKeySet = new Set(
     missions.map((m) => String(m.logicKey || "").toUpperCase()),
@@ -233,6 +256,75 @@ export default function MissionManagerPage() {
     }
   };
 
+  const handleLoadUserMissions = () => {
+    const parsed = parseInt(userMissionUserIdInput, 10);
+    if (!parsed || parsed <= 0) {
+      setUserMissionError("유저 ID를 입력하세요.");
+      setUserMissionNotice(null);
+      return;
+    }
+    setUserMissionError(null);
+    setUserMissionNotice(null);
+    setUserMissionUserId(parsed);
+  };
+
+  const handleProgressChange = (missionId: number, value: string) => {
+    setProgressEdits((prev) => ({ ...prev, [missionId]: value }));
+  };
+
+  const handleSaveProgress = (missionId: number, fallback: number) => {
+    if (!userMissionUserId) return;
+    const raw = progressEdits[missionId];
+    const parsed =
+      raw === undefined || raw.trim() === "" ? fallback : Number(raw);
+    if (Number.isNaN(parsed) || parsed < 0) {
+      setUserMissionError("진행값은 0 이상의 숫자여야 합니다.");
+      setUserMissionNotice(null);
+      return;
+    }
+    setUserMissionError(null);
+    updateProgressMutation.mutate({
+      userId: userMissionUserId,
+      missionId,
+      payload: { currentValue: parsed },
+    });
+  };
+
+  const handleResetProgress = (missionId: number) => {
+    if (!userMissionUserId) return;
+    setUserMissionError(null);
+    setUserMissionNotice(null);
+    resetProgressMutation.mutate({ userId: userMissionUserId, missionId });
+  };
+
+  const handleForceComplete = (missionId: number) => {
+    if (!userMissionUserId) return;
+    setUserMissionError(null);
+    setUserMissionNotice(null);
+    forceCompleteMutation.mutate({ userId: userMissionUserId, missionId });
+  };
+
+  const handleClaimReward = async (missionId: number) => {
+    if (!userMissionUserId) return;
+    setUserMissionError(null);
+    setUserMissionNotice(null);
+    try {
+      const res = await claimRewardMutation.mutateAsync({
+        userId: userMissionUserId,
+        missionId,
+      });
+      if (!res.success) {
+        setUserMissionError(res.message || "보상 지급 실패");
+        return;
+      }
+      const rewardLabel = res.rewardType ? `${res.rewardType}` : "보상";
+      const rewardAmount = res.rewardAmount ?? 0;
+      setUserMissionNotice(`${rewardLabel} ${rewardAmount} 지급 완료`);
+    } catch {
+      setUserMissionError("보상 지급 실패");
+    }
+  };
+
   return (
     <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
       <div className="flex justify-between items-start">
@@ -392,6 +484,129 @@ export default function MissionManagerPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Card className="bg-[#18181B] border-white/5">
+        <div className="p-4 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-100">
+              유저 미션 관리
+            </h2>
+            <p className="text-xs text-zinc-500">
+              진행값 수정/리셋, 강제 완료, 보상 지급을 지원합니다.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={userMissionUserIdInput}
+              onChange={(e) => setUserMissionUserIdInput(e.target.value)}
+              placeholder="유저 ID"
+              className="w-40 bg-black/50 border-white/10"
+            />
+            <Button
+              size="sm"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              onClick={handleLoadUserMissions}
+            >
+              조회
+            </Button>
+            {userMissionUserId && (
+              <Badge
+                variant="outline"
+                className="bg-white/5 text-zinc-300 border-white/10"
+              >
+                USER #{userMissionUserId}
+              </Badge>
+            )}
+          </div>
+
+          {userMissionError && (
+            <p className="text-xs text-red-400">{userMissionError}</p>
+          )}
+          {userMissionNotice && (
+            <p className="text-xs text-emerald-400">{userMissionNotice}</p>
+          )}
+
+          {isUserMissionsLoading ? (
+            <div className="text-sm text-zinc-500">미션 로딩 중...</div>
+          ) : userMissionUserId && userMissions.length === 0 ? (
+            <div className="text-sm text-zinc-500">
+              유저 미션 기록이 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {userMissions.map((mission) => (
+                <div
+                  key={mission.id}
+                  className="flex flex-col gap-3 rounded-lg border border-white/5 bg-black/30 p-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-zinc-200">
+                        {mission.missionTitle}
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        {mission.category} · {mission.progress}/
+                        {mission.maxProgress}
+                      </div>
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className="bg-white/5 text-zinc-300 border-white/10"
+                    >
+                      {mission.status}
+                    </Badge>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      value={
+                        progressEdits[mission.missionId] ??
+                        String(mission.progress)
+                      }
+                      onChange={(e) =>
+                        handleProgressChange(mission.missionId, e.target.value)
+                      }
+                      className="w-28 bg-black/50 border-white/10 text-right"
+                      type="number"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        handleSaveProgress(mission.missionId, mission.progress)
+                      }
+                    >
+                      진행값 저장
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleResetProgress(mission.missionId)}
+                    >
+                      리셋
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => handleForceComplete(mission.missionId)}
+                    >
+                      강제 완료
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-indigo-500/90 hover:bg-indigo-500 text-white"
+                      onClick={() => handleClaimReward(mission.missionId)}
+                    >
+                      보상 지급
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-[#18181B] border-white/10 text-white">
