@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../../components/ui/tabs";
 import { Ticket, Package } from "lucide-react";
 import TicketManagementTab from "./TicketManagementTab";
 import InventoryManagementTab from "./InventoryManagementTab";
@@ -17,14 +22,14 @@ export default function TicketInventoryTabPage() {
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Ticket className="w-4 h-4" />
-              ?�켓 관�?
+              티켓 관리
             </TabsTrigger>
             <TabsTrigger
               value="inventory"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
               <Package className="w-4 h-4" />
-              ?�벤?�리 관�?
+              인벤토리 관리
             </TabsTrigger>
           </TabsList>
         </div>

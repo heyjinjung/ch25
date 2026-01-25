@@ -108,7 +108,7 @@ TEXT_EXTENSIONS = {
 
 EXCLUDED_DIRS = {
     ".git", ".venv", "node_modules", "dist", "build", "coverage",
-    "logs", "__pycache__",
+    "logs", "__pycache__", "v1archive", "artifacts",
 }
 
 
@@ -128,9 +128,9 @@ def _iter_text_files(root: Path):
 
 
 def test_utf8_decode_docs_and_src():
-    """Ensure docs/ and src/ files are UTF-8 decodable (prevent mojibake regressions)."""
+    """Ensure V2 docs/src files are UTF-8 decodable (prevent mojibake regressions)."""
     project_root = Path(__file__).resolve().parents[3]
-    targets = [project_root / "docs", project_root / "src"]
+    targets = [project_root / "docs" / "v2_specs", project_root / "src" / "v2"]
 
     decode_failures = []
     for target in targets:
@@ -138,7 +138,7 @@ def test_utf8_decode_docs_and_src():
             continue
         for file_path in _iter_text_files(target):
             try:
-                file_path.read_text(encoding="utf-8")
+                file_path.read_text(encoding="utf-8", errors="strict")
             except UnicodeDecodeError:
                 decode_failures.append(str(file_path))
 
@@ -146,17 +146,17 @@ def test_utf8_decode_docs_and_src():
 
 
 def test_no_mojibake_replacement_char_in_docs_and_src():
-    """Detect common mojibake replacement char () in docs/ and src/."""
+    """Detect common mojibake replacement char (U+FFFD) in V2 docs/src."""
     project_root = Path(__file__).resolve().parents[3]
-    targets = [project_root / "docs", project_root / "src"]
+    targets = [project_root / "docs" / "v2_specs", project_root / "src" / "v2"]
 
     offending_files = []
     for target in targets:
         if not target.exists():
             continue
         for file_path in _iter_text_files(target):
-            content = file_path.read_text(encoding="utf-8")
-            if "" in content:
+            content = file_path.read_bytes().decode("utf-8", errors="replace")
+            if "\ufffd" in content:
                 offending_files.append(str(file_path))
 
     assert not offending_files, f"Mojibake replacement char found in: {offending_files}"

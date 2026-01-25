@@ -1,5 +1,5 @@
 // src/pages/home/components/GameCard.tsx
-// 개별 게임 카드 - GSAP ?�버 ?�과 ?�함
+// 개별 게임 카드 - GSAP 호버 효과 포함
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { Link } from "react-router-dom";
@@ -43,7 +43,7 @@ export function GameCard({
   const mainLayerRef = useRef<HTMLImageElement>(null);
   const effectLayerRef = useRef<HTMLImageElement>(null);
 
-  // ?�버 ?�과
+  // 호버 효과
   const handleMouseEnter = () => {
     if (!cardRef.current) return;
     gsap.to(cardRef.current, {
@@ -101,9 +101,9 @@ export function GameCard({
     }
 
     if (layers?.effect && effectLayerRef.current) {
-      // 'fixed' 모션?� ?�이???�니메이?�을 ?�략?�니??
+      // 'fixed' 모션은 해당 애니메이션을 생략합니다.
       if (layers.effectMotion === "fixed") {
-        // 고정: ?�무 ?�니메이?�도 ?�용?��? ?�음
+        // 고정: 아무 애니메이션도 적용하지 않음
       } else if (layers.effectMotion === "expand") {
         gsap.to(effectLayerRef.current, {
           scale: 1.05,
@@ -148,11 +148,11 @@ export function GameCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* 글?�스 배경 */}
+      {/* 글래스 배경 */}
       <div className="absolute inset-0 z-0 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10" />
       <div className="absolute inset-0 z-0 pointer-events-none bg-[radial-gradient(120%_80%_at_20%_0%,_rgba(255,255,255,0.22)_0%,_rgba(255,255,255,0)_60%)]" />
 
-      {/* 배�? */}
+      {/* 배지 */}
       {badge && (
         <span
           ref={badgeRef}
@@ -167,7 +167,7 @@ export function GameCard({
         <span className="text-xs font-bold text-white/50">CC</span>
       </div>
 
-      {/* (?�택) 배경 SVG ?�스�?*/}
+      {/* (옵션) 배경 SVG 베이스 */}
       {(bgMain || bgAccent) && (
         <div className="absolute inset-0 z-0 overflow-hidden rounded-2xl">
           {bgMain && (
@@ -189,7 +189,7 @@ export function GameCard({
         </div>
       )}
 
-      {/* ?�이??SVG */}
+      {/* 게임 SVG */}
       {layers ? (
         <div className="absolute inset-0 z-10">
           <img
@@ -224,11 +224,11 @@ export function GameCard({
         </div>
       )}
 
-      {/* ?�?��?/?�이�??�버?�이 ?�거 */}
+      {/* CTA/레이블 오버레이 제거 */}
 
       {/* CTA removed as requested */}
 
-      {/* 미묘??�??�과 */}
+      {/* 미묘한 광택 효과 */}
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(180deg,_rgba(255,255,255,0.05)_0%,_transparent_30%)]" />
     </Link>
   );

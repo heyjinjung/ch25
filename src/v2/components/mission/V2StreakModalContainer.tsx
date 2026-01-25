@@ -15,9 +15,9 @@ interface V2StreakModalContainerProps {
 
 /**
  * V2 Streak Modal Container
- * - V2 API/Hooks?� ?�결
- * - ?�트�?규칙 ?�동 조회
- * - ?�레??로직 처리
+ * - V2 API/Hooks와 연결
+ * - 스트릭 규칙 자동 조회
+ * - 클레임 로직 처리
  */
 const V2StreakModalContainer: React.FC<V2StreakModalContainerProps> = ({
   open,
