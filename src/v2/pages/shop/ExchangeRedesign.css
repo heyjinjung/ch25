@@ -180,30 +180,46 @@
 
 .shop-sub-grid {
     display: grid;
-    grid-template-columns: repeat(4, 74px);
-    grid-template-rows: repeat(2, 74px);
+    /* Fixed 3-column grid for sub-cards (80px width) */
+    grid-template-columns: repeat(3, 80px);
     width: 100%;
     max-width: 360px;
-    align-items: center;
-    gap: 20px 12px;
+    align-items: start;
+    gap: 16px 20px;
     justify-content: center;
     margin-top: 32px;
 }
 
 /* Main Shop Card */
 .shop-card-v2 {
-    width: 100.568px;
+    width: 100%;
+    /* Flexible within grid */
     height: 140.903px;
-    /* Default */
     position: relative;
-    border-radius: 6px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 8px;
     cursor: pointer;
-    transition: transform 0.2s;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
+    overflow: hidden;
+}
+
+.shop-card-v2:hover {
+    transform: translateY(-6px);
+    border-color: rgba(210, 253, 156, 0.4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(210, 253, 156, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.shop-card-v2:active {
+    transform: translateY(-2px) scale(0.98);
 }
 
 .shop-main-card {
@@ -226,12 +242,22 @@
 }
 
 .shop-sub-card {
-    width: 73.995px;
-    height: 74px;
-    background: transparent !important;
-    /* Managed by SVG component */
-    padding: 0;
-    justify-content: center;
+    width: 80px !important;
+    height: 90px !important;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    border-radius: 10px;
+}
+
+.shop-sub-card .shop-card-img {
+    width: 68px;
+    height: 68px;
+    object-fit: contain;
+}
+
+.shop-sub-card .shop-card-title {
+    font-size: 8px;
+    margin-top: 2px;
 }
 
 .sub-card-bg-svg {
@@ -303,26 +329,52 @@
 }
 
 .shop-buy-btn {
-    width: 50.452px;
-    height: 17.811px;
-    border-radius: 14px;
-    background: rgba(86, 96, 86, 0.78);
-    font-size: 8px;
-    font-weight: 700;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 4px 6px;
+    /* User requested 6px internal padding feel */
+    height: auto;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 9px;
+    font-weight: 800;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
+    z-index: 10;
 }
 
 .shop-main-card .shop-buy-btn {
-    width: 34.214px;
-    height: 11.822px;
-    border-radius: 20px;
-    background: #FFFFFF;
-    color: #1E1E1E;
-    font-size: 8px;
-    font-weight: 400;
+    background: #E1FF80;
+    color: #000;
+    border: none;
+}
+
+/* Subtle Shimmer Animation */
+.shimmer-effect {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(-45deg,
+            transparent 40%,
+            rgba(255, 255, 255, 0.08) 50%,
+            transparent 60%);
+    background-size: 200% 200%;
+    animation: shimmer-swipe 3s infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes shimmer-swipe {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 .shop-bg-overlay {

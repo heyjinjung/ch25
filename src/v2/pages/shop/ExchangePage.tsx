@@ -60,16 +60,17 @@ export default function ExchangePage() {
   }, [products]);
 
   const getItemImage = (type: string) => {
-    switch (type) {
-      case "gold_key":
-        return `${ASSET_PATH}/Frame 9-1.png`;
-      case "diamond_key":
-        return `${ASSET_PATH}/Frame 9.png`;
-      case "premium_ticket":
-        return `${ASSET_PATH}/Frame 9-2.png`;
-      default:
-        return `${ASSET_PATH}/Frame 9-3.png`;
-    }
+    const t = type.toLowerCase();
+    if (t.includes("starbucks")) return "/assets/icons/takeaway-cup-dynamic-color.png";
+    if (t.includes("diamond")) return "/assets/icons/diakey.png";
+    if (t.includes("gold_key") || t.includes("goldkey")) return "/assets/icons/goldkey.png";
+    if (t.includes("point") || t.includes("balance")) return "/assets/asset_coin_gold.png";
+    if (t.includes("roulette") || t.includes("bundle")) return "/assets/asset_ticket_bundle.png";
+    if (t.includes("dice")) return "/assets/icon_dice_silver.webp";
+    if (t.includes("lottery") || t.includes("lotto")) return "/v2/assets/01home/7.png";
+    if (t.includes("chicken") || t.includes("chiken")) return "/assets/icons/chiken.png";
+    if (t.includes("pizza")) return "/assets/icons/pizza.png";
+    return `${ASSET_PATH}/Frame 9-3.png`;
   };
 
   const getErrorDetail = (error: unknown) =>
@@ -191,6 +192,7 @@ export default function ExchangePage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => setActiveTab("shop")}
         >
+          <img src="/assets/icons/icon_cart.png" className="w-4 h-4 mr-1.5 opacity-60" alt="" />
           상점
         </div>
         <div
@@ -215,57 +217,67 @@ export default function ExchangePage() {
         {/* Products Grid */}
         <div className="shop-products-section">
           <div className="shop-main-cards-row">
-            {mainProducts.map((product: ShopProductDto) => (
-              <div
-                key={product.sku}
-                className="shop-card-v2 shop-main-card"
-                onClick={() => handlePurchase(product.sku)}
-              >
-                <div className="shop-card-img-container">
-                  <img
-                    src={getItemImage(product.reward_type)}
-                    className="shop-card-img"
-                    alt={product.name}
-                  />
-                </div>
-                <div className="shop-card-info">
-                  <div className="shop-card-title">{product.name}</div>
-                  <StarRating />
-                </div>
-                <div className="shop-card-footer">
+            {mainProducts.map((product: ShopProductDto) => {
+              const isPremium = product.reward_type.includes("key");
+              return (
+                <div
+                  key={product.sku}
+                  className="shop-card-v2 shop-main-card"
+                  onClick={() => handlePurchase(product.sku)}
+                >
+                  {isPremium && <div className="shimmer-effect" />}
+                  <SubCardBg />
+                  
                   <div className="shop-buy-btn">
-                    {product.cost_amount.toLocaleString()} P
+                    <img src="/assets/asset_coin_gold.png" className="w-3 h-3 mr-1" alt="P" />
+                    {product.cost_amount.toLocaleString()}
+                  </div>
+
+                  <div className="shop-card-img-container">
+                    <img
+                      src={getItemImage(product.reward_type)}
+                      className="shop-card-img"
+                      alt={product.name}
+                    />
+                  </div>
+                  <div className="shop-card-info">
+                    <div className="shop-card-title">{product.name}</div>
+                    <StarRating />
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="shop-sub-grid">
-            {subProducts.map((product: ShopProductDto) => (
-              <div
-                key={product.sku}
-                className="shop-card-v2 shop-sub-card"
-                onClick={() => handlePurchase(product.sku)}
-              >
-                <SubCardBg />
-                <div className="shop-card-img-container">
-                  <img
-                    src={getItemImage(product.reward_type)}
-                    className="shop-card-img"
-                    alt={product.name}
-                  />
-                </div>
-                <div className="shop-card-info">
-                  <div className="shop-card-title">{product.name}</div>
-                </div>
-                <div className="shop-card-footer">
+            {subProducts.map((product: ShopProductDto) => {
+              const isPremium = product.reward_type.includes("key");
+              return (
+                <div
+                  key={product.sku}
+                  className="shop-card-v2 shop-sub-card"
+                  onClick={() => handlePurchase(product.sku)}
+                >
+                  {isPremium && <div className="shimmer-effect" />}
+                  <SubCardBg />
                   <div className="shop-buy-btn">
-                    {product.cost_amount.toLocaleString()} P
+                    <img src="/assets/asset_coin_gold.png" className="w-3 h-3 mr-1" alt="P" />
+                    {product.cost_amount.toLocaleString()}
+                  </div>
+
+                  <div className="shop-card-img-container">
+                    <img
+                      src={getItemImage(product.reward_type)}
+                      className="shop-card-img"
+                      alt={product.name}
+                    />
+                  </div>
+                  <div className="shop-card-info">
+                    <div className="shop-card-title">{product.name}</div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

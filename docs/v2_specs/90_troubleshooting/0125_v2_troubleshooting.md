@@ -111,10 +111,6 @@
 ?�벤?�리 관�?(Inventory Management)
 ?��? ?�이??지�??�수 로그�?관리하�??�이?�을 지급합?�다.
 
-
-
-
-3.
 8.  ✅현재 미션관리에 dtet - 코덱스작업완료
 스타벅스 기프티콘 1만원12개 test
 tet포인트 (P)\100개 이렇게 설정했는데 유저에 대한 미션관리 기능/ 미션보상 지급기능이 없음
@@ -183,16 +179,32 @@ Ji @ react-dom.production.min.js:127
    - 조치: `ignoreDeprecations` 값을 `"5.0"`으로 수정
 
 1) ✅ 유저별 레벨관리 기능이 없음
+유저별 레벨포인트 관리 / 레벨등급 관리기능 백앤드/프론트 모두 
+v2 어드민시스템에 구현되어야해 
+---
 
-\
-2) ✅어드민페이지 복권설정 
+✅ 추가 
+1) 룰렛설정값 관리에서
+각 티켓별 라벨값이 다르게 설정되어야하는데
+모두 동기화처리됨 하나 바꾸면 4종 다 바뀜 
+가중치 / 보상타임 / 수량 / 잭팟여부 등 
+모든 설정값이 다 동기화 처리됨 
+
+
+✅ 2) 어드민페이지 복권설정 
+
 http://localhost:3000/api/v2/admin/game/lottery/config/1/prize/5
-요청 메서드PUT
-상태 코드 422 Unprocessable Entity
-원격 주소[::1]:3000
-리퍼러 정책application/json
+요청 메서드
+PUT
+상태 코드
+422 Unprocessable Entity
+원격 주소
+access-control-allow-origin
+http://localhost:3000
+connection
 
-각 컨피그마다 입력/저장시 모두 오류 / 정상이 다름.. 
+
+✅ 각 컨피그마다 입력/저장시 모두 오류 / 정상이 다름.. 
 그리고 완전 저장/. 활성화 하고 새로고침하면
 다시 비활성화 / 중지됨으로 바꾸어져 있음 
 
@@ -207,39 +219,24 @@ http://localhost:3000/api/v2/admin/game/lottery/config/1/prize/5
 그냥 원래 로그인했던 그 상태임 
 
 
-3) ✅ 개발유저 - 백앤드에서 소환하여 상태표시는 되지만
-실제 게임플레이 티켓차감 / 증감
-보상누적 전혀 확인되지 않음 
-그냥 원래 로그인했던 그 상태임 
-
-
------------------
-인박스 모달
 연속스트릭모달
 골든아워 모달
 
-
+-----------------
+인박스 모달
 2. **어드민에서 메시지 발송했는데 네트워크/서버 로그 미존재**
    - 증상: 어드민에서 발송 작업을 수행했으나 프론트/서버(access/nginx/backend) 어디에도 관련 요청/로그가 남지 않음.
    - 우선순위: P0
+admin Side (Works Correctly)
+Routing: Correctly routed to MarketingTabPage > MessageSenderPage.
+Logic: Uses proper V2 services (createV2AdminMessage, getAdminSegmentStats).
+Component: Fully implemented and functional.
+User Side (Partial - Missing UI)
+Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
 
 
 
-유저별 레벨포인트 관리 / 레벨등급 관리기능 백앤드/프론트 모두 
-v2 어드민시스템에 구현되어야해 
-
----
-
-추가 
-1) 룰렛설정값 관리에서
-각 티켓별 라벨값이 다르게 설정되어야하는데
-모두 동기화처리됨 하나 바꾸면 4종 다 바뀜 
-가중치 / 보상타임 / 수량 / 잭팟여부 등 
-모든 설정값이 다 동기화 처리됨 
-ㄴ 이걸 1차 수정했으나 어드민 페이지에서 다음과 같이 막혀버림
-### 해당 등급의 설정을 불러올 수 없습니다. ##
-ㄴ 디자인도 8개 휠이라
-아예 디자인 확장하면서 디비/스키마/로직 다 점검하고 새롭게 반영 
-
-
+1/25일 밤 10:39
+상점품목 중 골든티켓이라는 항목발견 / 데이터베이스 정합성 검증 필요 
+티켓 /인벤토리 로그 kst 가능한지 확인할것 
 

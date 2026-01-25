@@ -175,3 +175,57 @@ Figma 기준:
 - 포인터는 고정, 휠(조각+오버레이+센터캡)은 함께 회전한다.
 - `slot_index`와 포인터 아래 결과가 일치한다.
 - 프론트 빌드가 통과한다.
+
+
+
+룰렛 라벨이 조각 밖으로 절대 안 나가게, 휠 크기를 기준으로 반지름/가용폭을 계산하고 2줄 클램프를 적용하는 최소 패치를 진행하겠습니다.
+
+읽기 RouletteWheel.tsx, 220 줄에서 223 줄까지
+
+Edited
+RouletteWheel.tsx+44-2
+요약된 대화 내용
+
+라벨 패치가 적용됐고, 지금은 ESLint가 style= 인라인 스타일을 에러로 잡고 있어요. 다음으로는 라벨 배치를 “중첩 div + 고정 클래스(버킷)” 방식으로 바꿔 인라인 스타일을 제거하는 최소 패치를 계획하겠습니다. 먼저 현재 블록을 정확히 확인할게요.
+
+읽기 RouletteWheel.tsx, 160 줄에서 262 줄까지
+
+PLAN
+A) Triage Summary (facts only)
+
+RouletteWheel.tsx에서 라벨이 조각 밖으로 나가던 원인(고정 반지름 + nowrap)을 해결하기 위해 “휠 크기 기반 반지름/가용폭 계산 + 2줄 클램프” 로직을 이미 넣었습니다.
+현재 파일에서 style={{ transform: ... }}, style={{ maxWidth: ... }} 같은 인라인 스타일이 ESLint 규칙에 의해 에러로 잡힙니다.
+따라서 “조각 안에 넣기” 기능은 방향이 맞지만, 빌드/린트 통과를 위해 인라인 스타일 제거가 필요합니다.
+B) Root Cause Hypotheses TOP3 (ranked)
+
+프로젝트 ESLint 규칙이 style= 사용을 금지
+Why plausible: 현재 에러 메시지가 “CSS inline styles should not be used”로 명확함
+How to confirm: 같은 파일에서 style= 제거 시 에러 사라지는지 get_errors로 확인
+Tailwind/JIT 특성상 “동적 className”로만 처리하면 클래스가 빌드에 포함되지 않을 위험
+Why plausible: Tailwind는 정적 문자열 스캔 중심이라 런타임 문자열 조합은 누락될 수 있음
+How to confirm: 버킷 클래스들을 “리터럴로 나열”한 후 frontend build 통과 확인
+라벨 배치가 transform 조합이라 단일 class로 완전 대체가 어려움
+Why plausible: 현재 transform 순서가 rotate + translate 조합
+How to confirm: 중첩 div로 transform을 분해하면 인라인 없이 동일 배치 재현 가능
+C) Fix Plan
+
+Allowed Files (최대 12개)
+RouletteWheel.tsx
+(필요 시) src/v2/components/game/rouletteWheel.css 또는 기존 인접 스타일 파일 1개 (프로젝트 패턴 확인 후)
+Out of Scope
+스핀 로직/각도 보정/세그먼트 데이터 구조 변경
+SVG 레이어/블렌드 모드/에셋 경로 변경
+다른 게임(주사위/로또) UI 수정
+Minimal patch strategy
+인라인 style을 없애기 위해 라벨 렌더링을 “중첩 div transform 분해”로 변경:
+바깥: rotate(${rotateDeg})도 인라인이므로, 여기 역시 “버킷 회전”은 불가(8개 고정이니 8개 클래스를 리터럴로 나열해 선택)
+안쪽: 반지름/폭도 인라인 금지 → 반지름/폭을 몇 개 버킷 값으로 quantize해서 해당 Tailwind arbitrary class를 리터럴로 준비해 선택
+line-clamp-2는 유지 (이미 사용 중)
+Verify Checklist
+Frontend: RouletteWheel.tsx get_errors가 0인지
+Frontend: npm run build (workspace task “frontend build”) 통과
+UX: 라벨 샘플(룰렛1만/스벅깁콘1만/보너스콤프적용권/CC포인트 10민)이 조각 밖으로 튀지 않는지 확인
+D) Missing info (필요 시 1회만 요청)
+
+없음. (현재 에러/코드 위치가 확정이라 바로 패치 가능)
+인라인 스타일 금지 규칙을 만족시키기 위해, “라벨 반지름/폭을 버킷으로 고정 + 8개 회전 각도는 8개 클래스 리터럴로 분기” 방식으로 바꾸는 PATCH를 진행해도 될까요? (승인해주시면 바로 최소 diff로 고칩니다.)

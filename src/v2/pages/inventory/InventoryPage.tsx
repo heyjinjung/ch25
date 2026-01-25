@@ -64,16 +64,17 @@ export default function InventoryPage() {
   };
 
   const getItemImage = (type: string) => {
-    switch (type) {
-      case "gold_key":
-        return `${ASSET_PATH}/Frame 9-1.png`;
-      case "diamond_key":
-        return `${ASSET_PATH}/Frame 9.png`;
-      case "premium_ticket":
-        return `${ASSET_PATH}/Frame 9-2.png`;
-      default:
-        return `${ASSET_PATH}/Frame 9-3.png`;
-    }
+    const t = type.toLowerCase();
+    if (t.includes("starbucks")) return "/assets/icons/takeaway-cup-dynamic-color.png";
+    if (t.includes("diamond")) return "/assets/icons/diakey.png";
+    if (t.includes("gold_key") || t.includes("goldkey")) return "/assets/icons/goldkey.png";
+    if (t.includes("point") || t.includes("balance")) return "/assets/asset_coin_gold.png";
+    if (t.includes("roulette") || t.includes("bundle")) return "/assets/asset_ticket_bundle.png";
+    if (t.includes("dice")) return "/assets/icon_dice_silver.webp";
+    if (t.includes("lottery") || t.includes("lotto")) return "/v2/assets/01home/7.png";
+    if (t.includes("chicken") || t.includes("chiken")) return "/assets/icons/chiken.png";
+    if (t.includes("pizza")) return "/assets/icons/pizza.png";
+    return `${ASSET_PATH}/Frame 9-3.png`;
   };
 
   const SubCardBg = () => (
@@ -169,12 +170,14 @@ export default function InventoryPage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => navigate("/shop")}
         >
+          <img src="/assets/icons/icon_cart.png" className="w-4 h-4 mr-1.5 opacity-60" alt="" />
           상점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => setActiveTab("inventory")}
         >
+          <img src="/assets/lottery/icon_gift.webp" className="w-4 h-4 mr-1.5 opacity-60" alt="" />
           인벤토리
         </div>
       </div>
@@ -197,11 +200,9 @@ export default function InventoryPage() {
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
                 보관중(VAULT)
               </span>
-              <span className="text-lg font-black text-white italic">
-                {(vaultStatus?.vaultBalance || 0).toLocaleString()}{" "}
-                <span className="text-[10px] not-italic opacity-50 ml-0.5">
-                  P
-                </span>
+              <span className="text-lg font-black text-white italic flex items-center gap-1.5">
+                <img src="/assets/asset_coin_gold.png" className="w-5 h-5 not-italic" alt="P" />
+                {(vaultStatus?.vaultBalance || 0).toLocaleString()}
               </span>
             </div>
             <div className="w-px h-8 bg-white/10 mx-2" />
@@ -209,11 +210,9 @@ export default function InventoryPage() {
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
                 보유 토큰
               </span>
-              <span className="text-lg font-black text-[#FF7A00] italic">
-                {(vaultStatus?.ticketCount || 0).toLocaleString()}{" "}
-                <span className="text-[10px] not-italic opacity-50 ml-0.5">
-                  T
-                </span>
+              <span className="text-lg font-black text-[#FF7A00] italic flex items-center gap-1.5">
+                <img src="/assets/asset_ticket_bundle.png" className="w-5 h-5 not-italic" alt="T" />
+                {(vaultStatus?.ticketCount || 0).toLocaleString()}
               </span>
             </div>
           </div>
@@ -226,26 +225,30 @@ export default function InventoryPage() {
               No Items Found
             </div>
           )}
-          {items.slice(0, 9).map((item) => (
-            <div
-              key={item.item_type}
-              className="inventory-item-card-v2"
-              onClick={() => handleUseItem(item.item_type)}
-            >
-              <SubCardBg />
-              <div className="inventory-item-img-container">
-                <img
-                  className="inventory-item-img"
-                  src={getItemImage(item.item_type)}
-                  alt={item.item_type}
-                />
+          {items.slice(0, 9).map((item) => {
+            const isPremium = item.item_type.toLowerCase().includes("key");
+            return (
+              <div
+                key={item.item_type}
+                className="inventory-item-card-v2"
+                onClick={() => handleUseItem(item.item_type)}
+              >
+                {isPremium && <div className="shimmer-effect" />}
+                <SubCardBg />
+                <div className="inventory-item-img-container">
+                  <img
+                    className="inventory-item-img"
+                    src={getItemImage(item.item_type)}
+                    alt={item.item_type}
+                  />
+                </div>
+                {/* Quantity Indicator */}
+                <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded-full border border-white/10 text-[8px] font-black text-white z-20">
+                  x{item.quantity}
+                </div>
               </div>
-              {/* Quantity Indicator */}
-              <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded-full border border-white/10 text-[8px] font-black text-white z-20">
-                x{item.quantity}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Tip Section */}

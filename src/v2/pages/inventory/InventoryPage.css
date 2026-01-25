@@ -84,13 +84,12 @@
 /* Inventory specific sub-grid: 3x3 */
 .inventory-sub-grid {
     display: grid;
-    grid-template-columns: repeat(3, 74px);
-    grid-template-rows: repeat(3, 74px);
+    /* Standardized 3-column grid for 80px cards */
+    grid-template-columns: repeat(3, 80px);
     width: 100%;
     max-width: 360px;
-    align-items: center;
-    gap: 32px 24px;
-    /* Increased gap to fill area since no main cards */
+    align-items: start;
+    gap: 16px 20px;
     justify-content: center;
     margin-top: 40px;
 }
@@ -110,24 +109,31 @@
     display: none;
 }
 
-/* Individual Item Card (Mirroring .shop-sub-card) */
+/* Individual Item Card (Standardized 80x90) */
 .inventory-item-card-v2 {
-    width: 73.995px;
-    height: 74px;
+    width: 80px;
+    height: 90px;
     position: relative;
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 0;
-    background: transparent !important;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
 }
 
-.inventory-item-card-v2:active {
-    transform: scale(0.98);
+.inventory-item-card-v2:hover {
+    transform: translateY(-6px);
+    border-color: rgba(210, 253, 156, 0.3);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .inventory-item-img-container {
@@ -141,8 +147,8 @@
 }
 
 .inventory-item-img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 68px;
+    height: 68px;
     object-fit: contain;
 }
 
@@ -159,17 +165,21 @@
 /* Wallet Strip Styling (Shared with Shop) */
 .exchange-wallet-strip {
     width: 100%;
-    max-width: 360px;
-    margin-top: 24px;
+    max-width: 358px;
+    margin-top: 12px;
+}
+
+.exchange-wallet-strip>div {
+    padding: 20px 24px !important;
+    /* Increased padding for breathing room */
 }
 
 .inventory-summary-banner {
-    width: 100%;
-    max-width: 360px;
+    width: 358px;
     height: 110px;
-    border-radius: 50px;
-    background: rgba(98, 91, 113, 0.38);
-    /* Removed mix-blend-mode: plus-lighter to reduce brightness */
+    border-radius: 12px;
+    /* Adjusted for tighter fit */
+    background: rgba(255, 255, 255, 0.05);
     margin-top: 16px;
     display: flex;
     align-items: center;
@@ -181,7 +191,8 @@
 .summary-banner-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
+    /* Changed from cover to show the whole image */
 }
 
 .inventory-bg-overlay {

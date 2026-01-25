@@ -117,7 +117,7 @@ const V2MobileBottomNav: React.FC = () => {
       ),
     },
     {
-      label: "미션",
+      label: "미션/레벨",
       to: "/missions",
       isActive: isActive("/missions"),
       icon: (active: boolean) => (

@@ -55,10 +55,6 @@ const FIGMA_SLICE_LAYOUT = [
   },
 ] as const;
 
-
-
-
-
 interface RouletteWheelProps {
   readonly segments: Segment[];
   readonly isSpinning: boolean;
@@ -79,8 +75,106 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const wheelRef = useRef<HTMLDivElement | null>(null);
   const fallbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const ROTATE_CLASSES = useMemo(
+    () =>
+      [
+        "rotate-[22.5deg]",
+        "rotate-[67.5deg]",
+        "rotate-[112.5deg]",
+        "rotate-[157.5deg]",
+        "rotate-[202.5deg]",
+        "rotate-[247.5deg]",
+        "rotate-[292.5deg]",
+        "rotate-[337.5deg]",
+      ] as const,
+    [],
+  );
+
+  const LABEL_RADIUS_CLASSES = useMemo(
+    () =>
+      [
+        "-translate-x-[52px]",
+        "-translate-x-[58px]",
+        "-translate-x-[64px]",
+        "-translate-x-[70px]",
+        "-translate-x-[76px]",
+        "-translate-x-[82px]",
+        "-translate-x-[88px]",
+      ] as const,
+    [],
+  );
+
+  const LABEL_MAX_WIDTH_CLASSES = useMemo(
+    () =>
+      [
+        "max-w-[40px]",
+        "max-w-[48px]",
+        "max-w-[56px]",
+        "max-w-[64px]",
+        "max-w-[72px]",
+        "max-w-[80px]",
+      ] as const,
+    [],
+  );
+
+  const [labelLayout, setLabelLayout] = useState(() => ({
+    radiusIdx: 3,
+    maxWidthIdx: 2,
+  }));
+
   const segmentCount = 8;
   const anglePerSegment = useMemo(() => 360 / segmentCount, [segmentCount]);
+
+  useEffect(() => {
+    const node = wheelRef.current;
+    if (!node) return;
+
+    const pickNearestIndex = (value: number, candidates: readonly number[]) => {
+      let bestIndex = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+      for (let i = 0; i < candidates.length; i += 1) {
+        const distance = Math.abs(value - candidates[i]);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = i;
+        }
+      }
+      return bestIndex;
+    };
+
+    const compute = () => {
+      const rect = node.getBoundingClientRect();
+      const diameter = Math.min(rect.width, rect.height);
+      const wheelRadius = diameter / 2;
+
+      // Keep labels inside the slice: pick a stable radius + safe angular padding.
+      // segmentCount=8 => anglePerSegment=45deg, use delta=5deg per side => safeAngle=35deg.
+      const labelRadius = wheelRadius * 0.73;
+      const safeAngleRad = ((anglePerSegment - 10) * Math.PI) / 180;
+      const safeChord = 2 * labelRadius * Math.sin(safeAngleRad / 2);
+      const maxWidth = Math.max(28, Math.floor(safeChord - 8));
+
+      const radiusPx = Math.floor(labelRadius);
+      const radiusBucketPx = [52, 58, 64, 70, 76, 82, 88] as const;
+      const widthBucketPx = [40, 48, 56, 64, 72, 80] as const;
+
+      setLabelLayout({
+        radiusIdx: pickNearestIndex(radiusPx, radiusBucketPx),
+        maxWidthIdx: pickNearestIndex(maxWidth, widthBucketPx),
+      });
+    };
+
+    compute();
+
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(() => compute());
+      ro.observe(node);
+      return () => ro.disconnect();
+    }
+
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, [anglePerSegment]);
 
   useEffect(() => {
     if (!isSpinning) return;
@@ -176,29 +270,25 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
           {/* Labels - Mathematically positioned */}
           {Array.from({ length: segmentCount }).map((_, index) => {
             const segment = segments[index];
-            // Calculate rotation: start from top (0deg) + segment offset
-            const rotateDeg = (360 / segmentCount) * index + (360 / segmentCount / 2);
-            
-            // Radial Alignment Logic:
-            // 1. Point towards center: rotate(deg + 90deg)
-            // 2. Position: Move outwards from center using translateY (negative)
             return (
               <div
                 key={`lbl-${index}`}
-                className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-                style={{ transform: `rotate(${rotateDeg}deg)` }}
+                className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${ROTATE_CLASSES[index]}`}
               >
-                <div 
-                   className="absolute top-1/2 left-1/2 flex items-center justify-center"
-                   style={{ 
-                     transform: `translate(-50%, -50%) rotate(90deg) translate(-75px, 0px)` 
-                     // rotate(90deg): Text becomes radial (perpendicular) to radius
-                     // translate(-75px, 0px): Push text towards the Rim (negative X after rotation goes "Up" relative to text)
-                   }}
-                >
-                  <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap tracking-wide">
-                    {segment?.label ?? ""}
-                  </span>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90">
+                  <div
+                    className={`flex items-center justify-center ${
+                      LABEL_RADIUS_CLASSES[labelLayout.radiusIdx]
+                    }`}
+                  >
+                    <span
+                      className={`block text-[11px] leading-[1.1] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wide text-center line-clamp-2 [overflow-wrap:anywhere] ${
+                        LABEL_MAX_WIDTH_CLASSES[labelLayout.maxWidthIdx]
+                      }`}
+                    >
+                      {segment?.label ?? ""}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

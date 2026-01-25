@@ -51,12 +51,11 @@ const V2AppHeader: React.FC = () => {
         <div className="flex-1 max-w-[210px] flex items-center justify-around bg-white/5 border border-white/10 rounded-2xl h-10 px-2.5 gap-1 backdrop-blur-sm">
           {/* Vault */}
           <div className="flex items-center gap-2 flex-1 justify-center">
-            <img src="/assets/asset_coin_gold.webp" alt="V" className="w-5 h-5 object-contain" />
+            <img src="/assets/asset_coin_gold.png" alt="P" className="w-[18px] h-[18px] object-contain" />
             <div className="flex flex-col items-start leading-none gap-0.5">
               <span className="text-[8px] text-zinc-500 font-black uppercase">금고</span>
               <div className="flex items-baseline gap-0.5">
                 <AnimatedNumber value={vaultBalance} className="text-[14px] font-black text-[#F59E0B] font-mono" />
-                <span className="text-[9px] text-[#F59E0B]/80 font-bold">P</span>
               </div>
             </div>
           </div>
@@ -65,7 +64,7 @@ const V2AppHeader: React.FC = () => {
 
           {/* Tickets */}
           <div className="flex items-center gap-2 flex-1 justify-center">
-            <img src="/assets/asset_ticket_green.webp" alt="T" className="w-5 h-5 object-contain" />
+            <img src="/assets/asset_ticket_bundle.png" alt="T" className="w-[18px] h-[18px] object-contain" />
             <div className="flex flex-col items-start leading-none gap-0.5">
               <span className="text-[8px] text-zinc-500 font-black uppercase">티켓</span>
               <div className="flex items-baseline gap-0.5">
