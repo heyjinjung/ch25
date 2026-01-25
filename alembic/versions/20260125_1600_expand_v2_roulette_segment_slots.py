@@ -12,8 +12,7 @@ revision = "20260125_1600_expand_v2_roulette_segment_slots"
 down_revision = "20260124_1500_add_mission_reward_gifticons_v2"
 branch_labels = None
 depends_on = None
-
-
+ 
 def upgrade() -> None:
     op.drop_constraint(
         "ck_v2_roulette_segment_slot_range",

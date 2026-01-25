@@ -12,6 +12,7 @@ from app.models.user import User
 from app.models.game_wallet import GameTokenType
 from app.v2.models.user import V2User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.models.vault_ledger import VaultLedger
 from app.models.external_ranking import ExternalRankingData
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.user_activity import UserActivity
@@ -262,12 +263,48 @@ class V2VaultService:
             GameTokenType.TRIAL_TOKEN.value,
         ]
         
-        ticket_count = 0
         for k in ticket_keys:
             ticket_count += wallet.get(k, 0)
         for k in legacy_keys:
             if k not in ticket_keys: # Avoid double counting if names were ever same, though here they aren't
                 ticket_count += wallet.get(k, 0)
+
+        # ---------------------------------------------------------------------
+        # New Field: Today's Earnings (VaultLedger sum > 0 for operational day)
+        # ---------------------------------------------------------------------
+        # op_date_kst is a date object. We need start of day in UTC.
+        # Simple approx: just check created_at >= (now_utc - 24h) or strictly align with KST op day?
+        # User explicitly asked for "Today +8000". Strict KST op day matches daily reset logic.
+        
+        # Convert op_date_kst (date) to datetime range in UTC
+        # op_date_kst starts at ResetHour KST (e.g. 09:00 KST)
+        reset_hour_raw = getattr(settings, "streak_day_reset_hour_kst", 9)
+        reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
+        
+        # Construct KST datetime for op_date_kst start
+        op_start_kst = datetime(
+            op_date_kst.year, op_date_kst.month, op_date_kst.day,
+            reset_hour, 0, 0, tzinfo=tz
+        )
+        op_start_utc = op_start_kst.astimezone(timezone.utc).replace(tzinfo=None) # naive for DB
+
+        today_earnings = db.query(func.coalesce(func.sum(VaultLedger.amount), 0)).filter(
+            VaultLedger.user_id == legacy_user_id,
+            VaultLedger.amount > 0,
+            VaultLedger.created_at >= op_start_utc
+        ).scalar() or 0
+
+        # ---------------------------------------------------------------------
+        # New Field: Next Tier Goal (Dynamic Withdrawal Goal)
+        # ---------------------------------------------------------------------
+        approved_count_val = db.query(func.count(VaultWithdrawalRequest.id)).filter(
+            VaultWithdrawalRequest.user_id == legacy_user_id,
+            VaultWithdrawalRequest.status == "APPROVED",
+        ).scalar() or 0
+        
+        tier_minimums = [10_000, 10_000, 30_000, 50_000]
+        tier_idx = min(int(approved_count_val), len(tier_minimums) - 1)
+        next_min_balance = tier_minimums[tier_idx]
 
         return {
             "eligible": bool(eligible),
@@ -284,8 +321,10 @@ class V2VaultService:
             "daily_play_target": int(play_target),
             "daily_vault_spent": int(getattr(user, "vault_spent_today", 0) or 0),
             "daily_vault_spent_target": int(spend_target),
-            "daily_deposit_confirmed": bool(has_cc_deposit_today), # Using V2 terminology
+            "daily_deposit_confirmed": bool(has_cc_deposit_today),
             "withdrawal_count": int(withdrawal_count),
+            "today_earnings": int(today_earnings),
+            "minimum_withdrawal_amount": int(next_min_balance),
         }
 
     # Backwards-compatible bridge for V1 VaultService APIs used by game engines.

@@ -29,14 +29,19 @@ def upgrade() -> None:
     if col_type and "PUZZLE_C1" in col_type:
         return
 
-    op.execute(
-        "ALTER TABLE user_game_wallet "
-        "MODIFY COLUMN token_type ENUM("
-        "'ROULETTE_COIN','DICE_TOKEN','TRIAL_TOKEN','LOTTERY_TICKET','CC_COIN',"
-        "'GOLD_KEY','DIAMOND_KEY','DIAMOND','GOLD_KEY_FRAGMENT','DIAMOND_KEY_FRAGMENT',"
-        "'PUZZLE_C','PUZZLE_C1','PUZZLE_C2','PUZZLE_J','PUZZLE_M','VAULT'"
-        ") NOT NULL"
-    )
+    # Disable FK checks to allow ENUM modification on table with FK
+    op.execute("SET FOREIGN_KEY_CHECKS=0")
+    try:
+        op.execute(
+            "ALTER TABLE user_game_wallet "
+            "MODIFY COLUMN token_type ENUM("
+            "'ROULETTE_COIN','DICE_TOKEN','TRIAL_TOKEN','LOTTERY_TICKET','CC_COIN',"
+            "'GOLD_KEY','DIAMOND_KEY','DIAMOND','GOLD_KEY_FRAGMENT','DIAMOND_KEY_FRAGMENT',"
+            "'PUZZLE_C','PUZZLE_C1','PUZZLE_C2','PUZZLE_J','PUZZLE_M','VAULT'"
+            ") NOT NULL"
+        )
+    finally:
+        op.execute("SET FOREIGN_KEY_CHECKS=1")
 
 
 def downgrade() -> None:
@@ -51,11 +56,15 @@ def downgrade() -> None:
     if not col_type or "PUZZLE_C1" not in col_type:
         return
 
-    op.execute(
-        "ALTER TABLE user_game_wallet "
-        "MODIFY COLUMN token_type ENUM("
-        "'ROULETTE_COIN','DICE_TOKEN','TRIAL_TOKEN','LOTTERY_TICKET','CC_COIN',"
-        "'GOLD_KEY','DIAMOND_KEY','DIAMOND','GOLD_KEY_FRAGMENT','DIAMOND_KEY_FRAGMENT',"
-        "'PUZZLE_C','VAULT'"
-        ") NOT NULL"
-    )
+    op.execute("SET FOREIGN_KEY_CHECKS=0")
+    try:
+        op.execute(
+            "ALTER TABLE user_game_wallet "
+            "MODIFY COLUMN token_type ENUM("
+            "'ROULETTE_COIN','DICE_TOKEN','TRIAL_TOKEN','LOTTERY_TICKET','CC_COIN',"
+            "'GOLD_KEY','DIAMOND_KEY','DIAMOND','GOLD_KEY_FRAGMENT','DIAMOND_KEY_FRAGMENT',"
+            "'PUZZLE_C','VAULT'"
+            ") NOT NULL"
+        )
+    finally:
+        op.execute("SET FOREIGN_KEY_CHECKS=1")

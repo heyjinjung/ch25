@@ -93,13 +93,13 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   const LABEL_RADIUS_CLASSES = useMemo(
     () =>
       [
-        "-translate-x-[52px]",
-        "-translate-x-[58px]",
-        "-translate-x-[64px]",
-        "-translate-x-[70px]",
-        "-translate-x-[76px]",
-        "-translate-x-[82px]",
-        "-translate-x-[88px]",
+        "-translate-y-[44px]",
+        "-translate-y-[50px]",
+        "-translate-y-[56px]",
+        "-translate-y-[62px]",
+        "-translate-y-[68px]",
+        "-translate-y-[74px]",
+        "-translate-y-[80px]",
       ] as const,
     [],
   );
@@ -124,6 +124,10 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
   const segmentCount = 8;
   const anglePerSegment = useMemo(() => 360 / segmentCount, [segmentCount]);
+  const visualBaseOffsetDeg = useMemo(
+    () => -anglePerSegment / 2,
+    [anglePerSegment],
+  );
 
   useEffect(() => {
     const node = wheelRef.current;
@@ -148,18 +152,23 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
       const wheelRadius = diameter / 2;
 
       // Keep labels inside the slice: pick a stable radius + safe angular padding.
-      // segmentCount=8 => anglePerSegment=45deg, use delta=5deg per side => safeAngle=35deg.
-      const labelRadius = wheelRadius * 0.73;
-      const safeAngleRad = ((anglePerSegment - 10) * Math.PI) / 180;
-      const safeChord = 2 * labelRadius * Math.sin(safeAngleRad / 2);
-      const maxWidth = Math.max(28, Math.floor(safeChord - 8));
-
+      // segmentCount=8 => anglePerSegment=45deg.
+      // Use wider padding (delta=6deg per side) and keep labels comfortably inside the slice.
+      const labelRadius = wheelRadius * 0.62;
       const radiusPx = Math.floor(labelRadius);
-      const radiusBucketPx = [52, 58, 64, 70, 76, 82, 88] as const;
+
+      const radiusBucketPx = [44, 50, 56, 62, 68, 74, 80] as const;
       const widthBucketPx = [40, 48, 56, 64, 72, 80] as const;
 
+      const radiusIdx = pickNearestIndex(radiusPx, radiusBucketPx);
+      const chosenRadiusPx = radiusBucketPx[radiusIdx];
+
+      const safeAngleRad = ((anglePerSegment - 12) * Math.PI) / 180;
+      const safeChord = 2 * chosenRadiusPx * Math.sin(safeAngleRad / 2);
+      const maxWidth = Math.max(28, Math.floor(safeChord - 10));
+
       setLabelLayout({
-        radiusIdx: pickNearestIndex(radiusPx, radiusBucketPx),
+        radiusIdx,
         maxWidthIdx: pickNearestIndex(maxWidth, widthBucketPx),
       });
     };
@@ -185,8 +194,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
     const baseTurns = 12 + spinCountRef.current * 4;
     const spinTo =
       selectedIndex !== undefined
-        ? 360 * baseTurns +
-          (360 - anglePerSegment * selectedIndex - anglePerSegment / 2)
+        ? 360 * baseTurns + (360 - anglePerSegment * selectedIndex)
         : 360 * baseTurns;
 
     setRotation(spinTo);
@@ -200,9 +208,9 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
   useEffect(() => {
     const node = wheelRef.current;
     if (!node) return;
-    node.style.transform = `rotate(${rotation}deg)`;
+    node.style.transform = `rotate(${rotation + visualBaseOffsetDeg}deg)`;
     node.style.transition = `transform ${spinDurationMs}ms cubic-bezier(0.1, 0, 0.1, 1)`;
-  }, [rotation, spinDurationMs]);
+  }, [rotation, spinDurationMs, visualBaseOffsetDeg]);
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center">
@@ -275,14 +283,14 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 key={`lbl-${index}`}
                 className={`absolute inset-0 flex items-center justify-center pointer-events-none z-20 ${ROTATE_CLASSES[index]}`}
               >
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                   <div
                     className={`flex items-center justify-center ${
                       LABEL_RADIUS_CLASSES[labelLayout.radiusIdx]
                     }`}
                   >
                     <span
-                      className={`block text-[11px] leading-[1.1] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] tracking-wide text-center line-clamp-2 [overflow-wrap:anywhere] ${
+                      className={`block text-[15px] leading-[1.02] font-black text-white uppercase text-center line-clamp-2 [overflow-wrap:anywhere] bg-[rgba(0,0,0,0.35)] px-1 rounded [-webkit-text-stroke:1px_#000] [text-shadow:0_0_2px_rgba(0,0,0,0.7),0_2px_3px_rgba(0,0,0,0.4)] tracking-normal ${
                         LABEL_MAX_WIDTH_CLASSES[labelLayout.maxWidthIdx]
                       }`}
                     >

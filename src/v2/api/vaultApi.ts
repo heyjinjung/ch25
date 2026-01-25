@@ -38,6 +38,8 @@ export interface VaultStatusResponse {
   daily_vault_spent_target: number;
   daily_deposit_confirmed: boolean;
   withdrawal_count: number;
+  today_earnings: number;
+  minimum_withdrawal_amount: number;
   balances: Record<string, number>;
 }
 

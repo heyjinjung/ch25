@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { animate } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { useInView, useMotionValue, useSpring } from "framer-motion";
 import { cn } from "../../lib/utils";
 
 export const NumberTicker = ({
@@ -11,22 +11,31 @@ export const NumberTicker = ({
   className?: string;
   delay?: number;
 }) => {
-  const [displayValue, setDisplayValue] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const motionValue = useMotionValue(0);
+  const springValue = useSpring(motionValue, {
+    damping: 60,
+    stiffness: 100,
+  });
+  const isInView = useInView(ref, { once: true, margin: "0px" });
 
   useEffect(() => {
-    const controls = animate(0, value, {
-      duration: 1,
-      delay,
-      onUpdate(latest) {
-        setDisplayValue(Math.floor(latest));
-      },
-    });
-    return () => controls.stop();
-  }, [value, delay]);
+    if (isInView) {
+      setTimeout(() => {
+        motionValue.set(value);
+      }, delay * 1000);
+    }
+  }, [motionValue, isInView, delay, value]);
 
-  return (
-    <span className={cn("inline-block tabular-nums", className)}>
-      {displayValue.toLocaleString()}
-    </span>
-  );
+  useEffect(() => {
+    springValue.on("change", (latest) => {
+      if (ref.current) {
+        ref.current.textContent = Intl.NumberFormat("en-US").format(
+          Math.floor(latest)
+        );
+      }
+    });
+  }, [springValue]);
+
+  return <span ref={ref} className={cn("inline-block tabular-nums", className)} />;
 };

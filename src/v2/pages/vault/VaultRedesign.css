@@ -1,340 +1,124 @@
-/* src/v2/pages/vault/VaultRedesign.css */
+/* Vault Page Redesign - Retention Optimized */
 
-.vault-redesign.vault-container {
-    background-color: #121214;
-    height: 100vh;
-    /* Strictly 100vh */
-    width: 100%;
-    max-width: 391px;
-    margin: 0 auto;
-    position: relative;
-    overflow: hidden;
-    /* Prevent all scrolls */
-    color: #fff;
-    padding-top: var(--header-offset);
-    padding-bottom: var(--nav-offset);
-    display: flex;
-    flex-direction: column;
-    font-family: 'Inter', sans-serif;
-    --aurora-1: #0f2f25;
-    --aurora-2: #0b3c2d;
-    --aurora-3: #0a2a21;
+.vault-page-container {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  margin: 0 auto;
+  height: 100vh;
+  background: linear-gradient(to bottom, #0a0a0a, #121214);
+  overflow: hidden;
+  font-family: 'Inter', 'Pretendard', sans-serif;
 }
 
-/* Background SVG Overlay */
-.vault-bg-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 1;
-    /* Move to very background */
-}
-
+/* Aurora background layers (depth effect) */
 .vault-aurora-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    opacity: 0.5;
-    overflow: hidden;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  overflow: hidden;
 }
 
 .vault-aurora-blob {
-    position: absolute;
-    width: 340px;
-    height: 340px;
-    border-radius: 50%;
-    filter: blur(56px);
-    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
-    mix-blend-mode: screen;
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: screen;
+  animation: aurora-float 15s ease-in-out infinite;
 }
 
 .vault-aurora-blob.blob-1 {
-    top: -90px;
-    left: -70px;
-    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+  background: radial-gradient(circle at 30% 30%, rgba(16, 185, 129, 0.3), transparent 70%);
+  animation-delay: 0s;
 }
 
 .vault-aurora-blob.blob-2 {
-    top: 140px;
-    right: -90px;
-    background: radial-gradient(circle at 50% 50%, var(--aurora-2), transparent 70%);
+  width: 350px;
+  height: 350px;
+  top: 200px;
+  right: -120px;
+  background: radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.25), transparent 70%);
+  animation-delay: 5s;
 }
 
 .vault-aurora-blob.blob-3 {
-    bottom: -110px;
-    left: 30px;
-    width: 380px;
-    height: 380px;
-    background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
+  width: 450px;
+  height: 450px;
+  bottom: -150px;
+  left: 50px;
+  background: radial-gradient(circle at 50% 50%, rgba(5, 150, 105, 0.2), transparent 70%);
+  animation-delay: 10s;
 }
 
-/* Main Content Spec */
-.vault-main-area {
-    display: flex;
-    width: 100%;
-    max-width: 360px;
-    flex-direction: column;
-    align-items: center;
-    /* Centered */
-    gap: 12px;
-    padding: 10px 8px;
-    margin: 0 auto;
-    box-sizing: border-box;
-    position: relative;
-    z-index: 1;
+@keyframes aurora-float {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(-30px, 30px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(30px, -30px) scale(0.9);
+  }
 }
 
-/* Tiered Safes Display */
-.vault-safes-arena {
-    position: relative;
-    width: 100%;
-    max-width: 364.363px;
-    height: 195px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 15px;
-    padding-bottom: 20px;
-    align-self: center;
+/* Content wrapper */
+.vault-content-wrapper {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-top: calc(env(safe-area-inset-top) + 16px);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-
-
-.vault-safe-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    transition: transform 0.3s ease;
-    position: relative;
+/* Loading spinner */
+.vault-page-container .animate-spin {
+  animation: spin 1s linear infinite;
 }
 
-.vault-safe-item.lv1 {
-    width: 80.23px;
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.vault-safe-item.lv5 {
-    width: 120.35px;
+/* Responsive adjustments */
+@media (min-width: 391px) {
+  .vault-page-container {
+    max-width: 100%;
+  }
 }
 
-.vault-safe-item.vip {
-    width: 172.6px;
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+  .vault-aurora-blob,
+  .vault-page-container .animate-spin {
+    animation: none;
+  }
 }
 
-.vault-safe-item.lv1 .vault-safe-img {
-    animation: safe-rotate-1 12s linear infinite;
-}
-
-.vault-safe-item.lv5 .vault-safe-img {
-    animation: safe-rotate-2 15s linear infinite reverse;
-}
-
-.vault-safe-item.vip .vault-safe-img {
-    animation: safe-rotate-3 20s linear infinite;
-}
-
-.vault-safe-img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-}
-
-.vault-label {
-    font-size: 14px;
-    font-weight: 500;
-    opacity: 0.8;
-}
-
-/* Progress Section */
-.vault-progress-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    width: 100%;
-    padding: 0 8px;
-    box-sizing: border-box;
-}
-
-.section-title {
-    font-family: 'Roboto', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    color: #9AFFFA;
-    text-transform: uppercase;
-    padding-left: 2px;
-}
-
-.vault-progress-card {
-    width: 100%;
-    height: 100px;
-    background: rgba(43, 43, 43, 0.45);
-    /* Glass Background */
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 21px;
-    display: flex;
-    align-items: center;
-    padding: 16px 22px;
-    gap: 12px;
-    position: relative;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-.card-header-icon {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-}
-
-.card-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.progress-labels {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    font-size: 12px;
-    opacity: 0.6;
-}
-
-.custom-progress-bar-container {
-    width: 100%;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    overflow: hidden;
-    position: relative;
-    box-sizing: border-box;
-}
-
-.custom-progress-fill {
-    height: 100%;
-    border-radius: 24px;
-    background: linear-gradient(90deg, #FFFFFF 0%, #9AFFFA 50%, #509995 100%);
-    transition: width 0.5s ease-out;
-}
-
-.chevron-icon {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-}
-
-/* Action Footer Specced */
-.vault-action-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 10px 16px 24px;
-    box-sizing: border-box;
-    margin-top: auto;
-    position: relative;
-    z-index: 1;
-}
-
-.footer-top-row {
-    display: flex;
-    width: 100%;
-    gap: 12px;
-    justify-content: center;
-}
-
-.vault-footer-btn {
-    display: flex;
-    height: 48px;
-    padding: 13px 0;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    border-radius: 62px;
-    background: rgba(60, 60, 67, 0.45);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 15px;
-    font-weight: 700;
-    color: #fff;
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
-    text-decoration: none;
-    box-sizing: border-box;
-    overflow: hidden;
-    outline: none;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-}
-
-.vault-home-link,
-.vault-guide-button {
-    flex: 1;
-    max-width: 170px;
-}
-
-.vault-withdraw-main-btn {
-    width: 100%;
-    max-width: 352px;
-    background: linear-gradient(135deg, rgba(37, 173, 130, 0.6) 0%, rgba(18, 92, 72, 0.4) 100%);
-    border: 1px solid rgba(154, 255, 250, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-.vault-withdraw-main-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    background: rgba(60, 60, 67, 0.2);
-}
-
-.casino-logo {
-    width: 80px;
-    height: auto;
-    object-fit: contain;
-}
-
-.vault-footer-btn:active {
-    transform: scale(0.97);
-}
-
-@keyframes safe-rotate-1 {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes safe-rotate-2 {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@keyframes safe-rotate-3 {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+/* Dark mode optimization */
+@media (prefers-color-scheme: dark) {
+  .vault-page-container {
+    background: linear-gradient(to bottom, #000000, #0a0a0a);
+  }
 }

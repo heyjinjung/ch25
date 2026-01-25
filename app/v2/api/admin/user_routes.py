@@ -233,92 +233,6 @@ def create_admin_user(
     )
 
 
-@router.get("/users/{user_id}", response_model=AdminUserDetailDto)
-def get_admin_user_detail(
-    user_id: int,
-    db: Session = Depends(get_db),
-    admin_info: tuple[int, str] = Depends(get_current_admin_info),
-):
-    admin_id, admin_role = admin_info
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
-
-    ticket_balance = 0
-    wallets = db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).all()
-    for w in wallets:
-        try:
-            token_name = w.token_type.name if hasattr(w.token_type, "name") else str(w.token_type)
-            if "TICKET" in token_name or "COIN" in token_name:
-                ticket_balance += int(w.balance or 0)
-        except Exception:
-            continue
-
-    vault_balance = int(user.vault_locked_balance or 0) + int(user.vault_available_balance or 0)
-    current_assets = vault_balance
-
-    retention = db.query(UserRetentionState).filter(UserRetentionState.user_id == user_id).first()
-    risk_level = "LOW"
-    risk_reason = None
-
-    if retention:
-        if retention.churn_probability_score > 0.8:
-            risk_level = "HIGH"
-            risk_reason = "High Churn Probability"
-        elif retention.churn_probability_score > 0.5:
-            risk_level = "MEDIUM"
-
-    total_charge = int(user.total_charge_amount or 0)
-    if total_charge > 10000000:
-        risk_level = "HIGH"
-        risk_reason = "High Value Account"
-
-    suggested_actions = []
-    if risk_level == "HIGH":
-        suggested_actions = [
-            InterventionActionDto(
-                action_id="BAILOUT_GIFT",
-                label="긴급 구호 자금 지급",
-                type="REWARD",
-                description="파산 위험 유저에게 소액의 티켓 지급 (Retention)",
-            ),
-            InterventionActionDto(
-                action_id="SEND_CRM_PULSE",
-                label="CRM 펄스 전송",
-                type="MESSAGE",
-                description="이탈 방지용 개인화 메시지 전송",
-            ),
-        ]
-    elif risk_level == "MEDIUM":
-        suggested_actions = [
-            InterventionActionDto(
-                action_id="MONITOR_CLOSELY",
-                label="밀착 모니터링 지정",
-                type="SYSTEM",
-                description="해당 유저의 다음 게임 결과 실시간 알림 활성화",
-            )
-        ]
-
-    playbook = InterventionPlaybookDto(riskLevel=risk_level, suggestedActions=suggested_actions)
-
-    return AdminUserDetailDto(
-        id=user.id,
-        nickname=user.nickname or "(미설정)",
-        telegramId=user.telegram_id,
-        createdAt=user.created_at,
-        totalDeposit=total_charge,
-        currentAssets=current_assets,
-        vaultBalance=vault_balance,
-        ticketBalance=ticket_balance,
-        level=int(user.level or 1),
-        vipLevel="VIP" if total_charge > 5000000 else "COMMON",
-        isActive=(user.status == "ACTIVE"),
-        riskLevel=risk_level,
-        riskReason=risk_reason,
-        playbook=playbook if suggested_actions else None,
-    )
-
-
 @router.get("/users/level", response_model=AdminUserLevelSnapshotDto)
 def get_admin_user_level_by_cc_id(
     cc_id: str,
@@ -451,6 +365,92 @@ def set_admin_user_level(
         nextLevel=next_level,
         nextRequiredXp=next_required_xp,
         updatedAt=progress.updated_at,
+    )
+
+
+@router.get("/users/{user_id}", response_model=AdminUserDetailDto)
+def get_admin_user_detail(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    ticket_balance = 0
+    wallets = db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).all()
+    for w in wallets:
+        try:
+            token_name = w.token_type.name if hasattr(w.token_type, "name") else str(w.token_type)
+            if "TICKET" in token_name or "COIN" in token_name:
+                ticket_balance += int(w.balance or 0)
+        except Exception:
+            continue
+
+    vault_balance = int(user.vault_locked_balance or 0) + int(user.vault_available_balance or 0)
+    current_assets = vault_balance
+
+    retention = db.query(UserRetentionState).filter(UserRetentionState.user_id == user_id).first()
+    risk_level = "LOW"
+    risk_reason = None
+
+    if retention:
+        if retention.churn_probability_score > 0.8:
+            risk_level = "HIGH"
+            risk_reason = "High Churn Probability"
+        elif retention.churn_probability_score > 0.5:
+            risk_level = "MEDIUM"
+
+    total_charge = int(user.total_charge_amount or 0)
+    if total_charge > 10000000:
+        risk_level = "HIGH"
+        risk_reason = "High Value Account"
+
+    suggested_actions = []
+    if risk_level == "HIGH":
+        suggested_actions = [
+            InterventionActionDto(
+                action_id="BAILOUT_GIFT",
+                label="긴급 구호 자금 지급",
+                type="REWARD",
+                description="파산 위험 유저에게 소액의 티켓 지급 (Retention)",
+            ),
+            InterventionActionDto(
+                action_id="SEND_CRM_PULSE",
+                label="CRM 펄스 전송",
+                type="MESSAGE",
+                description="이탈 방지용 개인화 메시지 전송",
+            ),
+        ]
+    elif risk_level == "MEDIUM":
+        suggested_actions = [
+            InterventionActionDto(
+                action_id="MONITOR_CLOSELY",
+                label="밀착 모니터링 지정",
+                type="SYSTEM",
+                description="해당 유저의 다음 게임 결과 실시간 알림 활성화",
+            )
+        ]
+
+    playbook = InterventionPlaybookDto(riskLevel=risk_level, suggestedActions=suggested_actions)
+
+    return AdminUserDetailDto(
+        id=user.id,
+        nickname=user.nickname or "(미설정)",
+        telegramId=user.telegram_id,
+        createdAt=user.created_at,
+        totalDeposit=total_charge,
+        currentAssets=current_assets,
+        vaultBalance=vault_balance,
+        ticketBalance=ticket_balance,
+        level=int(user.level or 1),
+        vipLevel="VIP" if total_charge > 5000000 else "COMMON",
+        isActive=(user.status == "ACTIVE"),
+        riskLevel=risk_level,
+        riskReason=risk_reason,
+        playbook=playbook if suggested_actions else None,
     )
 
 

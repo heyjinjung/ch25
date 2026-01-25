@@ -1,171 +1,147 @@
-// src/pages/vault/VaultPage.tsx
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useV2Vault } from "../../hooks/useV2Vault";
 import { useSound } from "../../../hooks/useSound";
-import gsap from "gsap";
-import "./VaultRedesign.css";
+import confetti from "canvas-confetti";
+import { BackgroundBeamsWithCollision } from "../../components/effects/BackgroundBeamsWithCollision";
+import { VaultHero } from "../../components/vault/VaultHero";
+import { VaultProgress } from "../../components/vault/VaultProgress";
+import { VaultStats } from "../../components/vault/VaultStats";
+import { VaultCTA } from "../../components/vault/VaultCTA";
 import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModal";
+import "./VaultRedesign.css";
 
-const ASSET_PATH = "/assets/05valut";
+  // const WITHDRAWAL_GOAL = 100000; // Deprecated: Now dynamic from backend
 
 const VaultPage: React.FC = () => {
+  const navigate = useNavigate();
   const { useVaultStatus, useWithdraw } = useV2Vault();
   const { playVaultJingle } = useSound();
   const { data: vault, isLoading, error } = useVaultStatus();
   const withdrawMutation = useWithdraw();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const progressFillRef = useRef<HTMLDivElement>(null);
-  const auroraRef = useRef<HTMLDivElement>(null);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const todayEarnings = vault?.today_earnings || 0;
+  const withdrawalGoal = vault?.minimum_withdrawal_amount || 100000;
 
-  useLayoutEffect(() => {
-    if (!vault) return;
-    playVaultJingle();
-    const percent = Math.min(((vault.vaultBalance || 0) / 10000) * 100, 100);
-    if (progressFillRef.current) {
-      progressFillRef.current.style.width = `${percent}%`;
+  useEffect(() => {
+    if (vault) {
+      playVaultJingle();
+      
+      // Celebrate if withdrawal is available
+      if (vault.eligible && vault.availableBalance >= withdrawalGoal) {
+        setTimeout(() => {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#10b981', '#6ee7b7', '#34d399'],
+          });
+        }, 500);
+      }
     }
-    if (!containerRef.current || !auroraRef.current) return;
+  }, [vault, playVaultJingle, withdrawalGoal]);
 
-    const ctx = gsap.context(() => {
-      gsap.to(containerRef.current, {
-        "--aurora-1": "#1a6e50",
-        "--aurora-2": "#158a62",
-        "--aurora-3": "#125c48",
-        duration: 10,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
+  const handleWithdraw = async () => {
+    if (!vault || !vault.eligible) {
+      setShowGuideModal(true);
+      return;
+    }
 
-      gsap.to(".vault-aurora-blob", {
-        x: -24,
-        y: 20,
-        duration: 13,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        stagger: 0.7,
-      });
-    }, containerRef);
-    return () => ctx.revert();
-  }, [vault]);
-
-  const handleWithdraw = () => {
     if (window.confirm("출금 신청하시겠습니까?")) {
-      withdrawMutation.mutate({ amount: vault?.availableBalance || 0 });
+      try {
+        await withdrawMutation.mutateAsync({ amount: vault.availableBalance });
+        
+        // Success celebration
+        confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.5 },
+          colors: ['#10b981', '#6ee7b7', '#34d399', '#059669'],
+        });
+        
+        alert("출금 신청이 완료되었습니다!");
+      } catch (error) {
+        console.error("Withdrawal error:", error);
+        alert("출금 신청 중 오류가 발생했습니다. 다시 시도해주세요.");
+      }
     }
+  };
+
+  const handleHomeClick = () => {
+    navigate("/v2/home");
   };
 
   if (isLoading) {
     return (
-      <div className="flex h-[760px] w-[390px] mx-auto items-center justify-center bg-black">
-        <div className="w-10 h-10 border-2 border-[#9AFFFA] border-t-transparent rounded-full animate-spin" />
+      <div className="vault-page-container">
+        <div className="flex h-full items-center justify-center">
+          <div className="w-12 h-12 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
 
   if (error || !vault) {
     return (
-      <div className="flex h-[760px] w-[390px] mx-auto items-center justify-center bg-black px-6 text-center">
-        <p className="text-white/40">
-          오류가 발생했습니다. 잠시 후 다시 시도해주세요.
-        </p>
+      <div className="vault-page-container">
+        <div className="flex h-full items-center justify-center px-6 text-center">
+          <p className="text-white/40">
+            오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+          </p>
+        </div>
       </div>
     );
   }
 
+  const vaultBalance = vault.vaultBalance || 0;
+  const isEligible = vault.eligible && vaultBalance >= (vault.minimum_withdrawal_amount || 100000);
+
   return (
-    <div className="vault-redesign-container" ref={containerRef}>
-      <div className="vault-aurora-bg" ref={auroraRef}>
-        <div className="vault-aurora-blob blob-1" />
-        <div className="vault-aurora-blob blob-2" />
-        <div className="vault-aurora-blob blob-3" />
-      </div>
-
-      <div className="vault-main-area">
-        {/* Tiered Safes Display */}
-        <div className="vault-safes-arena">
-          <div className="vault-safe-item lv1">
-            <img
-              src={`${ASSET_PATH}/Frame 7.png`}
-              className="vault-safe-img"
-              alt="Lv.1 Safe"
-            />
-            <span className="vault-label">LV.1</span>
-          </div>
-          <div className="vault-safe-item lv5">
-            <img
-              src={`${ASSET_PATH}/Frame 6.png`}
-              className="vault-safe-img"
-              alt="Lv.5 Safe"
-            />
-            <span className="vault-label">LV.5</span>
-          </div>
-          <div className="vault-safe-item vip">
-            <img
-              src={`${ASSET_PATH}/Frame 5.png`}
-              className="vault-safe-img"
-              alt="VIP Safe"
-            />
-            <span className="vault-label underline">VIP</span>
-          </div>
+    <div className="vault-page-container">
+      <BackgroundBeamsWithCollision>
+        {/* Aurora background for depth */}
+        <div className="vault-aurora-bg">
+          <div className="vault-aurora-blob blob-1" />
+          <div className="vault-aurora-blob blob-2" />
+          <div className="vault-aurora-blob blob-3" />
         </div>
 
-        {/* Progress Section */}
-        <div className="vault-progress-section">
-          <span className="section-title">valut progress</span>
-          <div className="vault-progress-card">
-            <img
-              src={`${ASSET_PATH}/Button Icon.png`}
-              className="card-header-icon"
-              alt="status"
-            />
-            <div className="card-content">
-              <div className="progress-labels">
-                <span className="text-[12px] opacity-80">
-                  {vault.vaultBalance?.toLocaleString() || 0}원 / 10,000원
-                </span>
-              </div>
-              <div className="custom-progress-bar-container">
-                <div className="custom-progress-fill" ref={progressFillRef} />
-              </div>
-            </div>
-            <img
-              src={`${ASSET_PATH}/Chevron Icon.svg`}
-              className="chevron-icon"
-              alt="more"
-            />
-          </div>
-        </div>
-      </div>
+        {/* Main content */}
+        <div className="vault-content-wrapper">
+          {/* Hero section with vault and amount */}
+          <VaultHero
+            vaultBalance={vaultBalance}
+            todayEarnings={todayEarnings}
+            goalAmount={withdrawalGoal}
+          />
 
-      {/* Action Footer */}
-      <div className="vault-action-footer">
-        <div className="footer-top-row">
-          <a href="/home" className="vault-footer-btn vault-home-link">
-            <img
-              src={`${ASSET_PATH}/Frame 16.png`}
-              className="casino-logo"
-              alt="CC CASINO"
-            />
-          </a>
-          <button
-            className="vault-footer-btn vault-guide-button"
-            onClick={() => setShowGuideModal(true)}
-          >
-            출금 안내 조건
-          </button>
-        </div>
-        <button
-          className="vault-footer-btn vault-withdraw-main-btn"
-          onClick={handleWithdraw}
-          disabled={withdrawMutation.isPending}
-        >
-          {withdrawMutation.isPending ? "처리 중..." : "금고 출금하기"}
-        </button>
-      </div>
+          {/* Progress section */}
+          <VaultProgress
+            currentAmount={vaultBalance}
+            goalAmount={withdrawalGoal}
+            className="mb-4"
+          />
 
+          {/* Stats section */}
+          <VaultStats
+            userRank={10}
+            averageComparison={15}
+            className="mb-6"
+          />
+
+          {/* CTA section */}
+          <VaultCTA
+            onWithdraw={handleWithdraw}
+            onGuideClick={() => setShowGuideModal(true)}
+            onHomeClick={handleHomeClick}
+            isWithdrawEnabled={isEligible}
+            isLoading={withdrawMutation.isPending}
+            className="mt-auto pb-6"
+          />
+        </div>
+      </BackgroundBeamsWithCollision>
+
+      {/* Withdrawal guide modal */}
       <V2WithdrawalGuideModal
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
