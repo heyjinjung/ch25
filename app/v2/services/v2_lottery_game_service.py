@@ -127,7 +127,21 @@ class V2LotteryGameService:
                 .first()
             )
             if config is None:
-                raise
+                token_balance = V2InventoryService.get_wallet_balance(
+                    db, user_id, GameTokenType.LOTTERY_TICKET
+                )
+                return LotteryStatusResponse(
+                    config_id=0,
+                    name="UNCONFIGURED",
+                    max_daily_tickets=0,
+                    today_tickets=0,
+                    remaining_tickets=0,
+                    token_type="LOTTERY_TICKET",
+                    token_balance=int(token_balance or 0),
+                    prize_preview=[],
+                    feature_type=FeatureType.LOTTERY,
+                    collection_progress={"C1": 0, "C2": 0, "J": 0, "M": 0},
+                )
 
         normalized_ticket_type = self._normalize_ticket_type(getattr(config, "ticket_type", "LOTTERY_TICKET"))
 

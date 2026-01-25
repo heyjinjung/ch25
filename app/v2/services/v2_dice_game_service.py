@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.exceptions import InvalidConfigError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DiceGameData, DicePlayResponse, DiceRewardConfig, DiceStatusResponse
@@ -109,7 +110,35 @@ class V2DiceGameService:
         today = self._operational_date_kst(now)
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
 
-        config = V2GameConfigService.get_active_dice_config(db)
+        try:
+            config = V2GameConfigService.get_active_dice_config(db)
+        except InvalidConfigError:
+            token_balance = V2InventoryService.get_wallet_balance(
+                db, user_id, GameTokenType.DICE_TICKET
+            )
+            reward_config = DiceRewardConfig(
+                win_reward_type="POINT",
+                win_reward_amount=0,
+                draw_reward_type="POINT",
+                draw_reward_amount=0,
+                lose_reward_type="POINT",
+                lose_reward_amount=0,
+            )
+            return DiceStatusResponse(
+                config_id=0,
+                name="UNCONFIGURED",
+                max_daily_plays=0,
+                today_plays=0,
+                remaining_plays=0,
+                token_type="DICE_TICKET",
+                token_balance=int(token_balance or 0),
+                feature_type=FeatureType.DICE,
+                event_active=False,
+                event_plays_done=None,
+                event_plays_max=None,
+                event_ineligible_reason=None,
+                reward_config=reward_config,
+            )
         normalized_ticket_type = self._normalize_ticket_type(getattr(config, "ticket_type", "DICE_TICKET"))
 
         token_type_for_balance = None

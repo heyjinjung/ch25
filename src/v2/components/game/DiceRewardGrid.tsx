@@ -1,5 +1,4 @@
 import { type DiceStatusResponse } from "../../api/gameApi";
-import { getRewardItemLabel } from "../../constants/rewardItems";
 
 interface DiceRewardGridProps {
   status?: DiceStatusResponse;
@@ -21,7 +20,7 @@ export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
   }
 
   const cfg = status!.reward_config!;
-  
+
   const rewards = [
     {
       label: "WIN",
@@ -51,26 +50,34 @@ export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
           className="flex flex-col items-center justify-center p-3 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md relative overflow-hidden"
         >
           {/* Label Badge */}
-          <div className={`text-[10px] font-black ${reward.color} tracking-wider mb-1`}>
+          <div
+            className={`text-[10px] font-black ${reward.color} tracking-wider mb-1`}
+          >
             {reward.label}
           </div>
 
           {/* Icon/Type */}
-          <div className="text-white text-xs font-bold text-center leading-tight opacity-90">
-             {/* Simple logic: if type is NONE, show 'No Reward' */}
-             {reward.type === "NONE" 
-                ? "위로금 없음" 
-                : getRewardItemLabel(reward.type)
-             }
+          <div className="flex flex-col items-center gap-1">
+            {reward.type !== "NONE" && (
+              <img
+                src="/assets/asset_coin_gold.png"
+                alt="coin"
+                className="w-5 h-5 object-contain"
+              />
+            )}
+            <div className="text-white text-xs font-bold text-center leading-tight opacity-90">
+              {/* Simple logic: if type is NONE, show 'No Reward' */}
+              {reward.type === "NONE" ? "위로금 없음" : "원"}
+            </div>
           </div>
 
           {/* Amount (if valid) */}
           {reward.amount > 0 && reward.type !== "NONE" && (
-            <div className="text-[13px] font-black text-white mt-1">
+            <div className="text-[13px] font-black text-white mt-0.5">
               +{reward.amount.toLocaleString()}
             </div>
           )}
-          
+
           {/* Subtle Shine */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
         </div>

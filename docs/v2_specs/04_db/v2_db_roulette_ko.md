@@ -22,7 +22,7 @@ V2 룰렛 설정/슬롯/로그 테이블 스키마를 정의한다.
 | ticket_type | VARCHAR(50) | NOT NULL | 티켓 타입(문서 Enum) |
 | is_active | BOOL | NOT NULL | 활성 여부 |
 | max_daily_spins | INT | NOT NULL | 일일 최대 회전수(0=무제한) |
-| grade | VARCHAR(20) | NOT NULL | 적용 등급 |
+| grade | VARCHAR(20) | NULL | (Deprecated) 등급 - 미사용. ticket_type만으로 구분 |
 | created_at | DATETIME | NOT NULL | 생성 시각 |
 | updated_at | DATETIME | NOT NULL | 수정 시각 |
 
@@ -31,7 +31,7 @@ V2 룰렛 설정/슬롯/로그 테이블 스키마를 정의한다.
 | :--- | :--- | :--- | :--- |
 | id | INT | PK | 슬롯 ID |
 | config_id | INT | FK(v2_roulette_config.id) | 설정 ID |
-| slot_index | INT | NOT NULL | 슬롯 인덱스(0~5) |
+| slot_index | INT | NOT NULL | 슬롯 인덱스(0~7, 8개 세그먼트) |
 | label | VARCHAR(50) | NOT NULL | 슬롯 라벨 |
 | reward_type | VARCHAR(50) | NOT NULL | 보상 타입 |
 | reward_amount | INT | NOT NULL | 보상 수량 |
@@ -53,7 +53,7 @@ V2 룰렛 설정/슬롯/로그 테이블 스키마를 정의한다.
 
 ## 4. 인덱스/제약
 - uq_v2_roulette_segment_slot(config_id, slot_index)
-- ck_v2_roulette_segment_slot_range(slot_index 0~5)
+- ck_v2_roulette_segment_slot_range(slot_index 0~7) — 8개 세그먼트 지원
 - ck_v2_roulette_segment_weight_non_negative(weight >= 0)
 - ix_v2_roulette_log_user_created_at(user_id, created_at)
 
@@ -62,4 +62,5 @@ V2 룰렛 설정/슬롯/로그 테이블 스키마를 정의한다.
 - V2 어드민 게임 설정 스키마: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
 
 ## 6. 변경 이력
+- v1.1 (2026-01-25, GitHub Copilot): grade 컬럼 Deprecated 처리, slot_index 범위 0~7로 확장 (8세그먼트)
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

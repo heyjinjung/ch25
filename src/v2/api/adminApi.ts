@@ -1529,6 +1529,7 @@ const normalizeRouletteTicketType = (raw: string): string => {
   const mapping: Record<string, string> = {
     ROULETTE_COIN: "ROULETTE_TICKET",
     GOLD_KEY: "GOLD_KEY_TICKET",
+    GOLDEN_TICKET: "GOLD_KEY_TICKET", // 레거시 호환
     DIAMOND_KEY: "DIAMOND_TICKET",
     TRIAL_TOKEN: "TRIAL_TICKET",
   };
@@ -1704,23 +1705,29 @@ export const updateDiceConfig = async (
 };
 
 // Lottery API
-// Backend response type (snake_case)
+// Backend response type (camelCase - Pydantic serialization_alias)
 interface LotteryConfigBackend {
   id: number;
   name: string;
-  is_active: boolean;
-  max_daily_plays: number;
+  isActive?: boolean;
+  is_active?: boolean;
+  maxDailyPlays?: number;
+  max_daily_plays?: number;
   ticketType?: string;
   ticket_type?: string;
-  puzzle_piece_probability: number;
+  puzzlePieceProbability?: number;
+  puzzle_piece_probability?: number;
   prizes: Array<{
     id: number;
     label: string;
     weight: number;
     stock: number | null;
-    reward_type: string;
-    reward_amount: number;
-    is_active: boolean;
+    rewardType?: string;
+    reward_type?: string;
+    rewardAmount?: number;
+    reward_amount?: number;
+    isActive?: boolean;
+    is_active?: boolean;
   }>;
 }
 
@@ -1749,18 +1756,19 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
   return {
     id: config.id,
     name: config.name,
-    isActive: config.is_active ?? false,
-    maxDailyPlays: config.max_daily_plays ?? 0,
+    isActive: config.isActive ?? config.is_active ?? false,
+    maxDailyPlays: config.maxDailyPlays ?? config.max_daily_plays ?? 0,
     ticketType: config.ticketType ?? config.ticket_type ?? "LOTTERY_TICKET",
-    puzzlePieceProbability: config.puzzle_piece_probability ?? 0,
+    puzzlePieceProbability:
+      config.puzzlePieceProbability ?? config.puzzle_piece_probability ?? 0,
     prizes: config.prizes.map((prize, index) => ({
       id: prize.id,
       label: prize.label ?? "",
       weight: prize.weight ?? 0,
       stock: prize.stock ?? undefined,
-      rewardType: prize.reward_type ?? "NONE",
-      rewardAmount: prize.reward_amount ?? 0,
-      isActive: prize.is_active ?? false,
+      rewardType: prize.rewardType ?? prize.reward_type ?? "NONE",
+      rewardAmount: prize.rewardAmount ?? prize.reward_amount ?? 0,
+      isActive: prize.isActive ?? prize.is_active ?? false,
       color: PRIZE_COLORS[index % PRIZE_COLORS.length],
     })),
   };

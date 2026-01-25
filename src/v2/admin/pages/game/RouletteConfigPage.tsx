@@ -6,7 +6,6 @@ import {
 import {
   type AdminRouletteConfigDto,
   type AdminRouletteSegmentDto,
-  type RouletteGrade,
 } from "../../../api/adminApi";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 import {
@@ -43,7 +42,6 @@ export default function RouletteConfigPage() {
   const { data: configs, isLoading, refetch } = useRouletteConfigs();
   const updateConfig = useUpdateRouletteConfig();
 
-  const [selectedGrade, setSelectedGrade] = useState<RouletteGrade>("COMMON");
   const [selectedTicketType, setSelectedTicketType] =
     useState("ROULETTE_TICKET");
   const [localConfig, setLocalConfig] = useState<AdminRouletteConfigDto | null>(
@@ -60,9 +58,8 @@ export default function RouletteConfigPage() {
 
   useEffect(() => {
     if (configs) {
-      const config = configs.find(
-        (c) => c.grade === selectedGrade && c.ticketType === selectedTicketType,
-      );
+      // ticket_type만으로 필터링 (grade 무시)
+      const config = configs.find((c) => c.ticketType === selectedTicketType);
       if (config) {
         setLocalConfig({
           ...config,
@@ -73,7 +70,7 @@ export default function RouletteConfigPage() {
       }
       setIsDirty(false);
     }
-  }, [configs, selectedGrade, selectedTicketType]);
+  }, [configs, selectedTicketType]);
 
   const handleConfigChange = (
     field: keyof AdminRouletteConfigDto,
@@ -129,7 +126,7 @@ export default function RouletteConfigPage() {
             룰렛(Roulette) 설정
           </h1>
           <p className="text-zinc-400">
-            등급/티켓 타입별 룰렛의 확률과 보상을 설정합니다.
+            티켓 타입별 룰렛의 확률과 보상을 설정합니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -152,25 +149,7 @@ export default function RouletteConfigPage() {
         </div>
       </div>
 
-      {/* Grade Tabs */}
-      <Tabs
-        value={selectedGrade}
-        onValueChange={(v) => setSelectedGrade(v as RouletteGrade)}
-        className="w-full"
-      >
-        <TabsList className="bg-zinc-900 border border-white/10 p-1">
-          {["COMMON", "VIP", "WHALE"].map((grade) => (
-            <TabsTrigger
-              key={grade}
-              value={grade}
-              className="px-6 data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
-            >
-              {grade}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-
+      {/* Ticket Type Tabs (grade 제거) */}
       <Tabs
         value={selectedTicketType}
         onValueChange={setSelectedTicketType}
@@ -195,7 +174,10 @@ export default function RouletteConfigPage() {
           <Card className="bg-zinc-900 border-white/10">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                기본 설정 ({selectedGrade} · {selectedTicketType})
+                기본 설정 (
+                {ticketTabs.find((t) => t.value === selectedTicketType)
+                  ?.label ?? selectedTicketType}
+                )
                 {isDirty && (
                   <Badge
                     variant="outline"
@@ -415,7 +397,10 @@ export default function RouletteConfigPage() {
       ) : (
         <div className="text-center py-20 bg-zinc-900 border border-white/10 rounded-xl">
           <p className="text-zinc-500">
-            해당 등급의 설정을 불러올 수 없습니다.
+            해당 티켓 타입의 설정이 없습니다. DB에 설정을 추가해 주세요.
+          </p>
+          <p className="text-zinc-600 text-sm mt-2">
+            ticket_type: {selectedTicketType}
           </p>
         </div>
       )}

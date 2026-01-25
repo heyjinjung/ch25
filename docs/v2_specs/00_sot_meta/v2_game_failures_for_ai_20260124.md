@@ -332,7 +332,7 @@
   - 검증: 어드민 페이지 로드 시 모든 `/api/v2/admin/*` 호출에 Authorization 포함
   - 참고: `src/v2/api/client.ts`, `src/v2/api/adminApi.ts`
 
-- **상점/인벤토리(비즈니스 검증)** (상태: 수정 완료)
+- **상점/인벤토리(비즈니스 검증)** (상태: 수정 완료)ㅒ
   - 예: 구매/사용 실패(`INSUFFICIENT_BALANCE`, `INVALID_VOUCHER_TYPE`)
   - 검증: 구매 실패 시 상세 에러 반환 및 UI 안내
   - 참고: `src/v2/pages/shop/ExchangePage.tsx`, `src/v2/pages/inventory/InventoryPage.tsx`

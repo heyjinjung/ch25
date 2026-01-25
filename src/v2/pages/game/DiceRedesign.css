@@ -131,7 +131,7 @@
 }
 
 .player-nick {
-    background: linear-gradient(90deg, #FFF 0%, #9AFFFA 100%);
+    background: linear-gradient(90deg, #F93B86 0%, #FF6D74 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

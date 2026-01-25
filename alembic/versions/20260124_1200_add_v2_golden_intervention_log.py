@@ -1,7 +1,7 @@
 """add v2_golden_intervention_log table
 
 Revision ID: 20260124_1200_add_v2_golden_intervention_log
-Revises: 20260119_1700
+Revises: 20260123_1500_seed_v2_roulette_grade_configs
 Create Date: 2026-01-24 12:00:00.000000
 """
 from alembic import op
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20260124_1200_add_v2_golden_intervention_log'
-down_revision = '20260119_1700'
+down_revision = '20260123_1500_seed_v2_roulette_grade_configs'
 branch_labels = None
 depends_on = None
 

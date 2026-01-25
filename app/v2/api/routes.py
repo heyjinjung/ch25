@@ -219,7 +219,15 @@ def dice_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> DicePlayResponse:
-    return _v2_dice_game_service.play(db=db, user_id=user_id, bet_amount=payload.bet_amount, prediction=payload.prediction)
+    try:
+        return _v2_dice_game_service.play(
+            db=db,
+            user_id=user_id,
+            bet_amount=payload.bet_amount,
+            prediction=payload.prediction,
+        )
+    except InvalidConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc.detail)) from exc
 
 
 @router.get("/lottery/status", response_model=LotteryStatusResponse)
@@ -235,7 +243,10 @@ def lottery_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> LotteryPlayResponse:
-    return _v2_lottery_game_service.play(db=db, user_id=user_id)
+    try:
+        return _v2_lottery_game_service.play(db=db, user_id=user_id)
+    except InvalidConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc.detail)) from exc
 
 
 @router.post("/segments/run", response_model=V2SegmentBatchResponse, tags=["v2-admin"])

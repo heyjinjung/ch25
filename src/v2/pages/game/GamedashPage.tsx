@@ -89,28 +89,46 @@ export default function GamedashPage() {
       <div className="gamedash-flyer-bg" />
 
       <div className="gamedash-main-content">
-        {/* Main Card (Notice Card) */}
-        <div className="hero-card-container">
-          <div className="card-shine" />
-          <img
-            src={`${ASSET_PATH}/Ellipse 374.svg`}
-            className="character-img"
-            alt="character"
-          />
-          <div className="notice-container">
-            <div className="notice-wrapper">
-              {noticeItems.map((text, idx) => (
-                <div key={`notice-${idx}`} className="notice-item">
-                  {text}
-                </div>
-              ))}
-              {noticeItems.map((text, idx) => (
-                <div key={`notice-dup-${idx}`} className="notice-item">
-                  {text}
-                </div>
-              ))}
+{/* Magic UI Hero Card */}
+        <div className="magic-hero-card">
+          <div className="magic-hero-bg" />
+          
+          <div className="magic-hero-content">
+            <div className="magic-hero-left">
+              <span className="magic-subtitle">CC CASINO V2</span>
+              <span className="magic-title">
+                GRAND OPEN<br/>
+                <span style={{ color: '#9AFFFA' }}>SUPER EVENT</span>
+              </span>
+              
+              <div className="magic-stat-row">
+                 {/* Live Ticker Integrated Here */}
+                 <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '30px' }}>
+                    <div className="notice-wrapper">
+                      {noticeItems.map((text, idx) => (
+                        <div key={`notice-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
+                          {text}
+                        </div>
+                      ))}
+                      {noticeItems.map((text, idx) => (
+                        <div key={`notice-dup-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
+                          {text}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+              </div>
             </div>
+
+            <img
+              src={`${ASSET_PATH}/Ellipse 374.svg`}
+              className="character-img"
+              alt="character"
+              style={{ width: '120px', filter: 'drop-shadow(0 0 20px rgba(154,255,250,0.3))' }}
+            />
           </div>
+          
+          <div className="card-shine" />
         </div>
 
         {/* Game Selection Grid (2x2) */}

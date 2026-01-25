@@ -30,14 +30,14 @@ class AdminRouletteConfigBase(BaseModel):
     ticket_type: str        # 사용 티켓 (기본: ROULETTE_TICKET)
     is_active: bool         # 기본값 True
     max_daily_spins: int    # 일일 최대 회전수
-    grade: Optional[str]    # 적용 등급 (COMMON, VIP, WHALE, AT_RISK) - Default "COMMON"
-    segments: List[AdminRouletteSegmentBase]  # 6개 고정 슬롯
+    # grade: Optional[str]  # (Deprecated) 등급 - 미사용. ticket_type만으로 구분
+    segments: List[AdminRouletteSegmentBase]  # 8개 슬롯 (0~7)
 ```
 
 #### Segment (Detail)
 ```python
 class AdminRouletteSegmentBase(BaseModel):
-    slot_index: int         # 휠 위치 (0~5)
+    slot_index: int         # 휠 위치 (0~7, 8개 세그먼트)
     label: str              # 노출 텍스트
     weight: int             # 당첨 가중치 (확률)
     reward_type: str
@@ -94,7 +94,7 @@ class AdminLotteryPrizeBase(BaseModel):
 ---
 
 ## 4. 검증 로직 (Validation)
-- 룰렛: 슬롯은 6개 고정(0~5)이며, slot_index 또는 index 입력을 받아 0~5로 재배치한다. 부족분은 패딩, 초과분은 잘린다. weight가 0/누락이면 1로 보정한다.
+- 룰렛: 슬롯은 8개 고정(0~7)이며, slot_index 또는 index 입력을 받아 0~7로 재배치한다. 부족분은 패딩, 초과분은 잘린다. weight가 0/누락이면 1로 보정한다.
 - 룰렛/복권/주사위: ticket_type 허용값은 ROULETTE_TICKET, DICE_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, LOTTERY_TICKET, TRIAL_TICKET이다.
 - 룰렛/복권/주사위: reward_type 허용값은 **공통 지급 20개 + VAULT + NONE**만 허용한다.
     - 게임 티켓: ROULETTE_TICKET, DICE_TICKET, LOTTERY_TICKET
@@ -111,7 +111,8 @@ class AdminLotteryPrizeBase(BaseModel):
 - 보상 수량은 음수도 허용된다(예: 주사위 패배 시 금고 차감, 골든아워 이벤트의 음수 배수). 공통 음수 검증은 두지 않는다.
 
 ## 4.1 Grade(세그먼트) 참고
-- 등급 정의/세그먼트 맥락은 V2 등급/세그먼트 SoT를 따른다.
+- **룰렛에서 grade는 더 이상 사용하지 않음**. ticket_type만으로 설정을 구분한다.
+- 유저 등급 정의/세그먼트 맥락은 V2 등급/세그먼트 SoT를 따른다.
 - 관련 문서: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
 
 ## 5. 운영/검증 (QA)
@@ -119,6 +120,7 @@ class AdminLotteryPrizeBase(BaseModel):
 - [ ] 가중치/재고/중복 검증 로직 확인
 
 ## 6. 변경 이력
+- v2.3 (2026-01-25, GitHub Copilot): 룰렛 grade 필드 Deprecated 처리, 세그먼트 8개(0~7)로 확장
 - v2.2 (2026-01-21, GitHub Copilot): reward_type 허용 목록(공통 20개 + VAULT + NONE)과 레거시 정규화 규칙 명시.
 - v2.1 (2026-01-19, GitHub Copilot): TRIAL_TICKET 허용값 추가
 - v2.0 (2026-01-18, GitHub Copilot): v1 문서 기반 V2 SoT 생성

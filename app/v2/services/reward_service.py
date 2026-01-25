@@ -171,20 +171,23 @@ class V2RewardService:
             "PUZZLE_M": GameTokenType.PUZZLE_M,
             "PUZZLE_C1": GameTokenType.PUZZLE_C1,
             "PUZZLE_C2": GameTokenType.PUZZLE_C2,
-            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
-            "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
-            "ROULETTE_COIN": GameTokenType.ROULETTE_COIN,
-            "TICKET_DICE": GameTokenType.DICE_TOKEN,
-            "DICE_TICKET": GameTokenType.DICE_TOKEN,
-            "DICE_TOKEN": GameTokenType.DICE_TOKEN,
-            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+            # V2 Standard Names
+            "ROULETTE_TICKET": GameTokenType.ROULETTE_TICKET,
+            "DICE_TICKET": GameTokenType.DICE_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
-            "GOLD_KEY": GameTokenType.GOLD_KEY,
-            "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
             "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY_TICKET,
             "DIAMOND_TICKET": GameTokenType.DIAMOND_TICKET,
+            # V1 Legacy Names (for backward compatibility)
+            "TICKET_ROULETTE": GameTokenType.ROULETTE_TICKET,
+            "ROULETTE_COIN": GameTokenType.ROULETTE_TICKET,
+            "TICKET_DICE": GameTokenType.DICE_TICKET,
+            "DICE_TOKEN": GameTokenType.DICE_TICKET,
+            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
+            "GOLD_KEY": GameTokenType.GOLD_KEY,
+            "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
             "GOLD_KEY_FRAGMENT": GameTokenType.GOLD_KEY_FRAGMENT,
             "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_FRAGMENT,
+            "TRIAL_TICKET": GameTokenType.TRIAL_TICKET,
         }
 
         if reward_type in ticket_map:

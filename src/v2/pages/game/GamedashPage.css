@@ -139,150 +139,214 @@
     text-overflow: ellipsis;
 }
 
-/* Game Selection Grid (2x2) */
+
+/* --- Magic UI: Hero Card (Neon/Kinetic) --- */
+.magic-hero-card {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    height: clamp(160px, 24vh, 200px);
+    border-radius: 24px;
+    background: #0a0a0a;
+    /* Deep Black Base */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+    margin: 0 auto;
+    isolation: isolate;
+}
+
+/* Border Beam Animation */
+.magic-hero-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    background: linear-gradient(90deg,
+            transparent,
+            transparent,
+            #9AFFFA,
+            /* Mint Neon */
+            #FF2A6D,
+            /* Pink Neon */
+            transparent,
+            transparent);
+    background-size: 300% 300%;
+    animation: border-beam 4s linear infinite;
+    border-radius: 24px;
+    opacity: 0.6;
+}
+
+/* Inner Glow/Grid Background */
+.magic-hero-bg {
+    position: absolute;
+    inset: 1px;
+    background:
+        radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 0.9) 0%, #050505 100%),
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 20px 20px, 20px 20px;
+    border-radius: 23px;
+    z-index: -1;
+}
+
+@keyframes border-beam {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Content Layout for Magic Hero */
+.magic-hero-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* Char Left, Text Right */
+    padding: 20px;
+    height: 100%;
+    z-index: 2;
+}
+
+.magic-hero-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.magic-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(154, 255, 250, 0.4);
+}
+
+.magic-subtitle {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9AFFFA;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.magic-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.magic-stat-badge {
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+/* --- Updates to Game Cards (Adopting Old Hero Style) --- */
 .game-action-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    column-gap: clamp(14px, 4vw, 24px);
-    row-gap: clamp(14px, 2.6vh, 24px);
+    column-gap: 12px;
+    row-gap: 12px;
     width: 100%;
-    justify-items: center;
-    margin-top: clamp(10px, 2.4vh, 18px);
+    margin-top: 20px;
+    padding: 0 4px;
 }
 
 .game-action-card {
-    width: clamp(140px, 36vw, 162px);
-    height: clamp(116px, 18vh, 150px);
+    width: 100%;
+    /* Fill grid */
+    height: 160px;
     border-radius: 24px;
     position: relative;
     cursor: pointer;
     overflow: hidden;
-    isolation: isolate;
+    /* Reusing EXACT Current Main Card Styles */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(37, 173, 130, 0.06) 100%);
+    border: 0.6px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-    background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(31, 205, 135, 0.28) 55%, rgba(35, 134, 145, 0.10) 100%);
-    animation: dashboard-float 4.8s ease-in-out infinite;
-    will-change: transform;
-}
-
-/* Shimmer (Shine) Effect */
-.card-shine {
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.2) 50%,
-            rgba(255, 255, 255, 0) 100%);
-    z-index: 5;
-    pointer-events: none;
-    transform: skewX(-20deg);
-}
-
-.game-card-badge {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    z-index: 3;
-    height: 20px;
-    padding: 0 8px;
-    border-radius: 10px;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-}
-
-.badge-hot {
-    background: linear-gradient(135deg, rgba(255, 118, 118, 0.95), rgba(255, 58, 58, 0.95));
-}
-
-.badge-new {
-    background: linear-gradient(135deg, rgba(120, 255, 196, 0.9), rgba(37, 173, 130, 0.95));
-}
-
-.game-action-card::before {
-    content: "";
-    position: absolute;
-    inset: 1px;
-    border-radius: 23px;
-    background: radial-gradient(120px 60px at 20% 10%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 60%);
-    opacity: 0.35;
-    z-index: 1;
-    pointer-events: none;
-}
-
-.game-action-card::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 24px;
-    border: 0.5px solid rgba(255, 255, 255, 0.12);
-    opacity: 0.35;
-    z-index: 1;
-    pointer-events: none;
 }
 
 .game-action-card:hover {
-    transform: translateY(-4px) scale(1.01);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
-    filter: saturate(1.05);
-}
-
-.game-action-card:nth-child(2) {
-    animation-delay: 0.4s;
-    animation-duration: 5.2s;
-}
-
-.game-action-card:nth-child(3) {
-    animation-delay: 0.8s;
-    animation-duration: 5.6s;
-}
-
-.game-action-card:nth-child(4) {
-    animation-delay: 1.2s;
-    animation-duration: 6s;
-}
-
-.game-action-card:active {
-    transform: scale(0.95);
+    transform: translateY(-4px);
+    border-color: rgba(154, 255, 250, 0.3);
+    /* Mint hint */
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
 
 .game-card-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 2;
+    width: 80%;
+    /* Smaller icon to fit nicely */
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease;
 }
 
-.gamedash-bg-svg {
+.game-action-card:hover .game-card-icon {
+    transform: scale(1.05) rotate(2deg);
+}
+
+/* Reuse Badge but cleaner */
+.game-card-badge {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 390px;
-    height: 755px;
-    z-index: -1;
-    pointer-events: none;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #000;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.badge-hot {
+    background: #FF2A6D;
+    color: #fff;
+}
+
+.badge-new {
+    background: #9AFFFA;
+    color: #000;
 }
 
 @keyframes dashboard-float {
-    0% {
-        transform: translateY(0px);
+
+    0%,
+    100% {
+        transform: translateY(0);
     }
 
     50% {
-        transform: translateY(-6px);
-    }
-
-    100% {
-        transform: translateY(0px);
+        transform: translateY(-3px);
     }
 }
