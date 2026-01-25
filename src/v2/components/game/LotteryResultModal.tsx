@@ -77,24 +77,24 @@ export default function LotteryResultModal({
 
             <div className="flex flex-col items-center gap-2 z-10">
               <span className="text-sm font-bold text-[#FF4D4D] tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(255,77,77,0.5)]">
-                Lottery Result
+                추첨 결과
               </span>
               <h2 className="text-3xl font-black text-white italic tracking-wider drop-shadow-lg text-center">
-                DRAW COMPLETED
+                추첨 완료
               </h2>
             </div>
 
             <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-[#1F1F22] to-[#0A0A0B] border border-white/5 flex items-center justify-center shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]">
               <div className="absolute inset-0 rounded-full border border-white/5 animate-[spin_12s_linear_infinite]" />
               <div className="relative z-10 drop-shadow-[0_0_15px_rgba(255,77,77,0.6)]">
-                 {/* Placeholder Icon or Image depending on logic, using Trophy for now */}
-                 <Trophy className="w-12 h-12 text-[#FF4D4D]" />
+                {/* Placeholder Icon or Image depending on logic, using Trophy for now */}
+                <Trophy className="w-12 h-12 text-[#FF4D4D]" />
               </div>
             </div>
 
             <div className="flex flex-col items-center z-10">
               <span className="text-zinc-400 text-sm font-medium uppercase tracking-wide">
-                Winning Prize
+                당첨 상품
               </span>
               <span className="text-2xl font-black text-white font-mono tracking-tight mt-1 text-center">
                 {prizeLabel}
@@ -109,7 +109,7 @@ export default function LotteryResultModal({
               className="w-full h-14 bg-[#FF4D4D] hover:bg-[#FF3333] text-white font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,77,77,0.3)] transition-all active:scale-95 z-10"
             >
               <RotateCw className="w-5 h-5" />
-              <span className="tracking-wider">PLAY AGAIN</span>
+              <span className="tracking-wider">다시 하기</span>
             </button>
           </motion.div>
         </div>

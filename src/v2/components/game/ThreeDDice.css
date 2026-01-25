@@ -24,18 +24,18 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  background: white;
-  /* Solid background to prevent see-through artifacts */
+  background: radial-gradient(circle at center, #2a0a10 0%, #0a0505 100%);
+  /* Dark Red/Black Gradient to separate from bg but match theme */
   border-radius: 12px;
   /* Smooth corners */
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
-  /* Inner depth */
+  box-shadow: inset 0 0 20px rgba(255, 10, 10, 0.2);
+  /* Inner Red Glow */
   display: flex;
   justify-content: center;
   align-items: center;
   backface-visibility: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  /* Slight border */
+  border: 1px solid rgba(255, 42, 109, 0.3);
+  /* Subtle Neon Border */
   overflow: hidden;
 }
 

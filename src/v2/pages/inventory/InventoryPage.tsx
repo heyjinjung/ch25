@@ -162,6 +162,8 @@ export default function InventoryPage() {
 
   return (
     <div className="exchange-page-v2 inventory-specific" ref={containerRef}>
+      <div className="branding-watermark">CC</div>
+      
       <div className="shop-tabs-container">
         <div
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}

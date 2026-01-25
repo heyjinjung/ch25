@@ -1,3 +1,32 @@
+/* Dice Stat Card (Standardized Glassmorphism) */
+.dice-stat-card {
+    min-width: 120px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    margin: 0 auto 12px auto;
+    max-width: 140px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.stat-label-small {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 4px;
+}
+
 /* src/v2/pages/game/DiceRedesign.css */
 
 .dice-page-v2 {
@@ -61,6 +90,25 @@
     width: 340px;
     height: 340px;
     background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
+}
+
+/* Background Watermark Branding */
+.branding-watermark {
+    position: absolute;
+    top: 32%;
+    /* Moved up for better visibility */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 160px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.12);
+    /* Increased visibility */
+    user-select: none;
+    pointer-events: none;
+    z-index: 0;
+    white-space: nowrap;
+    letter-spacing: -0.05em;
+    font-family: 'Inter', sans-serif;
 }
 
 .dice-main-container {
@@ -171,21 +219,43 @@
 }
 
 .spin-button-v2 {
-    height: 52px;
-    border-radius: 26px;
-    background: linear-gradient(270deg, #F93B86 0%, #FF6D74 100%);
+    height: 55px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
     color: #fff;
-    font-weight: 900;
-    font-size: 16px;
-    border: none;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(249, 59, 134, 0.3);
+    background: linear-gradient(100deg, #ff2a6d 0%, #b1002a 60%, #ff0055 100%);
+    border: none;
+    /* box-shadow, drop-shadow 5% 수준으로 최소화 */
+    box-shadow: 0 0 6px 0 rgba(255, 42, 109, 0.05), 0 2px 8px 0 rgba(177, 0, 42, 0.03);
+    filter: drop-shadow(0 0 2px rgba(255, 42, 109, 0.05));
+    transition: all 0.18s cubic-bezier(.4, 1.2, .4, 1);
+    outline: none;
+}
+
+.spin-button-v2:hover {
+    transform: translateY(-3px) scale(1.04);
+    background: linear-gradient(100deg, #ff4d8d 0%, #d8003a 60%, #ff1a6f 100%);
+    /* box-shadow, drop-shadow 5% 수준으로 최소화 */
+    box-shadow: 0 0 8px 0 rgba(255, 42, 109, 0.07), 0 3px 12px 0 rgba(177, 0, 42, 0.05);
+    filter: brightness(1.08) saturate(1.15) drop-shadow(0 0 3px rgba(255, 42, 109, 0.07));
+}
+
+.spin-button-v2:active {
+    transform: scale(0.97);
+    filter: brightness(0.95) saturate(0.95);
 }
 
 .spin-button-v2:disabled {
-    opacity: 0.5;
-    background: #333;
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #2a2a2a;
     box-shadow: none;
+    filter: grayscale(1);
 }
 
 .item-board-card {
@@ -198,8 +268,34 @@
     border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
+
+/* Differentiated Reward Card Styles */
+.dice-reward-card {
+    border-radius: 19px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px);
+}
+
+.reward-card-win {
+    background: linear-gradient(135deg, rgba(55, 235, 255, 0.2) 0%, rgba(20, 20, 20, 0.8) 100%);
+    border-color: rgba(55, 235, 255, 0.3);
+}
+
+.reward-card-draw {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(20, 20, 20, 0.8) 100%);
+    border-color: rgba(255, 215, 0, 0.25);
+}
+
+.reward-card-lose {
+    background: linear-gradient(135deg, rgba(255, 42, 109, 0.15) 0%, rgba(20, 20, 20, 0.8) 100%);
+    border-color: rgba(255, 42, 109, 0.25);
+}
+
 .item-board-text {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.4);
+    /* Subtly semi-transparent */
     font-weight: 600;
+    letter-spacing: 0.05em;
 }

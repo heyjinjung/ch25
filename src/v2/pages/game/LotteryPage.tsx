@@ -16,10 +16,8 @@ const LotteryPage: React.FC = () => {
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const ball1Ref = useRef<HTMLImageElement>(null);
-  const ball2Ref = useRef<HTMLImageElement>(null);
-  const ball3Ref = useRef<HTMLImageElement>(null);
-  const ball4Ref = useRef<HTMLImageElement>(null);
+  // Ref array for multiple balls
+  const ballsRef = useRef<HTMLImageElement[]>([]);
 
   const queryClient = useQueryClient();
 
@@ -27,7 +25,7 @@ const LotteryPage: React.FC = () => {
   // API Queries
   // ============================================================================
 
-  const { data, isLoading } = useQuery({
+  const { data: status, isLoading } = useQuery({
     queryKey: ["v2-lottery-status"],
     queryFn: () => getV2LotteryStatus(),
     refetchOnWindowFocus: true,
@@ -50,18 +48,24 @@ const LotteryPage: React.FC = () => {
     if (!containerRef.current) return;
 
     const ctx = gsap.context(() => {
-      const balls = [ball1Ref, ball2Ref, ball3Ref, ball4Ref];
-      balls.forEach((ref, idx) => {
-        if (!ref.current) return;
+      // Animate all balls in the ref array
+      ballsRef.current.forEach((ball, idx) => {
+        if (!ball) return;
 
-        gsap.to(ref.current, {
-          x: `+=${8 + idx * 2}`,
-          y: `-=${6 + idx}`,
-          rotation: `+=${12 + idx * 3}`,
-          duration: 1.6 + idx * 0.4,
+        // Randomize initial float parameters for more natural look
+        const randomDur = 1.5 + Math.random() * 1.5;
+        const randomX = 5 + Math.random() * 10;
+        const randomY = 3 + Math.random() * 8;
+
+        gsap.to(ball, {
+          x: `+=${randomX}`,
+          y: `-=${randomY}`,
+          rotation: `+=${10 + Math.random() * 20}`,
+          duration: randomDur,
           repeat: -1,
           yoyo: true,
           ease: "sine.inOut",
+          delay: idx * 0.1, // Stagger start
         });
       });
     });
@@ -74,19 +78,19 @@ const LotteryPage: React.FC = () => {
   // ============================================================================
 
   const handlePlay = async () => {
-    if (isPlaying || isRevealed || !data || data.token_balance <= 0) return;
+    if (isPlaying || isRevealed || !status || status.token_balance <= 0) return;
 
     try {
       triggerHaptic("heavy");
       setIsPlaying(true);
 
-      // Intensive mixing animation
-      [ball1Ref, ball2Ref, ball3Ref, ball4Ref].forEach((ref, idx) => {
-        if (ref.current) {
-          gsap.to(ref.current, {
+      // Intensive mixing animation for ALL balls
+      ballsRef.current.forEach((ball, idx) => {
+        if (ball) {
+          gsap.to(ball, {
             y: "random(-60, 60)",
             x: "random(-70, 70)",
-            rotation: `random(-${120 + idx * 20}, ${120 + idx * 20})`,
+            rotation: `random(-${120 + idx * 10}, ${120 + idx * 10})`,
             duration: 0.12,
             repeat: 14,
             yoyo: true,
@@ -132,44 +136,64 @@ const LotteryPage: React.FC = () => {
   }
 
   const collection = {
-    C1: data?.collectionProgress?.C1 ?? 0,
-    C2: data?.collectionProgress?.C2 ?? 0,
-    J: data?.collectionProgress?.J ?? 0,
-    M: data?.collectionProgress?.M ?? 0,
+    C1: status?.collectionProgress?.C1 ?? 0,
+    C2: status?.collectionProgress?.C2 ?? 0,
+    J: status?.collectionProgress?.J ?? 0,
+    M: status?.collectionProgress?.M ?? 0,
   };
 
   return (
     <div className="lottery-redesign-container" ref={containerRef}>
-      {/* Ball Arena Section */}
-      <div className="ball-arena-container mt-4">
-        <img
-          ref={ball1Ref}
-          src={`${ASSET_PATH}/Mix balls 3.png`}
-          className="mixing-ball ball-1 w-[173px] blur-[2px]"
-          alt=""
-        />
-        <img
-          ref={ball2Ref}
-          src={`${ASSET_PATH}/Mix balls 1.png`}
-          className="mixing-ball ball-2 w-[128px] blur-[2px]"
-          alt=""
-        />
-        <img
-          ref={ball3Ref}
-          src={`${ASSET_PATH}/Mix balls 4.png`}
-          className="mixing-ball ball-3 w-[77px] blur-[2px]"
-          alt=""
-        />
-        <img
-          ref={ball4Ref}
-          src={`${ASSET_PATH}/Mix balls 2.png`}
-          className="mixing-ball ball-4 w-[100px] blur-[2px]"
-          alt=""
-        />
+      {/* Aurora BG: 전체 배경에만 적용, 버튼 중첩 방지 */}
+      <div className="lottery-aurora-bg">
+        <div className="lottery-aurora-blob blob-1" />
+        <div className="lottery-aurora-blob blob-2" />
+        <div className="lottery-aurora-blob blob-3" />
+      </div>
+      <div className="branding-watermark">CC</div>
+
+      {/* 1. Header Stats: Standardized Glassmorphism */}
+      <div className="lottery-stats-row">
+        <div className="lottery-stat-card">
+          <span className="stat-label-small">잔여</span>
+          <span className="stat-value text-sky-400">
+            {status?.token_balance?.toLocaleString() ?? 0}
+          </span>
+        </div>
       </div>
 
-      {/* Lotto Logo Area */}
-      <div className="flex flex-col items-center gap-4 mt-4">
+      {/* Ball Arena Section */}
+      <div className="ball-arena-container mt-4">
+        {/* User Requested Inner Container */}
+        <div className="ball-inner-container">
+          {/* Balls - Increased to 10 for density */}
+          {[
+            { src: "Mix balls 3.png", cls: "ball-1 w-[173px] blur-[2px]" },
+            { src: "Mix balls 1.png", cls: "ball-2 w-[128px] blur-[2px]" },
+            { src: "Mix balls 4.png", cls: "ball-3 w-[77px] blur-[2px]" },
+            { src: "Mix balls 2.png", cls: "ball-4 w-[100px] blur-[2px]" },
+            { src: "Mix balls 1.png", cls: "ball-5" }, // Extra
+            { src: "Mix balls 2.png", cls: "ball-6" }, // Extra
+            { src: "Mix balls 3.png", cls: "ball-7" }, // Extra
+            { src: "Mix balls 4.png", cls: "ball-8" }, // Extra
+            { src: "Mix balls 1.png", cls: "ball-9" }, // Deep Background
+            { src: "Mix balls 2.png", cls: "ball-10" }, // Deep Background
+          ].map((ball, idx) => (
+            <img
+              key={`ball-${idx}`}
+              ref={(el) => {
+                if (el) ballsRef.current[idx] = el;
+              }}
+              src={`${ASSET_PATH}/${ball.src}`}
+              className={`mixing-ball ${ball.cls}`}
+              alt=""
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Lotto Logo Area: Grouped with Arena */}
+      <div className="lotto-logo-wrapper">
         <img
           src={`${ASSET_PATH}/Lotto_Horizontal 1.png`}
           className="lotto-logo-img"
@@ -189,9 +213,10 @@ const LotteryPage: React.FC = () => {
         </div>
 
         <button
-          className={`lotto-play-button ${isPlaying || (data?.token_balance ?? 0) <= 0 ? "disabled" : ""}`}
+          className={`lotto-play-button ${isPlaying || (status?.token_balance ?? 0) <= 0 ? "disabled" : ""}`}
           onClick={isRevealed ? handleReset : handlePlay}
           disabled={isPlaying}
+          /* Aurora 효과 중첩 방지: 버튼 내부 오로라 절대 추가 금지 */
         >
           {isRevealed ? "NEXT GAME" : isPlaying ? "MIXING..." : "PLAY NOW"}
         </button>

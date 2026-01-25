@@ -103,7 +103,7 @@ export default function GamedashPage() {
               
               <div className="magic-stat-row">
                  {/* Live Ticker Integrated Here */}
-                 <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '30px' }}>
+                 <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '32px' }}>
                     <div className="notice-wrapper">
                       {noticeItems.map((text, idx) => (
                         <div key={`notice-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
@@ -142,8 +142,9 @@ export default function GamedashPage() {
               <div className="card-shine" />
               {(() => {
                 const remaining = getGameBadge(game.id);
-                if (typeof remaining !== "number") return null;
-                const label = remaining > 0 ? "READY" : "WAIT";
+                if (typeof remaining !== "number" || game.id === "rocket" || game.id === "ball") return null;
+                // Logic: > 0 means "HOT" (Playable), <= 0 means "보상최고" (Best Reward/Popular)
+                const label = remaining > 0 ? "HOT" : "보상최고";
                 const badgeClass = remaining > 0 ? "badge-hot" : "badge-new";
                 return (
                   <span className={`game-card-badge ${badgeClass}`}>

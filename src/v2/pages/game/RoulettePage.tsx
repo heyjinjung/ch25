@@ -8,52 +8,49 @@ import {
   getV2RouletteStatusStrict,
   playV2Roulette,
 } from "../../api/v1CompatAdapter";
+import "./RouletteRedesign.css";
+import { Loader2 } from "lucide-react";
+
 type RouletteTicketType =
   | "ROULETTE_TICKET"
   | "GOLD_KEY_TICKET"
   | "DIAMOND_TICKET"
   | "TRIAL_TICKET";
-// import { useTheme } from "../../contexts/ThemeContext";
-import { cn } from "../../lib/utils";
-import { Play, Loader2 } from "lucide-react";
-import { getRewardItemLabel } from "../../constants/rewardItems";
 
 const TICKET_TABS: {
   type: RouletteTicketType;
   label: string;
-  color: string;
+  icon: string;
 }[] = [
   {
     type: "ROULETTE_TICKET",
-    label: getRewardItemLabel("ROULETTE_TICKET"),
-    color: "from-purple-600 to-indigo-600",
+    label: "룰렛",
+    icon: "/assets/asset_ticket_green.png",
   },
   {
     type: "GOLD_KEY_TICKET",
-    label: getRewardItemLabel("GOLD_KEY_TICKET"),
-    color: "from-amber-500 to-yellow-500",
+    label: "골드",
+    icon: "/assets/icons/goldkey.png",
   },
   {
     type: "DIAMOND_TICKET",
-    label: getRewardItemLabel("DIAMOND_TICKET"),
-    color: "from-cyan-500 to-sky-500",
+    label: "다이아",
+    icon: "/assets/icons/diakey.png",
   },
   {
     type: "TRIAL_TICKET",
-    label: getRewardItemLabel("TRIAL_TICKET"),
-    color: "from-zinc-600 to-zinc-800",
+    label: "체험",
+    icon: "/assets/asset_ticket_trial.png",
   },
 ];
 
 export default function RoulettePage() {
-  // const { theme } = useTheme(); // Removed unused
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] =
     useState<RouletteTicketType>("ROULETTE_TICKET");
   const [isSpinning, setIsSpinning] = useState(false);
   const [winningSegment, setWinningSegment] = useState<number | null>(null);
-  
-  // Modal State
+
   const [showResultModal, setShowResultModal] = useState(false);
   const [lastWinAmount, setLastWinAmount] = useState(0);
   const [lastWinType, setLastWinType] = useState("POINT");
@@ -96,11 +93,8 @@ export default function RoulettePage() {
       playV2Roulette({ ticket_type: activeTab, bet_multiplier: 1 }),
     onSuccess: (data) => {
       setWinningSegment(data.game_data.segment.slot_index);
-      
-      // Store win data for modal
       setLastWinAmount(data.game_data.segment.reward_amount);
       setLastWinType(data.game_data.segment.reward_type);
-
       setIsSpinning(true);
     },
   });
@@ -109,18 +103,12 @@ export default function RoulettePage() {
     setIsSpinning(false);
     queryClient.invalidateQueries({ queryKey: ["v2-roulette-status"] });
     queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
-
-    // Open Modal
     setShowResultModal(true);
-    
-    // Reset segment logic is handled after modal or next spin, 
-    // but usually we keep the highlight until next spin.
-    // setWinningSegment(null); 
   };
 
   const handleModalClose = () => {
     setShowResultModal(false);
-    setWinningSegment(null); // Reset highlight when user closes modal to start fresh
+    setWinningSegment(null);
   };
 
   const handleSpinClick = () => {
@@ -133,107 +121,80 @@ export default function RoulettePage() {
   };
 
   return (
-    <div className="h-tg w-full max-w-[391px] mx-auto bg-[#121214] text-white flex flex-col items-center overflow-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)] px-4">
+    <div className="roulette-redesign-container">
+      {/* Background Layer */}
+      <div className="roulette-aurora-bg">
+        <div className="roulette-aurora-blob blob-1" />
+        <div className="roulette-aurora-blob blob-2" />
+        <div className="roulette-aurora-blob blob-3" />
+      </div>
+      <div className="branding-watermark">CC</div>
+
       {/* Result Modal */}
-      <RouletteResultModal 
+      <RouletteResultModal
         isOpen={showResultModal}
         onClose={handleModalClose}
         rewardType={lastWinType}
         rewardAmount={lastWinAmount}
       />
 
-      {/* Header Stats - Premium Glassmorphism */}
-      <div className="w-full flex justify-center gap-3 mb-6">
-        <div className="w-[130px] h-[45px] bg-[#1C1C1E]/80 border border-white/5 rounded-[12px] flex items-center justify-center shadow-lg backdrop-blur-md">
-          <span className="text-lg font-black font-mono text-emerald-400 tracking-tight drop-shadow-md">
+      {/* 1. Header Stats: Standardized Glassmorphism */}
+      <div className="roulette-stats-row">
+        <div className="roulette-stat-card">
+          <span className="stat-label-small">잔여</span>
+          <span className="stat-value text-emerald-400">
             {status?.token_balance?.toLocaleString() ?? 0}
           </span>
         </div>
-        <div className="w-[130px] h-[45px] bg-[#1C1C1E]/80 border border-white/5 rounded-[12px] flex items-center justify-center shadow-lg backdrop-blur-md">
-          <span className="text-lg font-black font-mono text-indigo-400 tracking-tight drop-shadow-md">
-            {status?.today_spins ?? 0} <span className="text-zinc-600 text-sm mx-1">/</span> {status?.max_daily_spins ?? 0}
-          </span>
-        </div>
       </div>
 
-      {/* Main Wheel Section - Fixed Aspect Ratio */}
-      <div className="relative w-full flex-1 flex items-center justify-center mb-4 min-h-0">
-        <div className="w-full max-w-[320px] aspect-[292/293]">
-          <RouletteWheel
-            segments={status?.segments || []}
-            isSpinning={isSpinning}
-            selectedIndex={winningSegment ?? undefined}
-            onSpinEnd={handleSpinComplete}
-          />
-        </div>
+      {/* 2. Wheel Section */}
+      <div className="roulette-wheel-wrapper">
+        <RouletteWheel
+          segments={status?.segments || []}
+          isSpinning={isSpinning}
+          selectedIndex={winningSegment ?? undefined}
+          onSpinEnd={handleSpinComplete}
+        />
       </div>
 
-      {/* Control Panel */}
-      <div className="w-full max-w-[360px] space-y-5">
-        {/* Ticket Selector - Neumorphic Depth */}
-        <div className="flex bg-[#0A0A0A] rounded-[20px] p-1.5 border border-white/5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]">
+      {/* 3. Logic & Control Panel */}
+      <div className="roulette-controls">
+        {/* Ticket Selector: Icon-only Neumorphic */}
+        <div className="ticket-selector-grid">
           {availableTabs.map((tab) => (
             <button
               key={tab.type}
               onClick={() => setActiveTab(tab.type)}
-              className={cn(
-                "flex-1 py-3 px-2 rounded-[16px] text-[11px] font-black transition-all duration-300 uppercase tracking-wider relative overflow-hidden",
-                activeTab === tab.type
-                  ? `bg-gradient-to-br ${tab.color} text-white shadow-lg`
-                  : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
-              )}
+              className={`ticket-tab-item ${activeTab === tab.type ? "active" : ""}`}
             >
-              {tab.label}
+              <img src={tab.icon} className="tab-icon" alt={tab.label} />
               {activeTab === tab.type && (
                 <motion.div
-                  layoutId="activeTabGlow"
-                  className="absolute inset-0 bg-white/20 mix-blend-overlay"
+                  layoutId="activeDot"
+                  className="tab-active-indicator"
                 />
               )}
             </button>
           ))}
         </div>
 
-        {/* Spin Button - Premium Action */}
+        {/* Premium Action Button */}
         <button
+          className="roulette-spin-button"
           onClick={handleSpinClick}
           disabled={
             isSpinning ||
             playMutation.isPending ||
             (status?.token_balance ?? 0) <= 0
           }
-          className={cn(
-            "w-full h-[68px] rounded-[24px] font-black text-xl tracking-[0.15em] uppercase transition-all flex items-center justify-center gap-3 relative overflow-hidden group",
-            isSpinning ||
-              playMutation.isPending ||
-              (status?.token_balance ?? 0) <= 0
-              ? "bg-[#1C1C1E] text-zinc-600 cursor-not-allowed border border-white/5"
-              : "bg-[#D2FD9C] hover:bg-[#B8EA81] text-[#0A0A0A] hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(210,253,156,0.15)]",
-          )}
         >
           {playMutation.isPending ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-7 h-7 animate-spin" />
           ) : (
-            <>
-              <div className="w-8 h-8 rounded-full bg-black/10 flex items-center justify-center">
-                 <Play className="w-4 h-4 fill-current ml-0.5" />
-              </div>
-              <span>Spin Now</span>
-            </>
-          )}
-
-          {/* Button Shine Effect - Only when active */}
-          {!isSpinning && !playMutation.isPending && (status?.token_balance ?? 0) > 0 && (
-            <div className="absolute inset-0 overflow-hidden rounded-[24px]">
-               <div className="absolute top-0 left-[-100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] animate-[shimmer_3s_infinite]" />
-            </div>
+            <span>{isSpinning ? "SPINNING..." : "SPIN NOW"}</span>
           )}
         </button>
-
-        <p className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest flex items-center justify-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          System Online • Alpha V2 Build
-        </p>
       </div>
     </div>
   );

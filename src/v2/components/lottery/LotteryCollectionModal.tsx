@@ -208,11 +208,11 @@ const LotteryCollectionModal = ({
             <div className="relative text-center mb-8 z-10">
               <div className="inline-block px-3 py-1 rounded-full border mb-3 bg-[#30E3AA]/10 border-[#30E3AA]/20">
                 <span className="text-[10px] font-black tracking-widest uppercase text-[#30E3AA]">
-                  Secret Puzzle
+                  비밀 퍼즐
                 </span>
               </div>
               <h2 className="text-3xl font-black text-white uppercase tracking-tight italic">
-                Collection
+                모음
               </h2>
               <p className="text-sm text-zinc-500 mt-2 font-medium">
                 퍼즐 조각 모아{" "}

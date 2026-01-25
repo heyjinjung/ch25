@@ -1,8 +1,8 @@
 /* src/v2/pages/game/LotteryRedesign.css */
 
 .lottery-redesign-container {
-    height: auto;
-    min-height: 600px;
+    height: 100vh;
+    /* Strictly 100vh to avoid scroll */
     width: 100%;
     max-width: 391px;
     margin: 0 auto;
@@ -10,14 +10,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: 36px 16px 10px 16px;
+    /* --- The 100/120 Rule & Header Offset --- */
+    padding: var(--header-offset) 16px 120px 16px;
     color: #fff;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
-    --aurora-1: #37EBFF;
-    --aurora-2: #1C6EFF;
-    --aurora-3: #06102F;
+    --aurora-1: #4f8cff;
+    --aurora-2: #1a237e;
+    --aurora-3: #0d133d;
 }
 
 .lottery-aurora-bg {
@@ -25,7 +25,7 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.6;
+    opacity: 0.85;
     overflow: hidden;
 }
 
@@ -34,7 +34,7 @@
     width: 320px;
     height: 320px;
     border-radius: 50%;
-    filter: blur(52px);
+    filter: blur(72px) brightness(1.2) saturate(1.2);
     background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 70%);
     mix-blend-mode: screen;
 }
@@ -59,6 +59,59 @@
     background: radial-gradient(circle at 50% 50%, var(--aurora-3), transparent 70%);
 }
 
+/* Background Watermark Branding */
+.branding-watermark {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 160px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.12);
+    /* Increased visibility */
+    user-select: none;
+    pointer-events: none;
+    z-index: 0;
+    white-space: nowrap;
+    letter-spacing: -0.05em;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Header Stats: Glassmorphism (Standardized) */
+.lottery-stats-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    z-index: 2;
+}
+
+.lottery-stat-card {
+    min-width: 120px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+.stat-label-small {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0 4px;
+}
 
 
 /* Ball Mixing Arena (275x275) */
@@ -84,6 +137,8 @@
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
     overflow: hidden;
+    margin-top: 12px;
+    /* Fixed spacing from header */
 }
 
 .ball-arena-container::before {
@@ -117,42 +172,124 @@
     filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.35)) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.18));
 }
 
+/* Inner Container (User Requested) */
+.ball-inner-container {
+    width: 263px;
+    height: 263px;
+    border-radius: 200px;
+    background: rgba(0, 0, 0, 0.00);
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    z-index: 2;
+    pointer-events: none;
+    /* Center aligns internal absolute balls relative to this container if needed, 
+       but currently balls are absolute relative to parent. 
+       If balls move INSIDE this, we need relative positioning context. */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Updated Ball Positions for density (Widened by ~2px/1%) */
 .mixing-ball.ball-1 {
-    top: 20%;
-    left: 10%;
+    top: 19%;
+    left: 14%;
 }
 
 .mixing-ball.ball-2 {
-    top: 10%;
-    right: 15%;
+    top: 14%;
+    right: 19%;
 }
 
 .mixing-ball.ball-3 {
-    bottom: 25%;
-    left: 20%;
+    bottom: 26%;
+    left: 24%;
 }
 
 .mixing-ball.ball-4 {
-    bottom: 20%;
-    right: 20%;
+    bottom: 21%;
+    right: 24%;
 }
 
-/* Logo & Labels */
+/* Extra Balls (Widened by ~2px/1%) */
+.mixing-ball.ball-5 {
+    top: 41%;
+    left: 9%;
+    width: 90px;
+    filter: blur(1px);
+    opacity: 0.9;
+}
+
+.mixing-ball.ball-6 {
+    top: 51%;
+    right: 9%;
+    width: 110px;
+    filter: blur(3px);
+    opacity: 0.8;
+}
+
+.mixing-ball.ball-7 {
+    bottom: 9%;
+    left: 41%;
+    width: 80px;
+    filter: blur(2px);
+    opacity: 0.9;
+}
+
+.mixing-ball.ball-8 {
+    top: 9%;
+    left: 46%;
+    width: 95px;
+    filter: blur(1px);
+    opacity: 0.85;
+}
+
+.mixing-ball.ball-9 {
+    top: 34%;
+    left: 34%;
+    width: 60px;
+    z-index: -1;
+    opacity: 0.7;
+}
+
+.mixing-ball.ball-10 {
+    bottom: 41%;
+    right: 31%;
+    width: 70px;
+    z-index: -1;
+    opacity: 0.7;
+}
+
+/* Logo Area: Grouped with Arena */
+.lotto-logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-top: -24px;
+    /* Pulled up more for better grouping */
+    z-index: 2;
+}
+
 .lotto-logo-img {
-    width: 275px;
-    height: 50px;
+    width: 240px;
+    /* Slightly reduced for better mobile fit */
+    height: 44px;
     object-fit: contain;
 }
 
-/* Action Section */
+/* Action Section: Centered in remaining space or fixed gap */
 .lottery-action-section {
     width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    margin-top: auto;
+    margin-top: 24px;
+    /* Structured gap instead of auto */
     padding-bottom: 0;
+    z-index: 3;
 }
 
 .lotto-collection-button {
@@ -164,24 +301,26 @@
     color: rgba(255, 255, 255, 0.7);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0.04) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(80, 120, 255, 0.18);
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -6px 14px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 2px 12px 0 rgba(80, 120, 255, 0.10), 0 1.5px 0 rgba(255, 255, 255, 0.10);
+    transition: all 0.18s cubic-bezier(.4, 1.2, .4, 1);
+    outline: none;
     transition: transform 0.2s, box-shadow 0.2s, color 0.2s;
 }
 
 .lotto-collection-button:hover {
-    transform: translateY(-2px);
-    color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px) scale(1.03);
+    color: #fff;
+    background: linear-gradient(90deg, rgba(80, 120, 255, 0.13) 0%, rgba(255, 255, 255, 0.08) 100%);
+    box-shadow: 0 6px 18px 0 rgba(80, 120, 255, 0.13), 0 2px 0 rgba(255, 255, 255, 0.13);
 }
 
 .lotto-play-button {
     width: 266px;
     height: 55px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.53) 0%, rgba(28, 110, 255, 0.26) 100%);
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -190,19 +329,24 @@
     font-weight: 700;
     color: #fff;
     cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s, filter 0.2s;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -6px 14px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(100deg, #4f8cff 0%, #1a237e 60%, #00eaff 100%);
+    border: none;
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.18), 0 1.5px 0 rgba(255, 255, 255, 0.10);
+    filter: none;
+    transition: all 0.18s cubic-bezier(.4, 1.2, .4, 1);
+    outline: none;
 }
 
 .lotto-play-button:hover {
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    filter: saturate(1.05);
+    transform: translateY(-3px) scale(1.04);
+    background: linear-gradient(100deg, #6fa8ff 0%, #283593 60%, #00eaff 100%);
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.22), 0 2px 0 rgba(255, 255, 255, 0.13);
+    filter: brightness(1.08) saturate(1.15);
 }
 
 .lotto-play-button:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
+    filter: brightness(0.95) saturate(0.95);
 }
 
 .lotto-play-button.disabled {
@@ -318,6 +462,7 @@
     line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }

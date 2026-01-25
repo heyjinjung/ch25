@@ -181,6 +181,8 @@ export default function ExchangePage() {
 
   return (
     <div className="exchange-page-v2" ref={containerRef}>
+      <div className="branding-watermark">CC</div>
+      
       {/* Background Dot Pattern (Parallax) */}
       <div className="shop-dot-pattern" ref={dotRef} />
 

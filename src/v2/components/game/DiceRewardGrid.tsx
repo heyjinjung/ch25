@@ -21,24 +21,39 @@ export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
 
   const cfg = status!.reward_config!;
 
-  const rewards = [
+  type Reward = {
+    label: string;
+    type: string;
+    amount: number;
+    textColor: string;
+    cardClass: string;
+    sign: string;
+  };
+
+  const rewards: Reward[] = [
     {
-      label: "WIN",
+      label: "승리",
       type: cfg.win_reward_type ?? "POINT",
       amount: cfg.win_reward_amount ?? 0,
-      color: "text-emerald-400",
+      textColor: "text-[#37EBFF]", // Mint
+      cardClass: "reward-card-win",
+      sign: "+",
     },
     {
-      label: "DRAW",
+      label: "무승부",
       type: cfg.draw_reward_type ?? "POINT",
       amount: cfg.draw_reward_amount ?? 0,
-      color: "text-amber-400",
+      textColor: "text-amber-400", // Gold
+      cardClass: "reward-card-draw",
+      sign: "+",
     },
     {
-      label: "LOSE",
+      label: "패배",
       type: cfg.lose_reward_type ?? "NONE",
       amount: cfg.lose_reward_amount ?? 0,
-      color: "text-red-400",
+      textColor: "text-[#FF2A6D]", // Pink/Red
+      cardClass: "reward-card-lose",
+      sign: "-",
     },
   ];
 
@@ -47,39 +62,31 @@ export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
       {rewards.map((reward, idx) => (
         <div
           key={idx}
-          className="flex flex-col items-center justify-center p-3 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md relative overflow-hidden"
+          className={`dice-reward-card ${reward.cardClass} flex flex-col items-center justify-center p-3 relative overflow-hidden h-[100px]`}
         >
-          {/* Label Badge */}
+          {/* Label (Top) */}
           <div
-            className={`text-[10px] font-black ${reward.color} tracking-wider mb-1`}
+            className={`text-[16px] font-black ${reward.textColor} tracking-widest mb-2 font-['Pretendard']`}
           >
             {reward.label}
           </div>
 
-          {/* Icon/Type */}
-          <div className="flex flex-col items-center gap-1">
-            {reward.type !== "NONE" && (
-              <img
-                src="/assets/asset_coin_gold.png"
-                alt="coin"
-                className="w-5 h-5 object-contain"
-              />
+          {/* Amount + Unit (Bottom) */}
+          <div className="flex items-end gap-1">
+            {reward.type === "NONE" ? (
+              <span className="text-zinc-400 text-sm">없음</span>
+            ) : (
+              <>
+                <span className="text-[18px] font-bold text-white tracking-tighter">
+                  {reward.sign}
+                  {reward.amount.toLocaleString()}
+                </span>
+                <span className="text-[14px] text-white/80 font-bold mb-[2px]">
+                  원
+                </span>
+              </>
             )}
-            <div className="text-white text-xs font-bold text-center leading-tight opacity-90">
-              {/* Simple logic: if type is NONE, show 'No Reward' */}
-              {reward.type === "NONE" ? "위로금 없음" : "원"}
-            </div>
           </div>
-
-          {/* Amount (if valid) */}
-          {reward.amount > 0 && reward.type !== "NONE" && (
-            <div className="text-[13px] font-black text-white mt-0.5">
-              +{reward.amount.toLocaleString()}
-            </div>
-          )}
-
-          {/* Subtle Shine */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
         </div>
       ))}
     </div>

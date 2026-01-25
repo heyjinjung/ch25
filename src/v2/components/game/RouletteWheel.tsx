@@ -179,14 +179,24 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
             // Calculate rotation: start from top (0deg) + segment offset
             const rotateDeg = (360 / segmentCount) * index + (360 / segmentCount / 2);
             
+            // Radial Alignment Logic:
+            // 1. Point towards center: rotate(deg + 90deg)
+            // 2. Position: Move outwards from center using translateY (negative)
             return (
               <div
                 key={`lbl-${index}`}
                 className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
                 style={{ transform: `rotate(${rotateDeg}deg)` }}
               >
-                <div className="translate-y-[-100px]">
-                  <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
+                <div 
+                   className="absolute top-1/2 left-1/2 flex items-center justify-center"
+                   style={{ 
+                     transform: `translate(-50%, -50%) rotate(90deg) translate(-75px, 0px)` 
+                     // rotate(90deg): Text becomes radial (perpendicular) to radius
+                     // translate(-75px, 0px): Push text towards the Rim (negative X after rotation goes "Up" relative to text)
+                   }}
+                >
+                  <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap tracking-wide">
                     {segment?.label ?? ""}
                   </span>
                 </div>

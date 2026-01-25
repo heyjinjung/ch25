@@ -105,18 +105,13 @@
 
 .notice-container {
     width: 200px;
-    /* Requested width 200 */
-    height: 100px;
-    /* Requested height 100 */
+    height: 32px;
+    /* Strict window height */
     overflow: hidden;
     position: relative;
     background: rgba(0, 0, 0, 0.4);
-    /* Slightly deeper overlay for text clarity */
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    padding: 4px !important;
-    /* Requested padding 4 */
+    border-radius: 16px;
+    padding: 0 10px !important;
     flex-shrink: 0;
 }
 
@@ -243,7 +238,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: auto;
+    margin-top: 4px;
+    /* Downward adjustment to avoid title overlap */
 }
 
 .magic-stat-badge {

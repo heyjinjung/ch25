@@ -1,0 +1,68 @@
+/* src/v2/pages/game/TeamBattleRedesign.css */
+
+.team-battle-redesign-container {
+    height: 100vh;
+    width: 100%;
+    max-width: 391px;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /* align-items: center; -> Let children control width, mostly full width */
+
+    /* --- The 100/120 Rule & Header Offset --- */
+    padding-top: var(--header-offset);
+    padding-bottom: 120px;
+    /* Safe bottom area */
+
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    overflow-y: auto;
+    /* Allow internal scroll if content overflows, but container is fixed */
+    overflow-x: hidden;
+    background-color: #000;
+    /* Fallback */
+}
+
+/* Background Watermark Branding */
+.branding-watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 160px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.20);
+    /* Increased visibility as requested */
+    user-select: none;
+    pointer-events: none;
+    z-index: 0;
+    white-space: nowrap;
+    letter-spacing: -0.05em;
+    font-family: 'Inter', sans-serif;
+}
+
+/* Glassmorphism Cards - Subtle, No Glow */
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    /* Simple drop shadow, no glow */
+    border-radius: 16px;
+}
+
+/* Modal Specific Glass */
+.glass-modal {
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Scrollbar Hide for Container */
+.team-battle-redesign-container::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}

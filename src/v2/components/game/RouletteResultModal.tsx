@@ -84,10 +84,10 @@ export default function RouletteResultModal({
 
             <div className="flex flex-col items-center gap-2 z-10">
               <span className="text-sm font-bold text-[#D2FD9C] tracking-[0.2em] uppercase drop-shadow-[0_0_10px_rgba(210,253,156,0.5)]">
-                Congratulation
+                축하합니다
               </span>
               <h2 className="text-3xl font-black text-white italic tracking-wider drop-shadow-lg">
-                YOU WIN!
+                당첨!
               </h2>
             </div>
 
@@ -113,7 +113,7 @@ export default function RouletteResultModal({
               className="w-full h-14 bg-[#D2FD9C] hover:bg-[#B8EA81] text-black font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(210,253,156,0.3)] transition-all active:scale-95 z-10"
             >
               <RotateCw className="w-5 h-5" />
-              <span className="tracking-wider">SPIN AGAIN</span>
+              <span className="tracking-wider">다시 돌리기</span>
             </button>
           </motion.div>
         </div>

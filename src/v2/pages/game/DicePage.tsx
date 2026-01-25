@@ -156,11 +156,20 @@ const DicePage = () => {
 
   return (
     <div className="dice-page-v2" ref={containerRef}>
+      {/* 잔여 카드 추가: 룰렛과 동일, stat-value만 레드계열 */}
+      <div className="roulette-stat-card dice-stat-card">
+        <span className="stat-label-small">잔여</span>
+        <span className="stat-value text-red-400">
+          {data?.token_balance ?? 0}
+        </span>
+      </div>
       <div className="dice-aurora-bg" ref={auroraRef}>
         <div className="dice-aurora-blob blob-1" />
         <div className="dice-aurora-blob blob-2" />
         <div className="dice-aurora-blob blob-3" />
       </div>
+
+      <div className="branding-watermark">CC</div>
 
       <div className="dice-main-container">
         {/* Battle Section */}
@@ -200,22 +209,22 @@ const DicePage = () => {
           <DiceRewardGrid status={data} />
         </div>
 
-        {/* Item Board (Preparing) - Explicitly added as separate section */}
-        <div className="w-full mt-2">
-          <div className="item-board-card">
-            <span className="item-board-text">아이템 준비중...</span>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="dice-action-area">
+        {/* Action Buttons (Moved Up) */}
+        <div className="dice-action-area w-full">
           <button
-            className="spin-button-v2"
+            className="spin-button-v2 w-full"
             onClick={rollDice}
             disabled={isRolling || !isPlayable}
           >
             {isRolling ? "ROLLING..." : "SPIN"}
           </button>
+        </div>
+
+        {/* Item Board (Preparing) - Moved Down */}
+        <div className="w-full mt-2">
+          <div className="item-board-card">
+            <span className="item-board-text">아이템 준비중...</span>
+          </div>
         </div>
       </div>
 

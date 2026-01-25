@@ -1,21 +1,42 @@
 /* src/v2/pages/shop/ExchangeRedesign.css */
 
 .exchange-page-v2 {
-    background: linear-gradient(180deg, rgba(80, 153, 149, 0.00) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%);
-    width: 390px;
-    height: 100%;
-    min-height: 100dvh;
+    background: linear-gradient(180deg, rgba(80, 153, 149, 0) 0%, rgba(68, 127, 72, 0.24) 50.96%, #396664 100%);
+    width: 100%;
+    max-width: 391px;
+    height: 100vh;
+    height: 100dvh;
     margin: 0 auto;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow-x: hidden;
-    color: #fff;
-    padding-top: 60px;
-    /* Reset to standard header offset to fix overlap */
-    /* Header + LiveFeed */
+    /* --- The 100/120 Rule & Header Offset --- */
+    padding-top: var(--header-offset);
+    padding-bottom: var(--nav-offset);
+    padding-left: 8px;
+    padding-right: 8px;
     box-sizing: border-box;
+    overflow: hidden;
+    /* Prevent body scroll */
+    color: #fff;
+}
+
+/* Background Watermark Branding (Directly from Design Guide) */
+.branding-watermark {
+    position: absolute;
+    top: 32%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 160px;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.12);
+    user-select: none;
+    pointer-events: none;
+    z-index: 0;
+    white-space: nowrap;
+    letter-spacing: -0.05em;
+    font-family: 'Inter', sans-serif;
 }
 
 /* Background Dot Pattern */
@@ -29,15 +50,27 @@
     opacity: 0.2;
 }
 
-/* Shop Main Content Area */
+/* Shop Main Content Area - Scrollable internal area */
 .shop-main-area {
     display: flex;
-    width: 365px;
+    width: 100%;
+    max-width: 391px;
     flex: 1;
-    padding: 10px 16px;
+    padding: 10px 0;
+    /* Horizontal padding inherited from parent */
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+    overflow-y: auto;
+    position: relative;
+    /* Maintain layer stack */
+    z-index: 1;
+    scrollbar-width: none;
+    /* Hide scrollbar for clean look */
+}
+
+.shop-main-area::-webkit-scrollbar {
+    display: none;
 }
 
 /* Shop/Inventory Tabs */
@@ -81,7 +114,8 @@
 
 /* Event Banner */
 .shop-event-banner {
-    width: 360px;
+    width: 100%;
+    max-width: 360px;
     height: 110px;
     border-radius: 50px;
     background: rgba(98, 91, 113, 0.38);
@@ -125,7 +159,8 @@
 /* Products Grid Section */
 .shop-products-section {
     display: flex;
-    width: 360px;
+    width: 100%;
+    max-width: 360px;
     padding-top: 0;
     flex-direction: column;
     align-items: center;
@@ -147,7 +182,8 @@
     display: grid;
     grid-template-columns: repeat(4, 74px);
     grid-template-rows: repeat(2, 74px);
-    width: 360px;
+    width: 100%;
+    max-width: 360px;
     align-items: center;
     gap: 20px 12px;
     justify-content: center;
@@ -173,7 +209,8 @@
 .shop-main-card {
     width: 100.568px;
     height: 140.903px;
-    padding: 7px 0 8px 2px;
+    padding: 7px 0 8px 0;
+    /* Removed 2px left padding to fix centering */
     justify-content: flex-end;
     background: url('/v2/assets/06shop/VectorMAIN.svg') lightgray 50% / contain no-repeat, linear-gradient(180deg, rgba(80, 150, 84, 0.00) 0%, rgba(42, 91, 46, 0.04) 100%);
     filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.25));
