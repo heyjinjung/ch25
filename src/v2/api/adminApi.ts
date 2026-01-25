@@ -1522,6 +1522,19 @@ const SEGMENT_COLORS = [
   "#3B82F6", // blue
 ];
 
+const normalizeRouletteTicketType = (raw: string): string => {
+  const value = String(raw || "")
+    .trim()
+    .toUpperCase();
+  const mapping: Record<string, string> = {
+    ROULETTE_COIN: "ROULETTE_TICKET",
+    GOLD_KEY: "GOLD_KEY_TICKET",
+    DIAMOND_KEY: "DIAMOND_TICKET",
+    TRIAL_TOKEN: "TRIAL_TICKET",
+  };
+  return mapping[value] || value || "ROULETTE_TICKET";
+};
+
 export const getRouletteConfigs = async (): Promise<
   AdminRouletteConfigDto[]
 > => {
@@ -1534,7 +1547,9 @@ export const getRouletteConfigs = async (): Promise<
     gameType: "ROULETTE" as const,
     name: config.name,
     grade: config.grade,
-    ticketType: config.ticketType ?? config.ticket_type ?? "ROULETTE_TICKET",
+    ticketType: normalizeRouletteTicketType(
+      config.ticketType ?? config.ticket_type ?? "ROULETTE_TICKET",
+    ),
     maxDailySpins: config.maxDailySpins ?? config.max_daily_spins ?? 0,
     isActive: config.isActive ?? config.is_active ?? false,
     segments: config.segments.map((seg) => ({

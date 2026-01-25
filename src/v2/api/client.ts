@@ -46,7 +46,9 @@ export const v2Client = axios.create({
 v2Client.interceptors.request.use((config) => {
   const pathname =
     typeof window !== "undefined" ? window.location.pathname : "";
-  const isV2AdminPath = pathname.startsWith("/admin");
+  const url = String(config.url ?? "");
+  const isV2AdminPath =
+    pathname.startsWith("/admin") || url.startsWith("/api/v2/admin/");
 
   const token = isV2AdminPath
     ? getAdminToken() ||
@@ -58,8 +60,6 @@ v2Client.interceptors.request.use((config) => {
       (typeof localStorage !== "undefined"
         ? localStorage.getItem("token")
         : null);
-  const url = String(config.url ?? "");
-
   // Skip auth for public endpoints if any (currently mostly auth'd)
   if (
     url.endsWith("/api/v2/auth/token") ||

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
+import logging
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
@@ -28,6 +29,7 @@ from app.v2.schemas.v2_admin_message import V2MessageCreate, V2MessageResponse
 from app.v2.services.admin_message_service import V2AdminMessageService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/marketing/messages", response_model=list[V2MessageResponse])
@@ -57,6 +59,10 @@ def create_admin_marketing_message(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ) -> V2MessageResponse:
     admin_id, _admin_role = admin_info
+    logger.info(
+        "V2 admin message create: start",
+        extra={"admin_id": admin_id, "target_type": payload.target_type, "target_value": payload.target_value},
+    )
 
     if payload.target_type != "ALL" and not (payload.target_value and payload.target_value.strip()):
         raise HTTPException(status_code=400, detail="TARGET_VALUE_REQUIRED")
@@ -82,12 +88,16 @@ def create_admin_marketing_message(
         target_value=payload.target_value,
         channels=payload.channels,
     )
-    V2AdminMessageService.fan_out_message(
+    fanout_count = V2AdminMessageService.fan_out_message(
         db,
         message_id=msg.id,
         target_type=payload.target_type,
         target_value=payload.target_value,
         resolved_user_ids=resolved_user_ids,
+    )
+    logger.info(
+        "V2 admin message create: fanout",
+        extra={"message_id": msg.id, "fanout_count": fanout_count},
     )
     return msg
 

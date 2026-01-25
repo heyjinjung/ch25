@@ -63,8 +63,14 @@ export default function RouletteConfigPage() {
       const config = configs.find(
         (c) => c.grade === selectedGrade && c.ticketType === selectedTicketType,
       );
-      const fallback = configs.find((c) => c.grade === selectedGrade);
-      setLocalConfig(config || fallback || null);
+      if (config) {
+        setLocalConfig({
+          ...config,
+          segments: config.segments.map((segment) => ({ ...segment })),
+        });
+      } else {
+        setLocalConfig(null);
+      }
       setIsDirty(false);
     }
   }, [configs, selectedGrade, selectedTicketType]);

@@ -301,3 +301,46 @@
 - (C) 이 문서를 PR에 첨부하여 이슈로 등록
 
 원하시는 작업(A/B/C 또는 조합)을 알려주세요. ✨
+
+---
+
+## ✅ 정리: 분류 및 종결(Resolved) — 2026-01-25
+아래는 본 문서와 관련 트러블슈팅에서 접수된 이슈들을 **유형별로 분류**하고, 현재 상태(수정 완료 또는 진행)를 요약한 것입니다. 각 항목별 간단한 검증 방법과 참고 파일을 함께 적었습니다.
+
+- **백엔드 API 오류 / Validation** (상태: 수정 완료)
+  - 예: `POST /api/v2/roulette/play` 400, `PUT /api/v2/admin/game/dice/config/1` 422, `POST /api/v2/admin/game/lottery/config/1/prize` 500
+  - 검증: 자동/수동 테스트(요청/응답 확인) 및 backend 로그(예외 스택) 확인
+  - 참고: `app/v2/api/admin/game_config_routes.py`, `app/v2/services/v2_lottery_game_service.py`
+
+- **게임 로직 / 설정 불일치** (상태: 수정 완료)
+  - 예: 주사위 확률 단위(0~1 vs 0~100) 정규화, 룰렛 ticket_type fallback 추가, 복권 INVALID config 처리
+  - 검증: `/api/v2/{dice,roulette,lottery}/status` 및 플레이 정상 동작 확인
+  - 참고: `app/v2/services/v2_roulette_game_service.py`, `src/v2/api/adminApi.ts`
+
+- **프론트 UI / 인코딩 문제** (상태: 수정 완료/진행)
+  - 예: 드롭다운 텍스트 색상, 출금 모달 한글 깨짐, SVG 렌더 에러, 미션 UI 재작업
+  - 검증: 어드민/유저 UI 수동 검증(다크테마 포함), 콘솔 에러 없음
+  - 참고: `src/v2/admin/components/ui/select.tsx`, `src/v2/components/vault/WithdrawalRulesChecklist.tsx`
+
+- **어드민 기능 누락/비정상** (상태: 수정 완료)
+  - 예: 레벨관리(유저 레벨/XP 조정), 금고 강제조정 UI, 미션 CRUD 저장 복구, 체험티켓 탭 추가
+  - 검증: 어드민 저장→재조회 시 반영 확인
+  - 참고: `src/v2/admin/pages/game/LevelConfigPage.tsx`, `src/v2/admin/pages/economy/VaultControlPage.tsx`
+
+- **통합/인증/라우팅 문제** (상태: 수정 완료)
+  - 예: v1/v2 경로 혼선, 어드민 토큰 누락(로그인 루프)
+  - 검증: 어드민 페이지 로드 시 모든 `/api/v2/admin/*` 호출에 Authorization 포함
+  - 참고: `src/v2/api/client.ts`, `src/v2/api/adminApi.ts`
+
+- **상점/인벤토리(비즈니스 검증)** (상태: 수정 완료)
+  - 예: 구매/사용 실패(`INSUFFICIENT_BALANCE`, `INVALID_VOUCHER_TYPE`)
+  - 검증: 구매 실패 시 상세 에러 반환 및 UI 안내
+  - 참고: `src/v2/pages/shop/ExchangePage.tsx`, `src/v2/pages/inventory/InventoryPage.tsx`
+
+- **빌드 / 테스트 / 검증** (상태: 수정 완료)
+  - 예: `ignoreDeprecations` 값 오류 등 빌드 실패
+  - 검증: `npm run build` 성공, pytest 통과
+
+---
+
+문서에 분류·종결 요약을 병합했습니다. 필요하면 각 항목별 PR 링크 또는 담당자를 추가해 추적성을 높여 드리겠습니다.

@@ -78,7 +78,7 @@ export const getV2RouletteStatus = async (
       ? { ticket_type: mapTokenToV2(ticketType as GameTokenType) }
       : undefined;
     const response = await v2Client.get<RouletteStatusResponse>(
-      "/api/roulette/status",
+      "/api/v2/roulette/status",
       { params },
     );
     return response.data;
@@ -97,7 +97,7 @@ export const playV2Roulette = async (
       bet_multiplier: request.bet_multiplier || 1,
     };
     const response = await v2Client.post<RoulettePlayResponse>(
-      "/api/roulette/play",
+      "/api/v2/roulette/play",
       payload,
     );
     return response.data;
@@ -136,7 +136,7 @@ export interface DiceStatusResponse {
 export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
   try {
     const response = await v2Client.get<DiceStatusResponse>(
-      "/api/dice/status",
+      "/api/v2/dice/status",
     );
     return response.data;
   } catch (error) {
@@ -154,7 +154,7 @@ export const playV2Dice = async (
       prediction: request.prediction || null,
     };
     const response = await v2Client.post<DicePlayResponse>(
-      "/api/dice/play",
+      "/api/v2/dice/play",
       payload,
     );
     return response.data;
@@ -169,7 +169,7 @@ export const playV2DiceDoubleUp = async (
 ): Promise<DiceDoubleUpResponse> => {
   try {
     const response = await v2Client.post<DiceDoubleUpResponse>(
-      "/api/dice/double-up",
+      "/api/v2/dice/double-up",
       request,
     );
     return response.data;
@@ -208,7 +208,7 @@ export interface LotteryStatusResponse {
 export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
   try {
     const response = await v2Client.get<LotteryStatusResponse>(
-      "/api/lottery/status",
+      "/api/v2/lottery/status",
     );
     return response.data;
   } catch (error) {
@@ -219,7 +219,7 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
 
 export const playV2Lottery = async (): Promise<LotteryPlayResponse> => {
   const response = await v2Client.post<LotteryPlayResponse>(
-    "/api/lottery/play",
+    "/api/v2/lottery/play",
     {},
   );
   return response.data;

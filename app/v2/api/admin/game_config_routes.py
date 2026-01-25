@@ -9,6 +9,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.v2.models.v2_dice import V2DiceConfig as DiceConfig
 from app.v2.models.v2_lottery import V2LotteryConfig as LotteryConfig, V2LotteryPrize as LotteryPrize
 from app.v2.models.v2_roulette import V2RouletteConfig as RouletteConfig, V2RouletteSegment as RouletteSegment
+from app.models.roulette import RouletteConfig as LegacyRouletteConfig
 from app.v2.services import V2AdminAuditService
 from app.v2.schemas.v2_admin_game import (
     DiceConfigDto,
@@ -122,6 +123,19 @@ def _normalize_roulette_grade_for_dto(value: object) -> str:
     return "COMMON"
 
 
+def _normalize_roulette_ticket_type_for_v2(value: object) -> str:
+    raw = str(value or "").strip().upper()
+    mapping = {
+        "ROULETTE_COIN": "ROULETTE_TICKET",
+        "GOLD_KEY": "GOLD_KEY_TICKET",
+        "DIAMOND_KEY": "DIAMOND_TICKET",
+        "TRIAL_TOKEN": "TRIAL_TICKET",
+    }
+    normalized = mapping.get(raw, raw)
+    allowed = {"ROULETTE_TICKET", "GOLD_KEY_TICKET", "DIAMOND_TICKET", "TRIAL_TICKET"}
+    return normalized if normalized in allowed else "ROULETTE_TICKET"
+
+
 @router.get("/game/roulette/configs", response_model=list[RouletteConfigDto])
 def get_roulette_configs(
     db: Session = Depends(get_db),
@@ -133,6 +147,52 @@ def get_roulette_configs(
         .order_by(RouletteConfig.grade)
         .all()
     )
+
+    if not configs:
+        legacy_configs = (
+            db.query(LegacyRouletteConfig)
+            .options(selectinload(LegacyRouletteConfig.segments))
+            .all()
+        )
+        existing_keys: set[tuple[str, str]] = set()
+        for legacy in legacy_configs:
+            v2_grade = _normalize_roulette_grade_for_dto(legacy.grade)
+            v2_ticket = _normalize_roulette_ticket_type_for_v2(legacy.ticket_type)
+            key = (v2_grade, v2_ticket)
+            if key in existing_keys:
+                continue
+            existing_keys.add(key)
+            new_config = RouletteConfig(
+                name=legacy.name,
+                grade=v2_grade,
+                ticket_type=v2_ticket,
+                is_active=legacy.is_active,
+                max_daily_spins=legacy.max_daily_spins,
+            )
+            db.add(new_config)
+            db.flush()
+            segments = [
+                RouletteSegment(
+                    config_id=new_config.id,
+                    slot_index=seg.slot_index,
+                    label=seg.label,
+                    weight=seg.weight,
+                    reward_type=_normalize_reward_type_for_write(seg.reward_type),
+                    reward_amount=seg.reward_amount,
+                    is_jackpot=seg.is_jackpot,
+                )
+                for seg in sorted(legacy.segments, key=lambda x: x.slot_index)
+            ]
+            if segments:
+                db.add_all(segments)
+        if legacy_configs:
+            db.commit()
+        configs = (
+            db.query(RouletteConfig)
+            .options(selectinload(RouletteConfig.segments))
+            .order_by(RouletteConfig.grade)
+            .all()
+        )
 
     result = []
     for config in configs:
