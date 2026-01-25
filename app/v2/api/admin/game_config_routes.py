@@ -509,7 +509,7 @@ def get_lottery_configs(
                 name=config.name,
                 is_active=config.is_active,
                 max_daily_plays=config.max_daily_tickets,
-                puzzle_piece_probability=0.0,
+                puzzle_piece_probability=config.puzzle_piece_probability,
                 prizes=prizes_dto,
                 created_at=config.created_at,
                 updated_at=config.updated_at,

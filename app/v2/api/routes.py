@@ -53,7 +53,7 @@ from app.v2.models.v2_admin_message import V2AdminMessageInbox
 from app.v2.models.v2_ticket_zero_log import V2TicketZeroLog
 from app.core.security import decode_access_token
 from app.core.config import get_settings
-from app.core.exceptions import NoFeatureTodayError
+from app.core.exceptions import InvalidConfigError, NoFeatureTodayError
 
 router = APIRouter(tags=["v2-games"])
 _feature_service = FeatureService()
@@ -160,13 +160,32 @@ def _map_v2_ticket_to_legacy(token_value: str) -> GameTokenType:
     return mapping.get(token_value, GameTokenType.ROULETTE_COIN)
 
 
+def _normalize_roulette_ticket_type(value: str | None) -> str:
+    raw = str(value or "").strip().upper()
+    if not raw:
+        raw = "ROULETTE_TICKET"
+    normalized = _map_legacy_token_to_v2(raw)
+    allowed = {"ROULETTE_TICKET", "GOLD_KEY_TICKET", "DIAMOND_TICKET", "TRIAL_TICKET"}
+    if normalized not in allowed:
+        raise HTTPException(status_code=400, detail="INVALID_TICKET_TYPE")
+    return normalized
+
+
 @router.get("/roulette/status", response_model=RouletteStatusResponse)
 def roulette_status(
     ticket_type: str = GameTokenType.ROULETTE_COIN.value,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RouletteStatusResponse:
-    return _v2_roulette_game_service.get_status(db=db, user_id=user_id, ticket_type=ticket_type)
+    normalized = _normalize_roulette_ticket_type(ticket_type)
+    try:
+        return _v2_roulette_game_service.get_status(
+            db=db,
+            user_id=user_id,
+            ticket_type=normalized,
+        )
+    except InvalidConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc.detail)) from exc
 
 
 @router.post("/roulette/play", response_model=RoulettePlayResponse)
@@ -175,8 +194,15 @@ def roulette_play(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> RoulettePlayResponse:
-    ticket_type = payload.ticket_type if payload else GameTokenType.ROULETTE_COIN.value
-    return _v2_roulette_game_service.play(db=db, user_id=user_id, ticket_type=ticket_type)
+    normalized = _normalize_roulette_ticket_type(payload.ticket_type if payload else None)
+    try:
+        return _v2_roulette_game_service.play(
+            db=db,
+            user_id=user_id,
+            ticket_type=normalized,
+        )
+    except InvalidConfigError as exc:
+        raise HTTPException(status_code=400, detail=str(exc.detail)) from exc
 
 
 @router.get("/dice/status", response_model=DiceStatusResponse)

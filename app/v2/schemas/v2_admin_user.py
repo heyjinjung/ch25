@@ -208,6 +208,17 @@ class UserMissionHistoryDto(BaseModel):
     rewardClaimed: bool
 
 
+class UserMissionProgressUpdateRequest(BaseModel):
+    currentValue: int = Field(..., ge=0)
+
+
+class UserMissionRewardClaimResponse(BaseModel):
+    success: bool
+    message: str
+    rewardType: Optional[str] = None
+    rewardAmount: Optional[int] = None
+
+
 class TicketLogDto(BaseModel):
     id: int
     userId: int

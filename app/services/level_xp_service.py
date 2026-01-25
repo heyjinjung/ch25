@@ -7,7 +7,6 @@ from typing import Any, Dict, List
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.game_wallet import GameTokenType
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.v2.models.v2_level_reward import V2LevelRewardTable
 from app.services.reward_service import RewardService
@@ -15,6 +14,19 @@ from app.services.reward_service import RewardService
 
 class LevelXPService:
     """Maintain user-level XP and issue rewards idempotently."""
+
+    LEGACY_REWARD_TYPE_MAP = {
+        "TICKET_ROULETTE": "ROULETTE_TICKET",
+        "TICKET_DICE": "DICE_TICKET",
+        "TICKET_LOTTERY": "LOTTERY_TICKET",
+        "ROULETTE_COIN": "ROULETTE_TICKET",
+        "DICE_TOKEN": "DICE_TICKET",
+        "TRIAL_TOKEN": "TRIAL_TICKET",
+        "GOLD_KEY": "GOLD_KEY_TICKET",
+        "DIAMOND_KEY": "DIAMOND_TICKET",
+        "DIAMOND_KEY_FRAGMENT": "DIAMOND_FRAGMENT",
+        "VAULT": "POINT",
+    }
 
     # [DEPRECATED] Hardcoded level rewards - DISABLED.
     # SeasonPass (DB-configured via Admin) is the sole source of truth for level rewards.
@@ -61,9 +73,10 @@ class LevelXPService:
                     {
                         "level": r.level,
                         "required_xp": r.required_xp,
-                        "reward_type": r.reward_type,
+                        "reward_type": self._normalize_reward_type(r.reward_type),
+                        "reward_amount": r.reward_amount,
                         "reward_payload": r.reward_payload or {},
-                        "auto_grant": True # V2 standard defaults to auto
+                        "auto_grant": True,  # V2 standard defaults to auto
                     }
                     for r in rows
                 ]
@@ -80,6 +93,13 @@ class LevelXPService:
 
     def __init__(self) -> None:
         self.reward_service = RewardService()
+
+        @classmethod
+        def _normalize_reward_type(cls, value: str | None) -> str:
+            if not value:
+                return "NONE"
+            normalized = str(value).upper()
+            return cls.LEGACY_REWARD_TYPE_MAP.get(normalized, normalized)
 
     def _get_or_create_progress(self, db: Session, user_id: int) -> UserLevelProgress:
         progress = db.get(UserLevelProgress, user_id)
@@ -141,52 +161,61 @@ class LevelXPService:
             if existing:
                 continue
                 
-            reward_log = UserLevelRewardLog(
-                user_id=user_id,
-                level=row["level"],
-                reward_type=row["reward_type"],
-                reward_payload=row["reward_payload"],
-                auto_granted=row["auto_grant"],
-            )
+                reward_type = self._normalize_reward_type(row["reward_type"])
+                reward_payload = dict(row.get("reward_payload") or {})
+                reward_amount = int(row.get("reward_amount") or 0)
+                if reward_amount <= 0:
+                    reward_amount = int(reward_payload.get("amount") or reward_payload.get("tickets") or 0)
+                reward_payload = {
+                    **reward_payload,
+                    "reward_amount": reward_amount,
+                }
+
+                reward_log = UserLevelRewardLog(
+                    user_id=user_id,
+                    level=row["level"],
+                    reward_type=reward_type,
+                    reward_payload=reward_payload,
+                    auto_granted=row["auto_grant"],
+                )
             db.add(reward_log)
             achieved.append(
                 {
                     "level": row["level"],
-                    "reward_type": row["reward_type"],
-                    "reward_payload": row["reward_payload"],
+                        "reward_type": reward_type,
+                        "reward_amount": reward_amount,
+                        "reward_payload": reward_payload,
                     "auto_granted": row["auto_grant"],
                 }
             )
             # Auto grant only for supported reward types; non-blocking
             if row["auto_grant"]:
-                reward_meta = {"source": source, "level": row["level"], **(row["reward_payload"] or {})}
+                    reward_meta = {"source": source, "level": row["level"], **reward_payload}
                 try:
-                    if row["reward_type"].startswith("COUPON"):
-                        self.reward_service.grant_coupon(db, user_id=user_id, coupon_type=row["reward_type"], meta=reward_meta)
-                    elif row["reward_type"].startswith("TICKET"):
-                        ticket_map = {
-                            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
-                            "TICKET_DICE": GameTokenType.DICE_TOKEN,
-                            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
-                        }
-                        token_type = ticket_map.get(row["reward_type"])
-                        payload = row.get("reward_payload") or {}
-                        amount = payload.get("tickets") or payload.get("amount") or 0
-                        if token_type and amount > 0:
-                            self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=reward_meta)
-                    elif row["reward_type"] == "BUNDLE":
-                        items = (row.get("reward_payload") or {}).get("items") or []
-                        ticket_map = {
-                            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
-                            "TICKET_DICE": GameTokenType.DICE_TOKEN,
-                            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
-                        }
-                        for item in items:
-                            token_type = ticket_map.get(item.get("type"))
-                            amount = item.get("amount") or 0
-                            if token_type and amount > 0:
-                                meta = {**reward_meta, "bundle": True, "bundle_type": item.get("type")}
-                                self.reward_service.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta)
+                        if reward_type == "BUNDLE":
+                            items = reward_payload.get("items") or []
+                            for item in items:
+                                item_type = self._normalize_reward_type(item.get("type"))
+                                item_amount = int(item.get("amount") or 0)
+                                if item_type and item_amount > 0:
+                                    meta = {**reward_meta, "bundle": True, "bundle_type": item_type}
+                                    self.reward_service.deliver(
+                                        db,
+                                        user_id=user_id,
+                                        reward_type=item_type,
+                                        reward_amount=item_amount,
+                                        meta=meta,
+                                        commit=False,
+                                    )
+                        elif reward_amount > 0 and reward_type not in {"NONE", ""}:
+                            self.reward_service.deliver(
+                                db,
+                                user_id=user_id,
+                                reward_type=reward_type,
+                                reward_amount=reward_amount,
+                                meta=reward_meta,
+                                commit=False,
+                            )
                 except Exception:
                     # Delivery errors should not break XP accrual; rely on logs for retries.
                     pass

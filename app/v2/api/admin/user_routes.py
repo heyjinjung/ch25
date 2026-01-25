@@ -11,7 +11,7 @@ from app.models.admin_audit_log import AdminAuditLog
 from app.models.game_wallet import GameTokenType
 from app.models.game_wallet import UserGameWallet
 from app.models.inventory import UserInventoryItem
-from app.models.mission import UserMissionProgress
+from app.models.mission import ApprovalStatus, Mission, UserMissionProgress
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
@@ -27,6 +27,8 @@ from app.v2.schemas.v2_admin_user import (
     InterventionExecutionResponse,
     InterventionPlaybookDto,
     TicketLogDto,
+    UserMissionProgressUpdateRequest,
+    UserMissionRewardClaimResponse,
     UserActivityLogDto,
     UserInventoryItemDto,
     UserListResponse,
@@ -34,6 +36,7 @@ from app.v2.schemas.v2_admin_user import (
     UserNoteDto,
 )
 from app.v2.services.vault_service import V2VaultService
+from app.v2.services.mission_service import V2MissionService
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
@@ -624,6 +627,42 @@ def get_user_missions(
     ]
 
 
+def _get_or_create_user_mission_progress(
+    db: Session,
+    *,
+    user_id: int,
+    mission_id: int,
+) -> tuple[Mission, UserMissionProgress]:
+    mission = db.query(Mission).filter(Mission.id == mission_id).first()
+    if not mission:
+        raise HTTPException(status_code=404, detail="MISSION_NOT_FOUND")
+
+    service = V2MissionService(db)
+    reset_date = service._get_reset_date_str(mission.category)
+
+    progress = (
+        db.query(UserMissionProgress)
+        .filter(
+            UserMissionProgress.user_id == user_id,
+            UserMissionProgress.mission_id == mission_id,
+            UserMissionProgress.reset_date == reset_date,
+        )
+        .first()
+    )
+
+    if not progress:
+        progress = UserMissionProgress(
+            user_id=user_id,
+            mission_id=mission_id,
+            reset_date=reset_date,
+            current_value=0,
+        )
+        db.add(progress)
+        db.flush()
+
+    return mission, progress
+
+
 @router.post("/users/{user_id}/missions/{mission_id}/complete")
 def force_complete_mission(
     user_id: int,
@@ -633,19 +672,99 @@ def force_complete_mission(
 ):
     admin_id, _ = admin_info
 
-    progress = (
-        db.query(UserMissionProgress)
-        .filter(UserMissionProgress.user_id == user_id, UserMissionProgress.mission_id == mission_id)
-        .first()
+    mission, progress = _get_or_create_user_mission_progress(
+        db, user_id=user_id, mission_id=mission_id
     )
 
-    if progress:
-        progress.is_completed = True
-        progress.current_value = progress.mission.target_value if progress.mission else 1
-        progress.completed_at = datetime.utcnow()
-        db.commit()
+    progress.is_completed = True
+    progress.current_value = int(mission.target_value or 1)
+    progress.completed_at = datetime.utcnow()
+    db.commit()
 
     return {"success": True}
+
+
+@router.post("/users/{user_id}/missions/{mission_id}/progress")
+def update_user_mission_progress(
+    user_id: int,
+    mission_id: int,
+    payload: UserMissionProgressUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+
+    mission, progress = _get_or_create_user_mission_progress(
+        db, user_id=user_id, mission_id=mission_id
+    )
+
+    target_value = int(mission.target_value or 0)
+    next_value = max(0, int(payload.currentValue))
+    if target_value > 0 and next_value >= target_value:
+        next_value = target_value
+        progress.is_completed = True
+        progress.completed_at = datetime.utcnow()
+    else:
+        progress.is_completed = False
+        progress.is_claimed = False
+        progress.approval_status = ApprovalStatus.NONE
+        progress.completed_at = None
+
+    progress.current_value = next_value
+    db.commit()
+
+    return {"success": True}
+
+
+@router.post("/users/{user_id}/missions/{mission_id}/reset")
+def reset_user_mission_progress(
+    user_id: int,
+    mission_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+
+    _, progress = _get_or_create_user_mission_progress(
+        db, user_id=user_id, mission_id=mission_id
+    )
+
+    progress.current_value = 0
+    progress.is_completed = False
+    progress.is_claimed = False
+    progress.approval_status = ApprovalStatus.NONE
+    progress.completed_at = None
+    db.commit()
+
+    return {"success": True}
+
+
+@router.post("/users/{user_id}/missions/{mission_id}/claim", response_model=UserMissionRewardClaimResponse)
+def claim_user_mission_reward(
+    user_id: int,
+    mission_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+
+    service = V2MissionService(db)
+    success, reward_type, reward_amount = service.claim_reward(user_id, mission_id)
+
+    if success:
+        return UserMissionRewardClaimResponse(
+            success=True,
+            message="OK",
+            rewardType=reward_type,
+            rewardAmount=reward_amount,
+        )
+
+    return UserMissionRewardClaimResponse(
+        success=False,
+        message=reward_type,
+        rewardType=None,
+        rewardAmount=None,
+    )
 
 
 @router.get("/users/{user_id}/segment")

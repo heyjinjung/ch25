@@ -8,6 +8,35 @@ from app.v2.services.admin_audit_service import V2AdminAuditService
 
 router = APIRouter()
 
+ALLOWED_REWARD_TYPES = {
+    "POINT",
+    "CC_POINT",
+    "GAME_XP",
+    "DIAMOND",
+    "TICKET",
+    "BUNDLE",
+    "TICKET_BUNDLE",
+    "NONE",
+    "ROULETTE_TICKET",
+    "DICE_TICKET",
+    "LOTTERY_TICKET",
+    "GOLD_KEY_TICKET",
+    "DIAMOND_TICKET",
+    "GOLD_KEY_FRAGMENT",
+    "DIAMOND_FRAGMENT",
+    "PUZZLE_C1",
+    "PUZZLE_C2",
+    "PUZZLE_J",
+    "PUZZLE_M",
+    "TRIAL_TICKET",
+}
+
+
+def _normalize_reward_type(value: str | None) -> str:
+    if not value:
+        return "NONE"
+    return value.upper()
+
 
 class AdminLevelDto(BaseModel):
     level: int
@@ -128,7 +157,10 @@ def update_admin_level(
         lvl.required_xp = payload.requiredXp
 
     if payload.rewardType is not None:
-        lvl.reward_type = payload.rewardType
+        normalized = _normalize_reward_type(payload.rewardType)
+        if not (normalized in ALLOWED_REWARD_TYPES or normalized.startswith("GIFTICON_")):
+            raise HTTPException(status_code=400, detail="INVALID_REWARD_TYPE")
+        lvl.reward_type = normalized
 
     if payload.rewardAmount is not None:
         lvl.reward_amount = payload.rewardAmount
