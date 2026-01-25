@@ -15,6 +15,7 @@ const getDiceImage = (val: number) => `${ASSET_PATH}/img_dice_side_{[${val}]}.pn
 
 const ThreeDDice: React.FC<ThreeDDiceProps> = ({ value, isRolling, size = 100 }) => {
   const cubeRef = useRef<HTMLDivElement>(null);
+  const blurRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
   const contextRef = useRef<gsap.Context | null>(null);
 
@@ -33,76 +34,72 @@ const ThreeDDice: React.FC<ThreeDDiceProps> = ({ value, isRolling, size = 100 })
     
     contextRef.current = gsap.context(() => {
       const cube = cubeRef.current;
+      const blur = blurRef.current;
       const shadow = shadowRef.current;
-      if (!cube || !shadow) return;
+      
+      if (!cube || !blur || !shadow) return;
 
       if (isRolling) {
-         // Rolling / Throwing Animation
-         const tl = gsap.timeline();
+         // === ROLLING STATE ===
+         // Hide strict 3D cube, show Motion Blur Effect
+         gsap.set(cube, { opacity: 0 });
+         gsap.set(blur, { opacity: 1, scale: 0.8 });
 
-         // 1. Initial Pop (Throw)
-         tl.to(cube, {
-            z: 200, // Move closer to camera (pop up)
-            duration: 0.4,
-            ease: "back.out(1.2)",
-         }, 0);
+         // Animate the blur sprite/texture to look like spinning
+         // We simulate this by shaking and scaling the blur container
+         gsap.to(blur, {
+             rotation: "+=360", 
+             duration: 0.4, 
+             repeat: -1, 
+             ease: "none" 
+         });
          
-         // 2. Continuous Spin (High Energy)
-         // Randomize direction slightly for realism
-         const randX = Math.random() < 0.5 ? 1080 : -1080;
-         const randY = Math.random() < 0.5 ? 720 : -720;
-
-         tl.to(cube, {
-             rotationX: `+=${randX}`,
-             rotationY: `+=${randY}`,
-             rotationZ: "+=360", // Add Z rotation for 3D tumbling
-             duration: 1.2,
+         // Add "Shake" to the blur to feel chaotic
+         gsap.to(blur, {
+             x: "random(-10, 10)",
+             y: "random(-10, 10)",
+             duration: 0.1,
              repeat: -1,
-             ease: "none",
-         }, 0);
+             yoyo: true
+         });
 
-         // 3. Shadow logic (fades out when dice pops up)
-         tl.to(shadow, {
-             scale: 0.5,
-             opacity: 0.2,
-             duration: 0.4,
-             ease: "power2.out"
-         }, 0);
+         // Shadow fades
+         gsap.to(shadow, { scale: 0.5, opacity: 0.3, duration: 0.3 });
 
       } else {
-         // Landing Animation
-         const currentX = (gsap.getProperty(cube, "rotationX") as number) || 0;
-         const currentY = (gsap.getProperty(cube, "rotationY") as number) || 0;
-         
+         // === LANDING STATE ===
+         // 1. Instant swap: Hide Blur, Show Cube
+         gsap.set(blur, { opacity: 0 });
+         gsap.set(cube, { opacity: 1 });
+
          const target = faceRotations[value] || { x: 0, y: 0 };
          
-         // Calculate nearest multiple of 360 to minimize travel but ensure spin
-         // Adding extra spins (720) ensures it doesn't just "snap" if close
-         const xMulti = Math.ceil(currentX / 360) * 360 + (360 * 2); 
-         const yMulti = Math.ceil(currentY / 360) * 360 + (360 * 2);
-         
-         const finalX = xMulti + target.x;
-         const finalY = yMulti + target.y;
+         // Start from a random "wild" angle to make the snap feel impactful
+         gsap.set(cube, {
+             rotationX: target.x + (Math.random() * 60 - 30), 
+             rotationY: target.y + (Math.random() * 60 - 30),
+             z: 100 // Slightly up
+         });
 
          const landTl = gsap.timeline();
 
-         // 1. Snap to face with elastic finish
+         // 2. Slam down and snap to face
          landTl.to(cube, {
-             rotationX: finalX,
-             rotationY: finalY,
-             rotationZ: 0, // Reset Z tilt
-             z: 0, // Return to base position
-             duration: 0.8,
-             ease: "elastic.out(1, 0.6)", // Bouncy landing
+             rotationX: target.x,
+             rotationY: target.y,
+             rotationZ: 0,
+             z: 0,
+             duration: 0.5,
+             ease: "back.out(1.7)", // Heavy impact
          });
 
-         // 2. Shadow restores as dice lands
+         // 3. Shadow restores with impact
          landTl.to(shadow, {
              scale: 1,
              opacity: 0.6,
-             duration: 0.5,
-             ease: "bounce.out"
-         }, 0.2); // Sync with dice landing
+             duration: 0.3,
+             ease: "power2.out"
+         }, 0);
       }
     });
 
@@ -113,14 +110,22 @@ const ThreeDDice: React.FC<ThreeDDiceProps> = ({ value, isRolling, size = 100 })
 
   return (
     <div className="scene" style={{ "--dice-size": `${size}px` } as React.CSSProperties}>
+      {/* 3D Cube for Result */}
       <div className="cube" ref={cubeRef}>
-        <div className="cube-face face-1"><img src={getDiceImage(1)} alt="Face 1" /></div>
-        <div className="cube-face face-2"><img src={getDiceImage(2)} alt="Face 2" /></div>
-        <div className="cube-face face-3"><img src={getDiceImage(3)} alt="Face 3" /></div>
-        <div className="cube-face face-4"><img src={getDiceImage(4)} alt="Face 4" /></div>
-        <div className="cube-face face-5"><img src={getDiceImage(5)} alt="Face 5" /></div>
-        <div className="cube-face face-6"><img src={getDiceImage(6)} alt="Face 6" /></div>
+        <div className="cube-face face-1"><img src={getDiceImage(1)} alt="1" /></div>
+        <div className="cube-face face-2"><img src={getDiceImage(2)} alt="2" /></div>
+        <div className="cube-face face-3"><img src={getDiceImage(3)} alt="3" /></div>
+        <div className="cube-face face-4"><img src={getDiceImage(4)} alt="4" /></div>
+        <div className="cube-face face-5"><img src={getDiceImage(5)} alt="5" /></div>
+        <div className="cube-face face-6"><img src={getDiceImage(6)} alt="6" /></div>
       </div>
+
+      {/* Motion Blur Placeholder (Visible only during rolling) */}
+      <div className="dice-blur" ref={blurRef}>
+        <img src={getDiceImage(1)} className="blur-img" alt="rolling" />
+        <div className="blur-overlay" />
+      </div>
+
       <div className="dice-shadow" ref={shadowRef} />
     </div>
   );

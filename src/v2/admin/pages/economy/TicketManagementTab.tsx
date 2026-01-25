@@ -38,19 +38,11 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuLabel,
-} from "../../components/ui/dropdown-menu";
 import { Label } from "../../../components/ui/label";
 import {
   Search,
   Plus,
   History,
-  MoreHorizontal,
   Edit2,
   Trash2,
   Ticket,
@@ -549,37 +541,26 @@ export default function TicketManagementTab() {
                       관리 액션
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        수정 (Edit)
+                      <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => openEditModal(log)}
                           className="h-8 w-8 hover:bg-white/10"
+                          title="수정"
                         >
-                          <MoreHorizontal className="w-4 h-4 text-zinc-400" />
+                          <Edit2 className="w-4 h-4 text-zinc-400 hover:text-emerald-400 transition-colors" />
                         </Button>
-                        삭제 (Delete)
-                        <DropdownMenuContent
-                          align="end"
-                          className="bg-[#18181B] border-white/10 text-white"
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDeleteModal(log)}
+                          className="h-8 w-8 hover:bg-white/10"
+                          title="삭제"
                         >
-                          <DropdownMenuLabel className="text-zinc-500 text-xs">
-                            관리 액션
-                          </DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => openEditModal(log)}>
-                            <Edit2 className="w-4 h-4 mr-2" />
-                            수정 (Edit)
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator className="bg-white/5" />
-                          <DropdownMenuItem
-                            onClick={() => openDeleteModal(log)}
-                            className="text-red-400 focus:text-red-400"
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            삭제 (Delete)
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          <Trash2 className="w-4 h-4 text-zinc-400 hover:text-red-400 transition-colors" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

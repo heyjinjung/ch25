@@ -58,15 +58,15 @@ export default function OpsDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            ?�영 ?�?�보??(Ops Dashboard)
+            운영 보고서(Ops Dashboard)
           </h1>
           <p className="text-sm text-zinc-400">
-            ?�스???�태, 리스???��?, ?�심 ?�영 지?��? ?�시간으�?관?�합?�다.
+            시스템 상태, 리스팅 상태, 심리 상태를 관리합니다.
           </p>
         </div>
         <div className="flex gap-2">
           <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
-            긴급 ?��? (Maintenance)
+            긴급 유지 (Maintenance)
           </Button>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function OpsDashboard() {
       {/* Top Row: Critical Status */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <QuickActionCard
-          label="?�스???�태"
+          label="시스템 상태"
           description={
             <div className="flex gap-2 mt-1">
               <span
@@ -94,7 +94,7 @@ export default function OpsDashboard() {
           icon={Server}
         />
         <QuickActionCard
-          label="개발�?(Holding)"
+          label="Holding"
           description={
             <div className="flex items-baseline gap-1">
               <span className="text-xs text-zinc-500">리텐???�황 준비중</span>
@@ -122,7 +122,7 @@ export default function OpsDashboard() {
           onClick={() => navigate("/admin/dashboard/golden")}
         />
         <QuickActionCard
-          label="금일 ?�속??(Active)"
+          label="금일 활성화(Active)"
           description={
             <div className="flex items-center gap-1">
               <NumberTicker
@@ -145,17 +145,17 @@ export default function OpsDashboard() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
-                골든 ?�이??(Risk & Opportunity)
+                Risk & Opportunity
               </h3>
               <p className="text-zinc-500 text-xs">
-                AI가 ?��????�기/기회 ?��? 그룹?�니??
+                AI가 판단한 리스크/기회그룹
               </p>
             </div>
             <Badge
               variant="outline"
               className="border-amber-500/30 text-amber-500 bg-amber-500/5 animate-pulse"
             >
-              ?�시�??�캔 �?
+              Crisis Group
             </Badge>
           </div>
 
@@ -196,7 +196,7 @@ export default function OpsDashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-zinc-500 text-sm">
-                    감�????�험 ?�소 ?�음
+                    감소된 리스크
                   </div>
                 )}
               </CardContent>
@@ -212,8 +212,8 @@ export default function OpsDashboard() {
               <CardContent className="space-y-4">
                 <div className="text-center py-8 text-zinc-500 text-sm">
                   {status?.goldenRadar?.highRollers > 0
-                    ? `${status.goldenRadar.highRollers}명의 고액 ?��? ?�성`
-                    : "?�성 고액 ?�용???�음"}
+                    ? `${status.goldenRadar.highRollers}명의 고액 유저`
+                    : "감소된 리스크"}
                 </div>
               </CardContent>
             </Card>
@@ -224,17 +224,17 @@ export default function OpsDashboard() {
         <div className="md:col-span-1 rounded-xl bg-[#18181B] border border-white/5 p-6 relative flex flex-col">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-400" />
-            ?�영 ?�림
+             알림
           </h3>
           <div className="space-y-4 overflow-y-auto pr-2">
             {/* Mock Alerts for now, can be connected to real logs later */}
             <div className="p-3 rounded-lg bg-zinc-800/50 border border-white/5 text-sm">
               <div className="flex justify-between mb-1">
-                <span className="font-bold text-zinc-400">?�스??백업</span>
+                <span className="font-bold text-zinc-400">데이터베이스 백업</span>
                 <span className="text-xs text-zinc-500">1h ago</span>
               </div>
               <p className="text-zinc-500">
-                ?�기 ?�이?�베?�스 백업???�료?�었?�니??
+                데이터베이스 백업
               </p>
             </div>
           </div>

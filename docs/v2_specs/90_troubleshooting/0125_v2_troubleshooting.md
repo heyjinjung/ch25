@@ -190,3 +190,13 @@ Ji @ react-dom.production.min.js:127
    - 우선순위: P0
 
 
+1) 유저별 레벨관리 기능이 없음
+유저별 레벨포인트 관리 / 레벨등급 관리기능 백앤드/프론트 모두 
+v2 어드민시스템에 구현되어야해 
+
+---
+
+## 빌드 이슈
+- ✅ **프론트 빌드 실패 (TS5103: Invalid value for '--ignoreDeprecations')**
+   - 증상: `npm run build` 중 `tsconfig.json`의 `ignoreDeprecations: "6.0"`에서 오류 발생
+   - 조치: `ignoreDeprecations` 값을 `"5.0"`으로 수정

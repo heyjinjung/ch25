@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/v2/dev", tags=["dev"])
 class DevLoginRequest(BaseModel):
     external_id: str | None = None
     nickname: str | None = None
-    create_if_missing: bool = True
+    create_if_missing: bool = False
 
 
 class DevLoginUser(BaseModel):
@@ -58,7 +58,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
 
     client_ip = request.client.host if request.client else None
     _ = client_ip
-    _ = V2UserService.ensure_legacy_user_id(db, int(user.id))
+    legacy_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
 
     try:
         db.commit()
@@ -66,7 +66,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
         db.rollback()
         raise HTTPException(status_code=400, detail="DEV_LOGIN_FAILED")
 
-    token = create_access_token(user_id=int(user.id))
+    token = create_access_token(user_id=int(legacy_user_id))
     return DevLoginResponse(
         access_token=token,
         user=DevLoginUser(

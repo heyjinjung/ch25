@@ -286,7 +286,7 @@ export function UserDetailDrawer({
                               value={inventoryAdjustItemType}
                               onValueChange={setInventoryAdjustItemType}
                             >
-                              <SelectTrigger className="bg-black/60 border-white/10 text-zinc-100">
+                              <SelectTrigger className="border-white/10">
                                 <SelectValue placeholder="아이템 선택" />
                               </SelectTrigger>
                               <SelectContent className="bg-[#18181B] border-white/10 text-white">
@@ -313,7 +313,7 @@ export function UserDetailDrawer({
                               onChange={(e) =>
                                 setInventoryAdjustDelta(e.target.value)
                               }
-                              className="bg-black/50 border-white/10 text-white font-mono"
+                              className="border-white/10 font-mono"
                             />
                           </div>
                         </div>
@@ -353,11 +353,11 @@ export function UserDetailDrawer({
                           >
                             <CardContent className="p-4 flex justify-between items-center">
                               <div>
-                                <div className="font-medium">
+                                <div className="font-medium text-zinc-200">
                                   {item.itemName}
                                 </div>
-                                <div className="text-xs text-zinc-500">
-                                  {item.itemType} ??x{item.quantity}
+                                <div className="text-xs text-zinc-400">
+                                  {item.itemType} • x{item.quantity}
                                 </div>
                               </div>
                               <Badge

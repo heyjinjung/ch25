@@ -55,7 +55,7 @@ export default function RouletteConfigPage() {
     { value: "ROULETTE_TICKET", label: "일반" },
     { value: "TRIAL_TICKET", label: "체험" },
     { value: "DIAMOND_TICKET", label: "다이아" },
-    { value: "GOLDEN_TICKET", label: "황금" },
+    { value: "GOLD_KEY_TICKET", label: "황금" },
   ];
 
   useEffect(() => {
@@ -250,10 +250,7 @@ export default function RouletteConfigPage() {
 
               <div className="space-y-2">
                 <Label className="text-zinc-400">소모 티켓 타입</Label>
-                <Select
-                  value={localConfig.ticketType}
-                  onValueChange={(v) => handleConfigChange("ticketType", v)}
-                >
+                <Select value={selectedTicketType} disabled>
                   <SelectTrigger className="bg-black/20 border-white/10">
                     <SelectValue />
                   </SelectTrigger>
@@ -263,7 +260,7 @@ export default function RouletteConfigPage() {
                     </SelectItem>
                     <SelectItem value="TRIAL_TICKET">체험 티켓</SelectItem>
                     <SelectItem value="DIAMOND_TICKET">다이아 티켓</SelectItem>
-                    <SelectItem value="GOLDEN_TICKET">황금 티켓</SelectItem>
+                    <SelectItem value="GOLD_KEY_TICKET">황금 티켓</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -116,6 +116,27 @@
 - 복권 티켓은 1종 고정 정책으로 UI/전송을 정리.
 - 불필요한 설정 변경 경로 제거로 실수 가능성 감소.
 
+## 8) 2026-01-25 추가 트러블슈팅 (룰렛 어드민 소모 티켓 타입 동기화)
+### 8.1 증상
+- 룰렛 어드민에서 "소모 티켓 타입"을 변경하면 다시 원복되는 현상 발생.
+- 콘솔/네트워크 오류 없이 값이 동기화되어 보임.
+
+### 8.2 원인
+- 탭(티켓 타입)과 Select가 이중 소스가 되어 refetch 시 값이 동기화됨.
+- 황금 티켓 코드가 `GOLDEN_TICKET`으로 잘못 표기되어 매칭 실패 가능.
+
+### 8.3 조치 (PATCH)
+- FE: 탭 티켓 타입 값 수정 `GOLDEN_TICKET` → `GOLD_KEY_TICKET`.
+- FE: "소모 티켓 타입"은 탭 기반 고정 표시(비활성화)로 변경.
+  - [src/v2/admin/pages/game/RouletteConfigPage.tsx](src/v2/admin/pages/game/RouletteConfigPage.tsx)
+
+### 8.4 정합성 체크
+- 탭(일반/체험/다이아/황금) 전환 시 해당 티켓 타입 표시 고정 확인.
+- 값이 더 이상 원복되지 않고 설정 편집이 유지됨 확인.
+
+### 8.5 증거
+- UI 탭/Select 로직: [src/v2/admin/pages/game/RouletteConfigPage.tsx](src/v2/admin/pages/game/RouletteConfigPage.tsx)
+
 ## 6) 증거/테스트
 - 요청에 따라 **터미널/자동 테스트 미실행**.
 - 필요한 증거:
@@ -123,6 +144,30 @@
   - 유저 레벨업 이벤트 후 vault/game_wallet 변화 스냅샷
   - 상점 구매 400 detail: `INSUFFICIENT_BALANCE`, payload sku=`SOT_GOLD_KEY_FRAGMENT`
   - 인벤토리 사용 400 detail: `INVALID_VOUCHER_TYPE`
+
+---
+
+## 9) 2026-01-25 추가 트러블슈팅 (주사위 보상 데이터 SoT 위반)
+### 9.1 증상
+- 백엔드에 보상 설정이 없거나 0이어도 프론트엔드에서 무조건 `WIN: +100`, `DRAW: +10`으로 표시됨.
+- 실제 게임 결과 보상과 표시 보상이 불일치하여 사용자 혼란 야기.
+
+### 9.2 원인
+- `v1CompatAdapter.ts` 및 `DiceRewardGrid.tsx` 내에 하드코딩된 Fallback 값(`100`, `10`) 존재.
+- "백엔드 데이터 부재 시 임시 표시" 의도로 들어갔으나, **거짓 데이터(Fake Data)**로 작용하여 SoT 위반.
+
+### 9.3 조치 (PATCH)
+- FE: 모든 하드코딩 Default 값(`0` 포함)을 **완전 제거**.
+- `?? 0` 로직을 삭제하고, 데이터가 없으면 `undefined` 상태를 유지하여 "거짓 데이터" 생성 방지.
+  - [src/v2/api/v1CompatAdapter.ts](src/v2/api/v1CompatAdapter.ts)
+  - [src/v2/components/game/DiceRewardGrid.tsx](src/v2/components/game/DiceRewardGrid.tsx)
+
+### 9.4 정합성 체크
+- 백엔드 설정이 없으면 `+0`으로 표시 확인 (거짓 정보 제거).
+- 어드민에서 보상 설정 시 해당 값으로 즉시 반영 확인.
+
+### 9.5 비고
+- **Docker 빌드 주의**: 로컬 `npm run build`는 컨테이너에 반영되지 않음. 반드시 `docker-compose build` 또는 `npm run dev` 확인 필요.
 
 ---
 끝

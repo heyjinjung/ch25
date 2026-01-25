@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { type DiceStatusResponse } from "../../api/gameApi";
 import { getRewardItemLabel } from "../../constants/rewardItems";
 
@@ -7,37 +6,39 @@ interface DiceRewardGridProps {
 }
 
 export default function DiceRewardGrid({ status }: DiceRewardGridProps) {
-  const rewards = useMemo(() => {
-    if (!status?.reward_config) {
-      // Fallback defaults if not loaded yet
-      return [
-        { label: "WIN", type: "POINT", amount: 100, color: "text-emerald-400" },
-        { label: "DRAW", type: "POINT", amount: 10, color: "text-amber-400" },
-        { label: "LOSE", type: "NONE", amount: 0, color: "text-red-400" },
-      ];
-    }
-    const cfg = status.reward_config;
-    return [
-      {
-        label: "WIN",
-        type: cfg.win_reward_type ?? "POINT",
-        amount: cfg.win_reward_amount ?? 0,
-        color: "text-emerald-400",
-      },
-      {
-        label: "DRAW",
-        type: cfg.draw_reward_type ?? "POINT",
-        amount: cfg.draw_reward_amount ?? 0,
-        color: "text-amber-400",
-      },
-      {
-        label: "LOSE",
-        type: cfg.lose_reward_type ?? "NONE",
-        amount: cfg.lose_reward_amount ?? 0,
-        color: "text-red-400",
-      },
-    ];
-  }, [status]);
+  // If no config is loaded yet, show "Item Preparing" (아이템 준비중)
+  if (!status?.reward_config) {
+    return (
+      <div className="w-full mt-2 p-4 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-md flex flex-col items-center justify-center min-h-[100px]">
+        <div className="text-zinc-400 text-sm font-bold animate-pulse">
+          아이템 준비중...
+        </div>
+      </div>
+    );
+  }
+
+  const cfg = status.reward_config;
+  
+  const rewards = [
+    {
+      label: "WIN",
+      type: cfg.win_reward_type ?? "POINT",
+      amount: cfg.win_reward_amount ?? 0,
+      color: "text-emerald-400",
+    },
+    {
+      label: "DRAW",
+      type: cfg.draw_reward_type ?? "POINT",
+      amount: cfg.draw_reward_amount ?? 0,
+      color: "text-amber-400",
+    },
+    {
+      label: "LOSE",
+      type: cfg.lose_reward_type ?? "NONE",
+      amount: cfg.lose_reward_amount ?? 0,
+      color: "text-red-400",
+    },
+  ];
 
   return (
     <div className="grid grid-cols-3 gap-2 w-full mt-2">

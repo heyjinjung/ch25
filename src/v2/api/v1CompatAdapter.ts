@@ -382,28 +382,22 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
       reward_config: {
         win_reward_type:
           data.reward_config?.win_reward_type ??
-          data.win_reward_type ??
-          "POINT",
+          data.win_reward_type,
         win_reward_amount:
           data.reward_config?.win_reward_amount ??
-          data.win_reward_amount ??
-          100,
+          data.win_reward_amount,
         draw_reward_type:
           data.reward_config?.draw_reward_type ??
-          data.draw_reward_type ??
-          "POINT",
+          data.draw_reward_type,
         draw_reward_amount:
           data.reward_config?.draw_reward_amount ??
-          data.draw_reward_amount ??
-          10,
+          data.draw_reward_amount,
         lose_reward_type:
           data.reward_config?.lose_reward_type ??
-          data.lose_reward_type ??
-          "NONE",
+          data.lose_reward_type,
         lose_reward_amount:
           data.reward_config?.lose_reward_amount ??
-          data.lose_reward_amount ??
-          0,
+          data.lose_reward_amount,
       },
     };
   } catch (error) {

@@ -627,7 +627,7 @@ export default function MissionManagerPage() {
                   setCreateForm({ ...createForm, category: val })
                 }
               >
-                <SelectTrigger className="col-span-3 bg-black/50 border-white/10">
+                <SelectTrigger className="col-span-3">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-[#18181B] border-white/10 text-white">
@@ -650,7 +650,7 @@ export default function MissionManagerPage() {
                 onChange={(e) =>
                   setCreateForm({ ...createForm, title: e.target.value })
                 }
-                className="col-span-3 bg-black/50 border-white/10"
+                className="col-span-3"
               />
             </div>
 
@@ -664,7 +664,7 @@ export default function MissionManagerPage() {
                 onChange={(e) =>
                   setCreateForm({ ...createForm, logicKey: e.target.value })
                 }
-                className="col-span-3 bg-black/50 border-white/10"
+                className="col-span-3"
                 placeholder="PLAY_ROULETTE, ATTENDANCE..."
               />
               {createError && (
@@ -684,7 +684,7 @@ export default function MissionManagerPage() {
                 onChange={(e) =>
                   setCreateForm({ ...createForm, condition: e.target.value })
                 }
-                className="col-span-3 bg-black/50 border-white/10"
+                className="col-span-3"
               />
             </div>
 
@@ -702,7 +702,7 @@ export default function MissionManagerPage() {
                     targetValue: parseInt(e.target.value),
                   })
                 }
-                className="col-span-3 bg-black/50 border-white/10"
+                className="col-span-3"
               />
             </div>
 
@@ -717,7 +717,7 @@ export default function MissionManagerPage() {
                     setCreateForm({ ...createForm, rewardType: val })
                   }
                 >
-                  <SelectTrigger className="flex-1 bg-black/50 border-white/10">
+                  <SelectTrigger className="flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
@@ -730,7 +730,7 @@ export default function MissionManagerPage() {
                 </Select>
                 <Input
                   type="number"
-                  className="w-24 bg-black/50 border-white/10"
+                  className="w-24"
                   value={createForm.rewardAmount}
                   onChange={(e) =>
                     setCreateForm({
@@ -779,7 +779,7 @@ export default function MissionManagerPage() {
                     setEditForm({ ...editForm, category: val as any })
                   }
                 >
-                  <SelectTrigger className="col-span-3 bg-black/50 border-white/10">
+                  <SelectTrigger className="col-span-3">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181B] border-white/10 text-white">
@@ -799,7 +799,7 @@ export default function MissionManagerPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, title: e.target.value })
                   }
-                  className="col-span-3 bg-black/50 border-white/10"
+                  className="col-span-3"
                 />
               </div>
 
@@ -810,7 +810,7 @@ export default function MissionManagerPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, logicKey: e.target.value })
                   }
-                  className="col-span-3 bg-black/50 border-white/10"
+                  className="col-span-3"
                 />
               </div>
               {editError && (
@@ -824,7 +824,7 @@ export default function MissionManagerPage() {
                   onChange={(e) =>
                     setEditForm({ ...editForm, condition: e.target.value })
                   }
-                  className="col-span-3 bg-black/50 border-white/10"
+                  className="col-span-3"
                 />
               </div>
 
@@ -839,7 +839,7 @@ export default function MissionManagerPage() {
                       targetValue: parseInt(e.target.value),
                     })
                   }
-                  className="col-span-3 bg-black/50 border-white/10"
+                  className="col-span-3"
                 />
               </div>
 
@@ -852,7 +852,7 @@ export default function MissionManagerPage() {
                       setEditForm({ ...editForm, rewardType: val })
                     }
                   >
-                    <SelectTrigger className="flex-1 bg-black/50 border-white/10">
+                    <SelectTrigger className="flex-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
@@ -865,7 +865,7 @@ export default function MissionManagerPage() {
                   </Select>
                   <Input
                     type="number"
-                    className="w-24 bg-black/50 border-white/10"
+                    className="w-24"
                     value={editForm.rewardAmount}
                     onChange={(e) =>
                       setEditForm({

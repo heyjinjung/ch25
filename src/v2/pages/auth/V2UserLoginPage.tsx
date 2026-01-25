@@ -57,7 +57,7 @@ const V2UserLoginPage: FC = () => {
     const res = await v2Client.post("/api/v2/dev/login", {
       external_id: trimmed,
       nickname: trimmed,
-      create_if_missing: true,
+      create_if_missing: false,
     });
 
     const token = res?.data?.access_token;
@@ -129,14 +129,14 @@ const V2UserLoginPage: FC = () => {
 
     try {
       const externalId = String(getValues("username") || "").trim();
-      await loginWithDevExternalId(externalId || "test");
+      await loginWithDevExternalId(externalId || "");
     } catch (err: any) {
       const detail = err?.response?.data?.detail || err?.message;
       const fallback =
         detail === "DEV_LOGIN_DISABLED"
           ? "현재 서버 환경에서 DEV_LOGIN이 꺼져 있습니다."
           : detail === "MISSING_EXTERNAL_ID"
-            ? "external_id를 입력하세요."
+            ? "CC ID를 입력하세요."
             : "DEV 로그인에 실패했습니다.";
       setServerError(typeof detail === "string" ? detail : fallback);
     } finally {
