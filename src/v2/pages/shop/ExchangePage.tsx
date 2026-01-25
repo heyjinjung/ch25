@@ -189,13 +189,13 @@ export default function ExchangePage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => setActiveTab("shop")}
         >
-          ?�점
+          상점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => navigate("/inventory")}
         >
-          ?�벤?�리
+          인벤토리
         </div>
       </div>
 
@@ -205,9 +205,9 @@ export default function ExchangePage() {
           <img
             src="/assets/06shop/banner.png"
             className="event-banner-img"
-            alt="?�점 메인 배너"
+            alt="상점 메인 배너"
           />
-          <div className="banner-info-btn">?�내버튼</div>
+          <div className="banner-info-btn">안내</div>
         </div>
 
         {/* Products Grid */}

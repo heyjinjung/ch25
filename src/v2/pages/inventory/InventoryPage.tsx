@@ -38,7 +38,7 @@ export default function InventoryPage() {
       alert("사용할 수 없는 아이템입니다.");
       return;
     }
-    if (window.confirm("?�이?�을 ?�용?�시겠습?�까?")) {
+    if (window.confirm("아이템을 사용하시겠습니까?")) {
       useItemMutation.mutate(
         { item_type: itemType, quantity: 1 },
         {
@@ -155,7 +155,7 @@ export default function InventoryPage() {
   if (error) {
     return (
       <div className="exchange-page-v2 inventory-specific items-center justify-center px-6 text-center">
-        <p className="text-white/40">?�류가 발생?�습?�다.</p>
+        <p className="text-white/40">오류가 발생했습니다.</p>
       </div>
     );
   }
@@ -167,13 +167,13 @@ export default function InventoryPage() {
           className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
           onClick={() => navigate("/shop")}
         >
-          ?�점
+          상점
         </div>
         <div
           className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
           onClick={() => setActiveTab("inventory")}
         >
-          ?�벤?�리
+          인벤토리
         </div>
       </div>
 
@@ -185,7 +185,7 @@ export default function InventoryPage() {
             className="summary-banner-img"
             alt="inventory summary"
           />
-          <div className="banner-info-btn">???�벤?�리</div>
+          <div className="banner-info-btn">내 인벤토리</div>
         </div>
 
         {/* Wallet Strip */}
@@ -193,7 +193,7 @@ export default function InventoryPage() {
           <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
             <div className="flex flex-col">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보�?�?(VAULT)
+                보관중(VAULT)
               </span>
               <span className="text-lg font-black text-white italic">
                 {(vaultStatus?.vaultBalance || 0).toLocaleString()}{" "}
@@ -205,7 +205,7 @@ export default function InventoryPage() {
             <div className="w-px h-8 bg-white/10 mx-2" />
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보유 ?�큰
+                보유 토큰
               </span>
               <span className="text-lg font-black text-[#FF7A00] italic">
                 {(vaultStatus?.ticketCount || 0).toLocaleString()}{" "}
@@ -253,9 +253,9 @@ export default function InventoryPage() {
               Inventory Tip
             </p>
             <p className="text-[11px] text-white/60 leading-relaxed">
-              ?�이?�을 ?�용?�여 게임?�서 ?�별??보너?��? 받을 ???�습?�다.
+              아이템을 사용하면 게임에서 특별한 보너스를 받을 수 있습니다.
               <br />
-              ?�용???�이?��? 즉시 ?�모?�며 ?�과가 발생?�니??
+              사용한 아이템은 즉시 소모되며 효과가 발생합니다.
             </p>
           </div>
         </div>

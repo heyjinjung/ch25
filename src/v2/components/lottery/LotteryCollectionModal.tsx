@@ -5,7 +5,7 @@ import { X, Check } from "lucide-react";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import confetti from "canvas-confetti";
 
-// 기본 ?�마 ?�상 (ThemeProvider ?�이 ?�용)
+// 기본 테마 색상 (ThemeProvider 없이 적용)
 const THEME_COLORS = {
   accent: "#30E3AA",
   primary: "#30E3AA",
@@ -165,7 +165,7 @@ const LotteryCollectionModal = ({
         ],
       });
 
-      setSuccessMessage("?�금?�쇠 교환 ?�공!");
+      setSuccessMessage("황금열쇠 교환 성공!");
       setTimeout(() => {
         setSuccessMessage(null);
         onClose();
@@ -215,11 +215,11 @@ const LotteryCollectionModal = ({
                 Collection
               </h2>
               <p className="text-sm text-zinc-500 mt-2 font-medium">
-                ?�즐??모아{" "}
+                퍼즐 조각 모아{" "}
                 <span className="font-bold underline decoration-amber-500/30 underline-offset-4 text-[#30E3AA]">
-                  ?�금?�쇠
+                  황금열쇠
                 </span>
-                �??�성?�세??
+                완성하세요
               </p>
             </div>
 
@@ -240,7 +240,7 @@ const LotteryCollectionModal = ({
                   className="rounded-xl py-4 text-center border bg-gradient-to-r from-[#30E3AA]/20 to-[#14D49E]/20 border-[#30E3AA]/30"
                 >
                   <p className="text-lg font-black text-[#30E3AA]">
-                    ?�� {successMessage}
+                    ✅ {successMessage}
                   </p>
                 </motion.div>
               ) : (
@@ -255,10 +255,10 @@ const LotteryCollectionModal = ({
                   )}
                 >
                   {isCrafting
-                    ? "교환 �?.."
+                    ? "교환 중..."
                     : canCraft
-                      ? "?�� ?�금?�쇠 교환?�기"
-                      : "조각??부족합?�다"}
+                      ? "✅ 황금열쇠 교환하기"
+                      : "조각이 부족합니다"}
                 </button>
               )}
             </div>
@@ -267,7 +267,7 @@ const LotteryCollectionModal = ({
             <button
               onClick={onClose}
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/50 hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all w-10 h-10 flex items-center justify-center z-50 backdrop-blur-md"
-              aria-label="?�기"
+              aria-label="닫기"
             >
               <X size={20} />
             </button>

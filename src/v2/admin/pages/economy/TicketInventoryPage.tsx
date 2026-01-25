@@ -459,7 +459,7 @@ export default function TicketInventoryPage() {
         <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400 flex justify-between items-center">
-              지�?건수 (Total Issued)
+              지급 건수 (Total Issued)
               <Badge
                 variant="outline"
                 className="bg-emerald-500/10 text-emerald-500 border-none scale-75 border-emerald-500/20"
@@ -525,7 +525,7 @@ export default function TicketInventoryPage() {
           <span className="text-zinc-600 pb-3">~</span>
           <div className="space-y-2">
             <label className="text-xs text-zinc-400 font-medium ml-1">
-              종료??
+              종료일
             </label>
             <Input
               type="date"
@@ -705,7 +705,7 @@ export default function TicketInventoryPage() {
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
               유저에게 티켓이나 아이템을 수동으로 지급합니다. 지급 즉시
-              반영?�니??
+              반영됩니다.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -731,7 +731,7 @@ export default function TicketInventoryPage() {
               </div>
               {targetUserNickname && (
                 <div className="text-[10px] text-emerald-500 font-medium ml-1">
-                  검??결과:{" "}
+                  검색 결과:{" "}
                   <span className="underline">{targetUserNickname}</span> 유저
                 </div>
               )}
@@ -808,11 +808,10 @@ export default function TicketInventoryPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit2 className="w-5 h-5 text-sky-500" />
-              보상 로그 ?�정
+              보상 로그 수정
             </DialogTitle>
             <DialogDescription className="text-zinc-400">
-              발행??보상???��? 로그 ?�보�??�정?�니?? (?�제 ?�산 변?��? 발생?��?
-              ?�음)
+              발행/보상 관련 로그 정보를 수정합니다 (실제 자산 변경 없음)
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -823,7 +822,7 @@ export default function TicketInventoryPage() {
               </span>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">?�량 ?�정</Label>
+              <Label className="text-zinc-400">수량 수정</Label>
               <Input
                 type="number"
                 className="bg-black/50 border-white/10"
@@ -832,7 +831,7 @@ export default function TicketInventoryPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">?�유 ?�정</Label>
+              <Label className="text-zinc-400">사유 수정</Label>
               <Input
                 className="bg-black/50 border-white/10"
                 value={reason}
@@ -845,7 +844,7 @@ export default function TicketInventoryPage() {
               취소
             </Button>
             <Button onClick={handleEdit} className="bg-sky-500 text-white">
-              ?�정 ?�료
+              수정 완료
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -857,12 +856,12 @@ export default function TicketInventoryPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trash2 className="w-5 h-5 text-red-500" />
-              로그 ??�� ?�인
+              로그 삭제 확인
             </DialogTitle>
             <DialogDescription className="text-zinc-500">
-              ??로그�??�말�???��?�시겠습?�까? <br />
+              이 로그를 정말 삭제하시겠습니까? <br />
               <span className="text-red-400/80 font-bold">
-                ?????�업?� ?�스??기록?�서 로그�??�구???�거?�니??
+                삭제 작업은 히스토리 기록에서 로그만 제거합니다.
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -886,7 +885,7 @@ export default function TicketInventoryPage() {
               onClick={handleDelete}
               className="bg-red-500 text-white hover:bg-red-600"
             >
-              ?�인 �???��
+              삭제 진행
             </Button>
           </DialogFooter>
         </DialogContent>

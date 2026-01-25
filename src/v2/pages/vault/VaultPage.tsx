@@ -52,7 +52,7 @@ const VaultPage: React.FC = () => {
   }, [vault]);
 
   const handleWithdraw = () => {
-    if (window.confirm("출금???�청?�시겠습?�까?")) {
+    if (window.confirm("출금 신청하시겠습니까?")) {
       withdrawMutation.mutate({ amount: vault?.availableBalance || 0 });
     }
   };
@@ -69,7 +69,7 @@ const VaultPage: React.FC = () => {
     return (
       <div className="flex h-[760px] w-[390px] mx-auto items-center justify-center bg-black px-6 text-center">
         <p className="text-white/40">
-          ?�류가 발생?�습?�다. ?�시 ???�시 ?�도?�주?�요.
+          오류가 발생했습니다. 잠시 후 다시 시도해주세요.
         </p>
       </div>
     );
@@ -124,7 +124,7 @@ const VaultPage: React.FC = () => {
             <div className="card-content">
               <div className="progress-labels">
                 <span className="text-[12px] opacity-80">
-                  {vault.vaultBalance?.toLocaleString() || 0}??/ 10,000??
+                  {vault.vaultBalance?.toLocaleString() || 0}원 / 10,000원
                 </span>
               </div>
               <div className="custom-progress-bar-container">
@@ -154,7 +154,7 @@ const VaultPage: React.FC = () => {
             className="vault-footer-btn vault-guide-button"
             onClick={() => setShowGuideModal(true)}
           >
-            출금?�내 조건
+            출금 안내 조건
           </button>
         </div>
         <button
@@ -162,7 +162,7 @@ const VaultPage: React.FC = () => {
           onClick={handleWithdraw}
           disabled={withdrawMutation.isPending}
         >
-          {withdrawMutation.isPending ? "처리�?.." : "금고 출금?�기"}
+          {withdrawMutation.isPending ? "처리 중..." : "금고 출금하기"}
         </button>
       </div>
 
