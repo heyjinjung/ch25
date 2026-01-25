@@ -102,6 +102,29 @@ export interface AdminUserDetailDto {
   playbook?: InterventionPlaybookDto;
 }
 
+export interface AdminUserLevelSnapshotDto {
+  userId: number;
+  ccId: string;
+  level: number;
+  xp: number;
+  nextLevel?: number | null;
+  nextRequiredXp?: number | null;
+  updatedAt?: string | null;
+}
+
+export interface AdminUserLevelAdjustRequest {
+  ccId: string;
+  deltaXp: number;
+  reason: string;
+}
+
+export interface AdminUserLevelSetRequest {
+  ccId: string;
+  level?: number;
+  xp?: number;
+  reason: string;
+}
+
 export interface AdminWalletAdjustmentRequest {
   amount: number;
   token_type: string;
@@ -505,6 +528,40 @@ export const getAdminUserDetail = async (
 ): Promise<AdminUserDetailDto> => {
   const response = await v2Client.get<AdminUserDetailDto>(
     `/api/v2/admin/users/${userId}`,
+  );
+  return response.data;
+};
+
+// ============================================================================
+// User Level (Per-User)
+// ============================================================================
+
+export const getAdminUserLevel = async (
+  ccId: string,
+): Promise<AdminUserLevelSnapshotDto> => {
+  const response = await v2Client.get<AdminUserLevelSnapshotDto>(
+    "/api/v2/admin/users/level",
+    { params: { cc_id: ccId } },
+  );
+  return response.data;
+};
+
+export const adjustAdminUserLevelXp = async (
+  payload: AdminUserLevelAdjustRequest,
+): Promise<AdminUserLevelSnapshotDto> => {
+  const response = await v2Client.post<AdminUserLevelSnapshotDto>(
+    "/api/v2/admin/users/level/adjust",
+    payload,
+  );
+  return response.data;
+};
+
+export const setAdminUserLevel = async (
+  payload: AdminUserLevelSetRequest,
+): Promise<AdminUserLevelSnapshotDto> => {
+  const response = await v2Client.post<AdminUserLevelSnapshotDto>(
+    "/api/v2/admin/users/level/set",
+    payload,
   );
   return response.data;
 };
@@ -1666,8 +1723,10 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
     "/api/v2/admin/game/lottery/configs",
   );
 
-  // Get first config (usually only one)
-  const config = response.data[0];
+  const preferred = response.data.find(
+    (item) => (item.ticketType ?? item.ticket_type) === "LOTTERY_TICKET",
+  );
+  const config = preferred ?? response.data[0];
   if (!config) {
     throw new Error("No lottery config found");
   }
@@ -1675,18 +1734,18 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
   return {
     id: config.id,
     name: config.name,
-    isActive: config.is_active,
-    maxDailyPlays: config.max_daily_plays,
+    isActive: config.is_active ?? false,
+    maxDailyPlays: config.max_daily_plays ?? 0,
     ticketType: config.ticketType ?? config.ticket_type ?? "LOTTERY_TICKET",
-    puzzlePieceProbability: config.puzzle_piece_probability,
+    puzzlePieceProbability: config.puzzle_piece_probability ?? 0,
     prizes: config.prizes.map((prize, index) => ({
       id: prize.id,
-      label: prize.label,
-      weight: prize.weight,
+      label: prize.label ?? "",
+      weight: prize.weight ?? 0,
       stock: prize.stock ?? undefined,
-      rewardType: prize.reward_type,
-      rewardAmount: prize.reward_amount,
-      isActive: prize.is_active,
+      rewardType: prize.reward_type ?? "NONE",
+      rewardAmount: prize.reward_amount ?? 0,
+      isActive: prize.is_active ?? false,
       color: PRIZE_COLORS[index % PRIZE_COLORS.length],
     })),
   };

@@ -66,7 +66,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
         db.rollback()
         raise HTTPException(status_code=400, detail="DEV_LOGIN_FAILED")
 
-    token = create_access_token(user_id=int(legacy_user_id))
+    token = create_access_token(user_id=int(user.id))
     return DevLoginResponse(
         access_token=token,
         user=DevLoginUser(

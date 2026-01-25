@@ -16,6 +16,11 @@ import {
   type AdminLevelDto,
   type AdminLevelGlobalConfig,
   type UserMissionProgressUpdateRequest,
+  type AdminUserLevelAdjustRequest,
+  type AdminUserLevelSetRequest,
+  getAdminUserLevel,
+  adjustAdminUserLevelXp,
+  setAdminUserLevel,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -185,3 +190,41 @@ export const useAdminUpdateLevelGlobalConfig = () => {
     },
   });
 };
+
+// ============================================================================
+// User Level (Per-User)
+// ============================================================================
+
+export function useAdminUserLevel(ccId?: string) {
+  return useQuery({
+    queryKey: ["admin", "users", "level", ccId],
+    queryFn: () => getAdminUserLevel(ccId as string),
+    enabled: false,
+  });
+}
+
+export function useAdminAdjustUserLevelXp() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminUserLevelAdjustRequest) =>
+      adjustAdminUserLevelXp(payload),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", "level", vars.ccId],
+      });
+    },
+  });
+}
+
+export function useAdminSetUserLevel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminUserLevelSetRequest) =>
+      setAdminUserLevel(payload),
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", "level", vars.ccId],
+      });
+    },
+  });
+}

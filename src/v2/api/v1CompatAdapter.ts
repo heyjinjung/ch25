@@ -366,6 +366,7 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
   try {
     const response = await v2Client.get<any>("/api/v2/dice/status");
     const data = response.data;
+    console.log("[V2Adapter] Dice Status Data:", data);
 
     return {
       config_id: data.config_id || 1,
@@ -382,22 +383,34 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
       reward_config: {
         win_reward_type:
           data.reward_config?.win_reward_type ??
-          data.win_reward_type,
+          data.reward_config?.winRewardType ??
+          data.win_reward_type ??
+          data.winRewardType,
         win_reward_amount:
           data.reward_config?.win_reward_amount ??
-          data.win_reward_amount,
+          data.reward_config?.winRewardAmount ??
+          data.win_reward_amount ??
+          data.winRewardAmount,
         draw_reward_type:
           data.reward_config?.draw_reward_type ??
-          data.draw_reward_type,
+          data.reward_config?.drawRewardType ??
+          data.draw_reward_type ??
+          data.drawRewardType,
         draw_reward_amount:
           data.reward_config?.draw_reward_amount ??
-          data.draw_reward_amount,
+          data.reward_config?.drawRewardAmount ??
+          data.draw_reward_amount ??
+          data.drawRewardAmount,
         lose_reward_type:
           data.reward_config?.lose_reward_type ??
-          data.lose_reward_type,
+          data.reward_config?.loseRewardType ??
+          data.lose_reward_type ??
+          data.loseRewardType,
         lose_reward_amount:
           data.reward_config?.lose_reward_amount ??
-          data.lose_reward_amount,
+          data.reward_config?.loseRewardAmount ??
+          data.lose_reward_amount ??
+          data.loseRewardAmount,
       },
     };
   } catch (error) {

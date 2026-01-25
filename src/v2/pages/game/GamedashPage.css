@@ -132,6 +132,7 @@
     color: #ccff00;
     font-weight: 700;
     font-size: 12px;
+    padding-left: 4px;
     /* Reduced from 13px */
     white-space: nowrap;
     overflow: hidden;

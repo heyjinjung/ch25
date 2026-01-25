@@ -137,6 +137,76 @@
 ### 8.5 증거
 - UI 탭/Select 로직: [src/v2/admin/pages/game/RouletteConfigPage.tsx](src/v2/admin/pages/game/RouletteConfigPage.tsx)
 
+## 9) 2026-01-25 추가 트러블슈팅 (룰렛 status/play 티켓타입 우선 매칭)
+### 9.1 증상
+- `/api/v2/roulette/status` 또는 `/api/v2/roulette/play`에서 `V2_ROULETTE_CONFIG_MISSING` 400 발생.
+- 어드민 설정은 존재하지만 grade 매칭 실패로 조회 불가.
+
+### 9.2 원인
+- 룰렛 설정 조회가 `grade + ticket_type` 조합 우선이라, 특정 유저 등급에 맞는 설정이 없으면 실패.
+
+### 9.3 조치 (PATCH)
+- BE: status/play 모두 **티켓타입 우선**으로 활성 설정을 조회하도록 fallback 추가.
+  - [app/v2/services/v2_roulette_game_service.py](app/v2/services/v2_roulette_game_service.py)
+
+### 9.4 정합성 체크
+- `ticket_type`만 맞으면 status/play가 200으로 동작하는지 확인.
+- grade가 없어도 최신 활성 config로 fallback되는지 확인.
+
+### 9.5 증거
+- 서비스 fallback 로직: [app/v2/services/v2_roulette_game_service.py](app/v2/services/v2_roulette_game_service.py)
+
+## 10) 2026-01-25 추가 트러블슈팅 (유저별 레벨관리 탭 부재)
+### 10.1 증상
+- 어드민 레벨관리에서 유저별 레벨/XP를 직접 조정할 수 없음.
+- CC ID 기준 조회 및 레벨포인트(GAME_XP) 관리 흐름 부재.
+
+### 10.2 원인
+- 유저 레벨/XP 관리 API 및 UI 탭이 미구현.
+- SoT `level_point = user_level_progress.xp` 연결이 어드민 기능에 반영되지 않음.
+
+### 10.3 조치 (PATCH)
+- BE: CC ID 기준 유저 레벨/XP 조회 및 조정 API 추가(보상 지급 없음).
+  - [app/v2/api/admin/user_routes.py](app/v2/api/admin/user_routes.py)
+  - [app/v2/schemas/v2_admin_user.py](app/v2/schemas/v2_admin_user.py)
+- FE: 레벨관리 페이지에 "유저 레벨 관리" 탭 추가 및 GAME_XP 조정 UI 제공.
+  - [src/v2/admin/pages/game/LevelConfigPage.tsx](src/v2/admin/pages/game/LevelConfigPage.tsx)
+  - [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts)
+  - [src/v2/hooks/useAdminGame.ts](src/v2/hooks/useAdminGame.ts)
+
+### 10.4 정합성 체크
+- CC ID 조회 시 현재 레벨/XP 표시 확인.
+- XP 가산/강제 설정 후 값 반영 확인(보상 지급 없음).
+- SoT 기준: GAME_XP 외 적립 경로 없음 확인.
+
+### 10.5 증거
+- 어드민 UI 탭/폼: [src/v2/admin/pages/game/LevelConfigPage.tsx](src/v2/admin/pages/game/LevelConfigPage.tsx)
+- Admin API 매핑: [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts)
+- Admin API 라우터: [app/v2/api/admin/user_routes.py](app/v2/api/admin/user_routes.py)
+
+## 11) 2026-01-25 추가 트러블슈팅 (DEV 로그인 유저 게임 상태 미반영)
+### 11.1 증상
+- DEV 로그인으로 유저 상태는 표시되지만 게임 플레이 티켓 차감/증감, 보상 누적이 반영되지 않음.
+- 로그인 직후 기존 상태 그대로 유지됨.
+
+### 11.2 원인
+- DEV 로그인 토큰이 legacy user 기준일 때 V2 서비스가 기대하는 사용자 ID와 불일치.
+- `get_current_user_id`가 V2User 토큰을 거부하여 401/상태 불일치 유발.
+
+### 11.3 조치 (PATCH)
+- BE: `get_current_user_id`에서 V2User ID도 허용하도록 검증 확장.
+  - [app/api/deps.py](app/api/deps.py)
+- BE: DEV 로그인 토큰을 V2 user id로 발급하도록 복구.
+  - [app/v2/api/dev_login.py](app/v2/api/dev_login.py)
+
+### 11.4 정합성 체크
+- DEV 로그인 후 게임 플레이 시 티켓 차감/보상 누적 반영 확인.
+- `/api/v2/*` 보호 API 호출 시 401 재발 없음 확인.
+
+### 11.5 증거
+- 인증 검증 로직: [app/api/deps.py](app/api/deps.py)
+- DEV 로그인 토큰 발급: [app/v2/api/dev_login.py](app/v2/api/dev_login.py)
+
 ## 6) 증거/테스트
 - 요청에 따라 **터미널/자동 테스트 미실행**.
 - 필요한 증거:

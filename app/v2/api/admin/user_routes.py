@@ -15,6 +15,7 @@ from app.models.mission import ApprovalStatus, Mission, UserMissionProgress
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
+from app.models.level_xp import UserLevelProgress, UserXpEventLog
 from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
 from app.v2.schemas.v2_admin_user import (
@@ -34,12 +35,51 @@ from app.v2.schemas.v2_admin_user import (
     UserListResponse,
     UserMissionHistoryDto,
     UserNoteDto,
+    AdminUserLevelSnapshotDto,
+    AdminUserLevelAdjustRequest,
+    AdminUserLevelSetRequest,
 )
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.mission_service import V2MissionService
+from app.v2.models.v2_level_reward import V2LevelRewardTable
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
+
+
+def _get_level_rows(db: Session) -> list[V2LevelRewardTable]:
+    return (
+        db.query(V2LevelRewardTable)
+        .order_by(V2LevelRewardTable.required_xp.asc())
+        .all()
+    )
+
+
+def _resolve_level_by_xp(level_rows: list[V2LevelRewardTable], xp: int) -> int:
+    if not level_rows:
+        return 1
+    current = 1
+    for row in level_rows:
+        if xp >= int(row.required_xp or 0):
+            current = int(row.level)
+    return max(current, 1)
+
+
+def _resolve_next_level(level_rows: list[V2LevelRewardTable], xp: int) -> tuple[int | None, int | None]:
+    for row in level_rows:
+        if xp < int(row.required_xp or 0):
+            return int(row.level), int(row.required_xp or 0)
+    return None, None
+
+
+def _get_or_create_level_progress(db: Session, user_id: int) -> UserLevelProgress:
+    progress = db.get(UserLevelProgress, user_id)
+    if progress:
+        return progress
+    progress = UserLevelProgress(user_id=user_id, level=1, xp=0)
+    db.add(progress)
+    db.flush()
+    return progress
 
 
 @router.get("/users", response_model=UserListResponse)
@@ -276,6 +316,141 @@ def get_admin_user_detail(
         riskLevel=risk_level,
         riskReason=risk_reason,
         playbook=playbook if suggested_actions else None,
+    )
+
+
+@router.get("/users/level", response_model=AdminUserLevelSnapshotDto)
+def get_admin_user_level_by_cc_id(
+    cc_id: str,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    _admin_id, _admin_role = admin_info
+    user = db.query(User).filter(User.external_id == cc_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    progress = _get_or_create_level_progress(db, user.id)
+    level_rows = _get_level_rows(db)
+    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+
+    return AdminUserLevelSnapshotDto(
+        userId=user.id,
+        ccId=str(user.external_id),
+        level=int(progress.level or 1),
+        xp=int(progress.xp or 0),
+        nextLevel=next_level,
+        nextRequiredXp=next_required_xp,
+        updatedAt=progress.updated_at,
+    )
+
+
+@router.post("/users/level/adjust", response_model=AdminUserLevelSnapshotDto)
+def adjust_admin_user_level_xp(
+    payload: AdminUserLevelAdjustRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _admin_role = admin_info
+    user = db.query(User).filter(User.external_id == payload.ccId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    if payload.deltaXp == 0:
+        raise HTTPException(status_code=400, detail="DELTA_XP_REQUIRED")
+
+    progress = _get_or_create_level_progress(db, user.id)
+    progress.xp = int(progress.xp or 0) + int(payload.deltaXp)
+    if progress.xp < 0:
+        progress.xp = 0
+
+    level_rows = _get_level_rows(db)
+    progress.level = _resolve_level_by_xp(level_rows, int(progress.xp or 0))
+    user.level = int(progress.level or 1)
+
+    db.add(
+        UserXpEventLog(
+            user_id=user.id,
+            source="ADMIN_ADJUST",
+            delta=int(payload.deltaXp),
+            meta={"reason": payload.reason, "policy": "NO_REWARD"},
+        )
+    )
+
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "USER_LEVEL_XP_ADJUST",
+        "USER_LEVEL",
+        str(user.id),
+        before={"xp": int(progress.xp or 0) - int(payload.deltaXp)},
+        after={"xp": int(progress.xp or 0), "level": int(progress.level or 1)},
+    )
+
+    db.commit()
+    db.refresh(progress)
+
+    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+    return AdminUserLevelSnapshotDto(
+        userId=user.id,
+        ccId=str(user.external_id),
+        level=int(progress.level or 1),
+        xp=int(progress.xp or 0),
+        nextLevel=next_level,
+        nextRequiredXp=next_required_xp,
+        updatedAt=progress.updated_at,
+    )
+
+
+@router.post("/users/level/set", response_model=AdminUserLevelSnapshotDto)
+def set_admin_user_level(
+    payload: AdminUserLevelSetRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _admin_role = admin_info
+    user = db.query(User).filter(User.external_id == payload.ccId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    if payload.level is None and payload.xp is None:
+        raise HTTPException(status_code=400, detail="LEVEL_OR_XP_REQUIRED")
+
+    progress = _get_or_create_level_progress(db, user.id)
+    before_xp = int(progress.xp or 0)
+    before_level = int(progress.level or 1)
+
+    if payload.xp is not None:
+        progress.xp = int(payload.xp)
+    if payload.level is not None:
+        progress.level = int(payload.level)
+    elif payload.xp is not None:
+        level_rows = _get_level_rows(db)
+        progress.level = _resolve_level_by_xp(level_rows, int(progress.xp or 0))
+
+    user.level = int(progress.level or 1)
+
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "USER_LEVEL_SET",
+        "USER_LEVEL",
+        str(user.id),
+        before={"level": before_level, "xp": before_xp},
+        after={"level": int(progress.level or 1), "xp": int(progress.xp or 0)},
+    )
+
+    db.commit()
+    db.refresh(progress)
+
+    level_rows = _get_level_rows(db)
+    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+    return AdminUserLevelSnapshotDto(
+        userId=user.id,
+        ccId=str(user.external_id),
+        level=int(progress.level or 1),
+        xp=int(progress.xp or 0),
+        nextLevel=next_level,
+        nextRequiredXp=next_required_xp,
+        updatedAt=progress.updated_at,
     )
 
 

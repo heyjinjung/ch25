@@ -195,9 +195,9 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                 key={`lbl-${index}`}
                 className={`absolute inset-0 flex items-center justify-center pointer-events-none ${LABEL_ROTATE_CLASSES[index]}`}
               >
-                <div className="translate-y-[-38%]">
+                <div className="translate-y-[-72px]">
                   <div className={LABEL_UNROTATE_CLASSES[index]}>
-                    <span className="text-[11px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
+                    <span className="text-[12px] font-black text-white uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap">
                       {segment?.label ?? ""}
                     </span>
                   </div>

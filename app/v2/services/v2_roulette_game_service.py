@@ -141,6 +141,18 @@ class V2RouletteGameService:
                 .order_by(V2RouletteConfig.id.desc())
                 .first()
             )
+            if config is None and normalized_ticket_type != "ROULETTE_TICKET":
+                config = (
+                    db.query(V2RouletteConfig)
+                    .filter(
+                        V2RouletteConfig.is_active.is_(True),
+                        V2RouletteConfig.ticket_type.in_(
+                            self._ticket_type_aliases("ROULETTE_TICKET")
+                        ),
+                    )
+                    .order_by(V2RouletteConfig.id.desc())
+                    .first()
+                )
             if config is not None:
                 segments = (
                     db.query(V2RouletteSegment)
@@ -218,14 +230,37 @@ class V2RouletteGameService:
                 grade=grade,
             )
         except InvalidConfigError:
-            if normalized_ticket_type != "ROULETTE_TICKET":
-                config, segments = V2GameConfigService.get_active_roulette_config(
-                    db,
-                    ticket_type="ROULETTE_TICKET",
-                    grade=grade,
+            config = (
+                db.query(V2RouletteConfig)
+                .filter(
+                    V2RouletteConfig.is_active.is_(True),
+                    V2RouletteConfig.ticket_type.in_(
+                        self._ticket_type_aliases(normalized_ticket_type)
+                    ),
                 )
-            else:
+                .order_by(V2RouletteConfig.id.desc())
+                .first()
+            )
+            if config is None and normalized_ticket_type != "ROULETTE_TICKET":
+                config = (
+                    db.query(V2RouletteConfig)
+                    .filter(
+                        V2RouletteConfig.is_active.is_(True),
+                        V2RouletteConfig.ticket_type.in_(
+                            self._ticket_type_aliases("ROULETTE_TICKET")
+                        ),
+                    )
+                    .order_by(V2RouletteConfig.id.desc())
+                    .first()
+                )
+            if config is None:
                 raise
+            segments = (
+                db.query(V2RouletteSegment)
+                .filter(V2RouletteSegment.config_id == config.id)
+                .order_by(V2RouletteSegment.slot_index)
+                .all()
+            )
 
         chosen = self._pick_weighted_segment(segments)
         reward_type = str(chosen.reward_type)

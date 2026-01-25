@@ -486,7 +486,12 @@ def get_lottery_configs(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    configs = db.query(LotteryConfig).options(selectinload(LotteryConfig.prizes)).all()
+    configs = (
+        db.query(LotteryConfig)
+        .options(selectinload(LotteryConfig.prizes))
+        .order_by(LotteryConfig.ticket_type.asc(), LotteryConfig.id.asc())
+        .all()
+    )
 
     result = []
     for config in configs:

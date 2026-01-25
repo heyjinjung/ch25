@@ -219,6 +219,29 @@ class UserMissionRewardClaimResponse(BaseModel):
     rewardAmount: Optional[int] = None
 
 
+class AdminUserLevelSnapshotDto(BaseModel):
+    userId: int
+    ccId: str
+    level: int
+    xp: int
+    nextLevel: Optional[int] = None
+    nextRequiredXp: Optional[int] = None
+    updatedAt: Optional[datetime] = None
+
+
+class AdminUserLevelAdjustRequest(BaseModel):
+    ccId: str = Field(..., min_length=1, max_length=100)
+    deltaXp: int = Field(..., description="GAME_XP delta (positive/negative)")
+    reason: str = Field(..., min_length=1)
+
+
+class AdminUserLevelSetRequest(BaseModel):
+    ccId: str = Field(..., min_length=1, max_length=100)
+    level: Optional[int] = Field(None, ge=1)
+    xp: Optional[int] = Field(None, ge=0)
+    reason: str = Field(..., min_length=1)
+
+
 class TicketLogDto(BaseModel):
     id: int
     userId: int

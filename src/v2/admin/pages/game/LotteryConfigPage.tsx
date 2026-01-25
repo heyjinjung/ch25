@@ -54,7 +54,23 @@ export default function LotteryConfigPage() {
 
   useEffect(() => {
     if (config) {
-      setLocalConfig(config);
+      setLocalConfig({
+        ...config,
+        isActive: !!config.isActive,
+        maxDailyPlays: config.maxDailyPlays ?? 0,
+        puzzlePieceProbability: config.puzzlePieceProbability ?? 0,
+        prizes: config.prizes.map((prize) => ({
+          ...prize,
+          label: prize.label ?? "",
+          weight: Number.isFinite(prize.weight) ? prize.weight : 0,
+          rewardType: prize.rewardType ?? "NONE",
+          rewardAmount: Number.isFinite(prize.rewardAmount)
+            ? prize.rewardAmount
+            : 0,
+          isActive: !!prize.isActive,
+          stock: prize.stock ?? undefined,
+        })),
+      });
       setIsDirty(false);
     }
   }, [config]);
@@ -207,7 +223,7 @@ export default function LotteryConfigPage() {
             <Label className="text-zinc-400">활성화 상태</Label>
             <div className="flex items-center space-x-2">
               <Switch
-                checked={localConfig.isActive}
+                checked={!!localConfig.isActive}
                 onCheckedChange={(checked) =>
                   handleConfigChange("isActive", checked)
                 }
@@ -237,10 +253,14 @@ export default function LotteryConfigPage() {
             <Label className="text-zinc-400">일일 최대 참여 횟수</Label>
             <Input
               type="number"
-              value={localConfig.maxDailyPlays}
-              onChange={(e) =>
-                handleConfigChange("maxDailyPlays", parseInt(e.target.value))
-              }
+              value={localConfig.maxDailyPlays ?? 0}
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value);
+                handleConfigChange(
+                  "maxDailyPlays",
+                  Number.isNaN(parsed) ? 0 : parsed,
+                );
+              }}
               className="bg-black/20 border-white/10"
             />
           </div>
@@ -250,13 +270,14 @@ export default function LotteryConfigPage() {
             <div className="relative">
               <Input
                 type="number"
-                value={localConfig.puzzlePieceProbability}
-                onChange={(e) =>
+                value={localConfig.puzzlePieceProbability ?? 0}
+                onChange={(e) => {
+                  const parsed = parseInt(e.target.value);
                   handleConfigChange(
                     "puzzlePieceProbability",
-                    parseInt(e.target.value),
-                  )
-                }
+                    Number.isNaN(parsed) ? 0 : parsed,
+                  );
+                }}
                 className="bg-black/20 border-white/10 pr-8"
               />
               <span className="absolute right-3 top-2.5 text-zinc-500">%</span>
@@ -297,7 +318,7 @@ export default function LotteryConfigPage() {
                   {/* Status Toggle */}
                   <div className="flex flex-col items-center gap-2">
                     <Switch
-                      checked={prize.isActive}
+                      checked={!!prize.isActive}
                       onCheckedChange={(checked) =>
                         handlePrizeChangeLocal(prize.id, "isActive", checked)
                       }
@@ -317,7 +338,7 @@ export default function LotteryConfigPage() {
                         경품명 (Label)
                       </Label>
                       <Input
-                        value={prize.label}
+                        value={prize.label ?? ""}
                         onChange={(e) =>
                           handlePrizeChangeLocal(
                             prize.id,
@@ -337,14 +358,15 @@ export default function LotteryConfigPage() {
                       <div className="relative">
                         <Input
                           type="number"
-                          value={prize.weight}
-                          onChange={(e) =>
+                          value={prize.weight ?? 0}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value);
                             handlePrizeChangeLocal(
                               prize.id,
                               "weight",
-                              parseInt(e.target.value),
-                            )
-                          }
+                              Number.isNaN(parsed) ? 0 : parsed,
+                            );
+                          }}
                           className="h-8 bg-black/20 border-white/10 font-mono"
                         />
                         {prize.weight === 0 && (
@@ -380,7 +402,7 @@ export default function LotteryConfigPage() {
                           보상 타입
                         </Label>
                         <Select
-                          value={prize.rewardType}
+                          value={prize.rewardType ?? "NONE"}
                           onValueChange={(v) =>
                             handlePrizeChangeLocal(prize.id, "rewardType", v)
                           }
@@ -401,14 +423,15 @@ export default function LotteryConfigPage() {
                         <Label className="text-xs text-zinc-500">수량</Label>
                         <Input
                           type="number"
-                          value={prize.rewardAmount}
-                          onChange={(e) =>
+                          value={prize.rewardAmount ?? 0}
+                          onChange={(e) => {
+                            const parsed = parseInt(e.target.value);
                             handlePrizeChangeLocal(
                               prize.id,
                               "rewardAmount",
-                              parseInt(e.target.value),
-                            )
-                          }
+                              Number.isNaN(parsed) ? 0 : parsed,
+                            );
+                          }}
                           className="h-8 bg-black/20 border-white/10 text-right"
                         />
                       </div>

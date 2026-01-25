@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.security import decode_access_token
 from app.db.session import SessionLocal
 from app.models.user import User
+from app.v2.models.user import V2User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -58,7 +59,9 @@ def get_current_user_id(
 
     user_exists = db.execute(select(User.id).where(User.id == user_id)).scalar_one_or_none()
     if user_exists is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID")
+        v2_exists = db.execute(select(V2User.id).where(V2User.id == user_id)).scalar_one_or_none()
+        if v2_exists is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID")
 
     return user_id
 

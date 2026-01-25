@@ -177,6 +177,12 @@ F1 @ react-dom.production.min.js:272
 Ji @ react-dom.production.min.js:127
 (anonymous) @ react-dom.production.min.js:266Understand this error
 
+## 빌드 이슈
+- ✅ **프론트 빌드 실패 (TS5103: Invalid value for '--ignoreDeprecations')**
+   - 증상: `npm run build` 중 `tsconfig.json`의 `ignoreDeprecations: "6.0"`에서 오류 발생
+   - 조치: `ignoreDeprecations` 값을 `"5.0"`으로 수정
+
+1) ✅ 유저별 레벨관리 기능이 없음
 
 
 -----------------
@@ -190,13 +196,94 @@ Ji @ react-dom.production.min.js:127
    - 우선순위: P0
 
 
-1) 유저별 레벨관리 기능이 없음
+
 유저별 레벨포인트 관리 / 레벨등급 관리기능 백앤드/프론트 모두 
 v2 어드민시스템에 구현되어야해 
 
 ---
 
-## 빌드 이슈
-- ✅ **프론트 빌드 실패 (TS5103: Invalid value for '--ignoreDeprecations')**
-   - 증상: `npm run build` 중 `tsconfig.json`의 `ignoreDeprecations: "6.0"`에서 오류 발생
-   - 조치: `ignoreDeprecations` 값을 `"5.0"`으로 수정
+추가 
+1) 룰렛설정값 관리에서
+각 티켓별 라벨값이 다르게 설정되어야하는데
+모두 동기화처리됨 하나 바꾸면 4종 다 바뀜 
+가중치 / 보상타임 / 수량 / 잭팟여부 등 
+모든 설정값이 다 동기화 처리됨 
+
+
+2) 어드민페이지 복권설정 
+
+http://localhost:3000/api/v2/admin/game/lottery/config/1/prize/5
+요청 메서드
+PUT
+상태 코드
+422 Unprocessable Entity
+원격 주소
+[::1]:3000
+리퍼러 정책
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-origin
+http://localhost:3000
+connection
+keep-alive
+content-length
+348
+content-type
+application/json
+date
+Sun, 25 Jan 2026 02:58:55 GMT
+server
+nginx/1.28.0
+vary
+Origin
+x-content-type-options
+nosniff
+x-frame-options
+SAMEORIGIN
+x-xss-protection
+1; mode=block
+accept
+application/json, text/plain, */*
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+ko-KR,ko;q=0.9
+authorization
+Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyIiwia
+
+RL
+http://localhost:3000/api/v2/admin/game/lottery/config/1/prize/36
+요청 메서드
+PUT
+상태 코드
+200 OK
+원격 주소
+[::1]:3000
+리퍼러 정책
+strict-origin-when-cross-origin
+access-control-allow-credentials
+true
+access-control-allow-origin
+http://localhost:3000
+connection
+keep-alive
+content-encoding
+br
+content-type
+application/json
+
+각 컨피그마다 입력/저장시 모두 오류 / 정상이 다름.. 
+그리고 완전 저장/. 활성화 하고 새로고침하면
+다시 비활성화 / 중지됨으로 바꾸어져 있음 
+
+- 원인: `/api/v2/admin/game/lottery/configs` 응답이 다중일 때 프론트가 첫 항목만 사용하여 새로고침 시 다른 config가 표시됨.
+- 조치: 백엔드 `/configs` 정렬 안정화 + 프론트에서 LOTTERY_TICKET 우선 선택.
+- 추가: Select/Switch 경고는 undefined 값으로 uncontrolled 렌더링된 것이라 기본값 보정.
+
+
+3) ✅ 개발유저 - 백앤드에서 소환하여 상태표시는 되지만
+실제 게임플레이 티켓차감 / 증감
+보상누적 전혀 확인되지 않음 
+그냥 원래 로그인했던 그 상태임 
+
