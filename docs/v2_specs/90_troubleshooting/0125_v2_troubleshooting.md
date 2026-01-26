@@ -240,8 +240,7 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
 
 ✅ 금고페이지 출금조건 확인 - 구플래쉬 작업완료 
 
-[] 게임결과 모달 및 애니메이션 
-ㄴ 꽝에는 실패용 모달 / 애니메이션 
+[] 모달 및 애니메이션 
 모달 텍스트에 
 https://ui.aceternity.com/components/encrypted-text
 Encrypted Text 
@@ -271,6 +270,8 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 
 --------------------
 
+[] 게임결과 모달 및 애니메이션 
+ㄴ 꽝에는 실패용 모달 / 애니메이션 
 
 연속스트릭모달
 골든아워 모달
@@ -299,8 +300,8 @@ special
 ------------
 
 기술기준문서 :
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\admin 내 모든문서
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 내 모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
 
 기능 생성 후

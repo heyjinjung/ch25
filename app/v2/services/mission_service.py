@@ -54,6 +54,25 @@ class V2MissionService:
         logic_key = (mission.logic_key or "").lower()
         return "golden_hour" in logic_key
 
+    def _is_new_user(self, user_id: int) -> bool:
+        """Check if user is considered 'New User' (within 7 days of creation)."""
+        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if not user:
+            return False
+        
+        # If no created_at, assume not new (or handle as needed)
+        if not user.created_at:
+            return False
+
+        now_tz = datetime.now(timezone.utc)
+        # created_at is usually UTC naive or aware in DB. Ensure comparison works.
+        created_at = user.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+            
+        diff = now_tz - created_at
+        return diff.days < 7
+
     def _within_time_window(self, mission: Mission, now_tz: datetime) -> bool:
         if mission.start_time and mission.end_time:
             current_time = now_tz.time()
@@ -422,6 +441,12 @@ class V2MissionService:
         for mission in missions:
             if self._is_golden_hour_mission(mission) and not bool(getattr(self.settings, "golden_hour_enabled", False)):
                 continue
+            
+            # [New User Check] Centralized logic
+            if mission.category == MissionCategory.NEW_USER:
+                if not self._is_new_user(user_id):
+                    continue
+
             if not self._within_time_window(mission, now_tz):
                 continue
 

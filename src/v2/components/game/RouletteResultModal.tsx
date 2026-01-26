@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useSound } from "../../../hooks/useSound";
 import { motion, AnimatePresence } from "framer-motion";
 import { Coins, X, RotateCw } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -18,8 +19,13 @@ export default function RouletteResultModal({
   rewardType,
   rewardAmount,
 }: RouletteResultModalProps) {
+  const { playRouletteStop } = useSound();
+
   useEffect(() => {
     if (isOpen) {
+      // 효과음 재생 (룰렛 결과 도달 시)
+      playRouletteStop();
+
       const end = Date.now() + 1000;
       const colors = ["#D2FD9C", "#FFFFFF", "#FFD700"];
 
@@ -44,7 +50,7 @@ export default function RouletteResultModal({
         }
       })();
     }
-  }, [isOpen]);
+  }, [isOpen, playRouletteStop]);
 
   const getRewardIcon = (type: string) => {
     void type;
