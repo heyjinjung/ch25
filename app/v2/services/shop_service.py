@@ -1,6 +1,7 @@
 """V2 shop service (Vault SoT: locked balance)."""
 from __future__ import annotations
 
+import logging
 from sqlalchemy.orm import Session
 
 from app.v2.models import GameTokenType
@@ -8,6 +9,8 @@ from app.v2.models.user import V2User
 from app.v2.models.v2_shop_order import V2ShopOrder
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
+
+logger = logging.getLogger(__name__)
 
 
 class V2ShopService:
@@ -22,7 +25,29 @@ class V2ShopService:
         cost_amount: int,
         reward_type: str,
         reward_amount: int,
+        skip_suspension_check: bool = False,
     ) -> V2ShopOrder:
+        """Purchase a shop product.
+        
+        SoT: v2_strict_vault_policy_sot_ko.md
+        - benefits_suspended=True인 유저는 구매 차단 (403)
+        
+        Args:
+            skip_suspension_check: 관리자 강제 구매 시 True (기본 False)
+        
+        Raises:
+            ValueError("BENEFITS_SUSPENDED"): 7일 무입금 유저의 구매 시도
+        """
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        if not skip_suspension_check:
+            is_suspended, deposit_7d = V2VaultService.is_benefits_suspended(db, user_id)
+            if is_suspended:
+                logger.warning(
+                    f"[SHOP] Purchase blocked: user_id={user_id} benefits_suspended=True, "
+                    f"deposit_7d={deposit_7d}, sku={sku}"
+                )
+                raise ValueError("BENEFITS_SUSPENDED")
+        
         if cost_amount <= 0:
             raise ValueError("cost_amount must be > 0")
         if reward_type != "NONE" and reward_amount <= 0:

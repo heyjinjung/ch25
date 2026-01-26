@@ -122,9 +122,8 @@ def get_admin_users_list(
     if sortBy == "level":
         order_col = User.level
     elif sortBy == "vault_balance":
-        order_col = func.coalesce(User.vault_available_balance, 0) + func.coalesce(
-            User.vault_locked_balance, 0
-        )
+        # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
+        order_col = func.coalesce(User.vault_locked_balance, 0)
     elif sortBy == "created_at":
         order_col = User.created_at
     else:
@@ -150,7 +149,8 @@ def get_admin_users_list(
 
     user_list = []
     for user in users:
-        vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+        # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
+        vault_balance = int(user.vault_locked_balance or 0)
 
         tier = "COMMON"
         if user.total_charge_amount:
@@ -198,7 +198,8 @@ def create_admin_user(
 
     user = V2AdminUserService.create_user(db, payload)
 
-    vault_balance = int(user.vault_available_balance or 0) + int(user.vault_locked_balance or 0)
+    # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
+    vault_balance = int(user.vault_locked_balance or 0)
     total_charge = int(getattr(user, "total_charge_amount", 0) or 0)
     tier = "COMMON"
     if total_charge >= 10000000:
@@ -389,7 +390,8 @@ def get_admin_user_detail(
         except Exception:
             continue
 
-    vault_balance = int(user.vault_locked_balance or 0) + int(user.vault_available_balance or 0)
+    # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
+    vault_balance = int(user.vault_locked_balance or 0)
     current_assets = vault_balance
 
     retention = db.query(UserRetentionState).filter(UserRetentionState.user_id == user_id).first()

@@ -335,7 +335,7 @@ export default function TicketManagementTab() {
         <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-zinc-400 flex justify-between items-center">
-              지�?건수 (Issued)
+              지급 건수 (Issued)
               <Badge
                 variant="outline"
                 className="bg-emerald-500/10 text-emerald-500 border-none scale-75"
@@ -364,10 +364,7 @@ export default function TicketManagementTab() {
             <div className="text-2xl font-bold text-zinc-300">
               {stats.totalUsed.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">?��?가 ?�모??건수</p>
-            <p className="text-[10px] text-zinc-500 mt-1">
-              사용자가 소모한 건수
-            </p>
+            <p className="text-[10px] text-zinc-500 mt-1">사용자가 소모한 건수</p>
           </CardContent>
         </Card>
 

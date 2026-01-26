@@ -7,10 +7,10 @@
 
 ## 🔢 사건 목록 (사용자 신고 순서 및 원문 요약)
 1
-   ✅ **회원관리상세페이지 ?�원 관�? - 구플래쉬 작업중 
-   �?11명의 ?�원??관리하�??�세 ?�보�? 조회?�니??
-   ?�원 ?�록
-   ?�네?? CC_id, telegram_id, telegram_username 검??..?�터
+   ✅ **회원관리상세페이지 회원 관리 - 구플래쉬 작업중 **
+   약 11명의 회원을 관리하고 상세 정보를 조회합니다.
+   회원 목록
+   닉네임, CC_id, telegram_id, telegram_username 검색 필터
 
 4. ✅**드롭다운 선택시 텍스트가 검정색** - 구글플래쉬 작업완료
    - 증상: 드롭다운(Select) 선택 항목의 텍스트가 UI 기준(밝은 테마)과 불일치 — 가독성 저하.
@@ -102,14 +102,14 @@
 ✅---. **v2 주사위 게임 요청** 구글 3 작업중 
    정적이고 재미없고 억지스러워 보임. 개선할것 
 
-2.✅ ?�점 관�? / 미션 관� - 상점/미션 탭 수정 - 구글3 완료 
+2.✅ 상점 관리 / 미션 관리 - 상점/미션 탭 수정 - 구글3 완료 
 
 
 ✅1. 티켓관리/ 인벤토리 - 구글 3 작업중 
-?�켓 관�?
-?�벤?�리 관�?
-?�벤?�리 관�?(Inventory Management)
-?��? ?�이??지�??�수 로그�?관리하�??�이?�을 지급합?�다.
+티켓 관리
+인벤토리 관리
+인벤토리 관리(Inventory Management)
+유저 아이템 지급/회수 로그를 관리하고 아이템을 지급합니다.
 
 8.  ✅현재 미션관리에 dtet - 코덱스작업완료
 스타벅스 기프티콘 1만원12개 test
@@ -218,15 +218,12 @@ connection
 보상누적 전혀 확인되지 않음 
 그냥 원래 로그인했던 그 상태임 
 
+ ✅ 상점품목 중 골든티켓이라는 항목발견 / 데이터베이스 정합성 검증 필요 
 
-연속스트릭모달
-골든아워 모달
-
------------------
 인박스 모달
-2. **어드민에서 메시지 발송했는데 네트워크/서버 로그 미존재**
+✅ 2. **어드민에서 메시지 발송했는데 네트워크/서버 로그 미존재**
    - 증상: 어드민에서 발송 작업을 수행했으나 프론트/서버(access/nginx/backend) 어디에도 관련 요청/로그가 남지 않음.
-   - 우선순위: P0
+   -
 admin Side (Works Correctly)
 Routing: Correctly routed to MarketingTabPage > MessageSenderPage.
 Logic: Uses proper V2 services (createV2AdminMessage, getAdminSegmentStats).
@@ -234,93 +231,45 @@ Component: Fully implemented and functional.
 User Side (Partial - Missing UI)
 Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
 
+--------------------
+
+
+연속스트릭모달
+골든아워 모달
+레벨페이지/미션페이지 유저용
+금고페이지 출금조건 확인
+팀배틀페이지 어드민 / 풀스택 연결 
+이벤트페이지
+
+
+게임결과 모달 및 애니메이션
+모달 텍스트에 
+https://ui.aceternity.com/components/encrypted-text
+Encrypted Text 
+적용가능한지 체크 
+
+미션페이지 too
+
+메인페이지 
+금고페이지!! 
+Animated Testimonials
+Minimal testimonials sections with image and quote.
+
+testimonials
+special 
+이 효과!! 
+
+
+
+골든프로젝트 백앤드 
+
+-----------------
+
 
 
 1/25일 밤 10:39
-상점품목 중 골든티켓이라는 항목발견 / 데이터베이스 정합성 검증 필요 
+
 티켓 /인벤토리 로그 kst 가능한지 확인할것 
 
 ---
-
-## 1/25일 밤 11시~ 트러블슈팅 세션
-
-### ✅ Issue 1: 상점 골드키 reward_type 오류
-
-**증상**: 상점에서 "골드키" 구매 시 토큰이 아닌 인벤토리에 저장됨 (게임에서 사용 불가)
-
-**원인 분석**:
-- `UiConfig.v2_shop_products`에서 골드키 항목의 `reward_type`이 `GOLDEN_TICKET` (레거시)
-- V2 표준은 `GOLD_KEY_TICKET`
-- `V2ShopService.grant_reward()`에서 `GameTokenType`에 없는 타입은 `grant_item()`으로 인벤토리 저장
-
-**검증 스크립트**: `scripts/check_shop_reward_types.py`
-```
-=== 상점 아이템 검사 결과 ===
-✅ SOT_ROULETTE_TICKET  → ROULETTE_TICKET
-✅ SOT_LOTTERY_TICKET   → LOTTERY_TICKET
-❌ SOT_GOLD_KEY_TICKET  → GOLDEN_TICKET (잘못됨!)
-✅ SOT_DIAMOND_TICKET   → DIAMOND_TICKET
-✅ SOT_DICE_TICKET      → DICE_TICKET
-❌ SOT_STARBUCKS_GIFTICON_10000 → STARBUCKS_GIFTICON_10000 (정상 - 기프티콘)
-❌ SOT_PIZZA_GIFTICON_10000     → PIZZA_GIFTICON_10000 (정상 - 기프티콘)
-❌ SOT_CHICKEN_GIFTICON_10000   → CHICKEN_GIFTICON_10000 (정상 - 기프티콘)
-```
-
-**조치**: `scripts/fix_shop_golden_ticket.py` 실행
-- `GOLDEN_TICKET` → `GOLD_KEY_TICKET` 수정 완료
-
-**참고**: 기프티콘 아이템(스벅/피자/치킨)은 `GameTokenType`에 없는 것이 **정상** (토큰이 아닌 인벤토리 아이템)
-
----
-
-### ✅ Issue 2: 금고 출금 모달 게임횟수 0 표시
-
-**증상**: 금고 출금 조건 모달에서 "게임 플레이 횟수"가 0으로 표시됨
-
-**진단 과정**:
-
-1. **DB 확인** - `VaultEarnEvent` 테이블에 user 15의 GAME_PLAY 기록 10+개 존재
-   ```sql
-   SELECT * FROM vault_earn_event WHERE user_id=15 AND earn_type='GAME_PLAY';
-   -- (68, 15, 'GAME_PLAY', 100, 2026-01-25 14:17:21) 등 다수
-   ```
-
-2. **백엔드 API 확인** - `V2VaultService.get_vault_info()` 정상 반환
-   ```python
-   # 실행 결과
-   daily_play_count: 50  ✅
-   daily_play_target: 30
-   daily_vault_spent: 0
-   daily_deposit_confirmed: False
-   ```
-
-3. **프론트엔드 타입 확인** - `VaultStatusResponse.daily_play_count` 정의됨 ✅
-
-4. **빌드 확인** - `VaultPage-fCoOLOOw.js`에 `daily_play` 코드 포함 ✅
-
-**결론**: 백엔드 정상, 프론트엔드 빌드 정상. 브라우저 캐시 또는 다른 유저 세션 문제 가능성.
-
-**검증 방법**: 
-- 브라우저 캐시 삭제 (Ctrl+Shift+R)
-- F12 → Network → `/api/v2/vault/status` 응답의 `daily_play_count` 값 확인
-
----
-
-### 관련 파일 목록
-
-| 파일 | 용도 |
-|---|---|
-| `app/v2/services/vault_service.py` L170-290 | 금고 상태 조회 로직 (daily_play_count 계산) |
-| `app/v2/services/shop_service.py` L65-105 | 상점 보상 지급 로직 (grant_reward) |
-| `src/v2/api/vaultApi.ts` L24-42 | VaultStatusResponse 타입 정의 |
-| `src/v2/components/vault/V2WithdrawalGuideModal.tsx` | 출금 조건 모달 |
-| `src/v2/components/vault/WithdrawalRulesChecklist.tsx` | 출금 조건 체크리스트 |
-
-### 생성된 유틸 스크립트
-
-| 스크립트 | 용도 |
-|---|---|
-| `scripts/check_shop_reward_types.py` | 상점 아이템 reward_type과 V2 표준 비교 |
-| `scripts/fix_shop_golden_ticket.py` | 골드키 reward_type 수정 |
-| `scripts/check_vault_program.py` | VaultProgram 설정 확인 |
 

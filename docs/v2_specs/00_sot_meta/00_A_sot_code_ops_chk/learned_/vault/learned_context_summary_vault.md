@@ -6,6 +6,62 @@
 
 ---
 
+## [2026-01-26 구현 완료 항목] - Remediation Guide 기반
+
+### A. Admin user list vault_balance 수정 ✅
+- **문제**: Admin 유저 목록/상세에서 `vault_balance = locked + available` 사용 (SoT 위반)
+- **해결**:
+  - `app/v2/api/admin/user_routes.py` 수정 (4곳)
+    - 정렬 컬럼: `func.coalesce(User.vault_locked_balance, 0)` 단일 사용
+    - 응답 DTO: `vault_balance = int(user.vault_locked_balance or 0)` 단일 사용
+- **검증**: sortBy=vault_balance 시 locked만 기준으로 정렬됨
+
+### B. Dashboard 집계 total_vault_balance 수정 ✅
+- **문제**: 대시보드/랭킹 집계가 `(locked + available)` 기반 (SoT 위반)
+- **해결**:
+  - `app/services/admin_dashboard_service.py` 수정 (2곳)
+    - Overview: `func.sum(User.vault_locked_balance)` 단일 사용
+    - Metric Detail: `User.vault_locked_balance > 0` 필터, `vault_locked_balance.desc()` 정렬
+- **검증**: KPI/리포트가 locked 기준으로 집계됨
+
+### E. FE adapter availableBalance 처리 ✅
+- **문제**: 호환 어댑터가 `availableBalance`를 노출 (정책 표현 충돌)
+- **해결**:
+  - `src/v2/api/v1CompatAdapter.ts` 수정
+    - `availableBalance: 0` 고정 (deprecated 주석 추가)
+    - `vaultBalance = lockedBalance` 단일 기준
+- **검증**: FE에서 available 값이 항상 0으로 반환됨
+
+### SQL 감사 쿼리 결과 (2026-01-26)
+```
+Non-zero available balance users: 2명
+- user_id=7, locked=100, available=100
+- user_id=8, locked=222000, available=20000
+```
+→ 레거시 데이터 2건 존재, 마이그레이션 또는 정리 필요
+
+---
+
+## [수정 파일 목록]
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/v2/api/admin/user_routes.py` | vault_balance 정렬/응답 4곳 → locked만 사용 |
+| `app/services/admin_dashboard_service.py` | total_vault_balance 집계 2곳 → locked만 사용 |
+| `src/v2/api/v1CompatAdapter.ts` | getV2VaultStatus() → availableBalance=0 고정 |
+
+---
+
+## [TODO - 추후 작업]
+
+- [ ] C. Withdrawals route 통합 (economy_routes vs vault_routes)
+- [ ] D. Admin prefix 표준화 (`/admin/api` vs `/api/v2/admin`)
+- [ ] F. Enum/Constants 정규화
+- [ ] 레거시 available balance 2건 마이그레이션/정리
+- [ ] Feature flag 적용 (staging→canary→prod 롤아웃)
+
+---
+
 ## 0. 포함 문서(학습 대상) 및 선정 기준
 
 ### 선정 기준

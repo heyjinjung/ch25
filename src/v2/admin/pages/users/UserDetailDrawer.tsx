@@ -169,7 +169,7 @@ export function UserDetailDrawer({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {/* ?��? 버튼 ?�거??(Placeholder) */}
+                  {/* 삭제 버튼 제거(Placeholder) */}
                 </div>
               </div>
             </SheetHeader>
@@ -375,7 +375,7 @@ export function UserDetailDrawer({
                       </div>
                     ) : (
                       <div className="text-center text-zinc-500 py-10">
-                        보유 중인 ?�이?�이 ?�습?�다.
+                        보유 중인 아이템이 없습니다.
                       </div>
                     )}
                   </TabsContent>
@@ -400,7 +400,7 @@ export function UserDetailDrawer({
                         }}
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        금고 지�?차감
+                        금고 지급/차감
                       </Button>
                     </div>
                   </TabsContent>

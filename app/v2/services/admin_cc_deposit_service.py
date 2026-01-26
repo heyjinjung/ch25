@@ -355,7 +355,9 @@ class V2AdminCCDepositService:
 
             if deposit_steps > 0 and xp_per_step > 0 and deposit_delta > 0:
                 xp_to_add = deposit_steps * xp_per_step
-                season_pass.add_bonus_xp(db, user_id=row.user_id, xp_amount=xp_to_add, now=today)
+                # NOTE: Season Pass Dual Write 제거 (2026-01-26)
+                # V2 정책: level_xp.add_xp만 사용 (단일 레벨 시스템)
+                # season_pass.add_bonus_xp는 호출하지 않음 (Legacy 폐기)
                 level_xp.add_xp(
                     db,
                     user_id=row.user_id,

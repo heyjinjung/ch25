@@ -171,16 +171,13 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
     const response = await v2Client.get<any>("/api/v2/vault/status");
     const data = response.data;
 
+    // SoT: vaultBalance = vault_locked_balance only (available은 레거시/미사용, 0 고정)
+    const lockedBalance = data.lockedBalance ?? data.vault_locked_balance ?? 0;
     return {
       eligible: data.eligible ?? true,
-      vaultBalance:
-        data.vaultBalance ??
-        data.vault_balance ??
-        data.vault_locked_balance ??
-        0,
-      lockedBalance: data.lockedBalance ?? data.vault_locked_balance ?? 0,
-      availableBalance:
-        data.availableBalance ?? data.vault_available_balance ?? 0,
+      vaultBalance: lockedBalance,
+      lockedBalance: lockedBalance,
+      availableBalance: 0, // deprecated: always 0 per SoT policy
       ticketCount: data.ticketCount ?? data.ticket_count ?? 0,
       is_golden_hour_active: data.is_golden_hour_active ?? false,
       golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,
@@ -198,11 +195,13 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
     // Fallback to V1 if V2 endpoint is not yet active
     const response = await v2Client.get<any>("/api/v2/vault/status");
     const data = response.data;
+    // SoT: vaultBalance = vault_locked_balance only
+    const lockedBalance = data.vault_locked_balance ?? 0;
     return {
       eligible: data.eligible,
-      vaultBalance: data.vault_balance ?? 0,
-      lockedBalance: data.vault_locked_balance ?? 0,
-      availableBalance: data.vault_available_balance ?? 0,
+      vaultBalance: lockedBalance,
+      lockedBalance: lockedBalance,
+      availableBalance: 0, // deprecated: always 0 per SoT policy
       ticketCount: data.ticket_count ?? 0,
       is_golden_hour_active: data.is_golden_hour_active ?? false,
       golden_hour_multiplier: data.golden_hour_multiplier ?? 1.0,

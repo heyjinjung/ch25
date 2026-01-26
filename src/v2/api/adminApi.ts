@@ -231,12 +231,12 @@ export interface AdminUserListDto {
 }
 
 export interface UserSearchParams {
-  search?: string; // ?�네?? CC_id, telegram_id, telegram_username
+  search?: string; // 닉네임, CC_id, telegram_id, telegram_username
   status?: string; // Active, Inactive, Suspended
   minLevel?: number;
   maxLevel?: number;
-  startDate?: string; // 가?�일 ?�작
-  endDate?: string; // 가?�일 종료
+  startDate?: string; // 가입일 시작
+  endDate?: string; // 가입일 종료
   sortBy?: "last_active" | "level" | "vault_balance" | "created_at";
   sortOrder?: "asc" | "desc";
   page?: number;
@@ -1350,7 +1350,7 @@ export const sendAdminMessage = async (
   const target_type = data.targetSegment === "ALL" ? "ALL" : "SEGMENT";
   const target_value = data.targetSegment === "ALL" ? null : data.targetSegment;
 
-  // PUSH 기능?� ?�거?? 관리자 메시지??INBOX�??�용?�다.
+  // PUSH 기능은 제거됨. 관리자 메시지는 INBOX를 사용한다.
   const channels = ["INBOX"];
 
   await v2Client.post("/api/v2/admin/marketing/messages", {
@@ -1466,10 +1466,10 @@ export interface AdminLotteryPrizeDto {
   id: number;
   label: string;
   weight: number; // SoT: 가중치
-  stock?: number; // SoT: ?�고 (Optional)
+  stock?: number; // SoT: 재고 (Optional)
   rewardType: string;
   rewardAmount: number;
-  isActive: boolean; // SoT: ?�성???��?
+  isActive: boolean; // SoT: 활성 여부
   color: string; // Frontend Only
 }
 
@@ -1479,7 +1479,7 @@ export interface AdminLotteryConfigDto {
   isActive: boolean;
   maxDailyPlays: number;
   ticketType: string;
-  puzzlePieceProbability: number; // SoT: ?�즐 조각 ?�랍 ?�률 (0~100%)
+  puzzlePieceProbability: number; // SoT: 퍼즐 조각 드랍 확률 (0~100%)
   prizes: AdminLotteryPrizeDto[];
 }
 

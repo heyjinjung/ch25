@@ -1,6 +1,6 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
 from sqlalchemy.orm import Session
 from time import perf_counter
 
@@ -14,16 +14,34 @@ from app.utils.idempotency import idempotency_cache
 from app.utils.rate_limit import rate_limiter
 
 # /workspace/ch25/app/api/routes/mission.py
-router = APIRouter(prefix="/api/mission", tags=["mission"])
+# =============================================================================
+# ⚠️ DEPRECATED: This router is deprecated. Use /api/v2/mission/* instead.
+# Deprecation started: 2026-01-26
+# Planned removal: 2026-02-26 (after 30 days)
+# See: docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/10.mission_actionable_guides.md
+# =============================================================================
+router = APIRouter(prefix="/api/mission", tags=["mission-legacy"])
+
+
+def _add_deprecation_headers(response: Response) -> None:
+    """Add deprecation headers to legacy endpoint responses."""
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-02-26"
+    response.headers["Link"] = '</api/v2/mission>; rel="successor-version"'
+
 
 @router.post("/streak/claim")
 def claim_streak_reward(
+    response: Response,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Claim a pending streak milestone reward.
+    
+    ⚠️ DEPRECATED: Use POST /api/v2/mission/streak/claim instead.
     """
+    _add_deprecation_headers(response)
     service = MissionService(db)
     result = service.claim_streak_reward(current_user.id)
     if not result.get("success"):
@@ -39,12 +57,16 @@ def claim_streak_reward(
 
 @router.get("/streak/rules")
 def get_streak_rules(
+    response: Response,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user), # Require auth for consistency
 ) -> Any:
     """
     Get streak reward rules for the UI.
+    
+    ⚠️ DEPRECATED: Use GET /api/v2/mission/streak/rules instead.
     """
+    _add_deprecation_headers(response)
     from app.services.ui_config_service import UiConfigService
     row = UiConfigService.get(db, "streak_reward_rules")
     if row and row.value_json:
@@ -66,12 +88,16 @@ def get_streak_rules(
 
 @router.get("/", response_model=MissionListResponse)
 def read_missions(
+    response: Response,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Get all daily missions and current user progress.
+    
+    ⚠️ DEPRECATED: Use GET /api/v2/mission/ instead.
     """
+    _add_deprecation_headers(response)
     # [Lazy Daily Check] For users with persistent sessions who don't hit /auth/token
     try:
         from app.services.mission_service import MissionService
@@ -108,13 +134,17 @@ def read_missions(
 def claim_mission_reward(
     mission_id: int,
     request: Request,
+    response: Response,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
     idempotency_key: str | None = Header(None, alias="X-Idempotency-Key"),
 ) -> Any:
     """
     Claim reward for a completed mission.
+    
+    ⚠️ DEPRECATED: Use POST /api/v2/mission/{mission_id}/claim instead.
     """
+    _add_deprecation_headers(response)
     start_ts = perf_counter()
     status_label = "error"
     http_status = 500
@@ -174,12 +204,16 @@ def claim_mission_reward(
 
 @router.post("/daily-gift")
 def claim_daily_gift(
+    response: Response,
     db: Session = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Claim the immediate daily login gift.
+    
+    ⚠️ DEPRECATED: Use POST /api/v2/mission/daily-gift instead.
     """
+    _add_deprecation_headers(response)
     service = MissionService(db)
     success, reward_type, amount = service.claim_daily_gift(current_user.id)
     

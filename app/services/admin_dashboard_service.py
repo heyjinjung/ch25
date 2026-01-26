@@ -118,8 +118,9 @@ class AdminDashboardService:
         today_deposit_count = int(ext_today_stats[1] or 0)
 
         # 4. Liabilities (Vault + Inventory)
+        # SoT: total_vault_balance = vault_locked_balance only (available은 레거시/미사용)
         vault_stats = db.query(
-            func.sum(User.vault_locked_balance + User.vault_available_balance)
+            func.sum(User.vault_locked_balance)
         ).scalar() or 0
         total_vault_balance = int(vault_stats)
         
@@ -684,18 +685,19 @@ class AdminDashboardService:
                 })
         
         elif metric_key == "total_vault_balance":
+            # SoT: total_vault_balance = vault_locked_balance only (available은 레거시/미사용)
             users = db.query(User).filter(
-                (User.vault_locked_balance + User.vault_available_balance) > 0
+                User.vault_locked_balance > 0
             ).order_by(
-                (User.vault_locked_balance + User.vault_available_balance).desc()
+                User.vault_locked_balance.desc()
             ).limit(50).all()
 
             for u in users:
-                total = u.vault_locked_balance + u.vault_available_balance
+                total = int(u.vault_locked_balance or 0)
                 results.append({
                     "id": u.id,
                     "label": u.nickname or f"User {u.id}",
-                    "sub_label": f"Locked: {u.vault_locked_balance:,}",
+                    "sub_label": f"Locked: {total:,}",
                     "value": f"{total:,} KRW",
                     "tags": ["VAULT"]
                 })

@@ -3,14 +3,17 @@ import { NumberTicker } from "../ui/NumberTicker";
 
 interface VaultBalanceCardProps {
   balance: number;
-  available: number;
-  reserved: number;
+  /** @deprecated availableBalance is deprecated per SoT policy. Always 0. */
+  available?: number;
+  reserved?: number;
 }
 
 export const VaultBalanceCard: React.FC<VaultBalanceCardProps> = ({
   balance,
-  available,
 }) => {
+  // SoT: available is deprecated (always 0), use balance (= vault_locked_balance)
+  const displayBalance = balance ?? 0;
+
   return (
     <div className="flex flex-col items-center justify-center h-full w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-black/85 to-slate-900/90 p-8 shadow-2xl backdrop-blur-2xl border border-white/10">
       {/* Glow Effect */}
@@ -22,7 +25,7 @@ export const VaultBalanceCard: React.FC<VaultBalanceCardProps> = ({
       </span>
       <div className="flex items-baseline gap-2 mb-8">
         <NumberTicker
-          value={balance ?? 0}
+          value={displayBalance}
           className="text-5xl font-black text-white bg-clip-text"
         />
         <span className="text-2xl font-bold text-white/80">원</span>
@@ -32,7 +35,7 @@ export const VaultBalanceCard: React.FC<VaultBalanceCardProps> = ({
         <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
           <span className="text-white/40 text-xs block mb-1">출금 가능</span>
           <span className="text-white font-bold text-lg">
-            {(available ?? 0).toLocaleString()}원
+            {displayBalance.toLocaleString()}원
           </span>
         </div>
       </div>

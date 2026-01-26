@@ -291,7 +291,7 @@ export default function OpsLogPage() {
               <Terminal className="w-5 h-5" /> Log Artifact
             </SheetTitle>
             <SheetDescription className="text-zinc-500">
-              ?�당 ?�벤?�의 ?�세 Raw ?�이로드?� 컨텍?�트?�니??
+              해당 이벤트의 상세 Raw 페이로드와 컨텍스트입니다.
             </SheetDescription>
           </SheetHeader>
 
@@ -333,7 +333,7 @@ export default function OpsLogPage() {
                   로그 복사
                 </Button>
                 <Button className="flex-1 bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90">
-                  ?�당 ?��? 관�?
+                  해당 유저 관리
                 </Button>
               </div>
             </div>

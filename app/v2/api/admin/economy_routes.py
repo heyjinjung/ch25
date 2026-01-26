@@ -196,6 +196,11 @@ def list_admin_withdrawals(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    """List withdrawal requests.
+    
+    DEPRECATED: Use /api/v2/admin/vault/withdrawals/{status} instead.
+    This endpoint will be removed in a future release.
+    """
     admin_id, admin_role = admin_info
 
     status = (status or "").strip().upper()
@@ -781,7 +786,11 @@ def approve_withdrawal(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    """Approve a withdrawal request"""
+    """Approve a withdrawal request.
+    
+    DEPRECATED: Use /api/v2/admin/vault/withdrawals/{id}/approve instead.
+    This endpoint will be removed in a future release.
+    """
     admin_id, admin_role = admin_info
     
     withdrawal = db.query(VaultWithdrawalRequest).filter(
@@ -817,7 +826,11 @@ def reject_withdrawal(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    """Reject a withdrawal request"""
+    """Reject a withdrawal request.
+    
+    DEPRECATED: Use /api/v2/admin/vault/withdrawals/{id}/reject instead.
+    This endpoint will be removed in a future release.
+    """
     admin_id, admin_role = admin_info
     
     withdrawal = db.query(VaultWithdrawalRequest).filter(

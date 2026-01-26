@@ -262,7 +262,7 @@ export const GoldenEventStream = () => {
 
       {/* Footer Note */}
       <div className="mt-3 text-xs text-gray-500 text-center">
-        최근 100�??�벤?�만 ?�시?�니??
+        최근 100개의 이벤트만 표시됩니다.
       </div>
     </div>
   );

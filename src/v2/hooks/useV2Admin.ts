@@ -647,7 +647,7 @@ export function useVaultStats() {
   return useQuery<VaultStatsDto>({
     queryKey: ["admin", "vault", "stats"],
     queryFn: getVaultStats,
-    refetchInterval: 30000, // 30초마???�동 ?�로고침
+    refetchInterval: 30000, // 30초마다 자동 새로고침
   });
 }
 
@@ -697,6 +697,6 @@ export function useInterventionLogs(userId: number | null, limit: number = 50) {
     queryKey: ["admin", "golden", "interventions", userId, limit],
     queryFn: () => getInterventionLogs(userId!, limit),
     enabled: !!userId && userId > 0,
-    refetchInterval: 10000, // 10초마???�동 ?�로고침
+    refetchInterval: 10000, // 10초마다 자동 새로고침
   });
 }

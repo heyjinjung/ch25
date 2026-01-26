@@ -48,11 +48,25 @@ export const V2UserRoutes = () => {
           <Route path="/game/roulette" element={<RoulettePage />} />
           <Route path="/game/dice" element={<DicePage />} />
           <Route path="/game/lottery" element={<LotteryPage />} />
-          
-          {/* Missions & Events */}
-          <Route path="/missions" element={<MissionsPage />} />
-          <Route path="/team-battle" element={<TeamBattlePage />} />
-          <Route path="/level" element={<LevelTowerPage />} />
+
+          {/* Missions & Events - Canonical routes */}
+          <Route path="/v2/missions" element={<MissionsPage />} />
+          {/* Legacy redirect (3주 유지 후 제거) - 2026-02-16 */}
+          <Route
+            path="/missions"
+            element={<Navigate to="/v2/missions" replace />}
+          />
+
+          <Route path="/v2/team-battle" element={<TeamBattlePage />} />
+          {/* Legacy redirect (3주 유지 후 제거) - 2026-02-16 */}
+          <Route
+            path="/team-battle"
+            element={<Navigate to="/v2/team-battle" replace />}
+          />
+
+          <Route path="/v2/level" element={<LevelTowerPage />} />
+          {/* Legacy redirect (3주 유지 후 제거) - 2026-02-16 */}
+          <Route path="/level" element={<Navigate to="/v2/level" replace />} />
         </Route>
 
         {/* Default redirect to Home */}

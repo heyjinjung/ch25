@@ -374,7 +374,32 @@ class V2InventoryService:
         legacy_user_id: int | None = None,
         *,
         auto_commit: bool = True,
+        skip_suspension_check: bool = False,
     ) -> dict:
+        """바우처 사용 (티켓으로 교환).
+        
+        SoT: v2_strict_vault_policy_sot_ko.md
+        - benefits_suspended=True인 유저는 바우처 사용 차단 (403)
+        
+        Args:
+            skip_suspension_check: 관리자 강제 사용 시 True (기본 False)
+        
+        Raises:
+            HTTPException(403): 7일 무입금 유저의 바우처 사용 시도
+        """
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        if not skip_suspension_check:
+            from app.v2.services.vault_service import V2VaultService
+            is_suspended, deposit_7d = V2VaultService.is_benefits_suspended(db, v2_user_id)
+            if is_suspended:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    f"[INVENTORY] Voucher use blocked: user_id={v2_user_id} benefits_suspended=True, "
+                    f"deposit_7d={deposit_7d}, item_type={item_type}"
+                )
+                raise HTTPException(status_code=403, detail="BENEFITS_SUSPENDED")
+        
         REWARD_MAP = {
             "VOUCHER_GOLD_KEY_1": {"token": GameTokenType.GOLD_KEY_TICKET, "amount": 1},
             "VOUCHER_DIAMOND_KEY_1": {"token": GameTokenType.DIAMOND_TICKET, "amount": 1},

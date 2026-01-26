@@ -16,6 +16,14 @@ from app.v2.schemas.v2_admin_economy import (
     AdminWithdrawalRejectRequest,
 )
 
+# =============================================================================
+# Vault Admin Routes (CANONICAL)
+# =============================================================================
+# NOTE: This is the canonical vault admin API.
+# Withdrawal endpoints here are preferred over economy_routes.py duplicates.
+# FE should use: /api/v2/admin/vault/* endpoints.
+# =============================================================================
+
 router = APIRouter()
 vault_service = V2VaultService()
 economy_service = V2AdminEconomyService()

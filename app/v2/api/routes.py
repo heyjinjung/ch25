@@ -493,7 +493,24 @@ def list_shop_products(
     value = row.value_json if row and isinstance(row.value_json, dict) else {}
     products = value.get("products", []) if isinstance(value, dict) else []
     if not isinstance(products, list):
+        products = []
+    
+    # === Empty Shop Risk: 운영자 알림 (02_empty_shop_risk.md) ===
+    if not products:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("[SHOP] Empty shop products config detected - check v2_shop_products UI config")
+        try:
+            import sentry_sdk
+            sentry_sdk.capture_message(
+                "[SHOP] shop_empty_products: v2_shop_products config is empty or missing",
+                level="warning",
+            )
+        except ImportError:
+            pass  # Sentry 미설치 환경
+        # Return empty list with status (FE에서 maintenance UI 표시 가능)
         return []
+    
     normalized = []
     for raw in products:
         if not isinstance(raw, dict):
@@ -529,6 +546,18 @@ def purchase_shop_product(
     x_idempotency_key: str | None = Header(default=None, alias="X-Idempotency-Key"),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ):
+    # === Strict Vault Policy: benefits_suspended 빠른 실패 (01_strict_vault_policy.md) ===
+    from app.v2.services.vault_service import V2VaultService
+    is_suspended, deposit_7d = V2VaultService.is_benefits_suspended(db, user_id)
+    if is_suspended:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            f"[SHOP] Purchase blocked at route: user_id={user_id} benefits_suspended=True, "
+            f"deposit_7d={deposit_7d}"
+        )
+        raise HTTPException(status_code=403, detail="BENEFITS_SUSPENDED")
+    
     sku = (payload.sku or "").strip()
     if not sku:
         raise HTTPException(status_code=400, detail="MISSING_SKU")

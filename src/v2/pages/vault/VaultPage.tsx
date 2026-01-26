@@ -11,7 +11,7 @@ import { VaultCTA } from "../../components/vault/VaultCTA";
 import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModal";
 import "./VaultRedesign.css";
 
-  // const WITHDRAWAL_GOAL = 100000; // Deprecated: Now dynamic from backend
+// const WITHDRAWAL_GOAL = 100000; // Deprecated: Now dynamic from backend
 
 const VaultPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,15 +26,16 @@ const VaultPage: React.FC = () => {
   useEffect(() => {
     if (vault) {
       playVaultJingle();
-      
+
       // Celebrate if withdrawal is available
-      if (vault.eligible && vault.availableBalance >= withdrawalGoal) {
+      // SoT: vaultBalance = vault_locked_balance (availableBalance is deprecated/0)
+      if (vault.eligible && vault.vaultBalance >= withdrawalGoal) {
         setTimeout(() => {
           confetti({
             particleCount: 100,
             spread: 70,
             origin: { y: 0.6 },
-            colors: ['#10b981', '#6ee7b7', '#34d399'],
+            colors: ["#10b981", "#6ee7b7", "#34d399"],
           });
         }, 500);
       }
@@ -49,16 +50,17 @@ const VaultPage: React.FC = () => {
 
     if (window.confirm("출금 신청하시겠습니까?")) {
       try {
-        await withdrawMutation.mutateAsync({ amount: vault.availableBalance });
-        
+        // SoT: vaultBalance = vault_locked_balance (availableBalance is deprecated/0)
+        await withdrawMutation.mutateAsync({ amount: vault.vaultBalance });
+
         // Success celebration
         confetti({
           particleCount: 200,
           spread: 100,
           origin: { y: 0.5 },
-          colors: ['#10b981', '#6ee7b7', '#34d399', '#059669'],
+          colors: ["#10b981", "#6ee7b7", "#34d399", "#059669"],
         });
-        
+
         alert("출금 신청이 완료되었습니다!");
       } catch (error) {
         console.error("Withdrawal error:", error);
@@ -94,7 +96,9 @@ const VaultPage: React.FC = () => {
   }
 
   const vaultBalance = vault.vaultBalance || 0;
-  const isEligible = vault.eligible && vaultBalance >= (vault.minimum_withdrawal_amount || 100000);
+  const isEligible =
+    vault.eligible &&
+    vaultBalance >= (vault.minimum_withdrawal_amount || 100000);
 
   return (
     <div className="vault-page-container">
@@ -123,11 +127,7 @@ const VaultPage: React.FC = () => {
           />
 
           {/* Stats section */}
-          <VaultStats
-            userRank={10}
-            averageComparison={15}
-            className="mb-6"
-          />
+          <VaultStats userRank={10} averageComparison={15} className="mb-6" />
 
           {/* CTA section */}
           <VaultCTA
