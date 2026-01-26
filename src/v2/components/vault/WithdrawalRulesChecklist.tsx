@@ -119,7 +119,7 @@ export const WithdrawalRulesChecklist: React.FC<
     {
       id: "play",
       title: "게임 플레이 횟수",
-      description: `최근 24시간 내 게임 ${toLocale(safePlayTarget)}회 이상 플레이`,
+      description: `최근 3일 내 게임 ${toLocale(safePlayTarget)}회 이상 플레이`,
       icon: Gamepad2,
       status: isPlayMet,
       progressText: `${toLocale(safePlayCount)} / ${toLocale(safePlayTarget)}`,
@@ -127,8 +127,8 @@ export const WithdrawalRulesChecklist: React.FC<
     },
     {
       id: "spent",
-      title: "누적 사용 금액",
-      description: `누적 ${toLocale(safeSpendTarget)} 포인트 이상 사용`,
+      title: "오늘 사용 금액",
+      description: `오늘 ${toLocale(safeSpendTarget)} 포인트 이상 사용`,
       icon: Coins,
       status: isSpendMet,
       progressText: `${toLocale(safeSpendAmount)} / ${toLocale(safeSpendTarget)}`,
@@ -136,8 +136,8 @@ export const WithdrawalRulesChecklist: React.FC<
     },
     {
       id: "verify",
-      title: "계좌 점유인증",
-      description: "입금 계좌 실명 확인 및 0원 인증 완료",
+      title: "일일 입금 확인",
+      description: "오늘 1회 이상 입금(결제) 완료",
       icon: Wallet,
       status: isAccountVerified,
       progressText: isAccountVerified ? "100%" : "0%",

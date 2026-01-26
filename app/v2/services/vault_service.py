@@ -719,6 +719,10 @@ class V2VaultService:
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
         """V2 adapted withdrawal request (CC Deposit based)."""
+        user = db.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+
         if amount < 10_000:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
 
@@ -758,25 +762,49 @@ class V2VaultService:
                 if last_charge_utc.astimezone(tz).date() == now_kst_date:
                     has_cc_deposit_today = True
 
+        # 1. CC Deposit / Activity based Eligibility
         if not has_cc_deposit_today:
-             earn_event_count = (
-                db.query(func.count(VaultEarnEvent.id))
-                .filter(
-                    VaultEarnEvent.user_id == user_id,
-                    VaultEarnEvent.earn_type.in_(["GAME_PLAY", "MISSION_REWARD"]),
-                    VaultEarnEvent.created_at >= now - timedelta(days=3)
-                )
-                .scalar()
-                or 0
-            )
-             if int(earn_event_count) < 1:
-                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="CC_DEPOSIT_REQUIRED_TODAY")
+            # If no deposit today, must meet play and spend targets (matches get_vault_info)
+            # Re-calculate segments and targets to ensure consistency
+            from app.v2.models.v2_user_segment import V2UserSegment
+            current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
+            segments = [str(current_segment).upper()] if current_segment else []
+            
+            # Fetch 7d deposit for target calculation
+            seven_days_ago_date = (now - timedelta(days=6)).date()
+            deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
+                ExternalRankingDailyDepositDelta.user_id == user_id,
+                ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
+            ).scalar() or 0
 
-        user = db.get(User, user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+            play_target = 30
+            spend_target = 10000
+            if "AT_RISK" in segments:
+                play_target = 100
+                spend_target = 30000
+            elif deposit_7d >= 3000000:
+                play_target = 0
+                spend_target = 0
+            elif deposit_7d >= 500000:
+                play_target = 15
+                spend_target = 20000
 
-        # Tiered minimum balance requirement (SoT: 10k -> 10k -> 30k -> 50k)
+            # Check Play count (3 days window)
+            recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
+                VaultEarnEvent.user_id == user_id,
+                VaultEarnEvent.earn_type == "GAME_PLAY",
+                VaultEarnEvent.created_at >= now - timedelta(days=3),
+            ).scalar() or 0
+
+            if int(recent_play_count) < play_target:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"PLAY_COUNT_INSUFFICIENT_{play_target}")
+
+            # Check Vault Spent (Today)
+            daily_spent = int(getattr(user, "vault_spent_today", 0) or 0)
+            if daily_spent < spend_target:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"VAULT_SPENT_INSUFFICIENT_{spend_target}")
+
+        # 2. Tiered minimum balance requirement (SoT: 10k -> 10k -> 30k -> 50k)
         approved_count = (
             db.query(func.count(VaultWithdrawalRequest.id))
             .filter(
@@ -797,7 +825,7 @@ class V2VaultService:
                 detail=f"MIN_WITHDRAWAL_AMOUNT_{required_min_balance}",
             )
 
-        # Concurrency & Balance checks
+        # 3. Concurrency & Balance checks
         pending_exists = (
             db.query(func.count(VaultWithdrawalRequest.id))
             .filter(VaultWithdrawalRequest.user_id == user_id, VaultWithdrawalRequest.status == "PENDING")

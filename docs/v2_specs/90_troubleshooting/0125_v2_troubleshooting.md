@@ -233,18 +233,19 @@ Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
 
 ✅ 골든프로젝트 백앤드 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
-
-팀배틀페이지 어드민 / 풀스택 연결 
+✅ 팀배틀페이지 어드민 / 풀스택 연결 
 
 ✅ 유저미션관리 > 닉네임으로 조회되게 
 /api/v2/admin/users/resolve?identifier=<nickname> 응답 확인
+
+[] 금고페이지 출금조건 확인 - 구플래쉬 작업중 
 --------------------
 
 
 연속스트릭모달
 골든아워 모달
 금고페이지 출금조건 확인
-팀배틀페이지 어드민 / 풀스택 연결 
+
 이벤트페이지
 
 
