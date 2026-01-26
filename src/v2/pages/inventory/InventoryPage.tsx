@@ -345,7 +345,13 @@ export default function InventoryPage() {
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
-                    className="flex-1 h-12 rounded-xl border-white/10 hover:bg-white/5 text-white"
+                    className="flex-1 h-12 rounded-xl border border-green-900/60 bg-white/10 backdrop-blur-md text-green-900 font-bold text-base shadow-md hover:bg-green-100/30 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-700/80 transition-all duration-200"
+                    style={{
+                      background: "rgba(20,40,20,0.18)",
+                      border: "1.5px solid rgba(20,40,20,0.35)",
+                      boxShadow: "0 4px 24px 0 rgba(20,40,20,0.10)",
+                      color: "#133a13",
+                    }}
                     onClick={() => setSelectedItem(null)}
                   >
                     닫기
@@ -353,7 +359,7 @@ export default function InventoryPage() {
 
                   {VOUCHER_ITEM_TYPES.has(selectedItem.item_type) && (
                     <Button
-                      className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-base shadow-lg shadow-emerald-500/20"
+                      className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-base shadow-lg shadow-emerald-500/20 inventory-glass-btn"
                       onClick={handleUseItem}
                       disabled={useItemMutation.isPending}
                     >
@@ -366,6 +372,11 @@ export default function InventoryPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Inventory Glassmorphism Button Style */}
+      <style>{`
+        @import './InventoryRedesign.css';
+      `}</style>
     </div>
   );
 }

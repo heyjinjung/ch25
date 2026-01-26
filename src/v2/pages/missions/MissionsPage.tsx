@@ -65,11 +65,12 @@ export default function MissionsPage() {
 
   // Use CSS variable for safe area offset - standard 100px top, 120px bottom
   return (
-    <div className="relative min-h-tg w-full bg-[#121214] overflow-hidden text-white">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px]" />
+    <div className="relative min-h-tg w-full bg-transparent overflow-hidden text-white">
+      {/* Aurora Background Effect - Blue Tone */}
+      <div className="vault-aurora-bg">
+        <div className="vault-aurora-blob blob-1" />
+        <div className="vault-aurora-blob blob-2" />
+        <div className="vault-aurora-blob blob-3" />
       </div>
 
       {/* Main Scrollable Content */}

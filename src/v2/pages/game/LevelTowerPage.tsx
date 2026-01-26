@@ -113,7 +113,13 @@ const LevelTowerPage: React.FC = () => {
   if (!view) return null;
 
   return (
-    <div className="flex flex-col px-4 py-4 min-h-[calc(100vh-120px)] bg-[#0A0A0A]">
+    <div className="relative flex flex-col px-4 py-4 min-h-tg bg-transparent overflow-hidden">
+      {/* Aurora Background Effect - Blue Tone (Standalone Support) */}
+      <div className="vault-aurora-bg">
+        <div className="vault-aurora-blob blob-1" />
+        <div className="vault-aurora-blob blob-2" />
+        <div className="vault-aurora-blob blob-3" />
+      </div>
       <div className="flex-1 flex flex-col justify-center">
         <div className="relative mx-auto w-full max-w-sm">
           {/* Tower Floors */}

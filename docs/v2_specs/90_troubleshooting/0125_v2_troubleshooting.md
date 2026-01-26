@@ -283,9 +283,6 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 메인페이지 
 메인 히어로 텍스트에 https://ui.aceternity.com/components/encrypted-text
 
-게임대쉬보드 페이지
-카드 hover scale/shadow, 버튼 ripple
-
 
 
 Animated Testimonials
