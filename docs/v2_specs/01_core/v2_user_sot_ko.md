@@ -5,6 +5,9 @@
 대상: BE/FE/기획
 상태: SoT
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟢] 🟢 [정합] `vault_locked_balance` 단일 SoT 및 레거시 write 금지 원칙이 Vault 정책 문서와 일치.
+
 ## 1. 목적 (Purpose)
 V2 User의 핵심 필드와 금고 SoT를 명확히 정의한다.
 

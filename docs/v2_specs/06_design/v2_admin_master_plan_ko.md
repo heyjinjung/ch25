@@ -5,6 +5,9 @@
 대상: 어드민 개발자, 운영팀
 상태: SoT
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Vault/Withdrawals 엔드포인트 명칭/프리픽스가 다른 문서(OpenAPI/Integration Guide)와 혼재 가능. “Admin Vault Ops SoT 경로”를 1개로 확정 필요.
+
 # V2 Admin Master Plan (운영자 중심 CRM 관제 시스템)
 
 ## 1. 목적 (Purpose)

@@ -5,6 +5,9 @@
 대상: Backend/Frontend 개발자
 상태: Draft
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Admin API 프리픽스가 `/admin/api`로 표기되어 OpenAPI의 `/api/v2/admin/*`와 혼재. Vault/Withdrawals 경로 및 에러코드 표기를 1개 SoT로 통일 필요.
+
 # V2 API 연동 및 전역 동기화 가이드 (Admin Integration)
 
 ## 1. 목적 (Purpose)

@@ -5,6 +5,9 @@
 대상: BE/FE/기획
 상태: SoT
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] `benefits_suspended`(bool) 표현과 `vault_policy_status`(SoT 필드/상태 원장)의 관계를 문서 내에서 1회 명시 필요(표현 SoT).
+
 ## 1. 목적 (Purpose)
 V2 금고 관련 용어의 단일 기준을 확정한다.
 

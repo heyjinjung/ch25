@@ -1,4 +1,6 @@
 # yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+# [최종 검토일: 2026-01-26]
+# [정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Admin DTO의 `vaultBalance` 및 WalletAdjustment의 `token_type=VAULT`는 SoT와 방향 일치하나, `vaultBalance`가 `vault_locked_balance` 단일 별칭임을 명시해 혼동 방지 필요.
 openapi: 3.0.3
 info:
   title: XMAS Event System V2 + Admin API
@@ -27,7 +29,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/RouletteConfigDto'
+                  $ref: "#/components/schemas/RouletteConfigDto"
 
   /api/v2/admin/game/roulette/config/{config_id}:
     get:
@@ -45,7 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouletteConfigDto'
+                $ref: "#/components/schemas/RouletteConfigDto"
     put:
       tags: [AdminGame]
       summary: Update roulette config (full or partial)
@@ -59,14 +61,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RouletteConfigFullUpdateRequest'
+              $ref: "#/components/schemas/RouletteConfigFullUpdateRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RouletteConfigDto'
+                $ref: "#/components/schemas/RouletteConfigDto"
 
   # ============================================================================
   # Game: Dice
@@ -81,7 +83,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DiceConfigDto'
+                $ref: "#/components/schemas/DiceConfigDto"
 
   /api/v2/admin/game/dice/config/{config_id}:
     put:
@@ -97,14 +99,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DiceConfigUpdateRequest'
+              $ref: "#/components/schemas/DiceConfigUpdateRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DiceConfigDto'
+                $ref: "#/components/schemas/DiceConfigDto"
 
   # ============================================================================
   # Game: Lottery
@@ -121,7 +123,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/LotteryConfigDto'
+                  $ref: "#/components/schemas/LotteryConfigDto"
 
   /api/v2/admin/game/lottery/config/{config_id}:
     get:
@@ -139,7 +141,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LotteryConfigDto'
+                $ref: "#/components/schemas/LotteryConfigDto"
     put:
       tags: [AdminGame]
       summary: Update lottery config details (excluding prizes)
@@ -153,14 +155,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LotteryConfigUpdateRequest'
+              $ref: "#/components/schemas/LotteryConfigUpdateRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LotteryConfigDto'
+                $ref: "#/components/schemas/LotteryConfigDto"
 
   /api/v2/admin/game/lottery/config/{config_id}/prize/{prize_id}:
     put:
@@ -181,14 +183,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LotteryPrizeUpdateRequest'
+              $ref: "#/components/schemas/LotteryPrizeUpdateRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LotteryPrizeDto'
+                $ref: "#/components/schemas/LotteryPrizeDto"
 
   # ============================================================================
   # User Management
@@ -226,7 +228,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserListResponse'
+                $ref: "#/components/schemas/UserListResponse"
     post:
       tags: [AdminUsers]
       summary: Create new admin managed user
@@ -234,14 +236,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminUserCreate'
+              $ref: "#/components/schemas/AdminUserCreate"
       responses:
         "201":
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserListDto'
+                $ref: "#/components/schemas/AdminUserListDto"
 
   /api/v2/admin/users/{user_id}:
     get:
@@ -259,7 +261,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserDetailDto'
+                $ref: "#/components/schemas/AdminUserDetailDto"
 
   /api/v2/admin/users/{user_id}/wallet/adjust:
     post:
@@ -275,14 +277,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminWalletAdjustmentRequest'
+              $ref: "#/components/schemas/AdminWalletAdjustmentRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InterventionExecutionResponse'
+                $ref: "#/components/schemas/InterventionExecutionResponse"
 
   /api/v2/admin/users/{user_id}/intervention/{action_id}:
     post:
@@ -305,7 +307,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InterventionExecutionResponse'
+                $ref: "#/components/schemas/InterventionExecutionResponse"
 
   # ============================================================================
   # User Level Management
@@ -326,7 +328,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserLevelSnapshotDto'
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
 
   /api/v2/admin/users/level/adjust:
     post:
@@ -336,14 +338,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminUserLevelAdjustRequest'
+              $ref: "#/components/schemas/AdminUserLevelAdjustRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserLevelSnapshotDto'
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
 
   /api/v2/admin/users/level/set:
     post:
@@ -353,14 +355,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AdminUserLevelSetRequest'
+              $ref: "#/components/schemas/AdminUserLevelSetRequest"
       responses:
         "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserLevelSnapshotDto'
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
 
   # ============================================================================
   # Marketing
@@ -377,7 +379,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/V2MessageResponse'
+                  $ref: "#/components/schemas/V2MessageResponse"
     post:
       tags: [AdminMarketing]
       summary: Create and send new message
@@ -385,14 +387,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/V2MessageCreate'
+              $ref: "#/components/schemas/V2MessageCreate"
       responses:
         "201":
           description: Created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V2MessageResponse'
+                $ref: "#/components/schemas/V2MessageResponse"
 
   /api/v2/admin/marketing/surveys:
     get:
@@ -406,7 +408,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/V2AdminSurveyDto'
+                  $ref: "#/components/schemas/V2AdminSurveyDto"
 
 components:
   schemas:
@@ -436,7 +438,7 @@ components:
         weight:
           type: integer
         rewardType:
-          $ref: '#/components/schemas/RewardType'
+          $ref: "#/components/schemas/RewardType"
         rewardAmount:
           type: integer
         isJackpot:
@@ -461,7 +463,7 @@ components:
         segments:
           type: array
           items:
-            $ref: '#/components/schemas/RouletteSegmentDto'
+            $ref: "#/components/schemas/RouletteSegmentDto"
         createdAt:
           type: string
           format: date-time
@@ -483,7 +485,7 @@ components:
         segments:
           type: array
           items:
-            $ref: '#/components/schemas/RouletteSegmentDto'
+            $ref: "#/components/schemas/RouletteSegmentDto"
 
     # Dice
     DiceConfigDto:
@@ -504,15 +506,15 @@ components:
         loseProbability:
           type: number
         winRewardType:
-          $ref: '#/components/schemas/RewardType'
+          $ref: "#/components/schemas/RewardType"
         winRewardAmount:
           type: integer
         drawRewardType:
-          $ref: '#/components/schemas/RewardType'
+          $ref: "#/components/schemas/RewardType"
         drawRewardAmount:
           type: integer
         loseRewardType:
-          $ref: '#/components/schemas/RewardType'
+          $ref: "#/components/schemas/RewardType"
         loseRewardAmount:
           type: integer
         dailyGainCap:
@@ -555,7 +557,7 @@ components:
         stock:
           type: integer
         rewardType:
-          $ref: '#/components/schemas/RewardType'
+          $ref: "#/components/schemas/RewardType"
         rewardAmount:
           type: integer
         isActive:
@@ -595,7 +597,7 @@ components:
         prizes:
           type: array
           items:
-            $ref: '#/components/schemas/LotteryPrizeDto'
+            $ref: "#/components/schemas/LotteryPrizeDto"
 
     LotteryConfigUpdateRequest:
       type: object
@@ -636,7 +638,7 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/AdminUserListDto'
+            $ref: "#/components/schemas/AdminUserListDto"
         total:
           type: integer
         page:
@@ -672,7 +674,7 @@ components:
         riskLevel:
           type: string
         playbook:
-          $ref: '#/components/schemas/InterventionPlaybookDto'
+          $ref: "#/components/schemas/InterventionPlaybookDto"
 
     InterventionPlaybookDto:
       type: object
@@ -682,7 +684,7 @@ components:
         suggested_actions:
           type: array
           items:
-            $ref: '#/components/schemas/InterventionActionDto'
+            $ref: "#/components/schemas/InterventionActionDto"
 
     InterventionActionDto:
       type: object

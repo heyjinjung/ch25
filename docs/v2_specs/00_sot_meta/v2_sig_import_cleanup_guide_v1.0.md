@@ -49,8 +49,18 @@ V2 코드에서 V1 서비스/라우트 import를 제거하는 절차와 기록 �
    - docs/v2_specs/00_sot_meta/v2_verification_checklist_ko.md의 v2-only 항목 갱신
 
 ## 6. 스캔 체크리스트
-- [ ] app/v2/** 에서 app.services.* import 없음
-- [ ] app/v2/** 에서 app.api.routes.* import 없음
+- [ ] app/v2/** 에서 app.services.* import 없음 
+   game_common.py (12행):
+from app.services.game_common import GamePlayContext as V1GamePlayContext, log_game_play as _v1_log_game_play
+level_xp_service.py (9행):
+from app.services.level_xp_service import LevelXPService
+season_pass_service.py (17행):
+from app.services.season_pass_service import SeasonPassService
+vault_legacy_bridge.py (21, 46행):
+from app.services.vault_service import VaultService as _V1VaultService
+이렇게 남아있음 
+
+- [ ] app/v2/** 에서 app.api.routes.* import 없음 / v1_auth_user_alias.py 내 V1 import가 의도적/임시 유지인지 확인(문서와 일치). 남아있음 
 - [ ] v2-only 기준을 만족하는 서비스/라우트만 완료 처리
 - [x] Vault v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)
 - [x] Game(roulette/dice/lottery) v1 import 제거 확인 — 검증: pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py (실행: 2026-01-23, Exit Code: 0)

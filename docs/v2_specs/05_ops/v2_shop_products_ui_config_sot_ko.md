@@ -5,6 +5,9 @@
 대상: BE/FE/운영
 상태: SoT
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🔴] 🔴 [정책/문서 충돌] 비용 SoT는 `user.vault_locked_balance` 단일 기준인데, 아래 문구가 레거시 `cash_balance` 사용처럼 읽힘(즉시 정정).
+
 # V2 상점 상품 UI Config SoT (v2_shop_products)
 
 ## 1. 목적 (Purpose)
@@ -16,7 +19,7 @@
 - 적용 API: `GET /api/v2/shop/products`, `POST /api/v2/shop/purchase`
 
 ## 3. SoT 규칙 (Source of Truth)
-- 상점 비용 SoT: `user.vault_locked_balance` (현금 잔액 사용) + 다이아(인벤토라)
+- 상점 비용 SoT: `user.vault_locked_balance` (현금 잔액 사용 금지) + 다이아(인벤토리)
 - 보상 타입 SoT: `v2_reward_type_standard_sot_ko.md`
 - 티켓 네이밍 SoT: `v2_ticket_enum_sot_ko.md`
 - 아이템/인벤토리 SoT: `v2_item_inventory_sot_ko.md`

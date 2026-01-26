@@ -5,6 +5,9 @@
 대상: 디자인/개발팀
 상태: ✅ Completed
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟢] 🟢 [정합] Vault 화면 UX(자산 고정 표시/출금 CTA 강조)는 Strict Vault Policy의 “출금 조건 기반 버튼 활성”과 방향 일치.
+
 # V2 Design Analysis Report: Main Home & Game Dashboard
 
 ## 1. 개요 (Overview)

@@ -5,6 +5,9 @@
 대상: BE/DB/운영
 상태: SoT
 
+[최종 검토일: 2026-01-26]
+[정책 최신화 필요 여부: 🟢] 🟢 [정합] `vault_locked_balance`(INT, NOT NULL) SoT가 01_core 정책과 일치.
+
 ## 1. 목적 (Purpose)
 V2 User 테이블 스키마를 정의한다.
 
