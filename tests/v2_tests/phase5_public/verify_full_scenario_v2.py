@@ -169,7 +169,7 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         print("Roulette Response:", r_roulette.status_code, r_roulette.json())
         assert r_roulette.status_code == 200
 
-        r_dice = client.post("/api/v2/dice/play")
+        r_dice = client.post("/api/v2/dice/play", json={"bet_count": 1})
         print("Dice Response:", r_dice.status_code, r_dice.json())
         assert r_dice.status_code == 200
 
@@ -205,7 +205,7 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         assert progress is not None
         assert progress.level >= 2
         assert reward_log is not None
-        assert reward_log.reward_type == "TICKET_ROULETTE"
+        assert reward_log.reward_type == "ROULETTE_TICKET"  # normalized enum
 
         print("\n========== Phase5 Scenario 2: Gambler's Loop ==========")
         user.vault_locked_balance = 0

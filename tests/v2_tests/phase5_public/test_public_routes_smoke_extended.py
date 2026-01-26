@@ -148,12 +148,13 @@ def test_v2_public_routes_smoke_extended(client: TestClient, seed_session: Sessi
         resp = client.get("/api/v2/shop/products")
         assert resp.status_code == 200, resp.text
 
-        # Purchase validations
+        # Purchase validations - benefits_suspended user gets 403 for all purchases
         resp = client.post("/api/v2/shop/purchase", json={"sku": ""})
-        assert resp.status_code == 400
+        assert resp.status_code == 403  # benefits_suspended policy blocks first
 
+        # benefits_suspended user -> 403 Forbidden (purchase blocked)
         resp = client.post("/api/v2/shop/purchase", json={"sku": "sku-1"})
-        assert resp.status_code == 400
+        assert resp.status_code == 403  # benefits_suspended policy
 
         # Ticket-zero
         resp = client.get("/api/v2/ticket-zero/status")

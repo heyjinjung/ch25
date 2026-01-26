@@ -231,6 +231,8 @@ Component: Fully implemented and functional.
 User Side (Partial - Missing UI)
 Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
 
+팀배틀페이지 어드민 / 풀스택 연결 
+
 --------------------
 
 

@@ -154,7 +154,7 @@ def test_admin_roulette_config_get_and_update(client: TestClient) -> None:
     assert resp.status_code == 200, resp.text
     cfg = resp.json()
     assert cfg["id"] == cfg_id
-    assert len(cfg.get("segments") or []) == 6
+    assert len(cfg.get("segments") or []) == 8  # 8-segment policy
 
     payload = {
         "name": "R1-updated",
@@ -170,7 +170,7 @@ def test_admin_roulette_config_get_and_update(client: TestClient) -> None:
                 "reward_amount": 1,
                 "is_jackpot": i == 0,
             }
-            for i in range(6)
+            for i in range(8)  # 8-segment policy
         ],
     }
 
