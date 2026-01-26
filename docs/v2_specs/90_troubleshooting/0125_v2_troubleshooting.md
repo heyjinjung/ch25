@@ -306,5 +306,12 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 
 기능 생성 후
 문서 업로드
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 내 관련있는 영역에
-오늘날짜_핵심변경내용_업데이트
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
+관련있는 영역의 폴더에 
+오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
+
+예시 > 미션 오류 발견 
+폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
+문서이름 : 20260126_미션_오류_업데이트.md
+
+이런식으로 문서 생성해줘

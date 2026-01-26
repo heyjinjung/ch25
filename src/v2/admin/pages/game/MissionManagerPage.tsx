@@ -48,7 +48,19 @@ import { REWARD_ITEMS } from "../../../constants/rewardItems";
  * V2 SoT-compliant mission reward options
  * 근거: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
  */
-const MISSION_REWARD_OPTIONS = REWARD_ITEMS;
+// Mapped for Backend MissionRewardType Enum match
+const REWARD_TYPE_MAPPING: Record<string, string> = {
+  ROULETTE_TICKET: "TICKET_ROULETTE",
+  DICE_TICKET: "TICKET_DICE",
+  LOTTERY_TICKET: "TICKET_LOTTERY",
+  GOLD_KEY_TICKET: "GOLD_KEY",
+  DIAMOND_TICKET: "DIAMOND_KEY",
+};
+
+const MISSION_REWARD_OPTIONS = REWARD_ITEMS.map((item) => ({
+  ...item,
+  value: REWARD_TYPE_MAPPING[item.value] || item.value,
+}));
 
 // Mock Categories for Tabs
 const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
@@ -207,8 +219,11 @@ export default function MissionManagerPage() {
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      // V2 SoT: Game Tickets
-      case "ROULETTE_TICKET":
+      // V2 SoT: Game Tickets (MissionRewardType)
+      case "TICKET_ROULETTE":
+      case "TICKET_DICE":
+      case "TICKET_LOTTERY":
+      case "ROULETTE_TICKET": // Fallback
       case "DICE_TICKET":
       case "LOTTERY_TICKET":
         return <Ticket className="w-4 h-4 text-emerald-400" />;
@@ -218,8 +233,10 @@ export default function MissionManagerPage() {
       // V2 SoT: Currency
       case "DIAMOND":
         return <Coins className="w-4 h-4 text-sky-400" />;
-      // V2 SoT: Premium Tickets
-      case "GOLD_KEY_TICKET":
+      // V2 SoT: Premium Tickets (MissionRewardType)
+      case "GOLD_KEY":
+      case "DIAMOND_KEY":
+      case "GOLD_KEY_TICKET": // Fallback
       case "DIAMOND_TICKET":
         return <Gift className="w-4 h-4 text-purple-400" />;
       // V2 SoT: Fragments
@@ -232,7 +249,7 @@ export default function MissionManagerPage() {
       case "PUZZLE_J":
       case "PUZZLE_M":
         return <Gift className="w-4 h-4 text-indigo-400" />;
-      // V2 SoT: Gifticoms
+      // V2 SoT: Gifticons
       case "CHICKEN_GIFTICON_5000":
       case "CHICKEN_GIFTICON_10000":
       case "STARBUCKS_GIFTICON_2000":
@@ -241,20 +258,15 @@ export default function MissionManagerPage() {
       case "PIZZA_GIFTICON_10000":
       case "GOOGLE_GIFTICON_5000":
       case "GOOGLE_GIFTICON_10000":
+      case "GIFTICON_BAEMIN":
+      case "GIFTICON_COMPOSE":
         return <Gift className="w-4 h-4 text-pink-400" />;
       // V2 SoT: Special
       case "NONE":
         return null;
-      // Legacy support
-      case "TICKET_ROULETTE":
-      case "TICKET_DICE":
-      case "TICKET_LOTTERY":
-        return <Ticket className="w-4 h-4 text-emerald-400 opacity-50" />;
       case "POINT":
-        return <Coins className="w-4 h-4 text-yellow-400 opacity-50" />;
-      case "GOLD_KEY":
-      case "DIAMOND_KEY":
-        return <Gift className="w-4 h-4 text-purple-400 opacity-50" />;
+      case "CC_POINT":
+        return <Coins className="w-4 h-4 text-yellow-400 opacity-80" />;
       default:
         return null;
     }
