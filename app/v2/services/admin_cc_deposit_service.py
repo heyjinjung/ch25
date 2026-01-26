@@ -1,6 +1,7 @@
-﻿"""Admin CRUD for CC deposit data and season-pass hooks.
+﻿"""Admin CRUD for CC deposit data.
 
 V2 location (Source of Truth). Legacy import paths should re-export from here.
+NOTE: Season Pass 연동 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템만 사용
 """
 from datetime import date, datetime, timedelta, timezone
 import logging
@@ -13,11 +14,9 @@ from sqlalchemy.orm import Session
 from app.models.external_ranking import ExternalRankingData
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.user_activity import UserActivity
-from app.models.season_pass import SeasonPassStampLog
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositUpdate
 from app.models.user import User
 from app.v2.services.vault_service import V2VaultService
-from app.v2.services.season_pass_service import V2SeasonPassService
 from app.v2.services.level_xp_service import V2LevelXPService
 from app.core.config import get_settings
 
@@ -155,7 +154,6 @@ class V2AdminCCDepositService:
     @staticmethod
     def upsert_many(db: Session, data: Iterable[CCDepositCreate], now: datetime | None = None) -> list[ExternalRankingData]:
         from zoneinfo import ZoneInfo
-        season_pass = V2SeasonPassService()
         vault_service = V2VaultService()
         level_xp = V2LevelXPService()
         settings = get_settings()
@@ -310,28 +308,9 @@ class V2AdminCCDepositService:
                     )
         db.commit()
 
-        # Season pass XP hooks
-        current_season = season_pass.get_current_season(db, today)
-        if not current_season and bool(getattr(settings, "test_mode", False)):
-             # Minimal default season for tests
-            from datetime import timedelta
-            from app.models.season_pass import SeasonPassConfig, SeasonPassLevel
-            season = SeasonPassConfig(
-                season_name=f"DEFAULT-{today.isoformat()}",
-                start_date=today,
-                end_date=today + timedelta(days=6),
-                max_level=10,
-                base_xp_per_stamp=10,
-                is_active=True,
-            )
-            db.add(season)
-            db.commit()
-            current_season = season
-
-        if not current_season:
-            return results
-
-        season_id = current_season.id
+        # NOTE: Season Pass 로직 제거 (2026-01-26)
+        # V2 정책: Season Pass 폐기, 단일 레벨 시스템(level_xp)만 사용
+        # 아래 로직은 XP 적립만 수행 (이전 Season Pass 연동은 제거됨)
 
         for row in results:
             snap = prev_snapshot.get(
@@ -355,9 +334,7 @@ class V2AdminCCDepositService:
 
             if deposit_steps > 0 and xp_per_step > 0 and deposit_delta > 0:
                 xp_to_add = deposit_steps * xp_per_step
-                # NOTE: Season Pass Dual Write 제거 (2026-01-26)
                 # V2 정책: level_xp.add_xp만 사용 (단일 레벨 시스템)
-                # season_pass.add_bonus_xp는 호출하지 않음 (Legacy 폐기)
                 level_xp.add_xp(
                     db,
                     user_id=row.user_id,
@@ -368,37 +345,10 @@ class V2AdminCCDepositService:
 
             row.deposit_remainder = remainder
 
-        # Weekly TOP10
-        top10 = (
-            db.execute(
-                select(ExternalRankingData)
-                .order_by(ExternalRankingData.deposit_amount.desc(), ExternalRankingData.play_count.desc())
-                .limit(10)
-            )
-            .scalars()
-            .all()
-        )
-        iso_year, iso_week, _ = today.isocalendar()
-        week_key = f"W{iso_year}-{iso_week:02d}"
-        for entry in top10:
-            existing_top = (
-                db.query(SeasonPassStampLog)
-                .filter(
-                    SeasonPassStampLog.user_id == entry.user_id,
-                    SeasonPassStampLog.season_id == season_id,
-                    SeasonPassStampLog.source_feature_type == "CC_DEPOSIT_TOP10",
-                    SeasonPassStampLog.period_key == f"TOP10_{week_key}",
-                )
-                .one_or_none()
-            )
-            if not existing_top:
-                season_pass.maybe_add_stamp(
-                    db,
-                    user_id=entry.user_id,
-                    source_feature_type="CC_DEPOSIT_TOP10",
-                    now=today,
-                    period_key=f"TOP10_{week_key}",
-                )
+        # NOTE: Weekly TOP10 Stamp 로직 제거 (2026-01-26)
+        # Season Pass 폐기로 인해 TOP10 스탬프 기능도 함께 제거
+        # 필요 시 별도 보상 시스템으로 대체 예정
+
         return results
 
     @staticmethod

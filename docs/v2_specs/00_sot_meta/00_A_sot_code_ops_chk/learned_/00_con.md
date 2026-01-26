@@ -360,7 +360,9 @@
 | 파일 | 변경 내용 |
 |------|----------|
 | `scripts/validate_level_sot.py` | 신규 - Level SoT 정합성 검증 스크립트 |
-| `app/v2/services/admin_cc_deposit_service.py` | Season Pass Dual Write 제거 |
+| `app/v2/services/admin_cc_deposit_service.py` | Season Pass 로직 전체 제거 (Dual Write + TOP10 스탬프) |
+| `app/services/level_xp_service.py` | 들여쓰기/메서드 배치 수정 |
+| `tests/v2_tests/phase2_core/test_cc_deposit_logic.py` | Season Pass mock 제거 → V2LevelXPService mock 사용 |
 
 ---
 
@@ -398,4 +400,9 @@
 ✅ Legacy API = Deprecation 헤더 적용 (Sunset: 2026-02-26)
 ✅ StreakService = MissionService에서 분리 완료
 ✅ 시간 경계 테스트 = 00:00~09:00 KST 회귀 테스트 15 cases
+✅ Level DB 분리 = user_level_progress 테이블 사용 (v2_user에 XP 컬럼 없음)
+✅ Season Pass Dual Write 제거 = level_xp.add_xp 단일 호출
+✅ Legacy API season_pass = null 반환 (RoulettePlayResponse 스키마 확인)
+✅ Team Battle v2 네임스페이스 = BE/FE 모두 v2 경로 사용
+✅ 시즌 롤오버 검증 = 자동화 스크립트 제공 (validate_team_battle_sot.py)
 ```

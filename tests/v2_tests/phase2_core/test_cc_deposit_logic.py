@@ -30,6 +30,8 @@ def test_cc_deposit_idempotency(db_session):
     2-6. CC Deposit Idempotency:
     Verify that submitting the SAME total_deposit amount twice results in 0 delta 
     and NO duplicated events.
+    
+    NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
     # 1. Setup User
     user = User(id=1, nickname="tester", external_id="ext_01")
@@ -47,12 +49,10 @@ def test_cc_deposit_idempotency(db_session):
     
     # We patch internal services to track calls
     with patch("app.v2.services.admin_cc_deposit_service.V2VaultService") as MockVaultService, \
-         patch("app.v2.services.admin_cc_deposit_service.SeasonPassService") as MockSeasonService, \
-         patch("app.v2.services.admin_cc_deposit_service.LevelXPService") as MockXPService, \
+         patch("app.v2.services.admin_cc_deposit_service.V2LevelXPService") as MockXPService, \
          patch("app.v2.services.admin_cc_deposit_service.get_settings") as MockSettings:
         
         # Configure Mocks
-        MockSeasonService.return_value.get_current_season.return_value = None
         # Ensure settings return valid ints
         MockSettings.return_value.external_ranking_deposit_step_amount = 100000
         MockSettings.return_value.external_ranking_deposit_xp_per_step = 20
@@ -90,6 +90,8 @@ def test_cc_deposit_delta_logic(db_session):
     """
     2-6. CC Deposit Delta:
     Verify that increasing total_deposit correctly calculates the delta.
+    
+    NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
     user = User(id=2, nickname="delta_tester", external_id="ext_02")
     db_session.add(user)
@@ -109,11 +111,10 @@ def test_cc_deposit_delta_logic(db_session):
     )
 
     with patch("app.v2.services.admin_cc_deposit_service.V2VaultService") as MockVaultService, \
-         patch("app.v2.services.admin_cc_deposit_service.SeasonPassService") as MockSeasonService, \
+         patch("app.v2.services.admin_cc_deposit_service.V2LevelXPService") as MockXPService, \
          patch("app.v2.services.admin_cc_deposit_service.get_settings") as MockSettings:
 
         # Configure Mocks
-        MockSeasonService.return_value.get_current_season.return_value = None
         # Ensure settings return valid ints
         MockSettings.return_value.external_ranking_deposit_step_amount = 100000
         MockSettings.return_value.external_ranking_deposit_xp_per_step = 20
@@ -136,6 +137,8 @@ def test_first_deposit_trigger(db_session):
     """
     2-6. New User / First Deposit Check:
     Verify first_deposit_at is set on the very first external deposit.
+    
+    NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
     user = User(id=3, nickname="newbie", external_id="ext_03")
     db_session.add(user)
@@ -145,8 +148,10 @@ def test_first_deposit_trigger(db_session):
 
     payload = CCDepositCreate(user_id=3, cc_id="ext_03", deposit_amount=50_000, play_count=0)
     
-    # We need to mock 'send_ops_notification' inside _check_whale_qualification to avoid errors
-    with patch("app.core.notifications.send_ops_notification"): 
+    # We need to mock services to avoid external dependencies
+    with patch("app.v2.services.admin_cc_deposit_service.V2VaultService"), \
+         patch("app.v2.services.admin_cc_deposit_service.V2LevelXPService"), \
+         patch("app.core.notifications.send_ops_notification"):
         AdminExternalRankingService.upsert_many(db_session, [payload])
 
     db_session.refresh(user)

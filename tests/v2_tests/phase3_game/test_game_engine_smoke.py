@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
 import pytest
 from fastapi.testclient import TestClient
@@ -12,6 +12,7 @@ from app.main import app
 from app.models.feature import FeatureConfig, FeatureType
 from app.models.game_wallet import GameTokenType
 from app.models.user import User
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.services.game_wallet_service import GameWalletService
 from app.v2.api.deps import get_current_user_id
 from app.v2.models.user import V2User
@@ -114,6 +115,16 @@ def _seed_v2_user(db: Session) -> V2User:
     )
     db.add(v2_user)
     db.flush()
+    
+    # Add deposit history to satisfy Strict Vault Policy (7-day no-deposit check)
+    deposit = ExternalRankingDailyDepositDelta(
+        user_id=v2_user.id,
+        kst_date=date.today(),
+        deposit_delta=10000
+    )
+    db.add(deposit)
+    db.flush()
+    
     return v2_user
 
 
@@ -187,7 +198,7 @@ def _seed_roulette_config(db: Session) -> V2RouletteConfig:
     db.flush()
 
     segments = []
-    for i in range(6):
+    for i in range(8):
         segments.append(
             V2RouletteSegment(
                 config_id=config.id,
@@ -263,7 +274,7 @@ def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, 
         data = r.json()
         assert "segments" in data
         assert isinstance(data["segments"], list)
-        assert len(data["segments"]) == 6
+        assert len(data["segments"]) == 8
 
         r = client.post("/api/v2/roulette/play", json={})
         assert r.status_code == 200, r.text
@@ -277,7 +288,7 @@ def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, 
         data = r.json()
         assert "token_balance" in data
 
-        r = client.post("/api/v2/dice/play")
+        r = client.post("/api/v2/dice/play", json={"bet_amount": 100, "prediction": "EVEN"})
         assert r.status_code == 200, r.text
         data = r.json()
         assert "game_data" in data

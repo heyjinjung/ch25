@@ -91,15 +91,15 @@ class LevelXPService:
         # 3. Hardcoded Fallback
         return self.LEVELS
 
+    @classmethod
+    def _normalize_reward_type(cls, value: str | None) -> str:
+        if not value:
+            return "NONE"
+        normalized = str(value).upper()
+        return cls.LEGACY_REWARD_TYPE_MAP.get(normalized, normalized)
+
     def __init__(self) -> None:
         self.reward_service = RewardService()
-
-        @classmethod
-        def _normalize_reward_type(cls, value: str | None) -> str:
-            if not value:
-                return "NONE"
-            normalized = str(value).upper()
-            return cls.LEGACY_REWARD_TYPE_MAP.get(normalized, normalized)
 
     def _get_or_create_progress(self, db: Session, user_id: int) -> UserLevelProgress:
         progress = db.get(UserLevelProgress, user_id)
@@ -160,62 +160,62 @@ class LevelXPService:
             
             if existing:
                 continue
-                
-                reward_type = self._normalize_reward_type(row["reward_type"])
-                reward_payload = dict(row.get("reward_payload") or {})
-                reward_amount = int(row.get("reward_amount") or 0)
-                if reward_amount <= 0:
-                    reward_amount = int(reward_payload.get("amount") or reward_payload.get("tickets") or 0)
-                reward_payload = {
-                    **reward_payload,
-                    "reward_amount": reward_amount,
-                }
 
-                reward_log = UserLevelRewardLog(
-                    user_id=user_id,
-                    level=row["level"],
-                    reward_type=reward_type,
-                    reward_payload=reward_payload,
-                    auto_granted=row["auto_grant"],
-                )
+            reward_type = self._normalize_reward_type(row["reward_type"])
+            reward_payload = dict(row.get("reward_payload") or {})
+            reward_amount = int(row.get("reward_amount") or 0)
+            if reward_amount <= 0:
+                reward_amount = int(reward_payload.get("amount") or reward_payload.get("tickets") or 0)
+            reward_payload = {
+                **reward_payload,
+                "reward_amount": reward_amount,
+            }
+
+            reward_log = UserLevelRewardLog(
+                user_id=user_id,
+                level=row["level"],
+                reward_type=reward_type,
+                reward_payload=reward_payload,
+                auto_granted=row["auto_grant"],
+            )
             db.add(reward_log)
             achieved.append(
                 {
                     "level": row["level"],
-                        "reward_type": reward_type,
-                        "reward_amount": reward_amount,
-                        "reward_payload": reward_payload,
+                    "reward_type": reward_type,
+                    "reward_amount": reward_amount,
+                    "reward_payload": reward_payload,
                     "auto_granted": row["auto_grant"],
                 }
             )
             # Auto grant only for supported reward types; non-blocking
             if row["auto_grant"]:
-                    reward_meta = {"source": source, "level": row["level"], **reward_payload}
+                reward_meta = {"source": source, "level": row["level"], **reward_payload}
                 try:
-                        if reward_type == "BUNDLE":
-                            items = reward_payload.get("items") or []
-                            for item in items:
-                                item_type = self._normalize_reward_type(item.get("type"))
-                                item_amount = int(item.get("amount") or 0)
-                                if item_type and item_amount > 0:
-                                    meta = {**reward_meta, "bundle": True, "bundle_type": item_type}
-                                    self.reward_service.deliver(
-                                        db,
-                                        user_id=user_id,
-                                        reward_type=item_type,
-                                        reward_amount=item_amount,
-                                        meta=meta,
-                                        commit=False,
-                                    )
-                        elif reward_amount > 0 and reward_type not in {"NONE", ""}:
-                            self.reward_service.deliver(
-                                db,
-                                user_id=user_id,
-                                reward_type=reward_type,
-                                reward_amount=reward_amount,
-                                meta=reward_meta,
-                                commit=False,
-                            )
+                    if reward_type == "BUNDLE":
+                        items = reward_payload.get("items") or []
+                        for item in items:
+                            item_type = self._normalize_reward_type(item.get("type"))
+                            item_amount = int(item.get("amount") or 0)
+                            if item_type and item_amount > 0:
+                                meta = {**reward_meta, "bundle": True, "bundle_type": item_type}
+                                self.reward_service.deliver(
+                                    db,
+                                    user_id=user_id,
+                                    reward_type=item_type,
+                                    reward_amount=item_amount,
+                                    meta=meta,
+                                    commit=False,
+                                )
+                    elif reward_amount > 0 and reward_type not in {"NONE", ""}:
+                        self.reward_service.deliver(
+                            db,
+                            user_id=user_id,
+                            reward_type=reward_type,
+                            reward_amount=reward_amount,
+                            meta=reward_meta,
+                            commit=False,
+                        )
                 except Exception:
                     # Delivery errors should not break XP accrual; rely on logs for retries.
                     pass

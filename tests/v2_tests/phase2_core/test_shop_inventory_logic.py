@@ -1,6 +1,6 @@
 import pytest
 import json
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
@@ -13,6 +13,7 @@ from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.inventory import UserInventoryItem
 from app.v2.models.v2_shop_order import V2ShopOrder
 from app.models.idempotency import UserIdempotencyKey
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 
 # Services & Routes
 from app.services.ui_config_service import UiConfigService
@@ -62,6 +63,14 @@ def setup_user(db, user_id=1, locked=5000):
         vault_locked_balance=locked
     )
     db.add(v2_user)
+    
+    # Add deposit record to satisfy Strict Vault Policy (7-day no-deposit check)
+    deposit = ExternalRankingDailyDepositDelta(
+        user_id=user_id,
+        kst_date=date.today(),
+        deposit_delta=locked if locked > 0 else 1000 # ensure at least some deposit
+    )
+    db.add(deposit)
     
     db.commit()
     return user
