@@ -998,3 +998,44 @@ def get_user_segment_info(
     if seg:
         return {"segment": seg.segment, "label": seg.segment}
     return {"segment": "UNKNOWN", "label": "미분류"}
+
+
+# ─────────────────────────────────────────────────────────────────
+# User Delete / Purge (V2 Native)
+# ─────────────────────────────────────────────────────────────────
+
+@router.delete("/users/{user_id}", status_code=204)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> None:
+    """유저 삭제 (일반 삭제, CASCADE 의존)"""
+    admin_id, admin_role = admin_info
+    
+    # 권한 체크: SUPER_ADMIN만 삭제 가능
+    if admin_role not in ("SUPER_ADMIN", "super_admin"):
+        raise HTTPException(status_code=403, detail="SUPER_ADMIN_REQUIRED")
+    
+    V2AdminUserService.delete_user(db, user_id, admin_id=admin_id)
+
+
+@router.post("/users/{user_id}/purge", status_code=204)
+def purge_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> None:
+    """유저 강제 퍼지 (모든 연관 데이터 포함, 테스트 리셋용)
+    
+    ⚠️ 경고: 이 작업은 되돌릴 수 없습니다!
+    - 유저 및 모든 연관 데이터(게임로그, 금고, 미션, 인벤토리 등)가 영구 삭제됩니다.
+    - SUPER_ADMIN 권한 필수
+    """
+    admin_id, admin_role = admin_info
+    
+    # 권한 체크: SUPER_ADMIN만 퍼지 가능
+    if admin_role not in ("SUPER_ADMIN", "super_admin"):
+        raise HTTPException(status_code=403, detail="SUPER_ADMIN_REQUIRED")
+    
+    V2AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)

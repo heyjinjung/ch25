@@ -21,7 +21,8 @@ export interface InboxListResponse {
 }
 
 export interface MarkInboxReadRequest {
-  readonly inbox_ids: number[];
+  readonly inbox_ids?: number[];
+  readonly mark_all?: boolean;
 }
 
 export interface MarkInboxReadResponse {

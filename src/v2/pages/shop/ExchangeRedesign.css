@@ -32,6 +32,7 @@
     font-weight: 900;
     color: rgba(255, 255, 255, 0.12);
     user-select: none;
+    -webkit-user-select: none;
     pointer-events: none;
     z-index: 0;
     white-space: nowrap;
@@ -66,7 +67,8 @@
     /* Maintain layer stack */
     z-index: 1;
     scrollbar-width: none;
-    /* Hide scrollbar for clean look */
+    /* For Chrome/Safari */
+    /* Hide scrollbar for webkit browsers */
 }
 
 .shop-main-area::-webkit-scrollbar {
@@ -203,9 +205,9 @@
     padding: 8px;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
     overflow: hidden;
@@ -247,6 +249,11 @@
     justify-content: flex-end;
     padding-bottom: 8px;
     border-radius: 10px;
+    /* 배경, 테두리, 블러 효과 제거 */
+    background: none !important;
+    border: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
 }
 
 .shop-sub-card .shop-card-img {

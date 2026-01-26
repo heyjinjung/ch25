@@ -69,7 +69,8 @@ class V2InboxListResponse(BaseModel):
 class V2MarkInboxReadRequest(BaseModel):
     """Mark one or more inbox messages as read."""
 
-    inbox_ids: list[int] = Field(..., min_length=1)
+    inbox_ids: list[int] = Field(default=[], min_length=0)
+    mark_all: bool = False
 
 
 class V2MarkInboxReadResponse(BaseModel):

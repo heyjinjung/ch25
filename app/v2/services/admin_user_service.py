@@ -166,3 +166,186 @@ class V2AdminUserService:
         if not user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
         return V2AdminUserService.build_summary(user)
+
+    # ─────────────────────────────────────────────────────────────────
+    # User Delete / Purge (V2 Native - 배포 후 V1 일괄 삭제)
+    # ─────────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def delete_user(db: Session, user_id: int, *, admin_id: int = 0) -> None:
+        """일반 유저 삭제 (CASCADE 의존, TeamMember만 명시 정리)"""
+        from app.models.team_battle import TeamMember
+
+        user = db.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+        before = {
+            "user_id": int(user.id),
+            "external_id": str(user.external_id),
+            "nickname": user.nickname,
+        }
+
+        # TeamMember 명시 정리 (orphaned 방지)
+        db.query(TeamMember).filter(TeamMember.user_id == user_id).delete(synchronize_session=False)
+
+        db.delete(user)
+
+        V2AdminAuditService.log(
+            db,
+            admin_id=admin_id,
+            action="DELETE_USER",
+            target_type="User",
+            target_id=str(user_id),
+            before=before,
+            after=None,
+        )
+        db.commit()
+
+    @staticmethod
+    def purge_user(db: Session, *, user_id: int, admin_id: int = 0) -> None:
+        """유저 + 연관 데이터 전체 강제 삭제 (테스트 리셋용, 파괴적 연산)
+
+        NOTE: API 레이어에서 권한 게이팅 필수
+        """
+        user = db.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+        before = {
+            "user_id": int(user.id),
+            "external_id": str(user.external_id),
+            "telegram_id": int(user.telegram_id) if user.telegram_id else None,
+            "nickname": user.nickname,
+        }
+
+        # ─── 연관 테이블 방어적 삭제 (CASCADE 미보장 대비) ───
+        from app.models import (
+            AdminMessageInbox,
+            ExternalRankingData,
+            ExternalRankingRewardLog,
+            RankingDaily,
+            SeasonPassProgress,
+            SeasonPassRewardLog,
+            SeasonPassStampLog,
+            TeamEventLog,
+            TeamMember,
+            TrialTokenBucket,
+            UserActivity,
+            UserActivityEvent,
+            UserCashLedger,
+            UserEventLog,
+            UserGameWallet,
+            UserGameWalletLedger,
+            UserIdempotencyKey,
+            UserInventoryItem,
+            UserInventoryLedger,
+            UserMissionProgress,
+            VaultEarnEvent,
+            VaultWithdrawalRequest,
+            VaultStatus,
+        )
+        from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+        from app.models.user_segment import UserSegment
+        from app.models.dice import DiceLog
+        from app.models.roulette import RouletteLog
+        from app.models.lottery import LotteryLog
+        from app.models.admin_user_profile import AdminUserProfile
+        from app.models.telegram_link_code import TelegramLinkCode
+        try:
+            from app.models.telegram_unlink_request import TelegramUnlinkRequest
+        except Exception:
+            TelegramUnlinkRequest = None  # type: ignore
+
+        # Game Wallet / Tokens
+        db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).delete(synchronize_session=False)
+        db.query(TrialTokenBucket).filter(TrialTokenBucket.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserCashLedger).filter(UserCashLedger.user_id == user_id).delete(synchronize_session=False)
+
+        # Mission
+        db.query(UserMissionProgress).filter(UserMissionProgress.user_id == user_id).delete(synchronize_session=False)
+
+        # Inventory
+        db.query(UserInventoryLedger).filter(UserInventoryLedger.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserInventoryItem).filter(UserInventoryItem.user_id == user_id).delete(synchronize_session=False)
+
+        # Level / XP
+        db.query(UserLevelRewardLog).filter(UserLevelRewardLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserXpEventLog).filter(UserXpEventLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserLevelProgress).filter(UserLevelProgress.user_id == user_id).delete(synchronize_session=False)
+
+        # Segmentation
+        db.query(UserSegment).filter(UserSegment.user_id == user_id).delete(synchronize_session=False)
+
+        # Game Logs
+        db.query(DiceLog).filter(DiceLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(RouletteLog).filter(RouletteLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(LotteryLog).filter(LotteryLog.user_id == user_id).delete(synchronize_session=False)
+
+        # Vault
+        db.query(VaultEarnEvent).filter(VaultEarnEvent.user_id == user_id).delete(synchronize_session=False)
+        db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.user_id == user_id).delete(synchronize_session=False)
+        db.query(VaultStatus).filter(VaultStatus.user_id == user_id).delete(synchronize_session=False)
+
+        # Activity
+        db.query(UserActivityEvent).filter(UserActivityEvent.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserActivity).filter(UserActivity.user_id == user_id).delete(synchronize_session=False)
+
+        # Ranking
+        db.query(ExternalRankingRewardLog).filter(ExternalRankingRewardLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).delete(synchronize_session=False)
+        db.query(RankingDaily).filter(RankingDaily.user_id == user_id).delete(synchronize_session=False)
+
+        # Season Pass
+        db.query(SeasonPassRewardLog).filter(SeasonPassRewardLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(SeasonPassStampLog).filter(SeasonPassStampLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(SeasonPassProgress).filter(SeasonPassProgress.user_id == user_id).delete(synchronize_session=False)
+
+        # Team Battle
+        db.query(TeamEventLog).filter(TeamEventLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(TeamMember).filter(TeamMember.user_id == user_id).delete(synchronize_session=False)
+
+        # Messaging
+        db.query(AdminMessageInbox).filter(AdminMessageInbox.user_id == user_id).delete(synchronize_session=False)
+
+        # Idempotency / Telegram
+        db.query(UserIdempotencyKey).filter(UserIdempotencyKey.user_id == user_id).delete(synchronize_session=False)
+        db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)
+
+        # Telegram Unlink Requests (optional table)
+        if TelegramUnlinkRequest is not None:
+            from sqlalchemy import inspect
+            inspector = inspect(db.bind)
+            if inspector.has_table(TelegramUnlinkRequest.__tablename__):
+                db.query(TelegramUnlinkRequest).filter(
+                    (TelegramUnlinkRequest.current_user_id == user_id)
+                    | (TelegramUnlinkRequest.requester_user_id == user_id)
+                    | (TelegramUnlinkRequest.processed_by == user_id)
+                ).delete(synchronize_session=False)
+                if user.telegram_id is not None:
+                    db.query(TelegramUnlinkRequest).filter(
+                        TelegramUnlinkRequest.telegram_id == str(int(user.telegram_id))
+                    ).delete(synchronize_session=False)
+
+        # Admin Profile
+        db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).delete(synchronize_session=False)
+
+        # Finally, delete the user
+        db.delete(user)
+
+        # Safety net: sqlite FK quirks
+        db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)
+        db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == int(user_id)).delete(synchronize_session=False)
+
+        V2AdminAuditService.log(
+            db,
+            admin_id=admin_id,
+            action="PURGE_USER",
+            target_type="User",
+            target_id=str(user_id),
+            before=before,
+            after=None,
+        )
+        db.commit()
+        logger.info(f"[V2] User {user_id} purged by admin {admin_id}")

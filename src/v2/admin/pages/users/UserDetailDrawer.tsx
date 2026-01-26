@@ -14,6 +14,8 @@ import {
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
+import { deleteUser, purgeUser } from "../../../../admin/api/adminUserApi";
+import { useState } from "react";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import {
@@ -23,7 +25,7 @@ import {
   CardTitle,
 } from "../../../components/ui/card";
 import { Ticket, Edit, Package, Vault } from "lucide-react";
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import gsap from "gsap";
 import WalletEditor from "../../components/users/WalletEditor";
 import {
@@ -88,6 +90,12 @@ export function UserDetailDrawer({
   );
 
   const { data: user, isLoading } = useAdminUserDetail(userId);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [purgeLoading, setPurgeLoading] = useState(false);
+  const [confirmType, setConfirmType] = useState<null | "delete" | "purge">(
+    null,
+  );
+  const [errorMsg, setErrorMsg] = useState<string>("");
   const { data: inventory } = useUserInventory(userId);
   const { data: ticketLogs = [] } = useAdminTicketLogs(
     userId ?? undefined,
@@ -169,8 +177,99 @@ export function UserDetailDrawer({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {/* 삭제 버튼 제거(Placeholder) */}
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={deleteLoading || purgeLoading}
+                    onClick={() => setConfirmType("delete")}
+                  >
+                    삭제
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-500 text-red-400 hover:bg-red-500/10"
+                    disabled={deleteLoading || purgeLoading}
+                    onClick={() => setConfirmType("purge")}
+                  >
+                    퍼지(완전삭제)
+                  </Button>
                 </div>
+                {/* 삭제/퍼지 확인 모달 */}
+                {confirmType && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                    <div className="bg-[#18181B] rounded-xl p-8 w-full max-w-xs border border-white/10 text-center">
+                      <div className="mb-4 text-lg font-bold">
+                        {confirmType === "delete"
+                          ? "정말 이 유저를 삭제하시겠습니까?"
+                          : "⚠️ 정말 이 유저와 모든 연관 데이터를 완전 삭제(PURGE)하시겠습니까?"}
+                      </div>
+                      <div className="mb-4 text-zinc-400 text-xs">
+                        {confirmType === "delete"
+                          ? "이 작업은 되돌릴 수 없습니다. 유저 정보가 삭제됩니다."
+                          : "이 작업은 되돌릴 수 없습니다. 유저 및 모든 게임/금고/미션/인벤토리/로그 데이터가 영구 삭제됩니다."}
+                      </div>
+                      {errorMsg && (
+                        <div className="mb-2 text-red-400 text-xs">
+                          {errorMsg}
+                        </div>
+                      )}
+                      <div className="flex gap-2 justify-center">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmType(null);
+                            setErrorMsg("");
+                          }}
+                          disabled={deleteLoading || purgeLoading}
+                        >
+                          취소
+                        </Button>
+                        <Button
+                          variant={
+                            confirmType === "purge" ? "destructive" : "default"
+                          }
+                          size="sm"
+                          disabled={deleteLoading || purgeLoading}
+                          onClick={async () => {
+                            setErrorMsg("");
+                            try {
+                              if (!userId) return;
+                              if (confirmType === "delete") {
+                                setDeleteLoading(true);
+                                await deleteUser(userId);
+                              } else {
+                                setPurgeLoading(true);
+                                await purgeUser(userId);
+                              }
+                              setDeleteLoading(false);
+                              setPurgeLoading(false);
+                              setConfirmType(null);
+                              onClose();
+                            } catch (err: any) {
+                              setDeleteLoading(false);
+                              setPurgeLoading(false);
+                              setErrorMsg(
+                                err?.response?.data?.detail ||
+                                  err?.message ||
+                                  "삭제 실패",
+                              );
+                            }
+                          }}
+                        >
+                          {confirmType === "delete"
+                            ? deleteLoading
+                              ? "삭제 중..."
+                              : "삭제"
+                            : purgeLoading
+                              ? "퍼지 중..."
+                              : "완전삭제(PURGE)"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </SheetHeader>
 

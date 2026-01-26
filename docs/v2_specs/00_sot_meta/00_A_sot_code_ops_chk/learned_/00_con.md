@@ -1,6 +1,20 @@
 
 ## [2026-01-26 구현 완료 항목]
 
+### [2026-01-26] V2 유저 삭제/퍼지 서비스 신규 구현 ✅
+- **문제**: V2 폴더(app/v2/services)에 유저 삭제/퍼지 기능이 없어, V1(app/services/admin_user_service.py) 의존
+- **해결**:
+  - `app/v2/services/admin_user_service.py` 수정 - `delete_user()`, `purge_user()` 메서드 추가
+    - `delete_user()`: 일반 삭제 (CASCADE 의존, TeamMember 명시 정리)
+    - `purge_user()`: 강제 삭제 (모든 연관 테이블 방어적 삭제)
+  - `app/v2/api/admin/user_routes.py` 수정 - V2 엔드포인트 추가
+    - `DELETE /api/v2/admin/users/{user_id}` - 일반 삭제
+    - `POST /api/v2/admin/users/{user_id}/purge` - 강제 퍼지
+  - 권한: SUPER_ADMIN만 삭제/퍼지 가능
+  - 감사 로그: V2AdminAuditService 연동 (DELETE_USER, PURGE_USER 액션 기록)
+- **정책**: V2 Native 구현, 배포 후 V1 일괄 삭제 예정
+- **검증**: V2 엔드포인트로 유저 삭제/퍼지 정상 동작
+
 ### [2026-01-26] 티켓/인벤토리 로그 KST 변환 적용 ✅
 - **문제**: 티켓/인벤토리 로그의 timestamp가 UTC로 반환되어 운영/프론트에서 시간 오프셋 혼동 발생
 - **해결**:

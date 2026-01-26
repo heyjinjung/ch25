@@ -36,7 +36,7 @@ export const VaultHero: React.FC<VaultHeroProps> = ({
           }}
           className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/30 to-emerald-500/30 blur-2xl"
         />
-        
+
         {/* Vault image */}
         <motion.img
           src="/assets/vault/vault_closed.webp"
@@ -77,8 +77,6 @@ export const VaultHero: React.FC<VaultHeroProps> = ({
         transition={{ delay: 0.3, duration: 0.6 }}
         className="flex flex-col items-center gap-2"
       >
-        <p className="text-sm font-medium text-white/40">내 금고 잔액</p>
-        
         <div className="flex items-baseline gap-1">
           <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-cyan-100 to-cyan-400 mb-2">
             ₩
@@ -94,16 +92,6 @@ export const VaultHero: React.FC<VaultHeroProps> = ({
           목표 ₩{goalAmount.toLocaleString()}
         </p>
       </motion.div>
-
-      {/* Motivational message */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="mt-4 text-center text-sm text-white/60 max-w-xs"
-      >
-        이용할수록 <span className="text-emerald-400 font-semibold">더 쌓입니다</span>
-      </motion.p>
     </div>
   );
 };

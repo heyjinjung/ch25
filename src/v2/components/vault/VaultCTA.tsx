@@ -33,7 +33,7 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
         whileHover={isWithdrawEnabled ? { scale: 1.02 } : {}}
         whileTap={isWithdrawEnabled ? { scale: 0.98 } : {}}
         className={`
-          relative w-full h-16 rounded-[32px] overflow-hidden
+          relative w-full h-[50px] rounded-[32px] overflow-hidden
           font-bold text-lg
           transition-all duration-300
           ${
@@ -117,16 +117,7 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
       </div>
 
       {/* Hint text */}
-      {!isWithdrawEnabled && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="text-center text-xs text-white/40"
-        >
-          출금 조건을 확인하고 게임을 즐기세요
-        </motion.p>
-      )}
+      {/* 출금 조건 안내 문구 완전 삭제 */}
     </motion.div>
   );
 };

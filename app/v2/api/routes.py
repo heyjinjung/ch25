@@ -857,8 +857,22 @@ def mark_inbox_read(
     now = datetime.utcnow()
     marked_count = 0
     updated_message_ids = set()
+    
+    # Determine target IDs
+    target_ids = list(payload.inbox_ids)
+    
+    if payload.mark_all:
+        all_unread = (
+            db.query(V2AdminMessageInbox)
+            .filter(
+                V2AdminMessageInbox.user_id == user_id,
+                V2AdminMessageInbox.is_read == False
+            )
+            .all()
+        )
+        target_ids = [entry.id for entry in all_unread]
 
-    for inbox_id in payload.inbox_ids:
+    for inbox_id in target_ids:
         entry = (
             db.query(V2AdminMessageInbox)
             .filter(

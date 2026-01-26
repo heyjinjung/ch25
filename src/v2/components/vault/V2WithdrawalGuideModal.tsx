@@ -91,15 +91,15 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-[360px] bg-gradient-to-b from-[#1a1c1e] to-[#121214] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
+            className="relative w-full max-w-[340px] bg-gradient-to-b from-[#1a1c1e] to-[#121214] border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
           >
             {/* Header gradient accent */}
             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-emerald-500/20 via-cyan-500/10 to-transparent pointer-events-none" />
 
-            <div className="relative pt-8 pb-4 px-6">
+            <div className="relative pt-6 pb-4 px-6">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all z-10"
                 aria-label="닫기"
                 title="닫기"
               >
@@ -115,13 +115,13 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                   className="relative"
                 >
                   <div className="absolute inset-0 bg-emerald-400/20 rounded-2xl blur-xl" />
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 flex items-center justify-center shadow-lg">
-                    <ShieldCheck size={28} className="text-emerald-400" />
+                  <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 flex items-center justify-center shadow-lg">
+                    <ShieldCheck size={24} className="text-emerald-400" />
                   </div>
                 </motion.div>
 
                 {/* Title */}
-                <h2 className="text-xl font-black text-white text-center">
+                <h2 className="text-lg font-black text-white text-center">
                   <EncryptedText text="출금 준비 안내" />
                 </h2>
 
@@ -165,8 +165,8 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
             </div>
 
             {/* Checklist Content */}
-            <div className="px-5 pb-6">
-              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 overflow-y-auto max-h-[320px]">
+            <div className="px-5 pb-4">
+              <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 overflow-y-auto max-h-[240px]">
                 <WithdrawalRulesChecklist
                   playCount={vaultData.daily_play_count}
                   playTarget={vaultData.daily_play_target}
@@ -195,7 +195,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
             </div>
 
             {/* Action buttons */}
-            {!isFullyComplete && (
+            {!isFullyComplete ? (
               <div className="px-5 pb-6 space-y-2">
                 <button
                   onClick={handlePlayGame}
@@ -203,10 +203,22 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                 >
                   게임하러 가기 →
                 </button>
-                <p className="text-center text-xs text-white/30">
-                  플레이할수록 조건이 채워집니다
-                </p>
+                <button
+                  onClick={onClose}
+                  className="w-full h-10 rounded-[20px] bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs font-semibold transition-all"
+                >
+                  닫기
+                </button>
               </div>
+            ) : (
+                <div className="px-5 pb-6 space-y-2">
+                    <button
+                        onClick={onClose}
+                        className="w-full h-12 rounded-[24px] bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-all"
+                    >
+                        닫기
+                    </button>
+                </div>
             )}
 
             {/* Footer */}
