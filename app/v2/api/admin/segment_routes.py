@@ -9,6 +9,7 @@ from app.v2.schemas.v2_admin_segment_rule import (
     AdminSegmentRuleUpdateRequest,
 )
 from app.v2.services import V2SegmentService
+from app.v2.middleware.admin_audit import log_admin_action
 
 router = APIRouter()
 
@@ -18,7 +19,19 @@ def run_segment_batch(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    return V2SegmentService.segment_all_users(db)
+    admin_id, _ = admin_info
+    result = V2SegmentService.segment_all_users(db)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SEGMENT_BATCH_RUN",
+        target_type="segment",
+        after={"result": str(result)[:500] if result else None},
+    )
+    
+    return result
 
 
 @router.get("/segments/stats")
@@ -126,6 +139,17 @@ def create_segment_rule_endpoint(
     )
 
     rule = V2SegmentService.create_rule(db, payload=rule_req)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SEGMENT_RULE_CREATE",
+        target_type="segment_rule",
+        target_id=str(rule.id),
+        after={"name": name, "segment": segment, "rule": raw_rule},
+    )
+    
     return {"id": rule.id, "message": "created"}
 
 
@@ -136,6 +160,8 @@ def update_segment_rule_endpoint(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    admin_id, _ = admin_info
+    
     update_data = {}
     if "label" in payload:
         update_data["name"] = payload["label"]
@@ -148,6 +174,17 @@ def update_segment_rule_endpoint(
 
     update_req = AdminSegmentRuleUpdateRequest(**update_data)
     rule = V2SegmentService.update_rule(db, rule_id=rule_id, payload=update_req)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SEGMENT_RULE_UPDATE",
+        target_type="segment_rule",
+        target_id=str(rule_id),
+        after=update_data,
+    )
+    
     return {"id": rule.id, "message": "updated"}
 
 
@@ -157,5 +194,17 @@ def delete_segment_rule_endpoint(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    admin_id, _ = admin_info
+    
     V2SegmentService.delete_rule(db, rule_id=rule_id)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SEGMENT_RULE_DELETE",
+        target_type="segment_rule",
+        target_id=str(rule_id),
+    )
+    
     return {"message": "deleted"}

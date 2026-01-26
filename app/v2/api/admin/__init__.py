@@ -12,6 +12,7 @@ from .streak_routes import router as streak_router
 from .level_routes import router as level_router
 from .inventory_routes import router as inventory_router
 from .csv_import_routes import router as csv_import_router
+from .team_battle_routes import router as team_battle_router
 
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
 router.include_router(marketing_router)
@@ -26,5 +27,6 @@ router.include_router(streak_router)
 router.include_router(level_router)
 router.include_router(inventory_router)
 router.include_router(csv_import_router)
+router.include_router(team_battle_router, prefix="/team-battle", tags=["v2-admin-team-battle"])
 
 __all__ = ["router"]

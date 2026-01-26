@@ -105,6 +105,40 @@ class V2VaultService:
             return now_kst.date() - timedelta(days=1)
         return now_kst.date()
 
+    @staticmethod
+    def is_benefits_suspended(db: Session, user_id: int, now_dt: datetime | None = None) -> tuple[bool, int]:
+        """유저가 혜택 제재 상태인지 확인 (7일간 무입금 시 제재).
+        
+        정책: v2_strict_vault_policy_sot_ko.md
+        - 7일간 입금 합계가 0이면 benefits_suspended = True
+        
+        Args:
+            db: SQLAlchemy 세션
+            user_id: 유저 ID
+            now_dt: 기준 시각 (기본: 현재 UTC)
+        
+        Returns:
+            (is_suspended, deposit_7d) tuple
+            - is_suspended: 제재 여부
+            - deposit_7d: 최근 7일 입금 합계
+        """
+        now_dt = now_dt or datetime.utcnow()
+        
+        # 최근 7일 입금 합계 확인 (6일 전 ~ 오늘)
+        seven_days_ago_date = (now_dt - timedelta(days=6)).date()
+        
+        deposit_7d = db.query(
+            func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)
+        ).filter(
+            ExternalRankingDailyDepositDelta.user_id == user_id,
+            ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
+        ).scalar() or 0
+        
+        # 7일간 입금이 0이면 제재
+        is_suspended = int(deposit_7d) < 1
+        
+        return is_suspended, int(deposit_7d)
+
     def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
         """V2 adapted get_status mimicking V1 VaultService behavior.
         
@@ -380,16 +414,19 @@ class V2VaultService:
     # =========================================================================
 
     def get_admin_stats(self, db: Session) -> dict:
-        """Get aggregate vault stats for admin dashboard."""
-        # KST Date Range Logic
+        """Get aggregate vault stats for admin dashboard.
+        
+        V2 정책: 09:00 KST 리셋 기준으로 통계 집계.
+        """
+        # V2: 9AM KST 기준으로 통계 집계 (자정 기준에서 변경)
+        from app.utils.timezone import business_day_start, business_day_end
+        
         KST = ZoneInfo("Asia/Seoul")
         now_kst = datetime.now(KST)
-        today_start_kst = now_kst.replace(hour=0, minute=0, second=0, microsecond=0)
-        today_end_kst = today_start_kst + timedelta(days=1)
         
-        # Convert to UTC for DB query (assuming naive UTC in DB)
-        today_start_utc = today_start_kst.astimezone(timezone.utc).replace(tzinfo=None)
-        today_end_utc = today_end_kst.astimezone(timezone.utc).replace(tzinfo=None)
+        # 비즈니스 일자 기준 (09:00 KST ~ 익일 08:59:59 KST)
+        today_start_utc = business_day_start(now_kst).replace(tzinfo=None)
+        today_end_utc = business_day_end(now_kst).replace(tzinfo=None)
 
         # Using sqlalchemy select/scalars for V2 standard
         today_total = db.execute(

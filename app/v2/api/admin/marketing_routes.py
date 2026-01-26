@@ -27,6 +27,7 @@ from app.v2.schemas.v2_admin_marketing import (
 )
 from app.v2.schemas.v2_admin_message import V2MessageCreate, V2MessageResponse
 from app.v2.services.admin_message_service import V2AdminMessageService
+from app.v2.middleware.admin_audit import log_admin_action
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -99,6 +100,21 @@ def create_admin_marketing_message(
         "V2 admin message create: fanout",
         extra={"message_id": msg.id, "fanout_count": fanout_count},
     )
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="MARKETING_MESSAGE_CREATE",
+        target_type="admin_message",
+        target_id=str(msg.id),
+        after={
+            "title": payload.title,
+            "target_type": payload.target_type,
+            "fanout_count": fanout_count,
+        },
+    )
+    
     return msg
 
 
@@ -256,6 +272,17 @@ def create_admin_marketing_survey(
     db.commit()
     db.refresh(survey)
     _replace_survey_questions(db, survey, payload)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SURVEY_CREATE",
+        target_type="survey",
+        target_id=str(survey.id),
+        after={"title": payload.title, "status": str(survey.status)},
+    )
+    
     return _serialize_survey_detail(survey)
 
 
@@ -279,10 +306,12 @@ def update_admin_marketing_survey(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ) -> SurveyDetailResponse:
-    _admin_id, _admin_role = admin_info
+    admin_id, _admin_role = admin_info
     survey = db.get(Survey, survey_id)
     if not survey:
         raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
+    
+    before_status = str(survey.status)
 
     survey.title = payload.title
     survey.description = payload.description
@@ -297,6 +326,18 @@ def update_admin_marketing_survey(
     db.commit()
     db.refresh(survey)
     _replace_survey_questions(db, survey, payload)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SURVEY_UPDATE",
+        target_type="survey",
+        target_id=str(survey_id),
+        before={"status": before_status},
+        after={"title": payload.title, "status": str(survey.status)},
+    )
+    
     return _serialize_survey_detail(survey)
 
 
@@ -306,7 +347,7 @@ def delete_admin_marketing_survey(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ) -> dict:
-    _admin_id, _admin_role = admin_info
+    admin_id, _admin_role = admin_info
     survey = db.get(Survey, survey_id)
     if not survey:
         raise HTTPException(status_code=404, detail="SURVEY_NOT_FOUND")
@@ -315,6 +356,16 @@ def delete_admin_marketing_survey(
     survey.updated_at = datetime.utcnow()
     db.add(survey)
     db.commit()
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SURVEY_DELETE",
+        target_type="survey",
+        target_id=str(survey_id),
+    )
+    
     return {"ok": True}
 
 

@@ -11,40 +11,47 @@ from app.models.roulette import RouletteLog
 from app.models.lottery import LotteryLog
 # from app.models.feature import FeatureConfig, FeatureType # If needed for status
 
+# V2: 비즈니스 일자 헬퍼 통합 (09:00 KST 기준)
+from app.utils.timezone import (
+    kst_now as get_kst_now_helper,
+    yesterday_business_day_range,
+    today_business_day_start_utc,
+    KST,
+)
+
 WELCOME_LOGIC_KEYS = (
     "NEW_USER_WELCOME_CASH",
     "NEW_USER_WELCOME_TICKET",
 )
 
-KST = ZoneInfo("Asia/Seoul")
 
 class AdminDashboardService:
+    """어드민 대시보드 통계 서비스.
+    
+    NOTE: V2에서 비즈니스 일자 기준이 00:00 KST → 09:00 KST로 통일됨.
+    모든 일간 집계는 09:00 KST ~ 익일 08:59:59 KST를 기준으로 함.
+    """
+    
     def __init__(self):
         pass
 
     def _get_kst_now(self) -> datetime:
         """Return current datetime in KST timezone."""
-        return datetime.now(KST)
+        return get_kst_now_helper()
 
     def _get_yesterday_kst_range(self, kst_now: datetime):
-        """Return UTC start/end for Yesterday (KST)."""
-        yesterday_kst = kst_now.date() - timedelta(days=1)
-
-        # Start: Yesterday 00:00 KST -> UTC (-9h)
-        start_kst = datetime.combine(yesterday_kst, time.min)
-        start_utc = start_kst - timedelta(hours=9)
-
-        # End: Yesterday 23:59:59 KST -> UTC (-9h)
-        end_kst = datetime.combine(yesterday_kst, time.max)
-        end_utc = end_kst - timedelta(hours=9)
-
-        return start_utc, end_utc
+        """Return UTC start/end for Yesterday's business day (09:00 KST based).
+        
+        V2 변경: 00:00 KST → 09:00 KST 기준으로 통일.
+        """
+        return yesterday_business_day_range(kst_now)
 
     def _get_today_kst_start_in_utc(self, kst_now: datetime) -> datetime:
-        """Return UTC timestamp for Today 00:00 KST."""
-        today_kst = kst_now.date()
-        start_kst = datetime.combine(today_kst, time.min)
-        return start_kst - timedelta(hours=9)
+        """Return UTC timestamp for Today's business day start (09:00 KST).
+        
+        V2 변경: 00:00 KST → 09:00 KST 기준으로 통일.
+        """
+        return today_business_day_start_utc(kst_now)
 
     def get_comprehensive_overview(self, db: Session):
         kst_now = self._get_kst_now()

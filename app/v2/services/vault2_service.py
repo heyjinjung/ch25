@@ -4,12 +4,14 @@ Phase 2/3-stage rollout prep:
 - Adds optional state transition helpers (locked→available→expired).
 - Adds program policy JSON parsing helpers.
 - Adds event recording entrypoints (accrual/unlock) without changing existing v1 gameplay.
+- [V2] Global circuit breaker integration for payout safety.
 
 NOTE: To keep incremental rollout safe, nothing calls these mutating helpers by default.
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta
 from copy import deepcopy
 from typing import Any
@@ -23,6 +25,11 @@ from app.models.user_cash_ledger import UserCashLedger
 from app.models.user import User
 from sqlalchemy import func, select
 from app.v2.services.audit_service import AuditService
+
+# [V2] Circuit breaker for payout safety
+from app.services.circuit_breaker import check_payout_safe, record_payout
+
+logger = logging.getLogger(__name__)
 
 
 # Default config knobs for Vault program operations
@@ -436,12 +443,30 @@ class Vault2Service:
         meta: dict[str, Any] | None = None,
         now: datetime | None = None,
         commit: bool = True,
+        skip_circuit_breaker: bool = False,
     ) -> VaultStatus:
         """Record an unlock event in Vault2 status progress JSON (Phase 2 prep).
 
         In current v1 behavior, unlock is paid into cash immediately.
         This method only records the event for future migration/observability.
+        
+        [V2] Circuit breaker integration:
+        - skip_circuit_breaker=True: 서킷 브레이커 체크 생략 (관리자 강제 지급 등)
+        - 기본값=False: 서킷 브레이커 체크 후 지급 (안전 모드)
+        
+        Raises:
+            ValueError: Circuit breaker가 OPEN 상태이고 skip_circuit_breaker=False인 경우
         """
+        # [V2] Circuit breaker check
+        if not skip_circuit_breaker and unlock_amount > 0:
+            allowed, reason = check_payout_safe(unlock_amount, db)
+            if not allowed:
+                logger.warning(
+                    f"Circuit breaker blocked unlock: user_id={user_id}, "
+                    f"amount={unlock_amount}, trigger={trigger}, reason={reason}"
+                )
+                raise ValueError(f"PAYOUT_BLOCKED: {reason}")
+        
         now_dt = now or datetime.utcnow()
         program = self._ensure_default_program(db)
         status = self.get_or_create_status(db, user_id=user_id, program=program)
@@ -455,6 +480,11 @@ class Vault2Service:
                 "at": now_dt.isoformat(),
             },
         )
+        
+        # [V2] Record payout for circuit breaker tracking
+        if unlock_amount > 0:
+            record_payout(unlock_amount, source=f"UNLOCK:{trigger}", user_id=user_id)
+        
         db.add(status)
         if commit:
             db.commit()

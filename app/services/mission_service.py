@@ -62,9 +62,13 @@ class MissionService:
         return True
 
     def _operational_play_date(self, now_tz: datetime) -> date:
-        """Return the operational play date (KST day with reset at configured hour)."""
-        reset_hour_raw = getattr(self.settings, "streak_day_reset_hour_kst", 0)
-        reset_hour = 0 if reset_hour_raw is None else int(reset_hour_raw)
+        """Return the operational play date (KST day with reset at configured hour).
+        
+        V2 정책: 기본값을 9 (09:00 KST)로 통일하여 VaultService와 일관성 유지.
+        """
+        # V2: 기본값을 0에서 9로 변경 (09:00 KST 리셋 정책 통합)
+        reset_hour_raw = getattr(self.settings, "streak_day_reset_hour_kst", 9)
+        reset_hour = 9 if reset_hour_raw is None else int(reset_hour_raw)
         today = now_tz.date()
         if now_tz.hour < reset_hour:
             return today - timedelta(days=1)
