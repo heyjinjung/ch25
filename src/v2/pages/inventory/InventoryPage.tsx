@@ -372,11 +372,6 @@ export default function InventoryPage() {
           )}
         </SheetContent>
       </Sheet>
-
-      {/* Inventory Glassmorphism Button Style */}
-      <style>{`
-        @import './InventoryRedesign.css';
-      `}</style>
     </div>
   );
 }
