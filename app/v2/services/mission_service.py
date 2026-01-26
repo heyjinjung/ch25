@@ -356,7 +356,7 @@ class V2MissionService:
             MissionRewardType.GOOGLE_GIFTICON_5000,
             MissionRewardType.GOOGLE_GIFTICON_10000,
         }:
-            target_reward_type = str(mission.reward_type)
+            target_reward_type = mission.reward_type.value if hasattr(mission.reward_type, "value") else str(mission.reward_type)
 
         if target_reward_type and target_amount > 0:
             reward_service.deliver(

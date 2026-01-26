@@ -3,18 +3,25 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { Target } from "lucide-react";
 
+// 정책 기반 금고 목표 금액 배열 (SoT와 동기화 필요)
+const VAULT_GOALS = [10000, 10000, 30000, 50000];
+
 interface VaultProgressProps {
   currentAmount: number;
-  goalAmount: number;
+  withdrawalCount?: number; // 누적 출금 성공 횟수(0부터 시작)
   className?: string;
 }
 
 export const VaultProgress: React.FC<VaultProgressProps> = ({
   currentAmount,
-  goalAmount,
+  withdrawalCount = 0,
   className = "",
 }) => {
   const progressRef = useRef<HTMLDivElement>(null);
+  // 현재 목표 단계 계산 (최대 목표 초과 시 마지막 목표 유지)
+  const currentGoalIndex = Math.min(withdrawalCount, VAULT_GOALS.length - 1);
+  const goalAmount = VAULT_GOALS[currentGoalIndex];
+  const nextGoalAmount = VAULT_GOALS[currentGoalIndex + 1];
   const percentage = Math.min((currentAmount / goalAmount) * 100, 100);
   const remaining = Math.max(goalAmount - currentAmount, 0);
 
@@ -45,7 +52,9 @@ export const VaultProgress: React.FC<VaultProgressProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm font-semibold text-white/70">출금 진행도</span>
+              <span className="text-sm font-semibold text-white/70">
+                출금 진행도
+              </span>
             </div>
             <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
               {percentage.toFixed(0)}%
@@ -85,8 +94,8 @@ export const VaultProgress: React.FC<VaultProgressProps> = ({
             </span>
           </div>
 
-          {/* Remaining amount message */}
-          {remaining > 0 && (
+          {/* Remaining amount or success/next goal message */}
+          {percentage < 100 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -98,18 +107,25 @@ export const VaultProgress: React.FC<VaultProgressProps> = ({
               </span>
               <span className="text-sm text-white/50">남음</span>
             </motion.div>
-          )}
-
-          {/* Success message */}
-          {percentage >= 100 && (
+          ) : (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center justify-center gap-2 py-2 px-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
             >
               <span className="text-sm font-bold text-emerald-400">
                 🎉 출금 가능! 지금 바로 신청하세요
               </span>
+              {nextGoalAmount ? (
+                <span className="text-xs text-white/60 pt-1">
+                  축하합니다!{" "}
+                  <b>다음 목표는 ₩{nextGoalAmount.toLocaleString()}</b>
+                </span>
+              ) : (
+                <span className="text-xs text-white/60 pt-1">
+                  모든 목표를 달성하셨습니다!
+                </span>
+              )}
             </motion.div>
           )}
         </div>

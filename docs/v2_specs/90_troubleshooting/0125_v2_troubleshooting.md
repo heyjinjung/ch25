@@ -240,33 +240,29 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
 
 ✅ 금고페이지 출금조건 확인 - 구플래쉬 작업완료 
 
-[] 모달 및 애니메이션 
-모달 텍스트에 
-https://ui.aceternity.com/components/encrypted-text
-Encrypted Text 
-적용가능한지 체크 
-
+✅ 모달 및 애니메이션 
+모달 텍스트에 https://ui.aceternity.com/components/encrypted-text
+Encrypted Text 적용가능한지 체크 
 V2WithdrawalGuideModal.tsx
 V2AttendanceStreakModal.tsx
-
 LotteryCollectionModal.tsx
 DiceResultModal.tsx
 LotteryResultModal.tsx
 RouletteResultModal.tsx
 
-
 ✅  티켓 /인벤토리 로그 kst 가능한지 확인할것 
-티켓/인벤토리 로그 KST 변환 적용 ✅
+티켓/인벤토리 로그 KST 변환 적용 
 수정된 파일:
-
 timezone.py - utc_to_kst(), utc_to_kst_iso() 헬퍼 함수 추가
 economy_routes.py - TicketLogDto 응답 시 KST 변환 적용
 user_routes.py - UserActivityLogDto 응답 시 KST 변환 적용
 정책:
-
 DB 저장: UTC (기존 유지)
 API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 문서 업데이트:
+
+✅ 미션 프론트 디비 EUAM 오류 해결 
+미션 관련 프론트 enum 업데이트 기록 이후 - 인벤토리 / 티켓 관련 업데이트 사항 문서 업데이트 
 
 --------------------
 
@@ -276,7 +272,6 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 연속스트릭모달
 골든아워 모달
 이벤트페이지
-미션페이지 too
 
 메인페이지 
 Animated Testimonials
@@ -288,14 +283,12 @@ special
 
 -----------------
 
-
-
-1/25일 밤 10:39
-
-
+유저 인박스 팝업에서 읽음처리 한번에 할수 있게 해줘 
+그리고 가독성 4.5 :1 확보 
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 팀배틀 닉네임으로 유저조회 및 처리 가능하게 해줘 
+
 
 ------------
 
@@ -312,6 +305,6 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 
 예시 > 미션 오류 발견 
 폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
-문서이름 : 20260126_미션_오류_업데이트.md
+문서이름 : 20260126_mission_error_update.md
 
 이런식으로 문서 생성해줘

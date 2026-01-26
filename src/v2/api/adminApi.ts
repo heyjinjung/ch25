@@ -48,6 +48,7 @@ export interface AdminMissionDto {
   condition: string;
   targetValue: number;
   logicKey: string;
+  actionType?: string;
   rewardType: string;
   rewardAmount: number;
   isActive: boolean;

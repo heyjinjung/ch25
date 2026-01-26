@@ -85,9 +85,7 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
           ) : (
             <>
               <Wallet className="w-5 h-5" />
-              <span>
-                {isWithdrawEnabled ? "지금 출금하기" : "조건 충족 시 출금 가능"}
-              </span>
+              <span>출금하기</span>
             </>
           )}
         </div>

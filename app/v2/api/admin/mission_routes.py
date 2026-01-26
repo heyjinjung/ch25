@@ -22,6 +22,7 @@ class AdminMissionDto(BaseModel):
     condition: str
     targetValue: int
     logicKey: str
+    actionType: str | None = None
     rewardType: str
     rewardAmount: int
     isActive: bool
@@ -33,6 +34,7 @@ class AdminMissionUpdateRequest(BaseModel):
     condition: str | None = None
     targetValue: int | None = None
     logicKey: str | None = None
+    actionType: str | None = None
     rewardType: str | None = None
     rewardAmount: int | None = None
     isActive: bool | None = None
@@ -44,6 +46,7 @@ class AdminMissionCreateRequest(BaseModel):
     condition: str | None = None
     targetValue: int
     logicKey: str
+    actionType: str | None = None
     rewardType: str
     rewardAmount: int
     isActive: bool | None = True
@@ -90,6 +93,7 @@ def get_admin_missions(
                 condition=m.description or f"Target: {m.target_value}",
                 targetValue=m.target_value,
                 logicKey=m.logic_key,
+                actionType=m.action_type,
                 rewardType=str(m.reward_type.value if hasattr(m.reward_type, "value") else m.reward_type),
                 rewardAmount=m.reward_amount,
                 isActive=m.is_active,
@@ -125,6 +129,7 @@ def create_admin_mission(
         "description": payload.condition or f"Target: {payload.targetValue}",
         "category": category_enum,
         "logic_key": payload.logicKey,
+        "action_type": payload.actionType,
         "target_value": int(payload.targetValue),
         "reward_type": reward_type,
         "reward_amount": int(payload.rewardAmount),
@@ -160,6 +165,7 @@ def update_admin_mission(
     if payload.title is not None: patch["title"] = payload.title
     if payload.condition is not None: patch["description"] = payload.condition
     if payload.logicKey is not None: patch["logic_key"] = payload.logicKey
+    if payload.actionType is not None: patch["action_type"] = payload.actionType
     if payload.targetValue is not None: patch["target_value"] = payload.targetValue
     if payload.rewardType is not None: patch["reward_type"] = _normalize_mission_reward_type(payload.rewardType)
     if payload.rewardAmount is not None: patch["reward_amount"] = payload.rewardAmount

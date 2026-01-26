@@ -58,3 +58,24 @@
 
 > This document records the status and solution for mission rewardType enum drift as of 2026-01-26.
 > Location: docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260126_mission_rewardType_enum_drift_update.md
+
+---
+
+## 5. Inventory / Ticket Verification Updates (2026-01-26 16:45)
+
+### A. Inventory Item Type Mismatch
+- **Trouble**: Gifticon rewards (e.g., `CHICKEN_GIFTICON_5000`) were failing to be created in `user_inventory_item` table.
+- **Root Cause**: `V2MissionService` was passing the Python Enum object's string representation (e.g., `"MissionRewardType.CHICKEN_GIFTICON_5000"`) instead of the value string (`"CHICKEN_GIFTICON_5000"`).
+- **Fix**: Updated `app/v2/services/mission_service.py` to explicitly use `.value`.
+  ```python
+  target_reward_type = mission.reward_type.value if hasattr(mission.reward_type, "value") else str(mission.reward_type)
+  ```
+
+### B. Validation Logic Mismatch (Mission vs Wallet)
+- **Trouble**: Automated verification tests failed for Ticket rewards.
+- **Root Cause**:
+    - **Input**: Admin uses Legacy Enum `MissionRewardType.TICKET_ROULETTE` ("TICKET_ROULETTE").
+    - **Process**: `V2RewardService` correctly maps this to V2 Standard `GameTokenType.ROULETTE_TICKET` ("ROULETTE_TICKET") for storage.
+    - **Verification Error**: Test script looked for the input string ("TICKET_ROULETTE") in the wallet, incorrectly assuming 1:1 storage without mapping.
+- **Learned Principle**: Validation scripts must verify against **Database Source of Truth (GameTokenType)**, not the Input Interface (MissionRewardType).
+- **Fix**: Updated validation logic to compare against `GameTokenType.ROULETTE_TICKET`.

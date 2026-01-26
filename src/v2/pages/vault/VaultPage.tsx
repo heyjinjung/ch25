@@ -122,7 +122,7 @@ const VaultPage: React.FC = () => {
           {/* Progress section */}
           <VaultProgress
             currentAmount={vaultBalance}
-            goalAmount={withdrawalGoal}
+            withdrawalCount={vault.withdrawal_count || 0}
             className="mb-4"
           />
 

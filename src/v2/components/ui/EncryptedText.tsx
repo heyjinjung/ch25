@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { cn } from "../../lib/utils";
 
-const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+const CHARS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
 
 interface EncryptedTextProps {
   text: string;
@@ -9,7 +10,11 @@ interface EncryptedTextProps {
   interval?: number;
 }
 
-export const EncryptedText = ({ text, className, interval = 50 }: EncryptedTextProps) => {
+export const EncryptedText = ({
+  text,
+  className,
+  interval = 50,
+}: EncryptedTextProps) => {
   const [displayText, setDisplayText] = useState(text);
 
   useEffect(() => {
@@ -18,24 +23,24 @@ export const EncryptedText = ({ text, className, interval = 50 }: EncryptedTextP
       setDisplayText(() =>
         text
           .split("")
-          .map((letter, index) => {
+          .map((_, index) => {
             if (index < iteration) {
               return text[index];
             }
             return CHARS[Math.floor(Math.random() * CHARS.length)];
           })
-          .join("")
+          .join(""),
       );
 
       if (iteration >= text.length) {
         clearInterval(timer);
       }
 
-      iteration += 1 / 3; 
+      iteration += 1 / 3;
     }, interval);
 
     return () => clearInterval(timer);
   }, [text, interval]);
 
   return <span className={cn(className)}>{displayText}</span>;
-}
+};

@@ -65,6 +65,23 @@ const MISSION_REWARD_OPTIONS = REWARD_ITEMS.map((item) => ({
 // Mock Categories for Tabs
 const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
 
+const ACTION_TYPE_OPTIONS = [
+  { value: "PLAY_GAME", label: "게임 플레이 (PLAY_GAME)" },
+  { value: "LOGIN", label: "로그인/출석 (LOGIN)" },
+  { value: "JOIN_CHANNEL", label: "채널 입장 (JOIN_CHANNEL)" },
+  { value: "SHARE_STORY", label: "스토리 공유 (SHARE_STORY)" },
+  { value: "INVITE_FRIEND", label: "친구 초대 (INVITE_FRIEND)" },
+  { value: "BUY_SHOP_ITEM", label: "상점 아이템 구매 (BUY_SHOP_ITEM)" },
+];
+
+const LOGIC_KEY_PRESETS = [
+  { value: "daily_play_generic", label: "일일 게임 플레이 (Generic)" },
+  { value: "daily_shop_purchase", label: "일일 상점 구매 (Shop Buy)" },
+  { value: "streak_challenge_3", label: "3일 연속 출석/플레이 (Streak)" },
+  { value: "daily_login_gift", label: "일일 출석 선물 (Fixed)" },
+  { value: "golden_hour", label: "골든 아워 (Golden Hour)" },
+];
+
 export default function MissionManagerPage() {
   const { data: missions = [], isLoading } = useAdminMissions();
   const updateMutation = useAdminUpdateMission();
@@ -95,6 +112,7 @@ export default function MissionManagerPage() {
     rewardAmount: 100,
     targetValue: 1,
     logicKey: `DAILY_${Date.now()}`,
+    actionType: "PLAY_GAME",
   }));
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
@@ -144,6 +162,7 @@ export default function MissionManagerPage() {
             rewardAmount: 100,
             targetValue: 1,
             logicKey: `DAILY_${Date.now()}`,
+            actionType: "PLAY_GAME",
           });
           setCreateError(null);
         },
@@ -192,6 +211,7 @@ export default function MissionManagerPage() {
           condition: editForm.condition,
           targetValue: editForm.targetValue,
           logicKey: nextLogicKey,
+          actionType: editForm.actionType,
           rewardType: editForm.rewardType,
           rewardAmount: editForm.rewardAmount,
           isActive: editForm.isActive,
@@ -708,11 +728,52 @@ export default function MissionManagerPage() {
                 className="col-span-3"
                 placeholder="PLAY_ROULETTE, ATTENDANCE..."
               />
+              <div className="col-start-2 col-span-3">
+                <Select
+                  onValueChange={(val) =>
+                    setCreateForm({ ...createForm, logicKey: val })
+                  }
+                >
+                  <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10">
+                    <SelectValue placeholder="프리셋 선택..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                    {LOGIC_KEY_PRESETS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               {createError && (
                 <p className="col-span-4 text-xs text-red-400 text-right">
                   {createError}
                 </p>
               )}
+            </div>
+
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="actionType" className="text-right text-zinc-400">
+                Action Type
+              </Label>
+              <Select
+                value={createForm.actionType || "PLAY_GAME"}
+                onValueChange={(val) =>
+                  setCreateForm({ ...createForm, actionType: val })
+                }
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                  {ACTION_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
@@ -853,6 +914,45 @@ export default function MissionManagerPage() {
                   }
                   className="col-span-3"
                 />
+                <div className="col-start-2 col-span-3">
+                  <Select
+                    onValueChange={(val) =>
+                      setEditForm({ ...editForm, logicKey: val })
+                    }
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10">
+                      <SelectValue placeholder="프리셋 선택..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                      {LOGIC_KEY_PRESETS.map((p) => (
+                        <SelectItem key={p.value} value={p.value}>
+                          {p.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right text-zinc-400">Action Type</Label>
+                <Select
+                  value={editForm.actionType || "PLAY_GAME"}
+                  onValueChange={(val) =>
+                    setEditForm({ ...editForm, actionType: val })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                    {ACTION_TYPE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {editError && (
                 <p className="text-xs text-red-400 text-right">{editError}</p>
