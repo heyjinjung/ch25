@@ -1,5 +1,5 @@
 [최종 검토일: 2026-01-26]
-정책 최신화 필요 여부: 🔴 업데이트 필요 (인증 내역/활동 로그 구현 누락)
+정책 최신화 필요 여부: 🔴 업데이트 필요 (인증 내역 누락, API 경로 불일치, 및 파일명 부정합)
 
 ## 정책 정합성/충돌 처리 원칙
 - SoT-코드-운영-DB-프론트 매핑에서 부정합/충돌 발견 시 아래와 같이 명시:
@@ -25,16 +25,18 @@
 ### [A] 주요 DB 컬럼/제약조건/Enum
 | DB 테이블/컬럼                | 제약조건/Enum/설명                                   | 정책/코드/프론트 매핑 필드명         | 비고 |
 |-------------------------------|------------------------------------------------------|--------------------------------------|------|
-| user.id                       | PK, UNIQUE                                           | user_id                              | FK 참조시 주의 |
-| user_auth.user_id             | FK(user.id)                                          | user_id                              | FK 제약조건 |
-| user_auth.provider            | ENUM(AuthProviderType)                               | AuthProviderType, provider           | Enum/케이스 주의 |
-| access_token.user_id          | FK(user.id)                                          | user_id                              | FK 제약조건 |
+| user.id                       | PK, UNIQUE                                           | user_id                              | 🟢 정합 (공통 PK) |
+| user_auth.user_id             | FK(user.id)                                          | user_id                              | 🟢 정합 (user_auth_user_id_fkey) |
+| user_auth.provider            | ENUM(AuthProviderType)                               | AuthProviderType, provider           | 🟢 정합 (TELEGRAM, DEV_WEB) |
+| access_token.user_id          | FK(user.id)                                          | user_id                              | 🟢 정합 (V1 호환 세션) |
 | (기타 FK/UNIQUE/ENUM)         | (각 테이블별로 명시)                                 |                                      |      |
 
 ### [B] 프론트-백엔드-DB-코드-정책 1:1 매핑 구조
 | 정책/문서           | 실제 코드/Enum/상수         | DB 컬럼/제약조건                | 프론트 필드명         | 비고 |
 |---------------------|-----------------------------|----------------------------------|----------------------|------|
-| v2_pre_release_auth_policy_ko.md | AuthProviderType, DEV_LOGIN_ENABLED | user_auth.provider | provider | Enum/케이스 일치 필수 |
+| v2_pre_release_auth_policy_ko.md | AuthProviderType, DEV_LOGIN_ENABLED | user_auth.provider | provider | 🟢 정합 (dev_login.py 연동) |
+| v2_auth_user_api_contract_ko.md | /api/auth/token, /api/activity/record | (Mock Response) | authApi, activityApi | 🔴 [정책/구현 충돌] 활동 기록 구현 누락 |
+| V2UserLoginPage.tsx | external_id, login_button | (Front-end Component) | external_id | 🟢 정합 (V2 FE 연동 완료) |
 
 ---
 
@@ -55,9 +57,19 @@
 
 <!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->
 
-## 3. 정합성 검증 요약 리포트 (Step 2-2)
+<!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->
 
-- **상태**: 🟢 **정합 (Validated)**
+## 3. 정합성 검증 요약 리포트 (Rounds 1-3)
+
+| 차수 | 주요 검증 결과 | 상태 | 이모지 요약 |
+| :--- | :--- | :--- | :--- |
+| **1차** | 인증 정책(v2_pre_release) 및 기본 토큰 발급 로직 검증 완료 | 🟢 정합 | ✅🟢 |
+| **2차** | Dev Login 환경 제한 및 JWT Role 클레임(`role`, `roles`) 정합성 확인 | 🟢 정합 | ✅🟢 |
+| **3차** | **인증 내역(Auth History) 및 활동 로그 구현 누락 확인**. 정책상 정의된 활동 기록 API가 Mock으로만 존재함. | 🔴 충돌/누락 | ❌🔴 |
+
+## 4. 정합성 검증 상세 리포트 (Step 2-2)
+
+- **상태**: 🔴 **업데이트 필요 (인증 내역/활동 로그 구현 누락)**
 - **주요 발견 사항**:
     - 🟢 [정책/구현 일치]: `v2_pre_release_auth_policy_ko.md`의 "DEV 로그인 환경 제한" 정책이 `dev_login.py` (Line 40: `env in ["local", "development", "dev"]`)에 정확히 구현됨.
     - 🟢 [API 계약 준수]: `/api/auth/token` (v2_issue_token) 응답 스키마가 `AuthUser` 모델을 통해 `vault_locked_balance` SoT를 준수함.
@@ -69,18 +81,24 @@
     - 🔴 [긴급]: `V2AuthService` 및 `dev_login` 성공 시 `UserEventLog` (또는 유력한 V2용 신규 로그 테이블) 적재 로직 추가 필수.
     - 🟡 [모니터링]: Prod 환경 배포 시 `DEV_LOGIN_DISABLED` 예외가 정상 발생하여 Dev Login이 차단되는지 스모크 테스트 필요.
 
-## 4. 실전 코드 검증 리포트 (Step 3-3)
+## 5. 코드베이스 실전영역 체크 리포트 (Step 3-3)
 
-- **검증 대상**: `app/v2/api/dev_login.py`, `app/v2/api/auth_routes.py`, `app/core/security.py`
 - **검증 일시**: 2026-01-26
+- **검증 대상**: `app/v2/api/dev_login.py`, `app/v2/api/auth_routes.py`, `src/v2/pages/auth/V2UserLoginPage.tsx`, `src/api/activityApi.ts`
 - **주요 발견 사항**:
-    - 🟢 [Dev Login]: `create_if_missing` 파라미터(Boolean)에 따라 신규 유저 생성 여부를 제어하는 로직이 정상 구현됨 (`V2UserService.create_user`).
-    - 🟢 [Legacy 호환]: `v2_issue_token`에서 `V2UserService.ensure_legacy_user_id`를 호출하여 V1/V2 ID 매핑을 보장함.
-    - 🟢 [Route Prefix]: `dev_login.py`가 `/api/v2/dev` prefix를 사용하여 일반 Auth (`/auth`)와 명확히 분리됨.
+    - 🔴 **[API 경로 불일치] 활동 기록**: 
+        - FE(`activityApi.ts`)는 `/api/activity/record`를 호출하나, BE(`activity_routes.py`)는 `/api/v2/activity/ingest`로 정의되어 있음. 
+        - **결과**: 현재 프론트엔드 활동 기록 기능 동작 불가 (404 예상).
+    - 🟡 **[파일명/문서 부정합]**: 
+        - SoT에서는 핵심 파일을 `app/v2/api/auth.py`로 명시하나, 실제 파일명은 `auth_routes.py`임. 문서 업데이트 필요.
+    - 🟡 **[환경 변수/설정]**: 
+        - SoT의 `DEV_LOGIN_ENABLED` 불리언 상수는 실제 `config.py`에 존재하지 않음. 
+        - 대신 `dev_login.py` 내에서 `settings.env` 값을 직접 체크하는 방식으로 수동 구현됨.
+    - 🟢 **[로그인 기능 정합]**: 
+        - `V2UserLoginPage.tsx`에서 `/api/v2/dev/login` 및 `/api/v2/auth/token`을 통한 로그인 연동 확인 완료.
     - 🔴 **[Critical] 인증 내역/활동 로그 누락**:
-        - `V2AuthService.issue_token` 및 `dev_login` 내부에서 유저 로그인 성공 기록을 DB에 남기는 코드가 발견되지 않음.
-        - `/activity/ingest` (Mock) 및 `/api/activity/record` (정의만 존재) 간의 명칭 및 구현 불일치 존재.
-- **최종 결론**: **🟡 조건부 배포 가능 (인증 내역 기능 누락 확인)**. 기본적인 토큰 발급 및 보안 정책(JWT/Env)은 정합하나, 유저 활동 추적/인증 내역(Auth History) 기능이 V1 대비 퇴보(Mock)되어 있어 조속한 구현 보완이 필요함.
+        - `V2AuthService` 및 `dev_login` 성공 시 유저 로그인 이력을 남기는 `UserEventLog` 적재 로직이 V2 코드 전체에서 누락됨.
+- **최종 결론**: **🔴 업데이트 필요**. 인증 기본 기능은 작동하나, 활동 기록 API의 경로 불일치로 인해 실전 운영이 불가능한 상태임. 또한 운영 정책인 '인증 내역 적재'가 누락되어 있어 보완 필수.
 
 
 <!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->

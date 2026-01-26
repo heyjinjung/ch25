@@ -51,5 +51,6 @@
 
 ## 6. Critical Implementation Gaps (Identified 2026-01-26)
 - 🔴 **Auth History Logging**: V2 Auth Service and routes do NOT log login events to `UserEventLog` or any other table, unlike V1.
-- 🔴 **Activity Ingestion Mock**: `/api/activity/record` (SoT definition) vs `/activity/ingest` (Code mock) discrepancy. No actual DB persistence for activity logs in V2 yet.
+- 🔴 **Activity Ingestion Path Conflict**: BE uses `/api/v2/activity/ingest` (mocked) while FE (`activityApi.ts`) still calls `/api/activity/record`.
+- 🟡 **Config Flag Mismatch**: SoT `DEV_LOGIN_ENABLED` is actually hardcoded as an env-check in `dev_login.py` (no explicit setting in `config.py`).
 
