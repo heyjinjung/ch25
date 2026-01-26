@@ -37,6 +37,10 @@
 - **검증**: 모든 어드민 작업에 V2AdminAuditService 감사 로그 기록
 
 ### 4. Admin Audit Logs — Full Coverage ✅
+
+### [2026-01-26] useAdminGame.ts 미사용 타입 import(AdminTeamBattleSeasonDto) 제거
+- ESLint no-unused-vars 오류 해소
+- 기능/로직 영향 없음, 코드 정합성 개선
 - **문제**: 감사 로그가 일부 영역(economy, inventory, game_config, vault)에만 적용
 - **해결**:
   - `app/v2/middleware/admin_audit.py` 신규 생성
@@ -282,6 +286,34 @@
     - `TestClaimBoundary`: 클레임 경계 테스트 (2 cases)
     - `TestStreakServiceSmoke`: 스모크 테스트 (2 cases)
 - **검증**: `pytest -k midnight tests/test_streak_midnight_boundary.py` - 15/15 통과
+
+### F. 유저미션관리 닉네임 조회 ✅
+- **문제**: 유저미션관리 화면이 유저 ID만 지원하여 닉네임 조회 불가
+- **해결**:
+  - `app/v2/api/admin/user_routes.py` 신규 - `GET /api/v2/admin/users/resolve?identifier=...`
+    - nickname/ID/telegram_id/external_id(정확 일치)로 유저 식별
+  - `src/v2/admin/pages/game/MissionManagerPage.tsx` 수정
+    - 입력값이 문자열일 경우 닉네임 기반 조회 지원
+- **검증**: 닉네임으로 유저 미션 조회 가능
+- **업데이트**: 2026-01-26_닉네임조회_업데이트
+
+### G. 팀배틀 어드민 프론트 연결 ✅
+- **문제**: 팀배틀 어드민 페이지가 placeholder 상태로 API 연결 없음
+- **해결**:
+  - `src/v2/admin/pages/game/AdminTeamBattlePage.tsx` 신규
+    - 시즌/팀 목록 조회, 시즌 생성, 팀 생성
+    - 점수 조정, 멤버 강제 가입/탈퇴
+  - `src/v2/api/adminApi.ts` 팀배틀 어드민 API 연동 추가
+- **검증**: /admin/game/team-battle 화면에서 팀배틀 어드민 API 호출 성공
+- **업데이트**: 2026-01-26_팀배틀어드민연결_업데이트
+
+### H. V2 인박스 경로 수정 ✅
+- **문제**: FE 인박스 API가 `/api/inbox`로 호출되어 404 발생
+- **해결**:
+  - `src/v2/api/inboxApi.ts` 수정
+    - `/api/v2/inbox`, `/api/v2/inbox/read`로 경로 정정
+- **검증**: 인박스 조회/읽음 처리 404 해소
+- **업데이트**: 2026-01-26_인박스경로수정_업데이트
 
 ---
 

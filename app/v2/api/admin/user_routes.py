@@ -22,6 +22,7 @@ from app.v2.schemas.v2_admin_user import (
     AdminUserCreate,
     AdminUserDetailDto,
     AdminUserListDto,
+    AdminUserResolveResponse,
     AdminWalletAdjustmentRequest,
     CreateUserNoteRequest,
     InterventionActionDto,
@@ -185,6 +186,48 @@ def get_admin_users_list(
         page=page,
         limit=limit,
         totalPages=total_pages,
+    )
+
+
+@router.get("/users/resolve", response_model=AdminUserResolveResponse)
+def resolve_admin_user(
+    identifier: str,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    _admin_id, _admin_role = admin_info
+
+    if not identifier or not identifier.strip():
+        raise HTTPException(status_code=400, detail="IDENTIFIER_REQUIRED")
+
+    identifier = identifier.strip()
+    user = None
+
+    if identifier.isdigit():
+        numeric = int(identifier)
+        user = db.query(User).filter(User.id == numeric).first()
+        if not user:
+            user = db.query(User).filter(User.telegram_id == numeric).first()
+        if not user:
+            user = db.query(User).filter(User.external_id == identifier).first()
+
+    if not user:
+        user = db.query(User).filter(User.nickname == identifier).first()
+
+    if not user:
+        user = (
+            db.query(User)
+            .filter(func.lower(User.nickname) == identifier.lower())
+            .first()
+        )
+
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    return AdminUserResolveResponse(
+        userId=user.id,
+        nickname=user.nickname or "(미설정)",
+        externalId=str(user.external_id),
     )
 
 

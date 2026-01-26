@@ -231,20 +231,25 @@ Component: Fully implemented and functional.
 User Side (Partial - Missing UI)
 Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
 
+✅ 골든프로젝트 백앤드 
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
+
 팀배틀페이지 어드민 / 풀스택 연결 
 
+✅ 유저미션관리 > 닉네임으로 조회되게 
+/api/v2/admin/users/resolve?identifier=<nickname> 응답 확인
 --------------------
 
 
 연속스트릭모달
 골든아워 모달
-레벨페이지/미션페이지 유저용
 금고페이지 출금조건 확인
 팀배틀페이지 어드민 / 풀스택 연결 
 이벤트페이지
 
 
-게임결과 모달 및 애니메이션
+게임결과 모달 및 애니메이션 
+ㄴ 꽝에는 실패용 모달 / 애니메이션 
 모달 텍스트에 
 https://ui.aceternity.com/components/encrypted-text
 Encrypted Text 
@@ -262,8 +267,7 @@ special
 이 효과!! 
 
 
-
-골든프로젝트 백앤드 
+유저미션관리 > 닉네임으로 조회되게 
 
 -----------------
 
@@ -272,6 +276,15 @@ special
 1/25일 밤 10:39
 
 티켓 /인벤토리 로그 kst 가능한지 확인할것 
-
+룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 ---
 
+기술기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\admin 내 모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 내 모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+
+기능 생성 후
+문서 업로드
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 내 관련있는 영역에
+오늘날짜_핵심변경내용_업데이트

@@ -21,6 +21,20 @@ import {
   getAdminUserLevel,
   adjustAdminUserLevelXp,
   setAdminUserLevel,
+  getAdminTeamBattleSeasons,
+  createAdminTeamBattleSeason,
+  endAdminTeamBattleSeason,
+  getAdminTeamBattleTeams,
+  createAdminTeamBattleTeam,
+  adjustAdminTeamBattleScore,
+  forceJoinAdminTeamBattle,
+  forceLeaveAdminTeamBattle,
+  // type AdminTeamBattleSeasonDto, // 2026-01-26 미사용 import 제거
+  type AdminTeamBattleCreateSeasonRequest,
+  type AdminTeamBattleCreateTeamRequest,
+  type AdminTeamBattleScoreAdjustRequest,
+  type AdminTeamBattleForceJoinRequest,
+  type AdminTeamBattleForceLeaveRequest,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -190,6 +204,107 @@ export const useAdminUpdateLevelGlobalConfig = () => {
     },
   });
 };
+
+// ============================================================================
+// Team Battle Admin Hooks
+// ============================================================================
+
+export function useAdminTeamBattleSeasons() {
+  return useQuery({
+    queryKey: ["admin", "team-battle", "seasons"],
+    queryFn: getAdminTeamBattleSeasons,
+  });
+}
+
+export function useAdminCreateTeamBattleSeason() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleCreateSeasonRequest) =>
+      createAdminTeamBattleSeason(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "seasons"],
+      });
+    },
+  });
+}
+
+export function useAdminEndTeamBattleSeason() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      seasonId,
+      distributeRewards,
+    }: {
+      seasonId: number;
+      distributeRewards: boolean;
+    }) => endAdminTeamBattleSeason(seasonId, distributeRewards),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "seasons"],
+      });
+    },
+  });
+}
+
+export function useAdminTeamBattleTeams() {
+  return useQuery({
+    queryKey: ["admin", "team-battle", "teams"],
+    queryFn: getAdminTeamBattleTeams,
+  });
+}
+
+export function useAdminCreateTeamBattleTeam() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleCreateTeamRequest) =>
+      createAdminTeamBattleTeam(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "teams"],
+      });
+    },
+  });
+}
+
+export function useAdminAdjustTeamBattleScore() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleScoreAdjustRequest) =>
+      adjustAdminTeamBattleScore(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "teams"],
+      });
+    },
+  });
+}
+
+export function useAdminForceJoinTeamBattle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleForceJoinRequest) =>
+      forceJoinAdminTeamBattle(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "teams"],
+      });
+    },
+  });
+}
+
+export function useAdminForceLeaveTeamBattle() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleForceLeaveRequest) =>
+      forceLeaveAdminTeamBattle(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle", "teams"],
+      });
+    },
+  });
+}
 
 // ============================================================================
 // User Level (Per-User)

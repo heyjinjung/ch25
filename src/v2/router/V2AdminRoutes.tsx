@@ -18,10 +18,8 @@ import TicketInventoryTabPage from "../admin/pages/economy/TicketInventoryTabPag
 import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
 import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
 import ModalControlPage from "../admin/pages/game/ModalControlPage";
-import {
-  AdminTeamBattlePage,
-  AdminGoldenHourPage,
-} from "../admin/pages/placeholders";
+import AdminTeamBattlePage from "../admin/pages/game/AdminTeamBattlePage";
+import { AdminGoldenHourPage } from "../admin/pages/placeholders";
 
 import { isAdminAuthenticated } from "../../auth/adminAuth";
 import V2AdminLoginPage from "../admin/pages/auth/V2AdminLoginPage";
@@ -32,10 +30,7 @@ const V2AdminRoutes: React.FC = () => {
       <Route path="login" element={<V2AdminLoginPage />} />
       <Route element={<RequireV2AdminAuth />}>
         <Route element={<AdminLayout />}>
-          <Route
-            index
-            element={<Navigate to="/admin/dashboard" replace />}
-          />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<OpsDashboard />} />
           <Route path="dashboard/radar" element={<CrisisRadarPage />} />
           <Route path="dashboard/golden" element={<GoldenRealTimePage />} />

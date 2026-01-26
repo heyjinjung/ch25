@@ -10,7 +10,10 @@ import {
   useAdminResetUserMissionProgress,
   useAdminClaimUserMissionReward,
 } from "../../../hooks/useAdminGame";
-import { type AdminMissionDto } from "../../../api/adminApi";
+import {
+  resolveAdminUserIdentifier,
+  type AdminMissionDto,
+} from "../../../api/adminApi";
 import {
   Tabs,
   TabsContent,
@@ -59,6 +62,7 @@ export default function MissionManagerPage() {
   const [userMissionUserId, setUserMissionUserId] = useState<number | null>(
     null,
   );
+  const [userMissionUserLabel, setUserMissionUserLabel] = useState<string>("");
   const [userMissionError, setUserMissionError] = useState<string | null>(null);
   const [userMissionNotice, setUserMissionNotice] = useState<string | null>(
     null,
@@ -256,16 +260,41 @@ export default function MissionManagerPage() {
     }
   };
 
-  const handleLoadUserMissions = () => {
-    const parsed = parseInt(userMissionUserIdInput, 10);
-    if (!parsed || parsed <= 0) {
-      setUserMissionError("유저 ID를 입력하세요.");
+  const handleLoadUserMissions = async () => {
+    const raw = userMissionUserIdInput.trim();
+    if (!raw) {
+      setUserMissionError("유저 ID 또는 닉네임을 입력하세요.");
       setUserMissionNotice(null);
       return;
     }
-    setUserMissionError(null);
-    setUserMissionNotice(null);
-    setUserMissionUserId(parsed);
+
+    if (/^\d+$/.test(raw)) {
+      const parsed = parseInt(raw, 10);
+      if (!parsed || parsed <= 0) {
+        setUserMissionError("유저 ID 또는 닉네임을 입력하세요.");
+        setUserMissionNotice(null);
+        return;
+      }
+      setUserMissionError(null);
+      setUserMissionNotice(null);
+      setUserMissionUserId(parsed);
+      setUserMissionUserLabel(`USER #${parsed}`);
+      return;
+    }
+
+    try {
+      setUserMissionError(null);
+      setUserMissionNotice(null);
+      const resolved = await resolveAdminUserIdentifier(raw);
+      setUserMissionUserId(resolved.userId);
+      setUserMissionUserLabel(
+        `${resolved.nickname} (USER #${resolved.userId})`,
+      );
+    } catch {
+      setUserMissionUserId(null);
+      setUserMissionUserLabel("");
+      setUserMissionError("닉네임으로 유저를 찾을 수 없습니다.");
+    }
   };
 
   const handleProgressChange = (missionId: number, value: string) => {
@@ -500,7 +529,7 @@ export default function MissionManagerPage() {
             <Input
               value={userMissionUserIdInput}
               onChange={(e) => setUserMissionUserIdInput(e.target.value)}
-              placeholder="유저 ID"
+              placeholder="유저 ID 또는 닉네임"
               className="w-40 bg-black/50 border-white/10"
             />
             <Button
@@ -515,7 +544,7 @@ export default function MissionManagerPage() {
                 variant="outline"
                 className="bg-white/5 text-zinc-300 border-white/10"
               >
-                USER #{userMissionUserId}
+                {userMissionUserLabel || `USER #${userMissionUserId}`}
               </Badge>
             )}
           </div>

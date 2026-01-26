@@ -250,6 +250,12 @@ export interface UserListResponse {
   limit: number;
 }
 
+export interface AdminUserResolveResponse {
+  userId: number;
+  nickname: string;
+  externalId: string;
+}
+
 // User Segment Types
 export interface UserSegmentDto {
   name: string;
@@ -376,6 +382,18 @@ export const getAdminUserList = async (
   const response = await v2Client.get<UserListResponse>("/api/v2/admin/users", {
     params,
   });
+  return response.data;
+};
+
+export const resolveAdminUserIdentifier = async (
+  identifier: string,
+): Promise<AdminUserResolveResponse> => {
+  const response = await v2Client.get<AdminUserResolveResponse>(
+    "/api/v2/admin/users/resolve",
+    {
+      params: { identifier },
+    },
+  );
   return response.data;
 };
 
@@ -1075,6 +1093,143 @@ export const updateAdminLevelGlobalConfig = async (
 ) => {
   const response = await v2Client.put("/api/v2/admin/game/levels/config", data);
   return response.data;
+};
+
+// ============================================================================
+// Team Battle Admin API
+// ============================================================================
+
+export interface AdminTeamBattleSeasonDto {
+  id: number;
+  name: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  is_active: boolean;
+  rewards_schema?: Record<string, any> | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface AdminTeamBattleTeamDto {
+  id: number;
+  name: string;
+  icon?: string | null;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface AdminTeamBattleScoreDto {
+  team_id: number;
+  season_id: number;
+  points: number;
+  updated_at?: string | null;
+}
+
+export interface AdminTeamBattleCreateSeasonRequest {
+  name: string;
+  starts_at: string;
+  ends_at: string;
+  rewards_schema?: Record<string, any> | null;
+  is_active?: boolean;
+}
+
+export interface AdminTeamBattleCreateTeamRequest {
+  name: string;
+  icon?: string | null;
+}
+
+export interface AdminTeamBattleScoreAdjustRequest {
+  team_id: number;
+  season_id: number;
+  delta: number;
+  reason: string;
+}
+
+export interface AdminTeamBattleForceJoinRequest {
+  user_id: number;
+  team_id: number;
+  reason?: string;
+}
+
+export interface AdminTeamBattleForceLeaveRequest {
+  user_id: number;
+  reason?: string;
+}
+
+export const getAdminTeamBattleSeasons = async (): Promise<
+  AdminTeamBattleSeasonDto[]
+> => {
+  const response = await v2Client.get<AdminTeamBattleSeasonDto[]>(
+    "/api/v2/admin/team-battle/seasons",
+    {
+      params: { include_inactive: true, limit: 50, offset: 0 },
+    },
+  );
+  return response.data;
+};
+
+export const createAdminTeamBattleSeason = async (
+  data: AdminTeamBattleCreateSeasonRequest,
+): Promise<AdminTeamBattleSeasonDto> => {
+  const response = await v2Client.post<AdminTeamBattleSeasonDto>(
+    "/api/v2/admin/team-battle/seasons",
+    data,
+  );
+  return response.data;
+};
+
+export const endAdminTeamBattleSeason = async (
+  seasonId: number,
+  distribute_rewards: boolean,
+): Promise<void> => {
+  await v2Client.post(`/api/v2/admin/team-battle/seasons/${seasonId}/end`, {
+    distribute_rewards,
+  });
+};
+
+export const getAdminTeamBattleTeams = async (): Promise<
+  AdminTeamBattleTeamDto[]
+> => {
+  const response = await v2Client.get<AdminTeamBattleTeamDto[]>(
+    "/api/v2/admin/team-battle/teams",
+    {
+      params: { include_inactive: true, limit: 100, offset: 0 },
+    },
+  );
+  return response.data;
+};
+
+export const createAdminTeamBattleTeam = async (
+  data: AdminTeamBattleCreateTeamRequest,
+): Promise<AdminTeamBattleTeamDto> => {
+  const response = await v2Client.post<AdminTeamBattleTeamDto>(
+    "/api/v2/admin/team-battle/teams",
+    data,
+  );
+  return response.data;
+};
+
+export const adjustAdminTeamBattleScore = async (
+  data: AdminTeamBattleScoreAdjustRequest,
+): Promise<AdminTeamBattleScoreDto> => {
+  const response = await v2Client.post<AdminTeamBattleScoreDto>(
+    "/api/v2/admin/team-battle/scores/adjust",
+    data,
+  );
+  return response.data;
+};
+
+export const forceJoinAdminTeamBattle = async (
+  data: AdminTeamBattleForceJoinRequest,
+): Promise<void> => {
+  await v2Client.post("/api/v2/admin/team-battle/members/force-join", data);
+};
+
+export const forceLeaveAdminTeamBattle = async (
+  data: AdminTeamBattleForceLeaveRequest,
+): Promise<void> => {
+  await v2Client.post("/api/v2/admin/team-battle/members/force-leave", data);
 };
 // ============================================================================
 // Inventory Ops API

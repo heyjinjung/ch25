@@ -163,6 +163,12 @@ class UserListResponse(BaseModel):
     totalPages: int
 
 
+class AdminUserResolveResponse(BaseModel):
+    userId: int
+    nickname: str
+    externalId: str
+
+
 class UserActivityLogDto(BaseModel):
     id: int
     userId: int
