@@ -3,6 +3,9 @@ import V2MobileBottomNav from "./V2MobileBottomNav";
 import V2AppHeader from "./V2AppHeader";
 import V2LiveFeedBar from "./V2LiveFeedBar";
 import V2SparkleBackground from "../effects/V2SparkleBackground";
+import V2FloatingSideMenu from "./V2FloatingSideMenu";
+import V2InboxDrawer from "../inbox/V2InboxDrawer";
+import V2MusicSettingsModal from "../settings/V2MusicSettingsModal";
 
 export default function V2AppLayout() {
   return (
@@ -23,6 +26,11 @@ export default function V2AppLayout() {
 
       {/* 86.87px Fixed Bottom Navigation */}
       <V2MobileBottomNav />
+
+      {/* Overlays & Floating UI */}
+      <V2FloatingSideMenu />
+      <V2InboxDrawer />
+      <V2MusicSettingsModal />
     </div>
   );
 }
