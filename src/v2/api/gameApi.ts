@@ -131,6 +131,7 @@ export interface DiceStatusResponse {
     lose_reward_type?: string;
     lose_reward_amount?: number;
   };
+  readonly is_golden_hour?: boolean;
 }
 
 export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {

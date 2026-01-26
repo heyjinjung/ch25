@@ -40,6 +40,8 @@ class DiceStatusResponse(BaseModel):
     event_plays_max: Optional[int] = None
     event_ineligible_reason: Optional[str] = None  # "NO_STAKE", "LOW_DEPOSIT", "CAP_REACHED", etc.
     reward_config: Optional[DiceRewardConfig] = None
+    is_golden_hour: bool = False
+
 
 
 class DiceGameData(BaseModel):
@@ -60,6 +62,8 @@ class DicePlayResponse(BaseModel):
     streak_info: Optional[StreakInfoSchema] = None
     event_seeded: bool = False  # True if 20k seed was granted on this play
     event_seed_amount: int = 0
+    is_golden_hour: bool = False
+
 
     # Backward-compatible fields
     game: DiceGameData | None = None

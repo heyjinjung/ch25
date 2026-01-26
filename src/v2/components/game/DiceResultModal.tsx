@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import confetti from "canvas-confetti";
+import { X, Trophy, Coins } from "lucide-react";
 import { useSound } from "../../../hooks/useSound";
 import { EncryptedText } from "../ui/EncryptedText";
 
@@ -9,6 +10,7 @@ interface DiceResultModalProps {
   outcome: "WIN" | "LOSE" | "DRAW" | null;
   vaultEarn: number;
   onClose: () => void;
+  isGoldenHour?: boolean;
 }
 
 export default function DiceResultModal({
@@ -16,17 +18,19 @@ export default function DiceResultModal({
   outcome,
   vaultEarn,
   onClose,
+  isGoldenHour = false,
 }: DiceResultModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { playTabTouch, playBigWin, playSmallWin, playDiceLose } = useSound();
+  const shineRef = useRef<HTMLDivElement>(null);
+  const { playTabTouch, playSmallWin, playDiceLose } = useSound();
 
   useEffect(() => {
     if (!modalRef.current || !contentRef.current) return;
 
     if (isOpen) {
       const isWin = outcome === "WIN";
-      const isBigWin = isWin && vaultEarn >= 10000;
+      const isDraw = outcome === "DRAW";
       const isLose = outcome === "LOSE";
 
       const tl = gsap.timeline();
@@ -39,151 +43,149 @@ export default function DiceResultModal({
         ease: "power2.out",
       });
 
-      // 2. Tiered Content Animation
-      if (isLose) {
-        // Heavy Drop for Lose
-        tl.fromTo(
-          contentRef.current,
-          { scale: 1.1, opacity: 0, y: -50 },
-          { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "bounce.out" },
-          "-=0.1"
-        );
-        playDiceLose();
-      } else if (isBigWin) {
-        // Energetic Spin for Big Win
-        tl.fromTo(
-          contentRef.current,
-          { scale: 0.5, opacity: 0, rotationY: 180 },
-          { scale: 1, opacity: 1, rotationY: 0, duration: 0.8, ease: "back.out(1.2)" },
-          "-=0.1"
-        );
-        playBigWin();
-        
-        // Continuous Side Cannons Confetti
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
-
-        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
-
-        const interval: any = setInterval(function() {
-          const timeLeft = animationEnd - Date.now();
-          if (timeLeft <= 0) return clearInterval(interval);
-
-          const particleCount = 50 * (timeLeft / duration);
-          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-        }, 250);
+      if (isGoldenHour) {
+        if (isWin) {
+          tl.fromTo(
+            contentRef.current,
+            { scale: 0.5, opacity: 0, y: 30 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
+            "-=0.1"
+          );
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ["#FFD700", "#FFFFFF", "#FFA500"],
+            zIndex: 10000,
+          });
+          playSmallWin();
+        } else if (isLose) {
+          tl.fromTo(
+            contentRef.current,
+            { scale: 0.8, opacity: 0, x: -10 },
+            { scale: 1, opacity: 1, x: 0, duration: 0.08, repeat: 7, yoyo: true, ease: "power1.inOut" },
+            "-=0.1"
+          );
+          playDiceLose();
+        } else {
+          tl.fromTo(contentRef.current, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4 });
+        }
       } else {
-        // Standard Bounce for Small Win/Draw
-        tl.fromTo(
-          contentRef.current,
-          { scale: 0.8, opacity: 0, y: 20 },
-          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
-          "-=0.1"
-        );
-        playSmallWin();
-
-        // One-shot Center Burst
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          zIndex: 10000,
-          colors: ["#D2FD9C", "#FFFFFF", "#FFD700"]
-        });
+        if (isWin || isDraw) {
+          tl.fromTo(
+            contentRef.current,
+            { scale: 0.95, opacity: 0, y: -20 },
+            { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "power3.out" },
+            "-=0.1"
+          );
+          if (shineRef.current) {
+            gsap.fromTo(
+              shineRef.current,
+              { x: "-100%", opacity: 0 },
+              { x: "100%", opacity: 0.4, duration: 1.2, ease: "power2.inOut", delay: 0.2 }
+            );
+          }
+          playSmallWin();
+        } else if (isLose) {
+          tl.fromTo(
+            contentRef.current,
+            { opacity: 0, y: 0, filter: "grayscale(1)" },
+            { opacity: 1, y: 15, filter: "grayscale(0.5)", duration: 0.8, ease: "power2.out" },
+            "-=0.1"
+          );
+          playDiceLose();
+        }
       }
     } else {
-      // Close Animation
-      gsap.to(contentRef.current, {
-        scale: 0.9,
-        opacity: 0,
-        y: 10,
-        duration: 0.2,
-        ease: "power2.in",
-      });
-      gsap.to(modalRef.current, {
-        opacity: 0,
-        pointerEvents: "none",
-        duration: 0.2,
-        delay: 0.1,
-      });
+      gsap.to(contentRef.current, { scale: 0.9, opacity: 0, y: 10, duration: 0.2, ease: "power2.in" });
+      gsap.to(modalRef.current, { opacity: 0, pointerEvents: "none", duration: 0.2, delay: 0.1 });
     }
-  }, [isOpen, outcome, vaultEarn, playBigWin, playSmallWin, playDiceLose]);
+  }, [isOpen, outcome, isGoldenHour, playSmallWin, playDiceLose]);
 
   if (!outcome) return null;
 
   const isWin = outcome === "WIN";
   const isDraw = outcome === "DRAW";
+  const isLose = outcome === "LOSE";
 
-  // Style Config
   const titleText = isWin ? "승리" : isDraw ? "무승부" : "패배";
   const titleColor = isWin
-    ? "text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+    ? "text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.6)]"
     : isDraw
-      ? "text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]"
-      : "text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]";
+      ? "text-amber-400 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]"
+      : "text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.6)]";
 
-  // Dynamic Emoji/Icon helper
   const renderIcon = () => {
-    if (isWin) return <div className="text-6xl mb-4 animate-bounce">🏆</div>;
+    if (isWin) return <div className="relative mb-4 drop-shadow-[0_0_20px_rgba(52,211,153,0.4)]"><Trophy className="w-16 h-16 text-emerald-400 animate-bounce" /></div>;
     if (isDraw) return <div className="text-6xl mb-4 animate-pulse">🤝</div>;
-    return <div className="text-6xl mb-4 grayscale opacity-80">💀</div>;
+    if (isGoldenHour && isLose) return <div className="text-6xl mb-4">💀</div>;
+    return <div className="text-6xl mb-4 grayscale opacity-60">👻</div>;
   };
 
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300"
     >
       <div
         ref={contentRef}
-        className="w-full max-w-[320px] bg-[#1a1a1e] border border-white/10 rounded-3xl p-6 flex flex-col items-center relative overflow-hidden shadow-2xl"
+        className={`w-full max-w-[340px] bg-[#121214] border border-white/10 rounded-[32px] p-8 flex flex-col items-center relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${!isGoldenHour && isLose ? "grayscale-[0.3]" : ""}`}
       >
-        {/* Glow Effects */}
-        <div
-          className={`absolute top-0 inset-x-0 h-[100px] bg-gradient-to-b ${isWin ? "from-emerald-500/20" : isDraw ? "from-amber-500/20" : "from-red-500/20"} to-transparent pointer-events-none`}
-        />
+        {/* Shine Layer */}
+        {!isGoldenHour && (isWin || isDraw) && (
+          <div ref={shineRef} className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 pointer-events-none" />
+        )}
 
-        {/* Content */}
+        {/* Top Gradient */}
+        <div className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${isWin ? "from-emerald-500/10" : isDraw ? "from-amber-500/10" : "from-red-500/10"} to-transparent pointer-events-none`} />
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-colors z-20"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         {renderIcon()}
 
-        <h2
-          className={`text-3xl font-black ${titleColor} italic tracking-tighter mb-2`}
-        >
-          <EncryptedText text={titleText} />
-        </h2>
-
-        <div className="text-zinc-400 text-sm font-medium mb-6 text-center leading-relaxed">
-          {isWin
-            ? "축하합니다! 상대를 압도했습니다."
-            : isDraw
-              ? "무승부입니다! 다시 도전하세요."
-              : "아쉽게 패배했습니다."}
+        <div className="flex flex-col items-center gap-1 mb-4">
+          <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${isWin ? "text-emerald-500/60" : "text-zinc-500"}`}>
+            Dice Battle Result
+          </span>
+          <h2 className={`text-4xl font-black italic tracking-tighter ${titleColor}`}>
+            <EncryptedText key={`title-${isOpen}-${outcome}`} text={titleText} />
+          </h2>
         </div>
 
-        {/* Reward Section (Only Positive) */}
+        <p className="text-zinc-400 text-sm font-medium mb-8 text-center leading-relaxed max-w-[200px]">
+          {isWin
+            ? "상대를 완벽하게 제압하고 승리했습니다!"
+            : isDraw
+              ? "막상막하의 대결! 다음엔 꼭 승리하세요."
+              : "운이 부족했네요. 다시 도전해보세요."}
+        </p>
+
         {vaultEarn > 0 && (
-          <div className="w-full bg-white/5 rounded-xl p-3 mb-6 border border-white/5 flex flex-col items-center">
-            <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider mb-1">
-              획득 보상
-            </span>
-            <div className="text-2xl font-black text-white flex items-center gap-1">
-              +{vaultEarn.toLocaleString()}{" "}
-              <span className="text-sm font-bold text-zinc-400">포인트</span>
+          <div className="w-full bg-gradient-to-b from-white/[0.08] to-transparent rounded-2xl p-5 mb-8 border border-white/10 flex flex-col items-center relative group">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-emerald-500 text-[10px] font-black text-black rounded-full uppercase tracking-tighter">
+              Rewarded
+            </div>
+            <div className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-emerald-400" />
+              <div className="text-3xl font-black text-white tracking-tight">
+                {vaultEarn.toLocaleString()}
+              </div>
+              <span className="text-sm font-bold text-zinc-500">P</span>
             </div>
           </div>
         )}
 
-        {/* Action Button */}
         <button
-          onClick={() => {
-            playTabTouch();
-            onClose();
-          }}
-          className="w-full h-12 rounded-xl bg-white text-black font-black text-lg hover:scale-105 active:scale-95 transition-transform"
+          onClick={() => { playTabTouch(); onClose(); }}
+          className={`w-full h-14 rounded-2xl ${isWin ? "bg-emerald-500 hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "bg-white hover:bg-zinc-200"} text-black font-black text-lg transition-all active:scale-95 z-10`}
         >
-          확인
+          {isWin ? "영광의 확인" : "다음 기회에"}
         </button>
       </div>
     </div>

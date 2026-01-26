@@ -193,7 +193,9 @@ class V2DiceGameService:
             event_plays_max=None,
             event_ineligible_reason=None,
             reward_config=reward_config,
+            is_golden_hour=V2EventService().is_golden_hour(db=db, now=now),
         )
+
 
     def play(
         self,
@@ -371,4 +373,6 @@ class V2DiceGameService:
             streak_info=(streak_info.model_dump() if streak_info else None),
             event_seeded=False,
             event_seed_amount=0,
+            is_golden_hour=golden_active,
         )
+

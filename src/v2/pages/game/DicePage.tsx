@@ -1,5 +1,5 @@
 // src/pages/game/DicePage.tsx
-import { useMemo, useState, useRef, useLayoutEffect } from "react";
+import { useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
@@ -87,6 +87,14 @@ const DicePage = () => {
     "WIN" | "LOAD" | "DRAW" | "LOSE" | null
   >(null);
   const [lastVaultEarn, setLastVaultEarn] = useState(0);
+  const [currentIsGolden, setCurrentIsGolden] = useState(false);
+
+  useEffect(() => {
+    if (data?.is_golden_hour !== undefined) {
+      setCurrentIsGolden(data.is_golden_hour);
+    }
+  }, [data?.is_golden_hour]);
+
 
   const rollDice = async () => {
     if (isRolling || !isPlayable) return;
@@ -120,6 +128,8 @@ const DicePage = () => {
         const finalOutcome = game.outcome as "WIN" | "DRAW" | "LOSE";
         setLastOutcome(finalOutcome);
         setLastVaultEarn(result.vault_earn);
+        setCurrentIsGolden(result.is_golden_hour || false);
+
 
         // Add 1 second delay for suspense before landing
         setTimeout(() => {
@@ -233,8 +243,10 @@ const DicePage = () => {
         isOpen={isModalOpen}
         outcome={lastOutcome as any}
         vaultEarn={lastVaultEarn}
+        isGoldenHour={currentIsGolden}
         onClose={() => setIsModalOpen(false)}
       />
+
     </div>
   );
 };

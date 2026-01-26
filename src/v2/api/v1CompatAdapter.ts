@@ -100,8 +100,8 @@ const mapV1DiceToV2 = (data: V1DiceStatusResponse): DiceStatusResponse => ({
   event_plays_done: data.event_plays_done ?? 0,
   event_plays_max: data.event_plays_max ?? 0,
   event_ineligible_reason: data.event_ineligible_reason,
-  // Reward Config (V1 does not have this, so we use defaults or undefined)
   reward_config: undefined,
+  is_golden_hour: false,
 });
 
 const mapV1LotteryToV2 = (
@@ -148,6 +148,7 @@ const emptyDiceStatus = (): DiceStatusResponse => ({
   event_plays_done: 0,
   event_plays_max: 0,
   event_ineligible_reason: "NO_FEATURE_TODAY",
+  is_golden_hour: false,
 });
 
 const emptyLotteryStatus = (): LotteryStatusResponse => ({
@@ -411,6 +412,7 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
           data.lose_reward_amount ??
           data.loseRewardAmount,
       },
+      is_golden_hour: data.is_golden_hour ?? false,
     };
   } catch (error) {
     if (isNoFeatureToday(error)) {

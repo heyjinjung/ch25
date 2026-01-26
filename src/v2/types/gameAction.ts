@@ -96,6 +96,7 @@ export const gameActionEnvelopeSchema = z.object({
   streak_info: streakInfoSchema.optional().nullable(),
   fever_gauge: feverGaugeSchema.optional().nullable(),
   next_action_available: z.array(z.string()).optional().nullable(),
+  is_golden_hour: z.boolean().optional().nullable(),
 });
 
 export const roulettePlayResponseSchema = gameActionEnvelopeSchema.extend({
