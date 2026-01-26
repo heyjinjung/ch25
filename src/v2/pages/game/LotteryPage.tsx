@@ -228,6 +228,10 @@ const LotteryPage: React.FC = () => {
         onClose={handleReset}
         onReset={handleReset}
         prizeLabel={revealedPrize?.label ?? "Try Again"}
+        isBigWin={
+          revealedPrize?.reward_type === "GIFTICON" ||
+          (revealedPrize?.reward_type === "POINT" && (revealedPrize?.reward_amount ?? 0) >= 10000)
+        }
       />
 
       <LotteryCollectionModal

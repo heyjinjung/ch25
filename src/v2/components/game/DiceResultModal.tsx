@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import confetti from "canvas-confetti";
 import { useSound } from "../../../hooks/useSound";
 import { EncryptedText } from "../ui/EncryptedText";
 
@@ -18,13 +19,16 @@ export default function DiceResultModal({
 }: DiceResultModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { playTabTouch } = useSound();
+  const { playTabTouch, playBigWin, playSmallWin, playDiceLose } = useSound();
 
   useEffect(() => {
     if (!modalRef.current || !contentRef.current) return;
 
     if (isOpen) {
-      // Open Animation
+      const isWin = outcome === "WIN";
+      const isBigWin = isWin && vaultEarn >= 10000;
+      const isLose = outcome === "LOSE";
+
       const tl = gsap.timeline();
 
       // 1. Background Fade In
@@ -35,13 +39,60 @@ export default function DiceResultModal({
         ease: "power2.out",
       });
 
-      // 2. Content Scale Up + Bounce
-      tl.fromTo(
-        contentRef.current,
-        { scale: 0.8, opacity: 0, y: 20 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
-        "-=0.2",
-      );
+      // 2. Tiered Content Animation
+      if (isLose) {
+        // Heavy Drop for Lose
+        tl.fromTo(
+          contentRef.current,
+          { scale: 1.1, opacity: 0, y: -50 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: "bounce.out" },
+          "-=0.1"
+        );
+        playDiceLose();
+      } else if (isBigWin) {
+        // Energetic Spin for Big Win
+        tl.fromTo(
+          contentRef.current,
+          { scale: 0.5, opacity: 0, rotationY: 180 },
+          { scale: 1, opacity: 1, rotationY: 0, duration: 0.8, ease: "back.out(1.2)" },
+          "-=0.1"
+        );
+        playBigWin();
+        
+        // Continuous Side Cannons Confetti
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 10000 };
+
+        const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+        const interval: any = setInterval(function() {
+          const timeLeft = animationEnd - Date.now();
+          if (timeLeft <= 0) return clearInterval(interval);
+
+          const particleCount = 50 * (timeLeft / duration);
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+          confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+        }, 250);
+      } else {
+        // Standard Bounce for Small Win/Draw
+        tl.fromTo(
+          contentRef.current,
+          { scale: 0.8, opacity: 0, y: 20 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
+          "-=0.1"
+        );
+        playSmallWin();
+
+        // One-shot Center Burst
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          zIndex: 10000,
+          colors: ["#D2FD9C", "#FFFFFF", "#FFD700"]
+        });
+      }
     } else {
       // Close Animation
       gsap.to(contentRef.current, {
@@ -58,7 +109,7 @@ export default function DiceResultModal({
         delay: 0.1,
       });
     }
-  }, [isOpen]);
+  }, [isOpen, outcome, vaultEarn, playBigWin, playSmallWin, playDiceLose]);
 
   if (!outcome) return null;
 

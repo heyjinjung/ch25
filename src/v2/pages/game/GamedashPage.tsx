@@ -140,9 +140,13 @@ export default function GamedashPage() {
               onClick={() => navigate(game.to)}
             >
               <div className="card-shine" />
+              {/* 크라운(팀배틀) 카드에만 HOT 뱃지 항상 노출 */}
+              {game.id === 'crown' && (
+                <span className="game-card-badge badge-hot">HOT</span>
+              )}
               {(() => {
                 const remaining = getGameBadge(game.id);
-                if (typeof remaining !== "number" || game.id === "rocket" || game.id === "ball") return null;
+                if (typeof remaining !== "number" || game.id === "rocket" || game.id === "ball" || game.id === "crown") return null;
                 // Logic: > 0 means "HOT" (Playable), <= 0 means "보상최고" (Best Reward/Popular)
                 const label = remaining > 0 ? "HOT" : "보상최고";
                 const badgeClass = remaining > 0 ? "badge-hot" : "badge-new";

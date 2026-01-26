@@ -234,14 +234,15 @@ export default function HomePage() {
         </div>
 
         {/* New 3D CTA Buttons Row */}
-        <div className="home-cta-row">
+        <div className="home-cta-row flex gap-4 mt-6">
           <button
             onClick={() => {
               playTabTouch();
               window.open("https://t.me/example_casino", "_blank");
             }}
-            className="cta-button cta-button--primary"
+            className="cta-button cta-button--primary flex items-center gap-2 px-5 py-3 text-lg font-bold"
           >
+            <img src="/assets/logo_cc_v2.webp" alt="CC로고" className="h-7 w-7 object-contain mr-1" />
             CC카지노
           </button>
           <button
@@ -249,8 +250,9 @@ export default function HomePage() {
               playTabTouch();
               window.open("https://t.me/example_official", "_blank");
             }}
-            className="cta-button cta-button--secondary"
+            className="cta-button cta-button--secondary flex items-center gap-2 px-5 py-3 text-lg font-bold"
           >
+            <img src="/assets/icon_telegram_button.png" alt="텔레그램" className="h-7 w-7 object-contain mr-1" />
             CC텔레공식채널
           </button>
         </div>

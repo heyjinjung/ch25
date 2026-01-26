@@ -26,31 +26,50 @@ export default function RouletteResultModal({
       // 효과음 재생 (룰렛 결과 도달 시)
       playRouletteStop();
 
-      const end = Date.now() + 1000;
+      if (rewardType === "NONE" || rewardAmount <= 0) return;
+
       const colors = ["#D2FD9C", "#FFFFFF", "#FFD700"];
+      const isBigWin = rewardAmount >= 10000 || rewardType.includes("GIFTICON") || rewardType.includes("TICKET");
 
-      (function frame() {
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: colors,
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: colors,
-        });
+      if (isBigWin) {
+        // High Intensity for Big Wins (2s continuous)
+        const duration = 2 * 1000;
+        const end = Date.now() + duration;
 
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      })();
+        (function frame() {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.7 },
+            colors: colors,
+            zIndex: 10000,
+          });
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.7 },
+            colors: colors,
+            zIndex: 10000,
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      } else {
+        // One-shot Center Burst for Small Wins
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: colors,
+          zIndex: 10000,
+        });
+      }
     }
-  }, [isOpen, playRouletteStop]);
+  }, [isOpen, playRouletteStop, rewardType, rewardAmount]);
 
   const getRewardIcon = (type: string) => {
     void type;

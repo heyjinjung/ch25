@@ -9,6 +9,7 @@ interface LotteryResultModalProps {
   readonly onClose: () => void;
   readonly prizeLabel: string;
   readonly onReset: () => void;
+  readonly isBigWin?: boolean;
 }
 
 export default function LotteryResultModal({
@@ -16,34 +17,53 @@ export default function LotteryResultModal({
   onClose,
   prizeLabel,
   onReset,
+  isBigWin = false,
 }: LotteryResultModalProps) {
   useEffect(() => {
     if (isOpen) {
-      const end = Date.now() + 1000;
+      if (prizeLabel.includes("꽝") || prizeLabel === "Try Again") return;
+
       const colors = ["#FF4D4D", "#FFFFFF", "#D2FD9C"];
 
-      (function frame() {
-        confetti({
-          particleCount: 4,
-          angle: 60,
-          spread: 60,
-          origin: { x: 0 },
-          colors: colors,
-        });
-        confetti({
-          particleCount: 4,
-          angle: 120,
-          spread: 60,
-          origin: { x: 1 },
-          colors: colors,
-        });
+      if (isBigWin) {
+        // High Intensity for Big Wins (2s continuous)
+        const duration = 2 * 1000;
+        const end = Date.now() + duration;
 
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      })();
+        (function frame() {
+          confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 65,
+            origin: { x: 0, y: 0.7 },
+            colors: colors,
+            zIndex: 10000,
+          });
+          confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 65,
+            origin: { x: 1, y: 0.7 },
+            colors: colors,
+            zIndex: 10000,
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(frame);
+          }
+        })();
+      } else {
+        // Small burst for items/small points (1s of slow drops)
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: colors,
+          zIndex: 10000,
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isBigWin, prizeLabel]);
 
   return (
     <AnimatePresence>
