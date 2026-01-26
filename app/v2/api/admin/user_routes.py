@@ -18,6 +18,7 @@ from app.models.user_segment import UserSegment
 from app.models.level_xp import UserLevelProgress, UserXpEventLog
 from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
+from app.utils.timezone import utc_to_kst
 from app.v2.schemas.v2_admin_user import (
     AdminUserCreate,
     AdminUserDetailDto,
@@ -634,7 +635,7 @@ def get_user_activity_logs(
                 "before": log.before_json or {},
                 "after": log.after_json or {},
             },
-            timestamp=log.created_at,
+            timestamp=utc_to_kst(log.created_at) or log.created_at,
         )
         for log in logs
     ]

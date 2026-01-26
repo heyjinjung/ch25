@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Coins, X, RotateCw } from "lucide-react";
 import confetti from "canvas-confetti";
 import { getRewardItemLabel } from "../../constants/rewardItems";
+import { EncryptedText } from "../ui/EncryptedText";
 
 interface RouletteResultModalProps {
   readonly isOpen: boolean;
@@ -87,7 +88,7 @@ export default function RouletteResultModal({
                 축하합니다
               </span>
               <h2 className="text-3xl font-black text-white italic tracking-wider drop-shadow-lg">
-                당첨!
+                <EncryptedText text="당첨!" />
               </h2>
             </div>
 

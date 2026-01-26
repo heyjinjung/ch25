@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import clsx from "clsx";
 import Button from "../common/Button";
 import { tryHaptic } from "../../utils/haptics";
+import { EncryptedText } from "../ui/EncryptedText";
 
 import type { V2StreakRule } from "../../api/missionApi";
 
@@ -121,9 +122,11 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                 Streak Bonus
               </div>
               <h2 className="text-3xl font-black text-white tracking-tight">
-                {isClaimable
-                  ? "오늘의 보상 도착!"
-                  : `🔥 ${currentStreak}일 출석 중!`}
+                {isClaimable ? (
+                  <EncryptedText text="오늘의 보상 도착!" />
+                ) : (
+                  <>🔥 <EncryptedText text={`${currentStreak}일 출석 중!`} /></>
+                )}
               </h2>
             </div>
             <button

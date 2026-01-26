@@ -6,6 +6,7 @@ import { useSoundContext } from "../../../contexts/SoundContext";
 import { X, Volume2, VolumeX, Music, Zap } from "lucide-react";
 import clsx from "clsx";
 
+
 const V2MusicSettingsModal: React.FC = () => {
   const { isMusicSettingsOpen, closeMusicSettings } = useV2UIStore();
   const { isMuted, toggleMute } = useSound();

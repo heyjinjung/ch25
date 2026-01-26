@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { WithdrawalRulesChecklist } from "./WithdrawalRulesChecklist";
 import { VaultStatusResponse } from "../../api/vaultApi";
 import { useNavigate } from "react-router-dom";
+import { EncryptedText } from "../ui/EncryptedText";
 
 interface V2WithdrawalGuideModalProps {
   isOpen: boolean;
@@ -121,7 +122,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
 
                 {/* Title */}
                 <h2 className="text-xl font-black text-white text-center">
-                  출금 준비 안내
+                  <EncryptedText text="출금 준비 안내" />
                 </h2>
 
                 {/* Completion progress */}

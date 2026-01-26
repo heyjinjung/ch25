@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useSound } from "../../../hooks/useSound";
+import { EncryptedText } from "../ui/EncryptedText";
 
 interface DiceResultModalProps {
   isOpen: boolean;
@@ -99,7 +100,7 @@ export default function DiceResultModal({
         <h2
           className={`text-3xl font-black ${titleColor} italic tracking-tighter mb-2`}
         >
-          {titleText}
+          <EncryptedText text={titleText} />
         </h2>
 
         <div className="text-zinc-400 text-sm font-medium mb-6 text-center leading-relaxed">

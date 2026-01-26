@@ -4,6 +4,7 @@ import clsx from "clsx";
 import { X, Check } from "lucide-react";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import confetti from "canvas-confetti";
+import { EncryptedText } from "../ui/EncryptedText";
 
 // 기본 테마 색상 (ThemeProvider 없이 적용)
 const THEME_COLORS = {
@@ -212,7 +213,7 @@ const LotteryCollectionModal = ({
                 </span>
               </div>
               <h2 className="text-3xl font-black text-white uppercase tracking-tight italic">
-                모음
+                <EncryptedText text="모음" />
               </h2>
               <p className="text-sm text-zinc-500 mt-2 font-medium">
                 퍼즐 조각 모아{" "}

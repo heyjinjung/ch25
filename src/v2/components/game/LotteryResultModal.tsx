@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, RotateCw, Trophy } from "lucide-react";
 import confetti from "canvas-confetti";
+import { EncryptedText } from "../ui/EncryptedText";
 
 interface LotteryResultModalProps {
   readonly isOpen: boolean;
@@ -80,7 +81,7 @@ export default function LotteryResultModal({
                 추첨 결과
               </span>
               <h2 className="text-3xl font-black text-white italic tracking-wider drop-shadow-lg text-center">
-                추첨 완료
+                <EncryptedText text="추첨 완료" />
               </h2>
             </div>
 

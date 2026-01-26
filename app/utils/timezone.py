@@ -110,3 +110,32 @@ def today_business_day_start_utc(reference: datetime | None = None) -> datetime:
     이 함수는 AdminDashboardService 등에서 기존 _get_today_kst_start_in_utc 대체용.
     """
     return business_day_start(reference)
+
+
+def utc_to_kst(dt: datetime | None) -> datetime | None:
+    """Convert UTC datetime to KST.
+    
+    Args:
+        dt: UTC datetime (naive or aware)
+    
+    Returns:
+        KST-aware datetime or None if input is None
+    """
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(KST)
+
+
+def utc_to_kst_iso(dt: datetime | None) -> str | None:
+    """Convert UTC datetime to KST ISO format string.
+    
+    Args:
+        dt: UTC datetime (naive or aware)
+    
+    Returns:
+        KST ISO format string (YYYY-MM-DDTHH:MM:SS+09:00) or None
+    """
+    kst_dt = utc_to_kst(dt)
+    return kst_dt.isoformat() if kst_dt else None

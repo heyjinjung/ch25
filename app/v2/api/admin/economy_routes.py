@@ -36,6 +36,7 @@ from app.v2.schemas.v2_admin_economy import (
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.utils.timezone import utc_to_kst_iso
 from sqlalchemy import desc, text
 
 router = APIRouter()
@@ -1159,7 +1160,7 @@ def get_ticket_logs(
             amount=abs(l.delta),
             balanceAfter=l.balance_after,
             reason=l.reason or "",
-            timestamp=l.created_at.isoformat(),
+            timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
             nickname=(user.nickname if user else "")
         ))
         
@@ -1173,7 +1174,7 @@ def get_ticket_logs(
             amount=abs(l.change_amount),
             balanceAfter=l.balance_after,
             reason=l.reason or "",
-            timestamp=l.created_at.isoformat(),
+            timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
             nickname=(user.nickname if user else "")
         ))
         

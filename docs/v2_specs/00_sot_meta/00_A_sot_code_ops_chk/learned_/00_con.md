@@ -1,6 +1,15 @@
 
 ## [2026-01-26 구현 완료 항목]
 
+### [2026-01-26] 티켓/인벤토리 로그 KST 변환 적용 ✅
+- **문제**: 티켓/인벤토리 로그의 timestamp가 UTC로 반환되어 운영/프론트에서 시간 오프셋 혼동 발생
+- **해결**:
+  - `app/utils/timezone.py` 수정 - `utc_to_kst()`, `utc_to_kst_iso()` 헬퍼 함수 추가
+  - `app/v2/api/admin/economy_routes.py` 수정 - TicketLogDto 응답 시 KST ISO 형식으로 변환
+  - `app/v2/api/admin/user_routes.py` 수정 - UserActivityLogDto 응답 시 KST 변환 적용
+- **정책**: DB 저장은 UTC, API 응답은 KST ISO 형식(+09:00)으로 통일
+- **검증**: 어드민 로그 조회 시 KST 시간대로 표시됨
+
 ### 1. Reset-time Unification (09:00 KST 통일) ✅
 - **문제**: `AdminDashboardService`가 00:00 KST 기준 사용 vs V2 서비스들(mission, vault)이 09:00 KST 사용
 - **해결**:
