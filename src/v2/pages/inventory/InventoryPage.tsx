@@ -1,270 +1,371 @@
-// src/pages/inventory/InventoryPage.tsx
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   useV2Inventory,
   useV2UseInventoryItem,
 } from "../../hooks/useV2Inventory";
-import { useV2Vault } from "../../hooks/useV2Vault";
-import "./InventoryPage.css";
+import { motion } from "framer-motion";
+import { ShoppingBag, Package, Gift, Archive } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet";
+import { Button } from "../../components/ui/button";
+import { clsx } from "clsx";
+import confetti from "canvas-confetti";
 
-const ASSET_PATH = "/assets/06shop";
+// ============================================================================
+// Types & Constants
+// ============================================================================
+
+const TABS = [
+  {
+    id: "shop",
+    label: "상점",
+    icon: ShoppingBag,
+    color: "from-amber-500 to-orange-500",
+  },
+  {
+    id: "inventory",
+    label: "인벤토리",
+    icon: Package,
+    color: "from-blue-500 to-cyan-500",
+  },
+  {
+    id: "event",
+    label: "이벤트",
+    icon: Gift,
+    color: "from-purple-500 to-pink-500",
+  },
+];
+
 const VOUCHER_ITEM_TYPES = new Set([
-  "VOUCHER_GOLD_KEY_1",
-  "VOUCHER_DIAMOND_KEY_1",
   "VOUCHER_ROULETTE_COIN_1",
   "VOUCHER_DICE_TOKEN_1",
   "VOUCHER_LOTTERY_TICKET_1",
 ]);
 
+const ITEM_NAME_MAP: Record<string, string> = {
+  VOUCHER_GOLD_KEY_1: "골드키",
+  VOUCHER_DIAMOND_KEY_1: "다이아키",
+  VOUCHER_ROULETTE_COIN_1: "룰렛티켓",
+  VOUCHER_DICE_TOKEN_1: "주사위티켓",
+  VOUCHER_LOTTERY_TICKET_1: "복권티켓",
+};
+
+const getFriendlyItemName = (type: string) => {
+  // 1. Map from table
+  if (ITEM_NAME_MAP[type]) return ITEM_NAME_MAP[type];
+
+  // 2. Gifticon Regex (BRAND_GIFTICON_AMOUNT)
+  const gifticonRegex = /^([A-Z]+)_GIFTICON_(\d+)$/;
+  const match = type.match(gifticonRegex);
+  if (match) {
+    const brand = match[1];
+    const amount = parseInt(match[2]).toLocaleString();
+    return `${brand} ${amount}원 깁콘`;
+  }
+
+  // 3. Fallback: Humanize
+  return type
+    .replace("VOUCHER_", "")
+    .replace("_1", "")
+    .replace(/_/g, " ")
+    .toUpperCase();
+};
+
+// Helper to get image path (Keep existing logic)
+const getItemImage = (type: string) => {
+  const t = type.toLowerCase();
+  if (t.includes("starbucks"))
+    return "/assets/icons/takeaway-cup-dynamic-color.png";
+  if (t.includes("diamond")) return "/assets/icons/diakey.png";
+  if (t.includes("gold_key") || t.includes("goldkey"))
+    return "/assets/icons/goldkey.png";
+  if (t.includes("point") || t.includes("balance"))
+    return "/assets/asset_coin_gold.png";
+  if (t.includes("roulette") || t.includes("bundle"))
+    return "/assets/asset_ticket_bundle.png";
+  if (t.includes("dice")) return "/assets/icon_dice_silver.webp";
+  if (t.includes("lottery") || t.includes("lotto"))
+    return "/v2/assets/01home/7.png";
+  if (t.includes("chicken") || t.includes("chiken"))
+    return "/assets/icons/chiken.png";
+  if (t.includes("pizza")) return "/assets/icons/pizza.png";
+  return "/assets/06shop/Frame 9-3.png"; // Fallback
+};
+
 export default function InventoryPage() {
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState("inventory");
-
-  const { data, isLoading, error } = useV2Inventory();
+  const { data, isLoading } = useV2Inventory();
   const useItemMutation = useV2UseInventoryItem();
-  const { useVaultStatus } = useV2Vault();
-  const { data: vaultStatus } = useVaultStatus();
+
+  const [activeTab, setActiveTab] = useState("inventory");
+  const [selectedItem, setSelectedItem] = useState<{
+    item_type: string;
+    quantity: number;
+  } | null>(null);
 
   const items = data?.items ?? [];
 
-  const getErrorDetail = (error: unknown) =>
-    (error as { response?: { data?: { detail?: string } } })?.response?.data
-      ?.detail;
-
-  const handleUseItem = (itemType: string) => {
-    if (!VOUCHER_ITEM_TYPES.has(itemType)) {
-      alert("사용할 수 없는 아이템입니다.");
+  const handleTabClick = (tabId: string) => {
+    if (tabId === "shop") {
+      navigate("/shop");
       return;
     }
-    if (window.confirm("아이템을 사용하시겠습니까?")) {
-      useItemMutation.mutate(
-        { item_type: itemType, quantity: 1 },
-        {
-          onError: (error) => {
-            const detail = getErrorDetail(error);
-            if (detail === "INVALID_VOUCHER_TYPE") {
-              alert("사용할 수 없는 아이템입니다.");
-              return;
-            }
-            if (detail === "INSUFFICIENT_ITEM_QUANTITY") {
-              alert("수량이 부족합니다.");
-              return;
-            }
-            if (detail === "IDEMPOTENCY_KEY_REQUIRED") {
-              alert("요청 키가 없습니다. 다시 시도하세요.");
-              return;
-            }
-            alert("아이템 사용에 실패했습니다. 잠시 후 다시 시도하세요.");
-          },
-        },
-      );
+    setActiveTab(tabId);
+  };
+
+  const handleItemClick = (item: { item_type: string; quantity: number }) => {
+    setSelectedItem(item);
+  };
+
+  const handleUseItem = async () => {
+    if (!selectedItem) return;
+
+    // Check if usable
+    if (!VOUCHER_ITEM_TYPES.has(selectedItem.item_type)) {
+      alert("이 아이템은 직접 사용할 수 없습니다. (보유 효과 적용 중)");
+      return;
+    }
+
+    try {
+      await useItemMutation.mutateAsync({
+        item_type: selectedItem.item_type,
+        quantity: 1,
+      });
+
+      // Success Effect
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.8 },
+        colors: ["#30FF75", "#00FFFF"],
+      });
+
+      alert("아이템을 사용했습니다!");
+      setSelectedItem(null);
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      if (detail === "INVALID_VOUCHER_TYPE")
+        alert("사용할 수 없는 아이템입니다.");
+      else if (detail === "INSUFFICIENT_ITEM_QUANTITY")
+        alert("수량이 부족합니다.");
+      else alert("아이템 사용 실패. 다시 시도해주세요.");
     }
   };
 
-  const getItemImage = (type: string) => {
-    const t = type.toLowerCase();
-    if (t.includes("starbucks")) return "/assets/icons/takeaway-cup-dynamic-color.png";
-    if (t.includes("diamond")) return "/assets/icons/diakey.png";
-    if (t.includes("gold_key") || t.includes("goldkey")) return "/assets/icons/goldkey.png";
-    if (t.includes("point") || t.includes("balance")) return "/assets/asset_coin_gold.png";
-    if (t.includes("roulette") || t.includes("bundle")) return "/assets/asset_ticket_bundle.png";
-    if (t.includes("dice")) return "/assets/icon_dice_silver.webp";
-    if (t.includes("lottery") || t.includes("lotto")) return "/v2/assets/01home/7.png";
-    if (t.includes("chicken") || t.includes("chiken")) return "/assets/icons/chiken.png";
-    if (t.includes("pizza")) return "/assets/icons/pizza.png";
-    return `${ASSET_PATH}/Frame 9-3.png`;
-  };
-
-  const SubCardBg = () => (
-    <svg
-      className="sub-card-bg-svg"
-      xmlns="http://www.w3.org/2000/svg"
-      width="82"
-      height="82"
-      viewBox="0 0 82 82"
-      fill="none"
-    >
-      <g filter="url(#filter0_d_10_314)">
-        <path
-          d="M61.8415 0H20.1539C11.2324 0 4 7.23281 4 16.1549V57.8451C4 66.7672 11.2324 74 20.1539 74H61.8415C70.7631 74 77.9954 66.7672 77.9954 57.8451V16.1549C77.9954 7.23281 70.7631 0 61.8415 0Z"
-          fill="url(#paint0_linear_10_314)"
-          fillOpacity="0.5"
-          shapeRendering="crispEdges"
-        />
-      </g>
-      <defs>
-        <filter
-          id="filter0_d_10_314"
-          x="0"
-          y="0"
-          width="81.9951"
-          height="82"
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
-        >
-          <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feColorMatrix
-            in="SourceAlpha"
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-            result="hardAlpha"
-          />
-          <feOffset dy="4" />
-          <feGaussianBlur stdDeviation="2" />
-          <feComposite in2="hardAlpha" operator="out" />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"
-          />
-          <feBlend
-            mode="normal"
-            in2="BackgroundImageFix"
-            result="effect1_dropShadow_10_314"
-          />
-          <feBlend
-            mode="normal"
-            in="SourceGraphic"
-            in2="effect1_dropShadow_10_314"
-            result="shape"
-          />
-        </filter>
-        <linearGradient
-          id="paint0_linear_10_314"
-          x1="40.9977"
-          y1="0"
-          x2="40.9977"
-          y2="74"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#E1FF80" stopOpacity="0.2" />
-          <stop offset="1" stopColor="#2A5B2E" stopOpacity="0.1" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-
-  if (isLoading) {
-    return (
-      <div className="exchange-page-v2 inventory-specific items-center justify-center">
-        <div className="w-10 h-10 border-2 border-[#9AFFFA] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="exchange-page-v2 inventory-specific items-center justify-center px-6 text-center">
-        <p className="text-white/40">오류가 발생했습니다.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="exchange-page-v2 inventory-specific" ref={containerRef}>
-      <div className="branding-watermark">CC</div>
-      
-      <div className="shop-tabs-container">
-        <div
-          className={`shop-tab-item ${activeTab === "shop" ? "active" : ""}`}
-          onClick={() => navigate("/shop")}
-        >
-          <img src="/assets/icons/icon_cart.png" className="w-4 h-4 mr-1.5 opacity-60" alt="" />
-          상점
-        </div>
-        <div
-          className={`shop-tab-item ${activeTab === "inventory" ? "active" : ""}`}
-          onClick={() => setActiveTab("inventory")}
-        >
-          <img src="/assets/lottery/icon_gift.webp" className="w-4 h-4 mr-1.5 opacity-60" alt="" />
-          인벤토리
-        </div>
+    <div className="relative min-h-tg bg-[#121214] text-white overflow-hidden flex flex-col pt-[var(--header-offset)] pb-[var(--nav-offset)]">
+      {/* Background Watermark */}
+      <div className="fixed inset-0 pointer-events-none flex items-center justify-center opacity-[0.03]">
+        <span className="text-[200px] font-black">CC</span>
       </div>
 
-      <div className="inventory-main-area">
-        {/* Summary Banner (Mirrors shop banner style) */}
-        <div className="inventory-summary-banner">
-          <img
-            src="/assets/06shop/banner.png"
-            className="summary-banner-img"
-            alt="inventory summary"
-          />
-          <div className="banner-info-btn">내 인벤토리</div>
-        </div>
-
-        {/* Wallet Strip */}
-        <div className="exchange-wallet-strip">
-          <div className="flex justify-between items-center bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-            <div className="flex flex-col">
-              <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보관중(VAULT)
-              </span>
-              <span className="text-lg font-black text-white italic flex items-center gap-1.5">
-                <img src="/assets/asset_coin_gold.png" className="w-5 h-5 not-italic" alt="P" />
-                {(vaultStatus?.vaultBalance || 0).toLocaleString()}
-              </span>
-            </div>
-            <div className="w-px h-8 bg-white/10 mx-2" />
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-1">
-                보유 토큰
-              </span>
-              <span className="text-lg font-black text-[#FF7A00] italic flex items-center gap-1.5">
-                <img src="/assets/asset_ticket_bundle.png" className="w-5 h-5 not-italic" alt="T" />
-                {(vaultStatus?.ticketCount || 0).toLocaleString()}
-              </span>
-            </div>
+      {/* Scrollable Area */}
+      <div className="flex-1 overflow-y-auto no-scrollbar relative z-10">
+        {/* Banner (Reuse Shop Banner style) */}
+        <div className="px-4 mb-4">
+          <div className="relative w-full rounded-2xl">
+            {/* Image - Natural Height */}
+            <img
+              src="/assets/06shop/banner.png"
+              alt="Inventory Banner"
+              className="w-full h-auto object-contain rounded-2xl"
+            />
           </div>
         </div>
 
-        {/* Inventory Items Section */}
-        <div className="inventory-sub-grid">
-          {items.length === 0 && (
-            <div className="col-span-3 text-center py-20 text-white/30 text-xs font-bold uppercase tracking-widest">
-              No Items Found
-            </div>
-          )}
-          {items.slice(0, 9).map((item) => {
-            const isPremium = item.item_type.toLowerCase().includes("key");
-            return (
-              <div
-                key={item.item_type}
-                className="inventory-item-card-v2"
-                onClick={() => handleUseItem(item.item_type)}
-              >
-                {isPremium && <div className="shimmer-effect" />}
-                <SubCardBg />
-                <div className="inventory-item-img-container">
-                  <img
-                    className="inventory-item-img"
-                    src={getItemImage(item.item_type)}
-                    alt={item.item_type}
+        {/* Tabbed Panel Layout */}
+        <div className="relative px-2">
+          {/* Folder Tabs */}
+          <div className="flex items-end px-4 gap-2 relative z-10 translate-y-1">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab.id)}
+                  className={clsx(
+                    "relative px-4 py-3 rounded-t-2xl flex items-center gap-2 transition-all duration-300",
+                    isActive
+                      ? `bg-[#1E1E22] text-white pb-4`
+                      : "bg-[#18181B] text-white/50 hover:text-white/70 hover:bg-[#1E1E22]/50 mb-1",
+                  )}
+                >
+                  {/* Top Highlight Logic for active tab */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabTop"
+                      className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.color}`}
+                    />
+                  )}
+
+                  <tab.icon
+                    size={16}
+                    className={isActive ? "text-white" : "text-current"}
                   />
+                  <span
+                    className={clsx(
+                      "text-sm font-bold",
+                      isActive ? "text-white" : "text-current",
+                    )}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Main Content Panel */}
+          <div className="relative bg-[#1E1E22] rounded-3xl min-h-[500px] p-2 shadow-xl border-t border-white/5 mx-1">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[300px]">
+                <div className="w-10 h-10 border-4 border-white/10 border-t-emerald-500 rounded-full animate-spin" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {items.map((item) => {
+                  const isPremium = item.item_type
+                    .toLowerCase()
+                    .includes("key");
+
+                  return (
+                    <motion.div
+                      key={item.item_type}
+                      layout
+                      whileHover={{ scale: 0.98 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleItemClick(item)}
+                      className={clsx(
+                        "relative aspect-[4/5] rounded-2xl bg-[#27272A] border border-white/5 flex flex-col items-center justify-between p-2 overflow-hidden group cursor-pointer",
+                        isPremium && "ring-1 ring-emerald-500/30",
+                      )}
+                    >
+                      {/* Premium Shine */}
+                      {isPremium && (
+                        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/10 to-transparent opacity-50" />
+                      )}
+
+                      {/* Image Area */}
+                      <div className="flex-1 flex items-center justify-center w-full relative z-10">
+                        <div
+                          className={clsx(
+                            "w-14 h-14 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110",
+                            isPremium ? "bg-emerald-500/10" : "bg-white/5",
+                          )}
+                        >
+                          <img
+                            src={getItemImage(item.item_type)}
+                            alt={item.item_type}
+                            className="w-10 h-10 object-contain drop-shadow-lg"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Info Area */}
+                      <div className="w-full text-center relative z-10 mt-1">
+                        <h3 className="text-[11px] font-bold text-white/90 truncate mb-1.5 px-1">
+                          {getFriendlyItemName(item.item_type)}
+                        </h3>
+
+                        {/* Quantity Badge */}
+                        <div className="w-full py-1.5 rounded-lg bg-[#52525B] flex items-center justify-center gap-1">
+                          <span className="text-[10px] text-white/60">
+                            보유량
+                          </span>
+                          <span className="text-[11px] font-bold text-white">
+                            {item.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!isLoading && items.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-white/50 gap-4">
+                <Archive size={48} strokeWidth={1} />
+                <p>보유 중인 아이템이 없습니다.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom spacer for safe area */}
+          <div className="h-10" />
+        </div>
+      </div>
+
+      {/* Item Detail & Use Sheet */}
+      <Sheet
+        open={!!selectedItem}
+        onOpenChange={(open) => !open && setSelectedItem(null)}
+      >
+        <SheetContent
+          side="bottom"
+          className="bg-[#18181B] border-t border-white/10 rounded-t-[32px] p-0"
+        >
+          {selectedItem && (
+            <>
+              <SheetTitle className="sr-only">
+                {selectedItem.item_type}
+              </SheetTitle>
+              <div className="flex flex-col p-6 pb-40">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-20 h-20 rounded-2xl bg-[#27272A] flex items-center justify-center border border-white/10">
+                    <img
+                      src={getItemImage(selectedItem.item_type)}
+                      alt={selectedItem.item_type}
+                      className="w-14 h-14 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      {getFriendlyItemName(selectedItem.item_type)}
+                    </h2>
+                    <p className="text-sm text-white/50">
+                      보유 수량:{" "}
+                      <span className="text-emerald-400 font-bold">
+                        {selectedItem.quantity}개
+                      </span>
+                    </p>
+                  </div>
                 </div>
-                {/* Quantity Indicator */}
-                <div className="absolute top-1 right-1 bg-black/60 px-1.5 py-0.5 rounded-full border border-white/10 text-[8px] font-black text-white z-20">
-                  x{item.quantity}
+
+                {/* Description */}
+                <div className="bg-[#27272A] rounded-2xl p-4 mb-6 border border-white/5">
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    {VOUCHER_ITEM_TYPES.has(selectedItem.item_type)
+                      ? "이 아이템을 사용하여 게임 내 재화나 특별한 효과를 얻을 수 있습니다."
+                      : "이 아이템은 자동으로 효과가 적용되거나, 특정 조건에서 사용됩니다."}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-12 rounded-xl border-white/10 hover:bg-white/5 text-white"
+                    onClick={() => setSelectedItem(null)}
+                  >
+                    닫기
+                  </Button>
+
+                  {VOUCHER_ITEM_TYPES.has(selectedItem.item_type) && (
+                    <Button
+                      className="flex-[2] h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-base shadow-lg shadow-emerald-500/20"
+                      onClick={handleUseItem}
+                      disabled={useItemMutation.isPending}
+                    >
+                      {useItemMutation.isPending ? "사용 중..." : "사용하기"}
+                    </Button>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Tip Section */}
-        <div className="w-full max-w-[360px] mt-10 pb-32">
-          <div className="rounded-2xl bg-white/5 border border-white/5 p-4 backdrop-blur-sm">
-            <p className="text-[10px] font-bold text-white/40 uppercase mb-1 tracking-widest">
-              Inventory Tip
-            </p>
-            <p className="text-[11px] text-white/60 leading-relaxed">
-              아이템을 사용하면 게임에서 특별한 보너스를 받을 수 있습니다.
-              <br />
-              사용한 아이템은 즉시 소모되며 효과가 발생합니다.
-            </p>
-          </div>
-        </div>
-      </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

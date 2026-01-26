@@ -245,6 +245,7 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
 Encrypted Text 적용가능한지 체크 
 V2WithdrawalGuideModal.tsx
 V2AttendanceStreakModal.tsx
+
 LotteryCollectionModal.tsx
 DiceResultModal.tsx
 LotteryResultModal.tsx
@@ -264,6 +265,12 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 ✅ 미션 프론트 디비 EUAM 오류 해결 
 미션 관련 프론트 enum 업데이트 기록 이후 - 인벤토리 / 티켓 관련 업데이트 사항 문서 업데이트 
 
+✅ 유저 인박스 팝업에서 읽음처리 한번에 할수 있게 해줘 
+그리고 인박스 메시지 가독성 4.5 :1 확보 
+
+✅ 유저 삭제 / 퍼지기능 회원관리 / 서랍에 구현 
+
+✅ 상점페이지 
 --------------------
 
 [] 게임결과 모달 및 애니메이션 
@@ -274,17 +281,23 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 이벤트페이지
 
 메인페이지 
+메인 히어로 텍스트에 https://ui.aceternity.com/components/encrypted-text
+
+게임대쉬보드 페이지
+카드 hover scale/shadow, 버튼 ripple
+
+
+
 Animated Testimonials
 Minimal testimonials sections with image and quote.
-
 testimonials
 special 
 이 효과!! 
 
------------------
 
-유저 인박스 팝업에서 읽음처리 한번에 할수 있게 해줘 
-그리고 가독성 4.5 :1 확보 
+[] 유저 삭제 / 퍼지기능 회원관리 / 서랍에 구현 
+
+-----------------
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 팀배틀 닉네임으로 유저조회 및 처리 가능하게 해줘 

@@ -69,8 +69,10 @@ const TeamBattlePage: React.FC = () => {
 
   const myTeam = myTeamQuery.data?.team;
   const teams = teamsQuery.data || [];
-  const entries = leaderboardQuery.data?.entries ?? [];
-  const leaderboard = (Array.isArray(entries) ? entries : []).map((entry) => ({
+  const entries = Array.isArray(leaderboardQuery.data?.entries)
+    ? leaderboardQuery.data!.entries
+    : [];
+  const leaderboard = entries.map((entry) => ({
     team_id: entry.team.id,
     team_name: entry.team.name,
     points: entry.season_score,

@@ -1,7 +1,7 @@
 /* src/v2/pages/game/TeamBattleRedesign.css */
 
 .team-battle-redesign-container {
-    height: 100vh;
+    min-height: 100%;
     width: 100%;
     max-width: 391px;
     margin: 0 auto;

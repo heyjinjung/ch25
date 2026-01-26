@@ -65,7 +65,7 @@ export interface LeaderboardResponse {
 
 export const getV2ActiveSeason = async (): Promise<TeamBattleSeasonDto> => {
   try {
-    const response = await v2Client.get<TeamBattleSeasonDto>("/api/team-battle/seasons/active");
+    const response = await v2Client.get<TeamBattleSeasonDto>("/api/v2/team-battle/seasons/active");
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to fetch V2 active season", error);
@@ -75,7 +75,7 @@ export const getV2ActiveSeason = async (): Promise<TeamBattleSeasonDto> => {
 
 export const getV2JoinableTeams = async (): Promise<TeamDto[]> => {
   try {
-    const response = await v2Client.get<TeamDto[]>("/api/team-battle/teams");
+    const response = await v2Client.get<TeamDto[]>("/api/v2/team-battle/teams");
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to fetch V2 joinable teams", error);
@@ -85,7 +85,7 @@ export const getV2JoinableTeams = async (): Promise<TeamDto[]> => {
 
 export const joinV2Team = async (request: JoinTeamRequest): Promise<JoinTeamResponse> => {
   try {
-    const response = await v2Client.post<JoinTeamResponse>("/api/team-battle/teams/join", request);
+    const response = await v2Client.post<JoinTeamResponse>("/api/v2/team-battle/teams/join", request);
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to join V2 team", error);
@@ -95,7 +95,7 @@ export const joinV2Team = async (request: JoinTeamRequest): Promise<JoinTeamResp
 
 export const leaveV2Team = async (): Promise<LeaveTeamResponse> => {
   try {
-    const response = await v2Client.post<LeaveTeamResponse>("/api/team-battle/teams/leave");
+    const response = await v2Client.post<LeaveTeamResponse>("/api/v2/team-battle/teams/leave");
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to leave V2 team", error);
@@ -105,7 +105,7 @@ export const leaveV2Team = async (): Promise<LeaveTeamResponse> => {
 
 export const getV2MyTeamMembership = async (): Promise<TeamMembershipResponse> => {
   try {
-    const response = await v2Client.get<TeamMembershipResponse>("/api/team-battle/teams/me");
+    const response = await v2Client.get<TeamMembershipResponse>("/api/v2/team-battle/teams/me");
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to fetch V2 team membership", error);
@@ -121,7 +121,7 @@ export interface LeaderboardParams {
 
 export const getV2TeamLeaderboard = async (params?: LeaderboardParams): Promise<LeaderboardResponse> => {
   try {
-    const response = await v2Client.get<LeaderboardResponse>("/api/team-battle/teams/leaderboard", {
+    const response = await v2Client.get<LeaderboardResponse>("/api/v2/team-battle/teams/leaderboard", {
       params: {
         season_id: params?.season_id,
         limit: params?.limit || 20,
@@ -137,7 +137,7 @@ export const getV2TeamLeaderboard = async (params?: LeaderboardParams): Promise<
 
 export const autoAssignV2Team = async (): Promise<JoinTeamResponse> => {
   try {
-    const response = await v2Client.post<JoinTeamResponse>("/api/team-battle/teams/auto-assign");
+    const response = await v2Client.post<JoinTeamResponse>("/api/v2/team-battle/teams/auto-assign");
     return response.data;
   } catch (error) {
     console.error("[teamBattleApi] Failed to auto-assign V2 team", error);
