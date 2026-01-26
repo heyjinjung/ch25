@@ -79,17 +79,18 @@ class V2DiceGameService:
 
     @staticmethod
     def _generate_dice_for_outcome(outcome: str) -> tuple[list[int], list[int]]:
-        # Keep 2 dice values for backward compatibility; frontend can show 1 die if it wants.
+        # V2: Frontend shows only 1 die, so we MUST ensure user_dice[0] vs dealer_dice[0] 
+        # matches the determined outcome (WIN/DRAW/LOSE).
         for _ in range(200):
-            user = [random.randint(1, 6), random.randint(1, 6)]
-            dealer = [random.randint(1, 6), random.randint(1, 6)]
-            us, ds = sum(user), sum(dealer)
-            if outcome == "WIN" and us > ds:
-                return user, dealer
-            if outcome == "DRAW" and us == ds:
-                return user, dealer
-            if outcome == "LOSE" and us < ds:
-                return user, dealer
+            u1, u2 = random.randint(1, 6), random.randint(1, 6)
+            d1, d2 = random.randint(1, 6), random.randint(1, 6)
+            
+            if outcome == "WIN" and u1 > d1:
+                return [u1, u2], [d1, d2]
+            if outcome == "DRAW" and u1 == d1:
+                return [u1, u2], [d1, d2]
+            if outcome == "LOSE" and u1 < d1:
+                return [u1, u2], [d1, d2]
         # Fallback: deterministic shaping
         if outcome == "WIN":
             return [6, 6], [1, 1]
