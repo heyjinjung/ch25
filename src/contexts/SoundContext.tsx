@@ -20,8 +20,8 @@ type SoundContextType = {
 
 const SOUND_ASSETS = {
     BGM: {
-        MAIN: "/assets/sounds/bgm/battle_theme.wav",
-        BATTLE: "/assets/sounds/bgm/battle_theme.wav",
+        MAIN: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
+        BATTLE: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
     },
     SFX: {
         TRANSITION: "/assets/sounds/sfx/page_turn.mp3",
