@@ -1012,10 +1012,10 @@ def delete_user(
 ) -> None:
     """유저 삭제 (일반 삭제, CASCADE 의존)"""
     admin_id, admin_role = admin_info
-    
-    # 권한 체크: SUPER_ADMIN만 삭제 가능
-    if admin_role not in ("SUPER_ADMIN", "super_admin"):
-        raise HTTPException(status_code=403, detail="SUPER_ADMIN_REQUIRED")
+
+    # 권한 체크: ADMIN만 허용 (SUPER_ADMIN은 ADMIN으로 호환 처리됨)
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="ADMIN_REQUIRED")
     
     V2AdminUserService.delete_user(db, user_id, admin_id=admin_id)
 
@@ -1033,9 +1033,9 @@ def purge_user(
     - SUPER_ADMIN 권한 필수
     """
     admin_id, admin_role = admin_info
-    
-    # 권한 체크: SUPER_ADMIN만 퍼지 가능
-    if admin_role not in ("SUPER_ADMIN", "super_admin"):
-        raise HTTPException(status_code=403, detail="SUPER_ADMIN_REQUIRED")
+
+    # 권한 체크: ADMIN만 허용 (SUPER_ADMIN은 ADMIN으로 호환 처리됨)
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="ADMIN_REQUIRED")
     
     V2AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)

@@ -61,11 +61,11 @@ export async function updateUser(userId: number, payload: Partial<AdminUserPaylo
 }
 
 export async function deleteUser(userId: number) {
-  await adminApi.delete(`/api/admin/users/${userId}`);
+  await adminApi.delete(`/api/v2/admin/users/${userId}`);
 }
 
 export async function purgeUser(userId: number) {
-  await adminApi.post(`/api/admin/users/${userId}/purge`);
+  await adminApi.post(`/api/v2/admin/users/${userId}/purge`);
 }
 
 export async function importProfiles(file: File) {

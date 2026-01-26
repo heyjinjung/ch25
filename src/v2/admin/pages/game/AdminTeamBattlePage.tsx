@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import { resolveAdminUserIdentifier } from "../../../api/adminApi";
 
 const toIsoString = (value: string) => {
   if (!value) return "";
@@ -65,6 +66,18 @@ export default function AdminTeamBattlePage() {
   });
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [resolvedJoinUserId, setResolvedJoinUserId] = useState<number | null>(null);
+  const [resolvedJoinUserInfo, setResolvedJoinUserInfo] = useState<{
+    userId: number;
+    nickname: string;
+    externalId: string;
+  } | null>(null);
+  const [resolvedLeaveUserId, setResolvedLeaveUserId] = useState<number | null>(null);
+  const [resolvedLeaveUserInfo, setResolvedLeaveUserInfo] = useState<{
+    userId: number;
+    nickname: string;
+    externalId: string;
+  } | null>(null);
 
   const activeSeason = useMemo(
     () => seasons.find((season) => season.is_active) ?? null,
@@ -165,15 +178,64 @@ export default function AdminTeamBattlePage() {
     );
   };
 
-  const handleForceJoin = () => {
+  const handleSearchJoinUser = async () => {
     setNotice(null);
     setError(null);
-    const userId = Number(forceJoinForm.userId);
+    setResolvedJoinUserInfo(null);
+
+    if (!forceJoinForm.userId.trim()) {
+      setError("유저 ID 또는 닉네임을 입력하세요.");
+      return;
+    }
+
+    try {
+      const resolved = await resolveAdminUserIdentifier(forceJoinForm.userId.trim());
+      setResolvedJoinUserId(resolved.userId);
+      setResolvedJoinUserInfo({
+        userId: resolved.userId,
+        nickname: resolved.nickname,
+        externalId: resolved.externalId,
+      });
+      setNotice(`유저 조회 완료`);
+    } catch (err: any) {
+      setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+    }
+  };
+
+  const handleForceJoin = async () => {
+    setNotice(null);
+    setError(null);
+
+    let userId = resolvedJoinUserId;
+
+    // If no resolved user, try to resolve
+    if (!userId) {
+      if (!forceJoinForm.userId.trim()) {
+        setError("유저를 먼저 조회하세요.");
+        return;
+      }
+
+      try {
+        const resolved = await resolveAdminUserIdentifier(forceJoinForm.userId.trim());
+        userId = resolved.userId;
+        setResolvedJoinUserId(userId);
+        setResolvedJoinUserInfo({
+          userId: resolved.userId,
+          nickname: resolved.nickname,
+          externalId: resolved.externalId,
+        });
+      } catch (err: any) {
+        setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+        return;
+      }
+    }
+
     const teamId = Number(forceJoinForm.teamId);
     if (!userId || !teamId) {
       setError("유저 ID와 팀 ID를 입력하세요.");
       return;
     }
+
     forceJoinMutation.mutate(
       {
         user_id: userId,
@@ -181,27 +243,86 @@ export default function AdminTeamBattlePage() {
         reason: forceJoinForm.reason || "Admin forced join",
       },
       {
-        onSuccess: () => setNotice("강제 팀 가입 완료"),
+        onSuccess: () => {
+          setNotice("강제 팀 가입 완료");
+          setForceJoinForm({ userId: "", teamId: "", reason: "Admin forced join" });
+          setResolvedJoinUserId(null);
+          setResolvedJoinUserInfo(null);
+        },
         onError: () => setError("강제 팀 가입 실패"),
       },
     );
   };
 
-  const handleForceLeave = () => {
+  const handleSearchLeaveUser = async () => {
     setNotice(null);
     setError(null);
-    const userId = Number(forceLeaveForm.userId);
+    setResolvedLeaveUserInfo(null);
+
+    if (!forceLeaveForm.userId.trim()) {
+      setError("유저 ID 또는 닉네임을 입력하세요.");
+      return;
+    }
+
+    try {
+      const resolved = await resolveAdminUserIdentifier(forceLeaveForm.userId.trim());
+      setResolvedLeaveUserId(resolved.userId);
+      setResolvedLeaveUserInfo({
+        userId: resolved.userId,
+        nickname: resolved.nickname,
+        externalId: resolved.externalId,
+      });
+      setNotice(`유저 조회 완료`);
+    } catch (err: any) {
+      setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+    }
+  };
+
+  const handleForceLeave = async () => {
+    setNotice(null);
+    setError(null);
+
+    let userId = resolvedLeaveUserId;
+
+    // If no resolved user, try to resolve
+    if (!userId) {
+      if (!forceLeaveForm.userId.trim()) {
+        setError("유저를 먼저 조회하세요.");
+        return;
+      }
+
+      try {
+        const resolved = await resolveAdminUserIdentifier(forceLeaveForm.userId.trim());
+        userId = resolved.userId;
+        setResolvedLeaveUserId(userId);
+        setResolvedLeaveUserInfo({
+          userId: resolved.userId,
+          nickname: resolved.nickname,
+          externalId: resolved.externalId,
+        });
+      } catch (err: any) {
+        setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+        return;
+      }
+    }
+
     if (!userId) {
       setError("유저 ID를 입력하세요.");
       return;
     }
+
     forceLeaveMutation.mutate(
       {
         user_id: userId,
         reason: forceLeaveForm.reason || "Admin forced leave",
       },
       {
-        onSuccess: () => setNotice("강제 팀 탈퇴 완료"),
+        onSuccess: () => {
+          setNotice("강제 팀 탈퇴 완료");
+          setForceLeaveForm({ userId: "", reason: "Admin forced leave" });
+          setResolvedLeaveUserId(null);
+          setResolvedLeaveUserInfo(null);
+        },
         onError: () => setError("강제 팀 탈퇴 실패"),
       },
     );
@@ -431,15 +552,54 @@ export default function AdminTeamBattlePage() {
         <Card className="bg-[#18181B] border-white/5 p-4 space-y-4">
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">멤버 강제 가입</h2>
-            <Input
-              type="number"
-              placeholder="유저 ID"
-              value={forceJoinForm.userId}
-              onChange={(e) =>
-                setForceJoinForm({ ...forceJoinForm, userId: e.target.value })
-              }
-              className="bg-black/50 border-white/10"
-            />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="유저 ID 또는 닉네임"
+                  value={forceJoinForm.userId}
+                  onChange={(e) => {
+                    setForceJoinForm({ ...forceJoinForm, userId: e.target.value });
+                    setResolvedJoinUserId(null);
+                    setResolvedJoinUserInfo(null);
+                  }}
+                  className="bg-black/50 border-white/10 flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchJoinUser();
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSearchJoinUser}
+                  className="border-white/10 text-zinc-200 hover:bg-white/10"
+                >
+                  조회
+                </Button>
+              </div>
+              {resolvedJoinUserInfo && (
+                <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-emerald-400 font-semibold">조회된 유저 정보</span>
+                  </div>
+                  <div className="text-sm text-white space-y-0.5">
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">닉네임:</span>
+                      <span className="font-semibold">{resolvedJoinUserInfo.nickname}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">유저 ID:</span>
+                      <span className="font-mono">{resolvedJoinUserInfo.userId}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">External ID:</span>
+                      <span className="font-mono text-xs">{resolvedJoinUserInfo.externalId}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <Input
               type="number"
               placeholder="팀 ID"
@@ -466,15 +626,54 @@ export default function AdminTeamBattlePage() {
           </div>
           <div className="space-y-3">
             <h2 className="text-lg font-semibold">멤버 강제 탈퇴</h2>
-            <Input
-              type="number"
-              placeholder="유저 ID"
-              value={forceLeaveForm.userId}
-              onChange={(e) =>
-                setForceLeaveForm({ ...forceLeaveForm, userId: e.target.value })
-              }
-              className="bg-black/50 border-white/10"
-            />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="유저 ID 또는 닉네임"
+                  value={forceLeaveForm.userId}
+                  onChange={(e) => {
+                    setForceLeaveForm({ ...forceLeaveForm, userId: e.target.value });
+                    setResolvedLeaveUserId(null);
+                    setResolvedLeaveUserInfo(null);
+                  }}
+                  className="bg-black/50 border-white/10 flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchLeaveUser();
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSearchLeaveUser}
+                  className="border-white/10 text-zinc-200 hover:bg-white/10"
+                >
+                  조회
+                </Button>
+              </div>
+              {resolvedLeaveUserInfo && (
+                <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-emerald-400 font-semibold">조회된 유저 정보</span>
+                  </div>
+                  <div className="text-sm text-white space-y-0.5">
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">닉네임:</span>
+                      <span className="font-semibold">{resolvedLeaveUserInfo.nickname}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">유저 ID:</span>
+                      <span className="font-mono">{resolvedLeaveUserInfo.userId}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="text-zinc-400 w-20">External ID:</span>
+                      <span className="font-mono text-xs">{resolvedLeaveUserInfo.externalId}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <Input
               placeholder="사유"
               value={forceLeaveForm.reason}
