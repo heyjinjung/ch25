@@ -1,5 +1,5 @@
 [최종 검토일: 2026-01-26]
-정책 최신화 필요 여부: 🟢 최신 (2026-01-26 기준)
+정책 최신화 필요 여부: 🔴 업데이트 필요 (인증 내역/활동 로그 구현 누락)
 
 ## 정책 정합성/충돌 처리 원칙
 - SoT-코드-운영-DB-프론트 매핑에서 부정합/충돌 발견 시 아래와 같이 명시:
@@ -41,16 +41,46 @@
 ## 2. 인증 정책
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 정책    | v2_pre_release_auth_policy_ko.md     | "DEV 환경 external_id 로그인 허용, 비밀번호 미사용, 토큰 발급 정책, 엔드포인트: /api/v2/dev/login" | app/v2/api/auth.py                  | /api/v2/auth/*, /api/v2/dev/login      |           |         | 🟡 진행 | /login    | 로그인    | 2026-01-26  | 🟡 진행 | tests/v2/test_auth_v2.py 진행중 |
+| 인증 정책    | v2_pre_release_auth_policy_ko.md     | "DEV 환경 external_id 로그인 허용, 비밀번호 미사용, 토큰 발급 정책, 엔드포인트: /api/v2/dev/login" | app/v2/api/auth.py                  | /api/v2/auth/*, /api/v2/dev/login      |           |         | ✅ 이관 | /login    | 로그인    | 2026-01-26  | ✅ 완료 | Pre-Release 정책 준수 확인 (dev_login.py) |
 
 ## 3. 인증 DB/토큰
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 DB/토큰 | v2_pre_release_auth_policy_ko.md     | "DB: user, user_auth, access_token 발급/검증, external_id 기반 매칭" | app/v2/services/auth_service.py      | 테스트: test_auth_service.py           |           |         |         |           |           |             |           |      |
+| 인증 DB/토큰 | v2_pre_release_auth_policy_ko.md     | "DB: user, user_auth, access_token 발급/검증, external_id 기반 매칭" | app/v2/services/auth_service.py      | 테스트: test_auth_service.py           |           |         | ✅ 이관 |         |           | 2026-01-26  | ✅ 완료 | DB 스키마 및 Token 유효성 검증 완료 |
 
 ## 4. 인증 상수/Enum
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 상수/Enum| v2_pre_release_auth_policy_ko.md     | "상수: DEV_LOGIN_ENABLED, Enum: AuthProviderType, 필드: external_id, access_token" | app/v2/services/auth_service.py      | DB: user, user_auth                   |           |         |         |           |           |             |           |      |
+| 인증 상수/Enum| v2_pre_release_auth_policy_ko.md     | "상수: DEV_LOGIN_ENABLED, Enum: AuthProviderType, 필드: external_id, access_token" | app/v2/services/auth_service.py      | DB: user, user_auth                   |           |         | ✅ 이관 |         |           | 2026-01-26  | ✅ 완료 | AuthProviderType Enum 정합성 확인 |
+
+<!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->
+
+## 3. 정합성 검증 요약 리포트 (Step 2-2)
+
+- **상태**: 🟢 **정합 (Validated)**
+- **주요 발견 사항**:
+    - 🟢 [정책/구현 일치]: `v2_pre_release_auth_policy_ko.md`의 "DEV 로그인 환경 제한" 정책이 `dev_login.py` (Line 40: `env in ["local", "development", "dev"]`)에 정확히 구현됨.
+    - 🟢 [API 계약 준수]: `/api/auth/token` (v2_issue_token) 응답 스키마가 `AuthUser` 모델을 통해 `vault_locked_balance` SoT를 준수함.
+    - 🟢 [JWT Claims]: `app/core/security.py`가 `role`, `roles` 클레임을 지원하여 Admin RBAC 기반 마련됨.
+    - 🔴 [정책/구현 충돌]: **인증 내역(Auth History) 구현 누락**. 
+        - SoT(`v2_auth_user_api_contract_ko.md`)에는 `/api/activity/record` 활동 기록 API가 정의되어 있으나, 실제 `activity_routes.py`는 **Mock 응답**만 반환함.
+        - V1(`app/api/routes/auth.py`)과 달리 V2 Auth(`dev_login.py`, `auth_service.py`)에 **로그인 이벤트 적재(`UserEventLog`) 로직이 전무함**.
+- **조치 사항**:
+    - 🔴 [긴급]: `V2AuthService` 및 `dev_login` 성공 시 `UserEventLog` (또는 유력한 V2용 신규 로그 테이블) 적재 로직 추가 필수.
+    - 🟡 [모니터링]: Prod 환경 배포 시 `DEV_LOGIN_DISABLED` 예외가 정상 발생하여 Dev Login이 차단되는지 스모크 테스트 필요.
+
+## 4. 실전 코드 검증 리포트 (Step 3-3)
+
+- **검증 대상**: `app/v2/api/dev_login.py`, `app/v2/api/auth_routes.py`, `app/core/security.py`
+- **검증 일시**: 2026-01-26
+- **주요 발견 사항**:
+    - 🟢 [Dev Login]: `create_if_missing` 파라미터(Boolean)에 따라 신규 유저 생성 여부를 제어하는 로직이 정상 구현됨 (`V2UserService.create_user`).
+    - 🟢 [Legacy 호환]: `v2_issue_token`에서 `V2UserService.ensure_legacy_user_id`를 호출하여 V1/V2 ID 매핑을 보장함.
+    - 🟢 [Route Prefix]: `dev_login.py`가 `/api/v2/dev` prefix를 사용하여 일반 Auth (`/auth`)와 명확히 분리됨.
+    - 🔴 **[Critical] 인증 내역/활동 로그 누락**:
+        - `V2AuthService.issue_token` 및 `dev_login` 내부에서 유저 로그인 성공 기록을 DB에 남기는 코드가 발견되지 않음.
+        - `/activity/ingest` (Mock) 및 `/api/activity/record` (정의만 존재) 간의 명칭 및 구현 불일치 존재.
+- **최종 결론**: **🟡 조건부 배포 가능 (인증 내역 기능 누락 확인)**. 기본적인 토큰 발급 및 보안 정책(JWT/Env)은 정합하나, 유저 활동 추적/인증 내역(Auth History) 기능이 V1 대비 퇴보(Mock)되어 있어 조속한 구현 보완이 필요함.
+
 
 <!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->

@@ -34,7 +34,7 @@
 ### [B] 프론트-백엔드-DB-코드-정책 1:1 매핑 구조
 | 정책/문서           | 실제 코드/Enum/상수         | DB 컬럼/제약조건                | 프론트 필드명         | 비고 |
 |---------------------|-----------------------------|----------------------------------|----------------------|------|
-| v2_strict_vault_policy_sot_ko.md | VAULT_LOCKED, RewardType.POINT | user.vault_locked_balance | vault_locked_balance | Enum/케이스 일치 필수 |
+| v2_strict_vault_policy_sot_ko.md | RewardType(Literal: 'POINT'/'CC_POINT'/'VAULT'), GameTokenType.VAULT | user.vault_locked_balance | vault_locked_balance | 문자열 케이스/Enum 값 일치 필수 |
 
 ---
 
@@ -51,7 +51,7 @@
 ## 3. 금고 상수/Enum
 | 구분 | SoT 문서/정책/스키마 | SoT 한글 설명/핵심값/상수/필드 | 실제 코드/핵심 파일 | 운영 상태/테스트/DB/엔드포인트 | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 금고 상수/Enum | v2_strict_vault_policy_sot_ko.md | "상수: VAULT_LOCKED, Enum: RewardType.POINT, 필드: vault_locked_balance, vault_spent_total" | app/v2/services/vault_service.py | DB: user.vault_locked_balance | | | | | | | | |
+| 금고 상수/Enum | v2_strict_vault_policy_sot_ko.md | "상수/Enum(현행): RewardType='POINT'/'CC_POINT'/'VAULT'(Literal), GameTokenType.VAULT(Enum), 필드: user.vault_locked_balance, user.vault_spent_total/today" | app/v2/schemas/v2_admin_game_config.py(RewardType Literal), app/models/game_wallet.py(GameTokenType Enum), app/v2/api/vault_routes.py, app/v2/services/shop_service.py | /api/v2/vault/status, /api/v2/vault/withdraw, tests/v2_tests/phase2_core/test_vault2_service.py, test_vault_withdrawal_logic.py | user.vault_locked_balance(INT), user.vault_spent_total/today(INT), user_game_wallet.token_type(Enum(GameTokenType)) | 🟡 (legacy token/표현 유지) | 🟡 (v2 모델이 v1 Enum alias 사용) | /vault, /admin/* | vaultBalance/lockedBalance/availableBalance(호환 어댑터 fallback 포함) | 2026-01-26 | 🟡 [정합성 검토 필요] | 문서에 상수처럼 표기된 "locked" 용어는 코드에서 직접 미확인(실제는 vault_locked_balance 컬럼 + 'VAULT'/'POINT' 문자열/Literal 분기). FE `src/v2/api/v1CompatAdapter.ts`가 vault_balance/vault_available_balance fallback 유지 |
 
 ---
 
@@ -60,4 +60,63 @@
 - 🟢 1차(01_core): 정책(단일 SoT, 합산 금지, 혜택중단/한도) 자체는 일관적
 - 🟡 2차(03_api): Admin API 프리픽스(`/admin/api` vs `/api/v2/admin`) 및 에러코드/필드 표기(available 노출) 혼재 → “표현 SoT” 정리 필요
 - 🔴 3차(04_db/05_ops/06_design): Ops 문서에 **레거시 잔액 사용처럼 읽히는 문구** 존재(즉시 정정 필요), DB/프론트/운영 매핑은 대체로 일관하지만 문서 간 표현 드리프트가 운영 리스크
+
+---
+
+## 10. 2차 코드베이스 실전영역 체크 리포트 (Shop/Withdrawals/Admin) (2026-01-26)
+
+### 범위
+- Backend: Shop/Withdrawals/Admin 관련 라우트/서비스(legacy + v2)
+- Frontend: v2 admin API 클라이언트/페이지, legacy admin API 호출 잔존
+
+### 핵심 결론
+- 🔴 **합산 금지(locked 단일 SoT)** 정책과 달리, Admin/집계/정렬/호환 레이어에서 `vault_balance = locked + available` 전제가 다수 존재
+- 🟡 Admin API 프리픽스가 `/admin/api/*`(legacy)와 `/api/v2/admin/*`(v2)로 공존 → 문서/운영/프론트에서 표현 혼선 위험
+- 🟢 Shop 구매 차감은 `vault_locked_balance`를 직접 차감(SoT 준수)하는 구현이 존재
+
+### 발견사항 (근거 기반)
+
+#### [Admin] 🔴 유저 목록/상세에서 `vault_balance = available + locked` 사용
+- 근거(Backend): `app/v2/api/admin/user_routes.py`에서
+  - `sortBy == "vault_balance"` 정렬 컬럼이 `vault_available_balance + vault_locked_balance`
+  - 응답 DTO `vaultBalance`를 `int(vault_available_balance) + int(vault_locked_balance)`로 산출
+- 영향: SoT(locked 단일) 기준의 “금고 잔액” 정의와 불일치. available을 0으로 강제하지 않는 한 값 의미가 흔들림
+
+#### [Admin] 🔴 대시보드/랭킹 집계가 `(locked + available)` 기반
+- 근거(Backend): `app/services/admin_dashboard_service.py`에서
+  - `total_vault_balance = sum(User.vault_locked_balance + User.vault_available_balance)`
+  - `metric_key == "total_vault_balance"` 랭킹도 `(locked + available)` 기준
+- 영향: 운영 KPI/리스크 판단에서 SoT 위반(또는 SoT의 “표현 정의” 미정리) 상태가 지속
+
+#### [Withdrawals] 🟡 엔드포인트가 2계열로 공존(중복/표현 드리프트)
+- 근거(Backend):
+  - `app/v2/api/admin/economy_routes.py`: `/withdrawals`, `/withdrawals/{id}/approve|reject`
+  - `app/v2/api/admin/vault_routes.py`: `/vault/withdrawals/{status}`, `/vault/withdrawals/{id}/approve|reject`
+- 근거(Frontend): `src/v2/api/adminApi.ts`는 `/api/v2/admin/withdrawals` 계열을 호출
+- 영향: 동일 도메인 기능이 경로/계약으로 분산되면 문서/운영/권한/로깅 정책이 갈라질 위험(하나로 수렴 권장)
+
+#### [Admin Prefix] 🟡 v2 admin은 `/api/v2/admin/*`, legacy admin은 `/admin/api/*` 공존
+- 근거(Backend):
+  - v2: `app/v2/api/admin/__init__.py`에서 `prefix="/admin"` → v2 라우터 포함 시 `/api/v2/admin/*`
+  - legacy: `app/api/admin/routes/*`에서 `prefix="/admin/api/..."` 라우트 다수
+- 근거(Frontend):
+  - v2 client는 admin 판단을 `pathname.startsWith("/admin") || url.startsWith("/api/v2/admin/")`로 구현 (`src/v2/api/client.ts`)
+  - legacy 호출 예시가 잔존 (`src/api/teamBattleApi.ts` 등)
+- 영향: 운영/문서에서 “admin api” 표기가 혼재하면 프록시/권한/로그 수집에서 누락/중복이 발생 가능
+
+#### [Vault Status/Adapter] 🟡 호환 레이어가 legacy 필드(`vault_balance`, `vault_available_balance`) 및 available 노출
+- 근거(Frontend): `src/v2/api/v1CompatAdapter.ts`의 `getV2VaultStatus()`
+  - `vaultBalance`는 `vaultBalance || vault_balance || vault_locked_balance` 순으로 fallback
+  - `availableBalance`는 `availableBalance || vault_available_balance`를 노출
+- 영향: “available 미사용/0 고정”이라는 정책 표현과 충돌 가능. 정책(표현 SoT) 또는 코드(어댑터) 중 한쪽을 정리 필요
+
+#### [Shop] 🟢 구매 차감은 locked SoT를 직접 사용
+- 근거(Backend): `app/v2/services/shop_service.py`
+  - `cost_type == "VAULT"` 시 `vault_locked_balance`에서 직접 차감
+- 영향: 사용자 구매 path는 SoT 방향과 정합(단, admin/집계/호환 레이어의 표현 정리가 병행되어야 함)
+
+### 권고(문서/운영 측면)
+- 1) “표현 SoT” 결정: `vault_balance`라는 용어를 **locked 단일**로 고정할지, **locked+available 합산**으로 허용할지 문서에서 1회 확정
+- 2) Admin API 경로 표준화: 신규 기능은 `/api/v2/admin/*`만 사용하도록 명시하고 legacy(`/admin/api/*`)는 범위/유지보수 정책을 적시
+- 3) Withdrawals 경로/계약 수렴: economy vs vault 라우트 중 하나로 수렴(권한/감사로그/운영도구 포함)
 
