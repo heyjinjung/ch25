@@ -87,6 +87,72 @@ class V2VaultService:
         return int(new_balance)
 
     @staticmethod
+    def _ensure_daily_vault_spent_reset(user: User, now: datetime) -> None:
+        """운영일(KST 09:00 리셋) 기준으로 vault_spent_today를 리셋한다."""
+        op_date = V2VaultService._operational_date_kst(now)
+        op_date_str = op_date.strftime("%Y-%m-%d")
+        if getattr(user, "vault_spent_reset_date", None) != op_date_str:
+            user.vault_spent_today = 0
+            user.vault_spent_reset_date = op_date_str
+
+    @staticmethod
+    def consume_locked_for_spend(
+        db: Session,
+        v2_user_id: int,
+        amount: int,
+        *,
+        reason: str = "V2_SHOP_PURCHASE",
+        now: datetime | None = None,
+    ) -> int:
+        """상점 구매 등 '소비'로 인한 금고 차감.
+
+        - daily_vault_spent(=User.vault_spent_today)가 실제 소비를 반영하도록 누적
+        - 운영일(KST 09:00) 기준으로 일일 리셋 처리
+        - VaultLedger에 소비 내역 기록
+        - v2_user 미러(balance) 동기화
+        """
+        if amount <= 0:
+            raise ValueError("amount must be > 0")
+
+        now_dt = now or datetime.utcnow()
+        master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
+
+        q = db.query(User).filter(User.id == master_user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        legacy_user = q.one_or_none()
+        if legacy_user is None:
+            raise ValueError("user not found")
+
+        current = int(getattr(legacy_user, "vault_locked_balance", 0) or 0)
+        if current < amount:
+            raise ValueError("insufficient locked balance")
+
+        legacy_user.vault_locked_balance = current - int(amount)
+        legacy_user.vault_spent_total = int(getattr(legacy_user, "vault_spent_total", 0) or 0) + int(amount)
+        V2VaultService._ensure_daily_vault_spent_reset(legacy_user, now_dt)
+        legacy_user.vault_spent_today = int(getattr(legacy_user, "vault_spent_today", 0) or 0) + int(amount)
+        db.add(legacy_user)
+
+        db.add(
+            VaultLedger(
+                user_id=int(master_user_id),
+                amount=-int(amount),
+                balance_after=int(legacy_user.vault_locked_balance or 0),
+                reason=reason,
+                ref_type="SHOP",
+            )
+        )
+
+        v2_user = db.get(V2User, v2_user_id)
+        if v2_user is not None:
+            v2_user.vault_locked_balance = int(legacy_user.vault_locked_balance or 0)
+            db.add(v2_user)
+
+        db.flush()
+        return int(legacy_user.vault_locked_balance or 0)
+
+    @staticmethod
     def _to_utc(now: datetime) -> datetime:
         if now.tzinfo is None:
             return now.replace(tzinfo=timezone.utc)
@@ -779,36 +845,39 @@ class V2VaultService:
                 if last_charge_utc.astimezone(tz).date() == now_kst_date:
                     has_cc_deposit_today = True
 
-        # 1. CC Deposit / Activity based Eligibility
+        # 1. Strict Withdrawal Eligibility (SoT): deposit today + play target + spend target
+        # Re-calculate segments and targets to ensure consistency with get_vault_info
+        from app.v2.models.v2_user_segment import V2UserSegment
+
+        current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
+        segments = [str(current_segment).upper()] if current_segment else []
+
+        seven_days_ago_date = (now - timedelta(days=6)).date()
+        deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
+            ExternalRankingDailyDepositDelta.user_id == master_user_id,
+            ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
+        ).scalar() or 0
+
+        play_target = 30
+        spend_target = 10000
+        if "AT_RISK" in segments:
+            play_target = 100
+            spend_target = 30000
+        elif deposit_7d >= 3000000:
+            play_target = 0
+            spend_target = 0
+        elif deposit_7d >= 500000:
+            play_target = 15
+            spend_target = 20000
+
+        # Deposit must be confirmed for the operational day (KST 09:00 reset)
         if not has_cc_deposit_today:
-            # If no deposit today, must meet play and spend targets (matches get_vault_info)
-            # Re-calculate segments and targets to ensure consistency
-            from app.v2.models.v2_user_segment import V2UserSegment
-            current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
-            segments = [str(current_segment).upper()] if current_segment else []
-            
-            # Fetch 7d deposit for target calculation
-            seven_days_ago_date = (now - timedelta(days=6)).date()
-            deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-                ExternalRankingDailyDepositDelta.user_id == master_user_id,
-                ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
-            ).scalar() or 0
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DEPOSIT_REQUIRED_TODAY")
 
-            play_target = 30
-            spend_target = 10000
-            if "AT_RISK" in segments:
-                play_target = 100
-                spend_target = 30000
-            elif deposit_7d >= 3000000:
-                play_target = 0
-                spend_target = 0
-            elif deposit_7d >= 500000:
-                play_target = 15
-                spend_target = 20000
-
-            # Check Play count (3 days window) - Refined to use all log tables
+        # Play count must meet segment-based target (last 3 days)
+        if play_target > 0:
             three_days_ago_ts = now - timedelta(days=3)
-            
+
             from app.models.dice import DiceLog
             from app.models.roulette import RouletteLog
             from app.models.lottery import LotteryLog
@@ -822,16 +891,15 @@ class V2VaultService:
             v2_dice = db.query(func.count(V2DiceLog.id)).filter(V2DiceLog.user_id == user_id, V2DiceLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_roul = db.query(func.count(V2RouletteLog.id)).filter(V2RouletteLog.user_id == user_id, V2RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_lott = db.query(func.count(V2LotteryLog.id)).filter(V2LotteryLog.user_id == user_id, V2LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
-            
-            recent_play_count = int(l_dice + l_roul + l_lott + v2_dice + v2_roul + v2_lott)
 
+            recent_play_count = int(l_dice + l_roul + l_lott + v2_dice + v2_roul + v2_lott)
             if recent_play_count < play_target:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"PLAY_COUNT_INSUFFICIENT_{play_target}")
 
-            # Check Vault Spent (Today)
-            daily_spent = int(getattr(user, "vault_spent_today", 0) or 0)
-            if daily_spent < spend_target:
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"VAULT_SPENT_INSUFFICIENT_{spend_target}")
+        # Vault spent (today) must meet target
+        daily_spent = int(getattr(user, "vault_spent_today", 0) or 0)
+        if daily_spent < spend_target:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"VAULT_SPENT_INSUFFICIENT_{spend_target}")
 
         # 2. Tiered minimum balance requirement (SoT: 10k -> 10k -> 30k -> 50k)
         approved_count = (
@@ -857,18 +925,18 @@ class V2VaultService:
         # 3. Concurrency & Balance checks
         pending_exists = (
             db.query(func.count(VaultWithdrawalRequest.id))
-            .filter(VaultWithdrawalRequest.user_id == user_id, VaultWithdrawalRequest.status == "PENDING")
+            .filter(VaultWithdrawalRequest.user_id == master_user_id, VaultWithdrawalRequest.status == "PENDING")
             .scalar()
             or 0
         )
         if int(pending_exists) > 0:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="WITHDRAWAL_REQUEST_ALREADY_PENDING")
-        reserved = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
+        reserved = self.get_withdrawal_reserved_amount(db=db, user_id=master_user_id)
         if total - reserved < amount:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
 
         req = VaultWithdrawalRequest(
-            user_id=user_id,
+            user_id=master_user_id,
             amount=amount,
             status="PENDING",
             created_at=now

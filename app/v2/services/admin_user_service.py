@@ -11,6 +11,7 @@ from app.core.security import hash_password
 from app.models.user import User
 from app.models.admin_user_profile import AdminUserProfile
 from app.schemas.admin_user import AdminUserCreate
+from app.v2.models.user import V2User
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary
 from app.v2.services.admin_audit_service import V2AdminAuditService
 
@@ -52,7 +53,7 @@ class V2AdminUserService:
         if payload.user_id is not None and db.get(User, payload.user_id):
             raise HTTPException(status_code=409, detail="USER_ID_EXISTS")
             
-        if db.query(User).filter(User.external_id == payload.external_id).first():
+        if db.query(User).filter(User.external_id == payload.cc_id).first():
             raise HTTPException(status_code=409, detail="EXTERNAL_ID_EXISTS")
 
         nickname = payload.nickname or payload.telegram_username or payload.cc_id

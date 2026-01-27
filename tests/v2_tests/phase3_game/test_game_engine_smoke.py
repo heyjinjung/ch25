@@ -309,3 +309,61 @@ def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, 
         assert "reward_amount" in data["prize"]
     finally:
         _clear_auth_override()
+
+
+def test_roulette_reward_diamond_ticket_is_credited_to_legacy_wallet_when_ids_diverge(
+    client: TestClient, seed_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """엣지케이스: v2_user.id != legacy user.id 인 환경에서
+    룰렛 보상(예: DIAMOND_TICKET)이 실제 티켓 저장소(user_game_wallet, legacy user_id)에 적재되어야 한다.
+    """
+
+    _disable_benefit_suspension(monkeypatch)
+    _ensure_feature_config(seed_session, FeatureType.ROULETTE)
+
+    # SQLite in-memory에서는 v2_user/user가 각각 id=1부터 시작해 우연히 동일해질 수 있어
+    # 엣지케이스(IDs diverge)를 재현하기 위해 더미 legacy user로 id를 선점한다.
+    _seed_user(seed_session)
+
+    v2_user = _seed_v2_user(seed_session)
+    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, v2_user.id)
+
+    # 이 테스트는 ID가 분리되는 환경을 강제한다(문제 재현용).
+    assert int(legacy_user_id) != int(v2_user.id)
+
+    # 룰렛 티켓 1장 지급(스핀 소비용)
+    wallet = GameWalletService()
+    wallet.grant_tokens(seed_session, legacy_user_id, GameTokenType.ROULETTE_TICKET, 1, reason="TEST")
+
+    # 보상은 DIAMOND_TICKET 1장으로 고정(랜덤 제거)
+    config = V2RouletteConfig(
+        name="Edge Roulette Config",
+        ticket_type="ROULETTE_TICKET",
+        is_active=True,
+        max_daily_spins=0,
+        grade="COMMON",
+    )
+    seed_session.add(config)
+    seed_session.flush()
+    seg = V2RouletteSegment(
+        config_id=config.id,
+        slot_index=0,
+        label="EDGE_DIAMOND_TICKET",
+        reward_type="DIAMOND_TICKET",
+        reward_amount=1,
+        weight=1,
+        is_jackpot=False,
+    )
+    seed_session.add(seg)
+    seed_session.commit()
+
+    _override_auth(int(v2_user.id))
+    try:
+        r = client.post("/api/v2/roulette/play", json={"ticket_type": "ROULETTE_TICKET"})
+        assert r.status_code == 200, r.text
+
+        # 보상은 legacy user_id(티켓 저장소 FK 대상)에 적재되어야 한다.
+        diamond_balance = wallet.get_balance(seed_session, legacy_user_id, GameTokenType.DIAMOND_TICKET)
+        assert int(diamond_balance) == 1
+    finally:
+        _clear_auth_override()

@@ -207,3 +207,8 @@ Authorization: Bearer {admin_token}
 - 삭제/퍼지 작업 시 추가 확인 모달 고려 (현재는 기본 구현)
 - 삭제 전 연관 데이터 요약 표시 고려
 - 대량 유저 삭제 기능 필요 시 별도 API 설계
+
+지금 500 원인 잡혔습니다. 백엔드 로그에 **NameError: name 'V2User' is not defined**가 찍혀 있었고, 이건 admin_user_service.py에서 V2User import 누락 때문에 PURGE가 바로 죽는 케이스였습니다.
+
+코드 수정은 이미 적용돼 있고(admin_user_service.py), 백엔드도 재시작했고,
+컨테이너 내부에서 V2User가 실제로 로드되는 것까지 확인했습니다(이제 V2User 존재함).

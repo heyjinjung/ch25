@@ -1,8 +1,8 @@
 """V2 Admin User CRUD Schema."""
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Annotated
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, AliasChoices
 
 from app.schemas.base import KstBaseModel as BaseModel
 
@@ -18,12 +18,14 @@ class AdminUserProfileSchema(BaseModel):
 
 
 class AdminUserBase(BaseModel):
-    external_id: str = Field(..., min_length=1, max_length=100)
+    cc_id: Annotated[str, Field(min_length=1, max_length=100, validation_alias=AliasChoices("cc_id", "external_id"))]
     nickname: Optional[str] = Field(None, max_length=100)
     level: int = Field(1, ge=1)
     status: str = Field("ACTIVE", max_length=20)
     xp: int = Field(0, ge=0)
     season_level: Optional[int] = Field(1, ge=1)
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminUserCreate(AdminUserBase):
@@ -36,7 +38,7 @@ class AdminUserCreate(AdminUserBase):
 
 
 class AdminUserUpdate(BaseModel):
-    external_id: Optional[str] = Field(None, max_length=100)
+    cc_id: Optional[Annotated[str, Field(max_length=100, validation_alias=AliasChoices("cc_id", "external_id"))]] = None
     nickname: Optional[str] = Field(None, max_length=100)
     level: Optional[int] = Field(None, ge=1)
     xp: Optional[int] = Field(None, ge=0)
@@ -54,6 +56,8 @@ class AdminUserUpdate(BaseModel):
     # Grinder Rule Streak
     login_streak: Optional[int] = None
     last_streak_updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class AdminUserResponse(AdminUserBase):

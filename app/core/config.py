@@ -272,8 +272,9 @@ class Settings(BaseSettings):
     external_ranking_deposit_xp_per_step: int = Field(
         20, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_XP_PER_STEP", "external_ranking_deposit_xp_per_step")
     )
+    # [DEPRECATED] 스텝 기반 일일 제한. 0 이하이면 제한 비활성화.
     external_ranking_deposit_max_steps_per_day: int = Field(
-        5, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_MAX_STEPS_PER_DAY", "external_ranking_deposit_max_steps_per_day")
+        0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_MAX_STEPS_PER_DAY", "external_ranking_deposit_max_steps_per_day")
     )
     external_ranking_deposit_cooldown_minutes: int = Field(
         0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_COOLDOWN_MINUTES", "external_ranking_deposit_cooldown_minutes")

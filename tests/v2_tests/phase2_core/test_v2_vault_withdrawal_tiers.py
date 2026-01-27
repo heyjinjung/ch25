@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -10,6 +10,8 @@ from app.db.base_class import Base
 from app.models.user import User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+from app.models.dice import DiceConfig, DiceLog
+from app.v2.models.user import V2User
 from app.v2.services.vault_service import V2VaultService
 
 
@@ -26,23 +28,62 @@ def db_session():
 
 
 def setup_valid_user(db, user_id: int, locked: int):
+    cc_id = f"cc{user_id:03d}"
+
+    v2_user = V2User(
+        id=user_id,
+        cc_id=cc_id,
+        nickname=f"u{user_id}",
+        vault_locked_balance=locked,
+    )
+    db.add(v2_user)
+
     user = User(
         id=user_id,
         nickname=f"u{user_id}",
-        external_id=f"ext_{user_id}",
+        external_id=cc_id,
         vault_locked_balance=locked,
         vault_spent_today=10_000,
         vault_spent_reset_date=datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d"),
     )
     db.add(user)
 
-    now_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
-    deposit = ExternalRankingDailyDepositDelta(
-        user_id=user_id,
-        kst_date=now_kst,
-        deposit_delta=10_000,
+    cfg = DiceConfig(
+        name=f"test_cfg_{user_id}",
+        is_active=True,
     )
-    db.add(deposit)
+    db.add(cfg)
+    db.flush()
+
+    # 출금 조건의 "최근 3일 내 플레이"는 (여러 게임 로그를 합산하는) 활동성 조건이다.
+    # 테스트에서는 대표 케이스로 DiceLog만 시드해서 플레이 수(기본 30)를 충족한다.
+    for i in range(30):
+        db.add(
+            DiceLog(
+                user_id=user_id,
+                config_id=cfg.id,
+                user_dice_1=1,
+                user_dice_2=1,
+                user_sum=2,
+                dealer_dice_1=1,
+                dealer_dice_2=1,
+                dealer_sum=2,
+                result="DRAW",
+                reward_type="NONE",
+                reward_amount=0,
+                created_at=datetime.utcnow(),
+            )
+        )
+
+    now_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
+    for kst_date in (now_kst, now_kst - timedelta(days=1)):
+        db.add(
+            ExternalRankingDailyDepositDelta(
+                user_id=user_id,
+                kst_date=kst_date,
+                deposit_delta=10_000,
+            )
+        )
 
     db.commit()
     return user

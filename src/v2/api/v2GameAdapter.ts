@@ -185,6 +185,17 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
       golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
       showModalOverride: data.show_modal_override ?? null,
       segment: data.segment ?? null,
+      daily_play_count: data.daily_play_count ?? data.dailyPlayCount ?? 0,
+      daily_play_target: data.daily_play_target ?? data.dailyPlayTarget ?? 0,
+      daily_vault_spent: data.daily_vault_spent ?? data.dailyVaultSpent ?? 0,
+      daily_vault_spent_target:
+        data.daily_vault_spent_target ?? data.dailyVaultSpentTarget ?? 0,
+      daily_deposit_confirmed:
+        data.daily_deposit_confirmed ?? data.dailyDepositConfirmed ?? false,
+      withdrawal_count: data.withdrawal_count ?? data.withdrawalCount ?? 0,
+      today_earnings: data.today_earnings ?? data.todayEarnings ?? 0,
+      minimum_withdrawal_amount:
+        data.minimum_withdrawal_amount ?? data.minimumWithdrawalAmount ?? 0,
       balances: data.balances ?? {},
     } as any;
   } catch (error) {
@@ -209,6 +220,17 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
       golden_hour_remaining_seconds: data.golden_hour_remaining_seconds ?? 0,
       showModalOverride: data.show_modal_override ?? null,
       segment: data.segment ?? null,
+      daily_play_count: data.daily_play_count ?? data.dailyPlayCount ?? 0,
+      daily_play_target: data.daily_play_target ?? data.dailyPlayTarget ?? 0,
+      daily_vault_spent: data.daily_vault_spent ?? data.dailyVaultSpent ?? 0,
+      daily_vault_spent_target:
+        data.daily_vault_spent_target ?? data.dailyVaultSpentTarget ?? 0,
+      daily_deposit_confirmed:
+        data.daily_deposit_confirmed ?? data.dailyDepositConfirmed ?? false,
+      withdrawal_count: data.withdrawal_count ?? data.withdrawalCount ?? 0,
+      today_earnings: data.today_earnings ?? data.todayEarnings ?? 0,
+      minimum_withdrawal_amount:
+        data.minimum_withdrawal_amount ?? data.minimumWithdrawalAmount ?? 0,
       balances: {},
     } as any;
   }
@@ -261,7 +283,9 @@ export const getV2RouletteStatus = async (
       }
     }
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.warn("[V2Adapter] V2 roulette status 404; falling back to legacy");
+      console.warn(
+        "[V2Adapter] V2 roulette status 404; falling back to legacy",
+      );
       try {
         const rawData = await getRawRouletteStatus(ticketType);
         return mapRawRouletteToV2(rawData);

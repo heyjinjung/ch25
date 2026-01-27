@@ -98,13 +98,14 @@ def test_shop_purchase_integrity(db_session):
     assert res["sku"] == "TICKET_ROULETTE_1"
     assert res["reward_amount"] == 1
     
-    # Check V2User (where deduction happened)
+    # Check legacy User (SoT) + V2User mirror
     v2_user = db_session.get(V2User, 1)
-    assert v2_user.vault_locked_balance == 9000
-    
-    # Check legacy User (should NOT have changed if tables are separate)
     db_session.refresh(user)
-    assert user.vault_locked_balance == 10000 
+    assert user.vault_locked_balance == 9000
+    assert v2_user.vault_locked_balance == 9000
+
+    # Check daily spend tracking (operational day 기준)
+    assert int(getattr(user, "vault_spent_today", 0) or 0) == 1000
     
     # Check Wallet (V2 token)
     wallet = db_session.query(UserGameWallet).filter_by(user_id=1, token_type=GameTokenType.ROULETTE_TICKET).first()
@@ -134,6 +135,8 @@ def test_shop_purchase_idempotency(db_session):
         idempotency_key="IDEM_KEY_1"
     )
     db_session.refresh(v2_user)
+    db_session.refresh(user)
+    assert user.vault_locked_balance == 9000
     assert v2_user.vault_locked_balance == 9000
     
     # Second call (same key)
@@ -147,6 +150,8 @@ def test_shop_purchase_idempotency(db_session):
     assert res1 == res2
     
     db_session.refresh(v2_user)
+    db_session.refresh(user)
+    assert user.vault_locked_balance == 9000
     assert v2_user.vault_locked_balance == 9000 # Still 9000
 
 def test_shop_cache_invalidation_simulation(db_session):

@@ -93,6 +93,52 @@ def client(db_session: Session) -> TestClient:
     app.dependency_overrides.clear()
 
 
+@pytest.fixture()
+def client_as_admin(db_session: Session) -> TestClient:
+    _seed_user_pair(db_session, user_id=1, external_id="admin-1", nickname="Admin", vault_locked=0)
+
+    def override_get_db():
+        yield db_session
+
+    def override_get_current_admin_id():
+        return 1
+
+    def override_get_current_admin_info():
+        return (1, "ADMIN")
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_admin_id] = override_get_current_admin_id
+    app.dependency_overrides[get_current_admin_info] = override_get_current_admin_info
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def client_as_operator(db_session: Session) -> TestClient:
+    _seed_user_pair(db_session, user_id=1, external_id="admin-1", nickname="Admin", vault_locked=0)
+
+    def override_get_db():
+        yield db_session
+
+    def override_get_current_admin_id():
+        return 1
+
+    def override_get_current_admin_info():
+        return (1, "OPERATOR")
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_admin_id] = override_get_current_admin_id
+    app.dependency_overrides[get_current_admin_info] = override_get_current_admin_info
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()
+
+
 def test_admin_user_list_and_detail_smoke(client: TestClient, db_session: Session) -> None:
     _seed_user_pair(db_session, user_id=2, external_id="user-2", nickname="User2", vault_locked=100)
 
@@ -198,3 +244,31 @@ def test_admin_inventory_adjust_and_notes(client: TestClient, db_session: Sessio
     resp = client.get("/api/v2/admin/users/20/notes")
     assert resp.status_code == 200, resp.text
     assert isinstance(resp.json(), list)
+
+
+def test_admin_delete_user_204_removes_legacy_and_v2(client_as_admin: TestClient, db_session: Session) -> None:
+    _seed_user_pair(db_session, user_id=30, external_id="user-30", nickname="DeleteMe", vault_locked=0)
+
+    resp = client_as_admin.delete("/api/v2/admin/users/30")
+    assert resp.status_code == 204, resp.text
+
+    assert db_session.get(User, 30) is None
+    assert db_session.get(V2User, 30) is None
+
+
+def test_admin_purge_user_204_removes_legacy_and_v2(client_as_admin: TestClient, db_session: Session) -> None:
+    _seed_user_pair(db_session, user_id=31, external_id="user-31", nickname="PurgeMe", vault_locked=0)
+
+    resp = client_as_admin.post("/api/v2/admin/users/31/purge")
+    assert resp.status_code == 204, resp.text
+
+    assert db_session.get(User, 31) is None
+    assert db_session.get(V2User, 31) is None
+
+
+def test_admin_delete_requires_admin_role(client_as_operator: TestClient, db_session: Session) -> None:
+    _seed_user_pair(db_session, user_id=32, external_id="user-32", nickname="NoDelete", vault_locked=0)
+
+    resp = client_as_operator.delete("/api/v2/admin/users/32")
+    assert resp.status_code == 403
+    assert resp.json().get("detail") == "ADMIN_REQUIRED"

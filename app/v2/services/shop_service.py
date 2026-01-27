@@ -60,7 +60,12 @@ class V2ShopService:
 
         if normalized_cost == "VAULT":
             try:
-                V2VaultService.withdraw(db, user_id, int(cost_amount))
+                V2VaultService.consume_locked_for_spend(
+                    db,
+                    user_id,
+                    int(cost_amount),
+                    reason="V2_SHOP_PURCHASE",
+                )
             except ValueError as exc:
                 if "insufficient" in str(exc).lower():
                     raise ValueError("INSUFFICIENT_BALANCE") from exc

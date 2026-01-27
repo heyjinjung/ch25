@@ -11,9 +11,17 @@ export const useVaultBalance = () => {
 export const useUpdateVaultBalance = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: { userId: string; amount: number; reason: string; type: string }) => {
-       const response = await v2Client.post("/api/v2/admin/vault/adjustment", data);
-       return response.data;
+    mutationFn: async (data: {
+      userId: string;
+      amount: number;
+      reason: string;
+      type: string;
+    }) => {
+      const response = await v2Client.post(
+        "/api/v2/admin/vault/adjustment",
+        data,
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vaultStatus"] });
@@ -40,7 +48,6 @@ export interface VaultStatusResponse {
   withdrawal_count: number;
   today_earnings: number;
   minimum_withdrawal_amount: number;
-  balances: Record<string, number>;
 }
 
 export interface WithdrawRequest {
@@ -57,10 +64,61 @@ export interface WithdrawResponse {
 
 export const vaultApi = {
   getStatus: async (): Promise<VaultStatusResponse> => {
-    const response = await v2Client.get<VaultStatusResponse>(
-      "/api/v2/vault/status",
+    const response = await v2Client.get<any>("/api/v2/vault/status");
+    const data = response.data ?? {};
+
+    // NOTE: 백엔드 응답이 camelCase/snake_case 혼재하거나 과거 키가 남아도
+    // 출금 조건 모달에 필요한 필드가 항상 채워지도록 정규화한다.
+    const lockedBalance = Number(
+      data.lockedBalance ?? data.vaultBalance ?? data.vault_locked_balance ?? 0,
     );
-    return response.data;
+    const vaultBalance = Number(data.vaultBalance ?? lockedBalance ?? 0);
+
+    return {
+      eligible: Boolean(data.eligible ?? false),
+      vaultBalance: Number.isFinite(vaultBalance) ? vaultBalance : 0,
+      lockedBalance: Number.isFinite(lockedBalance) ? lockedBalance : 0,
+      availableBalance: Number(
+        data.availableBalance ??
+          data.available_balance ??
+          data.vault_available_balance ??
+          0,
+      ),
+      ticketCount: Number(data.ticketCount ?? data.ticket_count ?? 0),
+      is_golden_hour_active: Boolean(data.is_golden_hour_active ?? false),
+      golden_hour_multiplier: Number(data.golden_hour_multiplier ?? 1.0),
+      golden_hour_remaining_seconds: Number(
+        data.golden_hour_remaining_seconds ?? 0,
+      ),
+      showModalOverride: (data.showModalOverride ??
+        data.show_modal_override ??
+        null) as any,
+      segment: (data.segment ?? null) as any,
+
+      // 출금 조건(전체 게임 합산: 최근 3일 플레이 N회)
+      daily_play_count: Number(
+        data.daily_play_count ?? data.dailyPlayCount ?? 0,
+      ),
+      daily_play_target: Number(
+        data.daily_play_target ?? data.dailyPlayTarget ?? 0,
+      ),
+      daily_vault_spent: Number(
+        data.daily_vault_spent ?? data.dailyVaultSpent ?? 0,
+      ),
+      daily_vault_spent_target: Number(
+        data.daily_vault_spent_target ?? data.dailyVaultSpentTarget ?? 0,
+      ),
+      daily_deposit_confirmed: Boolean(
+        data.daily_deposit_confirmed ?? data.dailyDepositConfirmed ?? false,
+      ),
+      withdrawal_count: Number(
+        data.withdrawal_count ?? data.withdrawalCount ?? 0,
+      ),
+      today_earnings: Number(data.today_earnings ?? data.todayEarnings ?? 0),
+      minimum_withdrawal_amount: Number(
+        data.minimum_withdrawal_amount ?? data.minimumWithdrawalAmount ?? 0,
+      ),
+    };
   },
   withdraw: async (data: WithdrawRequest): Promise<WithdrawResponse> => {
     const response = await v2Client.post<WithdrawResponse>(

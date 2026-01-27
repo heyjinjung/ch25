@@ -50,15 +50,36 @@ def _product_id_from_sku(sku: str) -> int:
 
 
 def _sync_cumulative_deposit(db: Session, user_id: int) -> None:
-    """Sync cumulative deposit from ExternalRankingDailyDepositDelta.
-    
-    This function ensures that the cumulative deposit is up-to-date
-    for a given user by aggregating all daily deposit deltas.
-    
-    TODO: Implement actual cumulative deposit logic if needed.
-    For now, this is a placeholder to prevent NameError.
+    """ExternalRankingDailyDepositDelta(일별 입금 로그) -> cc_deposit(누적) 동기화.
+
+    V2 어드민 입금 페이지는 일별 delta를 기록한다. 실제 누적 입금 SoT는
+    external_ranking_data(=cc_deposit)이므로, delta 합계를 누적으로 환산하여
+    V2AdminCCDepositService.upsert_many로 전달한다.
+
+    upsert_many 내부에서 (1) 누적 증가분 계산, (2) XP/레벨 동기화, (3) commit까지 수행한다.
     """
-    pass
+    from app.models.external_ranking import ExternalRankingData
+    from app.v2.schemas.v2_cc_deposit import CCDepositCreate
+    from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
+
+    total = (
+        db.query(func.sum(ExternalRankingDailyDepositDelta.deposit_delta))
+        .filter(ExternalRankingDailyDepositDelta.user_id == user_id)
+        .scalar()
+        or 0
+    )
+    total_int = max(int(total), 0)
+
+    rank_row = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+    current_play_count = int(rank_row.play_count or 0) if rank_row else 0
+
+    payload = CCDepositCreate(
+        user_id=int(user_id),
+        cc_id=None,
+        deposit_amount=total_int,
+        play_count=current_play_count,
+    )
+    V2AdminCCDepositService.upsert_many(db, [payload])
 
 
 def _classify_product_category(reward_type: str) -> str:
@@ -441,27 +462,6 @@ def delete_deposit_log(
     )
 
     return {"success": True}
-
-
-    from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
-    from app.models.external_ranking import ExternalRankingData
-    from app.v2.schemas.v2_cc_deposit import CCDepositCreate
-
-    # 현재 기록된 기존 데이터 확인 (없을 경우 새로 생성될 수 있도록)
-    rank_row = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
-    current_play_count = rank_row.play_count if rank_row else 0
-
-    # [중요] 직접 DB를 수정(업데이트)하지 않고, upsert_many에 새 목표 합계액을 전달.
-    # upsert_many 내부에서 기존 DB 값(스냅샷)과의 차이를 계산하여 XP를 적립함.
-    payload = CCDepositCreate(
-        user_id=user_id,
-        cc_id=None,
-        deposit_amount=int(total),
-        play_count=current_play_count
-    )
-    V2AdminCCDepositService.upsert_many(db, [payload])
-    # upsert_many 내부에서 DB 변경 사항이 commit되지 않으므로(보통 sesssion 관리상), 여기서 commit 수행
-    db.commit()
 
 
 @router.get("/economy/deposits/pending", response_model=List[AdminDepositDto])

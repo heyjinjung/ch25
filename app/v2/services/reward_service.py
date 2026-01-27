@@ -10,6 +10,7 @@ from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError
 from app.models.game_wallet import GameTokenType
 from app.v2.services.admin_inventory_service import V2AdminInventoryService
+from app.v2.services.user_service import V2UserService
 from app.v2.services.vault_service import V2VaultService
 
 
@@ -70,6 +71,15 @@ class V2RewardService:
         meta: dict[str, Any] | None = None,
         commit: bool = True,
     ) -> None:
+        # NOTE: Storage SoT
+        # - Wallet/Inventory는 legacy `user.id`를 FK로 사용한다.
+        # - v2_user.id와 legacy user.id가 분리될 수 있으므로, 지급 시점에 legacy user_id로 정규화한다.
+        storage_user_id = user_id
+        try:
+            storage_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+        except Exception:
+            storage_user_id = user_id
+
         if reward_amount == 0 or reward_type in {"NONE", "", None}:
             return
 
@@ -82,7 +92,7 @@ class V2RewardService:
             return
 
         if reward_type in {"POINT", "CC_POINT"}:
-            V2VaultService.deposit(db, user_id=user_id, amount=int(reward_amount))
+            V2VaultService.deposit(db, user_id=storage_user_id, amount=int(reward_amount))
             if commit:
                 db.commit()
             else:
@@ -130,11 +140,11 @@ class V2RewardService:
                 ]
 
             for token_type, amount in bundle_items:
-                self._grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta, commit=commit)
+                self._grant_ticket(db, user_id=storage_user_id, token_type=token_type, amount=amount, meta=meta, commit=commit)
             return
 
         if reward_type == "DIAMOND":
-            self._grant_ticket(db, user_id=user_id, token_type=GameTokenType.DIAMOND, amount=reward_amount, meta=meta, commit=commit)
+            self._grant_ticket(db, user_id=storage_user_id, token_type=GameTokenType.DIAMOND, amount=reward_amount, meta=meta, commit=commit)
             return
 
         if reward_type == "GIFTICON_BAEMIN":
@@ -142,7 +152,7 @@ class V2RewardService:
             if int(reward_amount) not in allowed:
                 raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
             item_type = f"BAEMIN_GIFTICON_{int(reward_amount)}"
-            self._grant_item(db, user_id=user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
+            self._grant_item(db, user_id=storage_user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
             return
 
         if reward_type == "GIFTICON_COMPOSE":
@@ -150,20 +160,20 @@ class V2RewardService:
             if int(reward_amount) not in allowed:
                 raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
             item_type = f"COMPOSE_AMERICANO_GIFTICON_{int(reward_amount)}"
-            self._grant_item(db, user_id=user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
+            self._grant_item(db, user_id=storage_user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
             return
 
         if reward_type in {"CC_COIN", "CC_COIN_GIFTICON"}:
-            self._grant_item(db, user_id=user_id, item_type="CC_COIN_GIFTICON", amount=1, meta=meta, commit=commit)
+            self._grant_item(db, user_id=storage_user_id, item_type="CC_COIN_GIFTICON", amount=1, meta=meta, commit=commit)
             return
 
         if reward_type == "PUZZLE_C":
             outcome = random.choice([GameTokenType.PUZZLE_C1, GameTokenType.PUZZLE_C2])
-            self._grant_ticket(db, user_id=user_id, token_type=outcome, amount=reward_amount, meta=meta, commit=commit)
+            self._grant_ticket(db, user_id=storage_user_id, token_type=outcome, amount=reward_amount, meta=meta, commit=commit)
             return
 
         if "GIFTICON" in str(reward_type):
-            self._grant_item(db, user_id=user_id, item_type=str(reward_type), amount=reward_amount, meta=meta, commit=commit)
+            self._grant_item(db, user_id=storage_user_id, item_type=str(reward_type), amount=reward_amount, meta=meta, commit=commit)
             return
 
         ticket_map = {
@@ -193,7 +203,7 @@ class V2RewardService:
         if reward_type in ticket_map:
             self._grant_ticket(
                 db,
-                user_id=user_id,
+                user_id=storage_user_id,
                 token_type=ticket_map[reward_type],
                 amount=reward_amount,
                 meta=meta,

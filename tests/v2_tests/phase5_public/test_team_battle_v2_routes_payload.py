@@ -140,5 +140,21 @@ def test_v2_team_battle_payloads(client: TestClient, seed_session: Session) -> N
         assert "season_id" in lb
         assert lb["season_id"] == season.id
 
+        resp = client.get("/api/v2/team-battle/status")
+        assert resp.status_code == 200, resp.text
+        status_payload = resp.json()
+        assert status_payload["season_name"] == season.name
+        assert status_payload["season"]["id"] == season.id
+        assert "top_teams" in status_payload
+        assert isinstance(status_payload["top_teams"], list)
+        assert status_payload["has_team"] is True
+        assert status_payload["my_team"] is not None
+
+        resp = client.get("/api/v2/team-battle/rankings")
+        assert resp.status_code == 200, resp.text
+        rankings_payload = resp.json()
+        assert "entries" in rankings_payload
+        assert "season_id" in rankings_payload
+
     finally:
         _clear_v2_auth_override()

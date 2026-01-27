@@ -1042,12 +1042,82 @@ def get_feed_list_stub():
     return []
 
 @router.get("/team-battle/status", tags=["v2-team-battle"])
-def get_team_battle_status_stub():
-    return {"status": "active"}
+def get_team_battle_status(
+    db: Session = Depends(get_db),
+    v2_user_id: int = Depends(get_current_user_id),
+):
+    season = _team_battle_service.get_active_season(db)
+    if not season:
+        return {
+            "status": "inactive",
+            "season": None,
+            "season_name": None,
+            "has_team": False,
+            "my_team": None,
+            "top_teams": [],
+        }
+
+    from app.v2.services.user_service import V2UserService
+
+    master_user_id = V2UserService.ensure_legacy_user_id(db, int(v2_user_id))
+
+    my_view = _team_battle_service.get_membership_view(db, user_id=master_user_id)
+    has_team = bool(my_view.get("has_team"))
+    my_team_payload = my_view.get("team")
+
+    # Top teams: reuse canonical leaderboard view (limit small; safe for dashboard).
+    lb = _team_battle_service.get_leaderboard_view(db, season_id=int(season.id), limit=5, offset=0)
+    top_teams: list[dict] = []
+    for entry in (lb.get("entries") or []):
+        team = entry.get("team") or {}
+        top_teams.append(
+            {
+                "id": int(team.get("id") or 0),
+                "name": team.get("name"),
+                "points": int(entry.get("season_score") or team.get("total_score") or 0),
+                "member_count": int(team.get("member_count") or 0),
+                "rank": int(entry.get("rank") or team.get("rank") or 0),
+            }
+        )
+
+    my_team = None
+    if isinstance(my_team_payload, dict) and my_team_payload:
+        my_team = {
+            "id": int(my_team_payload.get("id") or 0),
+            "name": my_team_payload.get("name"),
+            "points": int(my_team_payload.get("total_score") or 0),
+            "member_count": int(my_team_payload.get("member_count") or 0),
+        }
+
+    return {
+        "status": "active" if bool(season.is_active) else "inactive",
+        "season": {
+            "id": int(season.id),
+            "name": season.name,
+            "start_date": season.starts_at.isoformat() if season.starts_at else None,
+            "end_date": season.ends_at.isoformat() if season.ends_at else None,
+            "is_active": bool(season.is_active),
+        },
+        "season_name": season.name,
+        "has_team": has_team,
+        "my_team": my_team,
+        "top_teams": top_teams,
+    }
 
 @router.get("/team-battle/rankings", tags=["v2-team-battle"])
-def get_team_battle_rankings_stub():
-    return []
+def get_team_battle_rankings(
+    season_id: int | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    # Alias to leaderboard view for backward/compat clients.
+    return _team_battle_service.get_leaderboard_view(
+        db,
+        season_id=season_id,
+        limit=min(limit, 100),
+        offset=max(offset, 0),
+    )
 
 @router.get("/inventory/items", tags=["v2-inventory"])
 def get_inventory_items_stub(

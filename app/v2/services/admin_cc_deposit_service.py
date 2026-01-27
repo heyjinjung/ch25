@@ -167,7 +167,6 @@ class V2AdminCCDepositService:
         today = now_tz.astimezone(kst).date()
         step_amount = int(getattr(settings, "external_ranking_deposit_step_amount", V2AdminCCDepositService.STEP_AMOUNT))
         xp_per_step = int(getattr(settings, "external_ranking_deposit_xp_per_step", V2AdminCCDepositService.XP_PER_STEP))
-        max_steps_per_day = int(getattr(settings, "external_ranking_deposit_max_steps_per_day", V2AdminCCDepositService.MAX_STEPS_PER_DAY))
         cooldown_minutes = max(settings.external_ranking_deposit_cooldown_minutes, 0)
 
         existing_by_user = {row.user_id: row for row in db.execute(select(ExternalRankingData)).scalars().all()}
@@ -323,9 +322,6 @@ class V2AdminCCDepositService:
             total_for_step = snap.get("deposit_remainder", 0) + deposit_delta
             deposit_steps = total_for_step // step_amount
             remainder = total_for_step % step_amount
-
-            if max_steps_per_day > 0:
-                deposit_steps = min(deposit_steps, max_steps_per_day)
 
             if deposit_steps > 0 and cooldown_minutes > 0 and snap.get("updated_at"):
                 if now - snap["updated_at"] < timedelta(minutes=cooldown_minutes):
