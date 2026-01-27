@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/v2/dev", tags=["dev"])
 
 
 class DevLoginRequest(BaseModel):
-    external_id: str | None = None
+    cc_id: str | None = Field(None, validation_alias=AliasChoices("cc_id", "external_id"))
     nickname: str | None = None
     create_if_missing: bool = False
 
@@ -40,17 +40,17 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
     if settings.env not in ["local", "development", "dev"]:
         raise HTTPException(status_code=403, detail="DEV_LOGIN_DISABLED")
 
-    external_id = (payload.external_id or "dev_web_user").strip()
-    if not external_id:
-        raise HTTPException(status_code=400, detail="MISSING_EXTERNAL_ID")
+    cc_id = (payload.cc_id or "dev_web_user").strip()
+    if not cc_id:
+        raise HTTPException(status_code=400, detail="MISSING_CC_ID")
 
-    user = V2UserService.get_or_create_v2_user_from_legacy(db, external_id)
+    user = V2UserService.get_or_create_v2_user_from_legacy(db, cc_id)
     if user is None:
         if not payload.create_if_missing:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
         user = V2UserService.create_user(
             db,
-            cc_id=external_id,
+            cc_id=cc_id,
             nickname=payload.nickname or "Web Dev User",
         )
     elif payload.nickname:
@@ -58,7 +58,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
 
     client_ip = request.client.host if request.client else None
     _ = client_ip
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
+    master_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
 
     try:
         db.commit()

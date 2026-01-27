@@ -33,7 +33,6 @@ import {
   getAdminTeamBattleMemberContributions,
   updateAdminTeamBattleMemberJoinedAt,
   adjustAdminTeamBattleMemberContribution,
-  // type AdminTeamBattleSeasonDto, // 2026-01-26 미사용 import 제거
   type AdminTeamBattleCreateSeasonRequest,
   type AdminTeamBattleCreateTeamRequest,
   type AdminTeamBattleScoreAdjustRequest,

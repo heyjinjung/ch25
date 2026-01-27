@@ -1,23 +1,23 @@
 /**
- * V2 Backend Adapter
+ * V2 Game API Adapter
  *
  * This adapter connects V2 frontend components to V2 backend endpoints.
- * Uses v2Client for proper authentication handling.
+ * It ensures the V2 Native Single SoT policy is maintained.
  */
 
 import axios from "axios";
 import { v2Client } from "./client"; // V2 apiClient
 import {
-  getRouletteStatus as getV1RouletteStatus,
-  type RouletteStatusResponse as V1RouletteStatusResponse,
+  getRouletteStatus as getRawRouletteStatus,
+  type RouletteStatusResponse as RawRouletteStatusResponse,
 } from "../../api/rouletteApi";
 import {
-  getDiceStatus as getV1DiceStatus,
-  type DiceStatusResponse as V1DiceStatusResponse,
+  getDiceStatus as getRawDiceStatus,
+  type DiceStatusResponse as RawDiceStatusResponse,
 } from "../../api/diceApi";
 import {
-  getLotteryStatus as getV1LotteryStatus,
-  type LotteryStatusResponse as V1LotteryStatusResponse,
+  getLotteryStatus as getRawLotteryStatus,
+  type LotteryStatusResponse as RawLotteryStatusResponse,
 } from "../../api/lotteryApi";
 import type {
   RouletteStatusResponse,
@@ -64,8 +64,8 @@ const toNumber = (value: unknown, fallback = 0): number => {
   return fallback;
 };
 
-const mapV1RouletteToV2 = (
-  data: V1RouletteStatusResponse,
+const mapRawRouletteToV2 = (
+  data: RawRouletteStatusResponse,
 ): RouletteStatusResponse => {
   const segments = (data.segments || []).map((seg, index) => ({
     id: index + 1,
@@ -88,7 +88,7 @@ const mapV1RouletteToV2 = (
   };
 };
 
-const mapV1DiceToV2 = (data: V1DiceStatusResponse): DiceStatusResponse => ({
+const mapRawDiceToV2 = (data: RawDiceStatusResponse): DiceStatusResponse => ({
   config_id: 1,
   name: "Dice",
   max_daily_plays: data.remaining_plays ?? 0,
@@ -104,8 +104,8 @@ const mapV1DiceToV2 = (data: V1DiceStatusResponse): DiceStatusResponse => ({
   is_golden_hour: false,
 });
 
-const mapV1LotteryToV2 = (
-  data: V1LotteryStatusResponse,
+const mapRawLotteryToV2 = (
+  data: RawLotteryStatusResponse,
 ): LotteryStatusResponse => ({
   config_id: 1,
   name: "Lottery",
@@ -190,7 +190,7 @@ export const getV2VaultStatus = async (): Promise<VaultStatusResponse> => {
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       console.warn(
-        "[V2Adapter] V2 vault status 404; falling back to V1 alias check",
+        "[V2Adapter] V2 vault status 404; falling back to unified check",
       );
     }
     // Fallback to V1 if V2 endpoint is not yet active
@@ -248,11 +248,11 @@ export const getV2RouletteStatus = async (
   } catch (error) {
     if (isNoFeatureToday(error)) {
       console.warn(
-        "[V2Adapter] V2 roulette unavailable (NO_FEATURE_TODAY); falling back to V1",
+        "[V2Adapter] V2 roulette unavailable (NO_FEATURE_TODAY); falling back to legacy",
       );
       try {
-        const v1Data = await getV1RouletteStatus(ticketType);
-        return mapV1RouletteToV2(v1Data);
+        const rawData = await getRawRouletteStatus(ticketType);
+        return mapRawRouletteToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyRouletteStatus(ticketType);
@@ -261,10 +261,10 @@ export const getV2RouletteStatus = async (
       }
     }
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.warn("[V2Adapter] V2 roulette status 404; falling back to V1");
+      console.warn("[V2Adapter] V2 roulette status 404; falling back to legacy");
       try {
-        const v1Data = await getV1RouletteStatus(ticketType);
-        return mapV1RouletteToV2(v1Data);
+        const rawData = await getRawRouletteStatus(ticketType);
+        return mapRawRouletteToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyRouletteStatus(ticketType);
@@ -274,11 +274,11 @@ export const getV2RouletteStatus = async (
     }
     if (isRouletteConfigFallback(error)) {
       console.warn(
-        "[V2Adapter] V2 roulette status invalid config; falling back to V1",
+        "[V2Adapter] V2 roulette status invalid config; falling back to legacy",
       );
       try {
-        const v1Data = await getV1RouletteStatus(ticketType);
-        return mapV1RouletteToV2(v1Data);
+        const rawData = await getRawRouletteStatus(ticketType);
+        return mapRawRouletteToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyRouletteStatus(ticketType);
@@ -417,11 +417,11 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
   } catch (error) {
     if (isNoFeatureToday(error)) {
       console.warn(
-        "[V2Adapter] V2 dice unavailable (NO_FEATURE_TODAY); falling back to V1",
+        "[V2Adapter] V2 dice unavailable (NO_FEATURE_TODAY); falling back to legacy",
       );
       try {
-        const v1Data = await getV1DiceStatus();
-        return mapV1DiceToV2(v1Data);
+        const rawData = await getRawDiceStatus();
+        return mapRawDiceToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyDiceStatus();
@@ -430,10 +430,10 @@ export const getV2DiceStatus = async (): Promise<DiceStatusResponse> => {
       }
     }
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.warn("[V2Adapter] V2 dice status 404; falling back to V1");
+      console.warn("[V2Adapter] V2 dice status 404; falling back to legacy");
       try {
-        const v1Data = await getV1DiceStatus();
-        return mapV1DiceToV2(v1Data);
+        const rawData = await getRawDiceStatus();
+        return mapRawDiceToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyDiceStatus();
@@ -504,11 +504,11 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
   } catch (error) {
     if (isNoFeatureToday(error)) {
       console.warn(
-        "[V2Adapter] V2 lottery unavailable (NO_FEATURE_TODAY); falling back to V1",
+        "[V2Adapter] V2 lottery unavailable (NO_FEATURE_TODAY); falling back to legacy",
       );
       try {
-        const v1Data = await getV1LotteryStatus();
-        return mapV1LotteryToV2(v1Data);
+        const rawData = await getRawLotteryStatus();
+        return mapRawLotteryToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyLotteryStatus();
@@ -517,10 +517,10 @@ export const getV2LotteryStatus = async (): Promise<LotteryStatusResponse> => {
       }
     }
     if (axios.isAxiosError(error) && error.response?.status === 404) {
-      console.warn("[V2Adapter] V2 lottery status 404; falling back to V1");
+      console.warn("[V2Adapter] V2 lottery status 404; falling back to legacy");
       try {
-        const v1Data = await getV1LotteryStatus();
-        return mapV1LotteryToV2(v1Data);
+        const rawData = await getRawLotteryStatus();
+        return mapRawLotteryToV2(rawData);
       } catch (fallbackError) {
         if (isNoFeatureToday(fallbackError)) {
           return emptyLotteryStatus();

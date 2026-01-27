@@ -14,6 +14,10 @@
 
 ## Fix Plan
 
+### 대상 스택(정책)
+- 본 문서는 **V2 어드민/유저 스택 기준**으로 작성한다. (레거시 코드를 기술적으로 호출하더라도, 운영/문서/경로 기준은 V2 일관성을 우선)
+- 문서상의 참조 경로는 **V2 네임스페이스 위주로 개정**한다. (**V2 정책 반영**)
+
 ### Allowed Files
 - 프론트 어드민: src/v2/admin/pages/game/MissionManagerPage.tsx
 - 문서: docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/

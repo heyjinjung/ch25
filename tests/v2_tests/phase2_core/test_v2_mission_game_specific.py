@@ -34,7 +34,8 @@ def db_session():
 
 
 def _seed_user(db, user_id=1):
-    user = User(id=user_id, external_id=f"ext_{user_id}", nickname=f"user_{user_id}")
+    # V2 Native: ID는 통합되었으며 cc_id가 외부 식별자의 기준입니다.
+    user = User(id=user_id, external_id=f"cc_{user_id}", nickname=f"user_{user_id}")
     db.add(user)
     db.commit()
     return user

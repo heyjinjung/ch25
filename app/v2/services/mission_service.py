@@ -1,6 +1,6 @@
 """V2 Mission & Streak Service.
 
-V2-only: remove V1 MissionService dependency and implement core logic locally.
+V2-only: remove Master SoT MissionService dependency and implement core logic locally.
 """
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional, Tuple, Dict, Any

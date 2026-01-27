@@ -1,7 +1,7 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import gsap from "gsap";
-import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
+import { getV2LotteryStatus, playV2Lottery } from "../../api/v2GameAdapter";
 import { useSound } from "../../../hooks/useSound";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
 import LotteryResultModal from "../../components/game/LotteryResultModal";

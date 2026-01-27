@@ -1,4 +1,4 @@
-# 유저 삭제 API 경로 오류 수정
+# 유저 삭제 API 경로 오류 수정 및 V2 Native 정합성 강화
 
 **작성일**: 2026-01-26
 **관련 영역**: User Admin
@@ -90,7 +90,8 @@ export async function purgeUser(userId: number) {
 
 #### delete_user 메서드:
 - TeamMember 명시 정리 (orphaned 방지)
-- User 삭제 (다른 테이블은 CASCADE 의존)
+- **V2User 및 User 동시 삭제 (Same ID 정책)**
+- V2UserSegment 데이터 정리
 - 감사 로그 기록 후 커밋
 
 #### purge_user 메서드:
@@ -102,6 +103,7 @@ export async function purgeUser(userId: number) {
   - TeamMember, TeamEventLog
   - UserMissionProgress
   - UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+  - **V2User, V2UserSegment** (V2 전용 테이블)
   - 기타 모든 유저 연관 데이터
 - 감사 로그 기록 후 커밋
 
@@ -109,9 +111,9 @@ export async function purgeUser(userId: number) {
 
 - [x] 프론트엔드 API 경로 V2로 변경
 - [x] 백엔드 delete_user 서비스 구현 확인
-- [x] 백엔드 purge_user 서비스 구현 확인
+- [x] 백엔드 purge_user 서비스 구현 확인 (V2 테이블 포함)
 - [x] Admin 권한 인증 확인 (get_current_admin_info)
-- [x] SUPER_ADMIN 권한 체크 제거 (폐기된 권한 시스템)
+- [x] SUPER_ADMIN 권한 체크 제거 (V2 표준 권한 체계 적용)
 - [x] 감사 로그 기록 확인
 - [x] TeamMember 정리 로직 확인
 

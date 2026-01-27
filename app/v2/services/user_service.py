@@ -39,7 +39,7 @@ class V2UserService:
         if user:
             return user
             
-        # 2. 없으면 Legacy user 테이블에서 조회하여 V2 생성 (JIT Sync)
+        # 2. 없으면 통합 Master User 테이블에서 조회하여 V2 생성 (JIT Sync)
         legacy_user = db.query(User).filter(User.external_id == cc_id).first()
         if legacy_user:
             user = V2User(

@@ -7,7 +7,7 @@ import {
   getV2RouletteStatus,
   getV2RouletteStatusStrict,
   playV2Roulette,
-} from "../../api/v1CompatAdapter";
+} from "../../api/v2GameAdapter";
 import "./RouletteRedesign.css";
 import { useSound } from "../../../hooks/useSound";
 import { Loader2 } from "lucide-react";

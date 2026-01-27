@@ -7,7 +7,7 @@ def test_v2_login_sync():
     payload = {
         "external_id": "cc001",
         "nickname": "level",
-        "create_if_missing": False # Legacy에서 가져와야 하므로 False여도 성공해야 함
+        "create_if_missing": False # 통합 유저 테이블(Master SoT)에서 가져와야 하므로 False여도 성공해야 함
     }
     
     print(f"Testing V2 Login Sync for 'cc001'...")

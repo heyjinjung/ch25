@@ -102,7 +102,7 @@ export default function AdminTeamBattlePage() {
   const [resolvedJoinUserInfo, setResolvedJoinUserInfo] = useState<{
     userId: number;
     nickname: string;
-    externalId: string;
+    ccId: string;
   } | null>(null);
   const [resolvedLeaveUserId, setResolvedLeaveUserId] = useState<number | null>(
     null,
@@ -110,7 +110,7 @@ export default function AdminTeamBattlePage() {
   const [resolvedLeaveUserInfo, setResolvedLeaveUserInfo] = useState<{
     userId: number;
     nickname: string;
-    externalId: string;
+    ccId: string;
   } | null>(null);
 
   const memberTeamId = memberFilter.teamId
@@ -254,7 +254,7 @@ export default function AdminTeamBattlePage() {
       setResolvedJoinUserInfo({
         userId: resolved.userId,
         nickname: resolved.nickname,
-        externalId: resolved.externalId,
+        ccId: resolved.ccId,
       });
       setNotice(`유저 조회 완료`);
     } catch (err: any) {
@@ -286,7 +286,7 @@ export default function AdminTeamBattlePage() {
         setResolvedJoinUserInfo({
           userId: resolved.userId,
           nickname: resolved.nickname,
-          externalId: resolved.externalId,
+          ccId: resolved.ccId,
         });
       } catch (err: any) {
         setError(
@@ -342,7 +342,7 @@ export default function AdminTeamBattlePage() {
       setResolvedLeaveUserInfo({
         userId: resolved.userId,
         nickname: resolved.nickname,
-        externalId: resolved.externalId,
+        ccId: resolved.ccId,
       });
       setNotice(`유저 조회 완료`);
     } catch (err: any) {
@@ -374,7 +374,7 @@ export default function AdminTeamBattlePage() {
         setResolvedLeaveUserInfo({
           userId: resolved.userId,
           nickname: resolved.nickname,
-          externalId: resolved.externalId,
+          ccId: resolved.ccId,
         });
       } catch (err: any) {
         setError(
@@ -748,9 +748,9 @@ export default function AdminTeamBattlePage() {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="text-zinc-400 w-20">External ID:</span>
+                      <span className="text-zinc-400 w-20">CC ID:</span>
                       <span className="font-mono text-xs">
-                        {resolvedJoinUserInfo.externalId}
+                        {resolvedJoinUserInfo.ccId}
                       </span>
                     </div>
                   </div>
@@ -833,9 +833,9 @@ export default function AdminTeamBattlePage() {
                       </span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="text-zinc-400 w-20">External ID:</span>
+                      <span className="text-zinc-400 w-20">CC ID:</span>
                       <span className="font-mono text-xs">
-                        {resolvedLeaveUserInfo.externalId}
+                        {resolvedLeaveUserInfo.ccId}
                       </span>
                     </div>
                   </div>
@@ -959,7 +959,7 @@ export default function AdminTeamBattlePage() {
                   {selectedMember.user_id}
                 </div>
                 <div className="text-xs text-zinc-500">
-                  External ID: {selectedMember.external_id ?? "-"}
+                  CC ID: {selectedMember.external_id ?? "-"}
                 </div>
               </div>
 

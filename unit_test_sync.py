@@ -12,7 +12,7 @@ def unit_test_sync():
     
     with Session(engine) as db:
         cc_id = "cc001"
-        print(f"--- Unit Test: Syncing {cc_id} ---")
+        print(f"--- Unit Test: V2 Native Syncing {cc_id} ---")
         
         # 1. v2_user에 없는지 재확인
         v2_user = db.query(V2User).filter(V2User.cc_id == cc_id).first()
@@ -24,7 +24,7 @@ def unit_test_sync():
             print(f"SUCCESS: Synced user found/created. V2 ID: {synced_user.id}, Nickname: {synced_user.nickname}")
             db.commit()
         else:
-            print("FAILURE: User not found in Legacy either.")
+            print("FAILURE: User not found in Master SoT either.")
             
         # 3. 최종 확인
         final_check = db.query(V2User).filter(V2User.cc_id == cc_id).first()

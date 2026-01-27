@@ -254,7 +254,8 @@ export interface UserListResponse {
 export interface AdminUserResolveResponse {
   userId: number;
   nickname: string;
-  externalId: string;
+  ccId: string;
+  externalId?: string | null;
 }
 
 // User Segment Types
@@ -351,6 +352,7 @@ export interface CreateUserNoteRequest {
 
 export interface AdminUserCreateRequest {
   externalId: string;
+  ccId?: string;
   nickname?: string;
   level?: number;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
@@ -395,7 +397,13 @@ export const resolveAdminUserIdentifier = async (
       params: { identifier },
     },
   );
-  return response.data;
+  const data: any = response.data as any;
+  return {
+    userId: data.userId,
+    nickname: data.nickname,
+    ccId: data.ccId ?? data.cc_id ?? data.externalId ?? data.external_id ?? "",
+    externalId: data.externalId ?? data.external_id ?? null,
+  };
 };
 
 export const getUserActivityLogs = async (
@@ -432,8 +440,10 @@ export const createUserNote = async (
 export const createAdminUser = async (
   data: AdminUserCreateRequest,
 ): Promise<AdminUserListDto> => {
+  const ccId = data.ccId ?? data.externalId;
   const payload: Record<string, unknown> = {
-    external_id: data.externalId,
+    external_id: ccId,
+    cc_id: ccId,
   };
 
   if (data.nickname !== undefined) payload.nickname = data.nickname;

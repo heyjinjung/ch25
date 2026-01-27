@@ -1,7 +1,7 @@
 // src/pages/game/DicePage.tsx
 import { useEffect, useMemo, useState, useRef, useLayoutEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getV2DiceStatus, playV2Dice } from "../../api/v1CompatAdapter";
+import { getV2DiceStatus, playV2Dice } from "../../api/v2GameAdapter";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import { useSound } from "../../../hooks/useSound";
 import { useAuth } from "../../../auth/authStore";

@@ -1,4 +1,4 @@
-# 어드민 회원 입금 후 레벨 미반영 버그 수정
+# V2 어드민 회원 입금 후 레벨 동기화 버그 수정 (V2 Native)
 
 **작성일**: 2026-01-27
 **상태**: ✅ 해결됨
@@ -12,9 +12,9 @@
 
 ### 증상
 - 입금 내역은 정상 반영
-- 하지만 어드민의 **수동 입금 동기화(`_sync_cumulative_deposit`)** 시 XP 적립 로직 호출이 누락됨
-- 일일 XP 획득 한도가 기존 1000 XP로 너무 높아 하향 조정 필요 (요청 사항)
-- 결과적으로 회원조회 시 레벨이 변경되지 않거나 데이터가 누락됨
+- 하지만 **V2 어드민 수동 입금 동기화** 시 XP 적립 로직 호출 누락
+- 일일 XP 획득 한도가 기존 1000 XP로 너무 높아 하향 조정 필요 (V2 정책 반영)
+- 결과적으로 V2 회원조회 시 레벨이 즉시 갱신되지 않음
 
 ---
 
@@ -105,10 +105,10 @@ db.commit()
 
 | 파일 | 변경 내용 |
 |------|----------|
-| `app/services/level_xp_service.py` | `add_xp()` 메서드에서 `User.level` 동기화 추가 |
-| `app/v2/services/admin_cc_deposit_service.py` | XP 적립 루프 후 `db.commit()` 추가 |
-| `app/v2/api/admin/economy_routes.py` | `_sync_cumulative_deposit`에서 `upsert_many` 호출 추가 (수동 트리거) |
-| `app/core/config.py` | `external_ranking_deposit_max_steps_per_day`를 5(100 XP)로 조정 |
+| `app/v2/services/level_xp_service.py` | `V2LevelXPService`를 통한 `User.level` 동기화 보강 |
+| `app/v2/services/admin_cc_deposit_service.py` | XP 적립 루프 후 `db.commit()` 추가 (V2 Native 트랜잭션) |
+| `app/v2/api/admin/economy_routes.py` | V2 수동 트리거 로직 최신화 |
+| `app/core/config.py` | V2 일일 최대 XP 스텝 제한(5 스텝) 반영 |
 
 ---
 
@@ -156,11 +156,11 @@ return results
 
 ---
 
-## 9. 관련 문서
+## 9. 관련 문서 (V2 Native Stack)
 
-- V2 레벨 시스템: `app/services/level_xp_service.py`
-- 어드민 입금 서비스: `app/v2/services/admin_cc_deposit_service.py`
-- 어드민 회원 API: `app/v2/api/admin/user_routes.py`
+- V2 레벨 시스템: `app/v2/services/level_xp_service.py`
+- V2 어드민 입금 서비스: `app/v2/services/admin_cc_deposit_service.py`
+- V2 어드민 회원 API: `app/v2/api/admin/user_routes.py`
 
 ---
 

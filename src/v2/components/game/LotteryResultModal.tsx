@@ -28,33 +28,42 @@ export default function LotteryResultModal({
   const navigate = useNavigate();
   const { playTabTouch, playBigWin, playSmallWin, playDiceLose } = useSound();
 
-  // Tier Classification Logic (Technical Trigger)
+  // Tier Classification Logic (Strictly Type-Based)
   const safePrizeLabel = prizeLabel || "";
-  const isPoint = rewardType === "POINT";
-  const isTicket = rewardType === "TICKET";
 
-  // Improve prize name specificity
+  // 1. BIG_WIN (대박): 모든 포인트 보상, 희귀 티켓
+  const isBigWin =
+    rewardType === "POINT" ||
+    rewardType === "GOLD_KEY_TICKET" ||
+    rewardType === "DIAMOND_TICKET";
+
+  // 2. NORMAL (일반 당첨): 기프티콘, 바우처, 일반 게임 티켓(1~5매), 퍼즐 조각
+  const isNormal =
+    !isBigWin &&
+    (rewardType.includes("GIFTICON") ||
+      rewardType === "VOUCHER" ||
+      ["DICE_TICKET", "ROULETTE_TICKET", "LOTTERY_TICKET", "TICKET"].includes(
+        rewardType,
+      ) ||
+      rewardType.includes("PUZZLE") ||
+      rewardType.includes("ITEM"));
+
+  // 3. FAIL: 보상 없음 (NONE)
+  const isFail = !isBigWin && !isNormal;
+
+  // Display name helper
   const displayPrizeName = (() => {
-    if (isPoint) return `${rewardAmount.toLocaleString()} 포인트`;
-    if (isTicket) return `티켓 ${rewardAmount}장`;
+    if (rewardType === "POINT")
+      return `${rewardAmount.toLocaleString()} 포인트`;
+    if (
+      ["TICKET", "DICE_TICKET", "ROULETTE_TICKET", "LOTTERY_TICKET"].includes(
+        rewardType,
+      )
+    ) {
+      return `티켓 ${rewardAmount}장`;
+    }
     return safePrizeLabel;
   })();
-
-  // Updated: FAIL includes 1-5 tickets (as consolation) or NONE
-  const isFail =
-    rewardType === "NONE" ||
-    (isTicket && rewardAmount >= 1 && rewardAmount <= 5) ||
-    safePrizeLabel.includes("꽝");
-
-  const isRareTicket =
-    isTicket &&
-    !isFail &&
-    (safePrizeLabel.toLowerCase().includes("gold") ||
-      safePrizeLabel.toLowerCase().includes("diamond"));
-
-  // Refined: Points are only BigWin if >= 2000
-  const isBigWin = (isPoint && rewardAmount >= 2000) || isRareTicket;
-  const isNormal = !isBigWin && !isFail;
 
   useEffect(() => {
     if (!modalRef.current || !contentRef.current) return;
@@ -91,7 +100,7 @@ export default function LotteryResultModal({
       };
 
       if (isBigWin) {
-        // Celestial Reveal (Big Win)
+        // 'Celestial Reveal' (화려한 콘페티 + 테두리 Shine + 상품명 EncryptedText 효과)
         triggerHaptic("heavy");
 
         tl.fromTo(
@@ -149,17 +158,23 @@ export default function LotteryResultModal({
           playBigWin();
         }, "-=0.4");
       } else if (isNormal) {
-        // Stable Victory (Normal)
+        // 'Stable Victory' (부드러운 글로우 + 차분한 탄력 모션)
         triggerHaptic("medium");
 
         tl.fromTo(
           contentRef.current,
-          { scale: 0.85, opacity: 0, y: 20 },
+          {
+            scale: 0.85,
+            opacity: 0,
+            y: 20,
+            boxShadow: "0 0 20px rgba(234, 179, 8, 0)",
+          },
           {
             scale: 1,
             opacity: 1,
             y: 0,
             duration: 0.6,
+            boxShadow: "0 0 40px rgba(234, 179, 8, 0.3)",
             ease: "elastic.out(1, 0.75)",
           },
           "-=0.1",

@@ -14,7 +14,7 @@ class V2AuthService:
         *,
         user_id: int | None = None,
         cc_id: str | None = None,
-        external_id: str | None = None,
+        external_id: str | None = None, # Legacy alias for cc_id
         password: str | None = None,
     ) -> tuple[str, V2User]:
         _ = password

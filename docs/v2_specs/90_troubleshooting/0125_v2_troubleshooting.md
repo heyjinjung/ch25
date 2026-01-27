@@ -309,35 +309,107 @@ code
 [[Prototype]]
 : 
 Error
-2. 치킨은 구매는 가능하나 금고에서 돈이 차감안됨
 
-금고출금조건에 현재 플레이횟수가 전혀 카운팅 되고 있지 않음 
+✅  2. 치킨은 구매는 가능하나 금고에서 돈이 차감안됨
+
+✅ 금고출금조건에 현재 플레이횟수가 전혀 카운팅 되고 있지 않음 
+새로 빌드하거나 새로고침해도 계속 실패함 
+
+ ✅   주사위 골든아워 (Golden Hour)
+ 분기 기준 확인
+
+src/v2/components/game/DiceResultModal.tsx를 읽고 “골든아워 여부”, “승/패 여부”를 어떤 값으로 판단하는지 확인
+4케이스(골든승/일반승/골든패/일반패) 매핑 테이블을 내부적으로 정리(문서화는 코드 주석 없이 내 머리에서만)
+디자인 패치(분기/데이터 흐름은 그대로)
+
+✅  “Dice Battle Result” span 제거
+아이콘 74x74: 승리=주사위, 골든패=해골, 일반패=유령
+타이틀(36) + 잘림 방지(줄바꿈/최대폭/패딩/leading 조정)
+서브타이틀 타이핑 애니메이션:
+골든승 “2배 적립 축하”, 일반승 “승리 축하”, 골든패 “2배 놓침 ㅠㅠ”, 일반패 “패배했습니다”
+애니메이션:
+일반 승/패: “살짝 떠오름”(opacity+translate+scale), 회전 금지
+골든패: 흔들림 강도 낮춤
+골든승: 불꽃 느낌은 confetti 컬러/파티클 튜닝으로 최대 근접(새 라이브러리 추가 없이)
+금액 표시 섹션 정리
+
+코인 아이콘을 public/assets/logo_cc_v2.webp로 고정
+“P” 표기는 유지하되 UI 정렬만 정돈
+CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
+
+버튼은 다시하기 / 다른게임 / 닫기 3개로 통일(케이스별 노출 차이는 요구사항대로)
+“다른게임”은 v2 게임 대시보드로 이동:
+우선 기존 코드에 navigate나 onGoTo... 콜백이 있으면 그대로 사용
+없으면 라우터에서 실제 대시보드 경로를 검색해서 정확한 path로 연결(추측 금지)
+
+ㄴ재수정 해야함 
+1) "닫기" 3번째 버튼은 6개에서 모두 삭제
+2) 골든아워 패배 애니메이션 개선 
+3) 모든 게임모달 햅틱 애니메이션 추가
+4) 일반 주사위 승리 컬러감 개선 
+5) 씨씨코인 아이콘 변경해주기
+
+
+✅ 미션관리
+일일 조건이 붙은건 일일 액션타입과 매치되어야 하는건지
+현재 어떤 조건에 어떻게 붙어야 하는건지 관리자가 매우 헷갈려함 
+로직을 타이핑하는게 어려워서 드롭다운으로 선택하게 한건데
+이게 미션이 어떻게 조립이 되는지 모르겠음 
+
+✅ 예를 들어 골든하워 * 게임플레이 = 성립가능???  
+* 그리고 같은 로직키가 같은 탭안에서는 일일/주말/신규/스페셜의 조건에선 성립이 안됨 
+
+어드민 미션관리 미션편집 모달 수정 후 테스트 - 이게 정상작동되는지 모르겠음
+우선 주간단위 미션은 생성 . 편집에서 오류 있음 
+
+✅ 어드민 회원 레벨관리 
+입금 넣었는데도 회원조회시 레벨 변경이 안됨
+
+
+
+✅ 복권 게임결과 모달  
+백앤드 테스트 진행 
+
+   등급 1: BIG_WIN
+   조건: 금고에 적립되는 모든 포인트(POINT) 보상.
+   조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
+   연출: 'Celestial Reveal' (화려한 콘페티 + 햅틱강도 0.8 + 테두리 Shine + 레드오렌지핑크 그라데이션 배경컬러 값  + 상품명 EncryptedText 효과).
+   아이콘 : 
+   모든포인트 : C:\Users\JAVIS\ch\ch25\public\assets\asset_coin_gold.webp
+   골드키 : C:\Users\JAVIS\ch\ch25\public\assets\icons\goldkey.png
+   다이아몬드티켓 : C:\Users\JAVIS\ch\ch25\public\assets\icons\diakey.png
+
+   from-[#컬]/70
+   ring-red-500/62
+   shadow-[0_0_50px_rgba(255,0,84,0.31)]
+   drop-shadow 0.44
+
+   등급 2: NORMAL (일반 당첨)
+   조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
+   조건: 기타 아이템 및 퍼즐 조각.
+   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력모션 + 햅틱강도 0.3 +입체감 있는 카드 + 골드 0.5 테두리 ).
+   전체적으로 깔끔하게 디자인. 컬러, 폰트, 흐릿한 블러처리는 금지 
+   텍스트 애니메이션은 가볍게 전체적으로 움직이는 미세모션 
+   아이콘 : 
+   치킨 C:\Users\JAVIS\ch\ch25\public\assets\icons\chiken.png
+   피자 C:\Users\JAVIS\ch\ch25\public\assets\icons\pizza2.png
+   스타벅스 C:\Users\JAVIS\ch\ch25\public\assets\icons\takeaway-cup-dynamic-color.png
+ 
+   shadow-[0_0_50px_rgba(255,0,84,0.31)]
+   drop-shadow 0.44
+
+   등급 3: FAIL, 아이콘 해골, 컬러 투명하지만 그레이, 다크그린 톤으로, 글래스모피즘
+   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매), + NONE 타입
+   연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
+
 
 
 ----------------
 
 [] 게임결과 모달 및 애니메이션 
 ㄴ 꽝에는 실패용 모달 / 애니메이션 
-   주사위 골든아워 (Golden Hour)
-   승리: 축제의 콘페티 세례와 탄력 있는 등장.
-   패배: 요청하신 해골 아이콘(💀) + 7회 미세 진동 연출로 긴장감 부여.
-   일반 타임 (Normal Time)
-   승리 ("Radiant Reveal"): 콘페티 없이도 화려한 GSAP Shine(빛의 회전) 효과와 상단 글로우 연출.
-   패배 ("Somber Fade"): 채도를 낮춘(Grayscale) 모달이 차분하게 가라앉는 무게감 있는 모션.
 
-복권
-   등급 1: BIG_WIN (대박)
-   조건: 금고에 적립되는 모든 포인트(POINT) 보상.
-   조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
-   연출: 'Celestial Reveal' (화려한 콘페티 + 테두리 Shine + 상품명 EncryptedText 효과).
-   등급 2: NORMAL (일반 당첨)
-   조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
-   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매).
-   조건: 기타 아이템 및 퍼즐 조각.
-   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력 모션).
-   등급 3: FAIL (꽝)
-   조건: NONE 타입.
-   연출: 저채도 심플 연출.
+
 룰렛 
    등급 1: BIG_WIN (대박)
    조건: 금고에 적립되는 모든 포인트(POINT) 보상.
@@ -356,11 +428,7 @@ Error
 
 
 
-
 ---------------------------------------
-
-
-
 
 
 연속스트릭모달
@@ -371,34 +439,136 @@ Error
 --------------
 
 
-미션관리
-일일 조건이 붙은건 일일 액션타입과 매치되어야 하는건지
-현재 어떤 조건에 어떻게 붙어야 하는건지 관리자가 매우 헷갈려함 
-로직을 타이핑하는게 어려워서 드롭다운으로 선택하게 한건데
-이게 미션이 어떻게 조립이 되는지 모르겠음 
+check_db_state.py	2026-01-27 16:27
+check_deposit_baseline.py	2026-01-27 16:16
+check_user_progress.py	2026-01-27 15:41
+column_enums.txt	2026-01-27 15:25
+compare_users_tables.py	2026-01-27 16:30
+fix_user_id_mismatch.py	2026-01-27 16:36
+fix_user_id_mismatch_v2.py	2026-01-27 16:37
+force_recover_xp.py	2026-01-27 16:17
+20260127_user_integrity_execution_plan.md	2026-01-27 16:44
+20260127_user_login_jit_sync_implementation.md	2026-01-27 16:46
+20260127_user_table_unification_plan.md	2026-01-27 16:44
+inspect_level_users.py	2026-01-27 16:04
+inspect_mission_schema.py	2026-01-27 15:26
+inspect_output.txt	2026-01-27 16:04
+level_rewards_content.txt	2026-01-27 15:31
+level_thresholds_detail.txt	2026-01-27 15:43
+list_users.py	2026-01-27 15:37
+list_v2_levels.py	2026-01-27 15:33
+EncryptedText.tsx	2026-01-27 15:42
+useAdminGame.ts	2026-01-27 10:56
+DicePage.tsx	2026-01-27 14:55
+LotteryPage.tsx	2026-01-27 11:53
+RoulettePage.tsx	2026-01-27 11:53
+HomePage.tsx	2026-01-27 11:54
+VaultPage.tsx	2026-01-27 11:49
+test_v2_mission_game_specific.py
+mission_schema.txt	2026-01-27 15:21
+mission_schema_full.txt	2026-01-27 15:22
+recover_level_users.py	2026-01-27 16:16
+repro_mission_500.py	2026-01-27 15:13
+repro_output.log	2026-01-27 15:15
+test_audit_enum.py	2026-01-27 15:27
+test_point_edit.py	2026-01-27 15:36
+test_v2_login_sync.py	2026-01-27 16:34
+unit_test_sync.py	2026-01-27 16:34
+verify_api_fix.py	2026-01-27 16:18
+copilot-instructions.md	2026-01-27 14:26
+rule2026.instructions.md	2026-01-27 14:32
+game_design_evaluation.md	2026-01-27 09:42
+00_INDEX.md	2026-01-27 16:41
+20260127_dice_modal_vault_earn_display_fix.md	2026-01-27 14:56
+20260127_lottery_prize_partial_update_fix.md	2026-01-27 11:26
+20260205_lottery_ui_backend_tier_sync.md	2026-01-27 16:43
+07.level.md	2026-01-27 16:20
+20260127_mission_admin_builder_rules_update.md	2026-01-27 13:08
+20260127_mission_builder_auto_logickey_update.md	2026-01-27 13:44
+20260127_mission_error_update.md	2026-01-27 15:45
+20260127_mission_preset_expansion.md	2026-01-27 14:08
+20260127_shop_cost_type_fix.md	2026-01-27 12:21
+04.team_battle.md	2026-01-27 09:54
+02.user.md	2026-01-27 16:45
+20260126_user_delete_api_path_fix.md	2026-01-27 16:48
+20260127_admin_user_level_sync_fix.md	2026-01-27 16:20
+20260127_user_integrity_execution_plan.md	2026-01-27 16:44
+20260127_user_login_jit_sync_implementation.md	2026-01-27 16:46
+20260127_user_table_unification_plan.md	2026-01-27 16:44
+user_consistency_guide.md	2026-01-27 16:45
 
-예를 들어 골든하워 * 게임플레이 = 성립가능???  
-* 그리고 같은 로직키가 같은 탭안에서는 일일/주말/신규/스페셜의 조건에선 성립이 안됨 
 
 
 
 
 
-------------
+20260127_1600_add_missing_mission_gifticons.py	2026-01-27 15:44
+auth.py	2026-01-27 11:06
+config.py	2026-01-27 16:08
+dice_service.py	2026-01-27 13:57
+level_xp_service.py	2026-01-27 15:14
+lottery_service.py	2026-01-27 13:57
+mission_service.py	2026-01-27 11:06
+roulette_service.py	2026-01-27 13:57
+vault_service.py	2026-01-27 11:48
+dev_login.py	2026-01-27 16:33
+routes.py	2026-01-27 12:13
 
-기술기준문서 :
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
 
-기능 생성 후 문서 업로드해줘 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
-관련있는 영역의 폴더에 
-오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
 
-예시 > 미션 오류 발견 
-폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
-문서이름 : 20260126_mission_error_update.md
+economy_routes.py	2026-01-27 16:17
+game_config_routes.py	2026-01-27 11:24
+team_battle_routes.py	2026-01-27 09:51
+v2_admin_game.py	2026-01-27 11:24
+admin_cc_deposit_service.py	2026-01-27 15:14
+admin_user_service.py	2026-01-27 16:48
+auth_service.py	2026-01-27 16:33
+mission_service.py	2026-01-27 14:08
+shop_service.py	2026-01-27 12:13
+team_battle_admin_service.py	2026-01-27 09:51
+user_service.py	2026-01-27 16:37
+vault_service.py	2026-01-27 12:50
+verify_vault_fix.py	2026-01-27 12:49
+useSound.ts	2026-01-27 14:47
+AdminLayout.tsx	2026-01-27 11:21
+AdminTeamBattlePage.tsx	2026-01-27 09:59
+MissionManagerPage.tsx	2026-01-27 14:56
+adminApi.ts	2026-01-27 11:24
+DiceResultModal.tsx	2026-01-27 15:23
+LotteryResultModal.tsx	2026-01-27 16:43
+RouletteResultModal.tsx	2026-01-27 11:25
+
+
+
+
+
+
+
+
+
+20260127_dice_vault_deduction_fix.md	2026-01-27 11:48
+20260127_vault_play_count_update.md	2026-01-27 12:50
+v2_level_point_extension_sot_ko.md	2026-01-27 16:20
+v2_level_reward_table_sot_ko.md	2026-01-27 16:21
+v2_team_battle_sot_ko.md	2026-01-27 09:54
+v2_team_battle_api_contract_ko.md	2026-01-27 09:54
+0125_v2_troubleshooting.md	2026-01-27 12:51
+20260127_admin_login_integrity_error_fix.md	2026-01-27 11:10
+test_lottery_branching.py	2026-01-27 16:43
+test_play_count_bug.py	2026-01-27 12:22
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 -----------------
@@ -411,10 +581,6 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 
 
 
-
-
-
-
 @systematic-debugging 활용하여 수정해줘 
 
 기술기준문서 :
@@ -433,24 +599,4 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 
 
 
-
-
-
-
-
-@systematic-debugging 활용하여 수정해줘 
-
-기술기준문서 :
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
-
-기능 생성 후 문서 업로드해줘 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
-관련있는 영역의 폴더에 
-오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
-
-예시 > 미션 오류 발견 
-폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
-문서이름 : 20260126_mission_error_update.md
 
