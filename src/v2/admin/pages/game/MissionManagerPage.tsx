@@ -63,7 +63,8 @@ const MISSION_REWARD_OPTIONS = REWARD_ITEMS.map((item) => ({
 }));
 
 // Mock Categories for Tabs
-const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL_EVENT"];
+// BE MissionCategory enum: DAILY/WEEKLY/NEW_USER/SPECIAL
+const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL"];
 
 const ACTION_TYPE_OPTIONS = [
   { value: "PLAY_GAME", label: "게임 플레이 (PLAY_GAME)" },
@@ -81,6 +82,75 @@ const LOGIC_KEY_PRESETS = [
   { value: "daily_login_gift", label: "일일 출석 선물 (Fixed)" },
   { value: "golden_hour", label: "골든 아워 (Golden Hour)" },
 ];
+
+const isGoldenHourLogicKey = (logicKey: string) =>
+  String(logicKey || "")
+    .toLowerCase()
+    .includes("golden_hour");
+
+const getCategoryMeaning = (category: string) => {
+  const cat = String(category || "").toUpperCase();
+  if (cat === "DAILY") return "일일(09:00 KST 리셋)";
+  if (cat === "WEEKLY") return "주간(ISO Week 리셋)";
+  if (cat === "NEW_USER") return "신규 유저(가입 7일 이내)만 진행";
+  if (cat === "SPECIAL") return "스페셜(리셋 없음 / NON_RESET)";
+  return cat;
+};
+
+const PRESET_RECOMMENDED_ACTION_TYPE: Record<string, string | undefined> = {
+  daily_play_generic: "PLAY_GAME",
+  daily_shop_purchase: "BUY_SHOP_ITEM",
+  daily_login_gift: "LOGIN",
+  golden_hour: "PLAY_GAME",
+  streak_challenge_3: "LOGIN",
+};
+
+// 프리셋 한글 라벨 (자동 제목 생성용)
+const PRESET_TITLE_LABELS: Record<string, string> = {
+  daily_play_generic: "게임 플레이",
+  daily_shop_purchase: "상점 구매",
+  daily_login_gift: "출석 선물",
+  golden_hour: "골든아워 게임",
+  streak_challenge_3: "연속 출석",
+};
+
+// 카테고리 한글 접두어
+const CATEGORY_PREFIX: Record<string, string> = {
+  DAILY: "일일",
+  WEEKLY: "주간",
+  NEW_USER: "신규",
+  SPECIAL: "스페셜",
+};
+
+/**
+ * 프리셋 + 카테고리 + 목표값으로 고유 logicKey 자동 생성
+ * 예: daily_play_generic + DAILY + 5 → DAILY_PLAY_GENERIC_5
+ */
+const generateLogicKey = (
+  preset: string,
+  category: string,
+  targetValue: number,
+) => {
+  const base = String(preset || "custom").toUpperCase();
+  const cat = String(category || "DAILY").toUpperCase();
+  const tv = Math.max(1, Math.floor(Number(targetValue) || 1));
+  return `${cat}_${base}_${tv}`;
+};
+
+/**
+ * 프리셋 + 카테고리 + 목표값으로 제목 자동 생성
+ * 예: daily_play_generic + DAILY + 5 → "일일 게임 플레이 5회"
+ */
+const generateTitle = (
+  preset: string,
+  category: string,
+  targetValue: number,
+) => {
+  const catLabel = CATEGORY_PREFIX[category] || category;
+  const presetLabel = PRESET_TITLE_LABELS[preset] || "미션";
+  const tv = Math.max(1, Math.floor(Number(targetValue) || 1));
+  return `${catLabel} ${presetLabel} ${tv}회`;
+};
 
 export default function MissionManagerPage() {
   const { data: missions = [], isLoading } = useAdminMissions();
@@ -104,14 +174,16 @@ export default function MissionManagerPage() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<AdminMissionDto | null>(null);
+  const [selectedPreset, setSelectedPreset] =
+    useState<string>("daily_play_generic");
   const [createForm, setCreateForm] = useState(() => ({
     category: "DAILY",
-    title: "",
+    title: "일일 게임 플레이 1회",
     condition: "",
     rewardType: "VAULT",
     rewardAmount: 100,
     targetValue: 1,
-    logicKey: `DAILY_${Date.now()}`,
+    logicKey: "DAILY_DAILY_PLAY_GENERIC_1",
     actionType: "PLAY_GAME",
   }));
   const [createError, setCreateError] = useState<string | null>(null);
@@ -124,9 +196,38 @@ export default function MissionManagerPage() {
   const resetProgressMutation = useAdminResetUserMissionProgress();
   const claimRewardMutation = useAdminClaimUserMissionReward();
 
-  const logicKeySet = new Set(
-    missions.map((m) => String(m.logicKey || "").toUpperCase()),
-  );
+  const findLogicKeyConflict = (logicKey: string, excludeId?: number) => {
+    const normalized = normalizeLogicKey(logicKey);
+    if (!normalized) return null;
+    return (
+      missions.find(
+        (m) =>
+          (excludeId == null || m.id !== excludeId) &&
+          normalizeLogicKey(m.logicKey) === normalized,
+      ) || null
+    );
+  };
+
+  /**
+   * 논리적 중복 검사: 같은 카테고리 + 같은 액션타입 + 같은 목표값이면 중복
+   * logicKey가 달라도 실제로는 같은 미션이므로 경고
+   */
+  const findLogicalDuplicate = (
+    category: string,
+    actionType: string,
+    targetValue: number,
+    excludeId?: number,
+  ) => {
+    return (
+      missions.find(
+        (m) =>
+          (excludeId == null || m.id !== excludeId) &&
+          m.category === category &&
+          m.actionType === actionType &&
+          m.targetValue === targetValue,
+      ) || null
+    );
+  };
 
   const normalizeLogicKey = (value: string) =>
     String(value || "")
@@ -144,8 +245,26 @@ export default function MissionManagerPage() {
       setCreateError("로직 키를 입력하세요.");
       return;
     }
-    if (logicKeySet.has(nextLogicKey)) {
-      setCreateError("이미 사용 중인 로직 키입니다.");
+
+    // 1. logicKey 중복 검사
+    const keyConflict = findLogicKeyConflict(nextLogicKey);
+    if (keyConflict) {
+      setCreateError(
+        `이미 사용 중인 로직 키입니다. (충돌: ${keyConflict.category} / ${keyConflict.title})`,
+      );
+      return;
+    }
+
+    // 2. 논리적 중복 검사 (같은 카테고리+액션+목표값)
+    const logicalDup = findLogicalDuplicate(
+      createForm.category,
+      createForm.actionType,
+      createForm.targetValue,
+    );
+    if (logicalDup) {
+      setCreateError(
+        `동일한 조건의 미션이 이미 존재합니다: "${logicalDup.title}" (${logicalDup.category}, 목표 ${logicalDup.targetValue})`,
+      );
       return;
     }
 
@@ -154,14 +273,15 @@ export default function MissionManagerPage() {
       {
         onSuccess: () => {
           setIsCreateOpen(false);
+          setSelectedPreset("daily_play_generic");
           setCreateForm({
             category: "DAILY",
-            title: "",
+            title: "일일 게임 플레이 1회",
             condition: "",
             rewardType: "VAULT",
             rewardAmount: 100,
             targetValue: 1,
-            logicKey: `DAILY_${Date.now()}`,
+            logicKey: "DAILY_DAILY_PLAY_GENERIC_1",
             actionType: "PLAY_GAME",
           });
           setCreateError(null);
@@ -186,10 +306,7 @@ export default function MissionManagerPage() {
     if (!editForm) return;
     setEditError(null);
     const nextLogicKey = normalizeLogicKey(editForm.logicKey);
-    const isDuplicate = missions.some(
-      (m) =>
-        m.id !== editForm.id && normalizeLogicKey(m.logicKey) === nextLogicKey,
-    );
+    const conflict = findLogicKeyConflict(nextLogicKey, editForm.id);
     if (!editForm.title.trim()) {
       setEditError("제목을 입력하세요.");
       return;
@@ -198,8 +315,10 @@ export default function MissionManagerPage() {
       setEditError("로직 키를 입력하세요.");
       return;
     }
-    if (isDuplicate) {
-      setEditError("이미 사용 중인 로직 키입니다.");
+    if (conflict) {
+      setEditError(
+        `이미 사용 중인 로직 키입니다. (충돌: ${conflict.category} / ${conflict.title})`,
+      );
       return;
     }
     updateMutation.mutate(
@@ -228,6 +347,76 @@ export default function MissionManagerPage() {
 
   // Filter missions by active tab
   const filteredMissions = missions.filter((m) => m.category === activeTab);
+
+  const renderMissionAssemblyPreview = (vars: {
+    category: string;
+    logicKey: string;
+    actionType?: string | null;
+    targetValue: number;
+    condition?: string | null;
+  }) => {
+    const golden = isGoldenHourLogicKey(vars.logicKey);
+    const action = String(vars.actionType || "").trim() || "(없음)";
+    const catMeaning = getCategoryMeaning(vars.category);
+    const warnings: string[] = [];
+
+    if (golden && action !== "PLAY_GAME") {
+      warnings.push(
+        "골든아워 미션은 logicKey에 golden_hour 포함으로 판정됩니다. 게임플레이 기반이면 Action Type=PLAY_GAME를 권장합니다.",
+      );
+    }
+    if (vars.category === "DAILY" && !action) {
+      warnings.push(
+        "DAILY는 리셋 정책(09:00 KST)이며, 트리거는 Action Type로 결정됩니다.",
+      );
+    }
+
+    return (
+      <div className="col-span-4 mt-2 rounded-lg border border-white/10 bg-white/5 p-3">
+        <div className="text-xs font-semibold text-zinc-200">
+          미션 조립 프리뷰
+        </div>
+        <div className="mt-2 grid gap-1 text-xs text-zinc-300">
+          <div>
+            <span className="text-zinc-400">카테고리(리셋):</span> {catMeaning}
+          </div>
+          <div>
+            <span className="text-zinc-400">트리거(Action Type):</span> {action}
+            <span className="ml-2 text-zinc-500">
+              (게임 3종은 BE에서 update_progress("PLAY_GAME") 호출)
+            </span>
+          </div>
+          <div>
+            <span className="text-zinc-400">logicKey(전역 UNIQUE):</span>{" "}
+            {normalizeLogicKey(vars.logicKey) || "(없음)"}
+          </div>
+          <div>
+            <span className="text-zinc-400">목표:</span>{" "}
+            {Number(vars.targetValue || 0).toLocaleString()}
+          </div>
+          <div>
+            <span className="text-zinc-400">설명(표시용):</span>{" "}
+            {vars.condition?.trim() || "(비어있음)"}
+            <span className="ml-2 text-zinc-500">(실제 로직 조건이 아님)</span>
+          </div>
+          <div>
+            <span className="text-zinc-400">골든아워 판정:</span>{" "}
+            {golden ? "YES (logicKey contains golden_hour)" : "NO"}
+          </div>
+        </div>
+        {warnings.length > 0 && (
+          <div className="mt-2 rounded-md border border-amber-400/20 bg-amber-500/10 p-2 text-xs text-amber-200">
+            {warnings[0]}
+          </div>
+        )}
+        <div className="mt-2 text-[11px] text-zinc-500">
+          핵심: 카테고리=리셋정책, Action Type=진행 트리거, logicKey=식별자(전역
+          UNIQUE). 골든하워는 별도 스케줄이 아니라 logicKey 규칙+설정값으로
+          게이트됩니다.
+        </div>
+      </div>
+    );
+  };
 
   const handleUpdate = (
     id: number,
@@ -678,15 +867,73 @@ export default function MissionManagerPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            {/* Step 1: 프리셋 선택 (가장 먼저) */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right text-zinc-400 font-semibold">
+                1. 프리셋
+              </Label>
+              <Select
+                value={selectedPreset}
+                onValueChange={(val) => {
+                  setSelectedPreset(val);
+                  const recommendedActionType =
+                    PRESET_RECOMMENDED_ACTION_TYPE[val];
+                  const newLogicKey = generateLogicKey(
+                    val,
+                    createForm.category,
+                    createForm.targetValue,
+                  );
+                  const newTitle = generateTitle(
+                    val,
+                    createForm.category,
+                    createForm.targetValue,
+                  );
+                  setCreateForm({
+                    ...createForm,
+                    logicKey: newLogicKey,
+                    title: newTitle,
+                    actionType: recommendedActionType || createForm.actionType,
+                  });
+                }}
+              >
+                <SelectTrigger className="col-span-3 bg-emerald-500/10 border-emerald-500/30">
+                  <SelectValue placeholder="프리셋을 먼저 선택하세요..." />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                  {LOGIC_KEY_PRESETS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Step 2: 카테고리 선택 */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="category" className="text-right text-zinc-400">
-                카테고리
+                2. 카테고리
               </Label>
               <Select
                 value={createForm.category}
-                onValueChange={(val) =>
-                  setCreateForm({ ...createForm, category: val })
-                }
+                onValueChange={(val) => {
+                  const newLogicKey = generateLogicKey(
+                    selectedPreset,
+                    val,
+                    createForm.targetValue,
+                  );
+                  const newTitle = generateTitle(
+                    selectedPreset,
+                    val,
+                    createForm.targetValue,
+                  );
+                  setCreateForm({
+                    ...createForm,
+                    category: val,
+                    logicKey: newLogicKey,
+                    title: newTitle,
+                  });
+                }}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue />
@@ -694,16 +941,17 @@ export default function MissionManagerPage() {
                 <SelectContent className="bg-[#18181B] border-white/10 text-white">
                   {CATEGORIES.map((cat) => (
                     <SelectItem key={cat} value={cat}>
-                      {cat}
+                      {cat} ({getCategoryMeaning(cat)})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Step 3: 제목 (자동 생성되지만 수정 가능) */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="title" className="text-right text-zinc-400">
-                제목
+                3. 제목
               </Label>
               <Input
                 id="title"
@@ -712,45 +960,68 @@ export default function MissionManagerPage() {
                   setCreateForm({ ...createForm, title: e.target.value })
                 }
                 className="col-span-3"
+                placeholder="자동 생성됨 (수정 가능)"
               />
             </div>
 
+            {/* 로직 키 (자동 생성, 읽기 전용 표시) */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="logicKey" className="text-right text-zinc-400">
                 로직 키
               </Label>
-              <Input
-                id="logicKey"
-                value={createForm.logicKey}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, logicKey: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="PLAY_ROULETTE, ATTENDANCE..."
-              />
-              <div className="col-start-2 col-span-3">
-                <Select
-                  onValueChange={(val) =>
-                    setCreateForm({ ...createForm, logicKey: val })
-                  }
-                >
-                  <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10">
-                    <SelectValue placeholder="프리셋 선택..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    {LOGIC_KEY_PRESETS.map((p) => (
-                      <SelectItem key={p.value} value={p.value}>
-                        {p.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="col-span-3 flex items-center gap-2">
+                <Input
+                  id="logicKey"
+                  value={createForm.logicKey}
+                  readOnly
+                  className="bg-white/5 border-white/10 text-zinc-400 cursor-not-allowed"
+                />
+                <span className="text-xs text-zinc-500 whitespace-nowrap">
+                  자동 생성
+                </span>
               </div>
-              {createError && (
-                <p className="col-span-4 text-xs text-red-400 text-right">
-                  {createError}
-                </p>
-              )}
+            </div>
+
+            {createError && (
+              <div className="col-span-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+                ⚠️ {createError}
+              </div>
+            )}
+
+            {/* Step 4: 목표 횟수 (변경 시 logicKey와 제목 자동 업데이트) */}
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label
+                htmlFor="targetValue"
+                className="text-right text-zinc-400 font-semibold"
+              >
+                4. 목표 횟수
+              </Label>
+              <Input
+                id="targetValue"
+                type="number"
+                min={1}
+                value={createForm.targetValue}
+                onChange={(e) => {
+                  const newTarget = Math.max(1, parseInt(e.target.value) || 1);
+                  const newLogicKey = generateLogicKey(
+                    selectedPreset,
+                    createForm.category,
+                    newTarget,
+                  );
+                  const newTitle = generateTitle(
+                    selectedPreset,
+                    createForm.category,
+                    newTarget,
+                  );
+                  setCreateForm({
+                    ...createForm,
+                    targetValue: newTarget,
+                    logicKey: newLogicKey,
+                    title: newTitle,
+                  });
+                }}
+                className="col-span-3 bg-emerald-500/10 border-emerald-500/30"
+              />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
@@ -778,7 +1049,7 @@ export default function MissionManagerPage() {
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="condition" className="text-right text-zinc-400">
-                설명/조건
+                설명(표시용)
               </Label>
               <Input
                 id="condition"
@@ -787,26 +1058,17 @@ export default function MissionManagerPage() {
                   setCreateForm({ ...createForm, condition: e.target.value })
                 }
                 className="col-span-3"
+                placeholder="유저에게 보여지는 설명 (선택사항)"
               />
             </div>
 
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="targetValue" className="text-right text-zinc-400">
-                목표 점수
-              </Label>
-              <Input
-                id="targetValue"
-                type="number"
-                value={createForm.targetValue}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    targetValue: parseInt(e.target.value),
-                  })
-                }
-                className="col-span-3"
-              />
-            </div>
+            {renderMissionAssemblyPreview({
+              category: createForm.category,
+              logicKey: createForm.logicKey,
+              actionType: createForm.actionType,
+              targetValue: createForm.targetValue,
+              condition: createForm.condition,
+            })}
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="reward" className="text-right text-zinc-400">
@@ -916,9 +1178,16 @@ export default function MissionManagerPage() {
                 />
                 <div className="col-start-2 col-span-3">
                   <Select
-                    onValueChange={(val) =>
-                      setEditForm({ ...editForm, logicKey: val })
-                    }
+                    onValueChange={(val) => {
+                      const recommendedActionType =
+                        PRESET_RECOMMENDED_ACTION_TYPE[val];
+                      setEditForm({
+                        ...editForm,
+                        logicKey: val,
+                        actionType:
+                          recommendedActionType || editForm.actionType,
+                      });
+                    }}
                   >
                     <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10">
                       <SelectValue placeholder="프리셋 선택..." />
@@ -959,7 +1228,7 @@ export default function MissionManagerPage() {
               )}
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">설명/조건</Label>
+                <Label className="text-right text-zinc-400">설명(표시용)</Label>
                 <Input
                   value={editForm.condition}
                   onChange={(e) =>
@@ -968,6 +1237,14 @@ export default function MissionManagerPage() {
                   className="col-span-3"
                 />
               </div>
+
+              {renderMissionAssemblyPreview({
+                category: editForm.category,
+                logicKey: editForm.logicKey,
+                actionType: editForm.actionType,
+                targetValue: editForm.targetValue,
+                condition: editForm.condition,
+              })}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right text-zinc-400">목표 점수</Label>
