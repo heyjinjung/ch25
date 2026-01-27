@@ -89,20 +89,25 @@ class V2MissionService:
             return mission.start_time <= current_time <= mission.end_time
         return True
 
-    def get_user_missions(self, user_id: int) -> List[MissionWithProgress]:
-        """Fetch active missions with user's current progress."""
+    def get_user_missions(self, user_id: int, category: Optional[MissionCategory] = None) -> List[MissionWithProgress]:
+        """Fetch active missions with user's current progress, optionally filtered by category."""
         now_tz = self._now_tz()
         today = now_tz.date()
         
         # 1. Fetch all active missions
-        missions = self.db.execute(
-            select(Mission).where(
-                Mission.is_active == True,
-                and_(
-                    or_(Mission.start_date == None, Mission.start_date <= datetime.combine(today, datetime.min.time())),
-                    or_(Mission.end_date == None, Mission.end_date >= datetime.combine(today, datetime.max.time()))
-                )
+        conditions = [
+            Mission.is_active == True,
+            and_(
+                or_(Mission.start_date == None, Mission.start_date <= datetime.combine(today, datetime.min.time())),
+                or_(Mission.end_date == None, Mission.end_date >= datetime.combine(today, datetime.max.time()))
             )
+        ]
+        
+        if category:
+            conditions.append(Mission.category == category)
+
+        missions = self.db.execute(
+            select(Mission).where(*conditions)
         ).scalars().all()
         
         result = []

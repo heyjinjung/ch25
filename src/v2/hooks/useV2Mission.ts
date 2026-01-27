@@ -12,10 +12,10 @@ import {
 // Mission Hooks
 // ============================================================================
 
-export function useV2Missions() {
+export function useV2Missions(category?: string) {
   return useQuery({
-    queryKey: ["v2", "missions"],
-    queryFn: () => getV2Missions(),
+    queryKey: ["v2", "missions", category],
+    queryFn: () => getV2Missions(category),
     staleTime: 30000, // 30 seconds
   });
 }

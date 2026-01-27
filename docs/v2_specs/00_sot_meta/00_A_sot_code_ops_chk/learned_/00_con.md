@@ -8,6 +8,15 @@
   - `src/v2/hooks/useV2Shop.ts` 수정: `['v2-vault-status']`, `['v2-user-me']` 무효화로 즉시 재조회
 - **검증**: 프론트 빌드 통과 및 DB 차감 확인
 
+### [2026-01-27] 출금조건 모달 "오늘 사용 금액" 상점 구매 반영 누락 수정 ✅
+- **문제**: 상점에서 VAULT 결제 후에도 `GET /api/v2/vault/status`의 `daily_vault_spent`가 0으로 유지
+- **원인**: V2 상점 구매 경로가 잔액 차감만 수행하고 `User.vault_spent_today`(=daily_vault_spent) 누적/원장 기록이 누락
+- **해결**:
+  - `app/v2/services/vault_service.py`에 소비 전용 차감 로직 추가(운영일 KST 09:00 리셋 포함)
+  - `app/v2/services/shop_service.py`에서 VAULT 결제 시 해당 로직 사용
+- **검증**: 컨테이너 재시작 후 소비 발생 시 `daily_vault_spent` 증가 및 `VaultLedger(ref_type=SHOP)` 기록 확인
+- **문서**: `learned_/vault/20260127_vault_today_spent_shop_purchase_update.md`
+
 ## [2026-01-26 구현 완료 항목]
 
 ### [2026-01-26] V2 유저 삭제/퍼지 서비스 신규 구현 ✅

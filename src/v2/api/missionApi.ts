@@ -128,10 +128,10 @@ const mapBackendStreakInfo = (
   };
 };
 
-export const getV2Missions = async (): Promise<MissionListResponse> => {
+export const getV2Missions = async (category?: string): Promise<MissionListResponse> => {
   try {
-    const response =
-      await v2Client.get<BackendMissionListResponse>("/api/v2/mission/");
+    const url = category ? `/api/v2/mission/?category=${category}` : "/api/v2/mission/";
+    const response = await v2Client.get<BackendMissionListResponse>(url);
     const missions = response.data.missions.map(mapBackendMission);
     const streak_info = mapBackendStreakInfo(
       response.data.streak_info ?? response.data.streak,

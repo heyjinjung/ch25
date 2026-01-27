@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 // Link removed
 import { ChevronDown, ChevronUp, Gamepad2, Coins, ExternalLink } from "lucide-react";
-import clsx from "clsx";
+import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
 
 import AnimatedNumber from "../../components/common/AnimatedNumber";
@@ -133,7 +133,7 @@ const LevelTowerPage: React.FC = () => {
               return (
                 <div
                   key={floor.level}
-                  className={clsx(
+                  className={cn(
                     "relative px-4 py-4 border-b border-white/5 transition-all duration-500",
                     isCurrent && "bg-emerald-500/10",
                     isCompleted && "bg-white/5 opacity-60",
@@ -144,19 +144,19 @@ const LevelTowerPage: React.FC = () => {
                   <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={clsx(
+                        className={cn(
                           "w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden bg-black/40",
                           isCurrent ? "border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.4)]" : "border-white/10"
                         )}
                       >
-                         <Coins className={clsx("w-5 h-5", isCurrent ? "text-emerald-400" : "text-zinc-500")} />
+                         <Coins className={cn("w-5 h-5", isCurrent ? "text-emerald-400" : "text-zinc-500")} />
                       </div>
 
                       <div>
-                        <p className={clsx("font-black", isCurrent ? "text-emerald-300 text-xl" : "text-white/80 text-base")}>
+                        <p className={cn("font-black", isCurrent ? "text-emerald-300 text-xl" : "text-white/80 text-base")}>
                           Lv.{floor.level}
                         </p>
-                        <p className={clsx("text-xs font-bold", isCurrent ? "text-white" : "text-white/50")}>
+                        <p className={cn("text-xs font-bold", isCurrent ? "text-white" : "text-white/50")}>
                           {floor.reward_label}
                         </p>
                       </div>
@@ -182,7 +182,7 @@ const LevelTowerPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between mt-1.5">
                         <span className="text-[10px] text-white/40 font-mono">
-                          <AnimatedNumber value={view.currentXp} /> XP
+                          <AnimatedNumber value={Number(view.currentXp)} /> XP
                         </span>
                         <span className="text-[10px] text-emerald-400 font-bold">
                           {view.progressPct}%

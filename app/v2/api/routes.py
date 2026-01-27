@@ -13,6 +13,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.v2.api.deps import get_current_user_id
 from app.models.admin_message import AdminMessageInbox
 from app.models.game_wallet import GameTokenType
+from app.models.mission import MissionCategory
 from app.models.inventory import UserInventoryItem
 from app.models.user import User
 from app.v2.models.user import V2User
@@ -346,6 +347,7 @@ def queue_golden_reengagement(
 
 @router.get("/mission/", response_model=MissionListResponse, tags=["v2-mission"])
 def list_missions(
+    category: Optional[MissionCategory] = None,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> MissionListResponse:
@@ -354,12 +356,12 @@ def list_missions(
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     service = V2MissionService(db)
-    missions = service.get_user_missions(master_user_id)
+    missions = service.get_user_missions(master_user_id, category=category)
     streak_info = service.get_streak_info(master_user_id)
     return MissionListResponse(missions=missions, streak_info=streak_info)
 
 
-@router.post("/mission/{mission_id}/claim", tags=["v2-mission"])
+@router.post("/mission/{mission_id:int}/claim", tags=["v2-mission"])
 def claim_mission(
     mission_id: int,
     db: Session = Depends(get_db),
