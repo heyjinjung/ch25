@@ -50,6 +50,17 @@ V2 팀배틀(Team Battle)의 게임 규칙, 데이터 모델, API 스키마를 �
 - `GET /api/team-battle/teams/{team_id}/contributors/me` → `ContributorEntry | None`
 - `GET /api/team-battle/teams` → `list[TeamResponse]`
 
+### 5.4 어드민 멤버 상세/기여도 관리 (V2)
+- `GET /api/v2/admin/team-battle/teams/{team_id}/members`
+	- 팀 멤버 상세 목록 (가입일, 기여도 합산, 최근 기여일 포함)
+- `GET /api/v2/admin/team-battle/teams/{team_id}/members/{user_id}/contributions`
+	- 멤버 기여도 내역(TeamEventLog) 조회
+- `PATCH /api/v2/admin/team-battle/members/{user_id}/joined-at`
+	- 멤버 가입일 수정 (감사 로그 필수)
+- `POST /api/v2/admin/team-battle/members/contributions/adjust`
+	- 기여도 조정 로그 추가 (TeamEventLog action=`ADMIN_ADJUST` 기본)
+	- 기존 로그 수정/삭제는 금지 (무결성 유지)
+
 ## 6. SoT: 핵심 규칙
 **서비스 기준**: [app/services/team_battle_service.py](../../../app/services/team_battle_service.py#L17-L205)
 

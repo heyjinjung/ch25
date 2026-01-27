@@ -37,6 +37,16 @@
 ### 3.5 리더보드
 - Endpoint: `GET /api/v2/team-battle/teams/leaderboard`
 
+### 3.6 어드민 멤버 상세/기여도 관리 (Admin)
+- Endpoint: `GET /api/v2/admin/team-battle/teams/{team_id}/members`
+	- 팀 멤버 상세 목록 (가입일, 기여도 합산, 최근 기여일)
+- Endpoint: `GET /api/v2/admin/team-battle/teams/{team_id}/members/{user_id}/contributions`
+	- 멤버 기여도 내역(TeamEventLog)
+- Endpoint: `PATCH /api/v2/admin/team-battle/members/{user_id}/joined-at`
+	- 멤버 가입일 수정
+- Endpoint: `POST /api/v2/admin/team-battle/members/contributions/adjust`
+	- 기여도 조정 로그 추가 (기존 로그 수정/삭제 금지)
+
 ## 4. 오류 규칙 (Errors)
 - `TEAM_NOT_FOUND`
 - `ALREADY_JOINED`
