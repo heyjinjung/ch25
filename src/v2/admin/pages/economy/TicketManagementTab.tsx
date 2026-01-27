@@ -155,7 +155,7 @@ export default function TicketManagementTab() {
     }
 
     const response = await getAdminUserList({ search: normalized, limit: 1 });
-    if (response.users && response.users.length > 0) {
+    if (response.users && response.users.length > 0 && response.users[0]) {
       return response.users[0].id;
     }
     return undefined;
@@ -196,7 +196,7 @@ export default function TicketManagementTab() {
         search: String(resolved),
         limit: 1,
       });
-      if (response.users && response.users.length > 0) {
+      if (response.users && response.users.length > 0 && response.users[0]) {
         setTargetUserNickname(response.users[0].nickname || "");
       } else {
         setTargetUserNickname("유저를 찾을 수 없음");
@@ -364,7 +364,9 @@ export default function TicketManagementTab() {
             <div className="text-2xl font-bold text-zinc-300">
               {stats.totalUsed.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">사용자가 소모한 건수</p>
+            <p className="text-[10px] text-zinc-500 mt-1">
+              사용자가 소모한 건수
+            </p>
           </CardContent>
         </Card>
 

@@ -91,7 +91,10 @@ export default function RouletteConfigPage() {
     setLocalConfig((prev) => {
       if (!prev) return null;
       const newSegments = [...prev.segments];
-      newSegments[index] = { ...newSegments[index], [field]: value };
+      const target = newSegments[index];
+      if (target) {
+        newSegments[index] = { ...target, [field]: value };
+      }
       return { ...prev, segments: newSegments };
     });
     setIsDirty(true);

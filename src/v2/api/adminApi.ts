@@ -1829,7 +1829,7 @@ export const getRouletteConfigs = async (): Promise<
           (((seg.slotIndex ?? seg.slot_index ?? 0) % SEGMENT_COLORS.length) +
             SEGMENT_COLORS.length) %
             SEGMENT_COLORS.length
-        ],
+        ] ?? "#EF4444",
     })),
   }));
 };
@@ -2033,7 +2033,7 @@ export const getLotteryConfig = async (): Promise<AdminLotteryConfigDto> => {
       rewardType: prize.rewardType ?? prize.reward_type ?? "NONE",
       rewardAmount: prize.rewardAmount ?? prize.reward_amount ?? 0,
       isActive: prize.isActive ?? prize.is_active ?? false,
-      color: PRIZE_COLORS[index % PRIZE_COLORS.length],
+      color: PRIZE_COLORS[index % PRIZE_COLORS.length] ?? "#FDBA74",
     })),
   };
 };

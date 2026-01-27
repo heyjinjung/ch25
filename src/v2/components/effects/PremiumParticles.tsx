@@ -40,12 +40,20 @@ const PremiumParticles = ({ type, intensity = 15 }: PremiumParticlesProps) => {
     // Create floating particles
     for (let i = 0; i < intensity; i++) {
       const particle = document.createElement('div');
-      const size = gsap.utils.random(particleConfig.size[0], particleConfig.size[1]);
+      const size = gsap.utils.random(
+        particleConfig.size[0] ?? 4,
+        particleConfig.size[1] ?? 8,
+      );
 
       particle.className = 'absolute rounded-full pointer-events-none';
       particle.style.width = `${size}px`;
       particle.style.height = `${size}px`;
-      particle.style.backgroundColor = particleConfig.colors[Math.floor(Math.random() * particleConfig.colors.length)];
+      particle.style.backgroundColor =
+        particleConfig.colors[
+          Math.floor(Math.random() * particleConfig.colors.length)
+        ] ??
+        particleConfig.colors[0] ??
+        "#FFD700";
       particle.style.boxShadow = `0 0 ${size * 2}px ${particleConfig.glow}`;
       particle.style.left = `${Math.random() * 100}%`;
       particle.style.top = `${Math.random() * 100}%`;

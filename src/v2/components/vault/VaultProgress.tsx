@@ -20,8 +20,8 @@ export const VaultProgress: React.FC<VaultProgressProps> = ({
   const progressRef = useRef<HTMLDivElement>(null);
   // 현재 목표 단계 계산 (최대 목표 초과 시 마지막 목표 유지)
   const currentGoalIndex = Math.min(withdrawalCount, VAULT_GOALS.length - 1);
-  const goalAmount = VAULT_GOALS[currentGoalIndex];
-  const nextGoalAmount = VAULT_GOALS[currentGoalIndex + 1];
+  const goalAmount = VAULT_GOALS[currentGoalIndex] || 10000;
+  const nextGoalAmount = VAULT_GOALS[currentGoalIndex + 1] || goalAmount;
   const percentage = Math.min((currentAmount / goalAmount) * 100, 100);
   const remaining = Math.max(goalAmount - currentAmount, 0);
 

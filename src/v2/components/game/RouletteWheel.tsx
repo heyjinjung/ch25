@@ -137,7 +137,9 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
       let bestIndex = 0;
       let bestDistance = Number.POSITIVE_INFINITY;
       for (let i = 0; i < candidates.length; i += 1) {
-        const distance = Math.abs(value - candidates[i]);
+        const candidate = candidates[i];
+        if (candidate === undefined) continue;
+        const distance = Math.abs(value - candidate);
         if (distance < bestDistance) {
           bestDistance = distance;
           bestIndex = i;
@@ -161,7 +163,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
       const widthBucketPx = [40, 48, 56, 64, 72, 80] as const;
 
       const radiusIdx = pickNearestIndex(radiusPx, radiusBucketPx);
-      const chosenRadiusPx = radiusBucketPx[radiusIdx];
+      const chosenRadiusPx = radiusBucketPx[radiusIdx] ?? 62;
 
       const safeAngleRad = ((anglePerSegment - 12) * Math.PI) / 180;
       const safeChord = 2 * chosenRadiusPx * Math.sin(safeAngleRad / 2);

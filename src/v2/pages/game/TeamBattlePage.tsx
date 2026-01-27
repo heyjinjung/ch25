@@ -100,11 +100,14 @@ const TeamBattlePage: React.FC = () => {
   };
 
   // Calculate Team Scores for Gauge
-  const redScore = teams[0]
-    ? entries.find((l) => l.team.id === teams[0].id)?.season_score || 0
+  const redTeam = teams[0];
+  const blueTeam = teams[1];
+
+  const redScore = redTeam
+    ? entries.find((l) => l.team.id === redTeam.id)?.season_score || 0
     : 0;
-  const blueScore = teams[1]
-    ? entries.find((l) => l.team.id === teams[1].id)?.season_score || 0
+  const blueScore = blueTeam
+    ? entries.find((l) => l.team.id === blueTeam.id)?.season_score || 0
     : 0;
   const totalScore = redScore + blueScore || 1;
   const redPercent = Math.round((redScore / totalScore) * 100);

@@ -57,8 +57,8 @@ const getFriendlyItemName = (type: string) => {
   // 2. Gifticon Regex (BRAND_GIFTICON_AMOUNT)
   const gifticonRegex = /^([A-Z]+)_GIFTICON_(\d+)$/;
   const match = type.match(gifticonRegex);
-  if (match) {
-    const brand = match[1];
+  if (match && match[2]) {
+    const brand = match[1] || "Unknown";
     const amount = parseInt(match[2]).toLocaleString();
     return `${brand} ${amount}원 깁콘`;
   }

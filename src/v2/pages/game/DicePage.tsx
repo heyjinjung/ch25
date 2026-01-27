@@ -119,8 +119,8 @@ const DicePage = () => {
 
         // We set the final values, and turn off rolling.
         // The ThreeDDice component will see isRolling=false + new value, and animate landing.
-        setPlayerDice(game.user_dice[0]);
-        setOpponentDice(game.dealer_dice[0]);
+        setPlayerDice(game.user_dice[0] ?? 1);
+        setOpponentDice(game.dealer_dice[0] ?? 1);
 
         // Let's keep isRolling true for a tiny bit longer if we want guaranteed spin time,
         // but the API latency usually provides that "suspense" time.

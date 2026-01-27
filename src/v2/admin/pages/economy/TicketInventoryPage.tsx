@@ -177,7 +177,7 @@ export default function TicketInventoryPage() {
         search: normalized,
         limit: 1,
       });
-      if (response.users && response.users.length > 0) {
+      if (response.users && response.users.length > 0 && response.users[0]) {
         setSearchUserId(response.users[0].id);
       } else {
         alert("해당 닉네임의 유저를 찾을 수 없습니다.");
@@ -198,7 +198,7 @@ export default function TicketInventoryPage() {
         search: normalized,
         limit: 1,
       });
-      if (response.users && response.users.length > 0) {
+      if (response.users && response.users.length > 0 && response.users[0]) {
         const foundUser = response.users[0];
         setTargetUserNickname(foundUser.nickname || "");
         setTargetUserId(foundUser.id.toString()); // Auto-fill ID

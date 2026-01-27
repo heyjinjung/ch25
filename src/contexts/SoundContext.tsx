@@ -249,6 +249,7 @@ export const SoundProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const playNext = () => {
         const file = sources[currentIndex];
+        if (!file) return;
 
         // Clean up previous sound if it exists
         if (bgmRef.current) {

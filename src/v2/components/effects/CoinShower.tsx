@@ -46,7 +46,7 @@ const CoinShower = ({ active, coinType = 'normal', duration = 2500, intensity = 
     for (let i = 0; i < intensity; i++) {
       const coin = document.createElement('div');
       coin.className = 'absolute w-6 h-6 rounded-full pointer-events-none';
-      coin.style.backgroundColor = config.colors[Math.floor(Math.random() * config.colors.length)];
+      coin.style.backgroundColor = config.colors[Math.floor(Math.random() * config.colors.length)] ?? config.colors[0] ?? '#FACC15';
       coin.style.boxShadow = `0 0 20px rgba(255,215,0,0.6)`;
       coin.style.left = `${Math.random() * 100}%`;
       coin.style.top = `-20px`;

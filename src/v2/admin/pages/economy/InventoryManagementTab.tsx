@@ -168,7 +168,7 @@ export default function InventoryManagementTab() {
     }
 
     const response = await getAdminUserList({ search: normalized, limit: 1 });
-    if (response.users && response.users.length > 0) {
+    if (response.users && response.users.length > 0 && response.users[0]) {
       return response.users[0].id;
     }
     return undefined;
@@ -209,7 +209,7 @@ export default function InventoryManagementTab() {
         search: String(resolved),
         limit: 1,
       });
-      if (response.users && response.users.length > 0) {
+      if (response.users && response.users.length > 0 && response.users[0]) {
         const foundUser = response.users[0];
         setTargetUserNickname(foundUser.nickname || "");
         setTargetUserId(foundUser.id.toString());
@@ -381,7 +381,9 @@ export default function InventoryManagementTab() {
             <div className="text-2xl font-bold text-zinc-300">
               {stats.totalUsed.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">User Consumption Count</p>
+            <p className="text-[10px] text-zinc-500 mt-1">
+              User Consumption Count
+            </p>
           </CardContent>
         </Card>
 
@@ -395,7 +397,9 @@ export default function InventoryManagementTab() {
             <div className="text-2xl font-bold text-red-400">
               {stats.totalRevoked.toLocaleString()}
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">Admin Revoked Count</p>
+            <p className="text-[10px] text-zinc-500 mt-1">
+              Admin Revoked Count
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -742,7 +746,9 @@ export default function InventoryManagementTab() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-400">Edit Expiration (Optional)</Label>
+              <Label className="text-zinc-400">
+                Edit Expiration (Optional)
+              </Label>
               <Input
                 type="datetime-local"
                 className="bg-black/50 border-white/10 color-scheme-dark"

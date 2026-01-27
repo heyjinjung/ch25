@@ -21,7 +21,7 @@ def record_game_play_earn_event(
     from app.services.vault_service import VaultService as _V1VaultService
 
     v1 = _V1VaultService()
-    return v1.record_game_play_earn_event(
+    new_balance = v1.record_game_play_earn_event(
         db,
         user_id=user_id,
         game_type=game_type,
@@ -31,6 +31,19 @@ def record_game_play_earn_event(
         payout_raw=payout_raw,
         now=now,
     )
+
+    # V2 Native Sync: Sync absolute balance from legacy User to V2User
+    from app.v2.models.user import V2User
+    from app.models.user import User
+    v2_user = db.get(V2User, user_id)
+    if v2_user:
+        user = db.get(User, user_id)
+        if user:
+            v2_user.vault_locked_balance = int(user.vault_locked_balance or 0)
+            db.add(v2_user)
+            db.flush()
+    
+    return int(new_balance)
 
 
 def handle_deposit_increase_signal(
@@ -46,7 +59,7 @@ def handle_deposit_increase_signal(
     from app.services.vault_service import VaultService as _V1VaultService
 
     v1 = _V1VaultService()
-    return v1.handle_deposit_increase_signal(
+    new_balance = v1.handle_deposit_increase_signal(
         db,
         user_id=user_id,
         deposit_delta=deposit_delta,
@@ -55,3 +68,19 @@ def handle_deposit_increase_signal(
         now=now,
         commit=commit,
     )
+
+    # V2 Native Sync: Sync absolute balance from legacy User to V2User
+    from app.v2.models.user import V2User
+    from app.models.user import User
+    v2_user = db.get(V2User, user_id)
+    if v2_user:
+        user = db.get(User, user_id)
+        if user:
+            v2_user.vault_locked_balance = int(user.vault_locked_balance or 0)
+            db.add(v2_user)
+            if commit:
+                db.commit()
+            else:
+                db.flush()
+            
+    return int(new_balance)
