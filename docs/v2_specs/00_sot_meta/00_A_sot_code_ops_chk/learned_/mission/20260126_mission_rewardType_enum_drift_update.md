@@ -79,3 +79,28 @@
     - **Verification Error**: Test script looked for the input string ("TICKET_ROULETTE") in the wallet, incorrectly assuming 1:1 storage without mapping.
 - **Learned Principle**: Validation scripts must verify against **Database Source of Truth (GameTokenType)**, not the Input Interface (MissionRewardType).
 - **Fix**: Updated validation logic to compare against `GameTokenType.ROULETTE_TICKET`.
+
+---
+
+## 6. MissionsPage 로딩 실패 (streak schema drift) 업데이트 (2026-01-27)
+
+### Trouble (증상)
+- 유저 미션 화면에서 “미션을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.”가 표시됨.
+- 브라우저 콘솔:
+  - `TypeError: Cannot read properties of undefined (reading 'streak_days')`
+  - 위치: `src/v2/api/missionApi.ts` 내부 파서
+
+### Root Cause (원인)
+- V2 미션 API의 스트릭 정보가 프론트 가정과 다르게 직렬화/필드명이 변경됨.
+  - 프론트 가정: `streak_info.streak_days`
+  - 백엔드 실제 응답(현재): `streak.current_streak`
+- 즉, FE/BE 계약 드리프트로 인해 `streak_info`가 없거나, `streak_days`가 없는 경우 런타임 에러가 발생.
+
+### Fix (해결)
+- FE 파서를 백엔드 실제 응답과 호환되도록 보강:
+  - `streak_info ?? streak`로 입력을 수용
+  - `current_streak ?? streak_days ?? 0`로 안전 파싱
+
+### Verification (검증)
+- `npm run build` 통과
+- 미션 페이지 진입 시 `streak_days` undefined 런타임 에러가 발생하지 않아야 함

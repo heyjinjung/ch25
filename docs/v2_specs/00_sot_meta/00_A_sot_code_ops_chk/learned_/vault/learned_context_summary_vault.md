@@ -42,6 +42,19 @@ Non-zero available balance users: 2명
 
 ---
 
+## [2026-01-27 구현 완료 항목]
+
+### G. 상점 구매가 "오늘 사용 금액"에 반영 ✅
+- **문제**: V2 상점 구매(VAULT 차감) 후 `daily_vault_spent`가 0으로 유지
+- **원인**: `/api/v2/vault/status`는 `daily_vault_spent = User.vault_spent_today`를 반환하지만, V2 구매 경로에서 `vault_spent_today` 누적이 빠져있었음
+- **해결**:
+  - `app/v2/services/vault_service.py`에 소비 전용 차감(`consume_locked_for_spend`) 추가(운영일 KST 09:00 리셋 포함)
+  - `app/v2/services/shop_service.py` 구매 시 해당 메서드 사용
+- **검증**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py` 통과
+- **근거 문서**: learned_/vault/20260127_vault_daily_spent_tracks_v2_shop_purchase.md
+
+---
+
 ## [수정 파일 목록]
 
 | 파일 | 변경 내용 |

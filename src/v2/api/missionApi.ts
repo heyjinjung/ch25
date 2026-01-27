@@ -48,17 +48,23 @@ interface BackendMissionWithProgress {
 }
 
 interface BackendStreakInfoSchema {
-  readonly streak_days: number;
-  readonly current_multiplier: number;
-  readonly is_hot: boolean;
-  readonly is_legend: boolean;
-  readonly next_milestone: number;
-  readonly claimable_day: number | null;
+  // NOTE: Backend schema has drifted over time.
+  // - older: streak_days
+  // - current: current_streak (serialized as current_streak)
+  readonly streak_days?: number;
+  readonly current_streak?: number;
+  readonly current_multiplier?: number;
+  readonly is_hot?: boolean;
+  readonly is_legend?: boolean;
+  readonly next_milestone?: number;
+  readonly claimable_day?: number | null;
 }
 
 interface BackendMissionListResponse {
   readonly missions: BackendMissionWithProgress[];
-  readonly streak_info: BackendStreakInfoSchema;
+  // V2 schema uses serialization_alias="streak" for streak_info
+  readonly streak_info?: BackendStreakInfoSchema;
+  readonly streak?: BackendStreakInfoSchema;
 }
 
 export interface StreakRuleDto {
@@ -109,20 +115,27 @@ const mapBackendMission = (item: BackendMissionWithProgress): MissionDto => ({
 });
 
 const mapBackendStreakInfo = (
-  info: BackendStreakInfoSchema,
-): StreakInfoDto => ({
-  current_streak: info.streak_days,
-  today_completed: false,
-  last_completed_date: null,
-  claimable_rewards: info.claimable_day ? [info.claimable_day] : [],
-});
+  info: BackendStreakInfoSchema | null | undefined,
+): StreakInfoDto => {
+  const currentStreak = info?.current_streak ?? info?.streak_days ?? 0;
+  const claimableDay = info?.claimable_day ?? null;
+
+  return {
+    current_streak: currentStreak,
+    today_completed: false,
+    last_completed_date: null,
+    claimable_rewards: claimableDay ? [claimableDay] : [],
+  };
+};
 
 export const getV2Missions = async (): Promise<MissionListResponse> => {
   try {
     const response =
       await v2Client.get<BackendMissionListResponse>("/api/v2/mission/");
     const missions = response.data.missions.map(mapBackendMission);
-    const streak_info = mapBackendStreakInfo(response.data.streak_info);
+    const streak_info = mapBackendStreakInfo(
+      response.data.streak_info ?? response.data.streak,
+    );
     return { missions, streak_info };
   } catch (error) {
     console.error("[missionApi] Failed to fetch V2 missions", error);

@@ -31,8 +31,8 @@ export function useV2ClaimMission() {
       // Invalidate inventory/wallet (reward may include items)
       queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
       // Invalidate vault/balance (reward may include points)
-      queryClient.invalidateQueries({ queryKey: ["vault-status"] });
-      queryClient.invalidateQueries({ queryKey: ["user-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
     },
   });
 }
@@ -48,8 +48,8 @@ export function useV2ClaimDailyGift() {
       // Invalidate inventory/wallet
       queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
       // Invalidate vault/balance
-      queryClient.invalidateQueries({ queryKey: ["vault-status"] });
-      queryClient.invalidateQueries({ queryKey: ["user-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
     },
   });
 }
@@ -77,8 +77,8 @@ export function useV2ClaimStreakReward() {
       // Invalidate inventory/wallet
       queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
       // Invalidate vault/balance
-      queryClient.invalidateQueries({ queryKey: ["vault-status"] });
-      queryClient.invalidateQueries({ queryKey: ["user-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
     },
   });
 }
