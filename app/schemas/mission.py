@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
 
@@ -35,12 +35,21 @@ class MissionWithProgress(BaseModel):
 
 
 class StreakInfoSchema(BaseModel):
-    streak_days: int
+    current_streak: int = Field(
+        default=0,
+        alias="streak_days"  # Accept both field name and alias for backward compatibility
+    )
     current_multiplier: float
     is_hot: bool
     is_legend: bool
     next_milestone: int
     claimable_day: Optional[int] = None
+    
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,  # Accept both field name and alias in input
+        by_alias=True,  # Use alias in output (model_dump)
+    )
 
 
 class MissionListResponse(BaseModel):

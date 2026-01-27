@@ -97,9 +97,9 @@ def test_schema_instantiation():
     )
     m_progress = MissionProgressSchema(current_value=0, is_completed=False, is_claimed=False)
     m_with_p = MissionWithProgress(mission=m_schema, progress=m_progress)
-    streak = StreakInfoSchema(streak_days=3, current_multiplier=1.2, is_hot=True, is_legend=False, next_milestone=7)
+    streak = StreakInfoSchema(current_streak=3, current_multiplier=1.2, is_hot=True, is_legend=False, next_milestone=7)
     m_list = MissionListResponse(missions=[m_with_p], streak_info=streak)
-    assert m_list.streak_info.streak_days == 3
+    assert m_list.streak_info.current_streak == 3
 
     # level_reward
     v2_lr = V2LevelRewardRow(level=1, required_xp=0, reward_type="POINT", reward_amount=100)

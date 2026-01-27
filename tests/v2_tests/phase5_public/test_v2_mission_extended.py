@@ -83,15 +83,9 @@ def test_v2_streak_info_with_data(client: TestClient, seed_session: Session):
     )
     seed_session.add(config)
     
-    # 2. Seed UserStreak (already checked in yesterday)
-    yesterday = date.today() - timedelta(days=1)
-    user_streak = UserStreak(
-        user_id=user.id,
-        current_streak=1,
-        last_hit_date=yesterday,
-        total_hits=1
-    )
-    seed_session.add(user_streak)
+    # 2. Current implementation: get_streak_info reads User.play_streak directly
+    # not UserStreak table. So we set User.play_streak.
+    user.play_streak = 1
     seed_session.commit()
 
     _override_auth(user.id)
@@ -101,9 +95,7 @@ def test_v2_streak_info_with_data(client: TestClient, seed_session: Session):
         assert resp.status_code == 200
         data = resp.json()
         
-        # Streak should show 1 day (yesterday)
-        # Note: Depending on logic, it might show 1 as current.
-        # V2MissionService logic: current_streak = streak.current_streak if last_hit_date in (today, yesterday) else 0
+        # Streak should show 1 (from User.play_streak)
         assert data["streak"]["current_streak"] == 1
         
     finally:

@@ -42,9 +42,9 @@ const SOUND_ASSETS = {
     ROULETTE_STOP: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
     SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
     BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
-    VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
+    VAULT_JINGLE: "/assets/sounds/sfx/valut.mp3",
     LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
-    LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
+    LOTTERY_WIN: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
   },
 };
 

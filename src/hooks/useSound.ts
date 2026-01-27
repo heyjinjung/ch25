@@ -26,9 +26,10 @@ const SOUND_SOURCES = {
     // 룰렛 효과음: 플레이 버튼~결과 모달까지
     ROULETTE_PLAY: "/assets/sounds/sfx/rou-roll.mp3",
     // 당첨 효과음
-    WIN_SMALL: "/assets/sounds/sfx/Dice_Reveal.ogg",
-    WIN_BIG: "/assets/sounds/sfx/Dice_Reveal.ogg",
-    VAULT_JINGLE: "/assets/sounds/sfx/Dice_Reveal.ogg",
+    WIN_SMALL: "/assets/sounds/sfx/Small_Win.ogg",
+    WIN_BIG: "/assets/sounds/sfx/Big_Win.ogg",
+    VAULT_JINGLE: "/assets/sounds/sfx/valut.mp3",
+    LOTTO_WIN: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
   },
 };
 
