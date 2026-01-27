@@ -419,7 +419,8 @@ class RouletteService:
         # streak-based vault bonuses apply immediately on the same play.
         from app.services.mission_service import MissionService
         mission_service = MissionService(db)
-        mission_service.update_progress(user_id, "PLAY_GAME")
+        mission_service.update_progress(user_id, "PLAY_GAME")  # 공통 게임 플레이
+        mission_service.update_progress(user_id, "PLAY_ROULETTE")  # 룰렛 게임 개별
         streak_info = mission_service.get_streak_info(user_id)
 
         total_earn = 0

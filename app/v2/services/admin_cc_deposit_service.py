@@ -345,6 +345,9 @@ class V2AdminCCDepositService:
 
             row.deposit_remainder = remainder
 
+        # XP 적립 후 DB 커밋 (User.level 동기화 포함)
+        db.commit()
+
         # NOTE: Weekly TOP10 Stamp 로직 제거 (2026-01-26)
         # Season Pass 폐기로 인해 TOP10 스탬프 기능도 함께 제거
         # 필요 시 별도 보상 시스템으로 대체 예정

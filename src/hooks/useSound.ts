@@ -9,26 +9,26 @@ const SOUND_SOURCES = {
     MAIN: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
     BATTLE: "/assets/sounds/bgm/battle_theme.wav",
     VAULT: "/assets/sounds/bgm/Sketchbook 2025-12-11_BREAKDOWN.ogg",
-    LOTTERY: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
-    ROULETTE: "/assets/sounds/sfx/rou-roll.mp3",
+    LOTTERY: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
+    ROULETTE: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
   },
   SFX: {
     TRANSITION: "/assets/sounds/sfx/page_turn.mp3",
     TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
-    // TOAST: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
     DICE_SHAKE: "/assets/sounds/sfx/dice-shake-3.ogg",
     DICE_THROW: "/assets/sounds/sfx/dice-throw-3.ogg",
     DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
     ROULETTE_STOP: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
     ROULETTE_LOSE: "/assets/sounds/sfx/fail03.ogg",
     DICE_LOSE: "/assets/sounds/sfx/fail03.ogg",
-    // LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg", // Redundant with BGM.LOTTERY
-    // LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
-    // SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
-    // BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
-    // VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
-    // DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
-    // ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
+    // 복권(로또) 효과음: 플레이 버튼~결과 모달까지
+    LOTTO_PLAY: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
+    // 룰렛 효과음: 플레이 버튼~결과 모달까지
+    ROULETTE_PLAY: "/assets/sounds/sfx/rou-roll.mp3",
+    // 당첨 효과음
+    WIN_SMALL: "/assets/sounds/sfx/Dice_Reveal.ogg",
+    WIN_BIG: "/assets/sounds/sfx/Dice_Reveal.ogg",
+    VAULT_JINGLE: "/assets/sounds/sfx/Dice_Reveal.ogg",
   },
 };
 
@@ -36,9 +36,8 @@ export const useSound = () => {
   const { playSfx, playBgm, stopBgm, toggleMute, isMuted, isReady } =
     useSoundContext();
 
-  // Refs for stop control of looping sounds
+  // Refs for stop control of looping sounds (룰렛 효과음만 루프 제어)
   const rouletteSpinRef = useRef<Howl | null>(null);
-  // const lotteryScratchRef = useRef<Howl | null>(null); // Disabled due to duplication with BGM
 
   const playClick = useCallback(() => {
     // can be used for generic UI clicks
@@ -68,30 +67,31 @@ export const useSound = () => {
     [playSfx],
   );
 
-  const playLotteryScratch = useCallback(() => {
-    // Disabled - duplicated with Lottery BGM
-  }, []);
-  const stopLotteryScratch = useCallback(() => {
-    // Disabled - duplicated with Lottery BGM
+  // 복권(로또) 플레이 효과음: 플레이 버튼~결과 모달까지
+  const playLottoPlay = useCallback(
+    () => playSfx(SOUND_SOURCES.SFX.LOTTO_PLAY, { volume: 1.0, loop: true }),
+    [playSfx],
+  );
+  const stopLottoPlay = useCallback(() => {
+    // Lotto_Ball_Roll.ogg 효과음 정지
+    // Howl 인스턴스 관리 필요시 추가 구현
   }, []);
 
-  const playLotteryWin = useCallback(() => {
-    // Disabled - file removed
+  // 룰렛 플레이 효과음: 플레이 버튼~결과 모달까지
+  const playRoulettePlay = useCallback(
+    () => playSfx(SOUND_SOURCES.SFX.ROULETTE_PLAY, { volume: 1.0, loop: true }),
+    [playSfx],
+  );
+  const stopRoulettePlay = useCallback(() => {
+    // rou-roll.mp3 효과음 정지
+    // Howl 인스턴스 관리 필요시 추가 구현
   }, []);
 
   const playRouletteStop = useCallback(
     () => playSfx(SOUND_SOURCES.SFX.ROULETTE_STOP, { volume: 0.9 }),
     [playSfx],
   );
-  const playSmallWin = useCallback(() => {
-    // Disabled as per user request
-  }, []);
-  const playBigWin = useCallback(() => {
-    // Disabled as per user request
-  }, []);
-  const playVaultJingle = useCallback(() => {
-    // Disabled as per user request
-  }, []);
+  // 소/대규모 당첨, 금고 징글 등 불필요 효과음 제거
   const playRouletteLose = useCallback(
     () => playSfx(SOUND_SOURCES.SFX.ROULETTE_LOSE, { volume: 0.8 }),
     [playSfx],
@@ -138,6 +138,56 @@ export const useSound = () => {
     [playBgm],
   );
 
+  // 당첨 효과음
+  const playSmallWin = useCallback(
+    () => playSfx(SOUND_SOURCES.SFX.WIN_SMALL, { volume: 0.8 }),
+    [playSfx],
+  );
+  const playBigWin = useCallback(
+    () => playSfx(SOUND_SOURCES.SFX.WIN_BIG, { volume: 0.9 }),
+    [playSfx],
+  );
+  const playVaultJingle = useCallback(
+    () => playSfx(SOUND_SOURCES.SFX.VAULT_JINGLE, { volume: 0.7 }),
+    [playSfx],
+  );
+
+  // 햅틱 피드백 (모바일 진동)
+  const triggerHapticLight = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      // 일반 결과: 짧고 가벼운 진동 (15ms)
+      navigator.vibrate(15);
+    }
+  }, []);
+
+  const triggerHapticMedium = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      // 중간 강도: 살짝 긴 진동 (30ms)
+      navigator.vibrate(30);
+    }
+  }, []);
+
+  const triggerHapticStrong = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      // 골든아워: 강한 패턴 진동 (진동-멈춤-진동)
+      navigator.vibrate([40, 30, 60]);
+    }
+  }, []);
+
+  const triggerHapticSuccess = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      // 승리: 축하 패턴 (짧은 더블 탭)
+      navigator.vibrate([20, 50, 20]);
+    }
+  }, []);
+
+  const triggerHapticFail = useCallback(() => {
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      // 패배: 아쉬운 느낌의 단일 진동
+      navigator.vibrate(50);
+    }
+  }, []);
+
   const playEnterGame = useCallback(() => {
     // playSfx(SOUND_SOURCES.SFX.ENTER_GAME, { volume: 0.6 })
   }, [playSfx]);
@@ -149,9 +199,10 @@ export const useSound = () => {
     playDiceShake,
     playDiceThrow,
     playTabTouch,
-    playLotteryScratch,
-    stopLotteryScratch,
-    playLotteryWin,
+    playLottoPlay,
+    stopLottoPlay,
+    playRoulettePlay,
+    stopRoulettePlay,
     playRouletteSpin,
     stopRouletteSpin,
     startMainBgm,
@@ -166,11 +217,17 @@ export const useSound = () => {
     playSfx,
     playEnterGame,
     playRouletteStop,
-    playSmallWin,
-    playBigWin,
-    playVaultJingle,
     playRouletteLose,
     playDiceLose,
     playDiceReveal,
+    playSmallWin,
+    playBigWin,
+    playVaultJingle,
+    // 햅틱 피드백
+    triggerHapticLight,
+    triggerHapticMedium,
+    triggerHapticStrong,
+    triggerHapticSuccess,
+    triggerHapticFail,
   };
 };

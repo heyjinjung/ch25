@@ -17,11 +17,21 @@ from app.v2.services.reward_service import V2RewardService
 from app.v2.services.ui_config_service import UiConfigService
 from app.v2.schemas.v2_mission import MissionSchema, MissionProgressSchema, MissionWithProgress, StreakInfoSchema
 
-# Action type aliases for backward compatibility
+# Action type aliases for backward compatibility and game-specific tracking
+# PLAY_GAME 게임 공통(모든 게임에서 호출)
+# PLAY_DICE/ROULETTE/LOTTERY 개별 게임별 트래킹
 ACTION_TYPE_ALIASES = {
-    "JOIN_CHANNEL": ["SUBSCRIBE_CHANNEL", "CHANNEL_JOIN"],
+    "JOIN_CHANNEL": ["SUBSCRIBE_CHANNEL", "CHANNEL_JOIN", "JOIN_TELEGRAM_CHANNEL", "JOIN_CC_CHANNEL"],
     "SHARE_STORY": ["SHARE", "STORY_SHARE"],
-    "PLAY_GAME": ["PLAY"],
+    "PLAY_GAME": ["PLAY"],  # PLAY_DICE/ROULETTE/LOTTERY는 개별 미션용으로 분리
+    "PLAY_DICE": ["DICE_PLAY"],
+    "PLAY_ROULETTE": ["ROULETTE_PLAY"],
+    "PLAY_LOTTERY": ["LOTTERY_PLAY"],
+    "GOLDEN_HOUR_PLAY": ["GOLDEN_HOUR", "GOLDEN_HOUR_GAME"],
+    "CC_DEPOSIT": ["DEPOSIT", "CC_INPUT"],
+    "JOIN_TELEGRAM_CHANNEL": ["TELEGRAM_JOIN", "TG_CHANNEL_JOIN"],
+    "JOIN_CC_CHANNEL": ["CC_CHANNEL_JOIN", "OFFICIAL_CHANNEL_JOIN"],
+    "CONSECUTIVE_LOGIN": ["NEXT_DAY_LOGIN", "LOGIN_STREAK"],
 }
 
 

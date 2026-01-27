@@ -26,7 +26,15 @@ export default function DiceResultModal({
   const contentRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { playTabTouch, playSmallWin, playDiceLose } = useSound();
+  const {
+    playTabTouch,
+    playSmallWin,
+    playDiceLose,
+    triggerHapticLight,
+    triggerHapticStrong,
+    triggerHapticSuccess,
+    triggerHapticFail,
+  } = useSound();
 
   const [typedSubtitle, setTypedSubtitle] = useState("");
 
@@ -71,35 +79,106 @@ export default function DiceResultModal({
           });
           tl.add(() => {
             playSmallWin();
+            triggerHapticStrong();
           }, "-=0.3");
         } else if (isLose) {
-          // Golden Hour LOSE: Skeleton Vibration (Smoothed)
+          // Golden Hour LOSE: 패배감 있지만 과하지 않은 애니메이션
+          // 1. 먼저 부드럽게 등장
           tl.fromTo(
             contentRef.current,
-            { scale: 0.98, opacity: 0, x: -3 },
+            { scale: 0.9, opacity: 0, y: 20 },
             {
               scale: 1,
               opacity: 1,
-              x: 0,
-              duration: 0.18,
-              repeat: 2,
-              yoyo: true,
-              ease: "sine.inOut",
+              y: 0,
+              duration: 0.35,
+              ease: "power2.out",
             },
             "-=0.1",
           );
+          // 2. 등장 후 약간의 슬픈 흔들림 (좌우로 천천히)
+          tl.to(contentRef.current, {
+            x: -4,
+            duration: 0.12,
+            ease: "sine.inOut",
+          });
+          tl.to(contentRef.current, {
+            x: 4,
+            duration: 0.12,
+            ease: "sine.inOut",
+          });
+          tl.to(contentRef.current, {
+            x: -2,
+            duration: 0.1,
+            ease: "sine.inOut",
+          });
+          tl.to(contentRef.current, {
+            x: 0,
+            duration: 0.1,
+            ease: "sine.out",
+          });
+          // 3. 마지막에 살짝 아래로 처지는 느낌
+          tl.to(contentRef.current, {
+            y: 3,
+            duration: 0.2,
+            ease: "power2.out",
+          });
           tl.add(() => {
             playDiceLose();
-          }, "-=0.2");
+            triggerHapticStrong();
+          }, "-=0.4");
         } else {
+          // 골든아워 무승부
           tl.fromTo(
             contentRef.current,
             { scale: 0.8, opacity: 0 },
             { scale: 1, opacity: 1, duration: 0.4 },
           );
+          tl.add(() => {
+            triggerHapticLight();
+          });
         }
       } else {
-        if (isWin || isDraw) {
+        if (isWin) {
+          // 일반 승리: "살짝 떠오름" 애니메이션 (opacity + translate + scale, 회전 금지)
+          tl.fromTo(
+            contentRef.current,
+            { scale: 0.88, opacity: 0, y: 40 },
+            {
+              scale: 1.02,
+              opacity: 1,
+              y: -8,
+              duration: 0.45,
+              ease: "power2.out",
+            },
+            "-=0.1",
+          );
+          // 살짝 위로 떠오른 후 제자리로 착지
+          tl.to(contentRef.current, {
+            scale: 1,
+            y: 0,
+            duration: 0.25,
+            ease: "power2.inOut",
+          });
+          if (shineRef.current) {
+            gsap.fromTo(
+              shineRef.current,
+              { x: "-100%", opacity: 0 },
+              {
+                x: "100%",
+                opacity: 0.5,
+                duration: 1.0,
+                ease: "power2.inOut",
+                delay: 0.15,
+              },
+            );
+          }
+          tl.add(() => {
+            playSmallWin();
+            triggerHapticSuccess();
+          }, "-=0.5");
+        } else if (isDraw) {
+          // 무승부: 기존 애니메이션 유지
           tl.fromTo(
             contentRef.current,
             { scale: 0.96, opacity: 0, y: 18 },
@@ -121,6 +200,7 @@ export default function DiceResultModal({
           }
           tl.add(() => {
             playSmallWin();
+            triggerHapticLight();
           }, "-=0.4");
         } else if (isLose) {
           tl.fromTo(
@@ -137,6 +217,7 @@ export default function DiceResultModal({
           );
           tl.add(() => {
             playDiceLose();
+            triggerHapticFail();
           }, "-=0.4");
         }
       }
@@ -155,7 +236,7 @@ export default function DiceResultModal({
         delay: 0.1,
       });
     }
-  }, [isOpen, outcome, isGoldenHour, playSmallWin, playDiceLose]);
+  }, [isOpen, outcome, isGoldenHour, playSmallWin, playDiceLose, triggerHapticLight, triggerHapticStrong, triggerHapticSuccess, triggerHapticFail]);
 
   const { subtitleText, isGoldenWin, isGoldenLose, isNormalWin, isNormalLose } =
     useMemo(() => {
@@ -214,11 +295,11 @@ export default function DiceResultModal({
 
   const titleText = isWin ? "승리" : isDraw ? "무승부" : "패배";
   const titleColor = isGoldenWin
-    ? "bg-gradient-to-r from-[#FFD700] via-[#FFB800] to-[#FFA500] text-transparent bg-clip-text drop-shadow-[0_0_18px_rgba(255,196,0,0.45)]"
+    ? "bg-gradient-to-r from-[#FFD700] via-[#FFB800] to-[#FFA500] text-transparent bg-clip-text drop-shadow-[0_0_22px_rgba(255,196,0,0.56)]"
     : isNormalWin
-      ? "text-[#FF3B3B] drop-shadow-[0_0_18px_rgba(255,59,59,0.35)]"
+      ? "bg-gradient-to-r from-[#22C55E] via-[#4ADE80] to-[#22C55E] text-transparent bg-clip-text drop-shadow-[0_0_18px_rgba(34,197,94,0.45)]"
       : isGoldenLose
-        ? "text-zinc-200 drop-shadow-[0_0_16px_rgba(168,85,247,0.25)]"
+        ? "text-zinc-200 drop-shadow-[0_0_18px_rgba(168,85,247,0.30)]"
         : isNormalLose
           ? "text-zinc-200 drop-shadow-[0_0_16px_rgba(0,0,0,0.55)]"
           : isDraw
@@ -232,7 +313,7 @@ export default function DiceResultModal({
           className={cn(
             "relative mb-5",
             isGoldenWin
-              ? "drop-shadow-[0_0_26px_rgba(255,59,59,0.35)]"
+              ? "drop-shadow-[0_0_32px_rgba(255,59,59,0.44)]"
               : "drop-shadow-[0_0_22px_rgba(255,59,59,0.22)]",
           )}
         >
@@ -258,7 +339,7 @@ export default function DiceResultModal({
 
     if (isGoldenLose) {
       return (
-        <div className="relative mb-5 drop-shadow-[0_0_20px_rgba(168,85,247,0.25)]">
+        <div className="relative mb-5 drop-shadow-[0_0_24px_rgba(168,85,247,0.30)]">
           <Skull className="h-[74px] w-[74px] text-zinc-200" />
         </div>
       );
@@ -274,11 +355,11 @@ export default function DiceResultModal({
   const cardClassName = cn(
     "w-full max-w-[360px] rounded-[32px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-xl",
     isGoldenWin &&
-      "bg-gradient-to-b from-[#2a0b12]/70 to-[#0b0b10]/70 ring-1 ring-red-500/50 shadow-[0_0_40px_rgba(255,0,84,0.25)]",
+      "bg-gradient-to-b from-[#350e17]/70 to-[#0b0b10]/70 ring-1 ring-red-500/62 shadow-[0_0_50px_rgba(255,0,84,0.31)]",
     isNormalWin &&
-      "bg-white/[0.06] ring-1 ring-red-500/30 shadow-[0_20px_50px_rgba(0,0,0,0.55)]",
+      "bg-gradient-to-b from-[#0b2a18]/70 to-[#0b0b10]/70 ring-1 ring-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.2)]",
     isGoldenLose &&
-      "bg-white/[0.05] ring-1 ring-purple-500/30 shadow-[0_0_40px_rgba(88,28,135,0.18)]",
+      "bg-white/[0.05] ring-1 ring-purple-500/36 shadow-[0_0_48px_rgba(88,28,135,0.22)]",
     isNormalLose &&
       "bg-white/[0.05] ring-1 ring-black/30 shadow-[0_20px_50px_rgba(0,0,0,0.55)]",
     isDraw &&
@@ -340,7 +421,7 @@ export default function DiceResultModal({
           className={cn(
             "text-sm font-extrabold mb-7 text-center tracking-tight",
             isGoldenWin && "text-red-100/90",
-            isNormalWin && "text-red-200/85",
+            isNormalWin && "text-emerald-100/90",
             (isGoldenLose || isNormalLose) && "text-zinc-300/85",
             isDraw && "text-amber-200/85",
           )}
@@ -353,15 +434,22 @@ export default function DiceResultModal({
         <div className="w-full bg-white/[0.06] rounded-2xl p-5 mb-7 border border-white/10 flex flex-col items-center relative">
           <div className="flex items-center gap-2">
             <img
-              src="/assets/logo_cc_v2.webp"
+              src="/assets/asset_coin_gold.webp"
               alt="CC 코인"
               width={20}
               height={20}
               className="h-5 w-5 select-none"
               draggable={false}
             />
-            <div className="text-3xl font-black text-white tracking-tight">
-              {Math.max(0, vaultEarn).toLocaleString()}
+            <div
+              className={cn(
+                "text-3xl font-black tracking-tight",
+                vaultEarn >= 0 ? "text-white" : "text-red-400",
+              )}
+            >
+              {vaultEarn >= 0
+                ? `+${vaultEarn.toLocaleString()}`
+                : vaultEarn.toLocaleString()}
             </div>
             <span className="text-sm font-bold text-zinc-400">P</span>
           </div>
@@ -378,7 +466,7 @@ export default function DiceResultModal({
               isGoldenWin
                 ? "bg-gradient-to-r from-[#FF3B3B] to-[#FF8A00] text-black shadow-[0_0_24px_rgba(255,59,59,0.25)]"
                 : isNormalWin
-                  ? "bg-white text-black hover:bg-zinc-200"
+                  ? "bg-gradient-to-r from-[#22C55E] to-[#10B981] text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:from-[#16A34A] hover:to-[#059669]"
                   : "bg-white text-black hover:bg-zinc-200",
             )}
           >
@@ -396,15 +484,6 @@ export default function DiceResultModal({
             다른게임
           </button>
 
-          <button
-            onClick={() => {
-              playTabTouch();
-              onClose();
-            }}
-            className="w-full h-10 rounded-2xl bg-transparent text-zinc-400 font-bold text-sm hover:text-white transition-all"
-          >
-            닫기
-          </button>
         </div>
       </div>
     </div>

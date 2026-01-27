@@ -36,7 +36,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
@@ -68,19 +67,147 @@ const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL"];
 
 const ACTION_TYPE_OPTIONS = [
   { value: "PLAY_GAME", label: "게임 플레이 (PLAY_GAME)" },
+  { value: "PLAY_DICE", label: "주사위 게임 (PLAY_DICE)" },
+  { value: "PLAY_ROULETTE", label: "룰렛 게임 (PLAY_ROULETTE)" },
+  { value: "PLAY_LOTTERY", label: "복권 게임 (PLAY_LOTTERY)" },
   { value: "LOGIN", label: "로그인/출석 (LOGIN)" },
+  { value: "GOLDEN_HOUR_PLAY", label: "골든아워 참가 (GOLDEN_HOUR_PLAY)" },
+  { value: "BUY_SHOP_ITEM", label: "상점 구매 (BUY_SHOP_ITEM)" },
+  { value: "CC_DEPOSIT", label: "CC 입금 (CC_DEPOSIT)" },
+  {
+    value: "JOIN_TELEGRAM_CHANNEL",
+    label: "텔레그램 채널 입장 (JOIN_TELEGRAM_CHANNEL)",
+  },
+  { value: "JOIN_CC_CHANNEL", label: "CC 공식채널 입장 (JOIN_CC_CHANNEL)" },
+  { value: "CONSECUTIVE_LOGIN", label: "다음날 로그인 (CONSECUTIVE_LOGIN)" },
   { value: "JOIN_CHANNEL", label: "채널 입장 (JOIN_CHANNEL)" },
   { value: "SHARE_STORY", label: "스토리 공유 (SHARE_STORY)" },
   { value: "INVITE_FRIEND", label: "친구 초대 (INVITE_FRIEND)" },
-  { value: "BUY_SHOP_ITEM", label: "상점 아이템 구매 (BUY_SHOP_ITEM)" },
 ];
 
+/**
+ * 프리셋 목록 - 카테고리별로 분류
+ * DAILY: 일일 미션
+ * WEEKLY: 주간 미션
+ * NEW_USER: 신규 유저 전용
+ * SPECIAL: 특수 미션
+ */
 const LOGIC_KEY_PRESETS = [
-  { value: "daily_play_generic", label: "일일 게임 플레이 (Generic)" },
-  { value: "daily_shop_purchase", label: "일일 상점 구매 (Shop Buy)" },
-  { value: "streak_challenge_3", label: "3일 연속 출석/플레이 (Streak)" },
-  { value: "daily_login_gift", label: "일일 출석 선물 (Fixed)" },
-  { value: "golden_hour", label: "골든 아워 (Golden Hour)" },
+  // ── DAILY 프리셋 ──
+  {
+    value: "daily_play_generic",
+    label: "📅 일일 | 게임 플레이 (전체)",
+    category: "DAILY",
+  },
+  {
+    value: "daily_play_dice",
+    label: "📅 일일 | 주사위 게임",
+    category: "DAILY",
+  },
+  {
+    value: "daily_play_roulette",
+    label: "📅 일일 | 룰렛 게임",
+    category: "DAILY",
+  },
+  {
+    value: "daily_play_lottery",
+    label: "📅 일일 | 복권 게임",
+    category: "DAILY",
+  },
+  {
+    value: "daily_golden_hour",
+    label: "📅 일일 | 골든아워 참가",
+    category: "DAILY",
+  },
+  {
+    value: "daily_shop_purchase",
+    label: "📅 일일 | 상점 구매",
+    category: "DAILY",
+  },
+  {
+    value: "daily_login_gift",
+    label: "📅 일일 | 출석 체크",
+    category: "DAILY",
+  },
+  { value: "daily_cc_deposit", label: "📅 일일 | CC 입금", category: "DAILY" },
+  // ── WEEKLY 프리셋 ──
+  {
+    value: "weekly_play_generic",
+    label: "📆 주간 | 게임 플레이 (전체)",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_play_dice",
+    label: "📆 주간 | 주사위 게임",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_play_roulette",
+    label: "📆 주간 | 룰렛 게임",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_play_lottery",
+    label: "📆 주간 | 복권 게임",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_golden_hour",
+    label: "📆 주간 | 골든아워 참가",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_shop_purchase",
+    label: "📆 주간 | 상점 구매",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_login_streak",
+    label: "📆 주간 | 로그인",
+    category: "WEEKLY",
+  },
+  {
+    value: "weekly_cc_deposit",
+    label: "📆 주간 | CC 입금",
+    category: "WEEKLY",
+  },
+  // ── NEW_USER 프리셋 ──
+  {
+    value: "new_user_first_login",
+    label: "🆕 신규 | 첫 로그인",
+    category: "NEW_USER",
+  },
+  {
+    value: "new_user_first_game",
+    label: "🆕 신규 | 첫 게임 플레이",
+    category: "NEW_USER",
+  },
+  {
+    value: "new_user_telegram_join",
+    label: "🆕 신규 | 텔레그램 채널 입장",
+    category: "NEW_USER",
+  },
+  {
+    value: "new_user_cc_channel_join",
+    label: "🆕 신규 | CC 공식채널 입장",
+    category: "NEW_USER",
+  },
+  {
+    value: "new_user_next_day_login",
+    label: "🆕 신규 | 다음날 로그인",
+    category: "NEW_USER",
+  },
+  // ── SPECIAL 프리셋 ──
+  {
+    value: "streak_challenge_3",
+    label: "⭐ 스페셜 | 3일 연속 출석",
+    category: "SPECIAL",
+  },
+  {
+    value: "golden_hour",
+    label: "⭐ 스페셜 | 골든아워 (레거시)",
+    category: "SPECIAL",
+  },
 ];
 
 const isGoldenHourLogicKey = (logicKey: string) =>
@@ -97,21 +224,70 @@ const getCategoryMeaning = (category: string) => {
   return cat;
 };
 
+/**
+ * 프리셋 → 추천 액션타입 매핑
+ */
 const PRESET_RECOMMENDED_ACTION_TYPE: Record<string, string | undefined> = {
+  // DAILY
   daily_play_generic: "PLAY_GAME",
+  daily_play_dice: "PLAY_DICE",
+  daily_play_roulette: "PLAY_ROULETTE",
+  daily_play_lottery: "PLAY_LOTTERY",
+  daily_golden_hour: "GOLDEN_HOUR_PLAY",
   daily_shop_purchase: "BUY_SHOP_ITEM",
   daily_login_gift: "LOGIN",
-  golden_hour: "PLAY_GAME",
+  daily_cc_deposit: "CC_DEPOSIT",
+  // WEEKLY
+  weekly_play_generic: "PLAY_GAME",
+  weekly_play_dice: "PLAY_DICE",
+  weekly_play_roulette: "PLAY_ROULETTE",
+  weekly_play_lottery: "PLAY_LOTTERY",
+  weekly_golden_hour: "GOLDEN_HOUR_PLAY",
+  weekly_shop_purchase: "BUY_SHOP_ITEM",
+  weekly_login_streak: "LOGIN",
+  weekly_cc_deposit: "CC_DEPOSIT",
+  // NEW_USER
+  new_user_first_login: "LOGIN",
+  new_user_first_game: "PLAY_GAME",
+  new_user_telegram_join: "JOIN_TELEGRAM_CHANNEL",
+  new_user_cc_channel_join: "JOIN_CC_CHANNEL",
+  new_user_next_day_login: "CONSECUTIVE_LOGIN",
+  // SPECIAL
   streak_challenge_3: "LOGIN",
+  golden_hour: "PLAY_GAME",
 };
 
-// 프리셋 한글 라벨 (자동 제목 생성용)
+/**
+ * 프리셋 한글 라벨 (자동 제목 생성용)
+ */
 const PRESET_TITLE_LABELS: Record<string, string> = {
+  // DAILY
   daily_play_generic: "게임 플레이",
+  daily_play_dice: "주사위",
+  daily_play_roulette: "룰렛",
+  daily_play_lottery: "복권",
+  daily_golden_hour: "골든아워",
   daily_shop_purchase: "상점 구매",
-  daily_login_gift: "출석 선물",
-  golden_hour: "골든아워 게임",
+  daily_login_gift: "출석 체크",
+  daily_cc_deposit: "CC 입금",
+  // WEEKLY
+  weekly_play_generic: "게임 플레이",
+  weekly_play_dice: "주사위",
+  weekly_play_roulette: "룰렛",
+  weekly_play_lottery: "복권",
+  weekly_golden_hour: "골든아워",
+  weekly_shop_purchase: "상점 구매",
+  weekly_login_streak: "로그인",
+  weekly_cc_deposit: "CC 입금",
+  // NEW_USER
+  new_user_first_login: "첫 로그인",
+  new_user_first_game: "첫 게임",
+  new_user_telegram_join: "텔레그램 입장",
+  new_user_cc_channel_join: "CC 채널 입장",
+  new_user_next_day_login: "다음날 로그인",
+  // SPECIAL
   streak_challenge_3: "연속 출석",
+  golden_hour: "골든아워 게임",
 };
 
 // 카테고리 한글 접두어
@@ -120,6 +296,14 @@ const CATEGORY_PREFIX: Record<string, string> = {
   WEEKLY: "주간",
   NEW_USER: "신규",
   SPECIAL: "스페셜",
+};
+
+/**
+ * 프리셋 → 추천 카테고리 매핑
+ */
+const getPresetCategory = (preset: string): string => {
+  const p = LOGIC_KEY_PRESETS.find((item) => item.value === preset);
+  return p?.category || "DAILY";
 };
 
 /**
@@ -372,47 +556,62 @@ export default function MissionManagerPage() {
     }
 
     return (
-      <div className="col-span-4 mt-2 rounded-lg border border-white/10 bg-white/5 p-3">
-        <div className="text-xs font-semibold text-zinc-200">
-          미션 조립 프리뷰
-        </div>
-        <div className="mt-2 grid gap-1 text-xs text-zinc-300">
-          <div>
-            <span className="text-zinc-400">카테고리(리셋):</span> {catMeaning}
-          </div>
-          <div>
-            <span className="text-zinc-400">트리거(Action Type):</span> {action}
-            <span className="ml-2 text-zinc-500">
-              (게임 3종은 BE에서 update_progress("PLAY_GAME") 호출)
+      <div className="col-span-full mt-4 overflow-hidden rounded-xl border border-white/10 bg-[#09090B] shadow-2xl">
+        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+              Mission System Blueprint
             </span>
           </div>
-          <div>
-            <span className="text-zinc-400">logicKey(전역 UNIQUE):</span>{" "}
-            {normalizeLogicKey(vars.logicKey) || "(없음)"}
-          </div>
-          <div>
-            <span className="text-zinc-400">목표:</span>{" "}
-            {Number(vars.targetValue || 0).toLocaleString()}
-          </div>
-          <div>
-            <span className="text-zinc-400">설명(표시용):</span>{" "}
-            {vars.condition?.trim() || "(비어있음)"}
-            <span className="ml-2 text-zinc-500">(실제 로직 조건이 아님)</span>
-          </div>
-          <div>
-            <span className="text-zinc-400">골든아워 판정:</span>{" "}
-            {golden ? "YES (logicKey contains golden_hour)" : "NO"}
-          </div>
+          <span className="font-mono text-[10px] text-zinc-600">v2.ops.engine</span>
         </div>
-        {warnings.length > 0 && (
-          <div className="mt-2 rounded-md border border-amber-400/20 bg-amber-500/10 p-2 text-xs text-amber-200">
-            {warnings[0]}
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Category Scope</Label>
+              <div className="text-sm font-medium text-zinc-200">{catMeaning}</div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Trigger Event</Label>
+              <div className="font-mono text-sm text-emerald-400">{action}</div>
+            </div>
+            <div className="col-span-full space-y-1 py-2 border-y border-white/5">
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Global Identifier (Logic Key)</Label>
+              <div className="font-mono text-sm tracking-tight text-indigo-400 break-all bg-indigo-500/5 p-2 rounded border border-indigo-500/10">
+                {normalizeLogicKey(vars.logicKey) || "UNDEFINED_KEY"}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Target Threshold</Label>
+              <div className="text-xl font-bold text-zinc-100 italic">
+                {Number(vars.targetValue || 0).toLocaleString()}
+                <span className="ml-1 text-xs font-normal text-zinc-500 not-italic">counts</span>
+              </div>
+            </div>
+            <div className="space-y-1 text-right">
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Golden Hour Check</Label>
+              <div className={`text-sm font-bold ${golden ? "text-amber-400" : "text-zinc-600"}`}>
+                {golden ? "MATCHED" : "OFF"}
+              </div>
+            </div>
           </div>
-        )}
-        <div className="mt-2 text-[11px] text-zinc-500">
-          핵심: 카테고리=리셋정책, Action Type=진행 트리거, logicKey=식별자(전역
-          UNIQUE). 골든하워는 별도 스케줄이 아니라 logicKey 규칙+설정값으로
-          게이트됩니다.
+
+          <div className="mt-4 flex gap-3 text-[11px] text-zinc-500 leading-relaxed border-t border-white/5 pt-3">
+            <div className="h-4 w-1 bg-zinc-800 rounded-full shrink-0" />
+            <p>
+              Logic Key acts as a unique global ID. The mission engine evaluates progress based on the Action Type trigger and Category reset policy.
+            </p>
+          </div>
+
+          {warnings.length > 0 && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
+              <span className="text-amber-400 shrink-0">⚠️</span>
+              <p className="text-[11px] text-amber-200/80 leading-snug">
+                {warnings[0]}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -859,469 +1058,438 @@ export default function MissionManagerPage() {
       </Card>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="bg-[#18181B] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>새 미션 생성</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              신규 미션의 기본 정보와 보상을 설정합니다.
-            </DialogDescription>
+        <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0" />
+          
+          <DialogHeader className="p-6 pb-0">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                <Plus className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold tracking-tight">Mission Creator</DialogTitle>
+                <DialogDescription className="text-zinc-500 text-xs">
+                  Create a new operational mission for Season 25.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {/* Step 1: 프리셋 선택 (가장 먼저) */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right text-zinc-400 font-semibold">
-                1. 프리셋
-              </Label>
-              <Select
-                value={selectedPreset}
-                onValueChange={(val) => {
-                  setSelectedPreset(val);
-                  const recommendedActionType =
-                    PRESET_RECOMMENDED_ACTION_TYPE[val];
-                  const newLogicKey = generateLogicKey(
-                    val,
-                    createForm.category,
-                    createForm.targetValue,
-                  );
-                  const newTitle = generateTitle(
-                    val,
-                    createForm.category,
-                    createForm.targetValue,
-                  );
-                  setCreateForm({
-                    ...createForm,
-                    logicKey: newLogicKey,
-                    title: newTitle,
-                    actionType: recommendedActionType || createForm.actionType,
-                  });
-                }}
-              >
-                <SelectTrigger className="col-span-3 bg-emerald-500/10 border-emerald-500/30">
-                  <SelectValue placeholder="프리셋을 먼저 선택하세요..." />
-                </SelectTrigger>
-                <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                  {LOGIC_KEY_PRESETS.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
-            {/* Step 2: 카테고리 선택 */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="category" className="text-right text-zinc-400">
-                2. 카테고리
-              </Label>
-              <Select
-                value={createForm.category}
-                onValueChange={(val) => {
-                  const newLogicKey = generateLogicKey(
-                    selectedPreset,
-                    val,
-                    createForm.targetValue,
-                  );
-                  const newTitle = generateTitle(
-                    selectedPreset,
-                    val,
-                    createForm.targetValue,
-                  );
-                  setCreateForm({
-                    ...createForm,
-                    category: val,
-                    logicKey: newLogicKey,
-                    title: newTitle,
-                  });
-                }}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat} ({getCategoryMeaning(cat)})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Step 3: 제목 (자동 생성되지만 수정 가능) */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right text-zinc-400">
-                3. 제목
-              </Label>
-              <Input
-                id="title"
-                value={createForm.title}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, title: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="자동 생성됨 (수정 가능)"
-              />
-            </div>
-
-            {/* 로직 키 (자동 생성, 읽기 전용 표시) */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="logicKey" className="text-right text-zinc-400">
-                로직 키
-              </Label>
-              <div className="col-span-3 flex items-center gap-2">
-                <Input
-                  id="logicKey"
-                  value={createForm.logicKey}
-                  readOnly
-                  className="bg-white/5 border-white/10 text-zinc-400 cursor-not-allowed"
-                />
-                <span className="text-xs text-zinc-500 whitespace-nowrap">
-                  자동 생성
-                </span>
-              </div>
-            </div>
-
-            {createError && (
-              <div className="col-span-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
-                ⚠️ {createError}
-              </div>
-            )}
-
-            {/* Step 4: 목표 횟수 (변경 시 logicKey와 제목 자동 업데이트) */}
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label
-                htmlFor="targetValue"
-                className="text-right text-zinc-400 font-semibold"
-              >
-                4. 목표 횟수
-              </Label>
-              <Input
-                id="targetValue"
-                type="number"
-                min={1}
-                value={createForm.targetValue}
-                onChange={(e) => {
-                  const newTarget = Math.max(1, parseInt(e.target.value) || 1);
-                  const newLogicKey = generateLogicKey(
-                    selectedPreset,
-                    createForm.category,
-                    newTarget,
-                  );
-                  const newTitle = generateTitle(
-                    selectedPreset,
-                    createForm.category,
-                    newTarget,
-                  );
-                  setCreateForm({
-                    ...createForm,
-                    targetValue: newTarget,
-                    logicKey: newLogicKey,
-                    title: newTitle,
-                  });
-                }}
-                className="col-span-3 bg-emerald-500/10 border-emerald-500/30"
-              />
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="actionType" className="text-right text-zinc-400">
-                Action Type
-              </Label>
-              <Select
-                value={createForm.actionType || "PLAY_GAME"}
-                onValueChange={(val) =>
-                  setCreateForm({ ...createForm, actionType: val })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                  {ACTION_TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="condition" className="text-right text-zinc-400">
-                설명(표시용)
-              </Label>
-              <Input
-                id="condition"
-                value={createForm.condition}
-                onChange={(e) =>
-                  setCreateForm({ ...createForm, condition: e.target.value })
-                }
-                className="col-span-3"
-                placeholder="유저에게 보여지는 설명 (선택사항)"
-              />
-            </div>
-
-            {renderMissionAssemblyPreview({
-              category: createForm.category,
-              logicKey: createForm.logicKey,
-              actionType: createForm.actionType,
-              targetValue: createForm.targetValue,
-              condition: createForm.condition,
-            })}
-
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="reward" className="text-right text-zinc-400">
-                보상
-              </Label>
-              <div className="col-span-3 flex gap-2">
-                <Select
-                  value={createForm.rewardType}
-                  onValueChange={(val) =>
-                    setCreateForm({ ...createForm, rewardType: val })
-                  }
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
-                    {MISSION_REWARD_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="number"
-                  className="w-24"
-                  value={createForm.rewardAmount}
-                  onChange={(e) =>
-                    setCreateForm({
-                      ...createForm,
-                      rewardAmount: parseInt(e.target.value),
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsCreateOpen(false)}
-              className="text-zinc-400 hover:text-white"
-            >
-              취소
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={createMutation.isPending}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
-            >
-              생성
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-[#18181B] border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>미션 편집</DialogTitle>
-            <DialogDescription className="text-zinc-400">
-              기존 미션의 조건/보상을 수정합니다.
-            </DialogDescription>
-          </DialogHeader>
-          {editForm && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">카테고리</Label>
-                <Select
-                  value={editForm.category}
-                  onValueChange={(val) =>
-                    setEditForm({ ...editForm, category: val as any })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">제목</Label>
-                <Input
-                  value={editForm.title}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, title: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">로직 키</Label>
-                <Input
-                  value={editForm.logicKey}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, logicKey: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-                <div className="col-start-2 col-span-3">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Column: Basic Info & Logic */}
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">01. Identity & Config</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">Mission Preset</Label>
                   <Select
+                    value={selectedPreset}
                     onValueChange={(val) => {
-                      const recommendedActionType =
-                        PRESET_RECOMMENDED_ACTION_TYPE[val];
-                      setEditForm({
-                        ...editForm,
-                        logicKey: val,
-                        actionType:
-                          recommendedActionType || editForm.actionType,
+                      setSelectedPreset(val);
+                      const recommendedActionType = PRESET_RECOMMENDED_ACTION_TYPE[val];
+                      const presetCategory = getPresetCategory(val);
+                      const newTarget = createForm.targetValue;
+                      const newLogicKey = generateLogicKey(val, presetCategory, newTarget);
+                      const newTitle = generateTitle(val, presetCategory, newTarget);
+                      setCreateForm({
+                        ...createForm,
+                        category: presetCategory,
+                        logicKey: newLogicKey,
+                        title: newTitle,
+                        actionType: recommendedActionType || createForm.actionType,
                       });
                     }}
                   >
-                    <SelectTrigger className="h-7 text-xs bg-white/5 border-white/10">
-                      <SelectValue placeholder="프리셋 선택..." />
+                    <SelectTrigger className="bg-white/5 border-white/10 hover:border-emerald-500/30 transition-colors">
+                      <SelectValue placeholder="Select a preset..." />
                     </SelectTrigger>
                     <SelectContent className="bg-[#18181B] border-white/10 text-white">
                       {LOGIC_KEY_PRESETS.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>
+                        <SelectItem key={p.value} value={p.value} className="focus:bg-emerald-500/10 focus:text-emerald-400">
                           {p.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">Action Type</Label>
-                <Select
-                  value={editForm.actionType || "PLAY_GAME"}
-                  onValueChange={(val) =>
-                    setEditForm({ ...editForm, actionType: val })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    {ACTION_TYPE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {editError && (
-                <p className="text-xs text-red-400 text-right">{editError}</p>
-              )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400">Category</Label>
+                    <Select
+                      value={createForm.category}
+                      onValueChange={(val) => {
+                        const newLogicKey = generateLogicKey(selectedPreset, val, createForm.targetValue);
+                        const newTitle = generateTitle(selectedPreset, val, createForm.targetValue);
+                        setCreateForm({ ...createForm, category: val, logicKey: newLogicKey, title: newTitle });
+                      }}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400">Action Type</Label>
+                    <Select
+                      value={createForm.actionType || "PLAY_GAME"}
+                      onValueChange={(val) => setCreateForm({ ...createForm, actionType: val })}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                        {ACTION_TYPE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">설명(표시용)</Label>
-                <Input
-                  value={editForm.condition}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, condition: e.target.value })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-
-              {renderMissionAssemblyPreview({
-                category: editForm.category,
-                logicKey: editForm.logicKey,
-                actionType: editForm.actionType,
-                targetValue: editForm.targetValue,
-                condition: editForm.condition,
-              })}
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">목표 점수</Label>
-                <Input
-                  type="number"
-                  value={editForm.targetValue}
-                  onChange={(e) =>
-                    setEditForm({
-                      ...editForm,
-                      targetValue: parseInt(e.target.value),
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right text-zinc-400">보상</Label>
-                <div className="col-span-3 flex gap-2">
-                  <Select
-                    value={editForm.rewardType}
-                    onValueChange={(val) =>
-                      setEditForm({ ...editForm, rewardType: val })
-                    }
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
-                      {MISSION_REWARD_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">Display Title</Label>
                   <Input
-                    type="number"
-                    className="w-24"
-                    value={editForm.rewardAmount}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        rewardAmount: parseInt(e.target.value),
-                      })
-                    }
+                    value={createForm.title}
+                    onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                    className="bg-white/5 border-white/10 focus:border-emerald-500/50"
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400 font-bold text-emerald-500/80">Target Count</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={createForm.targetValue}
+                      onChange={(e) => {
+                        const newTarget = Math.max(1, parseInt(e.target.value) || 1);
+                        const newLogicKey = generateLogicKey(selectedPreset, createForm.category, newTarget);
+                        const newTitle = generateTitle(selectedPreset, createForm.category, newTarget);
+                        setCreateForm({ ...createForm, targetValue: newTarget, logicKey: newLogicKey, title: newTitle });
+                      }}
+                      className="bg-emerald-500/5 border-emerald-500/20 text-emerald-400 font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400">Display Condition</Label>
+                    <Input
+                      value={createForm.condition}
+                      onChange={(e) => setCreateForm({ ...createForm, condition: e.target.value })}
+                      placeholder="(Optional)"
+                      className="bg-white/5 border-white/10"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end">
-                <Switch
-                  checked={editForm.isActive}
-                  onCheckedChange={(checked) =>
-                    setEditForm({ ...editForm, isActive: checked })
-                  }
-                />
-                <span className="ml-2 text-sm text-zinc-400">활성</span>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">02. Reward Package</span>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1 space-y-2">
+                    <Label className="text-xs text-zinc-400">Asset Type</Label>
+                    <Select
+                      value={createForm.rewardType}
+                      onValueChange={(val) => setCreateForm({ ...createForm, rewardType: val })}
+                    >
+                      <SelectTrigger className="bg-white/5 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
+                        {MISSION_REWARD_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-32 space-y-2">
+                    <Label className="text-xs text-zinc-400">Amount</Label>
+                    <Input
+                      type="number"
+                      value={createForm.rewardAmount}
+                      onChange={(e) => setCreateForm({ ...createForm, rewardAmount: parseInt(e.target.value) || 0 })}
+                      className="bg-white/5 border-white/10 font-mono text-right"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Preview & Errors */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">03. Logic Preview</span>
+                </div>
+                
+                {renderMissionAssemblyPreview({
+                  category: createForm.category,
+                  logicKey: createForm.logicKey,
+                  actionType: createForm.actionType,
+                  targetValue: createForm.targetValue,
+                  condition: createForm.condition,
+                })}
+
+                {createError && (
+                  <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center gap-2 text-red-400 mb-1">
+                      <span className="text-sm font-bold">CONFIGURATION ERROR</span>
+                    </div>
+                    <p className="text-xs text-red-300 opacity-90 leading-snug">{createError}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-8 flex justify-end gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="text-zinc-500 hover:text-white hover:bg-white/5 px-8"
+                >
+                  DISCARD
+                </Button>
+                <Button
+                  onClick={handleCreate}
+                  disabled={createMutation.isPending}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-10 shadow-lg shadow-emerald-900/20"
+                >
+                  {createMutation.isPending ? "INITIALIZING..." : "EXECUTE DEPLOY"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0" />
+          
+          <DialogHeader className="p-6 pb-0">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                  <Edit2 className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold tracking-tight">Modify Parameters</DialogTitle>
+                  <DialogDescription className="text-zinc-500 text-xs font-mono">
+                    MISSION_ID: #{editForm?.id}
+                  </DialogDescription>
+                </div>
+              </div>
+              
+              {editForm && (
+                <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-lg border border-white/5">
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase">Status</span>
+                  <span className="flex items-center gap-2">
+                    <Switch
+                      checked={editForm.isActive}
+                      onCheckedChange={(checked) => setEditForm({ ...editForm, isActive: checked })}
+                      className="data-[state=checked]:bg-indigo-500"
+                    />
+                    <span className={`text-[10px] font-bold uppercase ${editForm.isActive ? "text-indigo-400" : "text-zinc-600"}`}>
+                      {editForm.isActive ? "Active" : "Disabled"}
+                    </span>
+                  </span>
+                </div>
+              )}
+            </div>
+          </DialogHeader>
+
+          {editForm && (
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">01. Identity & Condition</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400">Display Title</Label>
+                    <Input
+                      value={editForm.title}
+                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      className="bg-white/5 border-white/10 focus:border-indigo-500/50"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-zinc-400">Category Scope</Label>
+                      <Select
+                        value={editForm.category}
+                        onValueChange={(val) => setEditForm({ ...editForm, category: val as any })}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                          {CATEGORIES.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-zinc-400">Action Type</Label>
+                      <Select
+                        value={editForm.actionType || "PLAY_GAME"}
+                        onValueChange={(val) => setEditForm({ ...editForm, actionType: val })}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                          {ACTION_TYPE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400">Identifier (Logic Key)</Label>
+                    <div className="space-y-2">
+                      <Input
+                        value={editForm.logicKey}
+                        onChange={(e) => setEditForm({ ...editForm, logicKey: e.target.value })}
+                        className="font-mono text-sm bg-white/5 border-white/10 focus:border-indigo-500/50"
+                      />
+                      <Select
+                        onValueChange={(val) => {
+                          const recommendedActionType = PRESET_RECOMMENDED_ACTION_TYPE[val];
+                          setEditForm({
+                            ...editForm,
+                            logicKey: val,
+                            actionType: recommendedActionType || editForm.actionType,
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="h-8 text-xs bg-indigo-500/5 border-indigo-500/20 text-indigo-400">
+                          <SelectValue placeholder="Override with Preset..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                          {LOGIC_KEY_PRESETS.map((p) => (
+                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">02. Threshold & Reward</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-zinc-400 font-bold text-indigo-400">Target Value</Label>
+                      <Input
+                        type="number"
+                        value={editForm.targetValue}
+                        onChange={(e) => setEditForm({ ...editForm, targetValue: parseInt(e.target.value) || 1 })}
+                        className="bg-indigo-500/5 border-indigo-500/20 font-bold"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-zinc-400">Display Desc</Label>
+                      <Input
+                        value={editForm.condition || ""}
+                        onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })}
+                        className="bg-white/5 border-white/10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">Award Asset</Label>
+                      <Select
+                        value={editForm.rewardType}
+                        onValueChange={(val) => setEditForm({ ...editForm, rewardType: val })}
+                      >
+                        <SelectTrigger className="bg-transparent border-white/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
+                          {MISSION_REWARD_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-28 space-y-2">
+                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">Amount</Label>
+                      <Input
+                        type="number"
+                        value={editForm.rewardAmount}
+                        onChange={(e) => setEditForm({ ...editForm, rewardAmount: parseInt(e.target.value) || 0 })}
+                        className="bg-transparent border-white/10 font-mono text-xl font-bold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">03. Deployment Preview</span>
+                  </div>
+                  
+                  {renderMissionAssemblyPreview({
+                    category: editForm.category,
+                    logicKey: editForm.logicKey,
+                    actionType: editForm.actionType,
+                    targetValue: editForm.targetValue,
+                    condition: editForm.condition,
+                  })}
+
+                  {editError && (
+                    <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in">
+                      <div className="flex items-center gap-2 text-red-400 mb-1">
+                        <span className="text-sm font-bold uppercase">Update Blocked</span>
+                      </div>
+                      <p className="text-xs text-red-300 leading-snug">{editError}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-8 flex justify-end gap-3">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsEditOpen(false)}
+                    className="text-zinc-500 hover:text-white hover:bg-white/5 px-8"
+                  >
+                    ABORT
+                  </Button>
+                  <Button
+                    onClick={handleSaveEdit}
+                    disabled={updateMutation.isPending}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-10 shadow-lg shadow-indigo-900/20"
+                  >
+                    {updateMutation.isPending ? "PATCHING..." : "COMMIT CHANGES"}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setIsEditOpen(false)}
-              className="text-zinc-400 hover:text-white"
-            >
-              취소
-            </Button>
-            <Button
-              onClick={handleSaveEdit}
-              disabled={updateMutation.isPending}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
-            >
-              저장
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
