@@ -20,7 +20,7 @@ DELETE http://localhost:3000/api/admin/users/14 500 (Internal Server Error)
 
 ### 1. API 경로 불일치
 
-**프론트엔드** ([adminUserApi.ts:63-68](adminUserApi.ts:63-68)):
+**프론트엔드** (`src/admin/api/adminUserApi.ts`):
 ```typescript
 export async function deleteUser(userId: number) {
   await adminApi.delete(`/api/admin/users/${userId}`);  // ❌ 잘못된 경로
@@ -31,7 +31,7 @@ export async function purgeUser(userId: number) {
 }
 ```
 
-**백엔드** ([user_routes.py:1007-1041](user_routes.py:1007-1041)):
+**백엔드** (`app/v2/api/admin/user_routes.py`):
 ```python
 @router.delete("/users/{user_id}", status_code=204)  # ✅ /api/v2/admin/users/{user_id}
 def delete_user(...)
@@ -54,7 +54,7 @@ def purge_user(...)
 
 ## 해결 방법
 
-### 수정 파일: `src/admin/api/adminUserApi.ts`
+### 수정 파일: `src/admin/api/adminUserApi.ts` (V2 어드민에서 호출되는 호환 레이어)
 
 ```typescript
 export async function deleteUser(userId: number) {
@@ -177,6 +177,7 @@ Authorization: Bearer {admin_token}
 - `app/v2/api/admin/user_routes.py` - 백엔드 라우터
 - `app/v2/services/admin_user_service.py` - 백엔드 서비스 로직
 - `src/v2/admin/pages/users/UserDetailDrawer.tsx` - 유저 상세 화면 (삭제 UI)
+- `src/v2/admin/pages/users/UserDetailDrawer.tsx`는 V2 화면이지만, 삭제/퍼지 호출은 위 호환 레이어를 통해 `/api/v2/admin/*`로 전송된다. (**V2 정책 반영**)
 
 ## 기술기준문서 참조
 

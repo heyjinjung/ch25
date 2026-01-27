@@ -3,6 +3,7 @@ import { AuthUser } from "../auth/authStore";
 
 export interface LoginRequest {
   readonly user_id?: number;
+  readonly cc_id?: string;
   readonly external_id?: string;
   readonly password?: string;
 }

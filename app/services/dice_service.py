@@ -143,7 +143,7 @@ class DiceService:
                  payload = v_status.progress_json or {}
                  event_plays_done = int(payload.get("plays_done", 0))
 
-        # Daily cap removed: use 0 to denote unlimited.
+        # Daily cap removed: use 0 to denote unlimited (V2 Native standard).
         unlimited = 0
         remaining = 0
 
@@ -326,7 +326,7 @@ class DiceService:
              dealer_sum = sum(dealer_dice)
 
 
-        # Guardrails: enforce dice value range in case of RNG/provider change.
+        # Guardrails: enforce dice value range in case of RNG/provider change (V2 Native fallback).
         self._validate_dice_values(user_dice)
         self._validate_dice_values(dealer_dice)
 
@@ -441,7 +441,7 @@ class DiceService:
             },
         )
 
-        # Trial Payout Logic (Legacy) -> Only for NON-POINT rewards
+        # Trial Payout Logic (V2 Native bridge) -> Only for NON-POINT rewards
         settings = get_settings()
         is_trial_payout_mode = consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))
 

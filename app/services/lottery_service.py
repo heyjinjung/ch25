@@ -216,7 +216,7 @@ class LotteryService:
             },
         ) or 0
 
-        # Trial Logic (Legacy) -> Only for NON-POINT rewards
+        # Trial Logic (V2 Native bridge) -> Only for NON-POINT rewards
         settings = get_settings()
         is_trial_payout_mode = consumed_trial and bool(getattr(settings, "enable_trial_payout_to_vault", False))
         

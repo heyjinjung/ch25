@@ -55,12 +55,12 @@ class V2AdminUserService:
         if db.query(User).filter(User.external_id == payload.external_id).first():
             raise HTTPException(status_code=409, detail="EXTERNAL_ID_EXISTS")
 
-        nickname = payload.nickname or payload.telegram_username or payload.external_id
+        nickname = payload.nickname or payload.telegram_username or payload.cc_id
         telegram_username = V2AdminUserService._clean_telegram_username(payload.telegram_username)
 
         user = User(
             id=payload.user_id,
-            external_id=payload.external_id,
+            external_id=payload.cc_id,
             nickname=nickname,
             level=payload.level or 1,
             xp=payload.xp or 0,
@@ -107,7 +107,7 @@ class V2AdminUserService:
         admin_profile = getattr(user, "admin_profile", None)
         return AdminUserSummary(
             id=int(user.id),
-            external_id=str(user.external_id),
+            cc_id=str(user.external_id),
             nickname=(user.nickname or None),
             tg_id=V2AdminUserService.derive_tg_id(user),
             tg_username=(user.telegram_username or None),

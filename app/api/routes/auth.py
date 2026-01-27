@@ -21,13 +21,15 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 class TokenRequest(BaseModel):
     user_id: int | None = None
-    external_id: str | None = None
+    cc_id: str | None = Field(None, validation_alias=AliasChoices("cc_id", "external_id"))
+    external_id: str | None = None  # Backward compatibility
     password: str | None = None
 
 
 class AuthUser(BaseModel):
     id: int
-    external_id: str
+    cc_id: str = Field(..., validation_alias=AliasChoices("cc_id", "external_id"))
+    external_id: str  # Backward compatibility
     nickname: str | None = None
     status: str | None = None
     level: int | None = None
@@ -44,12 +46,12 @@ class TokenResponse(BaseModel):
 
 @router.post("/token", response_model=TokenResponse, summary="Issue JWT for user")
 def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
-    # external_id 우선, 없으면 user_id로 조회. 둘 다 없으면 401.
-    cleaned_external = payload.external_id.strip() if payload.external_id else None
+    # cc_id 우선, 없으면 user_id로 조회. 둘 다 없으면 401.
+    cleaned_cc = (payload.cc_id or payload.external_id or "").strip()
 
     user = None
-    if cleaned_external:
-        user = db.query(User).filter(User.external_id == cleaned_external).first()
+    if cleaned_cc:
+        user = db.query(User).filter(User.external_id == cleaned_cc).first()
     if user is None and payload.user_id is not None:
         user = db.get(User, payload.user_id)
     if user is None:
@@ -143,7 +145,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
                 user_id=user.id,
                 feature_type="AUTH",
                 event_name="AUTH_LOGIN",
-                meta_json={"external_id": user.external_id, "ip": client_ip},
+                meta_json={"cc_id": user.external_id, "ip": client_ip},
             )
         )
 
@@ -176,6 +178,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         access_token=token,
         user=AuthUser(
             id=user.id,
+            cc_id=user.external_id,
             external_id=user.external_id,
             nickname=user.nickname,
             status=user.status,

@@ -209,7 +209,7 @@ export interface GoldenGameEventDto {
   betAmount: number;
   payoutAmount: number;
   currentBalance: number;
-  externalUserId?: string;
+  ccId?: string;
   sessionId?: string;
   gameMetadata?: Record<string, any>;
   isHistorical: boolean;
@@ -255,7 +255,6 @@ export interface AdminUserResolveResponse {
   userId: number;
   nickname: string;
   ccId: string;
-  externalId?: string | null;
 }
 
 // User Segment Types
@@ -351,8 +350,7 @@ export interface CreateUserNoteRequest {
 }
 
 export interface AdminUserCreateRequest {
-  externalId: string;
-  ccId?: string;
+  ccId: string;
   nickname?: string;
   level?: number;
   status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
@@ -402,7 +400,6 @@ export const resolveAdminUserIdentifier = async (
     userId: data.userId,
     nickname: data.nickname,
     ccId: data.ccId ?? data.cc_id ?? data.externalId ?? data.external_id ?? "",
-    externalId: data.externalId ?? data.external_id ?? null,
   };
 };
 
@@ -440,9 +437,8 @@ export const createUserNote = async (
 export const createAdminUser = async (
   data: AdminUserCreateRequest,
 ): Promise<AdminUserListDto> => {
-  const ccId = data.ccId ?? data.externalId;
+  const ccId = data.ccId;
   const payload: Record<string, unknown> = {
-    external_id: ccId,
     cc_id: ccId,
   };
 
@@ -1174,7 +1170,7 @@ export interface AdminTeamBattleMemberDto {
   role: string;
   joined_at: string | null;
   nickname?: string | null;
-  external_id?: string | null;
+  cc_id?: string | null;
   contribution_points: number;
   latest_event_at: string | null;
 }
@@ -1195,7 +1191,7 @@ export interface AdminTeamBattleContributionLogDto {
   meta?: Record<string, any> | null;
   created_at: string | null;
   nickname?: string | null;
-  external_id?: string | null;
+  cc_id?: string | null;
 }
 
 export interface AdminTeamBattleContributionLogListDto {

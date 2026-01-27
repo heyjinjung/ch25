@@ -703,7 +703,8 @@ def ticket_zero_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> V2TicketZeroStatusResponse:
-    user = db.query(User).filter(User.id == user_id).first()
+    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+    user = db.query(User).filter(User.id == master_user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

@@ -24,4 +24,4 @@ V2 인증 과정에서 유저를 찾지 못할 경우, 즉시 V2 유저 데이�
 - **향후 과제**: V2 어드민에서 유저 생성 시 즉시 V2 유저를 생성하도록 로직 업데이트 권장.
 
 ---
-*상세 매핑 정보는 [20260127_user_table_dual_sot_mapping.md](file:///c:/Users/JAVIS/ch/ch25/docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/20260127_user_table_dual_sot_mapping.md)를 참조하세요.*
+*상세 매핑/정책은 [20260127_user_table_unification_plan.md](20260127_user_table_unification_plan.md)를 참조하세요. (V2 정책 반영)*

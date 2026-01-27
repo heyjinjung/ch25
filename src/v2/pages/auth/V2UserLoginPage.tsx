@@ -33,7 +33,7 @@ const V2UserLoginPage: FC = () => {
 
   const loginWithCredentials = async (username: string, password: string) => {
     const res = await v2Client.post("/api/v2/auth/token", {
-      external_id: username,
+      cc_id: username,
       password,
     });
 
@@ -48,14 +48,14 @@ const V2UserLoginPage: FC = () => {
     navigate("/home");
   };
 
-  const loginWithDevExternalId = async (externalId: string) => {
-    const trimmed = externalId.trim();
+  const loginWithDevCcId = async (ccId: string) => {
+    const trimmed = ccId.trim();
     if (!trimmed) {
-      throw new Error("MISSING_EXTERNAL_ID");
+      throw new Error("MISSING_CC_ID");
     }
 
     const res = await v2Client.post("/api/v2/dev/login", {
-      external_id: trimmed,
+      cc_id: trimmed,
       nickname: trimmed,
       create_if_missing: false,
     });
@@ -69,7 +69,7 @@ const V2UserLoginPage: FC = () => {
 
     setAuth(token, {
       id: devUser?.id ?? 0,
-      external_id: devUser?.cc_id ?? trimmed,
+      cc_id: devUser?.cc_id ?? trimmed,
       nickname: devUser?.nickname ?? trimmed,
       telegram_id: devUser?.telegram_id ?? null,
       telegram_username: devUser?.telegram_username ?? null,
@@ -104,7 +104,7 @@ const V2UserLoginPage: FC = () => {
 
     try {
       await v2Client.post("/api/v2/dev/login", {
-        external_id: "test",
+        cc_id: "test",
         nickname: "test",
         create_if_missing: true,
       });
@@ -128,14 +128,14 @@ const V2UserLoginPage: FC = () => {
     setServerError(null);
 
     try {
-      const externalId = String(getValues("username") || "").trim();
-      await loginWithDevExternalId(externalId || "");
+      const ccId = String(getValues("username") || "").trim();
+      await loginWithDevCcId(ccId || "");
     } catch (err: any) {
       const detail = err?.response?.data?.detail || err?.message;
       const fallback =
         detail === "DEV_LOGIN_DISABLED"
           ? "현재 서버 환경에서 DEV_LOGIN이 꺼져 있습니다."
-          : detail === "MISSING_EXTERNAL_ID"
+          : detail === "MISSING_CC_ID"
             ? "CC ID를 입력하세요."
             : "DEV 로그인에 실패했습니다.";
       setServerError(typeof detail === "string" ? detail : fallback);
@@ -225,7 +225,7 @@ const V2UserLoginPage: FC = () => {
               onClick={handleDevExternalLogin}
               disabled={isLoading}
             >
-              DEV 외부ID 로그인 (비번 없음)
+              DEV CCID 로그인 (비번 없음)
             </button>
 
             {serverError && (

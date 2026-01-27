@@ -195,7 +195,7 @@ class V2VaultService:
         has_cc_deposit_today = int(delta_today) > 0
 
         if not has_cc_deposit_today:
-            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == legacy_user_id).first()
+            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == master_user_id).first()
             if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
@@ -204,7 +204,7 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
-            activity = db.query(UserActivity).filter(UserActivity.user_id == legacy_user_id).first()
+            activity = db.query(UserActivity).filter(UserActivity.user_id == master_user_id).first()
             if activity and activity.last_charge_at:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
@@ -340,7 +340,7 @@ class V2VaultService:
         op_start_utc = op_start_kst.astimezone(timezone.utc).replace(tzinfo=None) # naive for DB
 
         today_earnings = db.query(func.coalesce(func.sum(VaultLedger.amount), 0)).filter(
-            VaultLedger.user_id == legacy_user_id,
+            VaultLedger.user_id == master_user_id,
             VaultLedger.amount > 0,
             VaultLedger.created_at >= op_start_utc
         ).scalar() or 0
@@ -349,7 +349,7 @@ class V2VaultService:
         # New Field: Next Tier Goal (Dynamic Withdrawal Goal)
         # ---------------------------------------------------------------------
         approved_count_val = db.query(func.count(VaultWithdrawalRequest.id)).filter(
-            VaultWithdrawalRequest.user_id == legacy_user_id,
+            VaultWithdrawalRequest.user_id == master_user_id,
             VaultWithdrawalRequest.status == "APPROVED",
         ).scalar() or 0
         
@@ -735,8 +735,8 @@ class V2VaultService:
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
         """V2 adapted withdrawal request (CC Deposit based)."""
-        legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-        user = db.get(User, legacy_user_id)
+        master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+        user = db.get(User, master_user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
@@ -753,7 +753,7 @@ class V2VaultService:
         delta_today = (
             db.query(ExternalRankingDailyDepositDelta.deposit_delta)
             .filter(
-                ExternalRankingDailyDepositDelta.user_id == legacy_user_id,
+                ExternalRankingDailyDepositDelta.user_id == master_user_id,
                 ExternalRankingDailyDepositDelta.kst_date == op_date_kst,
             )
             .scalar()
@@ -762,7 +762,7 @@ class V2VaultService:
         has_cc_deposit_today = int(delta_today) > 0
 
         if not has_cc_deposit_today:
-            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == legacy_user_id).first()
+            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == master_user_id).first()
             if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
@@ -771,7 +771,7 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
-            activity = db.query(UserActivity).filter(UserActivity.user_id == legacy_user_id).first()
+            activity = db.query(UserActivity).filter(UserActivity.user_id == master_user_id).first()
             if activity and activity.last_charge_at:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
@@ -790,7 +790,7 @@ class V2VaultService:
             # Fetch 7d deposit for target calculation
             seven_days_ago_date = (now - timedelta(days=6)).date()
             deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-                ExternalRankingDailyDepositDelta.user_id == legacy_user_id,
+                ExternalRankingDailyDepositDelta.user_id == master_user_id,
                 ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
             ).scalar() or 0
 
@@ -816,9 +816,9 @@ class V2VaultService:
             from app.v2.models.v2_roulette import V2RouletteLog
             from app.v2.models.v2_lottery import V2LotteryLog
 
-            l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == legacy_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
-            l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == legacy_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
-            l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == legacy_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == master_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == master_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == master_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_dice = db.query(func.count(V2DiceLog.id)).filter(V2DiceLog.user_id == user_id, V2DiceLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_roul = db.query(func.count(V2RouletteLog.id)).filter(V2RouletteLog.user_id == user_id, V2RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_lott = db.query(func.count(V2LotteryLog.id)).filter(V2LotteryLog.user_id == user_id, V2LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
@@ -837,7 +837,7 @@ class V2VaultService:
         approved_count = (
             db.query(func.count(VaultWithdrawalRequest.id))
             .filter(
-                VaultWithdrawalRequest.user_id == legacy_user_id,
+                VaultWithdrawalRequest.user_id == master_user_id,
                 VaultWithdrawalRequest.status == "APPROVED",
             )
             .scalar()

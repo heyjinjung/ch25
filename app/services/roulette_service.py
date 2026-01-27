@@ -148,22 +148,22 @@ class RouletteService:
         if user_id:
              target_grade = self._resolve_user_grade(db, user_id)
 
-        # Build list of ticket types to query (V2 standard + legacy alias)
+        # Build list of ticket types to query (V2 standard + alias mapping)
         # This ensures we find configs regardless of which naming convention was used
         ticket_types_to_query = [ticket_type]
-        legacy_map = {
+        master_map = {
             "GOLD_KEY_TICKET": "GOLD_KEY",
             "DIAMOND_TICKET": "DIAMOND_KEY",
             "TRIAL_TICKET": "TRIAL_TOKEN",
             "ROULETTE_TICKET": "ROULETTE_COIN",
             "DICE_TICKET": "DICE_TOKEN",
         }
-        reverse_legacy_map = {v: k for k, v in legacy_map.items()}
+        reverse_master_map = {v: k for k, v in master_map.items()}
 
-        if ticket_type in legacy_map:
-            ticket_types_to_query.append(legacy_map[ticket_type])
-        elif ticket_type in reverse_legacy_map:
-            ticket_types_to_query.append(reverse_legacy_map[ticket_type])
+        if ticket_type in master_map:
+            ticket_types_to_query.append(master_map[ticket_type])
+        elif ticket_type in reverse_master_map:
+            ticket_types_to_query.append(reverse_master_map[ticket_type])
 
         # Priority 1: Config matching Grade
         config = db.execute(
@@ -460,7 +460,7 @@ class RouletteService:
         settings = get_settings()
         trial_payout_enabled = bool(getattr(settings, "enable_trial_payout_to_vault", False))
         
-        # Trial/Key Special Routing (Legacy cleanup: ensure no double counting)
+        # Trial/Key Special Routing (V2 Native bridge)
         # The block above handles standard POINT accrual.
         # Trial enabled logic is handled via vault_service internal checks or skipped if not needed.
         

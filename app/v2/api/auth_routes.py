@@ -32,9 +32,9 @@ def v2_issue_token(
         detail = str(exc) if str(exc) else "USER_NOT_FOUND"
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
 
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
-    legacy_user = db.get(User, legacy_user_id)
-    vault_balance = int(legacy_user.vault_locked_balance or 0) if legacy_user else int(user.vault_locked_balance or 0)
+    master_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
+    master_user = db.get(User, master_user_id)
+    vault_balance = int(master_user.vault_locked_balance or 0) if master_user else int(user.vault_locked_balance or 0)
 
     return AuthTokenResponse(
         access_token=token,

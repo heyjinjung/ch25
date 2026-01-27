@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 
 export interface AuthUser {
   readonly id: number;
-  readonly external_id: string;
+  readonly cc_id: string;
+  readonly external_id?: string;
   readonly nickname?: string;
   readonly status?: string;
   readonly level?: number;

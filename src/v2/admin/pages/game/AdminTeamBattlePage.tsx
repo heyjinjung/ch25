@@ -959,7 +959,7 @@ export default function AdminTeamBattlePage() {
                   {selectedMember.user_id}
                 </div>
                 <div className="text-xs text-zinc-500">
-                  CC ID: {selectedMember.external_id ?? "-"}
+                  CC ID: {selectedMember.cc_id ?? "-"}
                 </div>
               </div>
 

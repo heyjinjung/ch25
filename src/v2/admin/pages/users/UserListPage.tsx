@@ -76,7 +76,7 @@ export default function UserListPage() {
   const [selectedDrawerTab, setSelectedDrawerTab] =
     useState<string>("overview");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createExternalId, setCreateExternalId] = useState("");
+  const [createCcId, setCreateCcId] = useState("");
   const [createNickname, setCreateNickname] = useState("");
   const [createTelegramId, setCreateTelegramId] = useState("");
   const [createTelegramUsername, setCreateTelegramUsername] = useState("");
@@ -142,14 +142,14 @@ export default function UserListPage() {
   };
 
   const handleCreateUser = async () => {
-    const externalId = createExternalId.trim();
-    if (!externalId) return;
+    const ccId = createCcId.trim();
+    if (!ccId) return;
 
     const level = Number.parseInt(createLevel, 10);
     const telegramId = Number.parseInt(createTelegramId, 10);
 
     await createUserMutation.mutateAsync({
-      externalId,
+      ccId,
       nickname: createNickname.trim() || undefined,
       level: Number.isFinite(level) ? level : undefined,
       status: createStatus,
@@ -158,7 +158,7 @@ export default function UserListPage() {
     });
 
     setIsCreateOpen(false);
-    setCreateExternalId("");
+    setCreateCcId("");
     setCreateNickname("");
     setCreateTelegramId("");
     setCreateTelegramUsername("");
@@ -461,8 +461,8 @@ export default function UserListPage() {
             <div className="space-y-2">
               <label className="text-sm text-zinc-300">CC ID</label>
               <Input
-                value={createExternalId}
-                onChange={(e) => setCreateExternalId(e.target.value)}
+                value={createCcId}
+                onChange={(e) => setCreateCcId(e.target.value)}
                 className="bg-zinc-900 border-zinc-800 text-zinc-200"
                 placeholder="예: cc_123"
               />
@@ -543,7 +543,7 @@ export default function UserListPage() {
               className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold"
               onClick={handleCreateUser}
               disabled={
-                createUserMutation.isPending || !createExternalId.trim()
+                createUserMutation.isPending || !createCcId.trim()
               }
             >
               {createUserMutation.isPending ? "등록 중.." : "등록"}

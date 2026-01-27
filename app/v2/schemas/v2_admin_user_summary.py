@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from typing import Optional, List
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field, AliasChoices
 
 from app.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminUserSummary(BaseModel):
     id: int
-    external_id: str
+    cc_id: str = Field(..., validation_alias=AliasChoices("cc_id", "external_id"))
     nickname: Optional[str] = None
 
     tg_id: Optional[int] = None

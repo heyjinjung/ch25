@@ -16,7 +16,7 @@ from app.services.reward_service import RewardService
 class LevelXPService:
     """Maintain user-level XP and issue rewards idempotently."""
 
-    LEGACY_REWARD_TYPE_MAP = {
+    MASTER_REWARD_TYPE_MAP = {
         "TICKET_ROULETTE": "ROULETTE_TICKET",
         "TICKET_DICE": "DICE_TICKET",
         "TICKET_LOTTERY": "LOTTERY_TICKET",
@@ -97,7 +97,7 @@ class LevelXPService:
         if not value:
             return "NONE"
         normalized = str(value).upper()
-        return cls.LEGACY_REWARD_TYPE_MAP.get(normalized, normalized)
+        return cls.MASTER_REWARD_TYPE_MAP.get(normalized, normalized)
 
     def __init__(self) -> None:
         self.reward_service = RewardService()

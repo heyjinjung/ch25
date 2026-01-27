@@ -136,7 +136,7 @@ class TeamMemberDto(BaseModel):
     role: str
     joined_at: str | None
     nickname: str | None
-    external_id: str | None
+    cc_id: str | None
     contribution_points: int
     latest_event_at: str | None
 
@@ -157,7 +157,7 @@ class ContributionLogDto(BaseModel):
     meta: dict | None
     created_at: str | None
     nickname: str | None
-    external_id: str | None
+    cc_id: str | None
 
 
 class ContributionLogListDto(BaseModel):
@@ -370,7 +370,7 @@ def list_team_members(
                 role=m["role"],
                 joined_at=utc_to_kst_iso(m["joined_at"]),
                 nickname=m["nickname"],
-                external_id=m["external_id"],
+                cc_id=m["external_id"],
                 contribution_points=m["contribution_points"],
                 latest_event_at=utc_to_kst_iso(m["latest_event_at"]),
             )
@@ -418,7 +418,7 @@ def list_member_contributions(
             meta=log["meta"],
             created_at=utc_to_kst_iso(log["created_at"]),
             nickname=log["nickname"],
-            external_id=log["external_id"],
+            cc_id=log["external_id"],
         )
         for log in result["items"]
     ]
@@ -578,7 +578,7 @@ def update_member_joined_at(
             role=member.role,
             joined_at=utc_to_kst_iso(member.joined_at),
             nickname=user.nickname if user else None,
-            external_id=user.external_id if user else None,
+            cc_id=user.external_id if user else None,
             contribution_points=0,
             latest_event_at=None,
         )

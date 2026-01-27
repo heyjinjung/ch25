@@ -9,7 +9,6 @@ sys.path.append(os.getcwd())
 from app.api.deps import get_db
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.v2_dice_game_service import V2DiceGameService
-from app.models.user import User
 from app.v2.models.v2_dice import V2DiceLog
 from app.models.vault_earn_event import VaultEarnEvent
 
@@ -26,10 +25,10 @@ def test_play_count_missing():
     initial_count = info_before.get("recent_play_count", 0)
     print(f"Initial recent_play_count from get_vault_info: {initial_count}")
 
-    # Get legacy user_id for direct query
+    # VaultEarnEvent는 호환 테이블인 user.id(legacy)를 사용하므로, v2_user_id에 대응되는 user.id를 구해 직접 조회한다. (V2 정책 반영)
     from app.v2.services.user_service import V2UserService
     legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    print(f"Legacy User ID: {legacy_user_id}")
+    print(f"Legacy(user.id) for v2_user_id={v2_user_id}: {legacy_user_id}")
 
     # Check VaultEarnEvent count directly
     v_event_count_before = db.query(VaultEarnEvent).filter(
@@ -79,7 +78,7 @@ def test_play_count_missing():
         print(f"Request failed: {e}")
         # If it fails with 404 or points to wrong user, we confirmed mismatch
         if "USER_NOT_FOUND" in str(e):
-            print("[CONFIRMED] ID Mismatch in request_withdrawal: It tried to db.get(User, v2_user_id) but V2 ID != Legacy ID.")
+            print("[CONFIRMED] ID Mismatch in request_withdrawal: It tried to use v2_user_id as user.id(legacy/호환).")
 
 if __name__ == "__main__":
     test_play_count_missing()

@@ -13,8 +13,8 @@ from app.models.feature import UserEventLog
 from app.core.config import get_settings
 from zoneinfo import ZoneInfo
 
-# Action type aliases for backward compatibility
-# Maps canonical action types to their legacy/alternative names
+# Action type aliases for Master SoT / V2 Native compatibility
+# Maps canonical action types to their alternative names
 ACTION_TYPE_ALIASES = {
     "JOIN_CHANNEL": ["SUBSCRIBE_CHANNEL", "CHANNEL_JOIN"],
     "SHARE_STORY": ["SHARE", "STORY_SHARE"],

@@ -34,7 +34,7 @@ const V2AdminLoginPage: FC = () => {
 
     try {
       const res = await v2Client.post("/api/auth/token", {
-        external_id: data.username,
+        cc_id: data.username,
         password: data.password,
       });
 

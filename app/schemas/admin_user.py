@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, AliasChoices
 
 from app.schemas.base import KstBaseModel as BaseModel
 
@@ -18,7 +18,7 @@ class AdminUserProfileSchema(BaseModel):
 
 
 class AdminUserBase(BaseModel):
-    external_id: str = Field(..., min_length=1, max_length=100)
+    cc_id: str = Field(..., validation_alias=AliasChoices("cc_id", "external_id"), min_length=1, max_length=100)
     nickname: Optional[str] = Field(None, max_length=100)
     level: int = Field(1, ge=1)
     status: str = Field("ACTIVE", max_length=20)
@@ -36,7 +36,7 @@ class AdminUserCreate(AdminUserBase):
 
 
 class AdminUserUpdate(BaseModel):
-    external_id: Optional[str] = Field(None, max_length=100)
+    cc_id: Optional[str] = Field(None, validation_alias=AliasChoices("cc_id", "external_id"), max_length=100)
     nickname: Optional[str] = Field(None, max_length=100)
     level: Optional[int] = Field(None, ge=1)
     xp: Optional[int] = Field(None, ge=0)

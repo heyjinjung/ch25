@@ -50,7 +50,7 @@ level=int(user.level or 1)  # User.level 사용!
 
 ### 문제 1: User.level 미동기화
 
-**위치**: `app/services/level_xp_service.py:222`
+**위치**: `app/v2/services/level_xp_service.py:222`
 
 ```python
 # Before (버그)
