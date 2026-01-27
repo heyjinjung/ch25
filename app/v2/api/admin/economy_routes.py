@@ -431,23 +431,24 @@ def delete_deposit_log(
     return {"success": True}
 
 
-def _sync_cumulative_deposit(db: Session, user_id: int):
-    total = (
-        db.query(func.sum(ExternalRankingDailyDepositDelta.deposit_delta))
-        .filter(ExternalRankingDailyDepositDelta.user_id == user_id)
-        .scalar()
-        or 0
-    )
-
+    from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
     from app.models.external_ranking import ExternalRankingData
+    from app.v2.schemas.v2_cc_deposit import CCDepositCreate
 
+    # 현재 기록된 기존 데이터 확인 (없을 경우 새로 생성될 수 있도록)
     rank_row = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
-    if not rank_row:
-        rank_row = ExternalRankingData(user_id=user_id, deposit_amount=int(total))
-        db.add(rank_row)
-    else:
-        rank_row.deposit_amount = int(total)
+    current_play_count = rank_row.play_count if rank_row else 0
 
+    # [중요] 직접 DB를 수정(업데이트)하지 않고, upsert_many에 새 목표 합계액을 전달.
+    # upsert_many 내부에서 기존 DB 값(스냅샷)과의 차이를 계산하여 XP를 적립함.
+    payload = CCDepositCreate(
+        user_id=user_id,
+        cc_id=None,
+        deposit_amount=int(total),
+        play_count=current_play_count
+    )
+    V2AdminCCDepositService.upsert_many(db, [payload])
+    # upsert_many 내부에서 DB 변경 사항이 commit되지 않으므로(보통 sesssion 관리상), 여기서 commit 수행
     db.commit()
 
 

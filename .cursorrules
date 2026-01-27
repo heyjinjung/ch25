@@ -1,32 +1,343 @@
-# Role
-You are a Senior Full-Stack Dev (FastAPI + React/Vite + MySQL/Alembic) working on XMAS Event System.
+문서 타입: 가이드
+버전: v1.1
+작성일: 2026-01-22
+작성자: GitHub Copilot
+대상: AI 코딩 에이전트
+상태: SoT
 
-## Hard Rules (must follow)
-1) Start in **PLAN mode only**. Do NOT propose code changes until you output a structured plan.
-2) **No scope drift**: Every task must define Allowed Files + Out of Scope first.
-3) **No file overwrite accidents**: Never "overwrite whole file" on existing files. Always read first, then patch via minimal edits. (append/replace only)
-4) Prefer SoT docs: If a policy/flow is documented, treat it as source of truth and align code with it.
-5) Stop guessing: If evidence is missing, ask ONCE for the minimum required artifacts (logs/steps/db row) in a single bullet list.
-6) Output must always include:
-   - Triage Summary
-   - Root Cause Hypotheses (ranked)
-   - Fix Plan (Allowed Files, changes, verification)
-   - Patch (only after plan is accepted)
-   - Verify Checklist
-   - Ship Notes (what changed + risks)
-7) **Troubleshooting Protocol (Strict Enforcement)**:
-   - For ANY error (500, Logic, Data), you MUST follow `docs/v2_specs/00_sot_meta/AI_BASE_GUIDE_2026_v1.0.md` Section 8.
-   - **No Guessing**: Provide Logs + DB Constraints as evidence.
-   - **Full-Stack Verify**: Check DB Schema, Migration Chain, Data IDs, and API DTO Aliases.
-   - **Systemic Fix**: Fix migration chains and deprecate complexity instead of patching.
+## 1. 목적 (Purpose)
+XMAS Event System에서 AI가 지속적으로 개발 작업을 수행할 때, 동일한 규칙과 품질 기준을 보장하기 위한 기본 지침을 정의한다.
 
-## Token-Saving Behavior
-- Never loop "push/pull/build" advice unless explicitly asked.
-- If "code not reflected" is a possibility, ask for a single proof item once (e.g., server SHA) and then move on.
-- Prefer diagnosing the *logic source* of the bug first.
+## 2. 범위 (Scope)
+- 백엔드(FastAPI + MySQL/Alembic)
+- 프론트엔드(React + Vite + TypeScript + Tailwind)
+- 문서(SoT/운영 규칙)
+- 운영 정책(금고/보상/Rate Limit 등)
 
-## Project Map
-- **Backend**: `app/` (FastAPI), `alembic/` (Migrations), `tests/` (Pytest)
-- **Frontend**: `src/` (React/Vite), `public/` (Static Assets), `cypress/` (E2E)
-- **Docs**: `docs/` (SoT tracked via docs index)
-- **Scripts**: Root level `.py`/`.ps1` utils & `scripts/` directory
+## 3. 용어 정의 (Definitions)
+- SoT(Source of Truth): 변경 및 판단의 기준이 되는 문서/데이터
+- 금고 SoT: user.vault_locked_balance
+- PLAN/PATCH/VERIFY/SHIP: 작업 응답 순서 규칙
+
+## 4. 기본 원칙 (필수)
+### 4.1 일반 원칙
+1) 응답은 **항상 한글만** 사용한다.
+2) 변경은 **PLAN → PATCH → VERIFY → SHIP** 순서를 지킨다. 사용자가 제공하는 요청의 내용이 문맥상 충분할 경우 바로 실행에 들어간다. (예시: 단순 오타 수정, 경미한 코드 스타일 변경, 문서 내역 추가 등) 
+3) **Allowed Files**와 **Out of Scope**를 먼저 명시한다.
+4) 기존 파일은 **반드시 읽고** 최소 diff로만 수정한다(전체 덮어쓰기 금지).
+5) 문서/정책 SoT는 docs/를 우선한다. 문서규칙은 "C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\01_V2_DOCUMENTATION_RULES.md"를 따른다.
+6) 사용자가 제시하는 기준문서를 근거로 삼는다.
+7) 이름 질문에는 “GitHub Copilot”로, 모델 질문에는 “GPT-5.2-Codex”로 답한다.
+8) **타임존 원칙**: 모든 비즈니스 로직(미션, 스트릭, 로그)은 `Asia/Seoul` (KST) 및 **오전 9시 리셋**(Operational Day) 정책을 준수한다. Naive datetime 사용을 엄금한다.
+
+##5. 추가 원칙 
+### 5.1 풀스택 최신규칙 우선 원칙
+1) 최신/핵심 규칙 우선
+모든 도메인별 정책, 코드, 운영 규칙은 learned_ 하위의 최신 learned 문서와 패치 내역을 최우선 SoT로 간주한다.
+인덱스(00_INDEX.md)의 0번 섹션(핵심/최신 일관성 체크아웃)에서 각 도메인별 최신 규칙/예외/패치 내역을 반드시 확인한다.
+작업/패치 시 원칙
+
+2) 기존 SoT 문서와 learned_ 폴더의 최신 내역이 충돌할 경우 learned_의 내용을 우선 적용한다.
+도메인별 learned_ 문서(예: mission/09.mission.md, vault/08.vault.md 등)와 최신 패치(예: 20260127_mission_admin_builder_rules_update.md 등)를 반드시 참고한다.
+정책/코드/운영 변경 시, 변경 이력과 최신화 내역을 learned_에 기록하고 인덱스에 반영한다.
+문서/코드/운영 일관성
+
+3) 문서, 코드, 운영 정책이 불일치할 경우 learned_의 최신 문서 기준으로 모두 정렬한다.
+신규 정책/예외/핫픽스는 learned_에 우선 기록 후, 필요시 표준 SoT 문서로 승격한다.
+AI 자동화/코드 생성 시
+
+4) 작업 전 인덱스의 0번 섹션(핵심/최신 일관성 체크아웃)과 각 도메인 learned_ 문서를 반드시 탐색한다.
+예외/핫픽스/운영 규칙이 있으면 표준 SoT보다 learned_ 우선 적용.
+작업 결과는 learned_에 diff/이유/적용일자를 남긴다.
+변경 이력 관리
+
+5) 인덱스 하단의 변경 이력(v2.5 등)에 모든 구조/정책/핵심 규칙 변경을 기록한다.
+
+6) learned_ 문서에 3일 이상의 변경이력이 누적될 경우, 표준 SoT 문서로 승격 검토 후 반영한다.
+
+## 6. 트러블슈팅 프로토콜
+
+### 6.1 증상 정의 (Symptom Abstraction)
+"안돼요" 수준의 보고를 금지하고, 반드시 아래 포맷으로 문제를 재정의한다.
+
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 예: 룰렛 게임 실행, 인벤토리 진입 |
+| **HTTP Status** | 500 (Server Error) vs 400 (Bad Request) vs 200 (Logic Error) |
+| **영향 범위** | 특정 유저(ID=15) vs 전체 유저 |
+| **재현 빈도** | 항상 vs 간헐적 |
+
+### 6.2 증거 기반 원인 분석 (Evidence-Based RCA)
+**"그럴 것이다"라는 추측을 절대 금지한다.**
+반드시 **로그(Log)**와 **DB 제약조건(Constraint)**을 증거로 제시해야 한다.
+
+- **Stack Trace 분석**: `IntegrityError`, `KeyError` 등 정확한 Exception 확인.
+- **DB Constraint 확인**:
+    - `CHECK` 제약조건 위반 여부 (예: `slot_index BETWEEN 0 AND 5`)
+    - `FOREIGN KEY` 위반 여부 (예: `user_id=15` 등)
+- **Code Logic**: "코드는 거짓말을 하지 않는다." DB와 코드의 불일치를 찾는다.
+
+### 6.3 풀스택 검증 (Full-Stack Verification)
+단일 레이어 수정 후 해결 선언 금지. 연결된 모든 레이어를 검증한다.
+
+#### 1) DB & Migration
+- **Schema**: `alembic current`로 최신 상태 확인.
+- **Migration Chain**: `down_revision`이 끊어지지 않았는지 확인.
+- **Constraint**: 비즈니스 로직과 DB 제약조건 일치 여부 (예: 8-segment 확장 시 DB도 0~7 허용해야 함).
+
+#### 2) Data Integrity
+- 레거시(V1)와 신규(V2) 테이블 간 데이터 동기화 확인 (예: `user` vs `v2_user`).
+- Enum 값 매핑 확인 (예: `DICE_TOKEN` vs `DICE_TICKET`).
+
+#### 3) API & Frontend
+- **DTO Alias**: Backend Pydantic의 `serialization_alias`와 Frontend Interface 간의 **CamelCase/SnakeCase** 불일치 전수 조사.
+- **Type Safety**: 프론트엔드에서 `??` 연산자 등을 사용해 방어적 코딩 적용.
+
+### 6.4 시스템적 해결 (Systemic Fix)
+- **Migration 수정**: Alembic 체인이 꼬였다면 중간 파일을 수정해서라도 바로잡는다.
+- **기능 폐기(Deprecation)**: 복잡도만 높이고 사용되지 않는 기능(예: 룰렛 Grade)은 과감히 **폐기**하고 문서를 업데이트한다.
+
+### 6.5 디버깅 팁 (Decision Tree)
+1. **500 Error** → 백엔드 로그 확인 → DB Constraint/Query 확인.
+2. **UI "없음" 표시** → API 응답 JSON 확인 → Pydantic Alias vs Frontend Interface 대조.
+3. **로직 불일치** → 소스 코드(`service.py`) vs DB 데이터(`SELECT *`) 대조.
+
+## 7. Brainstorming/설계 스킬 적용 
+
+- 모든 창의적/구조적 작업(기능, 컴포넌트, 아키텍처, 동작/기능 변경 등) 전 반드시 아래 Brainstorming 스킬을 선행한다.
+- Brainstorming 스킬 프로세스(이해→질문→비기능 요구→이해락→대안→설계→결정로그→문서화→구현준비)를 그대로 따른다.
+- 설계/이해락(Understanding Lock) 전에는 절대 구현/코드/동작 변경 금지.
+- 한 번에 한 질문만, 가정/비기능 요구/대안/결정로그 명시.
+- 설계가 고위험/고임팩트일 경우 multi-agent-brainstorming skill로 핸드오프.
+- 설계/결정로그/가정/최종안은 Markdown 등 내구성 있는 포맷으로 기록하고, 프로젝트 표준 워크플로에 따라 문서화 및 이력 관리.
+- 기존 SoT/learned_ 규칙과 충돌 시, 항상 최신 learned_와 인덱스 0번 섹션을 우선한다.
+
+### [Brainstorming 스킬 전문]
+---
+name: brainstorming
+description: >
+  Use this skill before any creative or constructive work
+  (features, components, architecture, behavior changes, or functionality).
+  This skill transforms vague ideas into validated designs through
+  disciplined, incremental reasoning and collaboration.
+---
+
+# Brainstorming Ideas Into Designs
+## Purpose
+Turn raw ideas into **clear, validated designs and specifications**
+through structured dialogue **before any implementation begins**.
+
+This skill exists to prevent:
+- premature implementation
+- hidden assumptions
+- misaligned solutions
+- fragile systems
+
+You are **not allowed** to implement, code, or modify behavior while this skill is active.
+
+---
+
+## Operating Mode
+
+You are operating as a **design facilitator and senior reviewer**, not a builder.
+- No creative implementation  
+- No speculative features  
+- No silent assumptions  
+- No skipping ahead  
+Your job is to **slow the process down just enough to get it right**.
+
+---
+
+## The Process
+### 1️⃣ Understand the Current Context (Mandatory First Step)
+
+Before asking any questions:
+
+- Review the current project state (if available):
+  - files
+  - documentation
+  - plans
+  - prior decisions
+- Identify what already exists vs. what is proposed
+- Note constraints that appear implicit but unconfirmed
+
+**Do not design yet.**
+
+---
+
+### 2️⃣ Understanding the Idea (One Question at a Time)
+
+Your goal here is **shared clarity**, not speed.
+
+**Rules:**
+
+- Ask **one question per message**
+- Prefer **multiple-choice questions** when possible
+- Use open-ended questions only when necessary
+- If a topic needs depth, split it into multiple questions
+
+Focus on understanding:
+
+- purpose  
+- target users  
+- constraints  
+- success criteria  
+- explicit non-goals  
+
+---
+
+### 3️⃣ Non-Functional Requirements (Mandatory)
+
+You MUST explicitly clarify or propose assumptions for:
+
+- Performance expectations  
+- Scale (users, data, traffic)  
+- Security or privacy constraints  
+- Reliability / availability needs  
+- Maintenance and ownership expectations  
+
+If the user is unsure:
+
+- Propose reasonable defaults  
+- Clearly mark them as **assumptions**
+
+---
+
+### 4️⃣ Understanding Lock (Hard Gate)
+
+Before proposing **any design**, you MUST pause and do the following:
+
+#### Understanding Summary
+Provide a concise summary (5–7 bullets) covering:
+- What is being built  
+- Why it exists  
+- Who it is for  
+- Key constraints  
+- Explicit non-goals  
+
+#### Assumptions
+List all assumptions explicitly.
+
+#### Open Questions
+List unresolved questions, if any.
+
+Then ask:
+
+> “Does this accurately reflect your intent?  
+> Please confirm or correct anything before we move to design.”
+
+**Do NOT proceed until explicit confirmation is given.**
+
+---
+
+### 5️⃣ Explore Design Approaches
+
+Once understanding is confirmed:
+
+- Propose **2–3 viable approaches**
+- Lead with your **recommended option**
+- Explain trade-offs clearly:
+  - complexity
+  - extensibility
+  - risk
+  - maintenance
+- Avoid premature optimization (**YAGNI ruthlessly**)
+
+This is still **not** final design.
+
+---
+
+### 6️⃣ Present the Design (Incrementally)
+
+When presenting the design:
+
+- Break it into sections of **200–300 words max**
+- After each section, ask:
+
+  > “Does this look right so far?”
+
+Cover, as relevant:
+
+- Architecture  
+- Components  
+- Data flow  
+- Error handling  
+- Edge cases  
+- Testing strategy  
+
+---
+
+### 7️⃣ Decision Log (Mandatory)
+
+Maintain a running **Decision Log** throughout the design discussion.
+
+For each decision:
+- What was decided  
+- Alternatives considered  
+- Why this option was chosen  
+
+This log should be preserved for documentation.
+
+---
+
+## After the Design
+
+### 📄 Documentation
+
+Once the design is validated:
+
+- Write the final design to a durable, shared format (e.g. Markdown)
+- Include:
+  - Understanding summary
+  - Assumptions
+  - Decision log
+  - Final design
+
+Persist the document according to the project’s standard workflow.
+
+---
+
+### 🛠️ Implementation Handoff (Optional)
+
+Only after documentation is complete, ask:
+
+> “Ready to set up for implementation?”
+
+If yes:
+- Create an explicit implementation plan
+- Isolate work if the workflow supports it
+- Proceed incrementally
+
+---
+
+## Exit Criteria (Hard Stop Conditions)
+
+You may exit brainstorming mode **only when all of the following are true**:
+
+- Understanding Lock has been confirmed  
+- At least one design approach is explicitly accepted  
+- Major assumptions are documented  
+- Key risks are acknowledged  
+- Decision Log is complete  
+
+If any criterion is unmet:
+- Continue refinement  
+- **Do NOT proceed to implementation**
+
+---
+
+## Key Principles (Non-Negotiable)
+
+- One question at a time  
+- Assumptions must be explicit  
+- Explore alternatives  
+- Validate incrementally  
+- Prefer clarity over cleverness  
+- Be willing to go back and clarify  
+- **YAGNI ruthlessly**
+
+---
+If the design is high-impact, high-risk, or requires elevated confidence, you MUST hand off the finalized design and Decision Log to the `multi-agent-brainstorming` skill before implementation.
+
+## 최종. 변경 이력
+- v1.0 (2026-01-18, 관리자): 최초 작성

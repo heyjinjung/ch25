@@ -11,9 +11,10 @@
 어드민에서 회원 입금 처리 후, 회원조회 시 **레벨이 즉시 변경되지 않는** 문제 발생.
 
 ### 증상
-- 입금 내역은 정상 반영됨
-- XP 적립 로직은 정상 실행됨
-- 하지만 회원조회 API에서 레벨이 이전 값으로 표시됨
+- 입금 내역은 정상 반영
+- 하지만 어드민의 **수동 입금 동기화(`_sync_cumulative_deposit`)** 시 XP 적립 로직 호출이 누락됨
+- 일일 XP 획득 한도가 기존 1000 XP로 너무 높아 하향 조정 필요 (요청 사항)
+- 결과적으로 회원조회 시 레벨이 변경되지 않거나 데이터가 누락됨
 
 ---
 
@@ -106,6 +107,8 @@ db.commit()
 |------|----------|
 | `app/services/level_xp_service.py` | `add_xp()` 메서드에서 `User.level` 동기화 추가 |
 | `app/v2/services/admin_cc_deposit_service.py` | XP 적립 루프 후 `db.commit()` 추가 |
+| `app/v2/api/admin/economy_routes.py` | `_sync_cumulative_deposit`에서 `upsert_many` 호출 추가 (수동 트리거) |
+| `app/core/config.py` | `external_ranking_deposit_max_steps_per_day`를 5(100 XP)로 조정 |
 
 ---
 
@@ -131,12 +134,12 @@ return results
 
 입금 후 XP가 적립되지 않는 또 다른 원인:
 
-| 설정 | 기본값 | 설명 |
-|------|--------|------|
-| `cooldown_minutes` | 설정에 따름 | 동일 유저 연속 입금 시 쿨다운 |
-| `max_steps_per_day` | 50 | 1일 최대 XP 스텝 제한 |
-| `step_amount` | 100,000 | 1스텝 당 입금액 (원) |
-| `xp_per_step` | 20 | 1스텝 당 XP |
+| 설정 | 기본값 | 현재값 (2026-01-27) | 설명 |
+|------|--------|---------------------|------|
+| `cooldown_minutes` | 0 | 0 | 동일 유저 연속 입금 시 쿨다운 |
+| `max_steps_per_day`| 50 | **5** (100 XP) | 1일 최대 XP 스텝 제한 |
+| `step_amount` | 100,000 | 100,000 | 1스텝 당 입금액 (원) |
+| `xp_per_step` | 20 | 20 | 1스텝 당 XP |
 
 **확인 방법**:
 - `admin_cc_deposit_service.py:330-333`: 쿨다운 체크 로직

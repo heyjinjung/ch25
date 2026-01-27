@@ -273,7 +273,7 @@ class Settings(BaseSettings):
         20, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_XP_PER_STEP", "external_ranking_deposit_xp_per_step")
     )
     external_ranking_deposit_max_steps_per_day: int = Field(
-        50, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_MAX_STEPS_PER_DAY", "external_ranking_deposit_max_steps_per_day")
+        5, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_MAX_STEPS_PER_DAY", "external_ranking_deposit_max_steps_per_day")
     )
     external_ranking_deposit_cooldown_minutes: int = Field(
         0, validation_alias=AliasChoices("EXTERNAL_RANKING_DEPOSIT_COOLDOWN_MINUTES", "external_ranking_deposit_cooldown_minutes")

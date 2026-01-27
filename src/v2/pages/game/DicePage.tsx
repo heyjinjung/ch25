@@ -127,7 +127,9 @@ const DicePage = () => {
         // we prepare the modal data now
         const finalOutcome = game.outcome as "WIN" | "DRAW" | "LOSE";
         setLastOutcome(finalOutcome);
-        setLastVaultEarn(result.vault_earn);
+        // vault_earn이 0이면 game.reward_amount를 사용 (금고 적립/차감 표시)
+        const displayEarn = result.vault_earn !== 0 ? result.vault_earn : (game.reward_amount ?? 0);
+        setLastVaultEarn(displayEarn);
         setCurrentIsGolden(result.is_golden_hour || false);
 
 
@@ -140,7 +142,7 @@ const DicePage = () => {
           setTimeout(() => {
             playDiceReveal();
             if (game.outcome === "WIN") {
-              if (result.vault_earn > 50000) playBigWin();
+              if (displayEarn > 50000) playBigWin();
               else playSmallWin();
             } else if (game.outcome === "LOSE") {
               playDiceLose();
