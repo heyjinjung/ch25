@@ -1,4 +1,18 @@
 문서 타입: 인덱스
+
+## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
+- **통합 컨텍스트**: [learned_/00_con.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
+- **도메인별 최신 Learned SoT**:
+  - **Auth/User**: [auth.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/auth.md) | [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md)
+  - **Admin**: [01.admin.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.admin.md) | [Admin 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.adminguide.md)
+  - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md)
+  - **Inventory**: [05.inventory.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory.md) | [인벤 패치 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory_patch_guide.md)
+  - **Mission**: [09.mission.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md) | [빌더 규칙](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_admin_builder_rules_update.md) | [자동 LogicKey](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_builder_auto_logickey_update.md)
+  - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md)
+  - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [플레이 횟수 업데이트](docs/v2_specs/00_sot_meta/vault/20260127_vault_play_count_update.md) | [주사위 차감 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260127_dice_vault_deduction_fix.md)
+  - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md) | [닉네임 조회 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/20260126_team_battle_nickname_lookup_update.md)
+
+## 1. 도메인별 기본 SoT (Legacy/Standard)
 - 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
 - 티켓 Enum SoT: docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md
 - 티켓 Enum 코드 정합 SoT: docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md
@@ -123,3 +137,4 @@
 - v1.0 (2026-01-18, GitHub Copilot): 최초 작성
 - v2.3 (2026-01-20, GitHub Copilot): Troubleshooting 섹션 및 V2 Admin 라우터 모듈(코드 맵) 링크 추가
 - v2.4 (2026-01-22, GitHub Copilot): CSV 임포트 가이드 및 신규 어드민 라우터(CSV, CC Deposit, Ops Plan) 링크 추가
+- v2.5 (2026-01-27, GitHub Copilot): V2 핵심 일관성 체크아웃(Learned SoT) 최신화 및 인덱스 구조 재편성
