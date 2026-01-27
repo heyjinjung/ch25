@@ -31,6 +31,9 @@ export default function LotteryResultModal({
   // Tier Classification Logic (Strictly Type-Based)
   const safePrizeLabel = prizeLabel || "";
 
+  const isPoint = rewardType === "POINT";
+  const isTicket = rewardType === "TICKET" || rewardType.includes("TICKET");
+
   // 1. BIG_WIN (대박): 모든 포인트 보상, 희귀 티켓
   const isBigWin =
     rewardType === "POINT" ||
