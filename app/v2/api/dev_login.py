@@ -60,6 +60,14 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
     _ = client_ip
     master_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
 
+    # Best-effort: login(출석) 미션 진행 반영
+    try:
+        from app.services.mission_service import MissionService
+
+        MissionService(db).ensure_login_progress(master_user_id)
+    except Exception:
+        pass
+
     try:
         db.commit()
     except Exception:

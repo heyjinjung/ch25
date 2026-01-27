@@ -33,6 +33,15 @@ def v2_issue_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
 
     master_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
+
+    # Best-effort: login(출석) 미션 진행 반영
+    try:
+        from app.services.mission_service import MissionService
+
+        MissionService(db).ensure_login_progress(master_user_id)
+    except Exception:
+        pass
+
     master_user = db.get(User, master_user_id)
     vault_balance = int(master_user.vault_locked_balance or 0) if master_user else int(user.vault_locked_balance or 0)
 

@@ -1,5 +1,6 @@
+```typescript
 /// <reference types="vite/client" />
-import axios from "axios";
+import axios, { AxiosRequestHeaders } from "axios";
 import { getAuthToken, clearAuth } from "../../auth/authStore"; // Reuse auth store for now as it handles token storage
 import { getAdminToken, clearAdminToken } from "../../auth/adminAuth";
 
@@ -70,7 +71,6 @@ v2Client.interceptors.request.use((config) => {
   }
 
   if (token) {
-    config.headers = config.headers ?? {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

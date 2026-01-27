@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/button";
 import { motion } from "framer-motion";
 
 import { MissionDto } from "../../api/missionApi";
+import { BorderBeam } from "../../components/ui/BorderBeam";
 
 interface MissionCardProps {
   mission: MissionDto;
@@ -28,13 +29,16 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       className={cn(
         "relative rounded-[24px] p-5 border transition-all duration-500 overflow-hidden group backdrop-blur-sm",
         isClaimable
-          ? "bg-[#18181B]/90 border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.15)] shine-border"
+          ? "bg-[#18181B]/90 border-emerald-500/40 shadow-[0_0_25px_rgba(16,185,129,0.15)]"
           : "bg-white/[0.02] border-white/[0.05]"
       )}
     >
       {/* Dynamic Background Glow for Claimable */}
       {isClaimable && (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent pointer-events-none" />
+          <BorderBeam size={250} duration={12} delay={9} colorFrom="#10b981" colorTo="#34d399" />
+        </>
       )}
 
       <div className="relative z-10 flex flex-col gap-4">

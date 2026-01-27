@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "../../lib/utils";
 import {
   useV2DiceStatus,
   useV2RouletteStatus,
@@ -8,13 +9,20 @@ import {
 import gsap from "gsap";
 import "./GamedashPage.css";
 
+import { motion } from "framer-motion";
+import { MatrixText } from "../../components/ui/MatrixText";
+import { MouseEffectCard } from "../../components/ui/MouseEffectCard";
+import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
+import { Meteors } from "../../components/effects/Meteors";
+import { BorderBeam } from "../../components/ui/BorderBeam";
+
 const ASSET_PATH = "/assets/02gamedash";
 
 const GAMES = [
-  { id: "dice", to: "/game/dice", icon: `${ASSET_PATH}/Group 12.png` },
-  { id: "rocket", to: "/game/roulette", icon: `${ASSET_PATH}/Group 13.png` },
-  { id: "ball", to: "/game/lottery", icon: `${ASSET_PATH}/Group 14.png` },
-  { id: "crown", to: "/team-battle", icon: `${ASSET_PATH}/Group 15.png` },
+  { id: "dice", to: "/game/dice", icon: `${ASSET_PATH}/Group 12.png`, color: "from-blue-500/20" },
+  { id: "rocket", to: "/game/roulette", icon: `${ASSET_PATH}/Group 13.png`, color: "from-purple-500/20" },
+  { id: "ball", to: "/game/lottery", icon: `${ASSET_PATH}/Group 14.png`, color: "from-emerald-500/20" },
+  { id: "crown", to: "/team-battle", icon: `${ASSET_PATH}/Group 15.png`, color: "from-amber-500/20" },
 ];
 
 export default function GamedashPage() {
@@ -85,79 +93,114 @@ export default function GamedashPage() {
   }, []);
 
   return (
-    <div className="gamedash-container" ref={containerRef}>
-      <div className="gamedash-flyer-bg" />
+    <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]" ref={containerRef}>
+      <BackgroundPaths count={20} className="opacity-40" />
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-emerald-950/5 to-[#09090B]" />
 
-      <div className="gamedash-main-content">
-{/* Magic UI Hero Card */}
-        <div className="magic-hero-card">
-          <div className="magic-hero-bg" />
-          
-          <div className="magic-hero-content">
-            <div className="magic-hero-left">
-              <span className="magic-subtitle">CC CASINO V2</span>
-              <span className="magic-title">
-                GRAND OPEN<br/>
-                <span style={{ color: '#9AFFFA' }}>SUPER EVENT</span>
-              </span>
-              
-              <div className="magic-stat-row">
-                 {/* Live Ticker Integrated Here */}
-                 <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '32px' }}>
-                    <div className="notice-wrapper">
-                      {noticeItems.map((text, idx) => (
-                        <div key={`notice-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
-                          {text}
-                        </div>
-                      ))}
-                      {noticeItems.map((text, idx) => (
-                        <div key={`notice-dup-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
-                          {text}
-                        </div>
-                      ))}
+      <div className="relative z-10 px-5 pb-10 max-w-lg mx-auto h-full flex flex-col">
+        {/* Magic UI Hero Card */}
+        <motion.div 
+           initial={{ opacity: 0, y: 20 }}
+           animate={{ opacity: 1, y: 0 }}
+           className="relative mt-4 mb-8"
+        >
+          <div className="magic-hero-card !bg-zinc-900/60 !border-white/5 overflow-hidden">
+            <div className="absolute inset-0 z-0 opacity-30">
+                <Meteors number={10} />
+            </div>
+            <BorderBeam size={200} duration={12} delay={9} colorFrom="#10b981" colorTo="#3b82f6" />
+            
+            <div className="magic-hero-content relative z-10 pt-6 pb-4">
+              <div className="magic-hero-left">
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.3em] mb-2 block"
+                >
+                  <MatrixText text="CC CASINO V2" />
+                </motion.span>
+                <h1 className="text-3xl font-black text-white leading-[1.1] mb-4">
+                    <MatrixText text="GRAND OPEN" /><br/>
+                    <span className="text-[#9AFFFA] italic">
+                        <MatrixText text="SUPER EVENT" />
+                    </span>
+                </h1>
+                
+                <div className="magic-stat-row">
+                   <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '32px' }}>
+                      <div className="notice-wrapper">
+                        {noticeItems.map((text, idx) => (
+                          <div key={`notice-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
+                            {text}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                </div>
               </div>
-            </div>
 
-            <img
-              src={`${ASSET_PATH}/Ellipse 374.svg`}
-              className="character-img"
-              alt="character"
-              style={{ width: '120px', filter: 'drop-shadow(0 0 20px rgba(154,255,250,0.3))' }}
-            />
+              <motion.img
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                src={`${ASSET_PATH}/Ellipse 374.svg`}
+                className="character-img"
+                alt="character"
+                style={{ width: '110px', filter: 'drop-shadow(0 0 20px rgba(154,255,250,0.3))' }}
+              />
+            </div>
           </div>
-          
-          <div className="card-shine" />
-        </div>
+        </motion.div>
 
-        {/* Game Selection Grid (2x2) */}
-        <div className="game-action-grid">
-          {GAMES.map((game) => (
-            <div
+        {/* Gaming Bento Grid */}
+        <div className="grid grid-cols-2 gap-3 mb-10">
+          {GAMES.map((game, idx) => (
+            <motion.div
               key={game.id}
-              className="game-action-card"
-              onClick={() => navigate(game.to)}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
             >
-              <div className="card-shine" />
-              {/* 크라운(팀배틀) 카드에만 HOT 뱃지 항상 노출 */}
-              {game.id === 'crown' && (
-                <span className="game-card-badge badge-hot">HOT</span>
-              )}
-              {(() => {
-                const remaining = getGameBadge(game.id);
-                if (typeof remaining !== "number" || game.id === "rocket" || game.id === "ball" || game.id === "crown") return null;
-                // Logic: > 0 means "HOT" (Playable), <= 0 means "보상최고" (Best Reward/Popular)
-                const label = remaining > 0 ? "HOT" : "보상최고";
-                const badgeClass = remaining > 0 ? "badge-hot" : "badge-new";
-                return (
-                  <span className={`game-card-badge ${badgeClass}`}>
-                    {label}
-                  </span>
-                );
-              })()}
-              <img src={game.icon} className="game-card-icon" alt={game.id} />
-            </div>
+              <MouseEffectCard
+                onClick={() => navigate(game.to)}
+                className={cn(
+                  "aspect-[4/5] flex flex-col p-4 group",
+                  "bg-neutral-900 border-white/5 shadow-2xl"
+                )}
+              >
+                {/* Background Color Glow */}
+                <div className={cn("absolute inset-0 bg-gradient-to-br transition-opacity opacity-0 group-hover:opacity-100", game.color)} />
+                
+                <div className="relative z-10 h-full flex flex-col">
+                    <div className="flex justify-between items-start mb-auto">
+                        <span className="text-[9px] font-black text-white/30 tracking-widest uppercase">
+                            Level: 01
+                        </span>
+                        {(() => {
+                            const remaining = getGameBadge(game.id);
+                            const label = (game.id === 'crown' || (typeof remaining === "number" && remaining > 0)) ? "HOT" : "NEW";
+                            return (
+                                <span className={cn(
+                                    "px-2 py-0.5 rounded text-[9px] font-black",
+                                    label === "HOT" ? "bg-red-500 text-white" : "bg-emerald-500 text-black"
+                                )}>
+                                    {label}
+                                </span>
+                            );
+                        })()}
+                    </div>
+
+                    <div className="mt-auto flex flex-col items-center">
+                        <img 
+                            src={game.icon} 
+                            className="w-24 h-24 object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500" 
+                            alt={game.id} 
+                        />
+                    </div>
+                </div>
+              </MouseEffectCard>
+            </motion.div>
           ))}
         </div>
       </div>

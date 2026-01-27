@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-// Link removed
+import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Gamepad2, Coins, ExternalLink } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
@@ -31,7 +31,9 @@ const useSeasonPassStatus = () => {
 }
 
 const LevelTowerPage: React.FC = () => {
+  const navigate = useNavigate();
   const season = useSeasonPassStatus();
+  // ... rest of state ...
   const [missionsOpen, setMissionsOpen] = useState(false);
   const hasTriggeredHaptic = useRef(false);
 
@@ -198,7 +200,10 @@ const LevelTowerPage: React.FC = () => {
       </div>
 
       <div className="mt-8 w-full max-w-sm mx-auto">
-         <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black h-14 text-lg rounded-xl shadow-lg shadow-emerald-900/20">
+         <Button 
+            onClick={() => navigate("/game")}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black h-14 text-lg rounded-xl shadow-lg shadow-emerald-900/20"
+         >
              <Gamepad2 className="mr-2" /> Play Games
          </Button>
       </div>

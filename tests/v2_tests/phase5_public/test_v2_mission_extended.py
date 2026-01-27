@@ -11,7 +11,7 @@ from app.v2.api.deps import get_current_user_id
 from app.db.base_class import Base
 from app.main import app
 from app.models.user import User
-from app.models.mission import Mission, UserMission, StreakConfig, UserStreak
+from app.models.mission import Mission, UserMission, StreakConfig, UserStreak, MissionCategory, MissionRewardType
 from app.v2.models.user import V2User
 
 @pytest.fixture()
@@ -152,3 +152,36 @@ def test_v2_streak_claim_logic(client: TestClient, seed_session: Session):
         
     finally:
         app.dependency_overrides.pop(get_current_user_id, None)
+
+
+def test_v2_auth_token_triggers_login_mission_progress(client: TestClient, seed_session: Session):
+    user = _seed_user(seed_session)
+    _seed_v2_user(seed_session, user)
+
+    mission = Mission(
+        title="테스트 출석 미션",
+        description="V2 로그인 시 LOGIN progress +1 회귀 테스트",
+        category=MissionCategory.DAILY,
+        logic_key=f"test_login_mission_{uuid.uuid4().hex}",
+        action_type="LOGIN",
+        target_value=1,
+        reward_type=MissionRewardType.DIAMOND,
+        reward_amount=1,
+        is_active=True,
+    )
+    seed_session.add(mission)
+    seed_session.commit()
+
+    resp = client.post("/api/v2/auth/token", json={"cc_id": user.external_id})
+    assert resp.status_code == 200, resp.text
+
+    seed_session.expire_all()
+    progress_rows = (
+        seed_session.query(UserMission)
+        .filter(UserMission.user_id == user.id, UserMission.mission_id == mission.id)
+        .all()
+    )
+    assert progress_rows, "V2 로그인 후 LOGIN 미션 progress row가 생성되어야 합니다."
+    assert any(int(p.current_value or 0) >= 1 for p in progress_rows), (
+        "V2 로그인 후 LOGIN 미션 progress가 +1 이상 반영되어야 합니다."
+    )
