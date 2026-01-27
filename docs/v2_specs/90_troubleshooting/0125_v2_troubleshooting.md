@@ -315,6 +315,8 @@ Error
 ✅ 금고출금조건에 현재 플레이횟수가 전혀 카운팅 되고 있지 않음 
 새로 빌드하거나 새로고침해도 계속 실패함 
 
+ ✅ 팀배틀 stub v2 서비스 연결 완료 
+
  ✅   주사위 골든아워 (Golden Hour)
  분기 기준 확인
 
@@ -366,6 +368,15 @@ CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
 입금 넣었는데도 회원조회시 레벨 변경이 안됨
 
 
+V1레거시 삭제후  V2유지 
+check_db_state.py	2026-01-27 16:27
+check_deposit_baseline.py	2026-01-27 16:16
+check_user_progress.py	2026-01-27 15:41
+column_enums.txt	2026-01-27 15:25
+compare_users_tables.py	2026-01-27 16:30
+fix_user_id_mismatch.py	2026-01-27 16:36
+fi
+
 
 ✅ 복권 게임결과 모달  
 백앤드 테스트 진행 
@@ -403,6 +414,17 @@ CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
    연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
 
 
+✅ 복권에서 다이아티켓 뽑았는데
+실제 티켓 저장소에 들어가지 않는거 같음
+RL
+http://localhost:3000/api/v2/roulette/status?ticket_type=DIAMOND_TICKET
+요청 메서드
+strict-origin-when-cross-origin
+
+✅  아이템 2만원치 넘게 샀는데 >> 작업중 
+그리고 실제 1만으로 한도 수정해야하고
+금고 출금조건에 안 잡힘 
+
 
 ----------------
 
@@ -411,20 +433,34 @@ CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
 
 
 룰렛 
-   등급 1: BIG_WIN (대박)
+
+   등급 1: BIG_WIN
    조건: 금고에 적립되는 모든 포인트(POINT) 보상.
    조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
-   연출: 'Celestial Reveal' (화려한 콘페티 + 테두리 Shine + 상품명 EncryptedText 효과).
-   
+   연출: 'Celestial Reveal' (화려한 콘페티 + 햅틱강도 0.8 + 테두리 Shine + 레드오렌지핑크 그라데이션 배경컬러 값  + 상품명 EncryptedText 효과).
+   아이콘 : 
+   모든포인트 : C:\Users\JAVIS\ch\ch25\public\assets\asset_coin_gold.webp
+   골드키 : C:\Users\JAVIS\ch\ch25\public\assets\icons\goldkey.png
+   다이아몬드티켓 : C:\Users\JAVIS\ch\ch25\public\assets\icons\diakey.png
+
+
+
    등급 2: NORMAL (일반 당첨)
    조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
-   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매).
    조건: 기타 아이템 및 퍼즐 조각.
-   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력 모션).
-  
-   등급 3: FAIL (꽝)
-   조건: NONE 타입.
-   연출: 저채도 심플 연출.
+   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력모션 + 햅틱강도 0.3 +입체감 있는 카드 + 골드 0.5 테두리 ).
+   전체적으로 깔끔하게 디자인. 컬러, 폰트, 흐릿한 블러처리는 금지 
+   텍스트 애니메이션은 가볍게 전체적으로 움직이는 미세모션 
+   아이콘 : 
+   치킨 C:\Users\JAVIS\ch\ch25\public\assets\icons\chiken.png
+   피자 C:\Users\JAVIS\ch\ch25\public\assets\icons\pizza2.png
+   스타벅스 C:\Users\JAVIS\ch\ch25\public\assets\icons\takeaway-cup-dynamic-color.png
+ 
+
+
+   등급 3: FAIL, 아이콘 해골, 컬러 투명하지만 그레이, 다크그린 톤으로, 글래스모피즘
+   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매), + NONE 타입
+   연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
 
 
 
@@ -437,131 +473,11 @@ CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 --------------
+출석미션 반영 / 횟수 카운트 
 
 
-check_db_state.py	2026-01-27 16:27
-check_deposit_baseline.py	2026-01-27 16:16
-check_user_progress.py	2026-01-27 15:41
-column_enums.txt	2026-01-27 15:25
-compare_users_tables.py	2026-01-27 16:30
-fix_user_id_mismatch.py	2026-01-27 16:36
-fix_user_id_mismatch_v2.py	2026-01-27 16:37
-force_recover_xp.py	2026-01-27 16:17
-20260127_user_integrity_execution_plan.md	2026-01-27 16:44
-20260127_user_login_jit_sync_implementation.md	2026-01-27 16:46
-20260127_user_table_unification_plan.md	2026-01-27 16:44
-inspect_level_users.py	2026-01-27 16:04
-inspect_mission_schema.py	2026-01-27 15:26
-inspect_output.txt	2026-01-27 16:04
-level_rewards_content.txt	2026-01-27 15:31
-level_thresholds_detail.txt	2026-01-27 15:43
-list_users.py	2026-01-27 15:37
-list_v2_levels.py	2026-01-27 15:33
-EncryptedText.tsx	2026-01-27 15:42
-useAdminGame.ts	2026-01-27 10:56
-DicePage.tsx	2026-01-27 14:55
-LotteryPage.tsx	2026-01-27 11:53
-RoulettePage.tsx	2026-01-27 11:53
-HomePage.tsx	2026-01-27 11:54
-VaultPage.tsx	2026-01-27 11:49
-test_v2_mission_game_specific.py
-mission_schema.txt	2026-01-27 15:21
-mission_schema_full.txt	2026-01-27 15:22
-recover_level_users.py	2026-01-27 16:16
-repro_mission_500.py	2026-01-27 15:13
-repro_output.log	2026-01-27 15:15
-test_audit_enum.py	2026-01-27 15:27
-test_point_edit.py	2026-01-27 15:36
-test_v2_login_sync.py	2026-01-27 16:34
-unit_test_sync.py	2026-01-27 16:34
-verify_api_fix.py	2026-01-27 16:18
-copilot-instructions.md	2026-01-27 14:26
-rule2026.instructions.md	2026-01-27 14:32
-game_design_evaluation.md	2026-01-27 09:42
-00_INDEX.md	2026-01-27 16:41
-20260127_dice_modal_vault_earn_display_fix.md	2026-01-27 14:56
-20260127_lottery_prize_partial_update_fix.md	2026-01-27 11:26
-20260205_lottery_ui_backend_tier_sync.md	2026-01-27 16:43
-07.level.md	2026-01-27 16:20
-20260127_mission_admin_builder_rules_update.md	2026-01-27 13:08
-20260127_mission_builder_auto_logickey_update.md	2026-01-27 13:44
-20260127_mission_error_update.md	2026-01-27 15:45
-20260127_mission_preset_expansion.md	2026-01-27 14:08
-20260127_shop_cost_type_fix.md	2026-01-27 12:21
-04.team_battle.md	2026-01-27 09:54
-02.user.md	2026-01-27 16:45
-20260126_user_delete_api_path_fix.md	2026-01-27 16:48
-20260127_admin_user_level_sync_fix.md	2026-01-27 16:20
-20260127_user_integrity_execution_plan.md	2026-01-27 16:44
-20260127_user_login_jit_sync_implementation.md	2026-01-27 16:46
-20260127_user_table_unification_plan.md	2026-01-27 16:44
-user_consistency_guide.md	2026-01-27 16:45
-
-
-
-
-
-
-20260127_1600_add_missing_mission_gifticons.py	2026-01-27 15:44
-auth.py	2026-01-27 11:06
-config.py	2026-01-27 16:08
-dice_service.py	2026-01-27 13:57
-level_xp_service.py	2026-01-27 15:14
-lottery_service.py	2026-01-27 13:57
-mission_service.py	2026-01-27 11:06
-roulette_service.py	2026-01-27 13:57
-vault_service.py	2026-01-27 11:48
-dev_login.py	2026-01-27 16:33
-routes.py	2026-01-27 12:13
-
-
-
-economy_routes.py	2026-01-27 16:17
-game_config_routes.py	2026-01-27 11:24
-team_battle_routes.py	2026-01-27 09:51
-v2_admin_game.py	2026-01-27 11:24
-admin_cc_deposit_service.py	2026-01-27 15:14
-admin_user_service.py	2026-01-27 16:48
-auth_service.py	2026-01-27 16:33
-mission_service.py	2026-01-27 14:08
-shop_service.py	2026-01-27 12:13
-team_battle_admin_service.py	2026-01-27 09:51
-user_service.py	2026-01-27 16:37
-vault_service.py	2026-01-27 12:50
-verify_vault_fix.py	2026-01-27 12:49
-useSound.ts	2026-01-27 14:47
-AdminLayout.tsx	2026-01-27 11:21
-AdminTeamBattlePage.tsx	2026-01-27 09:59
-MissionManagerPage.tsx	2026-01-27 14:56
-adminApi.ts	2026-01-27 11:24
-DiceResultModal.tsx	2026-01-27 15:23
-LotteryResultModal.tsx	2026-01-27 16:43
-RouletteResultModal.tsx	2026-01-27 11:25
-
-
-
-
-
-
-
-
-
-20260127_dice_vault_deduction_fix.md	2026-01-27 11:48
-20260127_vault_play_count_update.md	2026-01-27 12:50
-v2_level_point_extension_sot_ko.md	2026-01-27 16:20
-v2_level_reward_table_sot_ko.md	2026-01-27 16:21
-v2_team_battle_sot_ko.md	2026-01-27 09:54
-v2_team_battle_api_contract_ko.md	2026-01-27 09:54
-0125_v2_troubleshooting.md	2026-01-27 12:51
-20260127_admin_login_integrity_error_fix.md	2026-01-27 11:10
-test_lottery_branching.py	2026-01-27 16:43
-test_play_count_bug.py	2026-01-27 12:22
-
-
-
-
-
-
+----------
+https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
 
 
 

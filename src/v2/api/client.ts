@@ -1,13 +1,17 @@
-```typescript
 /// <reference types="vite/client" />
-import axios, { AxiosRequestHeaders } from "axios";
-import { getAuthToken, clearAuth } from "../../auth/authStore"; // Reuse auth store for now as it handles token storage
+import axios, { InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
+import { getAuthToken, clearAuth } from "../../auth/authStore";
 import { getAdminToken, clearAdminToken } from "../../auth/adminAuth";
 
-// V2 API Base URL logic - mirroring V1 for now but isolated for future changes
+// Define a helper to access env vars safely for TS
+const getEnv = (key: string): string => {
+  return (import.meta as any).env?.[key] || "";
+};
+
+// V2 API Base URL logic
 const rawEnvBase = (
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_URL ||
+  getEnv("VITE_API_BASE_URL") ||
+  getEnv("VITE_API_URL") ||
   ""
 ).trim();
 
@@ -20,20 +24,12 @@ const envBase = normalizeApiBase(rawEnvBase);
 
 const resolvedBaseURL = (() => {
   if (envBase) return envBase.replace(/\/+$/, "");
-
-  if (typeof window !== "undefined") {
-    // Default to same-origin.
-    // - Vite dev server uses proxy for `/api` -> backend.
-    // - Docker/nginx uses reverse proxy on the same origin.
-    // If you need a fixed origin, set VITE_API_BASE_URL/VITE_API_URL.
-    return "";
-  }
   return "";
 })();
 
 const DEFAULT_TIMEOUT_MS = 15000;
 const resolvedTimeoutMs = (() => {
-  const raw = String(import.meta.env.VITE_API_TIMEOUT_MS ?? "").trim();
+  const raw = String(getEnv("VITE_API_TIMEOUT_MS") || "").trim();
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_TIMEOUT_MS;
 })();
@@ -44,24 +40,20 @@ export const v2Client = axios.create({
 });
 
 // Request Interceptor: Attach Token
-v2Client.interceptors.request.use((config) => {
-  const pathname =
-    typeof window !== "undefined" ? window.location.pathname : "";
+v2Client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  // Ensure config.headers is initialized
+  if (!config.headers) {
+    config.headers = {} as AxiosRequestHeaders;
+  }
+  
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
   const url = String(config.url ?? "");
-  const isV2AdminPath =
-    pathname.startsWith("/admin") || url.startsWith("/api/v2/admin/");
+  const isV2AdminPath = pathname.startsWith("/admin") || url.startsWith("/api/v2/admin/");
 
   const token = isV2AdminPath
-    ? getAdminToken() ||
-      getAuthToken() ||
-      (typeof localStorage !== "undefined"
-        ? localStorage.getItem("token")
-        : null)
-    : getAuthToken() ||
-      (typeof localStorage !== "undefined"
-        ? localStorage.getItem("token")
-        : null);
-  // Skip auth for public endpoints if any (currently mostly auth'd)
+    ? getAdminToken() || getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null)
+    : getAuthToken() || (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
+
   if (
     url.endsWith("/api/v2/auth/token") ||
     url.endsWith("/api/v2/dev/login") ||
@@ -82,40 +74,17 @@ v2Client.interceptors.response.use(
   (error) => {
     const code = error?.response?.data?.error?.code;
     const detail = error?.response?.data?.detail;
-    const isNoFeatureToday =
-      code === "NO_FEATURE_TODAY" || detail === "NO_FEATURE_TODAY";
-    if (!isNoFeatureToday) {
-      // eslint-disable-next-line no-console
+    if (code !== "NO_FEATURE_TODAY" && detail !== "NO_FEATURE_TODAY") {
       console.error("[v2Client] response error", error);
     }
 
-    const status = error?.response?.status;
-
-    if (status === 401) {
-      const hadAuthHeader = Boolean(
-        error?.config?.headers?.Authorization ||
-        error?.config?.headers?.authorization ||
-        error?.config?.headers?.AUTHORIZATION,
-      );
-      const currentToken =
-        getAdminToken() ||
-        getAuthToken() ||
-        (typeof localStorage !== "undefined"
-          ? localStorage.getItem("token")
-          : null);
-
-      if (hadAuthHeader || currentToken) {
-        clearAdminToken();
-        clearAuth();
-        if (typeof window !== "undefined") {
-          const pathname = window.location.pathname || "";
-          const isV2AdminPath = pathname.startsWith("/admin");
-          const target = isV2AdminPath ? "/admin/login" : "/login";
-          if (pathname !== target) {
-            // Basic redirect for now, maybe use a custom event or router later
-            window.location.href = target;
-          }
-        }
+    if (error?.response?.status === 401) {
+      clearAdminToken();
+      clearAuth();
+      if (typeof window !== "undefined") {
+        const pathname = window.location.pathname || "";
+        const target = pathname.startsWith("/admin") ? "/admin/login" : "/login";
+        if (pathname !== target) window.location.href = target;
       }
     }
     return Promise.reject(error);

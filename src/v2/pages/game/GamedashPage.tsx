@@ -23,6 +23,8 @@ const GAMES = [
   { id: "rocket", to: "/game/roulette", icon: `${ASSET_PATH}/Group 13.png`, color: "from-purple-500/20" },
   { id: "ball", to: "/game/lottery", icon: `${ASSET_PATH}/Group 14.png`, color: "from-emerald-500/20" },
   { id: "crown", to: "/team-battle", icon: `${ASSET_PATH}/Group 15.png`, color: "from-amber-500/20" },
+  { id: "missions", to: "/v2/missions?cat=DAILY", icon: `/assets/01login/treasure.png`, label: "Mission Hub", color: "from-emerald-500/20" },
+  { id: "tower", to: "/v2/missions?cat=LEVEL", icon: `/assets/01login/Ellipse 374.svg`, label: "Glory Tower", color: "from-blue-600/20" },
 ];
 
 export default function GamedashPage() {
@@ -94,21 +96,22 @@ export default function GamedashPage() {
 
   return (
     <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]" ref={containerRef}>
-      <BackgroundPaths count={20} className="opacity-40" />
-      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-emerald-950/5 to-[#09090B]" />
+      <BackgroundPaths count={30} className="fixed inset-0 opacity-60 pointer-events-none" />
+      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.08),transparent_70%)]" />
+      <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-emerald-950/2 to-[#09090B]" />
 
       <div className="relative z-10 px-5 pb-10 max-w-lg mx-auto h-full flex flex-col">
         {/* Magic UI Hero Card */}
         <motion.div 
            initial={{ opacity: 0, y: 20 }}
            animate={{ opacity: 1, y: 0 }}
-           className="relative mt-4 mb-8"
+           className="relative mt-2 mb-6"
         >
-          <div className="magic-hero-card !bg-zinc-900/60 !border-white/5 overflow-hidden">
-            <div className="absolute inset-0 z-0 opacity-30">
-                <Meteors number={10} />
+          <div className="magic-hero-card !bg-neutral-900/40 !border-white/10 overflow-hidden backdrop-blur-md">
+            <div className="absolute inset-0 z-0 opacity-20">
+                <Meteors number={12} />
             </div>
-            <BorderBeam size={200} duration={12} delay={9} colorFrom="#10b981" colorTo="#3b82f6" />
+            <BorderBeam size={250} duration={15} colorFrom="#10b981" colorTo="#3b82f6" />
             
             <div className="magic-hero-content relative z-10 pt-6 pb-4">
               <div className="magic-hero-left">
@@ -194,9 +197,17 @@ export default function GamedashPage() {
                     <div className="mt-auto flex flex-col items-center">
                         <img 
                             src={game.icon} 
-                            className="w-24 h-24 object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500" 
+                            className={cn(
+                                "object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500",
+                                (game.id === 'missions' || game.id === 'tower') ? "w-16 h-16" : "w-24 h-24"
+                            )} 
                             alt={game.id} 
                         />
+                        {(game.id === 'missions' || game.id === 'tower') && (
+                            <span className="mt-3 text-[10px] font-black text-white/80 tracking-widest uppercase italic bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                                {game.label}
+                            </span>
+                        )}
                     </div>
                 </div>
               </MouseEffectCard>
