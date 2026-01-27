@@ -8,7 +8,10 @@ def inspect():
     with engine.connect() as conn:
         for col in ['category', 'reward_type']:
             print(f"--- {col} ---")
-            res = conn.execute(text(f"SHOW COLUMNS FROM mission LIKE '{col}'"))
+            res = conn.execute(
+                text("SHOW COLUMNS FROM mission LIKE :col"),
+                {"col": col},
+            )
             row = res.mappings().first()
             if row:
                 print(row['Type'])

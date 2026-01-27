@@ -20,9 +20,10 @@ class V2AuthService:
         _ = password
         resolved_cc_id = (cc_id or external_id or "").strip()
 
+        from app.v2.services.user_service import V2UserService
         user = None
         if resolved_cc_id:
-            user = db.query(V2User).filter(V2User.cc_id == resolved_cc_id).first()
+            user = V2UserService.get_or_create_v2_user_from_legacy(db, resolved_cc_id)
         if user is None and user_id is not None:
             user = db.get(V2User, user_id)
         if user is None:

@@ -177,19 +177,32 @@ class V2AdminUserService:
         from app.models.team_battle import TeamMember
 
         user = db.get(User, user_id)
-        if not user:
+        v2_user = db.get(V2User, user_id)
+        if not user and not v2_user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
+        # SoT 기반 삭제 정보 추출
+        target_ext_id = str(user.external_id if user else v2_user.cc_id)
+        target_nickname = (user.nickname if user else v2_user.nickname)
+
         before = {
-            "user_id": int(user.id),
-            "external_id": str(user.external_id),
-            "nickname": user.nickname,
+            "user_id": int(user_id),
+            "external_id": target_ext_id,
+            "nickname": target_nickname,
         }
 
         # TeamMember 명시 정리 (orphaned 방지)
         db.query(TeamMember).filter(TeamMember.user_id == user_id).delete(synchronize_session=False)
 
-        db.delete(user)
+        # V2 전용 데이터 삭제 (CASCADE 미보장 대비)
+        from app.v2.models.v2_user_segment import V2UserSegment
+        db.query(V2UserSegment).filter(V2UserSegment.user_id == user_id).delete(synchronize_session=False)
+
+        # Legacy & V2 유저 테이블 삭제
+        if user:
+            db.delete(user)
+        if v2_user:
+            db.delete(v2_user)
 
         V2AdminAuditService.log(
             db,
@@ -209,14 +222,17 @@ class V2AdminUserService:
         NOTE: API 레이어에서 권한 게이팅 필수
         """
         user = db.get(User, user_id)
-        if not user:
+        v2_user = db.get(V2User, user_id)
+        if not user and not v2_user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
+        target_ext_id = str(user.external_id if user else v2_user.cc_id)
+        target_nickname = (user.nickname if user else v2_user.nickname)
+
         before = {
-            "user_id": int(user.id),
-            "external_id": str(user.external_id),
-            "telegram_id": int(user.telegram_id) if user.telegram_id else None,
-            "nickname": user.nickname,
+            "user_id": int(user_id),
+            "external_id": target_ext_id,
+            "nickname": target_nickname,
         }
 
         # ─── 연관 테이블 방어적 삭제 (CASCADE 미보장 대비) ───
@@ -246,6 +262,7 @@ class V2AdminUserService:
             VaultStatus,
         )
         from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+        from app.v2.models.v2_user_segment import V2UserSegment as V2UserSegmentRecord
         from app.models.user_segment import UserSegment
         from app.models.dice import DiceLog
         from app.models.roulette import RouletteLog
@@ -275,8 +292,9 @@ class V2AdminUserService:
         db.query(UserXpEventLog).filter(UserXpEventLog.user_id == user_id).delete(synchronize_session=False)
         db.query(UserLevelProgress).filter(UserLevelProgress.user_id == user_id).delete(synchronize_session=False)
 
-        # Segmentation
+        # Segmentation (Legacy & V2)
         db.query(UserSegment).filter(UserSegment.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2UserSegmentRecord).filter(V2UserSegmentRecord.user_id == user_id).delete(synchronize_session=False)
 
         # Game Logs
         db.query(DiceLog).filter(DiceLog.user_id == user_id).delete(synchronize_session=False)
@@ -331,8 +349,11 @@ class V2AdminUserService:
         # Admin Profile
         db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).delete(synchronize_session=False)
 
-        # Finally, delete the user
-        db.delete(user)
+        # Finally, delete the users from both tables
+        if user:
+            db.delete(user)
+        if v2_user:
+            db.delete(v2_user)
 
         # Safety net: sqlite FK quirks
         db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)

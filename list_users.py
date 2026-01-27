@@ -6,7 +6,8 @@ def list_users():
     settings = get_settings()
     engine = create_engine(settings.database_url)
     with engine.connect() as conn:
-        res = conn.execute(text("SELECT id, external_id, nickname, level FROM user LIMIT 5"))
+        # V2 정책 반영: 유저 SoT는 v2_user
+        res = conn.execute(text("SELECT id, cc_id, nickname FROM v2_user LIMIT 5"))
         rows = res.mappings().all()
         for row in rows:
             print(row)
