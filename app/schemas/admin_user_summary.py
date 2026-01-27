@@ -9,7 +9,7 @@ from app.schemas.base import KstBaseModel as BaseModel
 
 class AdminUserSummary(BaseModel):
     id: int
-    external_id: str
+    cc_id: Optional[str] = None  # V2 Native identifier
     nickname: Optional[str] = None
 
     tg_id: Optional[int] = None

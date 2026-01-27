@@ -236,7 +236,17 @@ export default function DiceResultModal({
         delay: 0.1,
       });
     }
-  }, [isOpen, outcome, isGoldenHour, playSmallWin, playDiceLose, triggerHapticLight, triggerHapticStrong, triggerHapticSuccess, triggerHapticFail]);
+  }, [
+    isOpen,
+    outcome,
+    isGoldenHour,
+    playSmallWin,
+    playDiceLose,
+    triggerHapticLight,
+    triggerHapticStrong,
+    triggerHapticSuccess,
+    triggerHapticFail,
+  ]);
 
   const { subtitleText, isGoldenWin, isGoldenLose, isNormalWin, isNormalLose } =
     useMemo(() => {
@@ -299,11 +309,11 @@ export default function DiceResultModal({
     : isNormalWin
       ? "bg-gradient-to-r from-[#22C55E] via-[#4ADE80] to-[#22C55E] text-transparent bg-clip-text drop-shadow-[0_0_18px_rgba(34,197,94,0.45)]"
       : isGoldenLose
-        ? "text-zinc-200 drop-shadow-[0_0_18px_rgba(168,85,247,0.30)]"
+        ? "text-purple-100 drop-shadow-[0_0_22px_rgba(168,85,247,0.55)]"
         : isNormalLose
           ? "text-zinc-200 drop-shadow-[0_0_16px_rgba(0,0,0,0.55)]"
           : isDraw
-            ? "text-amber-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.45)]"
+            ? "text-amber-300 drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]"
             : "text-white";
 
   const renderIcon = () => {
@@ -331,7 +341,10 @@ export default function DiceResultModal({
 
     if (isDraw) {
       return (
-        <div className="text-6xl mb-4 animate-pulse" aria-hidden>
+        <div
+          className="text-6xl mb-4 animate-pulse drop-shadow-[0_0_25px_rgba(251,191,36,0.55)]"
+          aria-hidden
+        >
           🤝
         </div>
       );
@@ -339,8 +352,8 @@ export default function DiceResultModal({
 
     if (isGoldenLose) {
       return (
-        <div className="relative mb-5 drop-shadow-[0_0_24px_rgba(168,85,247,0.30)]">
-          <Skull className="h-[74px] w-[74px] text-zinc-200" />
+        <div className="relative mb-5 drop-shadow-[0_0_30px_rgba(168,85,247,0.45)]">
+          <Skull className="h-[74px] w-[74px] text-purple-200" />
         </div>
       );
     }
@@ -355,15 +368,15 @@ export default function DiceResultModal({
   const cardClassName = cn(
     "w-full max-w-[360px] rounded-[32px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-xl",
     isGoldenWin &&
-      "bg-gradient-to-b from-[#350e17]/70 to-[#0b0b10]/70 ring-1 ring-red-500/62 shadow-[0_0_50px_rgba(255,0,84,0.31)]",
+      "bg-gradient-to-br from-[#8a0000] via-[#4d0000] to-[#b38f00]/40 ring-2 ring-red-600 shadow-[0_0_60px_rgba(255,0,0,0.5)]",
     isNormalWin &&
       "bg-gradient-to-b from-[#0b2a18]/70 to-[#0b0b10]/70 ring-1 ring-emerald-500/40 shadow-[0_0_35px_rgba(16,185,129,0.2)]",
     isGoldenLose &&
-      "bg-white/[0.05] ring-1 ring-purple-500/36 shadow-[0_0_48px_rgba(88,28,135,0.22)]",
+      "bg-gradient-to-b from-[#1a0b2e] to-[#0b0b10] ring-1 ring-purple-600/50 shadow-[0_0_60px_rgba(88,28,135,0.45)]",
     isNormalLose &&
       "bg-white/[0.05] ring-1 ring-black/30 shadow-[0_20px_50px_rgba(0,0,0,0.55)]",
     isDraw &&
-      "bg-white/[0.06] ring-1 ring-amber-500/25 shadow-[0_20px_50px_rgba(0,0,0,0.55)]",
+      "bg-gradient-to-b from-[#2a1a0a] to-[#0b0b10] ring-1 ring-amber-500/45 shadow-[0_0_45px_rgba(251,191,36,0.3)]",
   );
 
   return (
@@ -388,7 +401,18 @@ export default function DiceResultModal({
 
         {/* Top Gradient */}
         <div
-          className={`absolute top-0 inset-x-0 h-32 bg-gradient-to-b ${isWin ? "from-emerald-500/10" : isDraw ? "from-amber-500/10" : "from-red-500/10"} to-transparent pointer-events-none`}
+          className={cn(
+            "absolute top-0 inset-x-0 h-40 bg-gradient-to-b to-transparent pointer-events-none",
+            isGoldenWin
+              ? "from-red-600/30"
+              : isNormalWin
+                ? "from-emerald-500/15"
+                : isDraw
+                  ? "from-amber-500/30"
+                  : isGoldenLose
+                    ? "from-purple-700/35"
+                    : "from-red-500/15",
+          )}
         />
 
         {/* Close Button */}
@@ -483,7 +507,6 @@ export default function DiceResultModal({
           >
             다른게임
           </button>
-
         </div>
       </div>
     </div>

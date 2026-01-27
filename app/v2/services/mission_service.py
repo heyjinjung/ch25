@@ -143,34 +143,34 @@ class V2MissionService:
         user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if not user:
             return StreakInfoSchema(
-                streak_days=0,
+                current_streak=0,
                 current_multiplier=1.0,
                 is_hot=False,
                 is_legend=False,
                 next_milestone=3
             )
 
-        streak_days = int(user.play_streak or 0)
+        current_streak = int(user.play_streak or 0)
         hot_threshold = int(getattr(self.settings, "streak_hot_threshold_days", 3) or 3)
         legend_threshold = int(getattr(self.settings, "streak_legend_threshold_days", 7) or 7)
 
-        is_hot = streak_days >= hot_threshold
-        is_legend = streak_days >= legend_threshold
+        is_hot = current_streak >= hot_threshold
+        is_legend = current_streak >= legend_threshold
         
         # Logic for next milestone
-        if streak_days < hot_threshold:
+        if current_streak < hot_threshold:
             next_milestone = hot_threshold
-        elif streak_days < legend_threshold:
+        elif current_streak < legend_threshold:
             next_milestone = legend_threshold
         else:
             # Loop check or next 7?
-            next_milestone = ((streak_days // 7) + 1) * 7
+            next_milestone = ((current_streak // 7) + 1) * 7
 
         claimable_day = self.get_pending_streak_milestone(user_id)
 
         return StreakInfoSchema(
-            streak_days=streak_days,
-            current_multiplier=self._get_streak_multiplier(streak_days),
+            current_streak=current_streak,
+            current_multiplier=self._get_streak_multiplier(current_streak),
             is_hot=is_hot,
             is_legend=is_legend,
             next_milestone=next_milestone,

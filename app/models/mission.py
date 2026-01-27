@@ -111,3 +111,31 @@ class UserMissionProgress(Base):
 
     user = relationship("User")
     mission = relationship("Mission")
+
+
+# Backward compatibility: 일부 테스트/레거시 코드에서 UserMission 이름을 참조한다.
+UserMission = UserMissionProgress
+
+
+class StreakConfig(Base):
+    """Streak daily reward config (테스트용 호환 모델)."""
+    __tablename__ = "streak_config"
+
+    id = Column(Integer, primary_key=True, index=True)
+    day_number = Column(Integer, nullable=False, index=True)
+    reward_type = Column(String(50), nullable=False)
+    reward_amount = Column(Integer, nullable=False, default=0)
+    description = Column(Text, nullable=True)
+
+
+class UserStreak(Base):
+    """User streak tracking (테스트용 호환 모델)."""
+    __tablename__ = "user_streak"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    current_streak = Column(Integer, nullable=False, default=0)
+    last_hit_date = Column(DateTime, nullable=True)
+    total_hits = Column(Integer, nullable=False, default=0)
+
+    user = relationship("User")

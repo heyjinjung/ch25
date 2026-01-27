@@ -36,7 +36,7 @@ def list_cc_deposit(db: Session = Depends(get_db)) -> CCDepositListResponse:
             id=row.id,
             user_id=row.user_id,
             cc_id=(
-                user_summary_by_id.get(row.user_id).external_id
+                user_summary_by_id.get(row.user_id).cc_id
                 if user_summary_by_id.get(row.user_id)
                 else None
             ),
@@ -78,7 +78,7 @@ def upsert_cc_deposit_batch(
             id=row.id,
             user_id=row.user_id,
             cc_id=(
-                user_summary_by_id.get(row.user_id).external_id
+                user_summary_by_id.get(row.user_id).cc_id
                 if user_summary_by_id.get(row.user_id)
                 else None
             ),
@@ -113,12 +113,12 @@ def update_cc_deposit(
         .first()
     )
     summary = V2AdminUserService.build_summary(user) if user else None
-    external_id = summary.external_id if summary else None
+    cc_id = summary.cc_id if summary else None
     telegram_username = summary.tg_username if summary else None
     return CCDepositEntry(
         id=row.id,
         user_id=row.user_id,
-        cc_id=external_id,
+        cc_id=cc_id,
         telegram_username=telegram_username,
         user=summary,
         deposit_amount=row.deposit_amount,
@@ -145,13 +145,13 @@ def update_cc_deposit_by_identifier(
         .filter(User.id == row.user_id)
         .first()
     )
-    summary = build_admin_user_summary(user) if user else None
-    external_id = summary.external_id if summary else None
+    summary = V2AdminUserService.build_summary(user) if user else None
+    cc_id = summary.cc_id if summary else None
     telegram_username = summary.tg_username if summary else None
     return CCDepositEntry(
         id=row.id,
         user_id=row.user_id,
-        cc_id=external_id,
+        cc_id=cc_id,
         telegram_username=telegram_username,
         user=summary,
         deposit_amount=row.deposit_amount,

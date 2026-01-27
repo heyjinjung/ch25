@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
 
@@ -42,17 +42,21 @@ class MissionWithProgress(BaseModel):
 
 
 class StreakInfoSchema(BaseModel):
-    streak_days: int
+    current_streak: int = 0  # V2: renamed from streak_days for clarity
     current_multiplier: float
     is_hot: bool
     is_legend: bool
     next_milestone: int
     claimable_day: Optional[int] = None
+    
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class MissionListResponse(BaseModel):
     missions: list[MissionWithProgress]
-    streak_info: StreakInfoSchema
+    streak_info: StreakInfoSchema = Field(serialization_alias="streak")
+    
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class MissionCreate(BaseModel):

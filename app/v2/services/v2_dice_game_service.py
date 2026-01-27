@@ -241,7 +241,7 @@ class V2DiceGameService:
             if golden_active:
                 golden_multiplier = float(getattr(config, "golden_hour_multiplier", 1.0) or 1.0)
 
-        if reward_amount > 0 and golden_multiplier != 1.0:
+        if reward_amount != 0 and golden_multiplier != 1.0:
             reward_amount = int(round(reward_amount * golden_multiplier))
 
         user_dice, dealer_dice = self._generate_dice_for_outcome(outcome)
