@@ -214,11 +214,27 @@ class V2VaultService:
 
         # Activity stats
         three_days_ago_ts = now_dt - timedelta(days=3)
-        recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
-            VaultEarnEvent.user_id == legacy_user_id,
-            VaultEarnEvent.earn_type == "GAME_PLAY",
-            VaultEarnEvent.created_at >= three_days_ago_ts,
-        ).scalar() or 0
+        
+        # Aggregated play count from all game logs (including 0-accrual plays)
+        # 1. Legacy logs
+        from app.models.dice import DiceLog
+        from app.models.roulette import RouletteLog
+        from app.models.lottery import LotteryLog
+        
+        l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == legacy_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+        l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == legacy_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+        l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == legacy_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+        
+        # 2. V2 logs
+        from app.v2.models.v2_dice import V2DiceLog
+        from app.v2.models.v2_roulette import V2RouletteLog
+        from app.v2.models.v2_lottery import V2LotteryLog
+        
+        v2_dice = db.query(func.count(V2DiceLog.id)).filter(V2DiceLog.user_id == user_id, V2DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+        v2_roul = db.query(func.count(V2RouletteLog.id)).filter(V2RouletteLog.user_id == user_id, V2RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+        v2_lott = db.query(func.count(V2LotteryLog.id)).filter(V2LotteryLog.user_id == user_id, V2LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+        
+        recent_play_count = int(l_dice + l_roul + l_lott + v2_dice + v2_roul + v2_lott)
 
         seven_days_ago_date = (now_dt - timedelta(days=6)).date()
         deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
@@ -719,7 +735,8 @@ class V2VaultService:
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
         """V2 adapted withdrawal request (CC Deposit based)."""
-        user = db.get(User, user_id)
+        legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
+        user = db.get(User, legacy_user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
@@ -736,7 +753,7 @@ class V2VaultService:
         delta_today = (
             db.query(ExternalRankingDailyDepositDelta.deposit_delta)
             .filter(
-                ExternalRankingDailyDepositDelta.user_id == user_id,
+                ExternalRankingDailyDepositDelta.user_id == legacy_user_id,
                 ExternalRankingDailyDepositDelta.kst_date == op_date_kst,
             )
             .scalar()
@@ -745,7 +762,7 @@ class V2VaultService:
         has_cc_deposit_today = int(delta_today) > 0
 
         if not has_cc_deposit_today:
-            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == legacy_user_id).first()
             if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
@@ -754,7 +771,7 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
-            activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
+            activity = db.query(UserActivity).filter(UserActivity.user_id == legacy_user_id).first()
             if activity and activity.last_charge_at:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
@@ -773,7 +790,7 @@ class V2VaultService:
             # Fetch 7d deposit for target calculation
             seven_days_ago_date = (now - timedelta(days=6)).date()
             deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-                ExternalRankingDailyDepositDelta.user_id == user_id,
+                ExternalRankingDailyDepositDelta.user_id == legacy_user_id,
                 ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
             ).scalar() or 0
 
@@ -789,14 +806,26 @@ class V2VaultService:
                 play_target = 15
                 spend_target = 20000
 
-            # Check Play count (3 days window)
-            recent_play_count = db.query(func.count(VaultEarnEvent.id)).filter(
-                VaultEarnEvent.user_id == user_id,
-                VaultEarnEvent.earn_type == "GAME_PLAY",
-                VaultEarnEvent.created_at >= now - timedelta(days=3),
-            ).scalar() or 0
+            # Check Play count (3 days window) - Refined to use all log tables
+            three_days_ago_ts = now - timedelta(days=3)
+            
+            from app.models.dice import DiceLog
+            from app.models.roulette import RouletteLog
+            from app.models.lottery import LotteryLog
+            from app.v2.models.v2_dice import V2DiceLog
+            from app.v2.models.v2_roulette import V2RouletteLog
+            from app.v2.models.v2_lottery import V2LotteryLog
 
-            if int(recent_play_count) < play_target:
+            l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == legacy_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == legacy_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == legacy_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+            v2_dice = db.query(func.count(V2DiceLog.id)).filter(V2DiceLog.user_id == user_id, V2DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+            v2_roul = db.query(func.count(V2RouletteLog.id)).filter(V2RouletteLog.user_id == user_id, V2RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+            v2_lott = db.query(func.count(V2LotteryLog.id)).filter(V2LotteryLog.user_id == user_id, V2LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+            
+            recent_play_count = int(l_dice + l_roul + l_lott + v2_dice + v2_roul + v2_lott)
+
+            if recent_play_count < play_target:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"PLAY_COUNT_INSUFFICIENT_{play_target}")
 
             # Check Vault Spent (Today)
@@ -808,7 +837,7 @@ class V2VaultService:
         approved_count = (
             db.query(func.count(VaultWithdrawalRequest.id))
             .filter(
-                VaultWithdrawalRequest.user_id == user_id,
+                VaultWithdrawalRequest.user_id == legacy_user_id,
                 VaultWithdrawalRequest.status == "APPROVED",
             )
             .scalar()

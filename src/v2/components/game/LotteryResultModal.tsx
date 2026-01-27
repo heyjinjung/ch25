@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import confetti from "canvas-confetti";
 import { Trophy, Gift, Ticket, Puzzle } from "lucide-react";
@@ -25,6 +26,7 @@ export default function LotteryResultModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { playTabTouch, playBigWin, playSmallWin, playDiceLose } = useSound();
 
   // Tier Classification Logic (Technical Trigger)
@@ -89,7 +91,7 @@ export default function LotteryResultModal({
             { x: "100%", opacity: 0.5, duration: 1.5, ease: "power2.inOut", delay: 0.3 }
           );
         }
-        playBigWin();
+        tl.add(() => { playBigWin(); }, "-=0.4");
       } else if (isNormal) {
         // Stable Victory (Normal)
         tl.fromTo(
@@ -98,7 +100,7 @@ export default function LotteryResultModal({
           { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
           "-=0.1"
         );
-        playSmallWin();
+        tl.add(() => { playSmallWin(); }, "-=0.3");
       } else {
         // FAIL
         tl.fromTo(
@@ -107,7 +109,7 @@ export default function LotteryResultModal({
           { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
           "-=0.1"
         );
-        playDiceLose();
+        tl.add(() => { playDiceLose(); }, "-=0.2");
       }
     } else {
       // Close Animation
@@ -135,6 +137,13 @@ export default function LotteryResultModal({
     if (rewardType === "ITEM" || rewardType === "PUZZLE") {
       return <Puzzle className="w-16 h-16 text-indigo-400 mb-6 drop-shadow-[0_0_15px_rgba(129,140,248,0.4)]" />;
     }
+    
+    // Normal fallback when specific type is missing
+    if (isNormal) {
+      return <Gift className="w-16 h-16 text-sky-400 mb-6 drop-shadow-[0_0_15px_rgba(56,189,248,0.4)]" />;
+    }
+
+    // Tier 3: FAIL (Move ghost here)
     return <div className="text-7xl mb-6 grayscale opacity-40">👻</div>;
   };
 
@@ -169,7 +178,10 @@ export default function LotteryResultModal({
             Sweepstakes Result
           </span>
           <h2 className={`text-4xl font-black italic tracking-tighter ${titleColor}`}>
-            <EncryptedText key={`res-title-${isOpen}`} text={isFail ? "추첨 완료" : "JACKPOT!"} />
+            <EncryptedText 
+                key={`res-title-${isOpen}`} 
+                text={isBigWin ? "JACKPOT!" : isNormal ? "WINNER!" : "NEXT TIME"} 
+            />
           </h2>
         </div>
 
@@ -216,6 +228,15 @@ export default function LotteryResultModal({
           >
             닫기
           </button>
+
+          {isFail && (
+            <button
+               onClick={() => { playTabTouch(); onClose(); navigate("/"); }}
+               className="w-full h-9 rounded-xl bg-white/5 text-zinc-500 font-bold text-xs hover:text-white hover:bg-white/10 transition-all opacity-60 hover:opacity-100"
+            >
+              다른 게임 하러 가기
+            </button>
+          )}
         </div>
 
         {/* Decorative elements for Big Win */}

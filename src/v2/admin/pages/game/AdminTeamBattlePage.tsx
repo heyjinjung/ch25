@@ -6,6 +6,10 @@ import {
   useAdminEndTeamBattleSeason,
   useAdminForceJoinTeamBattle,
   useAdminForceLeaveTeamBattle,
+  useAdminTeamBattleTeamMembers,
+  useAdminTeamBattleMemberContributions,
+  useAdminUpdateTeamBattleMemberJoinedAt,
+  useAdminAdjustTeamBattleMemberContribution,
   useAdminTeamBattleSeasons,
   useAdminTeamBattleTeams,
 } from "../../../hooks/useAdminGame";
@@ -29,6 +33,16 @@ const toIsoString = (value: string) => {
   return date.toISOString();
 };
 
+const toDatetimeLocal = (value: string | null | undefined) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (input: number) => String(input).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate(),
+  )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 export default function AdminTeamBattlePage() {
   const { data: seasons = [], isLoading: isSeasonsLoading } =
     useAdminTeamBattleSeasons();
@@ -41,6 +55,9 @@ export default function AdminTeamBattlePage() {
   const adjustScoreMutation = useAdminAdjustTeamBattleScore();
   const forceJoinMutation = useAdminForceJoinTeamBattle();
   const forceLeaveMutation = useAdminForceLeaveTeamBattle();
+  const updateMemberJoinedAtMutation = useAdminUpdateTeamBattleMemberJoinedAt();
+  const adjustMemberContributionMutation =
+    useAdminAdjustTeamBattleMemberContribution();
 
   const [seasonForm, setSeasonForm] = useState({
     name: "",
@@ -66,18 +83,59 @@ export default function AdminTeamBattlePage() {
   });
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [resolvedJoinUserId, setResolvedJoinUserId] = useState<number | null>(null);
+  const [memberFilter, setMemberFilter] = useState({
+    teamId: "",
+    seasonId: "",
+  });
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
+  const [memberJoinedAt, setMemberJoinedAt] = useState("");
+  const [memberJoinedReason, setMemberJoinedReason] = useState(
+    "Admin joined_at update",
+  );
+  const [contributionDelta, setContributionDelta] = useState("");
+  const [contributionReason, setContributionReason] =
+    useState("관리자 기여도 조정");
+  const [contributionAction, setContributionAction] = useState("ADMIN_ADJUST");
+  const [resolvedJoinUserId, setResolvedJoinUserId] = useState<number | null>(
+    null,
+  );
   const [resolvedJoinUserInfo, setResolvedJoinUserInfo] = useState<{
     userId: number;
     nickname: string;
     externalId: string;
   } | null>(null);
-  const [resolvedLeaveUserId, setResolvedLeaveUserId] = useState<number | null>(null);
+  const [resolvedLeaveUserId, setResolvedLeaveUserId] = useState<number | null>(
+    null,
+  );
   const [resolvedLeaveUserInfo, setResolvedLeaveUserInfo] = useState<{
     userId: number;
     nickname: string;
     externalId: string;
   } | null>(null);
+
+  const memberTeamId = memberFilter.teamId
+    ? Number(memberFilter.teamId)
+    : undefined;
+  const memberSeasonId = memberFilter.seasonId
+    ? Number(memberFilter.seasonId)
+    : null;
+  const { data: teamMembers, isLoading: isMembersLoading } =
+    useAdminTeamBattleTeamMembers(memberTeamId, memberSeasonId);
+  const { data: memberContributions, isLoading: isContribLoading } =
+    useAdminTeamBattleMemberContributions(
+      memberTeamId,
+      selectedMemberId ?? undefined,
+      memberSeasonId,
+    );
+
+  const selectedMember = useMemo(() => {
+    if (!teamMembers?.members || !selectedMemberId) return null;
+    return (
+      teamMembers.members.find(
+        (member) => member.user_id === selectedMemberId,
+      ) ?? null
+    );
+  }, [teamMembers, selectedMemberId]);
 
   const activeSeason = useMemo(
     () => seasons.find((season) => season.is_active) ?? null,
@@ -189,7 +247,9 @@ export default function AdminTeamBattlePage() {
     }
 
     try {
-      const resolved = await resolveAdminUserIdentifier(forceJoinForm.userId.trim());
+      const resolved = await resolveAdminUserIdentifier(
+        forceJoinForm.userId.trim(),
+      );
       setResolvedJoinUserId(resolved.userId);
       setResolvedJoinUserInfo({
         userId: resolved.userId,
@@ -198,7 +258,9 @@ export default function AdminTeamBattlePage() {
       });
       setNotice(`유저 조회 완료`);
     } catch (err: any) {
-      setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+      setError(
+        `유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`,
+      );
     }
   };
 
@@ -216,7 +278,9 @@ export default function AdminTeamBattlePage() {
       }
 
       try {
-        const resolved = await resolveAdminUserIdentifier(forceJoinForm.userId.trim());
+        const resolved = await resolveAdminUserIdentifier(
+          forceJoinForm.userId.trim(),
+        );
         userId = resolved.userId;
         setResolvedJoinUserId(userId);
         setResolvedJoinUserInfo({
@@ -225,7 +289,9 @@ export default function AdminTeamBattlePage() {
           externalId: resolved.externalId,
         });
       } catch (err: any) {
-        setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+        setError(
+          `유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`,
+        );
         return;
       }
     }
@@ -245,7 +311,11 @@ export default function AdminTeamBattlePage() {
       {
         onSuccess: () => {
           setNotice("강제 팀 가입 완료");
-          setForceJoinForm({ userId: "", teamId: "", reason: "Admin forced join" });
+          setForceJoinForm({
+            userId: "",
+            teamId: "",
+            reason: "Admin forced join",
+          });
           setResolvedJoinUserId(null);
           setResolvedJoinUserInfo(null);
         },
@@ -265,7 +335,9 @@ export default function AdminTeamBattlePage() {
     }
 
     try {
-      const resolved = await resolveAdminUserIdentifier(forceLeaveForm.userId.trim());
+      const resolved = await resolveAdminUserIdentifier(
+        forceLeaveForm.userId.trim(),
+      );
       setResolvedLeaveUserId(resolved.userId);
       setResolvedLeaveUserInfo({
         userId: resolved.userId,
@@ -274,7 +346,9 @@ export default function AdminTeamBattlePage() {
       });
       setNotice(`유저 조회 완료`);
     } catch (err: any) {
-      setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+      setError(
+        `유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`,
+      );
     }
   };
 
@@ -292,7 +366,9 @@ export default function AdminTeamBattlePage() {
       }
 
       try {
-        const resolved = await resolveAdminUserIdentifier(forceLeaveForm.userId.trim());
+        const resolved = await resolveAdminUserIdentifier(
+          forceLeaveForm.userId.trim(),
+        );
         userId = resolved.userId;
         setResolvedLeaveUserId(userId);
         setResolvedLeaveUserInfo({
@@ -301,7 +377,9 @@ export default function AdminTeamBattlePage() {
           externalId: resolved.externalId,
         });
       } catch (err: any) {
-        setError(`유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`);
+        setError(
+          `유저 조회 실패: ${err.response?.data?.detail || "알 수 없는 오류"}`,
+        );
         return;
       }
     }
@@ -324,6 +402,74 @@ export default function AdminTeamBattlePage() {
           setResolvedLeaveUserInfo(null);
         },
         onError: () => setError("강제 팀 탈퇴 실패"),
+      },
+    );
+  };
+
+  const handleSelectMember = (userId: number, joinedAt: string | null) => {
+    setSelectedMemberId(userId);
+    setMemberJoinedAt(toDatetimeLocal(joinedAt));
+    setContributionDelta("");
+    setContributionReason("관리자 기여도 조정");
+    setContributionAction("ADMIN_ADJUST");
+  };
+
+  const handleUpdateMemberJoinedAt = () => {
+    setNotice(null);
+    setError(null);
+    if (!selectedMemberId) {
+      setError("멤버를 선택하세요.");
+      return;
+    }
+    const joinedAtIso = toIsoString(memberJoinedAt);
+    if (!joinedAtIso) {
+      setError("가입일을 입력하세요.");
+      return;
+    }
+    if (!memberJoinedReason.trim()) {
+      setError("사유를 입력하세요.");
+      return;
+    }
+    updateMemberJoinedAtMutation.mutate(
+      {
+        userId: selectedMemberId,
+        payload: { joined_at: joinedAtIso, reason: memberJoinedReason.trim() },
+      },
+      {
+        onSuccess: () => setNotice("가입일 수정 완료"),
+        onError: () => setError("가입일 수정 실패"),
+      },
+    );
+  };
+
+  const handleAdjustMemberContribution = () => {
+    setNotice(null);
+    setError(null);
+    if (!selectedMemberId || !memberTeamId) {
+      setError("팀과 멤버를 선택하세요.");
+      return;
+    }
+    const delta = Number(contributionDelta);
+    if (Number.isNaN(delta) || delta === 0) {
+      setError("기여도 변경량을 입력하세요.");
+      return;
+    }
+    if (!contributionReason.trim()) {
+      setError("사유를 입력하세요.");
+      return;
+    }
+    adjustMemberContributionMutation.mutate(
+      {
+        team_id: memberTeamId,
+        user_id: selectedMemberId,
+        delta,
+        reason: contributionReason.trim(),
+        season_id: memberSeasonId ?? undefined,
+        action: contributionAction.trim() || "ADMIN_ADJUST",
+      },
+      {
+        onSuccess: () => setNotice("기여도 조정 완료"),
+        onError: () => setError("기여도 조정 실패"),
       },
     );
   };
@@ -558,7 +704,10 @@ export default function AdminTeamBattlePage() {
                   placeholder="유저 ID 또는 닉네임"
                   value={forceJoinForm.userId}
                   onChange={(e) => {
-                    setForceJoinForm({ ...forceJoinForm, userId: e.target.value });
+                    setForceJoinForm({
+                      ...forceJoinForm,
+                      userId: e.target.value,
+                    });
                     setResolvedJoinUserId(null);
                     setResolvedJoinUserInfo(null);
                   }}
@@ -581,20 +730,28 @@ export default function AdminTeamBattlePage() {
               {resolvedJoinUserInfo && (
                 <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-emerald-400 font-semibold">조회된 유저 정보</span>
+                    <span className="text-xs text-emerald-400 font-semibold">
+                      조회된 유저 정보
+                    </span>
                   </div>
                   <div className="text-sm text-white space-y-0.5">
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">닉네임:</span>
-                      <span className="font-semibold">{resolvedJoinUserInfo.nickname}</span>
+                      <span className="font-semibold">
+                        {resolvedJoinUserInfo.nickname}
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">유저 ID:</span>
-                      <span className="font-mono">{resolvedJoinUserInfo.userId}</span>
+                      <span className="font-mono">
+                        {resolvedJoinUserInfo.userId}
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">External ID:</span>
-                      <span className="font-mono text-xs">{resolvedJoinUserInfo.externalId}</span>
+                      <span className="font-mono text-xs">
+                        {resolvedJoinUserInfo.externalId}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -632,7 +789,10 @@ export default function AdminTeamBattlePage() {
                   placeholder="유저 ID 또는 닉네임"
                   value={forceLeaveForm.userId}
                   onChange={(e) => {
-                    setForceLeaveForm({ ...forceLeaveForm, userId: e.target.value });
+                    setForceLeaveForm({
+                      ...forceLeaveForm,
+                      userId: e.target.value,
+                    });
                     setResolvedLeaveUserId(null);
                     setResolvedLeaveUserInfo(null);
                   }}
@@ -655,20 +815,28 @@ export default function AdminTeamBattlePage() {
               {resolvedLeaveUserInfo && (
                 <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-emerald-400 font-semibold">조회된 유저 정보</span>
+                    <span className="text-xs text-emerald-400 font-semibold">
+                      조회된 유저 정보
+                    </span>
                   </div>
                   <div className="text-sm text-white space-y-0.5">
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">닉네임:</span>
-                      <span className="font-semibold">{resolvedLeaveUserInfo.nickname}</span>
+                      <span className="font-semibold">
+                        {resolvedLeaveUserInfo.nickname}
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">유저 ID:</span>
-                      <span className="font-mono">{resolvedLeaveUserInfo.userId}</span>
+                      <span className="font-mono">
+                        {resolvedLeaveUserInfo.userId}
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-zinc-400 w-20">External ID:</span>
-                      <span className="font-mono text-xs">{resolvedLeaveUserInfo.externalId}</span>
+                      <span className="font-mono text-xs">
+                        {resolvedLeaveUserInfo.externalId}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -689,6 +857,195 @@ export default function AdminTeamBattlePage() {
               강제 탈퇴
             </Button>
           </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="bg-[#18181B] border-white/5 p-4 space-y-3">
+          <h2 className="text-lg font-semibold">팀 멤버 상세</h2>
+          <Select
+            value={memberFilter.teamId}
+            onValueChange={(value) => {
+              setMemberFilter({ ...memberFilter, teamId: value });
+              setSelectedMemberId(null);
+            }}
+          >
+            <SelectTrigger className="bg-black/50 border-white/10">
+              <SelectValue placeholder="팀 선택" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#18181B] border-white/10 text-white">
+              {teams.map((team) => (
+                <SelectItem key={team.id} value={String(team.id)}>
+                  {team.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={memberFilter.seasonId || "auto"}
+            onValueChange={(value) =>
+              setMemberFilter({
+                ...memberFilter,
+                seasonId: value === "auto" ? "" : value,
+              })
+            }
+          >
+            <SelectTrigger className="bg-black/50 border-white/10">
+              <SelectValue placeholder="시즌(자동/활성)" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#18181B] border-white/10 text-white">
+              <SelectItem value="auto">자동(활성/최근)</SelectItem>
+              {seasons.map((season) => (
+                <SelectItem key={season.id} value={String(season.id)}>
+                  {season.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {isMembersLoading ? (
+            <p className="text-sm text-zinc-500">멤버 로딩 중...</p>
+          ) : !teamMembers?.members?.length ? (
+            <p className="text-sm text-zinc-500">멤버가 없습니다.</p>
+          ) : (
+            <div className="space-y-2 max-h-[360px] overflow-y-auto">
+              {teamMembers.members.map((member) => (
+                <div
+                  key={member.user_id}
+                  className={`flex items-center justify-between rounded-md border bg-black/30 p-3 ${
+                    selectedMemberId === member.user_id
+                      ? "border-emerald-500/40"
+                      : "border-white/10"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="text-sm font-semibold">
+                      {member.nickname ?? "닉네임 없음"}#{member.user_id}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      가입일: {member.joined_at ?? "-"}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      기여도: {member.contribution_points.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      최근 기여: {member.latest_event_at ?? "-"}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-white/10 text-zinc-200"
+                    onClick={() =>
+                      handleSelectMember(member.user_id, member.joined_at)
+                    }
+                  >
+                    선택
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        <Card className="bg-[#18181B] border-white/5 p-4 space-y-4">
+          <h2 className="text-lg font-semibold">멤버 상세/기여도 관리</h2>
+          {!selectedMember ? (
+            <p className="text-sm text-zinc-500">멤버를 선택하세요.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-md border border-white/10 bg-black/30 p-3 space-y-1">
+                <div className="text-sm font-semibold">
+                  {selectedMember.nickname ?? "닉네임 없음"}#
+                  {selectedMember.user_id}
+                </div>
+                <div className="text-xs text-zinc-500">
+                  External ID: {selectedMember.external_id ?? "-"}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">가입일 수정</div>
+                <Input
+                  type="datetime-local"
+                  value={memberJoinedAt}
+                  onChange={(e) => setMemberJoinedAt(e.target.value)}
+                  className="bg-black/50 border-white/10"
+                />
+                <Input
+                  placeholder="사유"
+                  value={memberJoinedReason}
+                  onChange={(e) => setMemberJoinedReason(e.target.value)}
+                  className="bg-black/50 border-white/10"
+                />
+                <Button
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  onClick={handleUpdateMemberJoinedAt}
+                >
+                  가입일 수정
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">기여도 조정</div>
+                <Input
+                  type="number"
+                  placeholder="기여도 변경량 (+/-)"
+                  value={contributionDelta}
+                  onChange={(e) => setContributionDelta(e.target.value)}
+                  className="bg-black/50 border-white/10"
+                />
+                <Input
+                  placeholder="액션 코드"
+                  value={contributionAction}
+                  onChange={(e) => setContributionAction(e.target.value)}
+                  className="bg-black/50 border-white/10"
+                />
+                <Input
+                  placeholder="사유"
+                  value={contributionReason}
+                  onChange={(e) => setContributionReason(e.target.value)}
+                  className="bg-black/50 border-white/10"
+                />
+                <Button
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                  onClick={handleAdjustMemberContribution}
+                >
+                  기여도 조정
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">기여도 내역</div>
+                {isContribLoading ? (
+                  <p className="text-sm text-zinc-500">내역 로딩 중...</p>
+                ) : !memberContributions?.items?.length ? (
+                  <p className="text-sm text-zinc-500">내역이 없습니다.</p>
+                ) : (
+                  <div className="space-y-2 max-h-[240px] overflow-y-auto">
+                    {memberContributions.items.map((log) => (
+                      <div
+                        key={log.id}
+                        className="rounded-md border border-white/10 bg-black/30 p-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-300">{log.action}</span>
+                          <span className="text-zinc-500">
+                            {log.created_at ?? "-"}
+                          </span>
+                        </div>
+                        <div className="text-zinc-400">Δ {log.delta}</div>
+                        {log.meta?.reason && (
+                          <div className="text-zinc-500">
+                            사유: {log.meta.reason}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </div>

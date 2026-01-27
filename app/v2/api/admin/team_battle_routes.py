@@ -16,7 +16,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
+from app.models.user import User
 from app.v2.services.team_battle_admin_service import TeamBattleAdminService
+from app.utils.timezone import utc_to_kst_iso
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")
@@ -78,6 +80,20 @@ class MemberForceLeaveRequest(BaseModel):
     reason: str = "Admin forced leave"
 
 
+class MemberJoinedAtUpdateRequest(BaseModel):
+    joined_at: datetime
+    reason: str = "Admin joined_at update"
+
+
+class MemberContributionAdjustRequest(BaseModel):
+    team_id: int
+    user_id: int
+    delta: int = Field(..., description="기여도 변경량 (양수/음수)")
+    reason: str = Field(..., min_length=1, description="조정 사유")
+    season_id: int | None = None
+    action: str = "ADMIN_ADJUST"
+
+
 class SeasonDto(BaseModel):
     id: int
     name: str
@@ -112,6 +128,43 @@ class TeamDetailDto(BaseModel):
     created_at: str | None
     members: List[dict]
     member_count: int
+
+
+class TeamMemberDto(BaseModel):
+    user_id: int
+    team_id: int
+    role: str
+    joined_at: str | None
+    nickname: str | None
+    external_id: str | None
+    contribution_points: int
+    latest_event_at: str | None
+
+
+class TeamMemberListDto(BaseModel):
+    team_id: int
+    season_id: int | None
+    members: List[TeamMemberDto]
+
+
+class ContributionLogDto(BaseModel):
+    id: int
+    team_id: int
+    user_id: int | None
+    season_id: int
+    action: str
+    delta: int
+    meta: dict | None
+    created_at: str | None
+    nickname: str | None
+    external_id: str | None
+
+
+class ContributionLogListDto(BaseModel):
+    team_id: int
+    user_id: int
+    season_id: int | None
+    items: List[ContributionLogDto]
 
 
 class TeamScoreDto(BaseModel):
@@ -296,6 +349,87 @@ def get_team_detail(
     return TeamDetailDto(**detail)
 
 
+@router.get("/teams/{team_id}/members", response_model=TeamMemberListDto)
+def list_team_members(
+    team_id: int,
+    season_id: int | None = Query(None, description="시즌 ID (없으면 활성/최근 시즌)"),
+    db: Session = Depends(get_db),
+    admin_info: tuple = Depends(get_current_admin_info),
+):
+    """팀 멤버 상세 목록 (기여도 포함)."""
+    try:
+        result = _service.list_team_members_with_contributions(
+            db,
+            team_id=team_id,
+            season_id=season_id,
+        )
+        members = [
+            TeamMemberDto(
+                user_id=m["user_id"],
+                team_id=m["team_id"],
+                role=m["role"],
+                joined_at=utc_to_kst_iso(m["joined_at"]),
+                nickname=m["nickname"],
+                external_id=m["external_id"],
+                contribution_points=m["contribution_points"],
+                latest_event_at=utc_to_kst_iso(m["latest_event_at"]),
+            )
+            for m in result["members"]
+        ]
+        return TeamMemberListDto(
+            team_id=result["team_id"],
+            season_id=result["season_id"],
+            members=members,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get(
+    "/teams/{team_id}/members/{user_id}/contributions",
+    response_model=ContributionLogListDto,
+)
+def list_member_contributions(
+    team_id: int,
+    user_id: int,
+    season_id: int | None = Query(None, description="시즌 ID (없으면 활성/최근 시즌)"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    admin_info: tuple = Depends(get_current_admin_info),
+):
+    """팀 멤버 기여도 로그 조회."""
+    result = _service.list_member_contribution_logs(
+        db,
+        team_id=team_id,
+        user_id=user_id,
+        season_id=season_id,
+        limit=limit,
+        offset=offset,
+    )
+    items = [
+        ContributionLogDto(
+            id=log["id"],
+            team_id=log["team_id"],
+            user_id=log["user_id"],
+            season_id=log["season_id"],
+            action=log["action"],
+            delta=log["delta"],
+            meta=log["meta"],
+            created_at=utc_to_kst_iso(log["created_at"]),
+            nickname=log["nickname"],
+            external_id=log["external_id"],
+        )
+        for log in result["items"]
+    ]
+    return ContributionLogListDto(
+        team_id=result["team_id"],
+        user_id=result["user_id"],
+        season_id=result["season_id"],
+        items=items,
+    )
+
+
 @router.post("/teams", response_model=TeamDto)
 def create_team(
     req: TeamCreateRequest,
@@ -418,3 +552,74 @@ def force_leave_team(
     if not success:
         raise HTTPException(status_code=404, detail="USER_NOT_IN_TEAM")
     return {"success": True, "user_id": req.user_id}
+
+
+@router.patch("/members/{user_id}/joined-at", response_model=TeamMemberDto)
+def update_member_joined_at(
+    user_id: int,
+    req: MemberJoinedAtUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple = Depends(get_current_admin_info),
+):
+    """팀 멤버 가입일 수정."""
+    admin_id, _ = admin_info
+    try:
+        member = _service.update_member_joined_at(
+            db,
+            user_id=user_id,
+            joined_at=req.joined_at,
+            admin_id=admin_id,
+            reason=req.reason,
+        )
+        user = db.get(User, user_id)
+        return TeamMemberDto(
+            user_id=member.user_id,
+            team_id=member.team_id,
+            role=member.role,
+            joined_at=utc_to_kst_iso(member.joined_at),
+            nickname=user.nickname if user else None,
+            external_id=user.external_id if user else None,
+            contribution_points=0,
+            latest_event_at=None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/members/contributions/adjust")
+def adjust_member_contribution(
+    req: MemberContributionAdjustRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple = Depends(get_current_admin_info),
+):
+    """팀 멤버 기여도 조정 (로그 추가)."""
+    admin_id, _ = admin_info
+    try:
+        result = _service.adjust_member_contribution(
+            db,
+            team_id=req.team_id,
+            user_id=req.user_id,
+            delta=req.delta,
+            reason=req.reason,
+            admin_id=admin_id,
+            season_id=req.season_id,
+            action=req.action,
+        )
+        log = result["log"]
+        return {
+            "success": True,
+            "team_points": result["team_points"],
+            "applied_delta": result["applied_delta"],
+            "log": {
+                "id": log.id,
+                "team_id": log.team_id,
+                "user_id": log.user_id,
+                "season_id": log.season_id,
+                "action": log.action,
+                "delta": log.delta,
+                "meta": log.meta,
+                "created_at": utc_to_kst_iso(log.created_at),
+            },
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

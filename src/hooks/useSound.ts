@@ -6,24 +6,28 @@ import { Howl } from "howler";
 // using local constants for easy reference if needed.
 const SOUND_SOURCES = {
   BGM: {
-    MAIN: "/assets/sounds/bgm/battle_theme.wav",
+    MAIN: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
     BATTLE: "/assets/sounds/bgm/battle_theme.wav",
+    VAULT: "/assets/sounds/bgm/Sketchbook 2025-12-11_BREAKDOWN.ogg",
+    LOTTERY: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
+    ROULETTE: "/assets/sounds/sfx/rou-roll.mp3",
   },
   SFX: {
     TRANSITION: "/assets/sounds/sfx/page_turn.mp3",
+    TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
     // TOAST: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
     DICE_SHAKE: "/assets/sounds/sfx/dice-shake-3.ogg",
     DICE_THROW: "/assets/sounds/sfx/dice-throw-3.ogg",
     DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
-    TAB_TOUCH: "/assets/sounds/sfx/page_turn.mp3",
-    LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg",
-    LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
     ROULETTE_STOP: "/assets/sounds/sfx/Ball_Drop_Clack.ogg",
-    SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
-    BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
-    VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
-    ROULETTE_LOSE: "/assets/sounds/sfx/roulette_lose.wav",
-    DICE_LOSE: "/assets/sounds/sfx/dice_lose.ogg",
+    ROULETTE_LOSE: "/assets/sounds/sfx/fail03.ogg",
+    DICE_LOSE: "/assets/sounds/sfx/fail03.ogg",
+    // LOTTERY_ROLL: "/assets/sounds/sfx/Lotto_Ball_Roll.ogg", // Redundant with BGM.LOTTERY
+    // LOTTERY_WIN: "/assets/sounds/sfx/Lotto_Win.ogg",
+    // SMALL_WIN: "/assets/sounds/sfx/Small_Win.ogg",
+    // BIG_WIN: "/assets/sounds/sfx/Big_Win.ogg",
+    // VAULT_JINGLE: "/assets/sounds/sfx/Vault_Jingle.ogg",
+    // DICE_REVEAL: "/assets/sounds/sfx/Dice_Reveal.ogg",
     // ENTER_GAME: "/assets/sounds/sfx/MESSAGE-B_Accept.wav", // Deleted
   },
 };
@@ -34,7 +38,7 @@ export const useSound = () => {
 
   // Refs for stop control of looping sounds
   const rouletteSpinRef = useRef<Howl | null>(null);
-  const lotteryScratchRef = useRef<Howl | null>(null);
+  // const lotteryScratchRef = useRef<Howl | null>(null); // Disabled due to duplication with BGM
 
   const playClick = useCallback(() => {
     // can be used for generic UI clicks
@@ -56,56 +60,38 @@ export const useSound = () => {
     () => playSfx(SOUND_SOURCES.SFX.DICE_THROW, { volume: 1.0 }),
     [playSfx],
   );
-  const playDiceReveal = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.DICE_REVEAL, { volume: 0.9 }),
-    [playSfx],
-  );
+  const playDiceReveal = useCallback(() => {
+    // Disabled as per user request
+  }, []);
   const playTabTouch = useCallback(
     () => playSfx(SOUND_SOURCES.SFX.TAB_TOUCH, { volume: 1.0 }),
     [playSfx],
   );
 
   const playLotteryScratch = useCallback(() => {
-    if (lotteryScratchRef.current) {
-      lotteryScratchRef.current.stop();
-    }
-    lotteryScratchRef.current = playSfx(SOUND_SOURCES.SFX.LOTTERY_ROLL, {
-      volume: 1.0,
-      loop: true,
-    });
-  }, [playSfx]);
-
+    // Disabled - duplicated with Lottery BGM
+  }, []);
   const stopLotteryScratch = useCallback(() => {
-    if (lotteryScratchRef.current) {
-      lotteryScratchRef.current.fade(1.0, 0, 300);
-      setTimeout(() => {
-        lotteryScratchRef.current?.stop();
-        lotteryScratchRef.current = null;
-      }, 300);
-    }
+    // Disabled - duplicated with Lottery BGM
   }, []);
 
-  const playLotteryWin = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.LOTTERY_WIN, { volume: 1.0 }),
-    [playSfx],
-  );
+  const playLotteryWin = useCallback(() => {
+    // Disabled - file removed
+  }, []);
 
   const playRouletteStop = useCallback(
     () => playSfx(SOUND_SOURCES.SFX.ROULETTE_STOP, { volume: 0.9 }),
     [playSfx],
   );
-  const playSmallWin = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.SMALL_WIN, { volume: 0.8 }),
-    [playSfx],
-  );
-  const playBigWin = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.BIG_WIN, { volume: 1.0 }),
-    [playSfx],
-  );
-  const playVaultJingle = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.VAULT_JINGLE, { volume: 0.8 }),
-    [playSfx],
-  );
+  const playSmallWin = useCallback(() => {
+    // Disabled as per user request
+  }, []);
+  const playBigWin = useCallback(() => {
+    // Disabled as per user request
+  }, []);
+  const playVaultJingle = useCallback(() => {
+    // Disabled as per user request
+  }, []);
   const playRouletteLose = useCallback(
     () => playSfx(SOUND_SOURCES.SFX.ROULETTE_LOSE, { volume: 0.8 }),
     [playSfx],
@@ -139,6 +125,18 @@ export const useSound = () => {
     () => playBgm(SOUND_SOURCES.BGM.BATTLE),
     [playBgm],
   );
+  const startVaultBgm = useCallback(
+    () => playBgm(SOUND_SOURCES.BGM.VAULT),
+    [playBgm],
+  );
+  const startLotteryBgm = useCallback(
+    () => playBgm(SOUND_SOURCES.BGM.LOTTERY),
+    [playBgm],
+  );
+  const startRouletteBgm = useCallback(
+    () => playBgm(SOUND_SOURCES.BGM.ROULETTE),
+    [playBgm],
+  );
 
   const playEnterGame = useCallback(() => {
     // playSfx(SOUND_SOURCES.SFX.ENTER_GAME, { volume: 0.6 })
@@ -158,6 +156,9 @@ export const useSound = () => {
     stopRouletteSpin,
     startMainBgm,
     startBattleBgm,
+    startVaultBgm,
+    startLotteryBgm,
+    startRouletteBgm,
     stopBgm,
     toggleMute,
     isMuted,

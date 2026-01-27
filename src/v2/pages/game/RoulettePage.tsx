@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import RouletteWheel from "../../components/game/RouletteWheel";
@@ -9,6 +9,7 @@ import {
   playV2Roulette,
 } from "../../api/v1CompatAdapter";
 import "./RouletteRedesign.css";
+import { useSound } from "../../../hooks/useSound";
 import { Loader2 } from "lucide-react";
 
 type RouletteTicketType =
@@ -50,6 +51,7 @@ export default function RoulettePage() {
     useState<RouletteTicketType>("ROULETTE_TICKET");
   const [isSpinning, setIsSpinning] = useState(false);
   const [winningSegment, setWinningSegment] = useState<number | null>(null);
+  const { startRouletteBgm, startMainBgm } = useSound();
 
   const [showResultModal, setShowResultModal] = useState(false);
   const [lastWinAmount, setLastWinAmount] = useState(0);
@@ -59,6 +61,13 @@ export default function RoulettePage() {
     queryKey: ["v2-roulette-status", activeTab],
     queryFn: () => getV2RouletteStatus(activeTab),
   });
+
+  useEffect(() => {
+    startRouletteBgm();
+    return () => {
+      startMainBgm();
+    };
+  }, [startRouletteBgm, startMainBgm]);
 
   const { data: tabStatuses } = useQuery({
     queryKey: ["v2-roulette-status-tabs"],

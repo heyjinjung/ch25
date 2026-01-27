@@ -275,11 +275,46 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 
 ✅ 주사위 게임로직과 결과맵핑이 맞지않음!!! 
 
-
 ✅  메인페이지 메인 히어로 텍스트에 https://ui.aceternity.com/components/encrypted-text
 주사위 게임로직과 결과맵핑이 맞지않음!!! 
 
 ✅ 팀배틀 닉네임으로 유저조회 및 처리 가능하게 해줘 
+
+
+✅ 주사위게임에서 티켓은 차감되나
+금고 잔액이 현재 차감되지 않고 있어
+특별한 에러나 로그도 없어 - 금고한도 / 에러메시지 + 주사위음수차감 
+[V2Adapter] Dice Status Data: {
+    "config_id": 1,
+    "name": "Default Digtce Config",
+    "max_daily_plays": 0,
+    "today_plays": 13,
+    "remaining_plays": 0,
+    "token_type": "DICE_TICKET",
+
+✅ 팀배틀 
+팀별 팀멤버 상세조회관리 기능
+팀멤버 가입일자 게임점수 기여도내역 
+어드민 프론트에 구현되야함 
+
+✅  1. 룰렛티켓 구매시 아래와 같은 오류 발생 
+
+shopApi.ts:76 [shopApi] Failed to purchase V2 shop product 
+ct {message: 'Request failed with status code 400', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
+code
+"Bad Request"
+[[Prototype]]
+: 
+"AxiosError: Request failed with status code 400\n    at kE (http://localhost:3000/assets/index-BLQ9nVW2.js:424:1088)\n    at XMLHttpRequest.N (http://localhost:3000/assets/index-BLQ9nVW2.js:424:5847)\n    at Vo.request (http://localhost:3000/assets/index-BLQ9nVW2.js:426:2094)\n    at async z (http://localhost:3000/assets/ExchangePage-DzgUxSWy.js:1:602)"
+[[Prototype]]
+: 
+Error
+2. 치킨은 구매는 가능하나 금고에서 돈이 차감안됨
+
+금고출금조건에 현재 플레이횟수가 전혀 카운팅 되고 있지 않음 
+
+
+----------------
 
 [] 게임결과 모달 및 애니메이션 
 ㄴ 꽝에는 실패용 모달 / 애니메이션 
@@ -308,18 +343,21 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
    조건: 금고에 적립되는 모든 포인트(POINT) 보상.
    조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
    연출: 'Celestial Reveal' (화려한 콘페티 + 테두리 Shine + 상품명 EncryptedText 효과).
+   
    등급 2: NORMAL (일반 당첨)
    조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
    조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매).
    조건: 기타 아이템 및 퍼즐 조각.
    연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력 모션).
+  
    등급 3: FAIL (꽝)
    조건: NONE 타입.
    연출: 저채도 심플 연출.
 
+
+
+
 ---------------------------------------
-
-
 
 
 
@@ -332,25 +370,19 @@ API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 --------------
 
-팀배틀 
-팀별 팀멤버 상세조회관리 기능
-팀멤버 가입일자 게임점수 기여도내역 
-어드민 프론트에 구현되야함 
-
 
 미션관리
 일일 조건이 붙은건 일일 액션타입과 매치되어야 하는건지
-현재 어떤 조건에 어떻게 붙어야 하는건지 관리자가 헷갈려함 
-예를 들어 골든하워 * 게임플레이 = 성립 ??>? 
-그리고 같은 로직키가 같은 탭안에서 성립이 안됨 
+현재 어떤 조건에 어떻게 붙어야 하는건지 관리자가 매우 헷갈려함 
+로직을 타이핑하는게 어려워서 드롭다운으로 선택하게 한건데
+이게 미션이 어떻게 조립이 되는지 모르겠음 
+
+예를 들어 골든하워 * 게임플레이 = 성립가능???  
+* 그리고 같은 로직키가 같은 탭안에서는 일일/주말/신규/스페셜의 조건에선 성립이 안됨 
 
 
 
-1. 403 에러 (BENEFITS_SUSPENDED)에 대하여
-네, 정상적인 동작입니다. 현재 적용된 **"강력한 금고 정책(Strict Vault Policy)"**에 따라, 최근 7일 내에 입금 내역이 없는 유저는 상점 이용 및 유료 게임 이용이 차단됩니다.
-원인: 테스트 중인 계정이 7일간 입금이 없는 '혜택 중단' 상태입니다.
-해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
-ㄴ 에러메시지 마련할것 
+
 
 ------------
 
@@ -359,8 +391,7 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
 
-기능 생성 후
-문서 업로드
+기능 생성 후 문서 업로드해줘 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
 관련있는 영역의 폴더에 
 오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
@@ -369,4 +400,57 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
 문서이름 : 20260126_mission_error_update.md
 
-이런식으로 문서 생성해줘
+
+-----------------
+1. 403 에러 (BENEFITS_SUSPENDED)에 대하여
+네, 정상적인 동작입니다. 현재 적용된 **"강력한 금고 정책(Strict Vault Policy)"**에 따라, 최근 7일 내에 입금 내역이 없는 유저는 상점 이용 및 유료 게임 이용이 차단됩니다.
+원인: 테스트 중인 계정이 7일간 입금이 없는 '혜택 중단' 상태입니다.
+해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
+ㄴ 에러메시지 마련할것 
+
+
+
+
+
+
+
+
+@systematic-debugging 활용하여 수정해줘 
+
+기술기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+
+기능 생성 후 문서 업로드해줘 
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
+관련있는 영역의 폴더에 
+오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
+
+예시 > 미션 오류 발견 
+폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
+문서이름 : 20260126_mission_error_update.md
+
+
+
+
+
+
+
+
+@systematic-debugging 활용하여 수정해줘 
+
+기술기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+
+기능 생성 후 문서 업로드해줘 
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
+관련있는 영역의 폴더에 
+오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
+
+예시 > 미션 오류 발견 
+폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
+문서이름 : 20260126_mission_error_update.md
+

@@ -417,6 +417,256 @@ class TeamBattleAdminService:
     # -------------------------------------------------------------------------
     # Member Management
     # -------------------------------------------------------------------------
+
+    def _get_active_or_latest_season_id(self, db: Session) -> int | None:
+        active = (
+            db.execute(
+                select(TeamSeason)
+                .where(TeamSeason.is_active == True)  # noqa: E712
+                .order_by(TeamSeason.id.desc())
+            )
+            .scalars()
+            .first()
+        )
+        if active:
+            return active.id
+
+        latest_id = (
+            db.execute(select(TeamSeason.id).order_by(TeamSeason.id.desc()).limit(1))
+            .scalar_one_or_none()
+        )
+        return latest_id
+
+    def list_team_members_with_contributions(
+        self,
+        db: Session,
+        *,
+        team_id: int,
+        season_id: int | None = None,
+    ) -> dict[str, Any]:
+        team = db.get(Team, team_id)
+        if not team:
+            raise ValueError("TEAM_NOT_FOUND")
+
+        resolved_season_id = season_id or self._get_active_or_latest_season_id(db)
+
+        contrib_stmt = (
+            select(
+                TeamEventLog.user_id.label("user_id"),
+                func.coalesce(func.sum(TeamEventLog.delta), 0).label("points"),
+                func.max(TeamEventLog.created_at).label("latest_event_at"),
+            )
+            .where(TeamEventLog.team_id == team_id)
+        )
+        if resolved_season_id is not None:
+            contrib_stmt = contrib_stmt.where(TeamEventLog.season_id == resolved_season_id)
+        contrib_stmt = contrib_stmt.group_by(TeamEventLog.user_id)
+        contrib_subq = contrib_stmt.subquery()
+
+        rows = (
+            db.execute(
+                select(TeamMember, User, contrib_subq.c.points, contrib_subq.c.latest_event_at)
+                .join(User, User.id == TeamMember.user_id)
+                .outerjoin(contrib_subq, contrib_subq.c.user_id == TeamMember.user_id)
+                .where(TeamMember.team_id == team_id)
+                .order_by(TeamMember.joined_at.asc())
+            )
+            .all()
+        )
+
+        members = []
+        for row in rows:
+            member = row.TeamMember
+            user = row.User
+            members.append(
+                {
+                    "user_id": member.user_id,
+                    "team_id": member.team_id,
+                    "role": member.role,
+                    "joined_at": member.joined_at,
+                    "nickname": user.nickname,
+                    "external_id": user.external_id,
+                    "contribution_points": int(row.points or 0),
+                    "latest_event_at": row.latest_event_at,
+                }
+            )
+
+        return {
+            "team_id": team_id,
+            "season_id": resolved_season_id,
+            "members": members,
+        }
+
+    def list_member_contribution_logs(
+        self,
+        db: Session,
+        *,
+        team_id: int,
+        user_id: int,
+        season_id: int | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        resolved_season_id = season_id or self._get_active_or_latest_season_id(db)
+
+        stmt = (
+            select(TeamEventLog, User)
+            .join(User, User.id == TeamEventLog.user_id)
+            .where(TeamEventLog.team_id == team_id)
+            .where(TeamEventLog.user_id == user_id)
+            .order_by(TeamEventLog.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        if resolved_season_id is not None:
+            stmt = stmt.where(TeamEventLog.season_id == resolved_season_id)
+
+        rows = db.execute(stmt).all()
+        items = []
+        for row in rows:
+            log = row.TeamEventLog
+            user = row.User
+            items.append(
+                {
+                    "id": log.id,
+                    "team_id": log.team_id,
+                    "user_id": log.user_id,
+                    "season_id": log.season_id,
+                    "action": log.action,
+                    "delta": log.delta,
+                    "meta": log.meta,
+                    "created_at": log.created_at,
+                    "nickname": user.nickname,
+                    "external_id": user.external_id,
+                }
+            )
+
+        return {
+            "team_id": team_id,
+            "user_id": user_id,
+            "season_id": resolved_season_id,
+            "items": items,
+        }
+
+    def update_member_joined_at(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        joined_at: datetime,
+        admin_id: int,
+        reason: str,
+    ) -> TeamMember:
+        member = db.get(TeamMember, user_id)
+        if not member:
+            raise ValueError("USER_NOT_IN_TEAM")
+
+        before = {"joined_at": member.joined_at.isoformat() if member.joined_at else None}
+        member.joined_at = joined_at
+        after = {"joined_at": member.joined_at.isoformat() if member.joined_at else None, "reason": reason}
+
+        V2AdminAuditService.log(
+            db,
+            admin_id=admin_id,
+            action="TEAM_MEMBER_JOINED_AT_UPDATE",
+            target_type="team_member",
+            target_id=str(user_id),
+            before=before,
+            after=after,
+            auto_commit=False,
+        )
+
+        db.commit()
+        db.refresh(member)
+        logger.info(f"Team member joined_at updated: user={user_id} by admin {admin_id}")
+        return member
+
+    def adjust_member_contribution(
+        self,
+        db: Session,
+        *,
+        team_id: int,
+        user_id: int,
+        delta: int,
+        reason: str,
+        admin_id: int,
+        season_id: int | None = None,
+        action: str = "ADMIN_ADJUST",
+    ) -> dict[str, Any]:
+        if delta == 0:
+            raise ValueError("DELTA_REQUIRED")
+
+        team = db.get(Team, team_id)
+        if not team:
+            raise ValueError("TEAM_NOT_FOUND")
+
+        member = db.get(TeamMember, user_id)
+        if not member or member.team_id != team_id:
+            raise ValueError("USER_NOT_IN_TEAM")
+
+        resolved_season_id = season_id or self._get_active_or_latest_season_id(db)
+        if resolved_season_id is None:
+            raise ValueError("SEASON_NOT_FOUND")
+
+        score = (
+            db.execute(
+                select(TeamScore).where(
+                    TeamScore.team_id == team_id,
+                    TeamScore.season_id == resolved_season_id,
+                )
+            )
+            .scalar_one_or_none()
+        )
+        if not score:
+            score = TeamScore(team_id=team_id, season_id=resolved_season_id, points=0)
+            db.add(score)
+            db.flush()
+
+        before_points = score.points
+        score.points = max(0, score.points + delta)
+        after_points = score.points
+        applied_delta = after_points - before_points
+        if applied_delta == 0:
+            raise ValueError("NO_EFFECT")
+
+        log = TeamEventLog(
+            team_id=team_id,
+            user_id=user_id,
+            season_id=resolved_season_id,
+            action=action,
+            delta=applied_delta,
+            meta={"reason": reason, "admin_id": admin_id},
+        )
+        db.add(log)
+
+        V2AdminAuditService.log(
+            db,
+            admin_id=admin_id,
+            action="TEAM_MEMBER_CONTRIBUTION_ADJUST",
+            target_type="team_event_log",
+            target_id=f"{team_id}:{user_id}:{resolved_season_id}",
+            before={"team_points": before_points},
+            after={
+                "team_points": after_points,
+                "delta": applied_delta,
+                "reason": reason,
+                "action": action,
+            },
+            auto_commit=False,
+        )
+
+        db.commit()
+        db.refresh(log)
+        logger.info(
+            f"Team member contribution adjusted: team={team_id}, user={user_id}, "
+            f"delta={applied_delta}, new_points={after_points} by admin {admin_id}"
+        )
+
+        return {
+            "log": log,
+            "team_points": after_points,
+            "applied_delta": applied_delta,
+        }
     
     def force_join_team(
         self,

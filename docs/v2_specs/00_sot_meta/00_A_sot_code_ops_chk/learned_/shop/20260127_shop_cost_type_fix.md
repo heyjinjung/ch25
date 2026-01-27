@@ -1,12 +1,29 @@
 # V2 상점 구매 오류/차감 불일치 수정
 
-**작성일**: 2026-01-27  
+문서 타입: 변경 로그
+버전: v1.1
+작성일: 2026-01-27
+작성자: GitHub Copilot
+대상 독자: BE 개발자, FE 개발자, 운영
+
 **상태**: ✅ 해결됨  
 **영향 범위**: V2 상점(룰렛티켓, 치킨 기프티콘) 구매
 
 ---
 
-## 1. 문제 요약
+## 1. 목적
+- V2 상점 구매 오류/잔액 불일치 원인과 수정 내용을 기록한다.
+
+## 2. 범위
+- 대상: V2 상점 구매 API 및 금고 차감 로직
+- 제외: 결제 연동, 외부 API, UI 디자인 변경
+
+## 3. 용어 정의
+- **CostType**: 상점 구매 비용 타입 (SoT 기준: VAULT/DIAMOND)
+- **VAULT alias**: POINT/CC_POINT → VAULT로 정규화
+- **Vault SoT**: `user.vault_locked_balance`
+
+## 4. 문제 요약
 
 ### 1.1 룰렛티켓 구매 400 오류
 - API: `POST /api/v2/shop/purchase`
@@ -18,7 +35,7 @@
 
 ---
 
-## 2. 근본 원인
+## 5. 근본 원인
 
 ### 2.1 cost_type 불일치 (룰렛티켓)
 - UI Config의 `cost_type=POINT`
@@ -31,7 +48,7 @@
 
 ---
 
-## 3. 해결 내용
+## 6. 해결 내용
 
 ### 3.1 cost_type 정규화
 - `POINT/CC_POINT/VAULT` → `VAULT`로 통일
@@ -43,7 +60,7 @@
 
 ---
 
-## 4. 수정 파일
+## 7. 수정 파일
 
 - `app/v2/api/routes.py`
   - shop products 반환 시 cost_type 정규화
@@ -53,7 +70,7 @@
 
 ---
 
-## 5. 검증 체크리스트
+## 8. 검증 체크리스트
 
 - [x] 룰렛티켓 cost_type → VAULT 정규화 확인
 - [x] 룰렛티켓 구매 400 에러 제거
@@ -62,10 +79,17 @@
 
 ---
 
-## 6. 참고
+## 9. 참고
 
-- UI Config (`v2_shop_products`) 에서 `cost_type=POINT`는 허용하되 API에서는 `VAULT`로 해석
+- UI Config (`v2_shop_products`)에서 `cost_type=POINT`는 허용하되 API에서는 `VAULT`로 해석
 - 금고 SoT는 `user.vault_locked_balance`
+- CostType SoT: [docs/soT/canonical_enums/shop_enums.json](docs/soT/canonical_enums/shop_enums.json)
+
+---
+
+## 10. 변경 이력
+- v1.1 (2026-01-27, GitHub Copilot): 메타 블록/목적·범위·용어 정의/변경 이력 추가
+- v1.0 (2026-01-27, GitHub Copilot): 최초 작성
 
 ---
 

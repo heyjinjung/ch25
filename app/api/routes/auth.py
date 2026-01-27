@@ -77,8 +77,6 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         # Update login audit fields
         # first_login_at is the source of truth for "new user" onboarding window.
         # Only set it when this is the user's first recorded login (avoid reclassifying existing users).
-        if user.first_login_at is None and user.last_login_at is None:
-            user.first_login_at = datetime.utcnow()
         try:
             MissionService(db).ensure_login_progress(user.id)
         except Exception:

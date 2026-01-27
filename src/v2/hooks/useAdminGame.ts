@@ -29,12 +29,18 @@ import {
   adjustAdminTeamBattleScore,
   forceJoinAdminTeamBattle,
   forceLeaveAdminTeamBattle,
+  getAdminTeamBattleTeamMembers,
+  getAdminTeamBattleMemberContributions,
+  updateAdminTeamBattleMemberJoinedAt,
+  adjustAdminTeamBattleMemberContribution,
   // type AdminTeamBattleSeasonDto, // 2026-01-26 미사용 import 제거
   type AdminTeamBattleCreateSeasonRequest,
   type AdminTeamBattleCreateTeamRequest,
   type AdminTeamBattleScoreAdjustRequest,
   type AdminTeamBattleForceJoinRequest,
   type AdminTeamBattleForceLeaveRequest,
+  type AdminTeamBattleMemberJoinedAtUpdateRequest,
+  type AdminTeamBattleMemberContributionAdjustRequest,
 } from "../api/adminApi";
 
 // ============================================================================
@@ -301,6 +307,74 @@ export function useAdminForceLeaveTeamBattle() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["admin", "team-battle", "teams"],
+      });
+    },
+  });
+}
+
+export function useAdminTeamBattleTeamMembers(
+  teamId?: number,
+  seasonId?: number | null,
+) {
+  return useQuery({
+    queryKey: ["admin", "team-battle", "teams", teamId, "members", seasonId],
+    queryFn: () => getAdminTeamBattleTeamMembers(teamId as number, seasonId),
+    enabled: !!teamId,
+  });
+}
+
+export function useAdminTeamBattleMemberContributions(
+  teamId?: number,
+  userId?: number,
+  seasonId?: number | null,
+) {
+  return useQuery({
+    queryKey: [
+      "admin",
+      "team-battle",
+      "teams",
+      teamId,
+      "members",
+      userId,
+      "contributions",
+      seasonId,
+    ],
+    queryFn: () =>
+      getAdminTeamBattleMemberContributions(
+        teamId as number,
+        userId as number,
+        seasonId,
+      ),
+    enabled: !!teamId && !!userId,
+  });
+}
+
+export function useAdminUpdateTeamBattleMemberJoinedAt() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      payload,
+    }: {
+      userId: number;
+      payload: AdminTeamBattleMemberJoinedAtUpdateRequest;
+    }) => updateAdminTeamBattleMemberJoinedAt(userId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle"],
+      });
+    },
+  });
+}
+
+export function useAdminAdjustTeamBattleMemberContribution() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminTeamBattleMemberContributionAdjustRequest) =>
+      adjustAdminTeamBattleMemberContribution(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "team-battle"],
       });
     },
   });

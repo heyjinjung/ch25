@@ -1,7 +1,8 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import gsap from "gsap";
 import { getV2LotteryStatus, playV2Lottery } from "../../api/v1CompatAdapter";
+import { useSound } from "../../../hooks/useSound";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
 import LotteryResultModal from "../../components/game/LotteryResultModal";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
@@ -14,6 +15,7 @@ const LotteryPage: React.FC = () => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealedPrize, setRevealedPrize] = useState<any | null>(null);
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
+  const { startLotteryBgm, startMainBgm } = useSound();
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Ref array for multiple balls
@@ -72,6 +74,13 @@ const LotteryPage: React.FC = () => {
 
     return () => ctx.revert();
   }, []);
+
+  useEffect(() => {
+    startLotteryBgm();
+    return () => {
+      startMainBgm();
+    };
+  }, [startLotteryBgm, startMainBgm]);
 
   // ============================================================================
   // Play Handler

@@ -1,0 +1,116 @@
+# 안티프라우드 운영 프레임워크: 데이터 중심 방어 체계
+
+본 문서는 서비스 운영 중 발생하는 핑돈(Ping Money), 통장 협박 등의 악성 유저 공격을 차단하기 위해 제안된 모든 전략을 **데이터 스키마(Schema)** 및 **운용 로직(SQL)** 관점에서 체계적으로 정리한 마스터 플랜입니다.
+
+---
+
+## 1. 시스템 아키텍처 개요 (Overview)
+모든 방어 체계는 유저의 **'신뢰 점수(Trust Score)'**와 **'계좌 노출(Exposure)'**의 상관관계를 기반으로 자동화됩니다.
+
+```mermaid
+graph TD
+    U[유저 진입] --> S{신뢰도 점수 산출}
+    S -->|저신뢰| T3[Tier 3: 총알받이 계좌 - Burner]
+    S -->|중신뢰| T2[Tier 2: 완충 계좌 - Buffer]
+    S -->|고신뢰| T1[Tier 1: 안전 금고 - Safe Vault]
+    
+    W[텔레그램 감시봇] -->|유출 탐지| L[계좌 즉시 동결 및 유저 격리]
+    L --> U
+```
+
+---
+
+## 2. 데이터베이스 스키마 설계 (Database Schema)
+
+### 2.1. `fraud_risk_profiles` (유저 리스크 프로필)
+유저별 신뢰도를 수치화하여 어떤 등급의 계좌를 노출할지 결정하는 기준 테이블입니다.
+
+| 컬럼명 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `user_id` | UUID | 유저 고유 ID |
+| `trust_score` | INT | 0~100 (높을수록 안전) |
+| `pci_score` | INT | 프로필 완성도 지수 (PCI - 텔레그램 메타데이터 기반) |
+| `account_age_days` | INT | 가입 후 경과 일수 |
+| `biometric_verified`| BOOL | 생체 인증 완료 여부 |
+| `risk_level` | ENUM | LOW, MEDIUM, HIGH, CRITICAL |
+
+### 2.2. `bank_account_tiers` (계좌 등급 및 노출 관리)
+운영 중인 차명/법인 계좌를 역할별로 분류하여 관리합니다.
+
+| 컬럼명 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `account_id` | UUID | 계좌 고유 ID |
+| `tier` | ENUM | BURNER(총알받이), BUFFER(완충), VAULT(안전금고) |
+| `bank_name` | STRING | 은행명 |
+| `account_number` | STRING | 계좌번호 |
+| `is_active` | BOOL | 현재 활성화 여부 |
+| `exposure_count` | INT | 해당 계좌를 본 유저 수 (리스크 분산용) |
+| `balance_limit` | BIGINT | 입금 한도 (Burner는 낮게 설정하여 피해 최소화) |
+
+### 2.3. `telegram_monitoring_leads` (유출 모니터링 내역)
+UserBot이 텔레그램 불법 채널에서 수집한 유출 정보를 기록합니다.
+
+| 컬럼명 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `lead_id` | UUID | 탐지 리드 ID |
+| `source_channel` | STRING | 유출이 발견된 채널명/URL |
+| `leaked_account` | STRING | 발견된 우리 계좌번호 |
+| `detected_at` | DATETIME | 탐지 시각 |
+| `severity` | ENUM | INFO, WARNING, CRITICAL |
+
+---
+
+## 3. 핵심 운영 쿼리 (Operational SQL Mastery)
+
+### 3.1. 지능형 계좌 배정 로직 (Dynamic Allocation)
+유저가 입금 요청을 할 때, 해당 유저의 리스크 등급에 맞는 최적의 계좌 하나를 호출합니다.
+
+```sql
+-- 유저 리스크 수준에 따른 최적 계좌 할당
+SELECT bank_name, account_number, tier
+FROM bank_account_tiers
+WHERE is_active = TRUE
+  AND tier = (
+    CASE 
+      WHEN (SELECT trust_score FROM fraud_risk_profiles WHERE user_id = :target_user_id) < 30 THEN 'BURNER'
+      WHEN (SELECT trust_score FROM fraud_risk_profiles WHERE user_id = :target_user_id) BETWEEN 30 AND 70 THEN 'BUFFER'
+      ELSE 'VAULT'
+    END
+  )
+ORDER BY exposure_count ASC -- 노출 횟수가 가장 적은 계좌를 우선 배정
+LIMIT 1;
+```
+
+### 3.2. 유출 탐지 시 즉시 방어 로직 (Immediate Response)
+UserBot이 계좌 유출을 포착하면 즉시 해당 계좌를 죽이고, 이를 열람했던 유저들을 추적합니다.
+
+```sql
+-- 유출 계좌 즉시 비활성화 및 관련 유저 격리 루틴
+BEGIN;
+  -- 1. 유출된 계좌 즉시 정지
+  UPDATE bank_account_tiers 
+  SET is_active = FALSE 
+  WHERE account_number = :leaked_account_number;
+
+  -- 2. 해당 계좌를 열람했던 모든 유저의 신뢰 점수 하락 (전수조사 및 차단 대기)
+  UPDATE fraud_risk_profiles
+  SET trust_score = trust_score - 50,
+      risk_level = 'CRITICAL'
+  WHERE user_id IN (
+    SELECT user_id FROM account_exposure_logs 
+    WHERE account_number = :leaked_account_number
+      AND exposed_at > (NOW() - INTERVAL '48 HOURS') -- 최근 48시간 내 열람자 집중 추적
+  );
+COMMIT;
+```
+
+---
+
+## 4. 실전 실행 로드맵 (Action Roadmap)
+
+1.  **[데이터]** 기존 `user` 테이블에 신뢰 점수 및 PCI 지수 필드 추가 (`ALTER TABLE`).
+2.  **[로직]** 입금 페이지 호출 시 `GetRecommendedAccount` API 구현 (위의 SQL 기반).
+3.  **[인프라]** Python 기반 `Telegram UserBot` 가동 및 모니터링 테이블 연동.
+4.  **[알림]** `CRITICAL` 등급의 유출 발생 시 관리자 텔레그램으로 자동 즉시 알림 발송.
+
+> **💡 핵심 가치**: 이 프레임워크는 **"계좌가 묶이는 것은 사고가 아니라 일상적인 운영 과정"**임을 전제로 합니다. 시스템이 스스로 오염된 계좌를 도려내고 새로운 총알받이(Burner)를 투입하며 유출 유저를 끝까지 추적하는 **'자가 치유형'** 방어 체계입니다.

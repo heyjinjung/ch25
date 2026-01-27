@@ -793,13 +793,10 @@ class VaultService:
             policy = self.get_user_vault_policy(db, user, now_dt)
             recency_mult = float(policy["recency_multiplier"])
 
-        # Check Zero-Deposit Limit (30,000 KRW)
+        # Get Zero-Deposit Limit (30,000 KRW)
+        # NOTE: This limit only blocks POSITIVE accruals (gains).
+        # Negative accruals (losses/deductions) should ALWAYS be processed.
         vault_limit = policy["vault_max_limit"]
-        if vault_limit > 0:
-            current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
-            if current_locked >= vault_limit:
-                # Already at or above limit -> No more accrual
-                return 0
 
         # Streak vault bonus: applies ONLY to the base +200 accrual amount and only for base game modes.
         eligible_for_streak_bonus = False
@@ -916,9 +913,18 @@ class VaultService:
         # Final Amount
         amount = int(amount)
         
-        # [Strict] If limiting, clamp final balance
+        # [Strict] Re-fetch current balance for accurate limit check
+        # (user object may have stale data if modified in same session)
+        db.refresh(user)
+        current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+        
+        # [Strict] If limit reached and amount is POSITIVE, block accrual.
+        # Negative amounts (losses) should ALWAYS be processed to deduct from vault.
+        if vault_limit > 0 and amount > 0 and current_locked >= vault_limit:
+            return 0
+        
+        # [Strict] If limiting, clamp final balance for positive amounts
         if vault_limit > 0 and amount > 0:
-            current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
             if current_locked + amount > vault_limit:
                 amount = max(0, vault_limit - current_locked)
         

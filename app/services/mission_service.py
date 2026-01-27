@@ -775,60 +775,55 @@ class MissionService:
         """
         Ensures the user has the correct login mission progress.
         Typically called on login or user creation.
-        For NEW_USER_LOGIN_DAY2, it should be 1 on Day 1, and 2 on Day 2+.
         """
         user = self.db.query(User).filter(User.id == user_id).first()
         if not user:
             return
 
+        now_tz = self._now_tz()
+        
+        # 1. Update all general LOGIN missions (DAILY, etc.) once.
+        # This handles standard progress and ensures records exist.
+        try:
+            # This will iterate through all active LOGIN missions and update/create progress.
+            self.update_progress(user_id, "LOGIN", delta=1)
+        except Exception as e:
+            # We don't want to block login if mission update fails, but we should log it.
+            print(f"Update login progress failed: {e}")
+
+        # 2. Handle NEW_USER specific logic (Day 2+ jump)
+        # The standard update_progress only gives +1. 
+        # For NEW_USER_LOGIN_DAY2, if target is 2 and user is on their 2nd day, we jump to completion.
         from app.models.mission import Mission, MissionCategory, UserMissionProgress
-        missions = self.db.query(Mission).filter(
+        new_user_login_missions = self.db.query(Mission).filter(
             Mission.action_type == "LOGIN",
+            Mission.category == MissionCategory.NEW_USER,
             Mission.is_active == True
         ).all()
 
-        now_tz = self._now_tz()
-        
-        for mission in missions:
+        for mission in new_user_login_missions:
             reset_date = self.get_reset_date_str(mission.category)
-            
-            # For Daily missions, we just use standard update_progress(delta=1) logic elsewhere,
-            # but for NEW_USER missions, we want to ensure they aren't stuck.
-            if mission.category == MissionCategory.NEW_USER:
-                progress = self.db.query(UserMissionProgress).filter(
-                    UserMissionProgress.user_id == user_id,
-                    UserMissionProgress.mission_id == mission.id,
-                    UserMissionProgress.reset_date == reset_date
-                ).first()
+            progress = self.db.query(UserMissionProgress).filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == mission.id,
+                UserMissionProgress.reset_date == reset_date
+            ).first()
 
-                if not progress:
-                    progress = UserMissionProgress(
-                        user_id=user_id,
-                        mission_id=mission.id,
-                        current_value=1, # Day 1
-                        reset_date=reset_date
-                    )
-                    self.db.add(progress)
-                else:
-                    # If it exists, check if we should increment based on time difference
-                    # If joined on Day A, and now is Day B (B > A), and current_value < 2, set to 2.
-                    if not progress.is_completed and progress.current_value < mission.target_value:
-                        # Simple logic: if user.first_login_at exists and it's a different day, it's Day 2.
-                        if user.first_login_at:
-                            kst = ZoneInfo("Asia/Seoul")
-                            first_kst = user.first_login_at.replace(tzinfo=timezone.utc).astimezone(kst).date()
-                            now_kst = now_tz.date()
-                            if now_kst > first_kst:
-                                progress.current_value = mission.target_value # Reach 2
-                                progress.is_completed = True
-                                progress.completed_at = datetime.utcnow()
-                                if mission.auto_claim:
-                                    try: self.claim_reward(user_id, mission.id)
-                                    except: pass
-
-            elif mission.category == MissionCategory.DAILY:
-                # For Daily missions, just ensure it exists for today if not already
-                self.update_progress(user_id, "LOGIN", delta=1)
+            if progress and not progress.is_completed and progress.current_value < mission.target_value:
+                # Simple logic: if user.first_login_at exists and it's a different day, it's Day 2.
+                if user.first_login_at:
+                    kst = ZoneInfo("Asia/Seoul")
+                    first_kst = user.first_login_at.replace(tzinfo=timezone.utc).astimezone(kst).date()
+                    now_kst = now_tz.date()
+                    if now_kst > first_kst:
+                        progress.current_value = mission.target_value # Reach completion (e.g. 2)
+                        progress.is_completed = True
+                        progress.completed_at = datetime.utcnow()
+                        if mission.auto_claim:
+                            try: 
+                                self.claim_reward(user_id, mission.id)
+                            except: 
+                                pass
 
         self.db.commit()
 

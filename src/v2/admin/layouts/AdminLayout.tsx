@@ -240,18 +240,29 @@ export default function AdminLayout() {
                               onClick={() => navigate(item.path)}
                               data-testid={`admin-nav:${item.path.split("/").pop() || "dashboard"}`}
                               className={cn(
-                                "flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
+                                "group relative flex w-full items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300",
                                 activeItemPath === item.path ||
                                   (item.submenu &&
                                     item.submenu.some(
                                       (sub) => location.pathname === sub.path,
                                     ))
-                                  ? "bg-obsidian-accent text-white shadow-lg shadow-obsidian-accent/20"
-                                  : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                                  ? "text-obsidian-accent"
+                                  : "text-obsidian-muted hover:text-white hover:bg-white/5",
                               )}
                             >
                               <item.icon size={18} />
-                              {item.label}
+                              <span>{item.label}</span>
+                              
+                              {/* Minimal Underline Indicator */}
+                              {(activeItemPath === item.path ||
+                                (item.submenu &&
+                                  item.submenu.some(
+                                    (sub) => location.pathname === sub.path,
+                                  ))) ? (
+                                <div className="absolute bottom-1.5 left-4 right-4 h-[2px] bg-obsidian-accent/60 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-300" />
+                              ) : (
+                                <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-obsidian-accent/30 rounded-full transition-all duration-300 group-hover:w-[calc(100%-2rem)]" />
+                              )}
                             </button>
 
                             {/* Submenu */}
@@ -263,14 +274,24 @@ export default function AdminLayout() {
                                     key={subItem.path}
                                     onClick={() => navigate(subItem.path)}
                                     className={cn(
-                                      "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-all duration-200",
+                                      "group relative flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-xs transition-all duration-200",
                                       location.pathname === subItem.path
-                                        ? "bg-obsidian-accent/50 text-white font-medium"
-                                        : "text-obsidian-muted hover:bg-white/5 hover:text-white",
+                                        ? "text-obsidian-accent font-bold"
+                                        : "text-obsidian-muted hover:text-white hover:bg-white/5",
                                     )}
                                   >
-                                    <div className="w-1 h-1 rounded-full bg-current opacity-50" />
+                                    <div className={cn(
+                                      "w-1 h-1 rounded-full transition-all duration-300",
+                                      location.pathname === subItem.path 
+                                        ? "bg-obsidian-accent scale-150 rotate-45 rounded-none" 
+                                        : "bg-obsidian-muted group-hover:bg-white opacity-50"
+                                    )} />
                                     {subItem.label}
+                                    
+                                    {/* Submenu Underline */}
+                                    {location.pathname === subItem.path && (
+                                      <div className="absolute bottom-0.5 left-6 right-3 h-[1px] bg-obsidian-accent/40" />
+                                    )}
                                   </button>
                                 ))}
                               </div>

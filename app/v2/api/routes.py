@@ -525,11 +525,14 @@ def list_shop_products(
         reward_amount = raw.get("reward_amount")
         if not sku or not name or cost_amount is None or reward_type is None or reward_amount is None:
             continue
+        normalized_cost_type = str(cost_type).upper()
+        if normalized_cost_type in {"POINT", "CC_POINT", "VAULT"}:
+            normalized_cost_type = "VAULT"
         normalized.append(
             {
                 "sku": sku,
                 "name": name,
-                "cost_type": str(cost_type).upper(),
+                "cost_type": normalized_cost_type,
                 "cost_amount": int(cost_amount),
                 "reward_type": reward_type,
                 "reward_amount": int(reward_amount),
@@ -594,6 +597,8 @@ def purchase_shop_product(
         raise HTTPException(status_code=400, detail="INVALID_REWARD_AMOUNT")
 
     cost_type = str(product.get("cost_type") or "VAULT").upper()
+    if cost_type in {"POINT", "CC_POINT", "VAULT"}:
+        cost_type = "VAULT"
     if cost_type not in {"VAULT", "DIAMOND"}:
         raise HTTPException(status_code=400, detail="INVALID_COST_TYPE")
 

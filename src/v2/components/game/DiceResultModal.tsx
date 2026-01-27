@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import confetti from "canvas-confetti";
 import { X, Trophy, Coins } from "lucide-react";
 import { useSound } from "../../../hooks/useSound";
 import { EncryptedText } from "../ui/EncryptedText";
+import { cn } from "../../lib/utils";
 
 interface DiceResultModalProps {
   isOpen: boolean;
@@ -23,6 +25,7 @@ export default function DiceResultModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { playTabTouch, playSmallWin, playDiceLose } = useSound();
 
   useEffect(() => {
@@ -64,7 +67,9 @@ export default function DiceResultModal({
             colors: ["#FFD700", "#FFFFFF", "#FFA500"],
             zIndex: 10000,
           });
-          playSmallWin();
+          tl.add(() => {
+            playSmallWin();
+          }, "-=0.3");
         } else if (isLose) {
           // Golden Hour LOSE: Skeleton Vibration (Smoothed)
           tl.fromTo(
@@ -81,7 +86,9 @@ export default function DiceResultModal({
             },
             "-=0.1",
           );
-          playDiceLose();
+          tl.add(() => {
+            playDiceLose();
+          }, "-=0.2");
         } else {
           tl.fromTo(
             contentRef.current,
@@ -110,7 +117,9 @@ export default function DiceResultModal({
               },
             );
           }
-          playSmallWin();
+          tl.add(() => {
+            playSmallWin();
+          }, "-=0.4");
         } else if (isLose) {
           tl.fromTo(
             contentRef.current,
@@ -124,7 +133,9 @@ export default function DiceResultModal({
             },
             "-=0.1",
           );
-          playDiceLose();
+          tl.add(() => {
+            playDiceLose();
+          }, "-=0.4");
         }
       }
     } else {
@@ -242,15 +253,35 @@ export default function DiceResultModal({
           </div>
         )}
 
-        <button
-          onClick={() => {
-            playTabTouch();
-            onClose();
-          }}
-          className={`w-full h-14 rounded-2xl ${isWin ? "bg-emerald-500 hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]" : "bg-white hover:bg-zinc-200"} text-black font-black text-lg transition-all active:scale-95 z-10`}
-        >
-          {isWin ? "영광의 확인" : "다음 기회에"}
-        </button>
+        <div className="w-full flex flex-col gap-3 z-10">
+          <button
+            onClick={() => {
+              playTabTouch();
+              onClose();
+            }}
+            className={cn(
+              "w-full h-14 rounded-2xl font-black text-lg transition-all active:scale-95",
+              isWin
+                ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                : "bg-white hover:bg-zinc-200 text-black",
+            )}
+          >
+            {isWin ? "영광의 확인" : "다시 하기"}
+          </button>
+
+          {isLose && (
+            <button
+              onClick={() => {
+                playTabTouch();
+                onClose();
+                navigate("/"); // Move to home or game list
+              }}
+              className="w-full h-10 rounded-xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white hover:bg-white/10 transition-all"
+            >
+              다른 게임 하기
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

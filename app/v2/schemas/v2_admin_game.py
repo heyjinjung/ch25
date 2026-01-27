@@ -218,10 +218,10 @@ class LotteryConfigUpdateRequest(BaseModel):
 
 
 class LotteryPrizeUpdateRequest(BaseModel):
-    """복권 당첨 항목 수정 요청"""
-    label: str
-    weight: int = Field(..., ge=0)
+    """복권 당첨 항목 수정 요청 (부분 업데이트 지원)"""
+    label: str | None = None
+    weight: int | None = Field(None, ge=0)
     stock: int | None = None
-    reward_type: RewardType
-    reward_amount: int = 0
-    is_active: bool = True
+    reward_type: RewardType | None = None
+    reward_amount: int | None = None
+    is_active: bool | None = None

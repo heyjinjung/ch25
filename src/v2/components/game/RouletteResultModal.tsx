@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import confetti from "canvas-confetti";
 import { Trophy, Gift, Ticket, Puzzle, Coins, ArrowRight } from "lucide-react";
@@ -22,6 +23,7 @@ export default function RouletteResultModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   const { playRouletteStop, playBigWin, playSmallWin, playDiceLose, playTabTouch } = useSound();
 
   const rewardLabel = getRewardItemLabel(rewardType);
@@ -91,7 +93,7 @@ export default function RouletteResultModal({
             { x: "150%", opacity: 0.4, duration: 1.8, ease: "power2.inOut", delay: 0.4 }
           );
         }
-        playBigWin();
+        tl.add(() => { playBigWin(); }, "-=0.5");
       } else if (isNormal) {
         // Stable Victory (Emerald Chill)
         tl.fromTo(
@@ -100,7 +102,7 @@ export default function RouletteResultModal({
           { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
           "-=0.1"
         );
-        playSmallWin();
+        tl.add(() => { playSmallWin(); }, "-=0.3");
       } else {
         // FAIL
         tl.fromTo(
@@ -109,7 +111,7 @@ export default function RouletteResultModal({
           { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
           "-=0.1"
         );
-        playDiceLose();
+        tl.add(() => { playDiceLose(); }, "-=0.2");
       }
     } else {
       // Exit Animation
@@ -171,7 +173,10 @@ export default function RouletteResultModal({
             Spin Reward
           </span>
           <h2 className={`text-4xl font-black italic tracking-tighter ${titleColor}`}>
-            <EncryptedText key={`roulette-title-${isOpen}`} text={isBigWin ? "WINNER!" : isFail ? "NEXT TIME" : "당첨!"} />
+            <EncryptedText 
+                key={`roulette-title-${isOpen}`} 
+                text={isBigWin ? "JACKPOT!" : isNormal ? "WINNER!" : "NEXT TIME"} 
+            />
           </h2>
         </div>
 
@@ -206,10 +211,19 @@ export default function RouletteResultModal({
           
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white hover:bg-white/5 transition-all"
+            className="w-full h-12 rounded-xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white hover:bg-white/10 transition-all"
           >
             닫기
           </button>
+          
+          {isFail && (
+            <button
+               onClick={() => { playTabTouch(); onClose(); navigate("/"); }}
+               className="w-full h-10 rounded-xl bg-white/5 text-zinc-500 font-bold text-xs hover:text-white hover:bg-white/10 transition-all opacity-60 hover:opacity-100"
+            >
+              다른 게임 하러 가기
+            </button>
+          )}
         </div>
 
         {/* Decorative corner glow */}

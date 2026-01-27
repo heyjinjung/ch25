@@ -1158,6 +1158,57 @@ export interface AdminTeamBattleForceLeaveRequest {
   reason?: string;
 }
 
+export interface AdminTeamBattleMemberDto {
+  user_id: number;
+  team_id: number;
+  role: string;
+  joined_at: string | null;
+  nickname?: string | null;
+  external_id?: string | null;
+  contribution_points: number;
+  latest_event_at: string | null;
+}
+
+export interface AdminTeamBattleMemberListDto {
+  team_id: number;
+  season_id: number | null;
+  members: AdminTeamBattleMemberDto[];
+}
+
+export interface AdminTeamBattleContributionLogDto {
+  id: number;
+  team_id: number;
+  user_id: number | null;
+  season_id: number;
+  action: string;
+  delta: number;
+  meta?: Record<string, any> | null;
+  created_at: string | null;
+  nickname?: string | null;
+  external_id?: string | null;
+}
+
+export interface AdminTeamBattleContributionLogListDto {
+  team_id: number;
+  user_id: number;
+  season_id: number | null;
+  items: AdminTeamBattleContributionLogDto[];
+}
+
+export interface AdminTeamBattleMemberJoinedAtUpdateRequest {
+  joined_at: string;
+  reason: string;
+}
+
+export interface AdminTeamBattleMemberContributionAdjustRequest {
+  team_id: number;
+  user_id: number;
+  delta: number;
+  reason: string;
+  season_id?: number | null;
+  action?: string;
+}
+
 export const getAdminTeamBattleSeasons = async (): Promise<
   AdminTeamBattleSeasonDto[]
 > => {
@@ -1231,6 +1282,57 @@ export const forceLeaveAdminTeamBattle = async (
   data: AdminTeamBattleForceLeaveRequest,
 ): Promise<void> => {
   await v2Client.post("/api/v2/admin/team-battle/members/force-leave", data);
+};
+
+export const getAdminTeamBattleTeamMembers = async (
+  teamId: number,
+  seasonId?: number | null,
+): Promise<AdminTeamBattleMemberListDto> => {
+  const response = await v2Client.get<AdminTeamBattleMemberListDto>(
+    `/api/v2/admin/team-battle/teams/${teamId}/members`,
+    { params: { season_id: seasonId ?? undefined } },
+  );
+  return response.data;
+};
+
+export const getAdminTeamBattleMemberContributions = async (
+  teamId: number,
+  userId: number,
+  seasonId?: number | null,
+  limit?: number,
+  offset?: number,
+): Promise<AdminTeamBattleContributionLogListDto> => {
+  const response = await v2Client.get<AdminTeamBattleContributionLogListDto>(
+    `/api/v2/admin/team-battle/teams/${teamId}/members/${userId}/contributions`,
+    { params: { season_id: seasonId ?? undefined, limit, offset } },
+  );
+  return response.data;
+};
+
+export const updateAdminTeamBattleMemberJoinedAt = async (
+  userId: number,
+  data: AdminTeamBattleMemberJoinedAtUpdateRequest,
+): Promise<AdminTeamBattleMemberDto> => {
+  const response = await v2Client.patch<AdminTeamBattleMemberDto>(
+    `/api/v2/admin/team-battle/members/${userId}/joined-at`,
+    data,
+  );
+  return response.data;
+};
+
+export const adjustAdminTeamBattleMemberContribution = async (
+  data: AdminTeamBattleMemberContributionAdjustRequest,
+): Promise<{
+  success: boolean;
+  team_points: number;
+  applied_delta: number;
+  log: AdminTeamBattleContributionLogDto;
+}> => {
+  const response = await v2Client.post(
+    "/api/v2/admin/team-battle/members/contributions/adjust",
+    data,
+  );
+  return response.data;
 };
 // ============================================================================
 // Inventory Ops API
@@ -1950,15 +2052,25 @@ export const updateLotteryPrize = async (
   prizeId: number,
   data: Partial<AdminLotteryPrizeDto>,
 ): Promise<void> => {
+  // 백엔드는 이제 부분 업데이트를 지원하지만, 안전을 위해 전달된 필드만 전송
+  // 단, 전체 prize 객체가 전달되는 경우 모든 필드가 포함됨
   const payload: Record<string, any> = {};
 
+  // 필수 필드들 - undefined가 아니면 항상 포함
   if (data.label !== undefined) payload.label = data.label;
   if (data.weight !== undefined) payload.weight = data.weight;
-  if (data.stock !== undefined) payload.stock = data.stock ?? null;
   if (data.rewardType !== undefined) payload.reward_type = data.rewardType;
   if (data.rewardAmount !== undefined)
     payload.reward_amount = data.rewardAmount;
   if (data.isActive !== undefined) payload.is_active = data.isActive;
+
+  // Optional 필드 - stock은 undefined일 때 null로 전송 (무제한)
+  if (data.stock !== undefined) {
+    payload.stock = data.stock ?? null;
+  } else if ("stock" in data) {
+    // 명시적으로 stock 키가 있으면 null 전송
+    payload.stock = null;
+  }
 
   await v2Client.put(
     `/api/v2/admin/game/lottery/config/${configId}/prize/${prizeId}`,
