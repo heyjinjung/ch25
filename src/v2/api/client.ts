@@ -3,9 +3,10 @@ import axios, { InternalAxiosRequestConfig, AxiosRequestHeaders } from "axios";
 import { getAuthToken, clearAuth } from "../../auth/authStore";
 import { getAdminToken, clearAdminToken } from "../../auth/adminAuth";
 
-// Define a helper to access env vars safely for TS
+// Fix for TypeScript errors regarding import.meta.env
 const getEnv = (key: string): string => {
-  return (import.meta as any).env?.[key] || "";
+  const env = import.meta.env;
+  return env?.[key] || "";
 };
 
 // V2 API Base URL logic
@@ -41,7 +42,6 @@ export const v2Client = axios.create({
 
 // Request Interceptor: Attach Token
 v2Client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  // Ensure config.headers is initialized
   if (!config.headers) {
     config.headers = {} as AxiosRequestHeaders;
   }

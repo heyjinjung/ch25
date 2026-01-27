@@ -1,8 +1,12 @@
 // src/auth/adminAuth.ts
-// Simple admin auth helpers using localStorage. In production, replace with secure token management.
+// Simple admin auth helpers using localStorage.
+
 export const ADMIN_TOKEN_KEY = "admin_token";
 
-const isE2ETestMode = (): boolean => (import.meta.env.VITE_TEST_MODE ?? "false") === "true";
+const isE2ETestMode = (): boolean => {
+  const testMode = import.meta.env.VITE_TEST_MODE;
+  return (testMode ?? "false") === "true";
+};
 
 export const getAdminToken = (): string | null => {
   if (typeof localStorage === "undefined") return null;
@@ -23,4 +27,3 @@ export const isAdminAuthenticated = (): boolean => {
   if (isE2ETestMode()) return true;
   return getAdminToken() !== null;
 };
-

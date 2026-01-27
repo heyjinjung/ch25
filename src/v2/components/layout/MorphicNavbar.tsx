@@ -18,6 +18,24 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
   const [rect, setRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const handleActive = React.useCallback(
+    (id: string, r: { left: number; top: number; width: number; height: number }) => {
+      if (id !== activeId) return;
+      setRect((prev) => {
+        if (
+          prev?.left === r.left &&
+          prev?.top === r.top &&
+          prev?.width === r.width &&
+          prev?.height === r.height
+        ) {
+          return prev;
+        }
+        return r;
+      });
+    },
+    [activeId]
+  );
+
   return (
     <div
       ref={containerRef}
@@ -29,7 +47,7 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
       {/* Morphing Highlight */}
       {rect && (
         <motion.div
-          className="absolute bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+          className="absolute bg-emerald-500/10 border border-emerald-500/20 rounded-xl pointer-events-none"
           initial={false}
           animate={{
             left: rect.left,
@@ -51,7 +69,7 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
           item={item}
           containerRef={containerRef}
           isActive={activeId === item.id}
-          onActive={(r) => activeId === item.id && setRect(r)}
+          onActive={handleActive}
           onClick={() => onChange(item.id)}
         />
       ))}
@@ -63,7 +81,7 @@ interface NavItemProps {
   item: { id: string; label: string; emoji?: string };
   containerRef: React.RefObject<HTMLDivElement>;
   isActive: boolean;
-  onActive: (rect: { left: number; top: number; width: number; height: number }) => void;
+  onActive: (id: string, rect: { left: number; top: number; width: number; height: number }) => void;
   onClick: () => void;
 }
 
@@ -74,7 +92,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, containerRef, isActive, onActiv
     if (isActive && ref.current && containerRef.current) {
       const parentRect = containerRef.current.getBoundingClientRect();
       const itemRect = ref.current.getBoundingClientRect();
-      onActive({
+      onActive(item.id, {
         left: itemRect.left - parentRect.left,
         top: itemRect.top - parentRect.top,
         width: itemRect.width,

@@ -22,7 +22,7 @@ const CATEGORIES = [
 export default function MissionsPage() {
   const navigate = useNavigate();
   const { playSmallWin } = useSound();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   
   const activeCategory = searchParams.get("cat") || "DAILY";
   
@@ -33,9 +33,7 @@ export default function MissionsPage() {
   const claimMutation = useV2ClaimMission();
 
   const setCategory = (cat: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.set("cat", cat);
-    setSearchParams(nextParams, { replace: true });
+    navigate(`?cat=${cat}`, { replace: true });
     triggerHaptic("medium");
   };
 
@@ -51,32 +49,7 @@ export default function MissionsPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-tg items-center justify-center bg-[#09090B]">
-        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="flex h-tg flex-col items-center justify-center bg-[#09090B] px-6 text-center gap-4">
-        <AlertCircle className="w-12 h-12 text-zinc-600" />
-        <p className="text-zinc-400">
-          미션을 불러올 수 없습니다. 잠시 후 다시 시도해주세요.
-        </p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-white/5 rounded-lg text-sm text-white hover:bg-white/10"
-        >
-          다시 시도
-        </button>
-      </div>
-    );
-  }
-
-  const { missions = [], streak_info } = data;
+  const { missions = [], streak_info } = data || {};
 
   return (
     <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]">
@@ -122,7 +95,25 @@ export default function MissionsPage() {
           />
         </motion.div>
 
-        {activeCategory === "LEVEL" ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
+            <p className="text-zinc-500 text-sm font-bold">Synchronizing Mission Data...</p>
+          </div>
+        ) : error || !data ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-4 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
+            <AlertCircle className="w-12 h-12 text-zinc-600" />
+            <p className="text-zinc-400 text-sm">
+                미션을 불러올 수 없습니다.
+            </p>
+            <button
+                onClick={() => refetch()}
+                className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-500 hover:bg-emerald-500/20"
+            >
+                다시 시도
+            </button>
+          </div>
+        ) : activeCategory === "LEVEL" ? (
           <motion.div
             key="tower"
             initial={{ opacity: 0, x: 20 }}

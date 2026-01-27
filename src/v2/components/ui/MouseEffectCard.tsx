@@ -73,7 +73,7 @@ export const MouseEffectCard: React.FC<MouseEffectCardProps> = ({
         style={{
             background: useTransform(
               [mouseXSpring, mouseYSpring],
-              ([x, y]) => `radial-gradient(circle at ${50 + (x as number) * 100}% ${50 + (y as number) * 100}%, rgba(16,185,129,0.15), transparent 80%)`
+              ([xVal, yVal]) => `radial-gradient(circle at ${50 + (xVal as number) * 100}% ${50 + (yVal as number) * 100}%, rgba(16,185,129,0.15), transparent 80%)`
             )
         }}
       />

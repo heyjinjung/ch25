@@ -7,7 +7,7 @@ interface BackgroundPathsProps {
   count?: number;
 }
 
-export const BackgroundPaths = ({ className, count = 20 }: BackgroundPathsProps) => {
+export const BackgroundPaths = ({ className, count = 12 }: BackgroundPathsProps) => {
   const paths = useMemo(() => {
     return Array.from({ length: count }).map((_, i) => ({
       id: i,
