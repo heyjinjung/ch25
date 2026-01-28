@@ -93,6 +93,7 @@ export default function MissionsPage() {
             items={CATEGORIES}
             activeId={activeCategory}
             onChange={(id) => setCategory(id as string)}
+            variant="grid-2"
             className="w-full max-w-md"
           />
         </motion.div>

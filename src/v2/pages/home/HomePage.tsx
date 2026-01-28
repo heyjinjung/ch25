@@ -10,6 +10,15 @@ export default function HomePage() {
   const navigate = useNavigate();
   const gridRef = useRef<HTMLDivElement>(null);
 
+  const openExternal = (url: string) => {
+    const tg = (window as any)?.Telegram?.WebApp;
+    if (typeof tg?.openLink === "function") {
+      tg.openLink(url);
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const gridCols = 18;
   const gridRows = 14;
 
@@ -156,7 +165,15 @@ export default function HomePage() {
       <div className="home-content">
         <div className="home-featured-section">
           <div className="featured-header" />
-          <div className="featured-card overflow-hidden">
+          <button
+            type="button"
+            className="featured-card overflow-hidden"
+            aria-label="CC 카지노 공식 사이트 열기"
+            onClick={() => {
+              playTabTouch();
+              openExternal("https://ccc-010.com");
+            }}
+          >
             <div className="flex flex-col items-center justify-center gap-4">
               <img
                 src="/assets/logo_cc_v2.png"
@@ -168,7 +185,7 @@ export default function HomePage() {
                 className="featured-sub-text !mb-0 text-white font-black tracking-[0.2em]"
               />
             </div>
-          </div>
+          </button>
         </div>
 
         <div className="home-bento-grid">
@@ -194,7 +211,7 @@ export default function HomePage() {
             }}
           >
             <div className="tile-content vertical">
-              <span className="tile-title">ROULETTE</span>
+              <span className="tile-title">게임하러 가기</span>
               <img
                 src="/assets/01home/2.png"
                 alt="roulette"
@@ -207,7 +224,7 @@ export default function HomePage() {
             className="bento-tile bento-tile--square"
             onClick={() => {
               playTabTouch();
-              navigate("/game/lottery");
+              navigate("/vault");
             }}
           >
             <img
@@ -222,7 +239,7 @@ export default function HomePage() {
             className="bento-tile bento-tile--square"
             onClick={() => {
               playTabTouch();
-              navigate("/game");
+              navigate("/v2/missions?cat=LEVEL");
             }}
           >
             <img
@@ -238,7 +255,7 @@ export default function HomePage() {
           <button
             onClick={() => {
               playTabTouch();
-              window.open("https://t.me/example_casino", "_blank");
+              navigate("/game");
             }}
             className="cta-button cta-button--primary flex items-center gap-2 px-5 py-3 text-lg font-bold"
           >

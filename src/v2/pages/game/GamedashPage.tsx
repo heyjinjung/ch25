@@ -19,12 +19,44 @@ import { BorderBeam } from "../../components/ui/BorderBeam";
 const ASSET_PATH = "/assets/02gamedash";
 
 const GAMES = [
-  { id: "dice", to: "/game/dice", icon: `${ASSET_PATH}/Group 12.png`, color: "from-blue-500/20" },
-  { id: "rocket", to: "/game/roulette", icon: `${ASSET_PATH}/Group 13.png`, color: "from-purple-500/20" },
-  { id: "ball", to: "/game/lottery", icon: `${ASSET_PATH}/Group 14.png`, color: "from-emerald-500/20" },
-  { id: "crown", to: "/team-battle", icon: `${ASSET_PATH}/Group 15.png`, color: "from-amber-500/20" },
-  { id: "missions", to: "/v2/missions?cat=DAILY", icon: `/assets/01login/treasure.png`, label: "Mission Hub", color: "from-emerald-500/20" },
-  { id: "tower", to: "/v2/missions?cat=LEVEL", icon: `/assets/01login/Ellipse 374.svg`, label: "Glory Tower", color: "from-blue-600/20" },
+  {
+    id: "dice",
+    to: "/game/dice",
+    icon: `${ASSET_PATH}/Group 12.png`,
+    color: "from-blue-500/20",
+  },
+  {
+    id: "rocket",
+    to: "/game/roulette",
+    icon: `${ASSET_PATH}/Group 13.png`,
+    color: "from-purple-500/20",
+  },
+  {
+    id: "ball",
+    to: "/game/lottery",
+    icon: `${ASSET_PATH}/Group 14.png`,
+    color: "from-emerald-500/20",
+  },
+  {
+    id: "crown",
+    to: "/team-battle",
+    icon: `${ASSET_PATH}/Group 15.png`,
+    color: "from-amber-500/20",
+  },
+  {
+    id: "missions",
+    to: "/v2/missions?cat=DAILY",
+    icon: `/assets/01login/treasure.png`,
+    label: "Mission Hub",
+    color: "from-emerald-500/20",
+  },
+  {
+    id: "tower",
+    to: "/v2/missions?cat=LEVEL",
+    icon: `/assets/01login/Ellipse 374.svg`,
+    label: "Glory Tower",
+    color: "from-blue-600/20",
+  },
 ];
 
 export default function GamedashPage() {
@@ -95,27 +127,38 @@ export default function GamedashPage() {
   }, []);
 
   return (
-    <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]" ref={containerRef}>
-      <BackgroundPaths count={30} className="fixed inset-0 opacity-60 pointer-events-none" />
+    <div
+      className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]"
+      ref={containerRef}
+    >
+      <BackgroundPaths
+        count={30}
+        className="fixed inset-0 opacity-60 pointer-events-none"
+      />
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.08),transparent_70%)]" />
       <div className="fixed inset-0 pointer-events-none bg-gradient-to-b from-transparent via-emerald-950/2 to-[#09090B]" />
 
       <div className="relative z-10 px-5 pb-10 max-w-lg mx-auto h-full flex flex-col">
         {/* Magic UI Hero Card */}
-        <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="relative mt-2 mb-6"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative mt-2 mb-6"
         >
           <div className="magic-hero-card !bg-neutral-900/40 !border-white/10 overflow-hidden backdrop-blur-md">
             <div className="absolute inset-0 z-0 opacity-20">
-                <Meteors number={12} />
+              <Meteors number={12} />
             </div>
-            <BorderBeam size={250} duration={15} colorFrom="#10b981" colorTo="#3b82f6" />
-            
+            <BorderBeam
+              size={250}
+              duration={15}
+              colorFrom="#10b981"
+              colorTo="#3b82f6"
+            />
+
             <div className="magic-hero-content relative z-10 pt-6 pb-4">
               <div className="magic-hero-left">
-                <motion.span 
+                <motion.span
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
@@ -124,22 +167,26 @@ export default function GamedashPage() {
                   <MatrixText text="CC CASINO V2" />
                 </motion.span>
                 <h1 className="text-3xl font-black text-white leading-[1.1] mb-4">
-                    <MatrixText text="GRAND OPEN" /><br/>
-                    <span className="text-[#9AFFFA] italic">
-                        <MatrixText text="SUPER EVENT" />
-                    </span>
+                  <MatrixText text="GRAND OPEN" />
+                  <br />
+                  <span className="text-[#9AFFFA] italic">
+                    <MatrixText text="SUPER EVENT" />
+                  </span>
                 </h1>
-                
+
                 <div className="magic-stat-row">
-                   <div className="notice-container" style={{ width: '100%', background: 'transparent', height: '32px' }}>
-                      <div className="notice-wrapper">
-                        {noticeItems.map((text, idx) => (
-                          <div key={`notice-${idx}`} className="notice-item" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>
-                            {text}
-                          </div>
-                        ))}
-                      </div>
+                  <div className="notice-container notice-container--full">
+                    <div className="notice-wrapper">
+                      {noticeItems.map((text, idx) => (
+                        <div
+                          key={`notice-${idx}`}
+                          className="notice-item notice-item--muted"
+                        >
+                          {text}
+                        </div>
+                      ))}
                     </div>
+                  </div>
                 </div>
               </div>
 
@@ -148,9 +195,8 @@ export default function GamedashPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
                 src={`${ASSET_PATH}/Ellipse 374.svg`}
-                className="character-img"
+                className="character-img character-img--glow"
                 alt="character"
-                style={{ width: '110px', filter: 'drop-shadow(0 0 20px rgba(154,255,250,0.3))' }}
               />
             </div>
           </div>
@@ -169,46 +215,53 @@ export default function GamedashPage() {
                 onClick={() => navigate(game.to)}
                 className={cn(
                   "aspect-[4/5] flex flex-col p-4 group",
-                  "bg-neutral-900 border-white/5 shadow-2xl"
+                  "bg-neutral-900 border-white/5 shadow-2xl",
                 )}
               >
-                {/* Background Color Glow */}
-                <div className={cn("absolute inset-0 bg-gradient-to-br transition-opacity opacity-0 group-hover:opacity-100", game.color)} />
-                
                 <div className="relative z-10 h-full flex flex-col">
-                    <div className="flex justify-between items-start mb-auto">
-                        <span className="text-[9px] font-black text-white/30 tracking-widest uppercase">
-                            Level: 01
+                  <div className="flex justify-between items-start mb-auto">
+                    <span className="text-[9px] font-black text-white/30 tracking-widest uppercase">
+                      Level: 01
+                    </span>
+                    {(() => {
+                      const remaining = getGameBadge(game.id);
+                      const label =
+                        game.id === "crown" ||
+                        (typeof remaining === "number" && remaining > 0)
+                          ? "HOT"
+                          : "NEW";
+                      return (
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded text-[9px] font-black",
+                            label === "HOT"
+                              ? "bg-red-500 text-white"
+                              : "bg-emerald-500 text-black",
+                          )}
+                        >
+                          {label}
                         </span>
-                        {(() => {
-                            const remaining = getGameBadge(game.id);
-                            const label = (game.id === 'crown' || (typeof remaining === "number" && remaining > 0)) ? "HOT" : "NEW";
-                            return (
-                                <span className={cn(
-                                    "px-2 py-0.5 rounded text-[9px] font-black",
-                                    label === "HOT" ? "bg-red-500 text-white" : "bg-emerald-500 text-black"
-                                )}>
-                                    {label}
-                                </span>
-                            );
-                        })()}
-                    </div>
+                      );
+                    })()}
+                  </div>
 
-                    <div className="mt-auto flex flex-col items-center">
-                        <img 
-                            src={game.icon} 
-                            className={cn(
-                                "object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500",
-                                (game.id === 'missions' || game.id === 'tower') ? "w-16 h-16" : "w-24 h-24"
-                            )} 
-                            alt={game.id} 
-                        />
-                        {(game.id === 'missions' || game.id === 'tower') && (
-                            <span className="mt-3 text-[10px] font-black text-white/80 tracking-widest uppercase italic bg-black/40 px-2 py-0.5 rounded border border-white/5">
-                                {game.label}
-                            </span>
-                        )}
-                    </div>
+                  <div className="mt-auto flex flex-col items-center">
+                    <img
+                      src={game.icon}
+                      className={cn(
+                        "object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500",
+                        game.id === "missions" || game.id === "tower"
+                          ? "w-16 h-16"
+                          : "w-24 h-24",
+                      )}
+                      alt={game.id}
+                    />
+                    {(game.id === "missions" || game.id === "tower") && (
+                      <span className="mt-3 text-[10px] font-black text-white/80 tracking-widest uppercase italic bg-black/40 px-2 py-0.5 rounded border border-white/5">
+                        {game.label}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </MouseEffectCard>
             </motion.div>

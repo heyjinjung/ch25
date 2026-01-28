@@ -1,0 +1,14 @@
+/* LevelTowerPage: Telegram(TMA) friendly, no inline styles */
+
+.level-tower-aurora-dim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.75) 55%,
+    rgba(0, 0, 0, 0.92) 100%
+  );
+}

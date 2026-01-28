@@ -6,6 +6,7 @@ interface MorphicNavbarProps {
   items: { id: string; label: string; emoji?: string }[];
   activeId: string;
   onChange: (id: string) => void;
+  variant?: "row" | "grid-2";
   className?: string;
 }
 
@@ -13,13 +14,22 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
   items,
   activeId,
   onChange,
+  variant = "row",
   className,
 }) => {
-  const [rect, setRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
+  const [rect, setRect] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleActive = React.useCallback(
-    (id: string, r: { left: number; top: number; width: number; height: number }) => {
+    (
+      id: string,
+      r: { left: number; top: number; width: number; height: number },
+    ) => {
       if (id !== activeId) return;
       setRect((prev) => {
         if (
@@ -33,15 +43,16 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
         return r;
       });
     },
-    [activeId]
+    [activeId],
   );
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative flex items-center p-1.5 bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden",
-        className
+        "relative p-1.5 bg-zinc-900/50 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden",
+        variant === "grid-2" ? "grid grid-cols-2 gap-2" : "flex items-center",
+        className,
       )}
     >
       {/* Morphing Highlight */}
@@ -71,6 +82,7 @@ export const MorphicNavbar: React.FC<MorphicNavbarProps> = ({
           isActive={activeId === item.id}
           onActive={handleActive}
           onClick={() => onChange(item.id)}
+          variant={variant}
         />
       ))}
     </div>
@@ -81,11 +93,22 @@ interface NavItemProps {
   item: { id: string; label: string; emoji?: string };
   containerRef: React.RefObject<HTMLDivElement>;
   isActive: boolean;
-  onActive: (id: string, rect: { left: number; top: number; width: number; height: number }) => void;
+  onActive: (
+    id: string,
+    rect: { left: number; top: number; width: number; height: number },
+  ) => void;
   onClick: () => void;
+  variant: "row" | "grid-2";
 }
 
-const NavItem: React.FC<NavItemProps> = ({ item, containerRef, isActive, onActive, onClick }) => {
+const NavItem: React.FC<NavItemProps> = ({
+  item,
+  containerRef,
+  isActive,
+  onActive,
+  onClick,
+  variant,
+}) => {
   const ref = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -99,7 +122,7 @@ const NavItem: React.FC<NavItemProps> = ({ item, containerRef, isActive, onActiv
         height: itemRect.height,
       });
     }
-  }, [isActive, onActive, containerRef]);
+  }, [isActive, onActive, containerRef, item.id, variant]);
 
   return (
     <button
@@ -107,7 +130,8 @@ const NavItem: React.FC<NavItemProps> = ({ item, containerRef, isActive, onActiv
       onClick={onClick}
       className={cn(
         "relative z-10 flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors duration-300",
-        isActive ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300"
+        variant === "grid-2" ? "w-full justify-center rounded-xl" : "",
+        isActive ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300",
       )}
     >
       {item.emoji && <span className="opacity-80">{item.emoji}</span>}

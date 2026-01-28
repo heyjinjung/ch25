@@ -465,7 +465,7 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
 ㄴ 에러메시지 마련할것 
 
-[] 출석미션 반영 / 횟수 카운트 - 구플래쉬3 작업중 
+✅ 출석미션 반영 / 횟수 카운트 - 구플래쉬3 작업중 
 신규유저 관련 미션 엣지케이스 추가, 테스트 진행중 
 ---------------------------------------
 
@@ -473,7 +473,11 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 연속스트릭모달
 골든아워 모달
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
+인증 
 
+시나리오 테스트 
+c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
+c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
 
 
 ----------
@@ -501,7 +505,5 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 예시 > 미션 오류 발견 
 폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
 문서이름 : 20260126_mission_error_update.md
-
-
 
 
