@@ -1,7 +1,7 @@
 # Golden V2: 프론트엔드 통합 기술 스펙 가이드 (Frontend Spec)
 
 **작성일**: 2026-01-28
-**버전**: v1.1
+**버전**: v1.2
 **상태**: SoT (Refined Blueprint)
 **대상**: FE 개발팀 / UX 디자인팀
 
@@ -80,8 +80,9 @@ TMA 유저 경험을 위해 SDK 기능을 적극 활용합니다.
 ## 4. 기술 스택 및 데이터 통신 규약
 
 ### 4.1 WebSocket (Real-time Stream)
-- **Channel**: `golden:v2:admin:queue` (승인 대용 소켓 추가)
-- **Update Frequency**: 데이터 변경 시 즉시(Pub/Sub Bridge) 기반.
+- **Endpoint**: `/api/v2/admin/ws/golden/events`
+- **Source Channel**: `golden:v2:events:game`
+- **Update Frequency**: 이벤트 발생 시 즉시(Pub/Sub Stream) 기반.
 
 ### 4.2 API Contract Expansion
 - **POST `/api/v2/admin/crm/approve`**: 복수 ID 승인 처리.
@@ -128,5 +129,6 @@ export default GoldenInterventionCard;
 ---
 
 ## 7. 변경 이력
+- v1.2 (2026-01-28): Admin WebSocket 규약을 현행 구현(/api/v2/admin/ws/golden/events) 기준으로 정합화.
 - v1.1 (2026-01-28): Feature-based 아키텍처, Suspense 모델, TMA SDK 연동 및 코드 템플릿 추가.
 - v1.0 (2026-01-28): 최초 작성.

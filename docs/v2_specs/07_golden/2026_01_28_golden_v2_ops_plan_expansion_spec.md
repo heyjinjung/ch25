@@ -1,6 +1,7 @@
 # Golden V2: Ops Plan 시스템 확장 설계서 (Expansion Spec)
 
 **작성일**: 2026-01-28
+**버전**: v1.1
 **상태**: SoT (Ops Expansion)
 **대상**: BE 개발팀 / 운영팀
 
@@ -30,9 +31,11 @@
 ### 2.3 GOLDEN_HOUR (골든아워 상태 제어)
 - **목적**: 특정 시간대 보너스 부스팅 상태 실시간 제어.
 - **구현 방식**: 
-    - **Redis Pub/Sub**: `golden:v2:config:updates` 채널로 메시지 발행.
-    - 게임 엔진 및 TMA 프론트엔드에서 해당 이벤트를 구독하여 UI/로직 즉시 반영.
-    - `ops_plan_task.payload_json`: `{"state": "START", "bonus_rate": 1.5, "duration_mins": 60}`
+    - **DB Config 업데이트**: Vault2Config의 `golden_hour_config`를 업데이트하여 즉시 반영.
+    - `ops_plan_task.payload_json`:
+        - `{"action": "FORCE_ON", "send_feed": true}`
+        - `{"action": "FORCE_OFF"}`
+        - `{"action": "MULTIPLIER_SET", "multiplier": 2.0}`
 
 ### 2.4 TARGETLIST_BROADCAST (타겟 리스트 상태 마킹)
 - **목적**: 특정 유저 그룹에게 '특별 타겟팅' 뱃지나 지위를 부여하여 심리적 변화 유도.
@@ -65,4 +68,5 @@
 ---
 
 ## 5. 변경 이력
+- v1.1 (2026-01-28): GOLDEN_HOUR 구현/페이로드를 현행 코드(OpsPlanService) 기준으로 정합화.
 - v1.0 (2026-01-28): Ops Plan 시스템 5대 액션 확장 계획 수립.

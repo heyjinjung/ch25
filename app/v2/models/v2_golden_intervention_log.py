@@ -16,6 +16,12 @@ class V2GoldenInterventionLog(Base):
     trigger_id = Column(String(50), nullable=False, index=True)  # e.g. TRG_LOSE_5, TRG_ZERO_BAL
     trigger_condition = Column(Text, nullable=True)  # Human-readable condition description
     action_taken = Column(String(100), nullable=False)  # e.g. Trigger_Pity_Win, Offer_Zero_Ticket
+    status = Column(
+        String(20),
+        nullable=False,
+        default="SENT",
+        index=True,
+    )  # PENDING_APPROVAL, APPROVED, REJECTED, SENT
 
     # Context data
     user_balance_before = Column(Float, nullable=True)

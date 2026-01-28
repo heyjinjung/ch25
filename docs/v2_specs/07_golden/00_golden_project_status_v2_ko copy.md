@@ -1,5 +1,5 @@
 문서 타입: 통합 현황
-버전: v2.0
+버전: v2.3
 작성일: 2026-01-26
 작성자: GitHub Copilot
 대상: 전체 팀
@@ -90,7 +90,7 @@ golden:v2:user:*:session_start_balance  # 세션 시작 잔액
 ```
 
 **[To-be Integrated] 추가 구현 코드:**
-- **Human-in-the-loop Bridge**: 개입 발생 시 로그를 `PENDING_APPROVAL`로 즉시 기록하고 관리자 웹소켓 채널(`golden:v2:admin:queue`)에 발행.
+- **Human-in-the-loop Bridge (Phase 2)**: 개입 발생 시 로그를 `PENDING_APPROVAL`로 즉시 기록. 현행 관제는 `/api/v2/admin/ws/golden/events`(source: `golden:v2:events:game`) 기반이며, 승인 대기열 전용 스트림(`golden:v2:admin:queue`)은 미구현.
 - **Cohort Health Monitor**: Redis에 집계된 코호트별 리텐션 지표가 임계치 하락 시 `TRG_COHORT_CPR` 트리거 자동 발동.
 - **Streak Protection Logic**: 유저의 `last_login`이 24시간 초과 전 'Golden Time' 내에 선제적 넛지 발송 로직 추가.
 - **DDA Controller (Adaptive Logic)**: `current_loss_streak`에 따른 AI 배율 및 함정 확률 동적 조정 API 연동.
@@ -219,7 +219,7 @@ interface RetentionInterventionResponse {
 
 ```typescript
 // 연결 엔드포인트
-const wsEndpoint = `${wsUrl}/api/admin/ws/golden/events`;
+const wsEndpoint = `${wsUrl}/api/v2/admin/ws/golden/events`;
 
 // 메시지 타입
 { type: "connection" }     // 연결 성공
@@ -432,5 +432,7 @@ TELEGRAM_WEBHOOK_SECRET_TOKEN=your_secret
 
 | 버전 | 날짜 | 작성자 | 내용 |
 |------|------|--------|------|
+| v2.3 | 2026-01-28 | GitHub Copilot | Phase 2(미구현) 승인 대기열 채널 표기를 현행 관제 WS 기준으로 정정 |
+| v2.2 | 2026-01-28 | GitHub Copilot | Admin WebSocket 경로를 /api/v2 기준으로 정합화 및 버전 헤더 정리 |
 | v2.1 | 2026-01-28 | 관리자 | 블루프린트 작성 완료 |
 | v2.0 | 2026-01-26 | GitHub Copilot | 통합 현황 문서 최초 작성 |

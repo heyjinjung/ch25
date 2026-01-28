@@ -4,7 +4,7 @@
 <!-- PATCH_NOTE 2026-01-18: 금고/지갑/보상/레거시 규칙 보강 및 용어 정리. -->
 
 **문서 타입**: 용어집(Glossary) / V2 Core SoT
-**버전**: v2.2 (V2 Init + Ops/Realtime Expansion)
+**버전**: v2.3 (V2 Init + Ops/Realtime Expansion)
 **작성일**: 2026-01-18
 **상태**: SoT (Source of Truth)
 **프로젝트**: Golden V2
@@ -90,8 +90,8 @@ V2 게임 엔진이 반환하는 표준 보상 타입입니다.
 ### 4.1 실시간 상태 (Real-time State)
 Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT 우선, Redis는 캐시**입니다.
 
-- **연패 카운트 (`current_loss_streak`)**: Redis `user:{id}:loss_streak`
-- **세션 시작 잔액 (`session_start_balance`)**: Redis `user:{id}:session_start_balance`
+- **연패 카운트 (`current_loss_streak`)**: Redis `golden:v2:user:{user_id}:loss_streak`
+- **세션 시작 잔액 (`session_start_balance`)**: Redis `golden:v2:user:{user_id}:session_start_balance`
 
 ### 4.2 데이터 흐름 원칙
 1.  **적립(Earn)**: 게임 결과 -> Redis Pub -> Worker -> DB Write (Async)
@@ -103,7 +103,7 @@ Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT �
 ### 5.1 레거시/확장 항목
 - **Legacy Enum 매핑**: ROULETTE_COIN→ROULETTE_TICKET, DICE_TOKEN→DICE_TICKET, GOLD_KEY→GOLD_KEY_TICKET, DIAMOND_KEY→DIAMOND_TICKET, LOTTERY_TICKET→LOTTERY_TICKET
 - **GameTokenType.DIAMOND / VAULT / 키 조각(Fragment)**: 레거시/확장 혼재. 신규 표준 보상은 3.1.1 매핑표를 우선합니다.
-- **문서의 Redis 키 네이밍(`user:{id}:...`)**: V2 목표 표기이며, 현행 구현은 다른 prefix를 사용합니다.
+- **문서의 Redis 키 네이밍(`user:{id}:...`)**: 개념 표기(레거시)이며, 현행 구현은 `golden:v2:user:{user_id}:...` prefix를 사용합니다.
 
 ### 5.2 사용 목적/제한
 - 레거시/확장 항목은 **신규 기능 설계의 기준으로 사용하지 않습니다**.
@@ -121,10 +121,12 @@ Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT �
 
 | 용어 | 키워드 | SoT(내부/저장) | SoT(통신/이벤트) | 설명 |
 | :--- | :--- | :--- | :--- | :--- |
-| 골든아워 활성 | `Golden Hour Active` | `GoldenHourConfig.enabled` | `state: START|STOP` | 활성화 상태 |
-| 배율 | `Multiplier` | `GoldenHourConfig.multiplier` | `bonus_rate` | 동일 의미. 저장은 `multiplier`, 이벤트/작업 Payload는 `bonus_rate`를 사용 |
-| 지속시간(분) | `Duration Minutes` | (Derived) | `duration_mins` | 이벤트 기반 운영 시 사용 |
-| 수동제어 | `Manual Override` | `GoldenHourConfig.manual_override` | - | `AUTO`/`FORCE_ON`/`FORCE_OFF` |
+| 골든아워 전역 활성 | `Golden Hour Active(Global)` | `golden_hour_config.enabled` | `GET /admin/api/vault/golden-hour` | 전역 골든아워 활성(시간창/강제 ON/OFF의 기반) |
+| 수동제어 | `Manual Override` | `golden_hour_config.manual_override` | `POST /admin/api/vault/golden-hour` | `AUTO`/`FORCE_ON`/`FORCE_OFF` |
+| 전역 배율 | `Multiplier(Global)` | `golden_hour_config.multiplier` | `GET /admin/api/vault/golden-hour` | 전역 배율(현재 V2 주사위 보상 배율 SoT는 아님) |
+| 주사위 적용 게이트 | `Dice Golden Hour Enabled` | `V2DiceConfig.enable_golden_hour` | `GET /api/v2/admin/game/dice/config` | 주사위 게임에서 골든아워 적용 여부 SoT |
+| 주사위 배율 | `Dice Golden Hour Multiplier` | `V2DiceConfig.golden_hour_multiplier` | `PUT /api/v2/admin/game/dice/config/{config_id}` | 주사위 보상 배율 SoT(골든아워 활성 시 적용) |
+| OpsPlan 제어 | `OpsPlan GOLDEN_HOUR` | (DB Config 업데이트) | `payload.action` / `payload.multiplier` | `action=FORCE_ON|FORCE_OFF|MULTIPLIER_SET` |
 
 ### 6.2 운영/CRM 워크플로우 상태 용어 (Intervention Status)
 
@@ -141,12 +143,11 @@ Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT �
 | :--- | :--- | :--- |
 | `golden:v2:events:game` | Game Stream | 게임 이벤트 스트림 |
 | `golden:v2:events:intervention` | Intervention Stream | 개입 이벤트 스트림 |
-| `golden:v2:admin:queue` | Approval Queue | 승인 대기열 갱신 스트림 |
-| `golden:v2:config:updates` | Config Updates | 설정/상태 변경 스트림(골든아워 포함) |
 
 ---
 
 ## 7. 변경 이력
+- v2.3 (2026-01-28, GitHub Copilot): 주사위 게임 기준 골든아워/Redis 키 SoT 정합화(키 prefix, 페이로드/채널 정정).
 - v2.2 (2026-01-28, GitHub Copilot): 골든아워/승인상태/실시간 채널 SoT 용어 확장 및 키 매핑 명시.
 - v2.1 (2026-01-18, GitHub Copilot): 용어/매핑/레거시 규칙 보강.
 - v2.0 (2026-01-18): Golden V2 프로젝트 출범에 맞춰 이관 및 아키텍처 컨텍스트 추가.

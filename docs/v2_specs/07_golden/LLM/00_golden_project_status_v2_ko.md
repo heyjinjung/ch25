@@ -1,5 +1,5 @@
 문서 타입: 통합 현황
-버전: v2.4 (2026-01-28)
+버전: v2.5 (2026-01-28)
 작성일: 2026-01-28
 작성자: Antigravity (Senior Fullstack Architect)
 대상: 전체 팀
@@ -185,7 +185,7 @@ interface RetentionInterventionResponse {
 
 ```typescript
 // 연결 엔드포인트
-const wsEndpoint = `${wsUrl}/api/admin/ws/golden/events`;
+const wsEndpoint = `${wsUrl}/api/v2/admin/ws/golden/events`;
 
 // 메시지 타입
 { type: "connection" }     // 연결 성공
@@ -278,5 +278,6 @@ interface GameEvent {
 ---
 
 ## 7. 변경 이력
+- v2.5 (2026-01-28): Admin WebSocket 경로를 /api/v2 기준으로 정합화.
 - v2.4 (2026-01-28): 사용자 요청에 의거 기존 구현 상세(v2.0) 100% 복구 및 V2 확장 계획 주석 통합.
 - v2.0 (2026-01-26): 최초 통합 현황 작성.

@@ -58,6 +58,7 @@ class GoldenInterventionService:
             trigger_id="TRG_LOSE_5",
             trigger_condition=f"Last 5 game results: {','.join(last_5)}",
             action_taken="Trigger_Pity_Win",
+            status="PENDING_APPROVAL",
             recent_results=",".join(last_5),
             cooldown_expires_at=datetime.utcnow() + timedelta(hours=cooldown_hours),
         )
@@ -118,6 +119,7 @@ class GoldenInterventionService:
             trigger_id="TRG_BAL_DROP_50",
             trigger_condition=f"Balance dropped {drop_ratio:.1%} (threshold: {drop_threshold:.0%})",
             action_taken="Crisis_Intervention",
+            status="PENDING_APPROVAL",
             user_balance_before=session_start_balance,
             session_balance_delta=balance_delta,
             cooldown_expires_at=datetime.utcnow() + timedelta(hours=cooldown_hours),

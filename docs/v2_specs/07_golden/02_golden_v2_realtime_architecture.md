@@ -1,7 +1,7 @@
 # Golden V2 실시간 아키텍처 (Real-time Architecture)
 
 **문서 타입**: 아키텍처 / V2 Core SoT
-**버전**: v2.1
+**버전**: v2.3
 **작성일**: 2026-01-18
 **상태**: SoT (Source of Truth)
 **프로젝트**: Golden V2
@@ -47,9 +47,9 @@ graph LR
     - `golden:v2:events:game`: 모든 게임 결과 스트림.
     - `golden:v2:events:intervention`: 분석 결과(개입) 스트림.
 - **Keys**:
-    - `user:{id}:loss_streak` (Int): 연속 패배 횟수.
-    - `user:{id}:session_start_balance` (Int): 세션 시작 잔액.
-    - `user:{id}:psych_state` (String): 현재 심리 상태 (e.g., `FRUSTRATED`).
+  - `golden:v2:user:{user_id}:loss_streak` (Int): 연속 패배 횟수.
+  - `golden:v2:user:{user_id}:session_start_balance` (Int): 세션 시작 잔액.
+  - `golden:v2:user:{user_id}:psych_state` (String): 현재 심리 상태 (e.g., `FRUSTRATED`).
 
 ### 3.3 Analysis Worker (Consumer / Brain)
 - **역할**: 게임 결과 이벤트를 구독하고, 복잡한 로직(Rules/AI)을 수행하여 개입 여부 결정.
@@ -109,8 +109,6 @@ graph LR
 | `ch25_events` | Upstream | 원본 게임 이벤트 스트림(브릿지 입력) | Game → GoldenEventWorker |
 | `golden:v2:events:game` | Game Event | V2 게임 이벤트 스트림(표준) | Game/Gateway → Analysis/Intervention |
 | `golden:v2:events:intervention` | Intervention Event | 개입 이벤트 스트림(표준) | Worker/Service → API(User Push) |
-| `golden:v2:admin:queue` | Admin Queue | 승인 대기열 실시간 갱신(반자동 CRM) | GoldenInterventionService → Admin WS Bridge |
-| `golden:v2:config:updates` | Config Update | 설정/상태 변경 즉시 반영(예: 골든아워) | OpsPlan(Kind=GOLDEN_HOUR) → Game/TMA/Admin |
 
 ### 6.2 Redis 키 SoT (확장)
 
@@ -121,17 +119,19 @@ graph LR
 | `golden:v2:user:{user_id}:session_start_balance` | Int | 세션 시작 잔액 |
 
 > [!NOTE]
-> 본 문서의 3.2 키 예시(`user:{id}:...`)는 개념 표기로 유지하되, **V2 Golden 실시간 상태 키의 표준 SoT는 `golden:v2:user:{user_id}:...` prefix를 사용**합니다.
+> V2 Golden 실시간 상태 키의 표준 SoT prefix는 `golden:v2:user:{user_id}:...` 입니다.
 
 ### 6.3 실시간 스트림 엔드포인트 SoT (확장)
 
 | 구분 | 엔드포인트 | 대상 | 비고 |
 | :--- | :--- | :--- | :--- |
 | User WebSocket | `/api/v2/ws/golden` | TMA/유저 | 개입/보상/상태 푸시 |
-| Admin WebSocket | `/api/admin/ws/golden/events` | 어드민 | 이벤트 스트림(대시보드) |
+| Admin WebSocket | `/api/v2/admin/ws/golden/events` | 어드민 | 게임 이벤트 스트림(대시보드) |
 
 ---
 
 ## 7. 변경 이력
+- v2.3 (2026-01-28, GitHub Copilot): Redis 키 예시 prefix를 현행 구현(golden:v2:user:{user_id}) 기준으로 정합화.
+- v2.2 (2026-01-28, GitHub Copilot): 미구현 채널 표기 정정 및 Admin WS 경로를 /api/v2 기준으로 정합화.
 - v2.1 (2026-01-28, GitHub Copilot): Pub/Sub 채널/키/엔드포인트 SoT 확장(OpsPlan/CRM/Config Updates 반영).
 - v2.0 (2026-01-18): Golden V2 실시간 아키텍처 정의 (최초 작성).

@@ -29,7 +29,7 @@
 
 ### 2.1 API 및 통신 (API & Contract)
 - [ ] **POST `/api/v2/admin/crm/approve`**: 복수건 일괄 승인/거절 API 구현 (Phase 2)
-- [ ] **WebSocket Stream**: `golden:v2:admin:queue` 실시간 승인 대기 리스트 브릿지
+- [ ] **WebSocket Stream**: `/api/v2/admin/ws/golden/events` (source: `golden:v2:events:game`) 기반 관제 스트림 연결
 - [ ] **Daily Nudge Scheduler**: 매일 무료 토큰 정보 발송 스케줄러 (🔴 High)
 - [ ] **Team Battle Notifier**: 팀 배틀 시작/랭킹 변동 알림 엔진 (🟡 Medium)
 
@@ -37,7 +37,7 @@
 - [ ] **Circuit Breaker**: 과다 지급 시 시스템 자동 중단 로직 연동 (🔴 High)
 - [ ] **Rollback Policy**: 잘못된 개입/지급에 대한 회수 자동화 정책 구현 (🟡 Medium)
 - [ ] **POST `/api/v2/user/evidence/submit`**: 유저 측 증거 제출 인터페이스 API (Phase 4)
-- [ ] **WebSocket Stream**: `golden:v2:admin:queue` 실시간 승인 대기 리스트 브릿지 (Phase 2)
+- [ ] **WebSocket Stream**: `/api/v2/admin/ws/golden/events` (source: `golden:v2:events:game`) 기반 관제 스트림 연결 (Phase 2)
 ### 2.2 운영 로직 (Ops Logic)
 - [ ] **Batch Processing**: 승인된 건에 대한 실제 보상 지급 및 텔레그램 푸시 연동
 - [ ] **Rate Limiting**: 동일 유저에 대한 중복 개입 방지 및 발송 제한 로직

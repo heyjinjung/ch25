@@ -14,6 +14,8 @@ from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
 from app.v2.models.v2_user_retention_state import V2UserRetentionState
 from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
 from app.v2.models.user import V2User
+from app.v2.models.auth_event import V2UserAuthEvent, AuthEventType
+from app.v2.models.refresh_token import V2UserRefreshToken
 
 # Aliases for backward compatibility: expose v1 models via v2 models namespace so
 # v2 code can import from `app.v2.models` while relying on existing v1 DB models.
@@ -42,6 +44,10 @@ __all__ = [
     "V2UserRetentionState",
     "V2RetentionRoiLog",
     "V2User",
+    # Auth models
+    "V2UserAuthEvent",
+    "AuthEventType",
+    "V2UserRefreshToken",
     # v1 model aliases
     "UserGameWallet",
     "UserGameWalletLedger",
