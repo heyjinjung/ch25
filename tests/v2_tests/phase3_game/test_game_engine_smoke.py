@@ -234,6 +234,7 @@ def _clear_auth_override() -> None:
 def _disable_benefit_suspension(monkeypatch: pytest.MonkeyPatch) -> None:
     # RouletteService uses instance method; LotteryService calls VaultService.get_user_vault_policy
     from app.services import vault_service
+    from app.v2.services.vault_service import V2VaultService
 
     def _no_suspend(*args, **kwargs):
         # Keep shape compatible with VaultService.get_user_vault_policy().
@@ -244,7 +245,11 @@ def _disable_benefit_suspension(monkeypatch: pytest.MonkeyPatch) -> None:
             "vault_max_limit": 0,
         }
 
+    def _no_suspend_v2(*args, **kwargs):
+        return False, 0
+
     monkeypatch.setattr(vault_service.VaultService, "get_user_vault_policy", staticmethod(_no_suspend), raising=False)
+    monkeypatch.setattr(V2VaultService, "is_benefits_suspended", staticmethod(_no_suspend_v2), raising=False)
 
 
 def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, monkeypatch: pytest.MonkeyPatch) -> None:
