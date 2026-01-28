@@ -207,7 +207,7 @@ export default function HomePage() {
             className="bento-tile bento-tile--tall"
             onClick={() => {
               playTabTouch();
-              navigate("/game/roulette");
+              navigate("/game");
             }}
           >
             <div className="tile-content vertical">
@@ -223,39 +223,40 @@ export default function HomePage() {
           <div
             className="bento-tile bento-tile--square"
             onClick={() => {
-              playTabTouch();
-              navigate("/vault");
+            playTabTouch();
+            navigate("/vault");
             }}
           >
-            <img
-              src="/assets/01home/3.png"
-              alt="lottery"
-              className="tile-img-small"
-            />
+          <img
+            src="/assets/icon_alarm_unread.webp"
+            alt="vault"
+            className="tile-img-small"
+          />
+           <span className="tile-title">금고</span>
           </div>
-
-          {/* Item 4: Square Card (All Games) */}
+        {/* Item 4: Square Card (All Games) */}
           <div
-            className="bento-tile bento-tile--square"
-            onClick={() => {
-              playTabTouch();
-              navigate("/v2/missions?cat=LEVEL");
+             className="bento-tile bento-tile--square"
+             onClick={() => {
+             playTabTouch();
+             navigate("/v2/missions?cat=LEVEL");
             }}
           >
-            <img
-              src="/assets/01home/8.png"
-              alt="all"
-              className="tile-img-small"
-            />
-          </div>
+          <img
+             src="/assets/season_pass/icon_node_cleared.webp"
+             alt="all"
+             className="tile-img-small"
+          />
+           <span className="tile-title">레벨</span>
+          </div> 
         </div>
-
+          
         {/* New 3D CTA Buttons Row */}
         <div className="home-cta-row flex gap-4 mt-6">
           <button
             onClick={() => {
               playTabTouch();
-              navigate("/game");
+              window.open("https://ccc-010.com", "_blank");
             }}
             className="cta-button cta-button--primary flex items-center gap-2 px-5 py-3 text-lg font-bold"
           >
@@ -269,7 +270,7 @@ export default function HomePage() {
           <button
             onClick={() => {
               playTabTouch();
-              window.open("https://t.me/example_official", "_blank");
+              window.open("https://t.me/+IE0NYpuze_k1YWZk", "_blank");
             }}
             className="cta-button cta-button--secondary flex items-center gap-2 px-5 py-3 text-lg font-bold"
           >

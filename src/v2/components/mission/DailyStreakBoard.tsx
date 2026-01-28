@@ -35,7 +35,7 @@ export const DailyStreakBoard: React.FC<DailyStreakBoardProps> = ({
             {currentStreak}
           </span>
           <span className="text-sm text-zinc-500 font-bold ml-1 uppercase">
-            Days
+            일
           </span>
         </div>
       </div>

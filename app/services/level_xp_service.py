@@ -230,16 +230,29 @@ class LevelXPService:
 
         return {"added_xp": delta, "new_rewards": achieved, "level": progress.level, "xp": progress.xp}
 
+    def _get_reward_label(self, reward_type: str, amount: int) -> str:
+        """Helper to generate consistent Korean reward labels."""
+        type_ko = {
+            "POINT": "포인트",
+            "TICKET": "티켓",
+            "ROULETTE_TICKET": "룰렛 티켓",
+            "DICE_TICKET": "주사위 티켓",
+            "LOTTERY_TICKET": "항권",
+            "GOLD_KEY_TICKET": "황금열쇠",
+            "DIAMOND_TICKET": "다이아몬드",
+            "DIAMOND_FRAGMENT": "다이아 조각",
+        }.get(reward_type, reward_type)
+
+        if amount > 0:
+            return f"{amount:,} {type_ko}"
+        return type_ko
+
     def get_status(self, db: Session, user_id: int) -> dict:
         """Return current level/XP snapshot and reward history."""
 
         progress = self._get_or_create_progress(db, user_id=user_id)
 
-        next_row = next((row for row in self.LEVELS if row["required_xp"] > progress.xp), None)
-        next_level = next_row["level"] if next_row else None
-        next_required = next_row["required_xp"] if next_row else None
-        xp_to_next = (next_required - progress.xp) if next_required is not None else None
-
+        levels = self._effective_levels(db)
         reward_logs = (
             db.execute(
                 select(UserLevelRewardLog)
@@ -249,6 +262,31 @@ class LevelXPService:
             .scalars()
             .all()
         )
+        claimed_levels = {log.level for log in reward_logs}
+
+        level_payload = []
+        for row in levels:
+            is_unlocked = progress.xp >= row["required_xp"]
+            is_claimed = row["level"] in claimed_levels
+            reward_type = self._normalize_reward_type(row["reward_type"])
+            reward_amount = row.get("reward_amount") or 0
+            
+            level_payload.append({
+                "level": row["level"],
+                "required_xp": row["required_xp"],
+                "reward_type": reward_type,
+                "reward_amount": reward_amount,
+                "reward_payload": row.get("reward_payload"),
+                "auto_grant": row.get("auto_grant", True),
+                "reward_label": self._get_reward_label(reward_type, reward_amount),
+                "is_unlocked": is_unlocked,
+                "is_claimed": is_claimed,
+            })
+
+        next_row = next((row for row in levels if row["required_xp"] > progress.xp), None)
+        next_level = next_row["level"] if next_row else None
+        next_required = next_row["required_xp"] if next_row else None
+        xp_to_next = (next_required - progress.xp) if next_required is not None else None
 
         rewards = [
             {
@@ -268,5 +306,6 @@ class LevelXPService:
             "next_level": next_level,
             "next_required_xp": next_required,
             "xp_to_next": xp_to_next,
+            "levels": level_payload,
             "rewards": rewards,
         }

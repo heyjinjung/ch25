@@ -1,44 +1,24 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Gamepad2, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, Gamepad2, ExternalLink, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion } from "framer-motion";
 
 import AnimatedNumber from "../../components/common/AnimatedNumber";
 import Button from "../../components/common/Button";
+import { useV2LevelXPStatus } from "../../hooks/useV2Mission";
+import { triggerHaptic } from "../../utils/haptic";
 import "./LevelTowerPage.css";
 
 const NODE_ICON_CLEARED = "/assets/season_pass/icon_node_cleared.webp";
 const NODE_ICON_CURRENT = "/assets/season_pass/icon_node_current.webp";
 const NODE_ICON_LOCKED = "/assets/season_pass/icon_node_locked.webp";
 
-// Mock haptics
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const tryHaptic = (_pattern: any) => {};
-
-// Mock Hook - Replace with actual V2 hook
-const useSeasonPassStatus = () => {
-  // TODO: Implement actual data fetching via React Query
-  return {
-    data: {
-      current_level: 5,
-      current_xp: 4500,
-      max_level: 50,
-      levels: Array.from({ length: 10 }, (_, i) => ({
-        level: i + 1,
-        required_xp: (i + 1) * 1000,
-        reward_label: `${(i + 1) * 10} Point`,
-        is_claimed: i < 4,
-      })),
-    },
-    isPending: false,
-  };
-};
-
 const LevelTowerPage: React.FC = () => {
   const navigate = useNavigate();
-  const season = useSeasonPassStatus();
-  // ... rest of state ...
+  // Switch to V2 Native Level XP Status (Unified Level System)
+  const { data: levelStatus, isLoading, isError, refetch } = useV2LevelXPStatus();
+  
   const [missionsOpen, setMissionsOpen] = useState(false);
   const hasTriggeredHaptic = useRef(false);
 
@@ -60,19 +40,20 @@ const LevelTowerPage: React.FC = () => {
 
   useEffect(() => {
     if (!hasTriggeredHaptic.current) {
-      tryHaptic(15);
+      triggerHaptic("medium");
       hasTriggeredHaptic.current = true;
     }
   }, []);
 
   const view = useMemo(() => {
-    if (!season.data) return null;
+    if (!levelStatus) return null;
 
-    const { current_level, current_xp, levels, max_level } = season.data;
+    const { current_level, current_xp, next_required_xp, levels } = levelStatus;
 
     const sortedLevels = [...levels].sort((a, b) => a.level - b.level);
     const currentIdx = sortedLevels.findIndex((l) => l.level === current_level);
 
+    // Show a window of floors around the current level
     const startIdx = Math.max(0, currentIdx - 1);
     const endIdx = Math.min(sortedLevels.length, currentIdx + 3);
     const visibleFloors = sortedLevels.slice(startIdx, endIdx).reverse();
@@ -85,7 +66,7 @@ const LevelTowerPage: React.FC = () => {
     );
 
     const startXp = currentLevelData?.required_xp ?? 0;
-    const endXp = nextLevelData?.required_xp ?? startXp + 1000;
+    const endXp = next_required_xp ?? startXp + 1000;
     const progressXp = Math.max(0, current_xp - startXp);
     const totalXp = Math.max(1, endXp - startXp);
     const progressPct = Math.min(100, Math.floor((progressXp / totalXp) * 100));
@@ -94,25 +75,36 @@ const LevelTowerPage: React.FC = () => {
     return {
       currentLevel: current_level,
       currentXp: current_xp,
-      maxLevel: max_level,
+      maxLevel: sortedLevels[sortedLevels.length - 1]?.level ?? 20,
       progressPct,
       remainingXp,
       nextReward: nextLevelData?.reward_label ?? "MAX",
       visibleFloors,
-      isMaxLevel: current_level >= max_level,
+      isMaxLevel: next_required_xp === null,
     };
-  }, [season.data]);
+  }, [levelStatus]);
 
   const handleMissionToggle = () => {
-    tryHaptic(10);
+    triggerHaptic("light");
     setMissionsOpen(!missionsOpen);
   };
 
-  if (season.isPending) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500/70 border-t-transparent" />
-        <p className="text-white/60 text-sm">Loading Level Tower...</p>
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-500/70" />
+        <p className="text-white/60 text-sm font-bold">레벨 타워 로딩 중...</p>
+      </div>
+    );
+  }
+
+  if (isError || !levelStatus) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
+        <p className="text-white/60 text-sm">레벨 정보를 불러올 수 없습니다.</p>
+        <Button onClick={() => refetch()} variant="outline" size="sm">
+          다시 시도
+        </Button>
       </div>
     );
   }
@@ -208,12 +200,25 @@ const LevelTowerPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {isCurrent && (
+                    {isCurrent ? (
                       <div className="text-right">
                         <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
-                          {view.remainingXp.toLocaleString()} XP Left
+                          {view.remainingXp.toLocaleString()} XP 남음
                         </p>
                       </div>
+                    ) : (
+                      !isCompleted && !isLocked && floor.is_unlocked && !floor.auto_grant && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            triggerHaptic("rigid");
+                            // Explicit manual claim not yet implemented in V2 Level Service
+                          }}
+                          className="h-8 py-0 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg"
+                        >
+                          받기
+                        </Button>
+                      )
                     )}
                   </div>
 
@@ -248,7 +253,7 @@ const LevelTowerPage: React.FC = () => {
           onClick={() => navigate("/game")}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black h-14 text-lg rounded-xl shadow-lg shadow-emerald-900/20"
         >
-          <Gamepad2 className="mr-2" /> Play Games
+          <Gamepad2 className="mr-2" /> 게임하기
         </Button>
       </div>
 
@@ -258,7 +263,7 @@ const LevelTowerPage: React.FC = () => {
           onClick={handleMissionToggle}
           className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm font-medium hover:bg-white/10 transition-colors"
         >
-          <span>Get More XP</span>
+          <span>더 많은 XP 받기</span>
           {missionsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
 
@@ -273,15 +278,15 @@ const LevelTowerPage: React.FC = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-black text-white">
-                  Join Event Channel
+                  이벤트 채널 입장
                 </p>
                 <p className="text-xs font-semibold text-white/60">
-                  Get latest news & XP codes
+                  최신 공지와 XP 코드를 확인하세요
                 </p>
               </div>
             </button>
             <div className="text-center text-zinc-500 text-xs py-2">
-              More missions coming soon
+              더 많은 미션이 곧 추가됩니다
             </div>
           </div>
         )}

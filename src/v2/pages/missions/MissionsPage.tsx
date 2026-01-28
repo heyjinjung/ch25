@@ -13,10 +13,10 @@ import { Meteors } from "../../components/effects/Meteors";
 import "./MissionRedesign.css";
 
 const CATEGORIES = [
-  { id: "DAILY", label: "Daily", emoji: "🔥" },
-  { id: "WEEKLY", label: "Weekly", emoji: "🏆" },
-  { id: "NEW_USER", label: "New User", emoji: "🎁" },
-  { id: "LEVEL", label: "Tower", emoji: "🏰" },
+  { id: "DAILY", label: "일일", emoji: "🔥" },
+  { id: "WEEKLY", label: "주간", emoji: "🏆" },
+  { id: "NEW_USER", label: "신규 유저", emoji: "🎁" },
+  { id: "LEVEL", label: "레벨타워", emoji: "🏰" },
 ];
 
 export default function MissionsPage() {
@@ -66,7 +66,7 @@ export default function MissionsPage() {
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                 <span className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">
-                  미션가이드
+                  미션 가이드
                 </span>
               </div>
               <h1 className="text-4xl font-black text-white tracking-tighter italic">
@@ -102,7 +102,7 @@ export default function MissionsPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
             <p className="text-zinc-500 text-sm font-bold">
-              Synchronizing Mission Data...
+              미션 데이터 동기화 중...
             </p>
           </div>
         ) : error || !data ? (

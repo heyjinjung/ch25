@@ -6,6 +6,9 @@ import {
   claimV2DailyGift,
   getV2StreakRules,
   claimV2StreakReward,
+  getV2SeasonPassStatus,
+  claimV2SeasonPassReward,
+  getV2LevelXPStatus,
 } from "../api/missionApi";
 
 // ============================================================================
@@ -80,5 +83,42 @@ export function useV2ClaimStreakReward() {
       queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
       queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
     },
+  });
+}
+
+// ============================================================================
+// Season Pass Hooks
+// ============================================================================
+
+export function useV2SeasonPassStatus() {
+  return useQuery({
+    queryKey: ["v2", "season-pass", "status"],
+    queryFn: () => getV2SeasonPassStatus(),
+    staleTime: 30000, // 30 seconds
+  });
+}
+
+export function useV2ClaimSeasonPassReward() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (level: number) => claimV2SeasonPassReward(level),
+    onSuccess: () => {
+      // Invalidate season pass status
+      queryClient.invalidateQueries({ queryKey: ["v2", "season-pass"] });
+      // Invalidate inventory/wallet
+      queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
+      // Invalidate vault/balance
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
+    },
+  });
+}
+
+export function useV2LevelXPStatus() {
+  return useQuery({
+    queryKey: ["v2", "level-xp", "status"],
+    queryFn: () => getV2LevelXPStatus(),
+    staleTime: 30000,
   });
 }

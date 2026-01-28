@@ -76,7 +76,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             />
             <div className="flex flex-col">
               <span className="text-[10px] text-zinc-600 font-bold leading-none uppercase tracking-tighter">
-                Reward
+                보상
               </span>
               <span className="text-xs font-black text-yellow-400 font-mono leading-none mt-0.5">
                 {mission.reward_amount.toLocaleString()}
@@ -95,7 +95,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
                   percent >= 100 ? "text-emerald-500" : "text-zinc-600",
                 )}
               >
-                {percent >= 100 ? "Ready to Claim" : "In Progress"}
+                {percent >= 100 ? "보상 받기 가능" : "진행 중"}
               </span>
               <span
                 className={cn(
@@ -134,7 +134,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             {mission.is_claimed ? (
               <div className="px-5 py-2.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-zinc-600 text-[12px] font-bold flex items-center gap-2">
                 <Check className="w-3.5 h-3.5" />
-                Completed
+                완료됨
               </div>
             ) : isClaimable ? (
               <Button
@@ -146,7 +146,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
                 {isClaiming ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  "CLAIM"
+                  "받기"
                 )}
               </Button>
             ) : (
@@ -154,7 +154,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
                 disabled
                 className="h-11 px-5 bg-white/[0.04] border border-white/5 rounded-2xl text-zinc-600 text-[11px] font-black uppercase tracking-widest cursor-default"
               >
-                Mission
+                미션
               </button>
             )}
           </div>

@@ -85,6 +85,61 @@ export interface MissionListResponse {
   readonly streak_info: StreakInfoDto;
 }
 
+export interface SeasonPassLevelDto {
+  readonly level: number;
+  readonly required_xp: number;
+  readonly reward_type: string;
+  readonly reward_amount: number;
+  readonly auto_claim: boolean;
+  readonly is_unlocked: boolean;
+  readonly is_claimed: boolean;
+  readonly reward_label: string;
+}
+
+export interface SeasonPassStatusResponse {
+  readonly season: {
+    readonly id: number;
+    readonly season_name: string;
+    readonly start_date: string;
+    readonly end_date: string;
+    readonly max_level: number;
+    readonly base_xp_per_stamp: number;
+  };
+  readonly progress: {
+    readonly current_level: number;
+    readonly current_xp: number;
+    readonly total_stamps: number;
+    readonly last_stamp_date: string | null;
+    readonly next_level_xp: number;
+  };
+  readonly levels: SeasonPassLevelDto[];
+  readonly today: {
+    readonly date: string;
+    readonly stamped: boolean;
+  };
+}
+
+export interface LevelXPRowDto {
+  readonly level: number;
+  readonly required_xp: number;
+  readonly reward_type: string;
+  readonly reward_amount: number;
+  readonly auto_grant: boolean;
+  readonly reward_label: string;
+  readonly is_unlocked: boolean;
+  readonly is_claimed: boolean;
+}
+
+export interface LevelXPStatusResponse {
+  readonly current_level: number;
+  readonly current_xp: number;
+  readonly next_level: number | null;
+  readonly next_required_xp: number | null;
+  readonly xp_to_next: number | null;
+  readonly levels: LevelXPRowDto[];
+  readonly rewards: any[];
+}
+
 export interface ClaimMissionResponse {
   readonly success: boolean;
   readonly reward_type: string;
@@ -207,6 +262,49 @@ export const claimV2StreakReward = async (): Promise<ClaimStreakResponse> => {
     return response.data;
   } catch (error) {
     console.error("[missionApi] Failed to claim V2 streak reward", error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// Season Pass API
+// ============================================================================
+
+export const getV2SeasonPassStatus = async (): Promise<SeasonPassStatusResponse> => {
+  try {
+    const response = await v2Client.get<SeasonPassStatusResponse>(
+      "/api/season-pass/status",
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[missionApi] Failed to fetch V2 season pass status", error);
+    throw error;
+  }
+};
+
+export const claimV2SeasonPassReward = async (
+  level: number,
+): Promise<ClaimMissionResponse> => {
+  try {
+    const response = await v2Client.post<ClaimMissionResponse>(
+      "/api/season-pass/claim",
+      { level },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[missionApi] Failed to claim V2 season pass reward", error);
+    throw error;
+  }
+};
+
+export const getV2LevelXPStatus = async (): Promise<LevelXPStatusResponse> => {
+  try {
+    const response = await v2Client.get<LevelXPStatusResponse>(
+      "/api/level-xp/status",
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[missionApi] Failed to fetch V2 Level XP status", error);
     throw error;
   }
 };

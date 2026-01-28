@@ -66,13 +66,35 @@ def get_admin_levels(
     levels = db.query(V2LevelRewardTable).order_by(V2LevelRewardTable.level).all()
 
     if not levels:
+        sot_data = [
+            (1, 0, "ROULETTE_TICKET", 1),
+            (2, 20, "DICE_TICKET", 1),
+            (3, 50, "ROULETTE_TICKET", 1),
+            (4, 60, "LOTTERY_TICKET", 1),
+            (5, 100, "DICE_TICKET", 1),
+            (6, 120, "GIFTICON_BAEMIN_5000", 5000),
+            (7, 160, "DICE_TICKET", 2),
+            (8, 200, "DICE_TICKET", 3),
+            (9, 300, "LOTTERY_TICKET", 1),
+            (10, 500, "GOLD_KEY_TICKET", 1),
+            (11, 700, "ROULETTE_TICKET", 3),
+            (12, 1000, "GOLD_KEY_TICKET", 1),
+            (13, 1200, "DICE_TICKET", 4),
+            (14, 1400, "ROULETTE_TICKET", 4),
+            (15, 1800, "LOTTERY_TICKET", 3),
+            (16, 2200, "LOTTERY_TICKET", 5),
+            (17, 3000, "GOLD_KEY_TICKET", 3),
+            (18, 4000, "DIAMOND_TICKET", 1),
+            (19, 5000, "DIAMOND_TICKET", 2),
+            (20, 6000, "DIAMOND_TICKET", 5),
+        ]
         levels = []
-        for i in range(1, 21):
+        for lv, xp, r_type, r_amount in sot_data:
             new_level = V2LevelRewardTable(
-                level=i,
-                required_xp=i * 1000,
-                reward_type="TICKET" if i % 5 == 0 else "POINT",
-                reward_amount=(i // 5 + 1) if i % 5 == 0 else i * 100,
+                level=lv,
+                required_xp=xp,
+                reward_type=r_type,
+                reward_amount=r_amount,
             )
             db.add(new_level)
             levels.append(new_level)

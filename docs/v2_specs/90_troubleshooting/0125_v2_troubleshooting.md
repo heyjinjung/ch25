@@ -467,6 +467,9 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 
 ✅ 출석미션 반영 / 횟수 카운트 - 구플래쉬3 작업중 
 신규유저 관련 미션 엣지케이스 추가, 테스트 진행중 
+
+✅ 미션허브 탭 디자인 수정
+✅ 레벨페이지 배경과 아이콘 
 ---------------------------------------
 
 
@@ -479,15 +482,232 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
 c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
 
+레벨페이지 애니메이션 - 엘리베이터..
+메인페이지 디렉션 체크 1차
+ㄴ 카드그리드 디렉션 위치 다양화
+ㄴ  cta 버튼 디렉션 링크 확인 
 
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
  docker compose build --no-cache; docker compose up -d
 
 -----------------
+계획 파일을 작성했습니다. 핵심 사항을 정리하면:
+
+계획 요약
+생성할 문서 (3개)
+Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
+트러블 매핑표: docs/v2_specs/90_troubleshooting/v2_auth_trouble_mapping_ko.md
+기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
+신규 생성 코드 (v2 경로)
+app/v2/core/telegram.py - Telegram initData 검증 (hash 비교 수정)
+app/v2/models/auth_event.py - V2UserAuthEvent 모델
+app/v2/models/refresh_token.py - V2UserRefreshToken 모델
+app/v2/api/telegram_routes.py - V2 Telegram 인증 API
+긴급 패치 (P0)
+🔴 Telegram hash 비교 로직 추가
+🔴 로그인 이벤트 기록 추가
+9개 도메인 영향
+높음: User (신규 테이블 2개)
+중간: Vault, Mission, Admin (기존 로직 유지, 일부 확장)
+낮음: Game, Shop, Inventory, Level, TeamBattle (변경 없음)
+Claude’s Plan
+V2 Telegram Auth SoT 수립 계획
+개요
+목표: 텔레그램 Mini App 전용 인증 SoT 수립 및 9개 도메인(admin, game, inventory, level, mission, shop, teambattle, user, vault)과의 유기적 통합
+핵심 원칙: v2 경로 아래 신규 파일 생성, 최소 수정으로 기존 도메인과 연동
+작성일: 2026-01-28
+Phase 1: 생성할 문서 (3개)
+1.1 Auth SoT 문서 (핵심)
+경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_telegram_auth_sot_ko.md
+
+구조:
+
+[A] 주요 DB 컬럼/제약조건/Enum (v2_user, telegram_link_code 등)
+[B] 프론트-백엔드-DB-코드-정책 1:1 매핑
+텔레그램 Mini App 인증 정책 (initData 검증, 신규 유저, 연동)
+Pre-Release DEV 로그인 정책
+토큰 정책 (Access 15분, Refresh 30일)
+RBAC 권한 모델
+세션/디바이스 관리 정책
+감사 로그 정책
+9개 도메인별 영향 요약
+자동화/운영 체크리스트
+1.2 예상 트러블 매핑표
+경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\v2_auth_trouble_mapping_ko.md
+
+구조:
+
+도메인별 영향 분석 (User: 높음, Vault/Mission/Admin: 중간, 나머지: 낮음)
+크로스도메인 충돌 포인트
+마이그레이션 순서 (Phase 1~3)
+롤백 계획
+모니터링 지표
+QA 체크리스트
+1.3 기술 디테일 가이드
+경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_technical_guide_ko.md
+
+구조:
+
+Telegram initData 검증 상세 (HMAC-SHA256)
+JWT 토큰 구조 및 클레임
+RBAC 미들웨어 구현
+환경별 인증 제한 (DEV/PROD)
+로그인 이벤트 기록 구현
+Refresh Token 구현 가이드
+Phase 2: 신규 생성 코드 (v2 경로)
+2.1 V2 Telegram 검증 모듈 (신규)
+경로: app/v2/core/telegram.py
+
+내용:
 
 
+# Telegram initData HMAC-SHA256 검증
+# 🔴 기존 app/core/telegram.py의 hash 비교 누락 수정 버전
+def validate_init_data(init_data: str) -> dict:
+    # ... 기존 로직 + hash 비교 추가
+    if calculated_hash != hash_val:
+        raise ValueError("Invalid hash")
+2.2 V2 Auth Event 모델 (신규)
+경로: app/v2/models/auth_event.py
 
+내용:
+
+
+class AuthEventType(str, Enum):
+    LOGIN_SUCCESS = "LOGIN_SUCCESS"
+    LOGIN_FAILED = "LOGIN_FAILED"
+    LOGOUT = "LOGOUT"
+    TOKEN_REFRESH = "TOKEN_REFRESH"
+    TELEGRAM_LINK = "TELEGRAM_LINK"
+    TELEGRAM_UNLINK = "TELEGRAM_UNLINK"
+    RBAC_DENIED = "RBAC_DENIED"
+
+class V2UserAuthEvent(Base):
+    __tablename__ = "v2_user_auth_event"
+    # id, user_id, event_type, ip_address, user_agent, telegram_id, success, error_message, created_at
+2.3 V2 Refresh Token 모델 (신규)
+경로: app/v2/models/refresh_token.py
+
+내용:
+
+
+class V2UserRefreshToken(Base):
+    __tablename__ = "v2_user_refresh_token"
+    # id, user_id, jti, expires_at, revoked_at, created_at, last_used_at
+2.4 V2 Auth Service 확장 (수정)
+경로: app/v2/services/auth_service.py
+
+추가 메서드:
+
+create_refresh_token(): Refresh Token 생성 및 DB 저장
+refresh_access_token(): Token 갱신 로직
+revoke_refresh_token(): 로그아웃 시 토큰 무효화
+log_auth_event(): 인증 이벤트 기록
+2.5 V2 Auth Routes 확장 (수정)
+경로: app/v2/api/auth_routes.py
+
+수정사항:
+
+POST /api/v2/auth/refresh: 구현 (현재 501)
+POST /api/v2/auth/logout: 실제 로직 추가 (현재 stub)
+모든 로그인 성공/실패 시 V2UserAuthEvent 기록
+2.6 V2 Telegram Routes (신규)
+경로: app/v2/api/telegram_routes.py
+
+내용:
+
+POST /api/v2/telegram/auth: V2 버전 Telegram 인증
+기존 app/api/routes/telegram.py 로직을 v2 경로로 이관
+app/v2/core/telegram.py 사용 (hash 검증 포함)
+V2UserAuthEvent 기록 추가
+Phase 3: DB Migration
+3.1 v2_user_auth_event 테이블
+
+CREATE TABLE v2_user_auth_event (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    event_type ENUM(...) NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    telegram_id BIGINT,
+    success BOOLEAN NOT NULL DEFAULT TRUE,
+    error_message VARCHAR(500),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at)
+);
+3.2 v2_user_refresh_token 테이블
+
+CREATE TABLE v2_user_refresh_token (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    jti VARCHAR(64) NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_jti (jti),
+    INDEX idx_expires_at (expires_at)
+);
+Phase 4: 9개 도메인 영향 분석
+도메인	영향도	수정 필요	비고
+User	🔴 높음	신규 테이블 2개	auth_event, refresh_token
+Vault	🟡 중간	없음	로그인 후 동기화 기존 로직 유지
+Mission	🟡 중간	없음	LOGIN 미션 트리거 기존 로직 유지
+Admin	🟡 중간	RBAC 로깅 추가	get_current_admin_info 확장
+Game	🟢 낮음	없음	JWT 의존성만
+Shop	🟢 낮음	없음	JWT 의존성만
+Inventory	🟢 낮음	없음	JWT 의존성만
+Level	🟢 낮음	없음	JWT 의존성만
+TeamBattle	🟢 낮음	없음	JWT 의존성만
+Phase 5: 긴급 패치 항목
+🔴 P0 (MVP 전 필수)
+Telegram hash 비교 누락: app/v2/core/telegram.py 신규 생성 시 수정
+Auth Event 로깅 누락: V2UserAuthEvent 모델 + 기록 로직
+🟡 P1 (MVP 후 권장)
+Refresh Token 미구현: V2UserRefreshToken + /api/v2/auth/refresh
+Activity 경로 불일치: FE /api/activity/record → /api/v2/activity/ingest
+🟢 P2 (미래 확장)
+Redis 세션 추적
+디바이스 관리 테이블
+파일 생성/수정 목록
+신규 생성
+경로	유형	설명
+docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md	문서	Auth SoT
+docs/v2_specs/90_troubleshooting/v2_auth_trouble_mapping_ko.md	문서	트러블 매핑표
+docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md	문서	기술 가이드
+app/v2/core/__init__.py	코드	패키지 init
+app/v2/core/telegram.py	코드	V2 Telegram 검증
+app/v2/models/auth_event.py	코드	Auth Event 모델
+app/v2/models/refresh_token.py	코드	Refresh Token 모델
+app/v2/api/telegram_routes.py	코드	V2 Telegram API
+alembic/versions/XXXXXX_add_v2_auth_tables.py	Migration	DB 스키마
+수정
+경로	변경 내용
+app/v2/services/auth_service.py	refresh/logout/log 메서드 추가
+app/v2/api/auth_routes.py	/refresh, /logout 구현
+app/v2/api/__init__.py	telegram_routes 등록
+app/v2/models/__init__.py	신규 모델 import
+검증 계획
+단위 테스트
+ app/v2/core/telegram.py: initData 검증 성공/실패
+ V2UserAuthEvent: 이벤트 기록 CRUD
+ V2UserRefreshToken: 토큰 생성/갱신/폐기
+통합 테스트
+ Telegram 신규 유저 → 로그인 → 이벤트 기록
+ Access Token 만료 → Refresh → 새 토큰
+ 로그아웃 → Refresh Token 무효화
+E2E 테스트
+ Telegram Mini App에서 실제 initData로 인증
+ DEV 로그인 (DEV 환경) / 차단 (PROD 환경)
+변경 이력
+v1.0 (2026-01-28): 최초 작성
+-----------------------------------
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_telegram_auth_sot_ko.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\v2_auth_trouble_mapping_ko.md
+docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md	
 
 
 @systematic-debugging 활용하여 수정해줘 

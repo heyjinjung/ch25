@@ -43,20 +43,6 @@ const GAMES = [
     icon: `${ASSET_PATH}/Group 15.png`,
     color: "from-amber-500/20",
   },
-  {
-    id: "missions",
-    to: "/v2/missions?cat=DAILY",
-    icon: `/assets/01login/treasure.png`,
-    label: "Mission Hub",
-    color: "from-emerald-500/20",
-  },
-  {
-    id: "tower",
-    to: "/v2/missions?cat=LEVEL",
-    icon: `/assets/01login/Ellipse 374.svg`,
-    label: "Glory Tower",
-    color: "from-blue-600/20",
-  },
 ];
 
 export default function GamedashPage() {
@@ -248,19 +234,9 @@ export default function GamedashPage() {
                   <div className="mt-auto flex flex-col items-center">
                     <img
                       src={game.icon}
-                      className={cn(
-                        "object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500",
-                        game.id === "missions" || game.id === "tower"
-                          ? "w-16 h-16"
-                          : "w-24 h-24",
-                      )}
+                      className="w-24 h-24 object-contain transition-transform group-hover:scale-110 group-hover:-translate-y-2 duration-500"
                       alt={game.id}
                     />
-                    {(game.id === "missions" || game.id === "tower") && (
-                      <span className="mt-3 text-[10px] font-black text-white/80 tracking-widest uppercase italic bg-black/40 px-2 py-0.5 rounded border border-white/5">
-                        {game.label}
-                      </span>
-                    )}
                   </div>
                 </div>
               </MouseEffectCard>
