@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import InvalidConfigError
+from app.core.exceptions import ForbiddenError, InvalidConfigError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.dice import DiceGameData, DicePlayResponse, DiceRewardConfig, DiceStatusResponse
@@ -215,6 +215,11 @@ class V2DiceGameService:
 
         today = self._operational_date_kst(now_dt)
         self.feature_service.validate_feature_active(db, today, FeatureType.DICE)
+
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
+        if is_suspended:
+            raise ForbiddenError("BENEFITS_SUSPENDED")
 
         config = V2GameConfigService.get_active_dice_config(db)
 

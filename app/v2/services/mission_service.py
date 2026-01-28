@@ -245,6 +245,12 @@ class V2MissionService:
         target_day = self.get_pending_streak_milestone(user_id)
         if not target_day:
             return {"success": False, "message": "NO_CLAIMABLE_REWARD"}
+
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        from app.v2.services.vault_service import V2VaultService
+        is_suspended, _ = V2VaultService.is_benefits_suspended(self.db, user_id)
+        if is_suspended:
+            return {"success": False, "message": "BENEFITS_SUSPENDED"}
             
         user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         streak_days = int(user.play_streak)
@@ -296,6 +302,12 @@ class V2MissionService:
 
     def claim_reward(self, user_id: int, mission_id: int) -> Tuple[bool, str, int]:
         """Claim reward for a completed mission (V2-only)."""
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        from app.v2.services.vault_service import V2VaultService
+        is_suspended, _ = V2VaultService.is_benefits_suspended(self.db, user_id)
+        if is_suspended:
+            return False, "BENEFITS_SUSPENDED", 0
+
         mission = self.db.query(Mission).filter(Mission.id == mission_id).first()
         if not mission:
             return False, "MISSION_NOT_FOUND", 0

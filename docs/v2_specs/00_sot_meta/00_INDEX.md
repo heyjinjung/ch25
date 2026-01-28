@@ -1,6 +1,14 @@
 문서 타입: 인덱스
 
 ## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
+
+---
+### [2026-01-28 금고 정책 SoT 승격 내역]
+- learned_/vault/20260128_vault_balance_sync_update.md: V1/V2 금고 잔액 동기화 정책, 서비스/테스트 케이스 개선, pytest 통과
+- learned_/vault/20260127_vault_today_spent_shop_purchase_update.md, learned_/vault/20260127_vault_daily_spent_tracks_v2_shop_purchase.md: 상점 구매 시 vault_spent_today/total 누적/리셋, 원장 기록, V2User 동기화, 테스트 케이스 보강
+- learned_/vault/20260127_vault_withdrawal_modal_condition_delivery_fix.md: API 응답 필드 정규화, 프론트 타입/어댑터 보강, UI 검증
+- learned_/vault/20260127_dice_vault_deduction_fix.md: 게임 결과별 금고 차감 정책, 서비스 로직/테스트 케이스 보강
+각 diff의 적용일자/핫픽스/테스트 결과를 SoT 변경 이력에 기록함
 - **통합 컨텍스트**: [learned_/00_con.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
 - **도메인별 최신 Learned SoT**:
   - **Auth/User**: [auth.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/auth.md) | [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md)

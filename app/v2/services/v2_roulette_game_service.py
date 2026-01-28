@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import InvalidConfigError
+from app.core.exceptions import ForbiddenError, InvalidConfigError
 from app.models.feature import FeatureType
 from app.models.game_wallet import GameTokenType
 from app.schemas.roulette import (
@@ -220,6 +220,11 @@ class V2RouletteGameService:
 
         today = self._operational_date_kst(now_dt)
         self.feature_service.validate_feature_active(db, today, FeatureType.ROULETTE)
+
+        # === Strict Vault Policy: benefits_suspended 체크 ===
+        is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
+        if is_suspended:
+            raise ForbiddenError("BENEFITS_SUSPENDED")
 
         grade = self._resolve_grade(db, user_id)
         normalized_ticket_type = self._normalize_ticket_type(ticket_type)

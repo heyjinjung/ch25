@@ -425,15 +425,16 @@ strict-origin-when-cross-origin
 그리고 실제 1만으로 한도 수정해야하고
 금고 출금조건에 안 잡힘 
 
-
-----------------
-
-[] 게임결과 모달 및 애니메이션 
+✅ 게임결과 모달 및 애니메이션 
 ㄴ 꽝에는 실패용 모달 / 애니메이션 
 
 
-룰렛 
+BackgroundPaths 에셋으로 배경효과 
 
+Magic UI 적용:
+Meteors & Shimmer: 타워 미션 영역에 Meteors (유성 효과)를 적용하고, 미션 카드에는 shimmer 애니메이션이 적용되어 시각적 주목도를 높였습니다. 
+MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하여 미래지향적인 분위기를 조성했습니다.
+룰렛 
    등급 1: BIG_WIN
    조건: 금고에 적립되는 모든 포인트(POINT) 보상.
    조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
@@ -442,8 +443,6 @@ strict-origin-when-cross-origin
    모든포인트 : C:\Users\JAVIS\ch\ch25\public\assets\asset_coin_gold.webp
    골드키 : C:\Users\JAVIS\ch\ch25\public\assets\icons\goldkey.png
    다이아몬드티켓 : C:\Users\JAVIS\ch\ch25\public\assets\icons\diakey.png
-
-
 
    등급 2: NORMAL (일반 당첨)
    조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
@@ -455,14 +454,18 @@ strict-origin-when-cross-origin
    치킨 C:\Users\JAVIS\ch\ch25\public\assets\icons\chiken.png
    피자 C:\Users\JAVIS\ch\ch25\public\assets\icons\pizza2.png
    스타벅스 C:\Users\JAVIS\ch\ch25\public\assets\icons\takeaway-cup-dynamic-color.png
- 
-
 
    등급 3: FAIL, 아이콘 해골, 컬러 투명하지만 그레이, 다크그린 톤으로, 글래스모피즘
    조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매), + NONE 타입
    연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
 
+✅ 1. 403 에러 (BENEFITS_SUSPENDED)에 대하여
+네, 정상적인 동작입니다. 현재 적용된 **"강력한 금고 정책(Strict Vault Policy)"**에 따라, 최근 7일 내에 입금 내역이 없는 유저는 상점 이용 및 유료 게임 이용이 차단됩니다.
+원인: 테스트 중인 계정이 7일간 입금이 없는 '혜택 중단' 상태입니다.
+해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
+ㄴ 에러메시지 마련할것 
 
+[] 출석미션 반영 / 횟수 카운트 - 구플래쉬3 작업중 
 
 ---------------------------------------
 
@@ -472,8 +475,7 @@ strict-origin-when-cross-origin
 -----------------
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
---------------
-출석미션 반영 / 횟수 카운트 
+
 
 
 ----------
@@ -488,11 +490,7 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 
 
 -----------------
-1. 403 에러 (BENEFITS_SUSPENDED)에 대하여
-네, 정상적인 동작입니다. 현재 적용된 **"강력한 금고 정책(Strict Vault Policy)"**에 따라, 최근 7일 내에 입금 내역이 없는 유저는 상점 이용 및 유료 게임 이용이 차단됩니다.
-원인: 테스트 중인 계정이 7일간 입금이 없는 '혜택 중단' 상태입니다.
-해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
-ㄴ 에러메시지 마련할것 
+
 
 
 

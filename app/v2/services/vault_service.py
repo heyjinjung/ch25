@@ -48,7 +48,16 @@ class V2VaultService:
             raise ValueError("user not found")
 
         primary_balance = int((legacy_user.vault_locked_balance if legacy_user is not None else v2_user.vault_locked_balance) or 0)
-        new_balance = primary_balance + int(amount)
+        
+        # === Strict Vault Policy: 30k Cap for Inactive Users ===
+        is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
+        if is_suspended:
+            if primary_balance >= 30000:
+                # Already at or over cap, skip additional deposit
+                return primary_balance
+            new_balance = min(primary_balance + int(amount), 30000)
+        else:
+            new_balance = primary_balance + int(amount)
 
         if legacy_user is not None:
             legacy_user.vault_locked_balance = new_balance

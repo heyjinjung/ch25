@@ -1,17 +1,18 @@
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useRef, useMemo } from "react";
 import gsap from "gsap";
 import confetti from "canvas-confetti";
-import { Trophy, Gift, Ticket, Puzzle, Coins, ArrowRight } from "lucide-react";
+import { Skull, Ghost, ArrowRight } from "lucide-react";
 import { useSound } from "../../../hooks/useSound";
-import { EncryptedText } from "../ui/EncryptedText";
-import { getRewardItemLabel } from "../../constants/rewardItems";
+import { MatrixText } from "../ui/MatrixText";
+import { BackgroundPaths } from "../effects/BackgroundPaths";
+import { cn } from "../../lib/utils";
 
 interface RouletteResultModalProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly rewardType: string;
   readonly rewardAmount: number;
+  readonly rewardLabel: string;
 }
 
 export default function RouletteResultModal({
@@ -19,21 +20,34 @@ export default function RouletteResultModal({
   onClose,
   rewardType,
   rewardAmount,
+  rewardLabel,
 }: RouletteResultModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const shineRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { playRouletteStop, playBigWin, playSmallWin, playDiceLose, playTabTouch } = useSound();
+  const { 
+    playRouletteStop, 
+    playBigWin, 
+    playSmallWin, 
+    playDiceLose, 
+    playTabTouch,
+    triggerHapticStrong, 
+    triggerHapticSuccess,
+    triggerHapticFail,
+  } = useSound();
 
-  const rewardLabel = getRewardItemLabel(rewardType);
-  const isPoint = rewardType === "POINT" || rewardType === "CC_POINT";
-  const isRareTicket = rewardType === "TICKET" && (rewardLabel.toLowerCase().includes("gold") || rewardLabel.toLowerCase().includes("diamond"));
-  
   // Tier Classification Logic
-  const isBigWin = isPoint || isRareTicket;
-  const isFail = rewardType === "NONE" || rewardAmount <= 0;
-  const isNormal = !isBigWin && !isFail;
+  const { isBigWin, isNormal, isFail } = useMemo(() => {
+    const isPoint = rewardType === "POINT" || rewardType === "CC_POINT";
+    const isRareTicket = (rewardType === "TICKET" || rewardType.includes("KEY")) && 
+                        (rewardLabel.toLowerCase().includes("gold") || rewardLabel.toLowerCase().includes("diamond") || rewardLabel.toLowerCase().includes("dia"));
+    
+    if (isPoint || isRareTicket) return { isBigWin: true, isNormal: false, isFail: false };
+    if (rewardType === "NONE" || (rewardType === "TICKET" && rewardAmount <= 5)) {
+        return { isBigWin: false, isNormal: false, isFail: true };
+    }
+    return { isBigWin: false, isNormal: true, isFail: false };
+  }, [rewardType, rewardAmount, rewardLabel]);
 
   useEffect(() => {
     if (!modalRef.current || !contentRef.current) return;
@@ -42,7 +56,6 @@ export default function RouletteResultModal({
       playRouletteStop();
       const tl = gsap.timeline();
 
-      // 1. Entrance Animation
       tl.to(modalRef.current, {
         opacity: 1,
         pointerEvents: "auto",
@@ -51,7 +64,6 @@ export default function RouletteResultModal({
       });
 
       if (isBigWin) {
-        // Celestial Reveal (Emerald & Gold)
         tl.fromTo(
           contentRef.current,
           { scale: 0.6, opacity: 0, y: 50 },
@@ -59,24 +71,23 @@ export default function RouletteResultModal({
           "-=0.1"
         );
 
-        // 2s Intensive Confetti
         const duration = 2000;
         const end = Date.now() + duration;
-        const colors = ["#D2FD9C", "#FFD700", "#FFFFFF"];
+        const colors = ["#FF3B3B", "#FF8A00", "#FF007A", "#FFFFFF"];
         
         const frame = () => {
           confetti({
-            particleCount: 4,
-            angle: 65,
-            spread: 50,
+            particleCount: 5,
+            angle: 60,
+            spread: 55,
             origin: { x: 0, y: 0.7 },
             colors: colors,
             zIndex: 10000,
           });
           confetti({
-            particleCount: 4,
-            angle: 115,
-            spread: 50,
+            particleCount: 5,
+            angle: 120,
+            spread: 55,
             origin: { x: 1, y: 0.7 },
             colors: colors,
             zIndex: 10000,
@@ -85,152 +96,215 @@ export default function RouletteResultModal({
         };
         frame();
 
-        // GSAP Shine Effect
         if (shineRef.current) {
           gsap.fromTo(
             shineRef.current,
-            { x: "-150%", opacity: 0 },
-            { x: "150%", opacity: 0.4, duration: 1.8, ease: "power2.inOut", delay: 0.4 }
+            { x: "-200%", opacity: 0 },
+            { 
+              x: "200%", 
+              opacity: 0.4, 
+              duration: 2.2, 
+              repeat: -1, 
+              ease: "power2.inOut",
+              repeatDelay: 0.8 
+            }
           );
         }
-        tl.add(() => { playBigWin(); }, "-=0.5");
+        tl.add(() => { 
+            playBigWin();
+            triggerHapticStrong();
+        }, "-=0.5");
+
       } else if (isNormal) {
-        // Stable Victory (Emerald Chill)
         tl.fromTo(
           contentRef.current,
           { scale: 0.9, opacity: 0, y: 20 },
-          { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
+          { 
+            scale: 1, 
+            opacity: 1, 
+            y: 0, 
+            duration: 0.6, 
+            ease: "elastic.out(1, 0.75)" 
+          },
           "-=0.1"
         );
-        tl.add(() => { playSmallWin(); }, "-=0.3");
+        tl.add(() => { 
+            playSmallWin();
+            triggerHapticSuccess();
+        }, "-=0.4");
+
       } else {
-        // FAIL
         tl.fromTo(
           contentRef.current,
-          { opacity: 0, y: 10, scale: 0.98 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: "power2.out" },
+          { opacity: 0, y: -25, scale: 1.05 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.7, ease: "bounce.out" },
           "-=0.1"
         );
-        tl.add(() => { playDiceLose(); }, "-=0.2");
+        tl.add(() => { 
+            playDiceLose();
+            triggerHapticFail();
+        }, "-=0.4");
       }
     } else {
-      // Exit Animation
-      gsap.to(contentRef.current, { scale: 0.9, opacity: 0, y: 15, duration: 0.25, ease: "power2.in" });
-      gsap.to(modalRef.current, { opacity: 0, pointerEvents: "none", duration: 0.25, delay: 0.1 });
+      gsap.to(contentRef.current, { scale: 0.92, opacity: 0, y: 15, duration: 0.25, ease: "power2.in" });
+      gsap.to(modalRef.current, { opacity: 0, pointerEvents: "none", duration: 0.2, delay: 0.1 });
     }
-  }, [isOpen, isBigWin, isNormal, isFail, playRouletteStop, playBigWin, playSmallWin, playDiceLose]);
+  }, [isOpen, isBigWin, isNormal, isFail, playRouletteStop, playBigWin, playSmallWin, playDiceLose, triggerHapticStrong, triggerHapticSuccess, triggerHapticFail]);
 
   if (!isOpen) return null;
 
   const renderIcon = () => {
+    const iconClass = "w-28 h-28 object-contain select-none drop-shadow-2xl";
     if (isBigWin) {
-      return (
-        <div className="relative mb-6 drop-shadow-[0_0_40px_rgba(210,253,156,0.5)]">
-          <Trophy className="w-24 h-24 text-[#D2FD9C] animate-pulse" />
+      if (rewardType === "POINT" || rewardType === "CC_POINT") {
+          return <img src="/assets/asset_coin_gold.webp" alt="Points" className={iconClass} />;
+      }
+      if (rewardLabel.toLowerCase().includes("gold")) {
+          return <img src="/assets/icons/goldkey.png" alt="Gold Key" className={iconClass} />;
+      }
+      if (rewardLabel.toLowerCase().includes("diamond") || rewardLabel.toLowerCase().includes("dia")) {
+          return <img src="/assets/icons/diakey.png" alt="Diamond Ticket" className={iconClass} />;
+      }
+      return <img src="/assets/asset_coin_gold.webp" alt="Reward" className={iconClass} />;
+    }
+
+    if (isNormal) {
+      if (rewardLabel.includes("치킨")) return <img src="/assets/icons/chiken.png" alt="Chicken" className={iconClass} />;
+      if (rewardLabel.includes("피자")) return <img src="/assets/icons/pizza2.png" alt="Pizza" className={iconClass} />;
+      if (rewardLabel.includes("스타벅스") || rewardLabel.includes("커피") || rewardLabel.includes("컵")) {
+          return <img src="/assets/icons/takeaway-cup-dynamic-color.png" alt="Starbucks" className={iconClass} />;
+      }
+      return <Ghost className="w-24 h-24 text-emerald-400 opacity-70" />;
+    }
+
+    return (
+        <div className="relative">
+            <Skull className="w-24 h-24 text-[#4a5a4a] opacity-70 drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]" />
         </div>
-      );
-    }
-    if (rewardType.includes("GIFTICON") || rewardType.includes("VOUCHER")) {
-      return <Gift className="w-16 h-16 text-rose-400 mb-6 drop-shadow-[0_0_15px_rgba(251,113,133,0.4)]" />;
-    }
-    if (rewardType === "TICKET" || rewardType.includes("COIN")) {
-      return <Ticket className="w-16 h-16 text-emerald-400 mb-6 drop-shadow-[0_0_15px_rgba(16,185,129,0.4)]" />;
-    }
-    if (isPoint) {
-      return <Coins className="w-16 h-16 text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />;
-    }
-    return <Puzzle className="w-16 h-16 text-zinc-500 mb-6 grayscale opacity-40" />;
+    );
   };
 
-  const titleColor = isBigWin 
-    ? "text-[#D2FD9C] drop-shadow-[0_0_15px_rgba(210,253,156,0.6)]" 
-    : isNormal 
-      ? "text-emerald-400" 
-      : "text-zinc-500";
+  const cardStyle = cn(
+    "w-full max-w-[340px] rounded-[44px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.8)]",
+    "animate-shimmer", // Added shimmer animation class
+    isBigWin && "bg-gradient-to-br from-[#121214] via-[#3d1119] to-[#121214] border-red-500/30", 
+    isNormal && "bg-[#121214] border-[2px] border-[#FFD700]/50",
+    isFail && "bg-gradient-to-b from-[#121412] to-[#09090b] border-zinc-800/50"
+  );
 
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-lg opacity-0 pointer-events-none"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300"
     >
-      <div
-        ref={contentRef}
-        className={`w-full max-w-[340px] bg-[#121214] border border-white/10 rounded-[44px] p-8 flex flex-col items-center relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.7)] ${isFail ? "grayscale-[0.4]" : ""}`}
-      >
-        {/* Decorative Glossy Glow */}
-        <div className={`absolute top-0 inset-x-0 h-48 bg-gradient-to-b ${isBigWin ? "from-[#D2FD9C]/10" : isNormal ? "from-emerald-500/10" : "from-zinc-500/5"} to-transparent pointer-events-none`} />
-        
+      {/* Background Paths for ambient effect */}
+      <BackgroundPaths className="opacity-40" count={8} />
+
+      <div ref={contentRef} className={cardStyle}>
+        {/* Shimmer Overlay */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] z-0" />
+
+        {/* Header Shine for BIG WIN */}
         {isBigWin && (
           <div 
             ref={shineRef}
-            className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-20 pointer-events-none"
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-25 pointer-events-none z-10"
           />
         )}
 
         {/* Header Section */}
-        <div className="flex flex-col items-center gap-1 mb-8 z-10">
-          <span className={`text-[10px] font-black uppercase tracking-[0.5em] ${isBigWin ? "text-[#D2FD9C]/60" : "text-zinc-600"}`}>
-            Spin Reward
+        <div className="flex flex-col items-center gap-1.5 mb-8 z-20">
+          <span className={cn(
+            "text-[10px] font-black uppercase tracking-[0.45em]",
+            isBigWin ? "text-red-400/80" : isNormal ? "text-amber-500/80" : "text-zinc-600"
+          )}>
+            <MatrixText text="Spin Results" />
           </span>
-          <h2 className={`text-4xl font-black italic tracking-tighter ${titleColor}`}>
-            <EncryptedText 
-                key={`roulette-title-${isOpen}`} 
-                text={isBigWin ? "JACKPOT!" : isNormal ? "WINNER!" : "NEXT TIME"} 
+          <h2 className={cn(
+            "text-4xl font-black italic tracking-tighter",
+            isBigWin ? "text-red-100 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]" : isNormal ? "text-white" : "text-zinc-500"
+          )}>
+            <MatrixText 
+                text={isBigWin ? "CELESTIAL!" : isNormal ? "WINNER!" : "HARD LUCK"} 
             />
           </h2>
         </div>
 
-        {renderIcon()}
-
-        {/* Reward Section */}
-        <div className="flex flex-col items-center z-10 w-full px-4 mb-10">
-          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2 font-mono">
-            {rewardLabel}
-          </span>
-          <div className={`text-5xl font-black ${isBigWin ? "text-white" : "text-emerald-50"} text-center leading-tight tracking-tighter drop-shadow-xl`}>
-            {isPoint ? (
-              <div className="flex items-center justify-center gap-1">
-                <EncryptedText key={`amount-${rewardAmount}`} text={`+${rewardAmount.toLocaleString()}`} />
-                <span className="text-xl text-yellow-500 mt-2 font-black italic">CP</span>
-              </div>
-            ) : (
-              <EncryptedText key={`label-${rewardLabel}`} text={rewardLabel} />
+        {/* Center Visual */}
+        <div className="relative mb-8 z-20 flex justify-center items-center h-32">
+            {isBigWin && (
+                <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-orange-600/20 to-pink-600/20 blur-[60px] animate-pulse rounded-full" />
             )}
-          </div>
+            {renderIcon()}
         </div>
 
-        {/* Action Button */}
-        <div className="w-full flex flex-col gap-3 z-10">
+        {/* Prize Name Section */}
+        <div className="flex flex-col items-center z-20 w-full px-4 mb-9">
+            <div className={cn(
+                "text-2xl font-black text-center mb-1 drop-shadow-md",
+                isBigWin ? "text-white" : isNormal ? "text-zinc-100" : "text-zinc-500"
+            )}>
+                <MatrixText text={rewardLabel} />
+            </div>
+            
+            {rewardAmount > 0 && (
+                <div className="mt-3 flex items-center gap-2 bg-white/5 px-5 py-2.5 rounded-2xl border border-white/5 shadow-inner">
+                    <span className={cn("text-3xl font-black", isBigWin ? "text-red-400" : "text-emerald-400")}>
+                        +{rewardAmount.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pt-1">
+                        <MatrixText text={rewardType === 'TICKET' ? 'Ticket' : 'Points'} />
+                    </span>
+                </div>
+            )}
+        </div>
+
+        {/* Interaction Group */}
+        <div className="w-full flex flex-col gap-3.5 z-20">
           <button
             onClick={() => { playTabTouch(); onClose(); }}
-            className={`w-full h-16 rounded-[24px] ${isBigWin ? "bg-[#D2FD9C] hover:bg-[#E5FFC4] shadow-[0_0_30px_rgba(210,253,156,0.4)]" : "bg-emerald-500 hover:bg-emerald-400 text-white"} text-black font-black text-xl transition-all active:scale-95 flex items-center justify-center gap-2 group`}
+            className={cn(
+                "w-full h-16 rounded-[28px] font-black text-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2.5 group",
+                isBigWin ? "bg-gradient-to-r from-red-600 via-orange-600 to-pink-600 text-white shadow-[0_15px_30px_rgba(239,68,68,0.3)]" : 
+                isNormal ? "bg-[#FFD700] text-black shadow-lg hover:bg-amber-400" : 
+                "bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
+            )}
           >
-            <span className="tracking-tight">{isBigWin ? "GET REWARD" : "다시 하기"}</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <MatrixText text={isFail ? "TRY AGAIN" : "CLAIM NOW"} />
+            <ArrowRight size={22} className="group-hover:translate-x-1.5 transition-transform" />
           </button>
           
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white hover:bg-white/10 transition-all"
+            className="w-full h-12 rounded-2xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white transition-all hover:bg-white/10"
           >
-            닫기
+            <MatrixText text="Close" />
           </button>
-          
-          {isFail && (
-            <button
-               onClick={() => { playTabTouch(); onClose(); navigate("/"); }}
-               className="w-full h-10 rounded-xl bg-white/5 text-zinc-500 font-bold text-xs hover:text-white hover:bg-white/10 transition-all opacity-60 hover:opacity-100"
-            >
-              다른 게임 하러 가기
-            </button>
-          )}
         </div>
 
-        {/* Decorative corner glow */}
+        {/* Decorative Light Leaks */}
         {isBigWin && (
-          <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#D2FD9C]/10 blur-[60px] pointer-events-none rounded-full" />
+          <div className="absolute -top-20 -left-20 w-80 h-80 bg-red-600/10 blur-[120px] pointer-events-none rounded-full" />
         )}
       </div>
+
+      {/* Tailwind global style injection for shimmer if not in CSS */}
+      <style>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          background: linear-gradient(
+            to right,
+            transparent 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            transparent 100%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 3s infinite linear;
+        }
+      `}</style>
     </div>
   );
 }

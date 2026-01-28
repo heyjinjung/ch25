@@ -56,6 +56,7 @@ export default function RoulettePage() {
   const [showResultModal, setShowResultModal] = useState(false);
   const [lastWinAmount, setLastWinAmount] = useState(0);
   const [lastWinType, setLastWinType] = useState("POINT");
+  const [lastWinLabel, setLastWinLabel] = useState("");
 
   const { data: status } = useQuery({
     queryKey: ["v2-roulette-status", activeTab],
@@ -104,6 +105,7 @@ export default function RoulettePage() {
       setWinningSegment(data.game_data.segment.slot_index);
       setLastWinAmount(data.game_data.segment.reward_amount);
       setLastWinType(data.game_data.segment.reward_type);
+      setLastWinLabel(data.game_data.segment.label);
       setIsSpinning(true);
     },
   });
@@ -145,6 +147,7 @@ export default function RoulettePage() {
         onClose={handleModalClose}
         rewardType={lastWinType}
         rewardAmount={lastWinAmount}
+        rewardLabel={lastWinLabel}
       />
 
       {/* 1. Header Stats: Standardized Glassmorphism */}
