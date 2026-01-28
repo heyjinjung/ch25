@@ -66,11 +66,11 @@ export default function MissionsPage() {
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
                 <span className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">
-                  미션 가이드
+                  미션가이드
                 </span>
               </div>
               <h1 className="text-4xl font-black text-white tracking-tighter italic">
-                "CC"<span className="text-emerald-500">미션</span>
+                CC<span className="text-emerald-500">미션</span>
               </h1>
             </div>
             <button

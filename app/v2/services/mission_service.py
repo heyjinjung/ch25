@@ -329,7 +329,12 @@ class V2MissionService:
         if not progress or not progress.is_completed:
             return False, "NOT_ELIGIBLE", 0
 
-        if mission.requires_approval and str(progress.approval_status) != "APPROVED":
+        status_value = (
+            progress.approval_status.value
+            if hasattr(progress.approval_status, "value")
+            else str(progress.approval_status)
+        )
+        if mission.requires_approval and status_value != "APPROVED":
             return False, "APPROVAL_PENDING", 0
 
         if progress.is_claimed:

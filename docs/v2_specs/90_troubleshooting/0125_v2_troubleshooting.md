@@ -472,23 +472,13 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 
 연속스트릭모달
 골든아워 모달
------------------
-
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
- docker compose build --no-cache; docker compose up -d
 
 
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
-
-
-
-
-
-
-
-
+ docker compose build --no-cache; docker compose up -d
 
 -----------------
 

@@ -185,3 +185,41 @@ def test_v2_auth_token_triggers_login_mission_progress(client: TestClient, seed_
     assert any(int(p.current_value or 0) >= 1 for p in progress_rows), (
         "V2 로그인 후 LOGIN 미션 progress가 +1 이상 반영되어야 합니다."
     )
+
+
+def test_v2_auth_token_triggers_new_user_login_progress_non_reset(client: TestClient, seed_session: Session):
+    user = _seed_user(seed_session)
+    _seed_v2_user(seed_session, user)
+
+    mission = Mission(
+        title="신규 유저 로그인",
+        description="V2 로그인 시 NEW_USER LOGIN progress 생성",
+        category=MissionCategory.NEW_USER,
+        logic_key=f"test_new_user_login_{uuid.uuid4().hex}",
+        action_type="LOGIN",
+        target_value=1,
+        reward_type=MissionRewardType.DIAMOND,
+        reward_amount=1,
+        is_active=True,
+        auto_claim=False,
+    )
+    seed_session.add(mission)
+    seed_session.commit()
+
+    resp = client.post("/api/v2/auth/token", json={"cc_id": user.external_id})
+    assert resp.status_code == 200, resp.text
+
+    seed_session.expire_all()
+    progress_rows = (
+        seed_session.query(UserMission)
+        .filter(
+            UserMission.user_id == user.id,
+            UserMission.mission_id == mission.id,
+            UserMission.reset_date == "NON_RESET",
+        )
+        .all()
+    )
+    assert progress_rows, "V2 로그인 후 NEW_USER LOGIN 미션 progress row가 NON_RESET으로 생성되어야 합니다."
+    assert any(int(p.current_value or 0) >= 1 for p in progress_rows), (
+        "V2 로그인 후 NEW_USER LOGIN 미션 progress가 +1 이상 반영되어야 합니다."
+    )
