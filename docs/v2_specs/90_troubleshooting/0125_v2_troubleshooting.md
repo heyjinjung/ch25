@@ -470,6 +470,17 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 
 ✅ 미션허브 탭 디자인 수정
 ✅ 레벨페이지 배경과 아이콘 
+✅ 메인페이지 디렉션 체크 1차
+ㄴ 카드그리드 디렉션 위치 다양화
+ㄴ  cta 버튼 디렉션 링크 확인 
+
+✅ 레벨페이지 애니메이션 - 엘리베이터..
+✅ 레벨표시 한글조건 + 수량 
+✅ 룰렛페이지 세그먼트값 백엔드 데이터연동 
+   어드민 API에서 정렬 순서를 ticket_type, id DESC로 변경하여 각 ticket_type별로 가장 높은 ID가 먼저 오도록 합니다.
+
+
+레벨 1일 300한도 ?? 한도 폐기? 확인할 것 
 ---------------------------------------
 
 
@@ -482,10 +493,8 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
 c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
 c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
 
-레벨페이지 애니메이션 - 엘리베이터..
-메인페이지 디렉션 체크 1차
-ㄴ 카드그리드 디렉션 위치 다양화
-ㄴ  cta 버튼 디렉션 링크 확인 
+
+
 
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
@@ -727,3 +736,83 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 문서이름 : 20260126_mission_error_update.md
 
 
+
+
+마케팅 아이디어	⚪ 	skills/marketing-ideas
+마케팅 심리학	⚪	skills/marketing-psychology
+마이크로 SaaS 런처	⚪	skills/micro-saas-launcher
+
+
+
+
+페이지크로	⚪	skills/page-cro
+SEO콘텐츠창작자	⚪	skills/content-creator
+카피라이팅	⚪	skills/copywriting
+교정	⚪	skills/copy-editing
+브레인스토밍	⚪	skills/brainstorming
+출시 전략	⚪	skills/launch-strategy
+프로그래매틱 SEO	⚪	skills/programming-seo
+세그먼트-cdp	⚪	skills/segment-cdp
+SEO 기초	⚪	skills/seo-fundamentals
+SEO 감사	⚪	skills/seo-audit
+
+
+회원가입 흐름	⚪	skills/signup-flow-cro
+온보딩-cro	⚪	skills/onboarding-cro
+모바일 디자인	⚪	skills/mobile-design
+모바일 게임	⚪	skills/game-development/mobile-games
+2D 게임	⚪	skills/game-development/2d-games
+게임 아트	⚪	skills/game-development/game-art
+게임 오디오	⚪	skills/game-development/game-audio
+게임 디자인	⚪	skills/game-development/game-design
+게임 개발	⚪	skills/game-development
+
+시니어 풀스택	⚪	skills/senior-fullstack
+텔레그램 봇 빌더	⚪	skills/telegram-bot-builder
+텔레그램 미니 앱	⚪	skills/telegram-mini-app
+프로덕션 코드 감사	⚪	skills/production-code-audit
+도구 전략	⚪	skills/free-tool-strategy
+대안	⚪	skills/competitor-alternatives
+컴퓨터 사용가능한 에이전트	⚪	skills/computer-use-agents
+데이터베이스 설계	⚪	skills/database-design
+플릿	⚪	skills/documentation-templates
+백앤드 개발 가이드라인	⚪	skills/backend-dev-guidelines
+백앤드 패턴	⚪	skills/cc-skill-backend-patterns
+클린 코드	⚪	skills/clean-code
+파일 정리 도구	⚪	skills/file-organizer
+카이젠	⚪	skills/kaizen
+체계적 디버깅	⚪ skills/systematic-debugging
+
+스키마 마크업	⚪	skills/schema-markup
+스크롤 경험	⚪	skills/scroll-experience
+보안 스캔 도구	⚪	skills/scanning-tools
+보안 검토	⚪	skills/cc-skill-security-review
+파워셸-윈도우	⚪	skills/powershell-windows
+해킹 방법론	⚪	skills/ethical-hacking-methodology
+
+프런트엔드 디자인	⚪	skills/frontend-design
+프런트엔드 개발 가이드라인	⚪	skills/frontend-dev-guidelines
+프런트엔드 패턴	⚪	skills/cc-skill-frontend-patterns
+자바스크립트 마스터리	⚪	skills/javascript-mastery
+린트 및 유효성 검사	⚪	skills/lint-and-validate
+팝업크로	⚪	skills/popup-cro
+리액트 패턴	⚪	skills/react-patterns
+react-ui-patterns	⚪	skills/react-ui-patterns
+타입스크립트 전문가	⚪	skills/typescript-expert
+ui-ux-pro-max	⚪	skills/ui-ux-pro-max
+아티팩트 빌더	⚪	skills/web-artifacts-builder
+웹 디자인 가이드라인	⚪	skills/web-design-guidelines
+웹 게임	⚪	skills/game-development/web-games
+웹 성능 최적화	⚪	skills/web-performance-optimization
+웹앱 테스트	⚪	skills/webapp-testin
+
+
+커뮤니케이션즈	⚪	Twilio를 사용하여 SMS 메시지, 음성 통화, WhatsApp Business API 및 사용자 인증(2FA)과 같은 커뮤니케이션 기능을 구축하세요. 간단한 알림부터 복잡한 IVR 시스템 및 다중 채널 인증에 이르기까지 모든 범위를 지원합니다. 규정 준수, 사용량 제한 및 오류 처리에 특히 중점을 둡니다. Twilio를 사용하여 SMS를 전송하거나, 문자 메시지를 보내거나, 음성 통화를 하거나, 전화번호를 인증할 때 사용하세요.	skills/twilio-communications
+
+
+타입스크립트 전문가	⚪	skills/typescript-expert
+ui-ux-pro-max	⚪	skills/ui-ux-pro-max
+바이럴 생성기 빌더	⚪	skills/viral-generator-builder
+ct 모범 사례	⚪	skills/react-best-practices
+
+글쓰기 계획	⚪	skills/writing-plans

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, Gamepad2, ExternalLink, Loader2 } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 import AnimatedNumber from "../../components/common/AnimatedNumber";
 import Button from "../../components/common/Button";
@@ -13,6 +13,27 @@ import "./LevelTowerPage.css";
 const NODE_ICON_CLEARED = "/assets/season_pass/icon_node_cleared.webp";
 const NODE_ICON_CURRENT = "/assets/season_pass/icon_node_current.webp";
 const NODE_ICON_LOCKED = "/assets/season_pass/icon_node_locked.webp";
+
+const getRewardLabel = (type: string, amount: number) => {
+  switch (type) {
+    case "ROULETTE_TICKET":
+      return `룰렛티켓 ${amount}`;
+    case "DICE_TICKET":
+      return `다이스티켓 ${amount}`;
+    case "LOTTERY_TICKET":
+      return `복권티켓 ${amount}`;
+    case "GOLD_KEY_TICKET":
+      return `골드키티켓 ${amount}`;
+    case "DIAMOND_TICKET":
+      return `다이아티켓 ${amount}`;
+    case "VAULT":
+      return `${amount} P`;
+    case "DIAMOND":
+      return `다이아 ${amount}`;
+    default:
+      return `${amount}`;
+  }
+};
 
 const LevelTowerPage: React.FC = () => {
   const navigate = useNavigate();
@@ -125,38 +146,47 @@ const LevelTowerPage: React.FC = () => {
         <div className="relative mx-auto w-full max-w-sm">
           {/* Tower Floors */}
           <div className="relative flex flex-col gap-0 border-2 border-white/15 bg-gradient-to-b from-zinc-900/90 to-black/95 rounded-2xl overflow-hidden backdrop-blur-md">
-            {view.visibleFloors.map((floor) => {
-              const isCurrent = floor.level === view.currentLevel;
-              const isCompleted =
-                floor.is_claimed || floor.level < view.currentLevel;
-              const isLocked = floor.level > view.currentLevel + 1;
-              const isNext = floor.level === view.currentLevel + 1;
+            <AnimatePresence mode="popLayout" initial={false}>
+              {view.visibleFloors.map((floor) => {
+                const isCurrent = floor.level === view.currentLevel;
+                const isCompleted =
+                  floor.is_claimed || floor.level < view.currentLevel;
+                const isLocked = floor.level > view.currentLevel + 1;
+                const isNext = floor.level === view.currentLevel + 1;
 
-              const nodeIconSrc =
-                isCurrent || isNext
+                const nodeIconSrc = isCurrent
                   ? NODE_ICON_CURRENT
                   : isCompleted
                     ? NODE_ICON_CLEARED
                     : NODE_ICON_LOCKED;
 
-              const nodeIconAlt =
-                isCurrent || isNext
+                const nodeIconAlt = isCurrent
                   ? "current"
                   : isCompleted
                     ? "cleared"
                     : "locked";
 
-              return (
-                <div
-                  key={floor.level}
-                  className={cn(
-                    "relative px-3 py-3 border-b border-white/5 transition-all duration-500",
-                    isCurrent && "bg-emerald-500/10",
-                    isCompleted && "bg-white/5 opacity-60",
-                    isLocked && "opacity-30",
-                    isNext && "bg-amber-500/5",
-                  )}
-                >
+                const rewardText = getRewardLabel(
+                  floor.reward_type,
+                  floor.reward_amount,
+                );
+
+                return (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    transition={{ duration: 0.3 }}
+                    key={floor.level}
+                    className={cn(
+                      "relative px-3 py-3 border-b border-white/5 transition-all duration-500",
+                      isCurrent && "bg-emerald-500/10",
+                      isCompleted && "bg-white/5 opacity-60",
+                      isLocked && "opacity-30",
+                      isNext && "bg-amber-500/5",
+                    )}
+                  >
                   <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
@@ -195,7 +225,7 @@ const LevelTowerPage: React.FC = () => {
                             isCurrent ? "text-white" : "text-white/50",
                           )}
                         >
-                          {floor.reward_label}
+                          {rewardText}
                         </p>
                       </div>
                     </div>
@@ -241,9 +271,10 @@ const LevelTowerPage: React.FC = () => {
                       </div>
                     </div>
                   )}
-                </div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         </div>
       </div>

@@ -229,3 +229,104 @@ D) Missing info (필요 시 1회만 요청)
 
 없음. (현재 에러/코드 위치가 확정이라 바로 패치 가능)
 인라인 스타일 금지 규칙을 만족시키기 위해, “라벨 반지름/폭을 버킷으로 고정 + 8개 회전 각도는 8개 클래스 리터럴로 분기” 방식으로 바꾸는 PATCH를 진행해도 될까요? (승인해주시면 바로 최소 diff로 고칩니다.)
+
+
+
+# Roulette Wheel Admin Config Sync Fix
+
+## Problem
+룰렛 휠에 표시되는 보상값이 어드민 설정값과 일치하지 않음.
+4종 룰렛 (ROULETTE_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, TRIAL_TICKET) 각각 다른 컨피그 필요.
+
+## Root Cause (확정)
+
+**어드민과 프론트엔드의 Config 선택 로직 불일치:**
+
+| 영역 | 선택 기준 | 결과 |
+|------|-----------|------|
+| **어드민** | `ticketType`만 | 첫 번째 매칭 config 수정 |
+| **프론트엔드 API** | `ticketType` + `grade` | 유저 등급에 맞는 config 조회 |
+
+**문제 시나리오:**
+- 같은 ticket_type에 grade가 다른 여러 config 존재 (VIP, COMMON 등)
+- 어드민이 VIP config 수정 → 일반 유저(COMMON)는 다른 config를 봄
+
+## 해결 방법 (구현 완료 ✅)
+
+**grade 개념 폐기** → ticket_type당 하나의 config만 조회
+
+### 수정된 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `app/v2/services/game_config_service.py` | `get_active_roulette_config()`에서 grade 필터 제거 |
+| `app/v2/services/v2_roulette_game_service.py` | `_resolve_grade()` deprecated 처리 (항상 COMMON 반환) |
+
+### 핵심 변경 사항
+
+**Before (game_config_service.py):**
+```python
+config = db.query(V2RouletteConfig).filter(
+    V2RouletteConfig.is_active.is_(True),
+    V2RouletteConfig.ticket_type.in_(ticket_aliases),
+    V2RouletteConfig.grade == grade,  # ❌ grade 필터
+).first()
+```
+
+**After:**
+```python
+config = db.query(V2RouletteConfig).filter(
+    V2RouletteConfig.is_active.is_(True),
+    V2RouletteConfig.ticket_type.in_(ticket_aliases),
+    # grade 필터 제거 ✅
+).first()
+```
+
+## 검증 방법
+
+```bash
+# 1. Docker 컨테이너 재시작
+docker compose restart xmas-backend
+
+# 2. DB에서 활성 config 확인
+docker compose exec xmas-backend python -c "
+from app.db.session import SessionLocal
+from app.v2.models.v2_roulette import V2RouletteConfig, V2RouletteSegment
+
+db = SessionLocal()
+for config in db.query(V2RouletteConfig).filter(V2RouletteConfig.is_active == True).all():
+    print(f'ID={config.id}, ticket_type={config.ticket_type}')
+    for seg in sorted(config.segments, key=lambda s: s.slot_index):
+        print(f'  slot {seg.slot_index}: {seg.label} ({seg.reward_type}:{seg.reward_amount})')
+"
+
+# 3. 프론트엔드 하드 리프레시 (Ctrl+F5)
+```
+
+## 주의 사항
+
+- ticket_type당 **하나의 활성 config만** 있어야 함
+- 중복 config가 있으면 `id DESC`로 최신 것 사용됨
+- 어드민에서 저장 후 프론트엔드에 즉시 반영됨 (캐시 30초)
+문제: 어드민은 grade 순으로 정렬된 첫 번째 config를 편집하고, 유저 페이지는 id DESC로 가장 높은 ID의 config를 사용합니다.
+
+해결책: 어드민 API의 정렬 순서를 id DESC로 변경하여 유저 페이지와 동일하게 맞춥니다.
+
+
+어드민 API 정렬 순서를 id DESC로 변경
+프론트엔드에서 가장 높은 ID config 선택하도록 수정
+검증 및 테스트
+
+변경된 파일 4개
+파일	변경 내용
+game_config_service.py	grade 필터 제거, id DESC 정렬 추가
+v2_roulette_game_service.py	_resolve_grade() deprecated (항상 COMMON)
+game_config_routes.py	어드민 API 정렬을 ticket_type, id DESC로 변경
+RouletteConfigPage.tsx	가장 높은 ID config 선택하도록 수정
+수정 후 예상 동작
+Ticket Type	어드민 편집 ID	유저 페이지 ID	상태
+ROULETTE_TICKET	ID 5	ID 5	✅ 일치
+DIAMOND_TICKET	ID 7	ID 7	✅ 일치
+TRIAL_TICKET	ID 6	ID 6	✅ 일치
+GOLD_KEY_TICKET	ID 8	ID 8	✅ 일치
+적용 방법

@@ -223,34 +223,34 @@ export default function HomePage() {
           <div
             className="bento-tile bento-tile--square"
             onClick={() => {
-            playTabTouch();
-            navigate("/vault");
+              playTabTouch();
+              navigate("/vault");
             }}
           >
-          <img
-            src="/assets/icon_alarm_unread.webp"
-            alt="vault"
-            className="tile-img-small"
-          />
-           <span className="tile-title">금고</span>
+            <img
+              src="/assets/icon_alarm_unread.webp"
+              alt="vault"
+              className="tile-img-small"
+            />
+            <span className="tile-title">금고</span>
           </div>
-        {/* Item 4: Square Card (All Games) */}
+          {/* Item 4: Square Card (All Games) */}
           <div
-             className="bento-tile bento-tile--square"
-             onClick={() => {
-             playTabTouch();
-             navigate("/v2/missions?cat=LEVEL");
+            className="bento-tile bento-tile--square"
+            onClick={() => {
+              playTabTouch();
+              navigate("/v2/missions?cat=LEVEL");
             }}
           >
-          <img
-             src="/assets/season_pass/icon_node_cleared.webp"
-             alt="all"
-             className="tile-img-small"
-          />
-           <span className="tile-title">레벨</span>
-          </div> 
+            <img
+              src="/assets/season_pass/icon_node_cleared.webp"
+              alt="all"
+              className="tile-img-small"
+            />
+            <span className="tile-title">레벨 미션</span>
+          </div>
         </div>
-          
+
         {/* New 3D CTA Buttons Row */}
         <div className="home-cta-row flex gap-4 mt-6">
           <button

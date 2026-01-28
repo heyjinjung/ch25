@@ -42,6 +42,7 @@ from app.api.routes import (
 	ws_events,
 	exchange,
 	retention_intervention,
+	level_xp,
 )
 from app.v2.api import dev_login
 
@@ -89,4 +90,5 @@ api_router.include_router(ws_feed.router)
 api_router.include_router(ws_events.router)
 api_router.include_router(exchange.router)
 api_router.include_router(retention_intervention.router)
+api_router.include_router(level_xp.router)
 api_router.include_router(v2_router, prefix="/api/v2")

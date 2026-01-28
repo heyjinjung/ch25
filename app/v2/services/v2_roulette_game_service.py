@@ -81,20 +81,13 @@ class V2RouletteGameService:
 
     @staticmethod
     def _resolve_grade(db: Session, user_id: int) -> str:
-        # V2 roulette grades: COMMON/VIP/WHALE/AT_RISK
-        # If missing or unknown, safely fall back to COMMON.
-        try:
-            from app.models.user_segment import UserSegment
+        """Deprecated: grade 개념 폐기됨 (2026-01).
 
-            legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-            row = db.query(UserSegment).filter(UserSegment.user_id == legacy_user_id).first()
-            seg = (row.segment if row else "COMMON") or "COMMON"
-            seg = str(seg).upper()
-            if seg in {"COMMON", "VIP", "WHALE", "AT_RISK"}:
-                return seg
-            return "COMMON"
-        except Exception:
-            return "COMMON"
+        호환성을 위해 메서드는 유지하되 항상 COMMON 반환.
+        ticket_type당 하나의 config만 존재하므로 grade 구분 불필요.
+        """
+        _ = db, user_id  # unused, kept for signature compatibility
+        return "COMMON"
 
     @staticmethod
     def _pick_weighted_segment(segments: Iterable[V2RouletteSegment]) -> V2RouletteSegment:

@@ -15,7 +15,8 @@ const LotteryPage: React.FC = () => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [revealedPrize, setRevealedPrize] = useState<any | null>(null);
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
-  const { startLotteryBgm, startMainBgm } = useSound();
+  const { startLotteryBgm, startMainBgm, playLottoPlay, stopLottoPlay } =
+    useSound();
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Ref array for multiple balls
@@ -76,11 +77,11 @@ const LotteryPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    startLotteryBgm();
     return () => {
+      stopLottoPlay();
       startMainBgm();
     };
-  }, [startLotteryBgm, startMainBgm]);
+  }, [startMainBgm, stopLottoPlay]);
 
   // ============================================================================
   // Play Handler
@@ -91,6 +92,8 @@ const LotteryPage: React.FC = () => {
 
     try {
       triggerHaptic("heavy");
+      startLotteryBgm();
+      playLottoPlay();
       setIsPlaying(true);
 
       // Intensive mixing animation for ALL balls
@@ -113,6 +116,8 @@ const LotteryPage: React.FC = () => {
       setTimeout(() => {
         setIsPlaying(false);
         setIsRevealed(true);
+        stopLottoPlay();
+        startMainBgm();
 
         const prize = result.game_data?.prize;
         if (prize) {

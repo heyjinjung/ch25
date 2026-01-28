@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import RouletteFrame from "./RouletteFrame";
 import RouletteTextureOverlay from "./RouletteTextureOverlay";
 
@@ -13,20 +14,11 @@ interface Segment {
 
 const FIGMA_SLICE_LAYOUT = [
   // Figma (1189:616) relative coords, converted to Tailwind arbitrary % classes.
+  // Correct Clockwise Order starting from 12:00 (Top Center) for Index 0
   {
-    src: "/assets/roulette/Vector4.svg",
-    alt: "Slice Vector4",
-    className: "left-[50%] top-[50%] w-[38.32%] h-[38.31%]",
-  },
-  {
-    src: "/assets/roulette/Vector5.svg",
-    alt: "Slice Vector5",
-    className: "left-[11.69%] top-[50%] w-[38.32%] h-[38.31%]",
-  },
-  {
-    src: "/assets/roulette/Vector6.svg",
-    alt: "Slice Vector6",
-    className: "left-[11.69%] top-[11.69%] w-[38.32%] h-[38.31%]",
+    src: "/assets/roulette/Vector10.svg",
+    alt: "Slice Vector10",
+    className: "left-[31.89%] top-[8.35%] w-[36.21%] h-[41.64%]",
   },
   {
     src: "/assets/roulette/Vector7.svg",
@@ -39,19 +31,29 @@ const FIGMA_SLICE_LAYOUT = [
     className: "left-[50.00%] top-[31.89%] w-[41.64%] h-[36.21%]",
   },
   {
-    src: "/assets/roulette/Vector9.svg",
-    alt: "Slice Vector9",
-    className: "left-[8.36%] top-[31.89%] w-[41.64%] h-[36.21%]",
-  },
-  {
-    src: "/assets/roulette/Vector10.svg",
-    alt: "Slice Vector10",
-    className: "left-[31.89%] top-[8.35%] w-[36.21%] h-[41.64%]",
+    src: "/assets/roulette/Vector4.svg",
+    alt: "Slice Vector4",
+    className: "left-[50%] top-[50%] w-[38.32%] h-[38.31%]",
   },
   {
     src: "/assets/roulette/Vector11.svg",
     alt: "Slice Vector11",
     className: "left-[31.89%] top-[50.00%] w-[36.21%] h-[41.64%]",
+  },
+  {
+    src: "/assets/roulette/Vector5.svg",
+    alt: "Slice Vector5",
+    className: "left-[11.69%] top-[50%] w-[38.32%] h-[38.31%]",
+  },
+  {
+    src: "/assets/roulette/Vector9.svg",
+    alt: "Slice Vector9",
+    className: "left-[8.36%] top-[31.89%] w-[41.64%] h-[36.21%]",
+  },
+  {
+    src: "/assets/roulette/Vector6.svg",
+    alt: "Slice Vector6",
+    className: "left-[11.69%] top-[11.69%] w-[38.32%] h-[38.31%]",
   },
 ] as const;
 
@@ -202,17 +204,11 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
     setRotation(spinTo);
     spinCountRef.current += 1;
 
+    // Fallback safety (in case animation event misses)
     fallbackTimeoutRef.current = setTimeout(() => {
       onSpinEnd?.();
-    }, spinDurationMs + 50);
+    }, spinDurationMs + 100);
   }, [anglePerSegment, isSpinning, selectedIndex, spinDurationMs, onSpinEnd]);
-
-  useEffect(() => {
-    const node = wheelRef.current;
-    if (!node) return;
-    node.style.transform = `rotate(${rotation + visualBaseOffsetDeg}deg)`;
-    node.style.transition = `transform ${spinDurationMs}ms cubic-bezier(0.1, 0, 0.1, 1)`;
-  }, [rotation, spinDurationMs, visualBaseOffsetDeg]);
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center">
@@ -226,9 +222,15 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
       <RouletteFrame>
         {/* Rotating Wheel Container */}
-        <div
-          ref={wheelRef}
-          className="relative h-full w-full rounded-full transition-transform will-change-transform"
+        {/* REFACTORED: Use framer-motion instead of inline styles for lint compliance */}
+        <motion.div
+           ref={wheelRef as any}
+           className="relative h-full w-full rounded-full"
+           animate={{ rotate: rotation + visualBaseOffsetDeg }}
+           transition={{ 
+             duration: spinDurationMs / 1000, 
+             ease: [0.1, 0, 0.1, 1] 
+           }}
         >
           {/* User Requested Texture Overlay - Clean Black Pattern */}
           <RouletteTextureOverlay />
@@ -279,7 +281,8 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
           {/* Labels - Mathematically positioned */}
           {Array.from({ length: segmentCount }).map((_, index) => {
-            const segment = segments[index];
+            // SAFE LOOKUP: backend might return unsorted or sparse segments
+            const segment = segments.find(s => s.slot_index === index);
             return (
               <div
                 key={`lbl-${index}`}
@@ -292,7 +295,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
                     }`}
                   >
                     <span
-                      className={`block text-[13.8px] leading-[1.02] font-black text-white uppercase text-center line-clamp-2 [overflow-wrap:anywhere] px-1 rounded tracking-normal ${
+                      className={`block text-[13.8px] leading-[1.02] font-black text-white uppercase text-center line-clamp-2 break-words px-1 rounded tracking-normal ${
                         LABEL_MAX_WIDTH_CLASSES[labelLayout.maxWidthIdx]
                       }`}
                     >
@@ -313,7 +316,7 @@ const RouletteWheel: React.FC<RouletteWheelProps> = ({
               className="w-[20.2%] h-[20.2%] pointer-events-none"
             />
           </div>
-        </div>
+        </motion.div>
       </RouletteFrame>
     </div>
   );

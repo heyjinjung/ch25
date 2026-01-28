@@ -134,8 +134,13 @@ class V2GameConfigService:
         db: Session,
         *,
         ticket_type: str = "ROULETTE_TICKET",
-        grade: str = "COMMON",
+        grade: str = "COMMON",  # Deprecated: grade 개념 폐기됨, 호환성 유지용 파라미터
     ) -> tuple[V2RouletteConfig, list[V2RouletteSegment]]:
+        """ticket_type 기준으로 활성 룰렛 config 조회.
+
+        Note: grade 파라미터는 더 이상 사용되지 않음 (2026-01 폐기).
+        ticket_type당 하나의 config만 존재해야 함.
+        """
         ticket_aliases = {ticket_type}
         legacy_aliases = {
             "ROULETTE_TICKET": "ROULETTE_COIN",
@@ -149,27 +154,16 @@ class V2GameConfigService:
         if ticket_type in reverse_aliases:
             ticket_aliases.add(reverse_aliases[ticket_type])
 
+        # grade 필터 제거 - ticket_type만으로 조회
         config = (
             db.query(V2RouletteConfig)
             .filter(
                 V2RouletteConfig.is_active.is_(True),
                 V2RouletteConfig.ticket_type.in_(ticket_aliases),
-                V2RouletteConfig.grade == grade,
             )
             .order_by(V2RouletteConfig.id.desc())
             .first()
         )
-        if config is None and grade != "COMMON":
-            config = (
-                db.query(V2RouletteConfig)
-                .filter(
-                    V2RouletteConfig.is_active.is_(True),
-                    V2RouletteConfig.ticket_type.in_(ticket_aliases),
-                    V2RouletteConfig.grade == "COMMON",
-                )
-                .order_by(V2RouletteConfig.id.desc())
-                .first()
-            )
         if config is None:
             raise InvalidConfigError("V2_ROULETTE_CONFIG_MISSING")
 

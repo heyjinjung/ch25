@@ -170,10 +170,12 @@ def get_roulette_configs(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    # ticket_type별로 가장 높은 ID가 먼저 오도록 정렬
+    # 유저 API(id DESC)와 동일한 config를 어드민이 편집하도록 보장
     configs = (
         db.query(RouletteConfig)
         .options(selectinload(RouletteConfig.segments))
-        .order_by(RouletteConfig.grade)
+        .order_by(RouletteConfig.ticket_type, RouletteConfig.id.desc())
         .all()
     )
 
@@ -219,7 +221,7 @@ def get_roulette_configs(
         configs = (
             db.query(RouletteConfig)
             .options(selectinload(RouletteConfig.segments))
-            .order_by(RouletteConfig.grade)
+            .order_by(RouletteConfig.ticket_type, RouletteConfig.id.desc())
             .all()
         )
 

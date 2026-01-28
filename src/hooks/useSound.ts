@@ -9,7 +9,7 @@ const SOUND_SOURCES = {
     MAIN: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
     BATTLE: "/assets/sounds/bgm/battle_theme.wav",
     VAULT: "/assets/sounds/bgm/Sketchbook 2025-12-11_BREAKDOWN.ogg",
-    LOTTERY: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
+    LOTTERY: "/assets/sounds/bgm/Red Curtain.ogg",
     ROULETTE: "/assets/sounds/bgm/Sketchbook 2025-12-03 LOOP.ogg",
   },
   SFX: {
@@ -39,6 +39,8 @@ export const useSound = () => {
 
   // Refs for stop control of looping sounds (룰렛 효과음만 루프 제어)
   const rouletteSpinRef = useRef<Howl | null>(null);
+  const lottoPlayRef = useRef<Howl | null>(null);
+  const roulettePlayRef = useRef<Howl | null>(null);
 
   const playClick = useCallback(() => {
     // can be used for generic UI clicks
@@ -69,23 +71,47 @@ export const useSound = () => {
   );
 
   // 복권(로또) 플레이 효과음: 플레이 버튼~결과 모달까지
-  const playLottoPlay = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.LOTTO_PLAY, { volume: 1.0, loop: true }),
-    [playSfx],
-  );
+  const playLottoPlay = useCallback(() => {
+    if (lottoPlayRef.current) {
+      lottoPlayRef.current.stop();
+      lottoPlayRef.current = null;
+    }
+    lottoPlayRef.current = playSfx(SOUND_SOURCES.SFX.LOTTO_PLAY, {
+      volume: 1.0,
+      loop: true,
+    });
+    return lottoPlayRef.current;
+  }, [playSfx]);
   const stopLottoPlay = useCallback(() => {
-    // Lotto_Ball_Roll.ogg 효과음 정지
-    // Howl 인스턴스 관리 필요시 추가 구현
+    const howl = lottoPlayRef.current;
+    if (!howl) return;
+    howl.fade(howl.volume(), 0, 250);
+    setTimeout(() => {
+      howl.stop();
+      lottoPlayRef.current = null;
+    }, 260);
   }, []);
 
   // 룰렛 플레이 효과음: 플레이 버튼~결과 모달까지
-  const playRoulettePlay = useCallback(
-    () => playSfx(SOUND_SOURCES.SFX.ROULETTE_PLAY, { volume: 1.0, loop: true }),
-    [playSfx],
-  );
+  const playRoulettePlay = useCallback(() => {
+    if (roulettePlayRef.current) {
+      roulettePlayRef.current.stop();
+      roulettePlayRef.current = null;
+    }
+    roulettePlayRef.current = playSfx(SOUND_SOURCES.SFX.ROULETTE_PLAY, {
+      volume: 1.0,
+      loop: true,
+    });
+    return roulettePlayRef.current;
+  }, [playSfx]);
   const stopRoulettePlay = useCallback(() => {
-    // rou-roll.mp3 효과음 정지
-    // Howl 인스턴스 관리 필요시 추가 구현
+    const howl = roulettePlayRef.current;
+    if (!howl) return;
+    howl.fade(howl.volume(), 0, 250);
+    setTimeout(() => {
+      howl.stop();
+      roulettePlayRef.current = null;
+    }, 260);
   }, []);
 
   const playRouletteStop = useCallback(

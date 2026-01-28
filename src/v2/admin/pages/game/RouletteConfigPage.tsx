@@ -58,8 +58,14 @@ export default function RouletteConfigPage() {
 
   useEffect(() => {
     if (configs) {
-      // ticket_type만으로 필터링 (grade 무시)
-      const config = configs.find((c) => c.ticketType === selectedTicketType);
+      // 같은 ticket_type 중 가장 높은 ID를 가진 config 선택 (유저 API와 동일)
+      const matchingConfigs = configs.filter(
+        (c) => c.ticketType === selectedTicketType,
+      );
+      const config =
+        matchingConfigs.length > 0
+          ? matchingConfigs.sort((a, b) => b.id - a.id)[0]
+          : undefined;
       if (config) {
         setLocalConfig({
           ...config,
