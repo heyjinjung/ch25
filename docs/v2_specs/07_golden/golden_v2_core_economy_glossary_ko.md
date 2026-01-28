@@ -4,7 +4,7 @@
 <!-- PATCH_NOTE 2026-01-18: 금고/지갑/보상/레거시 규칙 보강 및 용어 정리. -->
 
 **문서 타입**: 용어집(Glossary) / V2 Core SoT
-**버전**: v2.0 (V2 Init)
+**버전**: v2.2 (V2 Init + Ops/Realtime Expansion)
 **작성일**: 2026-01-18
 **상태**: SoT (Source of Truth)
 **프로젝트**: Golden V2
@@ -115,7 +115,39 @@ Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT �
 
 ---
 
-## 6. 변경 이력
+## 6. SoT 값 확장 (2026-01-28)
+
+### 6.1 골든아워(Golden Hour) 용어 및 키 매핑
+
+| 용어 | 키워드 | SoT(내부/저장) | SoT(통신/이벤트) | 설명 |
+| :--- | :--- | :--- | :--- | :--- |
+| 골든아워 활성 | `Golden Hour Active` | `GoldenHourConfig.enabled` | `state: START|STOP` | 활성화 상태 |
+| 배율 | `Multiplier` | `GoldenHourConfig.multiplier` | `bonus_rate` | 동일 의미. 저장은 `multiplier`, 이벤트/작업 Payload는 `bonus_rate`를 사용 |
+| 지속시간(분) | `Duration Minutes` | (Derived) | `duration_mins` | 이벤트 기반 운영 시 사용 |
+| 수동제어 | `Manual Override` | `GoldenHourConfig.manual_override` | - | `AUTO`/`FORCE_ON`/`FORCE_OFF` |
+
+### 6.2 운영/CRM 워크플로우 상태 용어 (Intervention Status)
+
+| 상태 | 키워드 | 의미 |
+| :--- | :--- | :--- |
+| `PENDING_APPROVAL` | 승인 대기 | 트리거 감지 후 즉시 적재되며 운영자 승인 전까지 발송/지급 금지 |
+| `APPROVED` | 승인됨 | 발송/지급 가능한 상태 |
+| `REJECTED` | 거절됨 | 운영자 거절로 종료 |
+| `SENT` | 발송완료 | 실제 지급/푸시까지 완료된 최종 상태 |
+
+### 6.3 실시간 이벤트/관제 채널 용어
+
+| 채널 | 키워드 | 설명 |
+| :--- | :--- | :--- |
+| `golden:v2:events:game` | Game Stream | 게임 이벤트 스트림 |
+| `golden:v2:events:intervention` | Intervention Stream | 개입 이벤트 스트림 |
+| `golden:v2:admin:queue` | Approval Queue | 승인 대기열 갱신 스트림 |
+| `golden:v2:config:updates` | Config Updates | 설정/상태 변경 스트림(골든아워 포함) |
+
+---
+
+## 7. 변경 이력
+- v2.2 (2026-01-28, GitHub Copilot): 골든아워/승인상태/실시간 채널 SoT 용어 확장 및 키 매핑 명시.
 - v2.1 (2026-01-18, GitHub Copilot): 용어/매핑/레거시 규칙 보강.
 - v2.0 (2026-01-18): Golden V2 프로젝트 출범에 맞춰 이관 및 아키텍처 컨텍스트 추가.
 - v1.1 (2026-01-16): 기존 `2026_core_economy_glossary_ko.md`.

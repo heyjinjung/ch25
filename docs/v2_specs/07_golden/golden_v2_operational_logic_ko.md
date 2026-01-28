@@ -1,5 +1,5 @@
 문서 타입: 운영 정책/규격
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-19
 작성자: Antigravity Agent
 대상: 운영/개발 팀
@@ -55,5 +55,33 @@ SoT `v2_ops_plan_execution_schema`와 연동되는 시각화 요구사항이다.
 
 ---
 
-## 5. 변경 이력
+## 5. SoT 확장 (2026-01-28)
+
+### 5.1 Ops Plan Action Kinds (실행 엔진 연동)
+
+| Kind(SoT) | 설명 | 처리 방식(의도) |
+| :--- | :--- | :--- |
+| `INVENTORY_GRANT_ALL` | 전체 유저 일괄 지급 | Async Worker |
+| `TARGETED_ITEM_GRANT` | 타겟 리스트 대상 지급 | Async Worker |
+| `GOLDEN_HOUR` | 골든아워 상태 제어 | Redis Pub/Sub |
+| `TARGETLIST_BROADCAST` | 타겟 리스트 상태/뱃지 마킹 | Sync/Async |
+| `MESSAGE_TEMPLATE` | 메시지 템플릿 발송 | Async Worker |
+
+### 5.2 Pub/Sub 채널 SoT (운영 관점)
+
+| 채널 | 목적 |
+| :--- | :--- |
+| `golden:v2:admin:queue` | 승인 대기열(운영자 UI) 실시간 갱신 |
+| `golden:v2:config:updates` | 설정/상태 변경 즉시 반영(골든아워 포함) |
+
+### 5.3 Admin 실시간 스트림 엔드포인트 SoT
+
+| 구분 | 엔드포인트 | 설명 |
+| :--- | :--- | :--- |
+| Admin WebSocket | `/api/admin/ws/golden/events` | 대시보드 이벤트 스트림 |
+
+---
+
+## 6. 변경 이력
+- v1.1 (2026-01-28, GitHub Copilot): OpsPlan Action Kinds/채널/엔드포인트 SoT 확장(운영 관제 정합).
 - v1.0 (2026-01-19): 최초 작성. 기존 `04_report`, `02_tech_spec` 내용을 기반으로 표준화.

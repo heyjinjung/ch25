@@ -1,5 +1,5 @@
 문서 타입: 정책/규격
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-19
 작성자: Antigravity Agent
 대상: 기획/개발/운영 팀
@@ -70,5 +70,34 @@ graph TD
 - **API**: 개입 실행은 V2 API(`docs/v2_specs/03_api`)를 통해서만 수행된다.
 - **Admin**: 모든 설정과 로그는 어드민 대시보드(`docs/v2_specs/05_ops`)에 통합된다.
 
-## 7. 변경 이력
+---
+
+## 7. SoT 확장 (2026-01-28)
+
+### 7.1 Loop Architecture의 실체(채널/엔드포인트)
+
+| 단계 | SoT(채널/엔드포인트) | 요약 |
+| :--- | :--- | :--- |
+| Collect | `ch25_events` → `golden:v2:events:game` | 원본 이벤트를 V2 표준 스트림으로 브릿지 |
+| Analyze | `golden:v2:events:game` | 워커/서비스가 구독해 트리거 판단 |
+| Act | `golden:v2:events:intervention` | 개입 이벤트 발행(유저 푸시) |
+| Admin Queue | `golden:v2:admin:queue` | 승인 대기열 실시간 갱신(Human-in-the-loop) |
+| Config | `golden:v2:config:updates` | 운영 설정/상태 변경 즉시 반영(골든아워 포함) |
+
+### 7.2 Human-in-the-loop(승인) 통합 규칙
+
+- 트리거 감지 즉시 자동 지급/발송 금지.
+- 감지 시점에 `PENDING_APPROVAL`로 적재하고 운영자 승인 후에만 발송/지급.
+- 상태 SoT: `PENDING_APPROVAL` → `APPROVED`/`REJECTED` → `SENT`.
+
+### 7.3 Admin 실시간 관제 엔드포인트 SoT
+
+| 구분 | 엔드포인트 | 대상 |
+| :--- | :--- | :--- |
+| Admin WebSocket | `/api/admin/ws/golden/events` | 어드민 대시보드 |
+
+---
+
+## 8. 변경 이력
+- v1.1 (2026-01-28, GitHub Copilot): 채널/엔드포인트/승인루프 SoT 확장(운영 플로우 정합).
 - v1.0 (2026-01-19, Antigravity Agent): 문서 생성. 기존 마케팅 문서를 SoT로 승격.

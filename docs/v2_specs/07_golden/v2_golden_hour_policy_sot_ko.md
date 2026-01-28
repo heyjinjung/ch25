@@ -1,5 +1,5 @@
 문서 타입: 게임 정책/로직
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-19
 작성자: Antigravity Agent
 대상: 기획/개발/운영 팀
@@ -52,5 +52,44 @@
 - 운영자는 어드민 패널(`admin_vault_ops`)을 통해 실시간으로 `manual_override`를 변경할 수 있다.
 - 변경 내역은 `OpsLog`에 기록되어야 한다.
 
-## 6. 변경 이력
+---
+
+## 6. SoT 확장 (2026-01-28)
+
+### 6.1 설정 업데이트 전파 채널 SoT
+
+| 채널 | 목적 | Consumer |
+| :--- | :--- | :--- |
+| `golden:v2:config:updates` | 골든아워 상태/배율 변경을 실시간 전파 | Game Engine / TMA / Admin |
+
+### 6.2 Ops Plan (Kind=GOLDEN_HOUR) Payload SoT
+
+| 필드 | 타입 | 설명 |
+| :--- | :--- | :--- |
+| `state` | string | `START` 또는 `STOP` |
+| `bonus_rate` | number | 배율(= multiplier). 예: `1.5`, `2.0` |
+| `duration_mins` | int | 지속시간(분). 예: `60` |
+
+예시:
+```json
+{"state": "START", "bonus_rate": 1.5, "duration_mins": 60}
+```
+
+### 6.3 키/필드 명칭 매핑 SoT
+
+| 구분 | SoT 키/필드 | 비고 |
+| :--- | :--- | :--- |
+| 저장/설정 | `GoldenHourConfig.multiplier` | 정책 스키마(3. 설정 스키마) |
+| 실행/전파 | `bonus_rate` | Ops Plan/이벤트 전파에서 사용 |
+
+### 6.4 어드민 UI 경로 SoT
+
+| 화면 | 경로 |
+| :--- | :--- |
+| 골든아워 관리 | `/admin/game/golden-hour` |
+
+---
+
+## 7. 변경 이력
+- v1.1 (2026-01-28, GitHub Copilot): Config Updates 채널/OpsPlan Payload/키 매핑/어드민 경로 SoT 확장.
 - v1.0 (2026-01-19, Antigravity Agent): 최초 정의.

@@ -1,7 +1,7 @@
 # Golden V2 실시간 아키텍처 (Real-time Architecture)
 
 **문서 타입**: 아키텍처 / V2 Core SoT
-**버전**: v2.0
+**버전**: v2.1
 **작성일**: 2026-01-18
 **상태**: SoT (Source of Truth)
 **프로젝트**: Golden V2
@@ -100,5 +100,38 @@ graph LR
 
 ---
 
-## 6. 변경 이력
+## 6. SoT 확장 (2026-01-28)
+
+### 6.1 Redis Pub/Sub 채널 SoT (확장)
+
+| 채널 | 방향 | 목적 | Producer → Consumer |
+| :--- | :--- | :--- | :--- |
+| `ch25_events` | Upstream | 원본 게임 이벤트 스트림(브릿지 입력) | Game → GoldenEventWorker |
+| `golden:v2:events:game` | Game Event | V2 게임 이벤트 스트림(표준) | Game/Gateway → Analysis/Intervention |
+| `golden:v2:events:intervention` | Intervention Event | 개입 이벤트 스트림(표준) | Worker/Service → API(User Push) |
+| `golden:v2:admin:queue` | Admin Queue | 승인 대기열 실시간 갱신(반자동 CRM) | GoldenInterventionService → Admin WS Bridge |
+| `golden:v2:config:updates` | Config Update | 설정/상태 변경 즉시 반영(예: 골든아워) | OpsPlan(Kind=GOLDEN_HOUR) → Game/TMA/Admin |
+
+### 6.2 Redis 키 SoT (확장)
+
+| 키 패턴 | 타입 | 의미 |
+| :--- | :--- | :--- |
+| `golden:v2:cooldown:{trigger_id}:{user_id}` | String/TTL | 트리거별/유저별 쿨다운 상태 |
+| `golden:v2:user:{user_id}:psych_state` | String | 유저 심리 상태(예: FRUSTRATED) |
+| `golden:v2:user:{user_id}:session_start_balance` | Int | 세션 시작 잔액 |
+
+> [!NOTE]
+> 본 문서의 3.2 키 예시(`user:{id}:...`)는 개념 표기로 유지하되, **V2 Golden 실시간 상태 키의 표준 SoT는 `golden:v2:user:{user_id}:...` prefix를 사용**합니다.
+
+### 6.3 실시간 스트림 엔드포인트 SoT (확장)
+
+| 구분 | 엔드포인트 | 대상 | 비고 |
+| :--- | :--- | :--- | :--- |
+| User WebSocket | `/api/v2/ws/golden` | TMA/유저 | 개입/보상/상태 푸시 |
+| Admin WebSocket | `/api/admin/ws/golden/events` | 어드민 | 이벤트 스트림(대시보드) |
+
+---
+
+## 7. 변경 이력
+- v2.1 (2026-01-28, GitHub Copilot): Pub/Sub 채널/키/엔드포인트 SoT 확장(OpsPlan/CRM/Config Updates 반영).
 - v2.0 (2026-01-18): Golden V2 실시간 아키텍처 정의 (최초 작성).
