@@ -605,5 +605,12 @@ class V2MissionService:
     ) -> None:
         return
 
+    def check_all_daily_completed(self, user_id: int) -> None:
+        """Check if all daily missions are completed and potentially grant a bonus.
+        Implementation TODO: Define bonus mission and grant logic.
+        """
+        return
+
+
     def _maybe_grant_streak_day_tickets(self, *, user: User, play_day: date) -> None:
         return

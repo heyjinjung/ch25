@@ -24,7 +24,7 @@ export const DailyStreakBoard: React.FC<DailyStreakBoardProps> = ({
         <div className="flex flex-col">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500 fill-orange-500 animate-pulse" />
-            Daily Streak
+            연속출석
           </h2>
           <p className="text-xs text-zinc-400 mt-1">
             매일 접속하고 추가 보상을 획득하세요
@@ -55,7 +55,7 @@ export const DailyStreakBoard: React.FC<DailyStreakBoardProps> = ({
                     ? "bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
                     : isToday
                       ? "bg-white/5 border-white/20 animate-pulse"
-                      : "bg-white/[0.02] border-white/5"
+                      : "bg-white/[0.02] border-white/5",
                 )}
               >
                 {isCompleted ? (
@@ -70,13 +70,13 @@ export const DailyStreakBoard: React.FC<DailyStreakBoardProps> = ({
                   <span
                     className={cn(
                       "text-xs font-bold",
-                      isToday ? "text-white" : "text-zinc-700"
+                      isToday ? "text-white" : "text-zinc-700",
                     )}
                   >
                     {day}
                   </span>
                 )}
-                
+
                 {/* Shine Effect for completed */}
                 {isCompleted && (
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent translate-y-full group-hover:translate-y-[-200%] transition-transform duration-700" />

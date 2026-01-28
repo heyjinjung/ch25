@@ -125,7 +125,9 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                 {isClaimable ? (
                   <EncryptedText text="오늘의 보상 도착!" />
                 ) : (
-                  <>🔥 <EncryptedText text={`${currentStreak}일 출석 중!`} /></>
+                  <>
+                    🔥 <EncryptedText text={`${currentStreak}일 출석 중!`} />
+                  </>
                 )}
               </h2>
             </div>
@@ -325,12 +327,12 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                     일 연속 플레이 중!
                   </p>
                   <p className="text-[11px] font-medium text-white/40">
-                    매일 자정(00:00) 기준 갱신
+                    매일 오전 (09:00) 기준갱신
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-amber-500">
-                    Next Target
+                    다음목표
                   </p>
                   <p className="text-lg font-black text-white">
                     Day {currentStreak + 1}
@@ -350,9 +352,9 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
               {isClaiming ? (
                 <RefreshCw className="animate-spin" />
               ) : isClaimable ? (
-                "🎁 오늘의 보상 받기"
+                "🎁 오늘의 보상받기"
               ) : currentStreak === 0 ? (
-                "게임 하고 보상 시작하기 🎮"
+                "게임하고 보상받기 🎮"
               ) : (
                 "내일 다시 만나요!"
               )}
