@@ -13,19 +13,19 @@
 
 ### 1.1 대상 항목 및 우선순위
 
-| 우선순위 | 항목 | Phase | 설명 |
-| :--- | :--- | :--- | :--- |
-| **1 (High)** | **Circuit Breaker 연동** | Phase 2 | 과다 지급 사고 방지를 위한 운영 안전장치 |
-| **2 (High)** | **Daily Nudge Scheduler** | Phase 2+ | 리텐션 유지를 위한 일일 무료 토큰 자동 발송 |
-| **3 (Medium)** | **Rollback Policy** | Phase 3 | 잘못된 개입(Intervention) 회수 자동화 |
-| **4 (Medium)** | **A/B Test Framework** | Phase 3+ | 개입 시나리오별 효과 측정 및 최적화 |
-| **5 (Low)** | **ROI Calculator Service** | Phase 4 | 개입 후 24시간 내 행동 추적 및 ROI 계산 |
+| 우선순위 | 항목 | Phase | 상태 | 설명 |
+| :--- | :--- | :--- | :--- | :--- |
+| **-** | **Circuit Breaker** | Phase 2 | ✅ 완료 | 과다 지급 사고 방지를 위한 운영 안전장치 |
+| **-** | **Latency Survival** | Phase 4 | ✅ 완료 | 입금 지연 시 유저 증거 기반 선지급 및 제재 예외 |
+| **-** | **Daily Nudge Scheduler** | Phase 2+ | ✅ 완료 | 리텐션 유지를 위한 일일 무료 토큰 자동 발송 |
+| **1 (High)** | **Rollback Policy** | Phase 3 | 대기 | 잘못된 개입(Intervention) 회수 자동화 |
+| **2 (Medium)** | **A/B Test Framework** | Phase 3+ | 대기 | 개입 시나리오별 효과 측정 및 최적화 |
+| **3 (Low)** | **ROI Calculator Service** | Phase 4 | 대기 | 개입 후 24시간 내 행동 추적 및 ROI 계산 |
 
 ---
 
 ## 2. 상세 구현 가이드 (Detailed Implementation Guide)
 
-### 2.1 [High] Circuit Breaker 연동 (운영 안전장치)
 
 **목적**: 시스템 오류나 어드민 실수로 인해 과도한 재화가 풀리는 것을 물리적으로 차단합니다.
 
@@ -40,19 +40,35 @@
     - `CIRCUIT_LIMIT_TICKET`: 시간당 500장
 - **SoT 참조**: `docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md`
 
-### 2.2 [High] Daily Nudge Scheduler (데일리 넛지)
+### 2.2 [Completed] Daily Nudge Scheduler (데일리 넛지) ✅
 
 **목적**: 유저가 앱을 잊지 않도록 매일 정해진 시간에 "작은 보상" 알림을 보냅니다.
 
+- **구현 완료** (2026-01-29):
+    - **Service**: `app/v2/services/daily_nudge_service.py`
+    - **Tasks**: `app/v2/tasks/daily_nudge_tasks.py`
+    - **Admin API**: `/api/v2/admin/daily-nudge/*`
+    - **Tests**: `tests/v2/test_daily_nudge_service.py`
+
 - **기술 스펙**:
-    - **Worker**: Celery Beat 스케줄러 (`app.worker.celery_app`)
-    - **Schedule**: 매일 12:00, 18:00 KST (Configurable)
-    - **Targeting**: 최근 3일 내 접속했으나 오늘 접속 안 한 유저 (`V2UserActivity` 참조).
+    - **Worker**: Celery Beat 스케줄러 (설정 파일 제공)
+    - **Schedule**: 매일 12:00, 18:00 KST
+    - **Targeting**:
+        - 최근 3일 내 접속했으나 오늘 접속 안 한 유저
+        - `UserActivity.last_login_at` 기반 조회
     - **Action**:
-        - 1) `InventoryService`를 통해 `TRIAL_TICKET` 1장 지급.
-        - 2) 텔레그램 메시지 발송 ("오늘의 무료 티켓이 도착했습니다!").
+        - 1) `V2InventoryService.grant_ticket()`을 통해 `ROULETTE` 티켓 1장 지급
+        - 2) 넛지 발송 결과 로그 기록
 - **제약 사항**:
-    - `benefits_suspended` (7일 무입금) 유저는 대상에서 제외.
+    - `benefits_suspended` (7일 무입금) 유저는 대상에서 자동 제외
+    - 관리자는 `skip_suspension_check=True`로 제재 유저에게도 발송 가능
+
+- **Admin API 엔드포인트**:
+    - `GET /api/v2/admin/daily-nudge/targets` - 넛지 대상자 조회
+    - `POST /api/v2/admin/daily-nudge/send` - 수동 넛지 발송 (단일 유저)
+    - `POST /api/v2/admin/daily-nudge/batch` - 넛지 배치 실행 (수동 트리거)
+    - `GET /api/v2/admin/daily-nudge/statistics` - 넛지 통계 조회
+    - `POST /api/v2/admin/daily-nudge/trigger-async` - 비동기 배치 실행
 
 ### 2.3 [Medium] Rollback Policy (개입 회수)
 

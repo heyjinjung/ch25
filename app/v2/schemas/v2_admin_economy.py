@@ -280,3 +280,58 @@ class TicketLogDto(BaseModel):
     nickname: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+# Latency Survival Admin Schemas
+class AdminLatencyEvidenceDto(BaseModel):
+    id: int
+    userId: int = Field(..., validation_alias="user_id")
+    nickname: str | None = None
+    txId: str = Field(..., validation_alias="tx_id")
+    claimedAmount: int = Field(..., validation_alias="claimed_amount")
+    status: str
+    rewardJson: dict = Field(..., validation_alias="reward_json")
+    adminMemo: str | None = Field(None, validation_alias="admin_memo")
+    matchedLogId: int | None = Field(None, validation_alias="matched_log_id")
+    createdAt: datetime = Field(..., validation_alias="created_at")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class AdminLatencyVerifyRequest(BaseModel):
+    log_id: int
+
+
+class AdminLatencyRejectRequest(BaseModel):
+    reason: str
+
+
+# Circuit Breaker Admin Schemas
+class CircuitBreakerGlobalStatus(BaseModel):
+    current: int
+    limit: int
+    isBreached: bool = Field(..., validation_alias="is_breached")
+
+
+class CircuitBreakerConfigStatus(BaseModel):
+    globalLimit: int = Field(..., validation_alias="global_limit")
+    userLimit: int = Field(..., validation_alias="user_limit")
+
+
+class AdminCircuitBreakerStatusDto(BaseModel):
+    assetType: str = Field(..., validation_alias="asset_type")
+    global_status: CircuitBreakerGlobalStatus = Field(..., alias="global")
+    config: CircuitBreakerConfigStatus
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class AdminCircuitBreakerResetRequest(BaseModel):
+    asset_type: str
+    limit_type: str  # GLOBAL, USER
+    user_id: int | None = None
+
+
+class AdminCircuitBreakerLimitUpdateRequest(BaseModel):
+    asset_type: str
+    global_limit: int | None = None
+    user_limit: int | None = None

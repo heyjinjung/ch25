@@ -275,6 +275,12 @@ class V2AdminUserService:
         except Exception:
             TelegramUnlinkRequest = None  # type: ignore
 
+        from app.v2.models.auth_event import V2UserAuthEvent
+        from app.v2.models.refresh_token import V2UserRefreshToken
+        from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
+        from app.v2.models.v2_shop_order import V2ShopOrder
+        from app.v2.models.v2_user_retention_state import V2UserRetentionState
+
         # Game Wallet / Tokens
         db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == user_id).delete(synchronize_session=False)
         db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).delete(synchronize_session=False)
@@ -306,6 +312,7 @@ class V2AdminUserService:
         db.query(VaultEarnEvent).filter(VaultEarnEvent.user_id == user_id).delete(synchronize_session=False)
         db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.user_id == user_id).delete(synchronize_session=False)
         db.query(VaultStatus).filter(VaultStatus.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2UserDepositEvidence).filter(V2UserDepositEvidence.user_id == user_id).delete(synchronize_session=False)
 
         # Activity
         db.query(UserActivityEvent).filter(UserActivityEvent.user_id == user_id).delete(synchronize_session=False)
@@ -327,6 +334,12 @@ class V2AdminUserService:
 
         # Messaging
         db.query(AdminMessageInbox).filter(AdminMessageInbox.user_id == user_id).delete(synchronize_session=False)
+
+        # V2 Auth / Tokens
+        db.query(V2UserAuthEvent).filter(V2UserAuthEvent.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2UserRefreshToken).filter(V2UserRefreshToken.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2ShopOrder).filter(V2ShopOrder.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2UserRetentionState).filter(V2UserRetentionState.user_id == user_id).delete(synchronize_session=False)
 
         # Idempotency / Telegram
         db.query(UserIdempotencyKey).filter(UserIdempotencyKey.user_id == user_id).delete(synchronize_session=False)

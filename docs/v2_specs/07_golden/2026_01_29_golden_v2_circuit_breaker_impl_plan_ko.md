@@ -109,17 +109,17 @@ class CircuitBreakerService:
 ## 5. 작업 목록 (Task Breakdown)
 
 ### 5.1 Service Layer
-- [ ] `app/v2/core/circuit_breaker.py` 모듈 생성 (Redis 로직).
-- [ ] `app/v2/core/exceptions.py`에 `CircuitBreakerError` 추가.
-- [ ] `VaultService`, `InventoryService`에 연동 코드 삽입.
+- [x] `app/v2/services/circuit_breaker_service.py` 모듈 생성 (Redis 로직).
+- [x] `app/v2/core/exceptions.py`에 `CircuitBreakerError` 추가.
+- [x] `VaultService`, `InventoryService`에 연동 코드 삽입.
 
 ### 5.2 Config & Admin
-- [ ] `v2_server_config` 테이블에 기본 임계치 JSON 데이터 추가 (Migration).
-- [ ] Admin API (`reset`, `update_limit`) 구현.
+- [x] `v2_server_config` 테이블에 기본 임계치 JSON 데이터 추가 (Migration).
+- [ ] Admin API (`reset`, `update_limit`) 구현 (Service 레벨은 완료).
 
 ### 5.3 Test
-- [ ] **Unit Test**: Mock Redis를 사용하여 한도 초과 시 Error 발생 확인.
-- [ ] **Integration Test**: 실제 API 호출로 연이어 지급 시도 -> 차단 확인.
+- [x] **Unit Test**: Mock Redis를 사용하여 한도 초과 시 Error 발생 확인 (`tests/v2/test_circuit_breaker.py`).
+- [x] **Integration Test**: 실제 API 호출로 연이어 지급 시도 -> 차단 확인 (`tests/v2_tests/phase5_public/test_golden_v2_integrated.py`).
 
 ---
 

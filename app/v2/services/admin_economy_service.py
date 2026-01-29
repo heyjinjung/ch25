@@ -48,3 +48,65 @@ class V2AdminEconomyService:
         db.add(withdrawal)
         db.flush()
         return withdrawal
+
+    @staticmethod
+    def list_latency_evidences(db: Session, status: str = None) -> List[Any]:
+        from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
+        from app.models.user import User
+        
+        query = db.query(V2UserDepositEvidence, User.nickname).outerjoin(User, V2UserDepositEvidence.user_id == User.id)
+        if status:
+            query = query.filter(V2UserDepositEvidence.status == status)
+        
+        rows = query.order_by(V2UserDepositEvidence.created_at.desc()).all()
+        result = []
+        for evidence, nickname in rows:
+            # Attach nickname for DTO
+            evidence.nickname = nickname
+            result.append(evidence)
+        return result
+
+    @staticmethod
+    def verify_latency_evidence(db: Session, evidence_id: int, log_id: int, admin_id: int) -> None:
+        from app.v2.services.latency_survival_service import LatencySurvivalService
+        LatencySurvivalService.verify_evidence(db, evidence_id, log_id)
+
+    @staticmethod
+    def reject_latency_evidence(db: Session, evidence_id: int, reason: str, admin_id: int) -> None:
+        from app.v2.services.latency_survival_service import LatencySurvivalService
+        LatencySurvivalService.reject_evidence(db, evidence_id, reason)
+
+    @staticmethod
+    def get_circuit_breaker_status(db: Session) -> List[dict]:
+        from app.v2.services.circuit_breaker_service import CircuitBreakerService
+        from app.core.config import get_settings
+        
+        settings = get_settings()
+        asset_types = ["VAULT", "TICKET"] # Basic supported types
+        
+        result = []
+        for asset in asset_types:
+            status = CircuitBreakerService.get_status(db, asset)
+            config = CircuitBreakerService.get_config(db, asset)
+            
+            result.append({
+                "asset_type": asset,
+                "global": {
+                    "current": status["global_current"],
+                    "limit": status["global_limit"],
+                    "is_breached": status["is_global_breached"]
+                },
+                "config": {
+                    "global_limit": config["global_limit"],
+                    "user_limit": config["user_limit"]
+                }
+            })
+        return result
+
+    @staticmethod
+    def reset_circuit_breaker(db: Session, asset_type: str, limit_type: str, user_id: int = None) -> None:
+        from app.v2.services.circuit_breaker_service import CircuitBreakerService
+        if limit_type == "GLOBAL":
+            CircuitBreakerService.reset_global_limit(db, asset_type)
+        elif limit_type == "USER" and user_id:
+            CircuitBreakerService.reset_user_limit(db, asset_type, user_id)

@@ -8,6 +8,12 @@ import {
   getAdminProducts,
   updateProductStatus,
   updateProductPrice,
+  getAdminLatencyEvidences,
+  verifyLatencyEvidence,
+  rejectLatencyEvidence,
+  getAdminCircuitBreakerStatus,
+  resetCircuitBreaker,
+  updateCircuitBreakerLimit,
 } from "../api/adminApi";
 import type { AdminWithdrawalDto } from "../api/adminApi";
 
@@ -93,6 +99,78 @@ export function useAdminUpdateProductPrice() {
       updateProductPrice(id, price),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+    },
+  });
+}
+// ============================================================================
+// Latency Survival Hooks
+// ============================================================================
+
+export function useAdminLatencyEvidences(params?: { status?: string }) {
+  return useQuery({
+    queryKey: ["admin", "latency-evidences", params?.status],
+    queryFn: () => getAdminLatencyEvidences(params),
+  });
+}
+
+export function useAdminVerifyLatencyEvidence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, logId }: { id: number; logId: number }) =>
+      verifyLatencyEvidence(id, logId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "latency-evidences"] });
+    },
+  });
+}
+
+export function useAdminRejectLatencyEvidence() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) =>
+      rejectLatencyEvidence(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "latency-evidences"] });
+    },
+  });
+}
+
+// ============================================================================
+// Circuit Breaker Hooks
+// ============================================================================
+
+export function useAdminCircuitBreakerStatus() {
+  return useQuery({
+    queryKey: ["admin", "circuit-breaker", "status"],
+    queryFn: getAdminCircuitBreakerStatus,
+    refetchInterval: 10000, // 10초마다 갱신
+  });
+}
+
+export function useAdminResetCircuitBreaker() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      asset_type: string;
+      limit_type: "GLOBAL" | "USER";
+      user_id?: number | null;
+    }) => resetCircuitBreaker(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "circuit-breaker"] });
+    },
+  });
+}
+
+export function useAdminUpdateCircuitBreakerLimit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      asset_type: string;
+      global_limit?: number;
+      user_limit?: number;
+    }) => updateCircuitBreakerLimit(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "circuit-breaker"] });
     },
   });
 }

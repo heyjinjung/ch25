@@ -119,6 +119,16 @@ export default function AdminLayout() {
           label: "티켓/토큰 관리",
           path: "/admin/inventory/tickets",
         },
+        {
+          icon: Settings,
+          label: "지연 극복 (Latency)",
+          path: "/admin/economy/latency",
+        },
+        {
+          icon: Settings,
+          label: "서킷 브레이커 (Safety)",
+          path: "/admin/economy/circuit-breaker",
+        },
         { icon: Store, label: "상점/미션", path: "/admin/economy/shop" },
       ],
     },

@@ -2,7 +2,7 @@
 
 **문서 타입**: 기술 사양서 (Specification)
 **작성일**: 2026-01-29
-**상태**: Draft
+**상태**: ✅ Verified (Integrated Test Pass)
 **프로젝트**: Golden V2 (Phase 4-Early)
 
 ---
@@ -134,3 +134,13 @@
     - **UI 구조**: Split View (좌: 증거 목록 / 우: 입금 로그).
     - **Smart Match**: 선택한 증거와 유사한 입금 로그(금액, 시간)를 하이라이팅.
     - **Action**: 승인(Match) 및 반려(Reject/Clawback) 버튼 권한 제어.
+
+---
+
+## 7. 이행 현황 (Implementation Status)
+
+- [x] **Core Model**: `v2_user_deposit_evidence` 정의 및 Alembic 적용.
+- [x] **Service Logic**: `submit_evidence`, 선지급, Bypass 로직 구현.
+- [x] **Integration**: `VaultService.is_benefits_suspended` 필터 연동.
+- [x] **Verification**: `test_golden_v2_integrated.py`를 통한 시나리오 검증 완료.
+- [ ] **Admin UI**: 증거-로그 매칭 관제 화면 (To-be).

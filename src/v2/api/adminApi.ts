@@ -2253,3 +2253,95 @@ export const getWithdrawalDetails = async (
   );
   return response.data;
 };
+
+// ============================================================================
+// Latency Survival API
+// ============================================================================
+
+export interface AdminLatencyEvidenceDto {
+  id: number;
+  userId: number;
+  nickname?: string;
+  txId: string;
+  claimedAmount: number;
+  status: "PENDING" | "PROVISIONAL" | "VERIFIED" | "REJECTED";
+  rewardJson: Record<string, any>;
+  adminMemo?: string;
+  matchedLogId?: number;
+  createdAt: string;
+}
+
+export const getAdminLatencyEvidences = async (params?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<AdminLatencyEvidenceDto[]> => {
+  const response = await v2Client.get<AdminLatencyEvidenceDto[]>(
+    "/api/v2/admin/economy/latency-evidences",
+    { params },
+  );
+  return response.data;
+};
+
+export const verifyLatencyEvidence = async (
+  id: number,
+  logId: number,
+): Promise<void> => {
+  await v2Client.post(`/api/v2/admin/economy/latency-evidences/${id}/verify`, {
+    log_id: logId,
+  });
+};
+
+export const rejectLatencyEvidence = async (
+  id: number,
+  reason: string,
+): Promise<void> => {
+  await v2Client.post(`/api/v2/admin/economy/latency-evidences/${id}/reject`, {
+    reason,
+  });
+};
+
+// ============================================================================
+// Circuit Breaker API
+// ============================================================================
+
+export interface AdminCircuitBreakerStatusDto {
+  assetType: string;
+  global: {
+    current: number;
+    limit: number;
+    isBreached: boolean;
+  };
+  config: {
+    globalLimit: number;
+    userLimit: number;
+  };
+}
+
+export const getAdminCircuitBreakerStatus = async (): Promise<
+  AdminCircuitBreakerStatusDto[]
+> => {
+  const response = await v2Client.get<AdminCircuitBreakerStatusDto[]>(
+    "/api/v2/admin/economy/circuit-breaker/status",
+  );
+  return response.data;
+};
+
+export const resetCircuitBreaker = async (params: {
+  asset_type: string;
+  limit_type: "GLOBAL" | "USER";
+  user_id?: number | null;
+}): Promise<void> => {
+  await v2Client.post("/api/v2/admin/economy/circuit-breaker/reset", params);
+};
+
+export const updateCircuitBreakerLimit = async (params: {
+  asset_type: string;
+  global_limit?: number;
+  user_limit?: number;
+}): Promise<void> => {
+  await v2Client.put(
+    "/api/v2/admin/economy/circuit-breaker/limits",
+    params,
+  );
+};

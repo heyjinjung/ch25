@@ -9,6 +9,8 @@ import GoldenRealTimePage from "../admin/pages/dashboard/GoldenRealTimePage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import CCDepositPage from "../admin/pages/economy/CCDepositPage";
+import LatencySurvivalPage from "../admin/pages/economy/LatencySurvivalPage";
+import CircuitBreakerPage from "../admin/pages/economy/CircuitBreakerPage";
 import ShopMissionTabPage from "../admin/pages/economy/ShopMissionTabPage";
 import LevelConfigPage from "../admin/pages/game/LevelConfigPage";
 import RouletteConfigPage from "../admin/pages/game/RouletteConfigPage";
@@ -42,6 +44,8 @@ const V2AdminRoutes: React.FC = () => {
           {/* Economy */}
           <Route path="economy/vault" element={<VaultControlPage />} />
           <Route path="economy/deposits" element={<CCDepositPage />} />
+          <Route path="economy/latency" element={<LatencySurvivalPage />} />
+          <Route path="economy/circuit-breaker" element={<CircuitBreakerPage />} />
 
           {/* Shop & Mission - Tabbed */}
           <Route path="economy/shop" element={<ShopMissionTabPage />} />

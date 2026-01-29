@@ -1,8 +1,8 @@
 # Golden V2: Ops Plan 시스템 확장 설계서 (Expansion Spec)
 
 **작성일**: 2026-01-28
-**버전**: v1.1
-**상태**: SoT (Ops Expansion)
+**버전**: v1.2
+**상태**: ✅ Verified (Core Engine Ready)
 **대상**: BE 개발팀 / 운영팀
 
 ---
@@ -58,6 +58,7 @@
 1. **Trigger**: Admin UI에서 `execute_task` 호출.
 2. **Dispatch**: `V2AdminOpsPlanService.execute_task`에서 `kind`에 따라 적절한 서비스/워커 호출.
 3. **Log**: 실행 결과를 `V2OpsExecutionResult`에 아카이빙하고 ROI 파이프라인(Phase 1)과 연결.
+4. **Verified**: `test_golden_v2_integrated.py`를 통해 Auth-Asset-CircuitBreaker 기반의 실행 흐름이 검증됨.
 
 ---
 
@@ -68,5 +69,6 @@
 ---
 
 ## 5. 변경 이력
+- v1.2 (2026-01-29): 통합 연동 테스트 성공 결과 반영 및 상태 'Verified' 갱신.
 - v1.1 (2026-01-28): GOLDEN_HOUR 구현/페이로드를 현행 코드(OpsPlanService) 기준으로 정합화.
 - v1.0 (2026-01-28): Ops Plan 시스템 5대 액션 확장 계획 수립.

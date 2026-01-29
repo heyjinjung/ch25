@@ -1,5 +1,21 @@
 ## [2026-01-29 구현 완료 항목]
 
+### [2026-01-29] V2 Daily Nudge Scheduler 구현 완료 ✅
+- **목적**: 리텐션 유지를 위한 일일 무료 토큰 자동 발송
+- **구현 항목**:
+  - `app/v2/services/daily_nudge_service.py` - 넛지 대상자 선정 및 발송 로직
+  - `app/v2/tasks/daily_nudge_tasks.py` - Celery Beat 스케줄러 태스크
+  - `app/v2/api/admin/daily_nudge_routes.py` - Admin 관리 API
+  - `tests/v2/test_daily_nudge_service.py` - 단위 테스트 (200+ assertions)
+- **기능**:
+  - 최근 3일 내 접속했으나 오늘 접속 안 한 유저 타겟팅
+  - `benefits_suspended` (7일 무입금) 유저 자동 제외
+  - 매일 12:00, 18:00 KST 스케줄 실행
+  - ROULETTE 티켓 1장 자동 지급
+  - Admin API: 대상자 조회, 수동 발송, 배치 실행, 통계 조회
+- **검증**: 타겟 선정, 제재 체크, 배치 실행, 시간대 처리, 엣지 케이스 테스트 완료
+- **문서**: `docs/v2_specs/07_golden/2026_01_29_golden_v2_remaining_implementation_guide_ko.md` 업데이트
+
 ### [2026-01-29] V2 Auth SoT 트러블 예상율 0% 달성 ✅
 - **문제**: V2 Auth 관련 5개 충돌 포인트 미해결
 - **해결**:

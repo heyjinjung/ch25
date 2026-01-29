@@ -32,6 +32,12 @@ from app.v2.schemas.v2_admin_economy import (
     InventoryItemCreateRequest,
     InventoryItemUpdateRequest,
     TicketLogDto,
+    AdminLatencyEvidenceDto,
+    AdminLatencyVerifyRequest,
+    AdminLatencyRejectRequest,
+    AdminCircuitBreakerStatusDto,
+    AdminCircuitBreakerResetRequest,
+    AdminCircuitBreakerLimitUpdateRequest,
 )
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.game_wallet_ledger import UserGameWalletLedger
@@ -1194,3 +1200,87 @@ def get_ticket_logs(
     # Sort desc
     combined.sort(key=lambda x: x.timestamp, reverse=True)
     return combined[:100]
+
+
+# ============================================================================
+# Latency Survival (Admin)
+# ============================================================================
+
+@router.get("/economy/latency-evidences", response_model=List[AdminLatencyEvidenceDto])
+def list_latency_evidences(
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    return V2AdminEconomyService.list_latency_evidences(db, status=status)
+
+
+@router.post("/economy/latency-evidences/{id}/verify")
+def verify_latency_evidence(
+    id: int,
+    payload: AdminLatencyVerifyRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+    V2AdminEconomyService.verify_latency_evidence(db, id, payload.log_id, admin_id)
+    db.commit()
+    return {"success": True}
+
+
+@router.post("/economy/latency-evidences/{id}/reject")
+def reject_latency_evidence(
+    id: int,
+    payload: AdminLatencyRejectRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, _ = admin_info
+    V2AdminEconomyService.reject_latency_evidence(db, id, payload.reason, admin_id)
+    db.commit()
+    return {"success": True}
+
+
+# ============================================================================
+# Circuit Breaker (Admin)
+# ============================================================================
+
+@router.get("/economy/circuit-breaker/status", response_model=List[AdminCircuitBreakerStatusDto])
+def get_circuit_breaker_status(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    return V2AdminEconomyService.get_circuit_breaker_status(db)
+
+
+@router.post("/economy/circuit-breaker/reset")
+def reset_circuit_breaker(
+    payload: AdminCircuitBreakerResetRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    V2AdminEconomyService.reset_circuit_breaker(
+        db, 
+        asset_type=payload.asset_type, 
+        limit_type=payload.limit_type, 
+        user_id=payload.user_id
+    )
+    db.commit()
+    return {"success": True}
+
+
+@router.put("/economy/circuit-breaker/limits")
+def update_circuit_breaker_limits(
+    payload: AdminCircuitBreakerLimitUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    from app.v2.services.circuit_breaker_service import CircuitBreakerService
+    CircuitBreakerService.set_config(
+        db, 
+        payload.asset_type, 
+        global_limit=payload.global_limit, 
+        user_limit=payload.user_limit
+    )
+    db.commit()
+    return {"success": True}

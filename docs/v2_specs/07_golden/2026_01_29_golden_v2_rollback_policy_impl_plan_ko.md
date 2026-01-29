@@ -18,6 +18,9 @@
 
 ---
 
+> [!NOTE]
+> **준비 완료**: V2 Golden의 기반 서비스(`VaultService`, `InventoryService`, `CircuitBreakerService`) 및 데이터 모델(`V2User`)이 구축되어 본 계획 실행을 위한 기초 인프라가 확보된 상태입니다.
+
 ## 2. 정책 및 로직 (Policy & Logic)
 
 ### 2.1 대상 (Target)
