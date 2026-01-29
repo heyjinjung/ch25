@@ -126,6 +126,11 @@ class V2InventoryService:
     ) -> int:
         if amount <= 0:
             raise ValueError("INVALID_TOKEN_AMOUNT")
+
+        # === Circuit Breaker: Safety Check ===
+        from app.v2.services.circuit_breaker_service import CircuitBreakerService
+        CircuitBreakerService.check_and_incr(db, token_type, amount, v2_user_id)
+
         storage_user_id = cls._resolve_storage_user_id(db, v2_user_id)
         wallet = cls._get_or_create_wallet(db, storage_user_id, token_type, auto_commit=auto_commit)
         wallet.balance += int(amount)

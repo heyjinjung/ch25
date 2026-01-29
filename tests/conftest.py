@@ -17,6 +17,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
+    # 모델 등록 (circular import 회피를 위해 함수 내부 import)
+    import app.db.base
+    
     # 모든 테이블 생성 (v2_user 등 포함)
     Base.metadata.create_all(bind=engine)
     yield
@@ -35,6 +38,10 @@ def test_db_session():
         session.close()
         transaction.rollback()
         connection.close()
+
+@pytest.fixture(scope="function")
+def db(test_db_session):
+    return test_db_session
 
 # FastAPI 의존성 오버라이드 (테스트 세션 사용)
 @pytest.fixture(scope="function", autouse=True)

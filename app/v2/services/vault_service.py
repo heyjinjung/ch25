@@ -42,6 +42,10 @@ class V2VaultService:
         if amount <= 0:
             raise ValueError("amount must be > 0")
 
+        # === Circuit Breaker: Safety Check ===
+        from app.v2.services.circuit_breaker_service import CircuitBreakerService
+        CircuitBreakerService.check_and_incr(db, "VAULT", amount, user_id)
+
         legacy_user = db.get(User, user_id)
         v2_user = db.get(V2User, user_id)
         if legacy_user is None and v2_user is None:
@@ -211,6 +215,21 @@ class V2VaultService:
         
         # 7일간 입금이 0이면 제재
         is_suspended = int(deposit_7d) < 1
+        
+        # [Latency Survival] Provisional Exception Check
+        # 제재 대상으로 판명되었으나, 최근 24시간 내 유효한 증거(PENDING/PROVISIONAL)가 있다면 예외 허용
+        if is_suspended:
+            from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence, EvidenceStatus
+            
+            bypass_window = now_dt - timedelta(hours=24)
+            valid_evidence_exists = db.query(V2UserDepositEvidence.id).filter(
+                V2UserDepositEvidence.user_id == user_id,
+                V2UserDepositEvidence.created_at >= bypass_window,
+                V2UserDepositEvidence.status.in_([EvidenceStatus.PENDING, EvidenceStatus.PROVISIONAL])
+            ).limit(1).scalar()
+            
+            if valid_evidence_exists:
+                is_suspended = False
         
         return is_suspended, int(deposit_7d)
 

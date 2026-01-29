@@ -547,6 +547,13 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
 
+
+Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
+트러블 매핑표: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_trouble_mapping_ko.md
+기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
+
+
+
 기능 생성 후 문서 업로드해줘 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
 관련있는 영역의 폴더에 
