@@ -218,14 +218,14 @@ export default function RouletteResultModal({
             "text-[10px] font-black uppercase tracking-[0.45em]",
             isBigWin ? "text-red-400/80" : isNormal ? "text-amber-500/80" : "text-zinc-600"
           )}>
-            <MatrixText text="Spin Results" />
+            <MatrixText text="Spin 결과" />
           </span>
           <h2 className={cn(
             "text-4xl font-black italic tracking-tighter",
             isBigWin ? "text-red-100 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]" : isNormal ? "text-white" : "text-zinc-500"
           )}>
             <MatrixText 
-                text={isBigWin ? "CELESTIAL!" : isNormal ? "WINNER!" : "HARD LUCK"} 
+                text={isBigWin ? "천상의 보상!" : isNormal ? "당첨!" : "아쉽습니다"} 
             />
           </h2>
         </div>
@@ -253,7 +253,7 @@ export default function RouletteResultModal({
                         +{rewardAmount.toLocaleString()}
                     </span>
                     <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pt-1">
-                        <MatrixText text={rewardType === 'TICKET' ? 'Ticket' : 'Points'} />
+                        <MatrixText text={rewardType === 'TICKET' ? '티켓' : '포인트'} />
                     </span>
                 </div>
             )}
@@ -270,7 +270,7 @@ export default function RouletteResultModal({
                 "bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300"
             )}
           >
-            <MatrixText text={isFail ? "TRY AGAIN" : "CLAIM NOW"} />
+            <MatrixText text={isFail ? "다시 하기" : "보상 받기"} />
             <ArrowRight size={22} className="group-hover:translate-x-1.5 transition-transform" />
           </button>
           
@@ -278,7 +278,7 @@ export default function RouletteResultModal({
             onClick={onClose}
             className="w-full h-12 rounded-2xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white transition-all hover:bg-white/10"
           >
-            <MatrixText text="Close" />
+            <MatrixText text="닫기" />
           </button>
         </div>
 

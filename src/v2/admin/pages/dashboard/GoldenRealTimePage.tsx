@@ -37,7 +37,7 @@ export default function GoldenRealTimePage() {
           <div className="flex items-center gap-2 text-amber-500 mb-2">
             <Radio className="w-4 h-4 animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              Real-time Monitoring
+              실시간 모니터링 (Real-time Monitoring)
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
@@ -50,7 +50,7 @@ export default function GoldenRealTimePage() {
         <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"/>
-                <span className="text-xs font-medium text-emerald-500">System Normal</span>
+                <span className="text-xs font-medium text-emerald-500">시스템 정상 (Normal)</span>
             </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function GoldenRealTimePage() {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-obsidian-muted">WebSocket 연결</span>
-                        <span className="text-emerald-500 font-medium">Connected</span>
+                        <span className="text-emerald-500 font-medium">연결됨 (Connected)</span>
                     </div>
                      <div className="flex justify-between items-center text-sm">
                         <span className="text-obsidian-muted">지연 시간(Latency)</span>
@@ -126,7 +126,7 @@ export default function GoldenRealTimePage() {
                     </div>
                      <div className="flex justify-between items-center text-sm">
                         <span className="text-obsidian-muted">이벤트 처리율</span>
-                        <span className="text-white font-medium">120/sec</span>
+                        <span className="text-white font-medium">120/초 (sec)</span>
                     </div>
                 </div>
             </div>

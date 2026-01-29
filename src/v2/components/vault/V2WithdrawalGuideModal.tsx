@@ -224,7 +224,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
             {/* Footer */}
             <div className="px-6 py-4 bg-white/[0.01] border-t border-white/5 flex items-center justify-center gap-2">
               <span className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
-                Secure Withdrawal System
+                안전 출금 시스템 (Secure System)
               </span>
             </div>
           </motion.div>

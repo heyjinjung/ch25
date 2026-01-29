@@ -119,7 +119,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black tracking-widest uppercase mb-3">
                 <Zap size={12} className="fill-current" />
-                Streak Bonus
+                연속 출석 보너스 (Streak)
               </div>
               <h2 className="text-3xl font-black text-white tracking-tight">
                 {isClaimable ? (
@@ -223,7 +223,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                             : "text-white/30",
                       )}
                     >
-                      Day{day}
+                      {day}일차
                     </span>
                   </div>
                 );
@@ -302,7 +302,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                             : "text-white/30",
                       )}
                     >
-                      Day{day}
+                      {day}일차
                     </span>
                   </div>
                 );

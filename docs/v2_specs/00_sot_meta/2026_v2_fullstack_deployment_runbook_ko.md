@@ -27,6 +27,7 @@
       체크리스트/런북/문서에 남아있는 “SUPERADMIN” 언급은 과거 정책의 잔재로, 최신 learned_ 기준과 불일치
 - [x] **토큰 만료 정책**: Access(15m), Refresh(30d) 정책이 환경 변수에 설정됨.
       Access(15m), Refresh(30d) 만료 정책은 실제 코드와 환경설정에 모두 구현되어 있음
+- [ ] **Circuit Breaker 한도(SoT) 정합성**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 환경/코드/테스트/운영 정책에 일치하는지 확인.
 ---
 
 ## 🧪 2. 최소 통합 테스트 세트 (Smoke Tests)
@@ -53,10 +54,12 @@ Golden V2 배포 품질 보장을 위해 아래 모든 영역에 대해 테스�
 **[x]Inventory & Shop**: 티켓/아이템 지급/차감, InventoryLog, Shop 구매/차감 등
       - pytest -v tests/v2_tests/phase2_core/test_shop_inventory_logic.py
       - pytest -v tests/v2_tests/phase4_admin/test_shop_crud.py
+**[x]보상(Rewards)**: 설문/보상 지급, 보상 로그/중복 지급 방지 등
+      - pytest -v tests/v2_tests/phase2_core/test_survey_reward_service_unit.py
 **[x]Mission & Streak**: 09:00 KST 리셋, 미션/스트릭 경계, 마일스톤 등
       - pytest -v tests/v2_tests/phase2_core/test_v2_mission_service.py
       - pytest -v tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py
-      - pytest -v tests/streak_midnight_boundary.py
+      - pytest -v tests/test_streak_midnight_boundary.py
 **[x]Level & XP**: user_level_progress, XP 이벤트 로그, 레벨 보상표, Season Pass 폐기 등
       - pytest -v tests/v2_tests/phase2_core/test_xp_cap.py
       - pytest -v tests/test_enum_matches_sot.py (XP 및 레벨 Enum 정합성)
@@ -64,6 +67,10 @@ Golden V2 배포 품질 보장을 위해 아래 모든 영역에 대해 테스�
       tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py
       tests/v2_tests/phase2_core/test_team_battle_edge.py
       tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py
+**[x]게임(Game)**: 게임 엔진 스모크, 게임 원장 분리, 어드민 주사위 연동 등
+      - pytest -v tests/v2_tests/phase3_game/test_game_engine_smoke.py
+      - pytest -v tests/v2_tests/phase3_game/test_game_ledger_separation.py
+      - pytest -v tests/v2_tests/phase3_game/test_dice_admin_integration.py
 **[x]Admin Dashboard**: 09:00 KST 리셋 통일, KPI 집계, Audit Log, 티켓/인벤토리 로그 KST 변환 등
       tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py
       tests/v2_tests/phase4_admin/verify_admin_ops_v2.py
@@ -104,6 +111,7 @@ tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오
    ```bash
    redis-cli monitor | grep "golden:v2:events"
    ```
+4. **Circuit Breaker 한도(SoT)**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 적용되어 있는지 확인.
 
 ---
 

@@ -65,6 +65,11 @@ CORS_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
 # Redis (Circuit Breaker, Celery)
 REDIS_URL=redis://localhost:6379/0
 
+# Circuit Breaker (SoT)
+# 아래 값은 SoT(변경 기준)입니다. 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 합니다.
+CIRCUIT_LIMIT_VAULT=100000  # 시간당 금고 지급 한도 (KRW, SoT)
+CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장, SoT)
+
 # Logging
 LOG_LEVEL=INFO
 SENTRY_DSN=<Sentry DSN>
@@ -103,7 +108,23 @@ pytest --cov=app --cov-report=html
 - [ ] `tests/v2/test_daily_nudge_service.py` - Daily Nudge 테스트
 - [ ] `tests/v2/test_roi_rollback_service.py` - ROI & Rollback 테스트
 
-### 3.3 Lint & Format
+### 3.3 도메인별 필수 커버리지 (요청 12개 영역)
+아래 영역은 **배포 전 반드시 커버**해야 합니다(자동 테스트 우선, 불가 시 수동 시나리오를 체크리스트로 남김).
+
+- [ ] **인증(Auth)**: `tests/v2/test_telegram_auth.py`, `tests/v2/test_admin_rbac.py`
+- [ ] **어드민(Admin)**: `tests/v2/test_admin_api.py`, `tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py`
+- [ ] **유저(User)**: `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage.py`, `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py`
+- [ ] **볼트(Vault)**: `tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`, `tests/v2_tests/phase2_core/test_vault_limit_suspension.py`
+- [ ] **경제(Economy)**: `tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `tests/v2/test_roi_rollback_service.py`
+- [ ] **상점(Shop)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_shop_crud.py`
+- [ ] **인벤토리(Inventory)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_admin_inventory_routes_coverage.py`
+- [ ] **보상(Rewards)**: `tests/v2_tests/phase2_core/test_survey_reward_service_unit.py`
+- [ ] **미션(Mission)**: `tests/v2_tests/phase2_core/test_v2_mission_service.py`, `tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py`
+- [ ] **팀배틀(Team Battle)**: `tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py`, `tests/v2_tests/phase2_core/test_team_battle_edge.py`, `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py`
+- [ ] **게임(Game)**: `tests/v2_tests/phase3_game/test_game_engine_smoke.py`, `tests/v2_tests/phase3_game/test_game_ledger_separation.py`, `tests/v2_tests/phase3_game/test_dice_admin_integration.py`
+- [ ] **레벨(Level/XP)**: `tests/v2_tests/phase2_core/test_xp_cap.py`, `tests/test_enum_matches_sot.py`
+
+### 3.4 Lint & Format
 ```bash
 # Ruff (또는 Flake8)
 ruff check app/
@@ -141,8 +162,9 @@ mypy app/
 - [x] Redis 연결 확인 (`redis-cli ping`)
 - [x] Circuit Breaker 임계값 설정
   ```python
-  CIRCUIT_LIMIT_VAULT=1000000  # 시간당 100만원
-  CIRCUIT_LIMIT_TICKET=500     # 시간당 500장
+  # 아래 값은 SoT(변경 기준)입니다. 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 합니다.
+  CIRCUIT_LIMIT_VAULT=100000  # 시간당 금고 지급 한도 (KRW, SoT)
+  CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장, SoT)
   ```
 - [x] Slack/Telegram Alert 설정 (Mocked/Ready)
 

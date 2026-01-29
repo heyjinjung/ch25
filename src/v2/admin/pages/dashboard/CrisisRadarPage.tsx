@@ -42,7 +42,7 @@ export default function CrisisRadarPage() {
           <div className="flex items-center gap-2 text-red-500 mb-2">
             <ShieldAlert className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              Golden Hour Radar
+              골든 아워 레이더 (Golden Hour Radar)
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -78,7 +78,7 @@ export default function CrisisRadarPage() {
               {riskyUsers.filter((u) => u.riskLevel === "HIGH").length}
             </div>
             <p className="text-[10px] text-red-400/60 mt-1">
-              Immediate intervention required
+              즉각적인 개입 필요
             </p>
           </CardContent>
         </Card>
@@ -93,33 +93,33 @@ export default function CrisisRadarPage() {
               {riskyUsers.filter((u) => u.riskLevel === "MEDIUM").length}
             </div>
             <p className="text-[10px] text-amber-400/60 mt-1">
-              Increasing churn probability
+              이탈 가능성 증가 중
             </p>
           </CardContent>
         </Card>
         <Card className="bg-obsidian-surface border-obsidian-muted/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-obsidian-muted uppercase tracking-widest">
-              Avg Churn Score
+              평균 이탈 위험도 (Avg Churn Score)
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">82%</div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              Radar detection precision: 94%
+              레이더 탐지 정확도: 94%
             </p>
           </CardContent>
         </Card>
         <Card className="bg-obsidian-surface border-indigo-500/20 bg-indigo-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
-              Today Interventions
+              오늘의 개입 건수
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-indigo-400">24</div>
             <p className="text-[10px] text-indigo-400/60 mt-1">
-              Success rate: 75%
+              성공률: 75%
             </p>
           </CardContent>
         </Card>
@@ -128,19 +128,19 @@ export default function CrisisRadarPage() {
       {/* User Table / List */}
       <Card className="bg-obsidian-surface border-obsidian-border">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-lg">Risk User List</CardTitle>
+          <CardTitle className="text-lg">위험 유저 리스트</CardTitle>
           <div className="flex gap-2">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
               <Input
-                placeholder="Search users..."
+                placeholder="유저 검색..."
                 className="bg-black/20 border-obsidian-border pl-9 h-9 w-[200px] text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             <Button variant="outline" size="sm" className="h-9 border-obsidian-border">
-              <Filter className="w-4 h-4 mr-2" /> Filter
+              <Filter className="w-4 h-4 mr-2" /> 필터
             </Button>
           </div>
         </CardHeader>
@@ -149,12 +149,12 @@ export default function CrisisRadarPage() {
             <table className="w-full text-sm text-left">
               <thead className="text-[10px] text-zinc-500 uppercase tracking-wider border-y border-obsidian-border bg-white/5">
                 <tr>
-                  <th className="px-6 py-3 font-medium">Username</th>
-                  <th className="px-6 py-3 font-medium">Risk Score</th>
-                  <th className="px-6 py-3 font-medium">Risk Level</th>
-                  <th className="px-6 py-3 font-medium">Detected Reason</th>
+                  <th className="px-6 py-3 font-medium">사용자명</th>
+                  <th className="px-6 py-3 font-medium">위험 점수</th>
+                  <th className="px-6 py-3 font-medium">위험 단계</th>
+                  <th className="px-6 py-3 font-medium">탐지 사유</th>
                   <th className="px-6 py-3 font-medium text-right">
-                    Quick Action
+                    빠른 작업
                   </th>
                 </tr>
               </thead>
@@ -192,16 +192,16 @@ export default function CrisisRadarPage() {
                       <td className="px-6 py-4">
                         {u.riskLevel === "HIGH" ? (
                           <Badge className="bg-red-500/10 text-red-500 border-none h-5 text-[10px]">
-                            CRITICAL
+                            심각 (CRITICAL)
                           </Badge>
                         ) : (
                           <Badge className="bg-amber-500/10 text-amber-500 border-none h-5 text-[10px]">
-                            WARNING
+                            주의 (WARNING)
                           </Badge>
                         )}
                       </td>
                       <td className="px-6 py-4 text-zinc-500 text-xs">
-                        {u.riskReason || "Unusual loss streak detected"}
+                        {u.riskReason || "비정상적 연속 손실 감지됨"}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1">
@@ -209,7 +209,7 @@ export default function CrisisRadarPage() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-zinc-500 hover:text-indigo-400"
-                            title="Bailout Gift"
+                            title="회생 선물 (Bailout)"
                           >
                             <Zap className="w-3.5 h-3.5" />
                           </Button>
@@ -217,7 +217,7 @@ export default function CrisisRadarPage() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-zinc-500 hover:text-indigo-400"
-                            title="Send Message"
+                            title="메시지 전송"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </Button>
@@ -225,7 +225,7 @@ export default function CrisisRadarPage() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-zinc-500 hover:text-indigo-400"
-                            title="CRM Call"
+                            title="CRM 전화"
                           >
                             <PhoneCall className="w-3.5 h-3.5" />
                           </Button>
