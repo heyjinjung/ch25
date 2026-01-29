@@ -4,7 +4,7 @@ V2 Refresh Token 모델
 30일 sliding window Refresh Token 저장
 토큰 갱신 시 last_used_at 업데이트, 만료 30일 미만 시 새 토큰 발급
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Integer, String, Index
 from app.db.base_class import Base
@@ -31,10 +31,10 @@ class V2UserRefreshToken(Base):
     expires_at = Column(DateTime, nullable=False, index=True, comment="만료 시각")
     revoked_at = Column(DateTime, nullable=True, comment="폐기 시각 (NULL이면 유효)")
     created_at = Column(
-        DateTime, nullable=False, default=datetime.utcnow, comment="생성 시각"
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), comment="생성 시각"
     )
     last_used_at = Column(
-        DateTime, nullable=False, default=datetime.utcnow, comment="마지막 사용 시각"
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc), comment="마지막 사용 시각"
     )
 
     __table_args__ = (
@@ -47,7 +47,7 @@ class V2UserRefreshToken(Base):
         """토큰 유효성 확인"""
         if self.revoked_at is not None:
             return False
-        if self.expires_at < datetime.utcnow():
+        if self._as_utc(self.expires_at) < datetime.now(timezone.utc):
             return False
         return True
 
@@ -59,7 +59,13 @@ class V2UserRefreshToken(Base):
     @property
     def is_expired(self) -> bool:
         """토큰 만료 여부"""
-        return self.expires_at < datetime.utcnow()
+        return self._as_utc(self.expires_at) < datetime.now(timezone.utc)
+
+    @staticmethod
+    def _as_utc(value: datetime) -> datetime:
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value.astimezone(timezone.utc)
 
     def __repr__(self):
         return f"<V2UserRefreshToken(id={self.id}, user_id={self.user_id}, jti={self.jti[:8]}...)>"

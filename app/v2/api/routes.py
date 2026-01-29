@@ -70,12 +70,14 @@ from app.v2.services.team_battle_service import V2TeamBattleService
 
 _team_battle_service = V2TeamBattleService()
 
+
 from app.v2.api.admin import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
 from app.v2.api.auth_routes import router as auth_router
 from app.v2.api.telegram_routes import router as telegram_router
 from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
+
 
 router.include_router(admin_router)
 router.include_router(telegram_router)
@@ -1158,9 +1160,7 @@ def list_missions_alias(
 ):
     return list_missions(db, user_id)
 
-@router.post("/mission/claim", tags=["v2-mission"])
-def claim_mission_alias():
-    return {"success": True}
+
 
 @router.post("/team-battle/join", tags=["v2-team-battle"])
 def join_team_battle_alias():

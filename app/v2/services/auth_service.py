@@ -15,6 +15,12 @@ from app.v2.models.auth_event import V2UserAuthEvent, AuthEventType
 from app.v2.models.refresh_token import V2UserRefreshToken
 
 
+def _coerce_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def log_auth_event(
     db: Session,
     user_id: int,
@@ -170,10 +176,11 @@ class V2AuthService:
         refresh_token, jti = create_refresh_token(user_id)
 
         # DB 저장
+        now_utc = datetime.now(timezone.utc)
         token_record = V2UserRefreshToken(
             user_id=user_id,
             jti=jti,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+            expires_at=now_utc + timedelta(days=30),
         )
         db.add(token_record)
         db.commit()
@@ -217,7 +224,9 @@ class V2AuthService:
             raise HTTPException(status_code=401, detail="TOKEN_REVOKED")
 
         # 4. 만료 확인
-        if token_record.expires_at < datetime.now(timezone.utc):
+        now_utc = datetime.now(timezone.utc)
+        expires_at = _coerce_utc(token_record.expires_at)
+        if expires_at < now_utc:
             raise HTTPException(status_code=401, detail="TOKEN_EXPIRED")
 
         # 5. 새 Access Token 발급 (V2 전용 만료 시간)
@@ -228,22 +237,22 @@ class V2AuthService:
         )
 
         # 6. last_used_at 갱신 (sliding window)
-        token_record.last_used_at = datetime.now(timezone.utc)
+        token_record.last_used_at = now_utc
 
         # 7. 만료 7일 미만 시 새 Refresh Token 발급 (sliding)
         new_refresh_token = None
-        days_left = (token_record.expires_at - datetime.now(timezone.utc)).days
+        days_left = (expires_at - now_utc).days
 
         if days_left < 7:
             new_refresh_token, new_jti = create_refresh_token(user_id)
             new_token_record = V2UserRefreshToken(
                 user_id=user_id,
                 jti=new_jti,
-                expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+                expires_at=now_utc + timedelta(days=30),
             )
             db.add(new_token_record)
             # 기존 토큰 revoke
-            token_record.revoked_at = datetime.now(timezone.utc)
+            token_record.revoked_at = now_utc
 
         db.commit()
 

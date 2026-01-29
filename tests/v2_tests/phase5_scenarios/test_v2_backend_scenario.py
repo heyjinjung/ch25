@@ -77,7 +77,13 @@ def test_lottery_status_empty_on_invalid_config(db_session, test_user):
 
 def test_roulette_play_fallback(db_session, test_user):
     """Verify that roulette play falls back to ROULETTE_TICKET config if DIAMOND_TICKET config is missing."""
+    from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+    from datetime import date
     service = V2RouletteGameService()
+    # 혜택 정지 우회: 오늘 입금 내역 추가
+    deposit = ExternalRankingDailyDepositDelta(user_id=test_user.id, kst_date=date.today(), deposit_delta=10000)
+    db_session.add(deposit)
+    db_session.commit()
     
     # 1. Add a ROULETTE_TICKET config
     config = V2RouletteConfig(
@@ -116,7 +122,13 @@ def test_roulette_play_fallback(db_session, test_user):
 
 def test_dice_play_vault_deduction(db_session, test_user):
     """Verify that dice play deducts bet amount from vault (lose_reward_amount = -100)."""
+    from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+    from datetime import date
     service = V2DiceGameService()
+    # 혜택 정지 우회: 오늘 입금 내역 추가
+    deposit = ExternalRankingDailyDepositDelta(user_id=test_user.id, kst_date=date.today(), deposit_delta=10000)
+    db_session.add(deposit)
+    db_session.commit()
     
     # Add Dice Config
     config = V2DiceConfig(

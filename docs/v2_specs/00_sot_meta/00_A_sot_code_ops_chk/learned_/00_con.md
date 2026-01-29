@@ -1,3 +1,41 @@
+## [2026-01-29 구현 완료 항목]
+
+### [2026-01-29] V2 Auth SoT 트러블 예상율 0% 달성 ✅
+- **문제**: V2 Auth 관련 5개 충돌 포인트 미해결
+- **해결**:
+  1. **3.1 Activity 경로 불일치**: `app/v2/api/activity_routes.py`에 `/record` 별칭 추가
+  2. **3.2 DEV 로그인 환경 제한**: `app/core/config.py`에 `dev_login_enabled: bool = False` 플래그 추가
+  3. **3.3 Telegram hash 검증**: `app/v2/core/telegram.py` V2 전용 모듈 (hmac.compare_digest 사용)
+  4. **3.4 Access Token 만료**: `v2_access_token_expire_minutes: int = 15` V2 전용 설정 분리
+  5. **2.4 Admin RBAC 로깅**: `app/api/deps.py`에 `RBAC_DENIED` 이벤트 기록 추가
+- **검증**: 모든 충돌 포인트 해결, 트러블 예상율 0%
+- **문서**: `docs/v2_specs/00_sot_meta/v2_auth_trouble_mapping_ko.md` v1.2
+
+### [2026-01-28~29] V2 Telegram Auth SoT 구현 완료 ✅
+- **목표**: 텔레그램 Mini App 전용 인증 SoT 수립
+- **핵심 원칙**: V2 경로 아래 신규 파일 생성, V1 의존성 완전 제거
+- **구현 항목**:
+  - `app/v2/core/telegram.py` - initData HMAC-SHA256 검증 (hash 비교 포함)
+  - `app/v2/models/auth_event.py` - V2UserAuthEvent, AuthEventType Enum
+  - `app/v2/models/refresh_token.py` - V2UserRefreshToken 모델
+  - `app/v2/api/telegram_routes.py` - POST /api/v2/telegram/auth (순수 V2)
+  - `app/v2/api/auth_routes.py` - /refresh, /logout 엔드포인트
+  - `app/v2/services/auth_service.py` - log_auth_event, V2AuthService 확장
+  - `alembic/versions/20260128_1800_add_v2_auth_tables.py` - DB Migration
+- **테스트**:
+  - `tests/v2/test_telegram_auth.py` - 14개 유닛 테스트 통과
+  - `scripts/generate_test_init_data.py` - 수동 테스트용 initData 생성기
+- **정책**:
+  - Access Token: 15분 만료 (V2 전용)
+  - Refresh Token: 30일 만료, 7일 미만 시 갱신 (sliding window)
+  - Auth Event: 로그인 성공/실패, 토큰 갱신, 로그아웃, RBAC 거부 기록
+- **문서**:
+  - `docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md`
+  - `docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md`
+  - `docs/v2_specs/00_sot_meta/v2_auth_trouble_mapping_ko.md`
+
+---
+
 ## [2026-01-28 구현 완료 항목]
 
 ### [2026-01-28] User/V2User 금고 잔액 동기화 누락 수정 ✅
@@ -464,7 +502,7 @@
 
 ---
 
-## [SoT 정합성 상태 - 2026-01-26]
+## [SoT 정합성 상태 - 2026-01-29]
 
 ```
 ✅ vault_balance = vault_locked_balance only (SoT 단일 출처)
@@ -485,4 +523,14 @@
 ✅ Legacy API season_pass = null 반환 (RoulettePlayResponse 스키마 확인)
 ✅ Team Battle v2 네임스페이스 = BE/FE 모두 v2 경로 사용
 ✅ 시즌 롤오버 검증 = 자동화 스크립트 제공 (validate_team_battle_sot.py)
+
+[2026-01-29 추가]
+✅ V2 Telegram Auth = 순수 V2 구현, V1 의존성 완전 제거
+✅ Telegram hash 검증 = hmac.compare_digest 사용 (타이밍 공격 방지)
+✅ V2 Access Token = 15분 만료 (v2_access_token_expire_minutes 분리)
+✅ Refresh Token = 30일 만료, 7일 미만 시 sliding window 갱신
+✅ Auth Event 로깅 = LOGIN_SUCCESS/FAILED, TOKEN_REFRESH, LOGOUT, RBAC_DENIED
+✅ DEV 로그인 = dev_login_enabled 플래그 (기본값 False, PROD 안전)
+✅ Admin RBAC 로깅 = RBAC_DENIED 이벤트 기록 (app/api/deps.py)
+✅ Activity 경로 = /api/v2/activity/record 별칭 추가 (FE 호환)
 ```

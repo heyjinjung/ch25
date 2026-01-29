@@ -145,6 +145,36 @@ Golden V2의 "실시간 개입"을 위한 **V2 전용 정책**이며, **DB SoT �
 | `golden:v2:events:intervention` | Intervention Stream | 개입 이벤트 스트림 |
 
 ---
+# 6. SoT 값 확장 (2026-01-28)
+
+### 6.1 골든아워(Golden Hour) 용어 및 키 매핑
+
+| 용어 | 키워드 | SoT(내부/저장) | SoT(통신/이벤트) | 설명 |
+| :--- | :--- | :--- | :--- | :--- |
+| 골든아워 전역 활성 | `Golden Hour Active(Global)` | `golden_hour_config.enabled` | `GET /admin/api/vault/golden-hour` | 전역 골든아워 활성(시간창/강제 ON/OFF의 기반) |
+| 수동제어 | `Manual Override` | `golden_hour_config.manual_override` | `POST /admin/api/vault/golden-hour` | `AUTO`/`FORCE_ON`/`FORCE_OFF` |
+| 전역 배율 | `Multiplier(Global)` | `golden_hour_config.multiplier` | `GET /admin/api/vault/golden-hour` | 전역 배율(현재 V2 주사위 보상 배율 SoT는 아님) |
+| 주사위 적용 게이트 | `Dice Golden Hour Enabled` | `V2DiceConfig.enable_golden_hour` | `GET /api/v2/admin/game/dice/config` | 주사위 게임에서 골든아워 적용 여부 SoT |
+| 주사위 배율 | `Dice Golden Hour Multiplier` | `V2DiceConfig.golden_hour_multiplier` | `PUT /api/v2/admin/game/dice/config/{config_id}` | 주사위 보상 배율 SoT(골든아워 활성 시 적용) |
+| OpsPlan 제어 | `OpsPlan GOLDEN_HOUR` | (DB Config 업데이트) | `payload.action` / `payload.multiplier` | `action=FORCE_ON|FORCE_OFF|MULTIPLIER_SET` |
+
+### 6.2 운영/CRM 워크플로우 상태 용어 (Intervention Status)
+
+| 상태 | 키워드 | 의미 |
+| :--- | :--- | :--- |
+| `PENDING_APPROVAL` | 승인 대기 | 트리거 감지 후 즉시 적재되며 운영자 승인 전까지 발송/지급 금지 |
+| `APPROVED` | 승인됨 | 발송/지급 가능한 상태 |
+| `REJECTED` | 거절됨 | 운영자 거절로 종료 |
+| `SENT` | 발송완료 | 실제 지급/푸시까지 완료된 최종 상태 |
+
+### 6.3 실시간 이벤트/관제 채널 용어
+
+| 채널 | 키워드 | 설명 |
+| :--- | :--- | :--- |
+| `golden:v2:events:game` | Game Stream | 게임 이벤트 스트림 |
+| `golden:v2:events:intervention` | Intervention Stream | 개입 이벤트 스트림 |
+
+---
 
 ## 7. 변경 이력
 - v2.3 (2026-01-28, GitHub Copilot): 주사위 게임 기준 골든아워/Redis 키 SoT 정합화(키 prefix, 페이로드/채널 정정).

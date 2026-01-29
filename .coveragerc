@@ -1,0 +1,17 @@
+[run]
+source = app/v2
+
+[report]
+omit =
+    */models/*
+    */schemas/*
+    */__init__.py
+    */migrations/*
+    */tests/*
+    */test_*.py
+    */conftest.py
+    */settings.py
+    */main.py
+    */asgi.py
+    */wsgi.py
+    */__main__.py

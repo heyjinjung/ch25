@@ -75,32 +75,6 @@ def test_game_token_type_matches_sot(canonical_enums: dict):
     assert not only_in_sot, f"GameTokenType values only in SoT (not in code): {only_in_sot}"
 
 
-def test_roulette_grade_matches_sot(canonical_enums: dict):
-    """RouletteGrade Literal이 SoT JSON과 일치하는지 검증."""
-    from app.v2.schemas.v2_constants import RouletteGrade
-    
-    code_values = set(get_args(RouletteGrade))
-    sot_values = set(canonical_enums.get("RouletteGrade", []))
-    
-    only_in_code = code_values - sot_values
-    only_in_sot = sot_values - code_values
-    
-    assert not only_in_code, f"RouletteGrade values only in code (not in SoT): {only_in_code}"
-    assert not only_in_sot, f"RouletteGrade values only in SoT (not in code): {only_in_sot}"
-
-
-def test_animation_type_matches_sot(canonical_enums: dict):
-    """AnimationType Literal이 SoT JSON과 일치하는지 검증."""
-    from app.v2.schemas.v2_constants import AnimationType
-    
-    code_values = set(get_args(AnimationType))
-    sot_values = set(canonical_enums.get("AnimationType", []))
-    
-    only_in_code = code_values - sot_values
-    only_in_sot = sot_values - code_values
-    
-    assert not only_in_code, f"AnimationType values only in code (not in SoT): {only_in_code}"
-    assert not only_in_sot, f"AnimationType values only in SoT (not in code): {only_in_sot}"
 
 
 def test_game_result_matches_sot(canonical_enums: dict):

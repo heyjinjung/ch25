@@ -21,3 +21,20 @@ FastAPI 백엔드와 Vite 기반 React 프런트로 구성된 원위크 이벤�
 - 유저 `nickname/password_hash/level` 컬럼 추가(관리자 CRUD 대비)
 
 자세한 실행·시드·테스트 흐름은 `docs/ONBOARDING.md`를 참고하세요.
+
+# Jules API 연동 Quickstart
+
+## 준비
+- .env.local 파일에 JULES_API_KEY 입력
+- Python requests 설치 필요: `pip install requests`
+
+## 사용법
+1. docs/jules_api_test.http 파일로 VS Code에서 HTTP 요청 테스트 가능
+2. scripts/jules_api_test.py 실행 시 Source 조회 및 세션 생성 자동 테스트
+3. Source 등록/업데이트: scripts/jules_api_test.py 또는 docs/jules_api_test.http 참고
+	- register_source("JAVIS", "ch25") 함수로 현재 레포를 Jules에 등록/업데이트
+	- HTTP 예시: POST /v1alpha/sources
+
+## 주의
+- API Key는 외부에 노출하지 마세요.
+- 실제 연동 전 Jules 웹앱에서 Source(GitHub 등) 연결 필요

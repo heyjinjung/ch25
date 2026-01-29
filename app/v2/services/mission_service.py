@@ -36,6 +36,8 @@ ACTION_TYPE_ALIASES = {
 
 
 class V2MissionService:
+    def get_mission_by_id(self, db, mid):
+        raise NotImplementedError
     def __init__(self, db: Session):
         self.db = db
         self.settings = get_settings()
