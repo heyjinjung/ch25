@@ -16,7 +16,7 @@ Create Date: 2026-01-23
 
 from typing import Any, Dict, Optional
 
-from alembic import op
+from alembic import op, context
 from sqlalchemy.sql import text
 
 
@@ -28,10 +28,14 @@ depends_on = None
 
 
 def _fetch_one(conn, sql: str, params: Optional[Dict[str, Any]] = None):
+    if context.is_offline_mode():
+        return None
     return conn.execute(text(sql), params or {}).mappings().first()
 
 
 def _fetch_all(conn, sql: str, params: Optional[Dict[str, Any]] = None):
+    if context.is_offline_mode():
+        return []
     return conn.execute(text(sql), params or {}).mappings().all()
 
 
@@ -39,8 +43,8 @@ def upgrade() -> None:
     conn = op.get_bind()
     dialect = conn.dialect.name
 
-    if dialect not in {"mysql", "mariadb"}:
-        # 현재 운영/로컬은 MySQL 계열. 다른 DB에서는 안전하게 no-op.
+    if dialect not in {"mysql", "mariadb"} or context.is_offline_mode():
+        # Skip in non-MySQL or offline mode (avoiding DB queries)
         return
 
     # 1) 기준 COMMON config 확보 (없으면 생성)
