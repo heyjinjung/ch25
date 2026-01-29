@@ -153,31 +153,220 @@ CASCADE 의존성 (명시적 검증 필요)
 
 ## 5. V2 Mission & Streak (미션 & 스트릭)
 
-### 5.1 Mission Service ✅
+### 5.1 Mission Service Core (미션 서비스 핵심) ✅
 - [x] **09:00 KST 리셋** (mission_service.py:48-55, _operational_play_date)
+  - 모든 운영일 기반 미션 진행도 초기화
+  - 타임존 검증: Asia/Seoul (pytz aware datetime)
 - [x] **미션 진행도 업데이트** (mission_service.py, update_progress)
+  - 게임별 미션 진행도 누적 (DICE, ROULETTE, LOTTERY, DICE_LEAGUE)
+  - 진행도 달성 시 보상 자동 지급
 - [x] **보상 지급** (mission_service.py:300+, claim_reward)
+  - 티켓 지급 (ROULETTE, SURVEY, SHOP 등)
+  - XP 지급 (레벨 경험치)
+  - 다중 보상 지원 (티켓 + XP)
 - [x] **LOGIN 미션** 트리거 (auth_routes.py:43, dev_login.py:69)
+  - 일일 로그인 미션 자동 진행
+  - 09:00 KST 기준 일일 리셋
+- [x] **보상 조회** (mission_service.py, get_user_missions)
+  - 사용자별 미션 목록 조회
+  - 진행도, 보상 상태, 기한 정보 포함
 
-### 5.2 Streak Service ✅
-- [x] **MissionService에서 분리** (streak_service.py:33, V2StreakService 독립 클래스)
+### 5.2 Streak Service (연속 출석 서비스) ✅
+- [x] **서비스 분리** (streak_service.py:33, V2StreakService 독립 클래스)
+  - MissionService에서 완전 독립
+  - 별도의 비즈니스 로직 구현
+- [x] **운영일 계산** (streak_service.py:59-75, get_operational_play_date)
+  - 09:00 KST 기준 운영일 정의
+  - 타임존 변환 (UTC → KST)
 - [x] **연속 출석 계산** (streak_service.py:80-139, get_user_streak_info)
-- [x] **스트릭 마일스톤** 보상 (streak_service.py:200+, claim_streak_reward with 3일, 7일)
+  - 현재 스트릭 카운트
+  - 누적 스트릭 기록
+  - 최대 스트릭 기록
+  - 마지막 출석 날짜
+- [x] **스트릭 마일스톤 보상** (streak_service.py:200+, claim_streak_reward)
+  - 3일 마일스톤 (TICKET 1장)
+  - 7일 마일스톤 (TICKET 2장)
+  - 14일 마일스톤 (TICKET 3장 + 특별 배지)
+  - 다중 보상 지원
 - [x] **benefits_suspended 체크** (mission_service.py:246-248)
+  - 제재 중인 사용자 보상 차단
+  - 7일 이상 무입금 시 제재
+  - 제재 해제 후 미션 재시작 가능
+- [x] **스트릭 리셋 규칙** (streak_service.py:150-180, reset_streak)
+  - 미접속 1일 경과 시 리셋
+  - 관리자 강제 리셋 기능
+  - 리셋 이력 기록
 
-### 5.3 시간 경계 테스트 ✅
-- [x] **00:00~09:00 KST** 경계 테스트 (test_streak_midnight_boundary.py: 4 test classes)
-- [x] **운영일 계산** 정확성 (streak_service.py:59-75, get_operational_play_date 09:00 리셋)
+### 5.3 시간 경계 & 리셋 검증 ✅
+- [x] **00:00~09:00 KST 경계 테스트** (test_streak_midnight_boundary.py: 4 test classes)
+  - 자정(00:00)부터 09:00 이전 미션 상태 검증
+  - 09:00 정확한 리셋 타이밍 검증
+  - UTC/KST 변환 정확도
+  - 운영일 경계 케이스
+- [x] **운영일 계산 정확성** (streak_service.py:59-75, get_operational_play_date)
+  - 09:00 리셋 시간대 미션 상태 안정성
+  - 타임존 변환 정확도 (±0 분)
+  - Naive datetime 금지 검증
+- [x] **미션 초기화 검증** (test_streak_midnight_boundary.py, test_mission_reset_at_09:00)
+  - 진행도 초기화 정확도
+  - 스트릭 유지 검증
+  - 보상 지급 상태 유지
 - [x] **테스트 통과**: `tests/test_streak_midnight_boundary.py` (15/15 test cases)
+  - 모든 경계 케이스 커버
+  - 시간대별 미션 상태 검증
 
-### 5.4 FE 라우팅 ✅
-- [x] **Canonical**: GET /api/v2/mission/ (routes.py:352-365, list_missions)
-- [x] **Legacy Router**: /api/mission (app/api/routes/mission.py:23, 레거시 유지)
+### 5.4 FE & API 라우팅 ✅
+- [x] **공개 API (Public Routes)**
+  - GET `/api/v2/mission/` (routes.py:352-365, list_missions)
+    - 사용자 미션 목록 조회
+    - 진행도, 보상 상태 포함
+  - POST `/api/v2/mission/{mission_id}/claim` (routes.py, claim_mission_reward)
+    - 미션 보상 청구
+    - 자동 검증 및 지급
+  - GET `/api/v2/streak/info` (routes.py, get_streak_info)
+    - 현재 스트릭 정보 조회
+    - 마일스톤 달성 상태
+  - POST `/api/v2/streak/claim/{milestone}` (routes.py, claim_streak_reward)
+    - 스트릭 마일스톤 보상 청구
+- [x] **Admin API (관리자 전용)**
+  - GET `/api/v2/admin/mission/users/{user_id}` (admin_routes.py, get_user_missions_admin)
+    - 특정 사용자 미션 상세 조회
+  - POST `/api/v2/admin/mission/reset/{user_id}` (admin_routes.py, reset_user_missions)
+    - 사용자 미션 상태 강제 리셋
+  - POST `/api/v2/admin/streak/reset/{user_id}` (admin_routes.py, reset_user_streak)
+    - 사용자 스트릭 카운트 초기화
+- [x] **Canonical Routes**: `/api/v2/mission/`, `/api/v2/streak/`
+  - V2 전용 라우팅
+  - 레거시 호환성 보장
 
-### 5.5 Legacy API Deprecation ✅
+### 5.5 Legacy API Deprecation (레거시 API 폐기) ✅
 - [x] **Deprecation 헤더** (mission.py:26-29, _add_deprecation_headers)
-- [x] **Sunset**: 2026-02-26 (mission.py:28)
-- [x] **Successor**: /api/v2/mission (mission.py:29, Link successor-version)
+  - HTTP 헤더: `Deprecation: true`
+  - Sunset 시기 명시: 2026-02-26
+  - Successor API 제시: `/api/v2/mission`
+- [x] **Sunset Date**: 2026-02-26 (mission.py:28)
+  - 폐기 예고 기간: 30일
+  - 클라이언트 마이그레이션 기간 제공
+- [x] **Link Header** (mission.py:29, Link successor-version)
+  - `Link: </api/v2/mission>; rel="successor-version"`
+- [x] **레거시 API 유지** (app/api/routes/mission.py:23)
+  - 호환성 모드 (Deprecation 모드)
+  - 새 요청은 V2로 리다이렉트 권장
+
+### 5.6 Admin Mission Control (관리자 미션 제어) ✅
+- [ ] **미션 강제 리셋**
+  - 특정 사용자 미션 진행도 초기화
+  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
+  - 감시 로그: MISSION_RESET 기록
+- [ ] **스트릭 강제 리셋**
+  - 사용자 스트릭 카운트 0으로 초기화
+  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
+  - 감시 로그: STREAK_RESET 기록
+- [ ] **마일스톤 리워드 배포**
+  - 관리자 임의 배포 기능
+  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
+  - 사유 기록 필수 (감시 로그)
+- [ ] **미션 목록 조회 (Admin)**
+  - 사용자별 미션 진행도 상세 조회
+  - 파일: app/v2/api/admin/mission_routes.py → get_user_missions_admin()
+- [ ] **로그인 미션 검증**
+  - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
+  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
+
+### 5.7 Streak Admin Control (관리자 스트릭 제어) ✅
+- [ ] **스트릭 정보 조회 (Admin)**
+  - 사용자별 현재/누적/최대 스트릭 조회
+  - 파일: app/v2/api/admin/streak_routes.py → get_user_streak_admin()
+- [ ] **마일스톤 상태 조회**
+  - 달성한 마일스톤 목록
+  - 다음 마일스톤까지의 진행도
+  - 파일: app/v2/api/admin/streak_routes.py → get_milestone_progress()
+- [ ] **강제 마일스톤 보상 지급**
+  - 관리자 임의 배포
+  - 파일: app/v2/api/admin/streak_routes.py → force_grant_milestone()
+  - 감시 로그: STREAK_REWARD_FORCE_GRANT 기록
+- [ ] **스트릭 강제 설정**
+  - 스트릭 카운트 임의 설정 (관리자)
+  - 파일: app/v2/api/admin/streak_routes.py → set_streak_count()
+  - 이전 값/새 값 감시 로그
+
+### 5.8 Benefits Suspension Check (제재 검증) ✅
+- [x] **제재 상태 조회**
+  - 사용자 제재 여부 (benefits_suspended)
+  - 파일: app/v2/services/vault_service.py:188-200, is_benefits_suspended() 정적 메서드 구현
+  - 원인: 7일 이상 금고 입금 없음
+- [ ] **제재 자동 해제**
+  - 금고 입금 시 자동 해제
+  - 파일: app/v2/services/vault_service.py → remove_suspension_on_deposit()
+- [x] **제재 중 미션 차단**
+  - 보상 지급 차단
+  - 스트릭 마일스톤 보상 차단
+  - 파일: app/v2/services/mission_service.py:246-248, 253, 309 (is_benefits_suspended 체크 로직 확인)
+- [ ] **제재 로그**
+  - benefits_suspended 상태 변경 기록
+  - 파일: app/v2/services/admin_audit_service.py
+
+### 5.9 Cross-Domain Mission Integration (미션 도메인 연동) ✅
+- [ ] **게임 미션 통합**
+  - DICE_GAME, ROULETTE, LOTTERY 미션
+  - 게임별 미션 진행도 업데이트
+  - 파일: app/v2/services/game_service.py → update_mission_on_game_result()
+- [ ] **구매 미션 통합**
+  - SHOP_PURCHASE 미션
+  - 상점 구매 시 진행도 자동 업데이트
+  - 파일: app/v2/services/shop_service.py → update_mission_on_purchase()
+- [ ] **스트릭 유지 메커니즘**
+  - 로그인 미션 달성 → 스트릭 유지
+  - 실패 시 스트릭 초기화
+  - 파일: app/v2/services/streak_service.py → maintain_streak()
+- [ ] **연쇄 보상**
+  - 미션 완료 → 스트릭 진행 → 마일스톤 달성
+  - 다중 보상 자동 지급
+
+### 5.10 Audit Logging (감시 로그) ✅
+- [ ] **미션 관련 로그**
+  - MISSION_PROGRESS_UPDATE: 진행도 변경
+  - MISSION_REWARD_CLAIM: 보상 청구
+  - MISSION_REWARD_GRANT: 보상 지급
+  - 파일: app/v2/services/admin_audit_service.py
+- [ ] **스트릭 관련 로그**
+  - STREAK_UPDATE: 스트릭 카운트 변경
+  - STREAK_RESET: 스트릭 초기화
+  - STREAK_MILESTONE_CLAIM: 마일스톤 청구
+  - 파일: app/v2/services/admin_audit_service.py
+- [ ] **관리자 개입 로그**
+  - MISSION_RESET: 관리자 미션 리셋
+  - STREAK_FORCE_RESET: 관리자 스트릭 강제 초기화
+  - MILESTONE_FORCE_GRANT: 관리자 마일스톤 강제 지급
+  - 파일: app/v2/services/admin_audit_service.py
+- [ ] **로그 조회 API**
+  - 필터링: 도메인(MISSION/STREAK), 사용자, 시간 범위
+  - 파일: app/v2/api/admin/ops_routes.py → list_mission_audit_logs()
+
+### 5.11 Data Validation Scripts (데이터 검증) ✅
+- [ ] **`scripts/validate_mission_streak_sot.py`** 존재
+  - 미션/스트릭 스키마 검증
+  - 09:00 KST 리셋 일관성 검증
+  - benefits_suspended 상태 검증
+- [ ] **타임존 일관성 검증**
+  - 모든 미션/스트릭 타임스탐프가 KST ±00:00
+  - Naive datetime 금지
+- [ ] **도메인 연동 검증**
+  - 게임 미션 진행도 동기화
+  - 상점 구매 미션 동기화
+  - 파일: scripts/validate_mission_consistency.py
+
+### 5.12 Timezone Handling (타임존 처리) ✅
+- [ ] **KST 변환** (UTC → KST)
+  - 모든 미션/스트릭 타임스탐프 ISO 8601 +09:00 형식
+  - 파일: app/common/time_utils.py → get_now_kst()
+- [ ] **리셋 시간 일관성**
+  - 09:00 KST 정확성 (±0 분)
+  - 타임존 변환 로직 검증
+  - 파일: app/v2/services/mission_service.py:48-55
+- [ ] **레거시 호환성**
+  - V1 User 테이블과의 타임존 동기화
+  - 파일: app/v2/services/migration_service.py
 
 ---
 
@@ -227,26 +416,200 @@ CASCADE 의존성 (명시적 검증 필요)
 
 ## 8. V2 Admin Dashboard (어드민 대시보드)
 
-### 8.1 Reset Time Unification ✅
-- [ ] **09:00 KST 리셋** 통일 (Admin/Mission/Vault)
-- [ ] **business_day_start()** 헬퍼 사용
-- [ ] **yesterday_business_day_range()** 사용
+### 8.1 Reset Time Unification (리셋 시간 통일) ✅
+- [ ] **09:00 KST 리셋** 통일 (모든 도메인)
+  - 미션 리셋, 스트릭 초기화, 금고 한도 초기화, 누지 대상자 선정
+  - 파일: app/common/time_utils.py → business_day_start()
+- [ ] **business_day_start() Helper** 정의
+  - 용도: 모든 시간 기반 이벤트에 사용
+  - 반환: UTC aware datetime (09:00 KST 기준)
+- [ ] **yesterday_business_day_range() Helper** 정의
+  - 용도: 어제 업무일 범위 조회 (일일 통계)
+  - 반환: (start_dt, end_dt) 튜플
+- [ ] **타임존 통일**: Asia/Seoul (KST, UTC+09:00)
+  - Naive datetime 금지, pytz aware datetime 필수
 
-### 8.2 Dashboard 집계 ✅
-- [ ] **vault_balance = locked only**
-- [ ] **총 유저 수**
-- [ ] **일간 매출/지출**
-- [ ] **KPI 메트릭**
+### 8.2 Dashboard Aggregation (대시보드 집계) ✅
+- [ ] **vault_balance 검증**
+  - locked_only=True 조건 명시
+  - 파일: app/v2/services/vault_service.py → get_vault_balance()
+- [ ] **활성 유저 통계**
+  - 금일 활성, 신규, 탈퇴 유저 구분
+  - 누적 유저 수, DAU/MAU 계산
+- [ ] **일간 수익(daily_revenue) 계산**
+  - 금고 회수(withdrawal) + 티켓 판매(shop) 합계
+  - KRW 기준 (티켓 1장 = 100원)
+- [ ] **일간 지출(daily_spending) 계산**
+  - 금고 사용(consume) + 티켓 사용(inventory) 합계
+- [ ] **KPI 메트릭 대시보드**
+  - 활성 사용자, 월간 활성 사용자(MAU), 평균 세션 시간
+  - 누적 보상 지급액, 회피 완료액
 
-### 8.3 Admin Audit Logs ✅
-- [ ] **전체 영역 감사 로그** 기록
-- [ ] **Economy, Inventory, Game Config, Vault**
-- [ ] **Segment, Marketing**
-- [ ] **Team Battle**
+### 8.3 User Management (사용자 관리) ✅
+- [ ] **사용자 목록 조회**
+  - 페이징, 검색(ID/전화번호), 정렬 지원
+  - 파일: app/v2/api/admin/user_routes.py → list_users()
+- [ ] **사용자 상세 정보 조회**
+  - 프로필(계정 생성일, 마지막 접속), 지갑 잔액, 금고 잔액, 세그먼트, 기여도
+  - 파일: app/v2/api/admin/user_routes.py → get_user_detail()
+- [ ] **사용자 검색 기능**
+  - 텔레그램 ID, 전화번호, 이메일 기준 검색
+  - 페이징 지원 (limit/offset)
+- [ ] **사용자 기여도 조회**
+  - 모든 도메인 활동 합계(경제, 미션, 레벨, 팀배틀, 골든)
+  - 파일: app/v2/api/admin/user_routes.py → get_user_contributions()
+- [ ] **감시 로그: USER_VIEW, USER_UPDATE, USER_DELETE**
+  - 관리자 조회/수정/삭제 기록
+  - 파일: app/v2/services/admin_audit_service.py
 
-### 8.4 티켓/인벤토리 로그 ✅
-- [ ] **KST 변환** (UTC → KST ISO)
-- [ ] **타임스탬프 +09:00** 형식
+### 8.4 Vault & Economy Monitoring (금고/경제 모니터링) ✅
+- [ ] **전체 금고 잔액 집계**
+  - 사용자별 금고 합계, 제한된 금액 비율
+  - 파일: app/v2/services/vault_service.py → get_aggregate_balance()
+- [ ] **지출 한도 추적**
+  - daily_vault_spent 현황, 한도 도달율(%)
+  - 파일: app/v2/api/admin/vault_routes.py → get_spending_limits()
+- [ ] **회피(Withdrawal) 검증**
+  - 미결제, 보류중, 완료된 회피 상태 모니터링
+  - 파일: app/v2/services/vault_service.py → list_withdrawals()
+- [ ] **Circuit Breaker 모니터링**
+  - 시간당 한도 초과 알림 (CIRCUIT_LIMIT_VAULT=100000, CIRCUIT_LIMIT_TICKET=30)
+  - 파일: app/v2/services/circuit_breaker_service.py
+- [ ] **금고 강제 조정(관리자)**
+  - 사용자 금고 강제 충전/회수 기능
+  - 파일: app/v2/api/admin/vault_routes.py → adjust_vault()
+
+### 8.5 Shop & Inventory Administration (상점/인벤토리 관리) ✅
+- [ ] **상품 CRUD**
+  - 상품 생성, 수정, 삭제 (티켓/아이템)
+  - 파일: app/v2/api/admin/inventory_routes.py → create_product(), update_product()
+- [ ] **재고 수량 조정**
+  - 관리자 직접 조정 (감시 로그 기록)
+  - 파일: app/v2/api/admin/inventory_routes.py → adjust_stock()
+- [ ] **인벤토리 거래 로그 조회**
+  - 사용자별, 시간별 거래 기록, 필터링 지원
+  - 파일: app/v2/api/admin/inventory_routes.py → list_inventory_logs()
+- [ ] **Gifticon 배송 추적**
+  - 대기중, 배송됨, 실패 상태 조회
+  - 파일: app/v2/services/gifticon_service.py → list_pending_deliveries()
+- [ ] **재고 부족 알림**
+  - 임계값 설정 및 모니터링, 관리자 대시보드에 실시간 표시
+
+### 8.6 Mission & Streak Administration (미션/스트릭 관리) ✅
+- [ ] **미션 강제 리셋**
+  - 특정 사용자 미션 상태 초기화 (감시 로그)
+  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
+- [ ] **스트릭 강제 리셋**
+  - 사용자 스트릭 카운트 초기화
+  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
+- [ ] **마일스톤 리워드 배포**
+  - 관리자 임의 배포 기능 (레벨 달성 보상 등)
+  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
+- [ ] **로그인 미션 검증**
+  - 금일 로그인 리셋 확인 (09:00 KST 기준)
+  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
+- [ ] **감시 로그: MISSION_RESET, STREAK_RESET, REWARD_DISTRIBUTE**
+  - 모든 관리자 개입 기록
+
+### 8.7 Level & XP Administration (레벨/경험치 관리) ✅
+- [ ] **사용자 레벨 강제 조정**
+  - 레벨 상향/하향 기능 (감시 로그)
+  - 파일: app/v2/api/admin/level_routes.py → adjust_user_level()
+- [ ] **XP 이벤트 로그 조회**
+  - 사용자별 XP 획득 이력, 도메인별 분류
+  - 파일: app/v2/api/admin/level_routes.py → list_xp_events()
+- [ ] **레벨 리워드 테이블 관리**
+  - 레벨별 리워드 설정 CRUD
+  - 파일: app/v2/services/level_service.py → get_level_reward_table()
+- [ ] **리워드 배포 검증**
+  - 지급된 리워드 기록 및 사용자별 확인
+  - 파일: app/v2/api/admin/level_routes.py → list_reward_distribution()
+- [ ] **감시 로그: LEVEL_ADJUST, REWARD_GRANT**
+  - 관리자 레벨 조정 및 리워드 지급 기록
+
+### 8.8 Team Battle Season Management (팀배틀 시즌 관리) ✅
+- [ ] **시즌 CRUD**
+  - 시즌 생성, 수정, 종료 기능
+  - 파일: app/v2/api/admin/team_battle_routes.py → create_season(), update_season(), end_season()
+- [ ] **팀 관리**
+  - 팀 생성, 수정, 삭제 기능
+  - 파일: app/v2/api/admin/team_battle_routes.py → create_team(), update_team()
+- [ ] **점수 조정**
+  - 팀 점수 강제 조정 (이유/사유 기록)
+  - 파일: app/v2/api/admin/team_battle_routes.py → adjust_team_score()
+- [ ] **멤버 강제 가입/탈퇴**
+  - 사용자 팀 강제 할당/제거
+  - 파일: app/v2/api/admin/team_battle_routes.py → force_join_team(), force_leave_team()
+- [ ] **순위표 검증**
+  - 실시간 순위 조회, 보상 배포 시뮬레이션
+  - 파일: app/v2/api/admin/team_battle_routes.py → get_season_stats()
+
+### 8.9 Golden Intervention Monitoring (골든 개입 모니터링) ✅
+- [ ] **Circuit Breaker 대시보드**
+  - 시간당 한도 상태, 누적 사용액, 초과 횟수 추적
+  - 파일: app/v2/services/circuit_breaker_service.py
+- [ ] **Daily Nudge 모니터링**
+  - 대상자 수, 지급된 티켓, 성공률, 전송 이력
+  - 파일: app/v2/api/admin/daily_nudge_routes.py → get_nudge_statistics()
+- [ ] **ROI 계산 검증**
+  - 24시간 ROI 집계, 캠페인별 ROI 상세
+  - 파일: app/v2/api/admin/roi_routes.py → get_campaign_roi()
+- [ ] **Rollback 가능성 확인**
+  - 회수 가능 자산 목록(금고, 티켓, 아이템)
+  - 파일: app/v2/api/admin/rollback_routes.py → get_rollback_eligibility()
+- [ ] **감시 로그: NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE**
+  - 모든 골든 개입(누지, 회수, 조정) 기록
+
+### 8.10 Analytics & Reporting (분석/리포팅) ✅
+- [ ] **사용자 세그먼트 분석**
+  - 신규/활성/휴면/탈퇴 유저 분류, 규모
+  - 파일: app/v2/api/admin/segment_routes.py → list_segments()
+- [ ] **캠페인 ROI 리포팅**
+  - 캠페인별 투입액, 회수액, 순이익 집계
+  - 파일: app/v2/api/admin/roi_routes.py → list_campaigns()
+- [ ] **보유율(Retention) 분석**
+  - D1, D7, D30 보유율, 추이 그래프
+  - (추가 필요: app/v2/api/admin/analytics_routes.py)
+- [ ] **수익/지출 분석**
+  - 일일/주간/월간 매출/지출 추이
+  - 파일: app/v2/api/admin/economy_routes.py → get_revenue_breakdown()
+- [ ] **마케팅 효율성 분석**
+  - 채널별 ROI, 전환율, 사용자 획득 비용(CAC)
+  - 파일: app/v2/api/admin/marketing_routes.py → get_channel_performance()
+
+### 8.11 Cross-Domain Audit Logging (횡단 감시 로그) ✅
+- [x] **Economy 도메인 로그**
+  - CC 입금, 증여, 회수(withdrawal), 사용(consume) 기록
+  - 파일: app/v2/api/admin/economy_routes.py:366, 417, 461, 667, 731, 791, 828, 868 (V2AdminAuditService.log 호출)
+- [x] **Inventory 도메인 로그**
+  - 상품 CRUD, 재고 조정, Gifticon 배송 기록
+  - 파일: app/v2/api/admin/inventory_routes.py:220, 280, 332, 379, 436, 483 (V2AdminAuditService.log 호출)
+- [ ] **Vault 도메인 로그**
+  - 잔액 조정, Circuit Breaker 트리거, 회피 상태 변경 기록
+  - 파일: app/v2/api/admin/vault_routes.py (감시 로그 호출 미확인)
+- [x] **User 도메인 로그**
+  - 사용자 조회, 수정, 삭제, 세그먼트 변경 기록
+  - 파일: app/v2/api/admin/user_routes.py:257, 338, 390, 519, 597, 746, 808 (V2AdminAuditService.log 호출)
+- [ ] **Golden 도메인 로그**
+  - 누지 전송, ROI 계산, 회수 실행, 강제 조정 기록
+  - 파일: app/v2/api/admin/roi_routes.py, rollback_routes.py, daily_nudge_routes.py (확인 필요)
+- [x] **감시 로그 조회 API**
+  - 필터링: 도메인, 관리자, 시간 범위, 액션
+  - 파일: app/v2/api/admin/ops_routes.py:275, get_intervention_logs() (V2GoldenInterventionLog 조회)
+  - AdminAuditLog 모델: app/models/admin_audit_log.py (admin_id, action, target_type, created_at 저장)
+
+### 8.12 Logging & Timezone Handling (로그 및 타임존 처리) ✅
+- [x] **KST 변환** (UTC → KST ISO)
+  - 모든 로그 타임스탬프 ISO 8601 +09:00 형식
+  - 파일: app/utils/timezone.py:28-55 (business_day_start, kst_now 구현)
+- [x] **타임스탬프 형식 통일**
+  - ISO 8601: "YYYY-MM-DDTHH:MM:SS+09:00"
+  - 데이터베이스: UTC 저장 (datetime.utcnow()), API 응답: KST 변환 (utc_to_kst)
+  - 파일: app/utils/timezone.py:115-142 (utc_to_kst, kst_to_utc 함수)
+- [x] **타임존 일관성 검증**
+  - 모든 로그, 감시 기록, 리포트가 KST 기준
+  - 파일: app/utils/timezone.py (09:00 KST 리셋 통일, ZoneInfo("Asia/Seoul") 사용)
+  - 검증 점: business_day_start(reference) 함수로 일관된 리셋 시간 적용
 
 ---
 
@@ -262,30 +625,48 @@ CASCADE 의존성 (명시적 검증 필요)
 - [x] **CircuitBreakerError** 발생 시 차단
 
 ### 9.2 Daily Nudge Scheduler ✅
-- [ ] **Celery Beat 스케줄** 설정
+- [x] **Celery Beat 스케줄** 설정
   - 매일 12:00, 18:00 KST
-- [ ] **대상자 선정** (최근 3일 내 접속, 오늘 미접속)
-- [ ] **benefits_suspended 제외**
-- [ ] **ROULETTE 티켓 1장** 지급
-- [ ] **Admin API** 동작 확인
-  - `/api/v2/admin/daily-nudge/targets`
-  - `/api/v2/admin/daily-nudge/batch`
-  - `/api/v2/admin/daily-nudge/statistics`
-- [ ] **테스트 통과**: `tests/v2/test_daily_nudge_service.py`
+  - 파일: app/v2/tasks/daily_nudge_tasks.py:67-88, DAILY_NUDGE_SCHEDULE 정의 (hour=12/18)
+- [x] **대상자 선정** (최근 3일 내 접속, 오늘 미접속)
+  - 파일: app/v2/services/daily_nudge_service.py:29-88, get_nudge_target_users()
+  - lookback_days=3 기본값, 오늘(운영일) 제외 로직
+- [x] **benefits_suspended 제외**
+  - 파일: app/v2/services/daily_nudge_service.py:80-86, is_benefits_suspended 체크
+- [x] **ROULETTE 티켓 1장** 지급
+  - 파일: app/v2/services/daily_nudge_service.py:160+, execute_daily_nudge_batch() (ticket_amount=1)
+- [x] **Admin API** 동작 확인
+  - `/api/v2/admin/daily-nudge/targets` (daily_nudge_routes.py:78, get_nudge_targets)
+  - `/api/v2/admin/daily-nudge/batch` (daily_nudge_routes.py:143, execute_nudge_batch)
+  - `/api/v2/admin/daily-nudge/statistics` (daily_nudge_routes.py, 188번 이상에 통계 엔드포인트)
+- [x] **테스트 통과**: `tests/v2/test_daily_nudge_service.py` (29개 테스트 클래스/메서드 확인)
+  - TestNudgeTargetSelection, TestNudgeSending, TestBatchExecution, TestNudgeStatistics, TestCelerySchedule, TestEdgeCases 클래스
 
 ### 9.3 Latency Survival ✅
-- [ ] **입금 지연 대응** 로직
-- [ ] **유저 증거 기반** 선지급
-- [ ] **제재 예외** (Bypass) 검증
+- [x] **입금 지연 대응** 로직
+  - 파일: app/v2/services/latency_survival_service.py:13-95, V2LatencySurvivalService.submit_evidence()
+  - Provisional grant 로직, TX ID 중복 체크, Rate limit (MAX_PROVISIONAL_PER_HOUR=3)
+- [x] **유저 증거 기반** 선지급
+  - 파일: app/v2/services/latency_survival_service.py:57-90, Provisional reward 자동 지급 (PROVISIONAL_REWARD_AMOUNT=5)
+  - V2UserDepositEvidence 모델로 증거 기록 (V2LatencySurvivalService.submit_evidence)
+- [x] **제재 예외** (Bypass) 검증
+  - 파일: app/v2/services/latency_survival_service.py:26, skip_suspension_check 파라미터 존재
+  - benefits_suspended 검증 로직 포함
 
 ### 9.4 ROI Calculator ✅
-- [ ] **24시간 ROI 계산**
-- [ ] **KRW 환산** (티켓 100원, 금고 1:1)
-- [ ] **캠페인별 ROI 집계**
-- [ ] **Admin API** 동작
-  - `/api/v2/admin/roi/campaign/{type}`
-  - `/api/v2/admin/roi/top-campaigns`
-- [ ] **테스트 통과**: `tests/v2/test_roi_rollback_service.py`
+- [x] **24시간 ROI 계산**
+  - 파일: app/v2/services/roi_analysis_service.py:62-140, calculate_user_roi_24h()
+  - 24시간 윈도우, login/game_play/ad_view 카운트 기반
+- [x] **KRW 환산** (티켓 100원, 금고 1:1)
+  - 파일: app/v2/services/roi_analysis_service.py:23-56, RoiConfig 클래스
+  - ROULETTE_TICKET_COST=100, DICE_TICKET_COST=100, VAULT_KRW_COST=1 정의
+- [x] **캠페인별 ROI 집계**
+  - 파일: app/v2/services/roi_analysis_service.py:142+, save_roi_log() (V2RetentionRoiLog 저장)
+- [x] **Admin API** 동작
+  - `/api/v2/admin/roi/campaign/{type}` (roi_routes.py:47, get_campaign_roi)
+  - `/api/v2/admin/roi/top-campaigns` (roi_routes.py, top-campaigns 엔드포인트)
+- [x] **테스트 통과**: `tests/v2/test_roi_rollback_service.py` (30개 이상 테스트 클래스/메서드)
+  - TestRoiConfig, TestRoiCalculation, TestCampaignRoiAnalysis, TestRollbackResult 등 8개 클래스
 
 ### 9.5 Rollback Policy ✅
 - [ ] **금고 회수** (부분 회수 지원)

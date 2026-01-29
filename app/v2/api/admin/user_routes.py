@@ -40,6 +40,9 @@ from app.v2.schemas.v2_admin_user import (
     AdminUserLevelSnapshotDto,
     AdminUserLevelAdjustRequest,
     AdminUserLevelSetRequest,
+    UserMissionProgressAdminDto,
+    UserMissionsAdminResponse,
+    ResetAllMissionsResponse,
 )
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.mission_service import V2MissionService
@@ -1039,3 +1042,126 @@ def purge_user(
         raise HTTPException(status_code=403, detail="ADMIN_REQUIRED")
     
     V2AdminUserService.purge_user(db, user_id=user_id, admin_id=admin_id)
+
+
+# ─────────────────────────────────────────────────────────────────
+# Mission Admin API (V2)
+# ─────────────────────────────────────────────────────────────────
+
+@router.get("/users/{user_id}/missions", response_model=UserMissionsAdminResponse)
+def get_user_missions_admin(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    유저의 전체 미션 진행 현황 조회 (어드민용)
+
+    Returns:
+        UserMissionsAdminResponse: 모든 미션의 진행 현황
+    """
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # 모든 활성 미션 조회
+    missions = db.query(Mission).filter(Mission.is_active == True).all()
+
+    # 유저의 미션 진행도 조회 (LEFT JOIN 효과)
+    progress_map = {}
+    progresses = db.query(UserMissionProgress).filter(
+        UserMissionProgress.user_id == user_id
+    ).all()
+    for p in progresses:
+        progress_map[p.mission_id] = p
+
+    result_missions = []
+    completed_count = 0
+    claimed_count = 0
+
+    for m in missions:
+        p = progress_map.get(m.id)
+        is_completed = p.is_completed if p else False
+        is_claimed = p.is_claimed if p else False
+
+        if is_completed:
+            completed_count += 1
+        if is_claimed:
+            claimed_count += 1
+
+        result_missions.append(UserMissionProgressAdminDto(
+            mission_id=m.id,
+            title=m.title,
+            category=m.category.value if hasattr(m.category, "value") else str(m.category),
+            logic_key=m.logic_key,
+            current_value=p.current_value if p else 0,
+            target_value=m.target_value,
+            is_completed=is_completed,
+            is_claimed=is_claimed,
+            approval_status=p.approval_status.value if p and hasattr(p.approval_status, "value") else "NONE",
+            reset_date=p.reset_date if p else None,
+            completed_at=p.completed_at if p else None,
+        ))
+
+    return UserMissionsAdminResponse(
+        user_id=user_id,
+        total_missions=len(result_missions),
+        completed_count=completed_count,
+        claimed_count=claimed_count,
+        missions=result_missions,
+    )
+
+
+@router.post("/users/{user_id}/missions/reset-all", response_model=ResetAllMissionsResponse)
+def reset_all_user_missions(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    유저의 모든 미션 진행도 리셋
+
+    - 모든 UserMissionProgress 레코드를 리셋
+    - current_value=0, is_completed=False, is_claimed=False
+
+    Permission: ADMIN 이상
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # 유저의 모든 미션 진행도 조회
+    progresses = db.query(UserMissionProgress).filter(
+        UserMissionProgress.user_id == user_id
+    ).all()
+
+    reset_count = 0
+    for p in progresses:
+        p.current_value = 0
+        p.is_completed = False
+        p.is_claimed = False
+        p.approval_status = ApprovalStatus.NONE
+        p.completed_at = None
+        reset_count += 1
+
+    db.commit()
+
+    # 감사 로그 기록
+    V2AdminAuditService.log(
+        db, admin_id, "MISSION_RESET_ALL", "USER", str(user_id),
+        after={"reset_count": reset_count}
+    )
+
+    logger.info(f"[ADMIN] Reset all missions: user_id={user_id}, count={reset_count}, admin_id={admin_id}")
+
+    return ResetAllMissionsResponse(
+        success=True,
+        user_id=user_id,
+        reset_count=reset_count,
+        message=f"{reset_count}개 미션 진행도가 리셋되었습니다.",
+    )

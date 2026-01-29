@@ -1,6 +1,7 @@
 """V2 Admin Streak Routes."""
+import logging
 from datetime import date
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import func, select
@@ -9,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_admin_info
 from app.models.feature import UserEventLog
 from app.models.user import User
+from app.models.user_segment import UserSegment
 from app.schemas.admin_streak_rewards import (
     StreakRewardDailyCountsResponse,
     StreakRewardUserEventsResponse,
@@ -17,8 +19,21 @@ from app.schemas.admin_streak_rewards import (
 )
 
 from app.v2.services.v2_admin_mission_service import V2AdminMissionService
+from app.v2.services.streak_service import V2StreakService
+from app.v2.services import V2AdminAuditService
+from app.v2.schemas.v2_admin_user import (
+    SetStreakCountRequest,
+    UserStreakAdminDto,
+    MilestoneProgressDto,
+    UserMilestoneProgressResponse,
+    ForceGrantMilestoneRequest,
+    ForceGrantMilestoneResponse,
+    DistributeMilestoneRequest,
+    DistributeMilestoneResponse,
+)
 
 router = APIRouter(prefix="/streak-rewards", tags=["v2-admin-streak"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/daily-counts", response_model=StreakRewardDailyCountsResponse)

@@ -266,4 +266,105 @@ class TicketLogDto(BaseModel):
     nickname: Optional[str] = None
 
 
+# ============ Mission/Streak Admin Schemas ============
+
+class UserMissionProgressAdminDto(BaseModel):
+    """유저 미션 진행 현황 (어드민용)"""
+    mission_id: int
+    title: str
+    category: str
+    logic_key: str
+    current_value: int
+    target_value: int
+    is_completed: bool
+    is_claimed: bool
+    approval_status: str
+    reset_date: Optional[str] = None
+    completed_at: Optional[datetime] = None
+
+
+class UserMissionsAdminResponse(BaseModel):
+    """유저 미션 전체 조회 응답"""
+    user_id: int
+    total_missions: int
+    completed_count: int
+    claimed_count: int
+    missions: List[UserMissionProgressAdminDto]
+
+
+class ResetAllMissionsResponse(BaseModel):
+    """전체 미션 리셋 응답"""
+    success: bool
+    user_id: int
+    reset_count: int
+    message: str
+
+
+class SetStreakCountRequest(BaseModel):
+    """스트릭 일수 설정 요청"""
+    streak_days: int = Field(..., ge=0, le=365, description="설정할 스트릭 일수")
+    adjust_last_play_date: bool = Field(True, description="last_play_date도 자동 조정할지 여부")
+
+
+class UserStreakAdminDto(BaseModel):
+    """유저 스트릭 상세 정보 (어드민용)"""
+    user_id: int
+    streak_days: int
+    last_play_date: Optional[str] = None
+    is_hot: bool
+    is_legend: bool
+    next_milestone: int
+    claimable_day: Optional[int] = None
+    current_multiplier: float = 1.0
+
+
+class MilestoneProgressDto(BaseModel):
+    """마일스톤 진행 현황"""
+    day: int
+    achieved: bool
+    claimed: bool
+    claim_date: Optional[str] = None
+    rewards: Optional[List[dict]] = None
+
+
+class UserMilestoneProgressResponse(BaseModel):
+    """유저 마일스톤 진행 현황 응답"""
+    user_id: int
+    streak_days: int
+    milestones: List[MilestoneProgressDto]
+
+
+class ForceGrantMilestoneRequest(BaseModel):
+    """마일스톤 강제 지급 요청"""
+    milestone_day: int = Field(..., ge=1, description="지급할 마일스톤 일수 (3, 7, 14...)")
+    reason: str = Field("admin_grant", description="지급 사유")
+
+
+class ForceGrantMilestoneResponse(BaseModel):
+    """마일스톤 강제 지급 응답"""
+    success: bool
+    user_id: int
+    milestone_day: int
+    grants: List[dict]
+    message: str
+
+
+class DistributeMilestoneRequest(BaseModel):
+    """마일스톤 일괄 배포 요청"""
+    milestone_day: int = Field(..., ge=1, description="배포할 마일스톤 일수")
+    user_ids: Optional[List[int]] = Field(None, description="대상 유저 ID 목록 (None이면 조건에 맞는 전체)")
+    segment: Optional[str] = Field(None, description="특정 세그먼트만 대상")
+    reason: str = Field("admin_distribute", description="배포 사유")
+
+
+class DistributeMilestoneResponse(BaseModel):
+    """마일스톤 일괄 배포 응답"""
+    success: bool
+    milestone_day: int
+    total_users: int
+    success_count: int
+    failed_count: int
+    details: List[dict]
+
+
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary  # noqa: E402

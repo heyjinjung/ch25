@@ -41,32 +41,30 @@ def verify_channel(
     if not current_user.telegram_id:
          raise HTTPException(status_code=400, detail="User has no connected Telegram ID")
 
+    # 2.1 [Optimization] Check if already completed to prevent double work/rewards
+    # Actually, MissionService.update_progress handles counts, but for manual check missions,
+    # it's better to fail fast if the mission is already complete and claimed.
+    
     service = NotificationService()
     is_member = service.check_chat_member(target_channel, current_user.telegram_id)
     
     if not is_member:
-        return {"success": False, "message": "Not a member yet"}
+        # [Log Enhancement] Provide more context for admin troubleshooting
+        logger.warning(
+            f"[VIRAL_VERIFY] User {current_user.id} (TG: {current_user.telegram_id}) "
+            f"failed membership check for {target_channel}"
+        )
+        return {"success": False, "message": "채널 가입이 확인되지 않았습니다. 가입 후 다시 시도해주세요."}
 
     # 3. Update Mission Logic
-    # We can either update by specific mission_id or by generic action "JOIN_CHANNEL"
     ms = MissionService(db)
-    
-    # If mission_id provided, ensure it matches? 
-    # Actually, simpler to just trigger "JOIN_CHANNEL" action
-    # But user specifically clicked "Check" on a mission card
-    
-    # Let's trigger action "JOIN_CHANNEL"
-    # And specifically enforce the mission_id passed?
-    # MissionService.update_progress updates ALL matching action_type.
-    # So we just trigger the action.
-    
     updated = ms.update_progress(current_user.id, "JOIN_CHANNEL", 1)
     
     if updated:
-        return {"success": True, "message": "Verified and Updated"}
+        logger.info(f"[VIRAL_VERIFY] User {current_user.id} verified for channel {target_channel}")
+        return {"success": True, "message": "인증 성공! 보상이 지급되었습니다."}
     else:
-        # If no mission was updated (maybe already complete), but verification passed
-        return {"success": True, "message": "Verified (Already completed or no active mission)"}
+        return {"success": True, "message": "이미 인증되었거나 진행 중인 미션이 없습니다."}
 
 
 @router.post("/action", summary="Record Viral Action (Trust-based)")

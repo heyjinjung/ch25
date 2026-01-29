@@ -1,11 +1,13 @@
-import React from "react";
-import { Check, Gift, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Gift, Loader2, ExternalLink, Share2, ShieldCheck } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { motion } from "framer-motion";
 
 import { MissionDto } from "../../api/missionApi";
 import { BorderBeam } from "../../components/ui/BorderBeam";
+import { useViralAction } from "../../v2/hooks/useViralAction";
+import { triggerHaptic } from "../../v2/utils/haptic";
 
 interface MissionCardProps {
   mission: MissionDto;
@@ -18,8 +20,127 @@ export const MissionCard: React.FC<MissionCardProps> = ({
   onClaim,
   isClaiming,
 }) => {
+  const [isJoined, setIsJoined] = useState(false);
+  const { recordAction, verifyChannel, isRecording, isVerifying } = useViralAction();
+
   const percent = Math.min(100, (mission.progress / mission.target) * 100);
   const isClaimable = mission.is_completed && !mission.is_claimed;
+
+  const handleAction = async () => {
+    const tg = (window as any).Telegram?.WebApp;
+    if (!tg) return;
+
+    triggerHaptic("medium");
+
+    // Action Type based logic
+    // We assume these strings based on Mission schema and V2MissionService aliases
+    const logicKey = (mission as any).logic_key || "";
+    const actionType = (mission as any).action_type || "";
+
+    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL") {
+      if (!isJoined) {
+        // Step 1: Join
+        const channelUrl = "https://t.me/cc_jm_official"; // Fallback URL or get from metadata
+        tg.openTelegramLink(channelUrl);
+        setIsJoined(true);
+      } else {
+        // Step 2: Verify
+        await verifyChannel({ missionId: parseInt(mission.id) });
+      }
+    } else if (actionType === "SHARE_STORY") {
+      tg.shareToStory("https://cc-jm.com/share-bg.png", { text: "CC 미팅 같이해요! 💎" });
+      await recordAction({ action_type: "SHARE_STORY", mission_id: parseInt(mission.id) });
+    } else if (actionType === "SHARE_LINK" || actionType === "SHARE") {
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent("https://t.me/your_bot?start=ref_" + (tg.initDataUnsafe?.user?.id || ""))}&text=${encodeURIComponent("같이 게임하고 보상 받아요!")}`;
+      tg.openTelegramLink(shareUrl);
+      await recordAction({ action_type: actionType, mission_id: parseInt(mission.id) });
+    }
+  };
+
+  const renderActionButton = () => {
+    if (mission.is_claimed) {
+      return (
+        <div className="px-5 py-2.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-zinc-600 text-[12px] font-bold flex items-center gap-2">
+          <Check className="w-3.5 h-3.5" />
+          완료됨
+        </div>
+      );
+    }
+
+    if (isClaimable) {
+      return (
+        <Button
+          size="sm"
+          onClick={() => onClaim(mission.id)}
+          disabled={isClaiming}
+          className="h-11 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 border-none"
+        >
+          {isClaiming ? <Loader2 className="w-4 h-4 animate-spin" /> : "보상 받기"}
+        </Button>
+      );
+    }
+
+    // Trigger buttons for incomplete viral missions
+    const actionType = (mission as any).action_type || "";
+    const isProcessing = isRecording || isVerifying;
+
+    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL") {
+      return (
+        <Button
+          size="sm"
+          onClick={handleAction}
+          disabled={isProcessing}
+          className={cn(
+            "h-11 px-5 font-black text-xs rounded-2xl transition-all active:scale-95 border-none gap-2",
+            isJoined ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-white/10 hover:bg-white/20 text-white"
+          )}
+        >
+          {isProcessing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : isJoined ? (
+            <>
+              <ShieldCheck className="w-4 h-4" />
+              가입 확인
+            </>
+          ) : (
+            <>
+              <ExternalLink className="w-4 h-4" />
+              채널 가입
+            </>
+          )}
+        </Button>
+      );
+    }
+
+    if (actionType.includes("SHARE")) {
+      return (
+        <Button
+          size="sm"
+          onClick={handleAction}
+          disabled={isProcessing}
+          className="h-11 px-5 bg-white/10 hover:bg-white/20 text-white font-black text-xs rounded-2xl transition-all active:scale-95 border-none gap-2"
+        >
+          {isProcessing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              공유하기
+            </>
+          )}
+        </Button>
+      );
+    }
+
+    return (
+      <button
+        disabled
+        className="h-11 px-5 bg-white/[0.04] border border-white/5 rounded-2xl text-zinc-600 text-[11px] font-black uppercase tracking-widest cursor-default"
+      >
+        미션 진행 중
+      </button>
+    );
+  };
 
   return (
     <motion.div
@@ -95,7 +216,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
                   percent >= 100 ? "text-emerald-500" : "text-zinc-600",
                 )}
               >
-                {percent >= 100 ? "보상 받기 가능" : "진행 중"}
+                {percent >= 100 ? "완료" : "진행 중"}
               </span>
               <span
                 className={cn(
@@ -131,32 +252,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
 
           {/* Action Button - High Visual Priority */}
           <div className="flex-shrink-0">
-            {mission.is_claimed ? (
-              <div className="px-5 py-2.5 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-zinc-600 text-[12px] font-bold flex items-center gap-2">
-                <Check className="w-3.5 h-3.5" />
-                완료됨
-              </div>
-            ) : isClaimable ? (
-              <Button
-                size="sm"
-                onClick={() => onClaim(mission.id)}
-                disabled={isClaiming}
-                className="h-11 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 border-none"
-              >
-                {isClaiming ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "받기"
-                )}
-              </Button>
-            ) : (
-              <button
-                disabled
-                className="h-11 px-5 bg-white/[0.04] border border-white/5 rounded-2xl text-zinc-600 text-[11px] font-black uppercase tracking-widest cursor-default"
-              >
-                미션
-              </button>
-            )}
+            {renderActionButton()}
           </div>
         </div>
       </div>

@@ -325,6 +325,233 @@ class V2StreakService:
         
         if commit:
             self.db.commit()
-        
+
         logger.info(f"[STREAK] Reset: user_id={user_id}")
         return True
+
+    def set_streak_count(
+        self,
+        user_id: int,
+        streak_days: int,
+        *,
+        adjust_last_play_date: bool = True,
+        commit: bool = True,
+    ) -> Dict[str, Any]:
+        """스트릭 일수 직접 설정 (관리자용).
+
+        Args:
+            user_id: 유저 ID
+            streak_days: 설정할 스트릭 일수
+            adjust_last_play_date: last_play_date도 자동 조정할지 여부
+            commit: 커밋 여부
+
+        Returns:
+            dict: 설정 결과
+        """
+        user = self.db.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return {"success": False, "message": "USER_NOT_FOUND"}
+
+        old_streak = int(user.play_streak or 0)
+        user.play_streak = streak_days
+
+        if adjust_last_play_date:
+            # streak_days가 0이면 last_play_date도 None으로
+            if streak_days == 0:
+                user.last_play_date = None
+            else:
+                # streak_days에 맞게 last_play_date 조정 (오늘 기준)
+                today = self._operational_play_date(self._now_tz())
+                user.last_play_date = today
+
+        if commit:
+            self.db.commit()
+
+        logger.info(
+            f"[STREAK] Set count: user_id={user_id}, "
+            f"old={old_streak}, new={streak_days}"
+        )
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "old_streak": old_streak,
+            "new_streak": streak_days,
+            "last_play_date": user.last_play_date.isoformat() if user.last_play_date else None,
+        }
+
+    def force_grant_milestone(
+        self,
+        user_id: int,
+        milestone_day: int,
+        *,
+        reason: str = "admin_grant",
+        commit: bool = True,
+    ) -> Dict[str, Any]:
+        """마일스톤 보상 강제 지급 (관리자용).
+
+        Args:
+            user_id: 유저 ID
+            milestone_day: 지급할 마일스톤 일수 (3, 7, 14...)
+            reason: 지급 사유
+            commit: 커밋 여부
+
+        Returns:
+            dict: 지급 결과
+        """
+        user = self.db.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return {"success": False, "message": "USER_NOT_FOUND", "grants": []}
+
+        # 해당 마일스톤 규칙 찾기
+        rules = self._get_streak_reward_rules()
+        rule = next((r for r in rules if r["day"] == milestone_day), None)
+
+        if not rule:
+            return {
+                "success": False,
+                "message": f"MILESTONE_RULE_NOT_FOUND: {milestone_day}",
+                "grants": [],
+            }
+
+        # 이벤트 로그용 날짜 (오늘 기준)
+        today = self._operational_play_date(self._now_tz())
+        event_name = f"streak.reward_grant.{milestone_day}.{today.isoformat()}"
+
+        # 이미 지급되었는지 확인
+        exists = self.db.execute(
+            select(UserEventLog).where(
+                UserEventLog.user_id == user_id,
+                UserEventLog.event_name == event_name
+            )
+        ).first()
+
+        if exists:
+            return {
+                "success": False,
+                "message": "ALREADY_GRANTED",
+                "grants": [],
+            }
+
+        # 보상 지급
+        grants = rule.get("grants", [])
+        results = []
+        reward_service = V2RewardService()
+
+        meta = {
+            "reason": reason,
+            "milestone_day": milestone_day,
+            "force_grant": True,
+            "grant_date": today.isoformat(),
+        }
+
+        for g in grants:
+            kind = g.get("kind")
+            amount = int(g.get("amount", 0))
+
+            if kind == "WALLET":
+                tt = g.get("token_type")
+                reward_service.deliver(
+                    self.db,
+                    user_id=user_id,
+                    reward_type=tt,
+                    reward_amount=amount,
+                    meta=meta,
+                    commit=False
+                )
+                results.append({"type": tt, "amount": amount})
+
+            elif kind == "INVENTORY":
+                it = g.get("item_type")
+                reward_service.deliver(
+                    self.db,
+                    user_id=user_id,
+                    reward_type=it,
+                    reward_amount=amount,
+                    meta=meta,
+                    commit=False
+                )
+                results.append({"type": it, "amount": amount})
+
+        # 완료 로그 기록
+        self.db.add(UserEventLog(
+            user_id=user_id,
+            feature_type="STREAK",
+            event_name=event_name,
+            meta_json={**meta, "grants": results}
+        ))
+
+        if commit:
+            self.db.commit()
+
+        logger.info(
+            f"[STREAK] Force grant milestone: user_id={user_id}, "
+            f"day={milestone_day}, grants={len(results)}"
+        )
+
+        return {
+            "success": True,
+            "user_id": user_id,
+            "milestone_day": milestone_day,
+            "grants": results,
+        }
+
+    def get_milestone_progress(self, user_id: int) -> List[Dict[str, Any]]:
+        """유저의 마일스톤 진행 현황 조회.
+
+        Args:
+            user_id: 유저 ID
+
+        Returns:
+            list: 각 마일스톤별 달성/클레임 여부
+        """
+        user = self.db.execute(
+            select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return []
+
+        streak_days = int(user.play_streak or 0)
+        rules = self._get_streak_reward_rules()
+        results = []
+
+        for rule in sorted(rules, key=lambda x: x["day"]):
+            m_day = rule["day"]
+            achieved = streak_days >= m_day
+
+            # 클레임 여부 확인 (최근 7일 내 이벤트 로그 검색)
+            claimed = False
+            claim_date = None
+
+            if achieved and user.last_play_date:
+                # 해당 마일스톤 달성 날짜 추정
+                hit_date = user.last_play_date - timedelta(days=(streak_days - m_day))
+                event_name = f"streak.reward_grant.{m_day}.{hit_date.isoformat()}"
+
+                event = self.db.execute(
+                    select(UserEventLog).where(
+                        UserEventLog.user_id == user_id,
+                        UserEventLog.event_name == event_name
+                    )
+                ).scalar_one_or_none()
+
+                if event:
+                    claimed = True
+                    claim_date = event.created_at.isoformat() if event.created_at else None
+
+            results.append({
+                "day": m_day,
+                "achieved": achieved,
+                "claimed": claimed,
+                "claim_date": claim_date,
+                "rewards": rule.get("grants", []),
+            })
+
+        return results
