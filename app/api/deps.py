@@ -1,7 +1,7 @@
 """Shared API dependencies."""
 from collections.abc import Generator
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -13,6 +13,24 @@ from app.models.user import User
 from app.v2.models.user import V2User
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def _log_rbac_denied(db: Session, user_id: int, ip_address: str | None = None, user_agent: str | None = None) -> None:
+    """RBAC 거부 이벤트 기록 (best-effort)"""
+    try:
+        from app.v2.models.auth_event import V2UserAuthEvent, AuthEventType
+        event = V2UserAuthEvent(
+            user_id=user_id,
+            event_type=AuthEventType.RBAC_DENIED,
+            ip_address=ip_address,
+            user_agent=user_agent[:500] if user_agent else None,
+            success=False,
+            error_message="ADMIN_REQUIRED",
+        )
+        db.add(event)
+        db.commit()
+    except Exception:
+        db.rollback()  # 로깅 실패해도 원래 요청에는 영향 없음
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -67,6 +85,7 @@ def get_current_user_id(
 
 
 def get_current_admin_info(
+    request: Request,
     db: Session = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> tuple[int, str]:
@@ -102,6 +121,10 @@ def get_current_admin_info(
                 role_str = tag_role.replace("ROLE_", "", 1).upper()
 
     if not role_str:
+        # RBAC_DENIED 이벤트 기록
+        client_ip = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+        _log_rbac_denied(db, admin_id, client_ip, user_agent)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ADMIN_REQUIRED")
 
     # Backward compatibility: treat SUPER_ADMIN as ADMIN.

@@ -25,6 +25,23 @@ class Settings(BaseSettings):
     # Test mode: bypasses feature_schedule validation (all games accessible)
     test_mode: bool = Field(False, validation_alias=AliasChoices("TEST_MODE", "test_mode"))
 
+    # V2 Dev Login: Explicit flag to enable/disable dev login endpoint.
+    # Default: False for production safety. Set to True in local/dev environments.
+    dev_login_enabled: bool = Field(
+        False,
+        validation_alias=AliasChoices("DEV_LOGIN_ENABLED", "dev_login_enabled"),
+    )
+
+    # V2 Auth: Access Token expiration for V2 endpoints (in minutes)
+    # Default: 15 minutes (recommended for security)
+    v2_access_token_expire_minutes: int = Field(
+        15,
+        validation_alias=AliasChoices(
+            "V2_ACCESS_TOKEN_EXPIRE_MINUTES",
+            "v2_access_token_expire_minutes",
+        ),
+    )
+
     # MySQL credentials (used by Docker Compose)
     mysql_root_password: str | None = Field(None, validation_alias=AliasChoices("MYSQL_ROOT_PASSWORD", "mysql_root_password"))
     mysql_database: str | None = Field(None, validation_alias=AliasChoices("MYSQL_DATABASE", "mysql_database"))

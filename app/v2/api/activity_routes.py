@@ -24,8 +24,23 @@ def ingest_activity(
     """
     # For now, just a mock response to satisfy the contract
     # Real implementation involves creating UserActivityEvent
-    
+
     return ActivityRecordResponse(
         user_id=current_user.id,
         updated_at=datetime.utcnow()
     )
+
+
+@router.post("/record", response_model=ActivityRecordResponse)
+def record_activity(
+    payload: ActivityRecordRequest,
+    db: Session = Depends(get_db),
+    current_user: V2User = Depends(get_current_user),
+):
+    """
+    Record user activity event (alias for /ingest).
+
+    FE 호환성을 위한 별칭 엔드포인트.
+    FE: /api/activity/record -> BE: /api/v2/activity/record
+    """
+    return ingest_activity(payload, db, current_user)

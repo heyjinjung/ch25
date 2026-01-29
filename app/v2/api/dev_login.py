@@ -37,7 +37,9 @@ class DevLoginResponse(BaseModel):
 @router.post("/login", response_model=DevLoginResponse, summary="Dev login for web-first debugging")
 def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(get_db)) -> DevLoginResponse:
     settings = get_settings()
-    if settings.env not in ["local", "development", "dev"]:
+    # Use explicit flag (priority) or fallback to env check for backward compatibility
+    is_dev_env = settings.env in ["local", "development", "dev"]
+    if not settings.dev_login_enabled and not is_dev_env:
         raise HTTPException(status_code=403, detail="DEV_LOGIN_DISABLED")
 
     cc_id = (payload.cc_id or "dev_web_user").strip()

@@ -480,7 +480,22 @@ MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하
    어드민 API에서 정렬 순서를 ticket_type, id DESC로 변경하여 각 ticket_type별로 가장 높은 ID가 먼저 오도록 합니다.
 
 
-레벨 1일 300한도 ?? 한도 폐기? 확인할 것 
+✅ 레벨 1일 300한도 ?? 한도 폐기? 확인할 것 
+
+✅ Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
+트러블 매핑표: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_trouble_mapping_ko.md
+기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
+신규 생성 코드 (v2 경로)
+app/v2/core/telegram.py - Telegram initData 검증 (hash 비교 수정)
+app/v2/models/auth_event.py - V2UserAuthEvent 모델
+app/v2/models/refresh_token.py - V2UserRefreshToken 모델
+app/v2/api/telegram_routes.py - V2 Telegram 인증 API
+DB Migration 생성 (v2_user_auth_event, v2_user_refresh_token)
+DB Migration 실행
+models/__init__.py에 새 모델 export 추가
+routes.py에 telegram_routes 등록 확인
+문서 업데이트 (SoT, Trouble Mapping, Technical Guide)
+
 ---------------------------------------
 
 
@@ -501,218 +516,24 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
  docker compose build --no-cache; docker compose up -d
 
 -----------------
-계획 파일을 작성했습니다. 핵심 사항을 정리하면:
-
-계획 요약
-생성할 문서 (3개)
-Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
-트러블 매핑표: docs/v2_specs/90_troubleshooting/v2_auth_trouble_mapping_ko.md
-기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
-신규 생성 코드 (v2 경로)
-app/v2/core/telegram.py - Telegram initData 검증 (hash 비교 수정)
-app/v2/models/auth_event.py - V2UserAuthEvent 모델
-app/v2/models/refresh_token.py - V2UserRefreshToken 모델
-app/v2/api/telegram_routes.py - V2 Telegram 인증 API
-긴급 패치 (P0)
-🔴 Telegram hash 비교 로직 추가
-🔴 로그인 이벤트 기록 추가
-9개 도메인 영향
-높음: User (신규 테이블 2개)
-중간: Vault, Mission, Admin (기존 로직 유지, 일부 확장)
-낮음: Game, Shop, Inventory, Level, TeamBattle (변경 없음)
-Claude’s Plan
-V2 Telegram Auth SoT 수립 계획
-개요
-목표: 텔레그램 Mini App 전용 인증 SoT 수립 및 9개 도메인(admin, game, inventory, level, mission, shop, teambattle, user, vault)과의 유기적 통합
-핵심 원칙: v2 경로 아래 신규 파일 생성, 최소 수정으로 기존 도메인과 연동
-작성일: 2026-01-28
-Phase 1: 생성할 문서 (3개)
-1.1 Auth SoT 문서 (핵심)
-경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_telegram_auth_sot_ko.md
-
-구조:
-
-[A] 주요 DB 컬럼/제약조건/Enum (v2_user, telegram_link_code 등)
-[B] 프론트-백엔드-DB-코드-정책 1:1 매핑
-텔레그램 Mini App 인증 정책 (initData 검증, 신규 유저, 연동)
-Pre-Release DEV 로그인 정책
-토큰 정책 (Access 15분, Refresh 30일)
-RBAC 권한 모델
-세션/디바이스 관리 정책
-감사 로그 정책
-9개 도메인별 영향 요약
-자동화/운영 체크리스트
-1.2 예상 트러블 매핑표
-경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\v2_auth_trouble_mapping_ko.md
-
-구조:
-
-도메인별 영향 분석 (User: 높음, Vault/Mission/Admin: 중간, 나머지: 낮음)
-크로스도메인 충돌 포인트
-마이그레이션 순서 (Phase 1~3)
-롤백 계획
-모니터링 지표
-QA 체크리스트
-1.3 기술 디테일 가이드
-경로: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_technical_guide_ko.md
-
-구조:
-
-Telegram initData 검증 상세 (HMAC-SHA256)
-JWT 토큰 구조 및 클레임
-RBAC 미들웨어 구현
-환경별 인증 제한 (DEV/PROD)
-로그인 이벤트 기록 구현
-Refresh Token 구현 가이드
-Phase 2: 신규 생성 코드 (v2 경로)
-2.1 V2 Telegram 검증 모듈 (신규)
-경로: app/v2/core/telegram.py
-
-내용:
 
 
-# Telegram initData HMAC-SHA256 검증
-# 🔴 기존 app/core/telegram.py의 hash 비교 누락 수정 버전
-def validate_init_data(init_data: str) -> dict:
-    # ... 기존 로직 + hash 비교 추가
-    if calculated_hash != hash_val:
-        raise ValueError("Invalid hash")
-2.2 V2 Auth Event 모델 (신규)
-경로: app/v2/models/auth_event.py
-
-내용:
-
-
-class AuthEventType(str, Enum):
-    LOGIN_SUCCESS = "LOGIN_SUCCESS"
-    LOGIN_FAILED = "LOGIN_FAILED"
-    LOGOUT = "LOGOUT"
-    TOKEN_REFRESH = "TOKEN_REFRESH"
-    TELEGRAM_LINK = "TELEGRAM_LINK"
-    TELEGRAM_UNLINK = "TELEGRAM_UNLINK"
-    RBAC_DENIED = "RBAC_DENIED"
-
-class V2UserAuthEvent(Base):
-    __tablename__ = "v2_user_auth_event"
-    # id, user_id, event_type, ip_address, user_agent, telegram_id, success, error_message, created_at
-2.3 V2 Refresh Token 모델 (신규)
-경로: app/v2/models/refresh_token.py
-
-내용:
-
-
-class V2UserRefreshToken(Base):
-    __tablename__ = "v2_user_refresh_token"
-    # id, user_id, jti, expires_at, revoked_at, created_at, last_used_at
-2.4 V2 Auth Service 확장 (수정)
-경로: app/v2/services/auth_service.py
-
-추가 메서드:
-
-create_refresh_token(): Refresh Token 생성 및 DB 저장
-refresh_access_token(): Token 갱신 로직
-revoke_refresh_token(): 로그아웃 시 토큰 무효화
-log_auth_event(): 인증 이벤트 기록
-2.5 V2 Auth Routes 확장 (수정)
-경로: app/v2/api/auth_routes.py
-
-수정사항:
-
-POST /api/v2/auth/refresh: 구현 (현재 501)
-POST /api/v2/auth/logout: 실제 로직 추가 (현재 stub)
-모든 로그인 성공/실패 시 V2UserAuthEvent 기록
-2.6 V2 Telegram Routes (신규)
-경로: app/v2/api/telegram_routes.py
-
-내용:
-
-POST /api/v2/telegram/auth: V2 버전 Telegram 인증
-기존 app/api/routes/telegram.py 로직을 v2 경로로 이관
-app/v2/core/telegram.py 사용 (hash 검증 포함)
-V2UserAuthEvent 기록 추가
-Phase 3: DB Migration
-3.1 v2_user_auth_event 테이블
-
-CREATE TABLE v2_user_auth_event (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    event_type ENUM(...) NOT NULL,
-    ip_address VARCHAR(45),
-    user_agent VARCHAR(500),
-    telegram_id BIGINT,
-    success BOOLEAN NOT NULL DEFAULT TRUE,
-    error_message VARCHAR(500),
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at)
-);
-3.2 v2_user_refresh_token 테이블
-
-CREATE TABLE v2_user_refresh_token (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    jti VARCHAR(64) NOT NULL UNIQUE,
-    expires_at DATETIME NOT NULL,
-    revoked_at DATETIME,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_used_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_jti (jti),
-    INDEX idx_expires_at (expires_at)
-);
-Phase 4: 9개 도메인 영향 분석
-도메인	영향도	수정 필요	비고
-User	🔴 높음	신규 테이블 2개	auth_event, refresh_token
-Vault	🟡 중간	없음	로그인 후 동기화 기존 로직 유지
-Mission	🟡 중간	없음	LOGIN 미션 트리거 기존 로직 유지
-Admin	🟡 중간	RBAC 로깅 추가	get_current_admin_info 확장
-Game	🟢 낮음	없음	JWT 의존성만
-Shop	🟢 낮음	없음	JWT 의존성만
-Inventory	🟢 낮음	없음	JWT 의존성만
-Level	🟢 낮음	없음	JWT 의존성만
-TeamBattle	🟢 낮음	없음	JWT 의존성만
-Phase 5: 긴급 패치 항목
-🔴 P0 (MVP 전 필수)
-Telegram hash 비교 누락: app/v2/core/telegram.py 신규 생성 시 수정
-Auth Event 로깅 누락: V2UserAuthEvent 모델 + 기록 로직
-🟡 P1 (MVP 후 권장)
-Refresh Token 미구현: V2UserRefreshToken + /api/v2/auth/refresh
-Activity 경로 불일치: FE /api/activity/record → /api/v2/activity/ingest
-🟢 P2 (미래 확장)
-Redis 세션 추적
-디바이스 관리 테이블
-파일 생성/수정 목록
-신규 생성
-경로	유형	설명
-docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md	문서	Auth SoT
-docs/v2_specs/90_troubleshooting/v2_auth_trouble_mapping_ko.md	문서	트러블 매핑표
-docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md	문서	기술 가이드
-app/v2/core/__init__.py	코드	패키지 init
-app/v2/core/telegram.py	코드	V2 Telegram 검증
-app/v2/models/auth_event.py	코드	Auth Event 모델
-app/v2/models/refresh_token.py	코드	Refresh Token 모델
-app/v2/api/telegram_routes.py	코드	V2 Telegram API
-alembic/versions/XXXXXX_add_v2_auth_tables.py	Migration	DB 스키마
-수정
-경로	변경 내용
-app/v2/services/auth_service.py	refresh/logout/log 메서드 추가
-app/v2/api/auth_routes.py	/refresh, /logout 구현
-app/v2/api/__init__.py	telegram_routes 등록
-app/v2/models/__init__.py	신규 모델 import
 검증 계획
-단위 테스트
  app/v2/core/telegram.py: initData 검증 성공/실패
  V2UserAuthEvent: 이벤트 기록 CRUD
  V2UserRefreshToken: 토큰 생성/갱신/폐기
-통합 테스트
  Telegram 신규 유저 → 로그인 → 이벤트 기록
  Access Token 만료 → Refresh → 새 토큰
  로그아웃 → Refresh Token 무효화
 E2E 테스트
  Telegram Mini App에서 실제 initData로 인증
  DEV 로그인 (DEV 환경) / 차단 (PROD 환경)
-변경 이력
-v1.0 (2026-01-28): 최초 작성
+
+Telegram initData는 HMAC-SHA256 서명 기반이라 테스트용 토큰을 생성할 수 있습니다.
+테스트용 initData 생성 스크립트를 만들고 pytest로 백테스트를 실행하겠습니다.
+Write C:\Users\JAVIS\ch\ch25\tests\v2\test_telegram_auth.py
+
+
 -----------------------------------
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_telegram_auth_sot_ko.md
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\v2_auth_trouble_mapping_ko.md
@@ -736,83 +557,4 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 문서이름 : 20260126_mission_error_update.md
 
 
-
-
-마케팅 아이디어	⚪ 	skills/marketing-ideas
-마케팅 심리학	⚪	skills/marketing-psychology
-마이크로 SaaS 런처	⚪	skills/micro-saas-launcher
-
-
-
-
-페이지크로	⚪	skills/page-cro
-SEO콘텐츠창작자	⚪	skills/content-creator
-카피라이팅	⚪	skills/copywriting
-교정	⚪	skills/copy-editing
-브레인스토밍	⚪	skills/brainstorming
-출시 전략	⚪	skills/launch-strategy
-프로그래매틱 SEO	⚪	skills/programming-seo
-세그먼트-cdp	⚪	skills/segment-cdp
-SEO 기초	⚪	skills/seo-fundamentals
-SEO 감사	⚪	skills/seo-audit
-
-
-회원가입 흐름	⚪	skills/signup-flow-cro
-온보딩-cro	⚪	skills/onboarding-cro
-모바일 디자인	⚪	skills/mobile-design
-모바일 게임	⚪	skills/game-development/mobile-games
-2D 게임	⚪	skills/game-development/2d-games
-게임 아트	⚪	skills/game-development/game-art
-게임 오디오	⚪	skills/game-development/game-audio
-게임 디자인	⚪	skills/game-development/game-design
-게임 개발	⚪	skills/game-development
-
-시니어 풀스택	⚪	skills/senior-fullstack
-텔레그램 봇 빌더	⚪	skills/telegram-bot-builder
-텔레그램 미니 앱	⚪	skills/telegram-mini-app
-프로덕션 코드 감사	⚪	skills/production-code-audit
-도구 전략	⚪	skills/free-tool-strategy
-대안	⚪	skills/competitor-alternatives
-컴퓨터 사용가능한 에이전트	⚪	skills/computer-use-agents
-데이터베이스 설계	⚪	skills/database-design
-플릿	⚪	skills/documentation-templates
-백앤드 개발 가이드라인	⚪	skills/backend-dev-guidelines
-백앤드 패턴	⚪	skills/cc-skill-backend-patterns
-클린 코드	⚪	skills/clean-code
-파일 정리 도구	⚪	skills/file-organizer
-카이젠	⚪	skills/kaizen
-체계적 디버깅	⚪ skills/systematic-debugging
-
-스키마 마크업	⚪	skills/schema-markup
-스크롤 경험	⚪	skills/scroll-experience
-보안 스캔 도구	⚪	skills/scanning-tools
-보안 검토	⚪	skills/cc-skill-security-review
-파워셸-윈도우	⚪	skills/powershell-windows
-해킹 방법론	⚪	skills/ethical-hacking-methodology
-
-프런트엔드 디자인	⚪	skills/frontend-design
-프런트엔드 개발 가이드라인	⚪	skills/frontend-dev-guidelines
-프런트엔드 패턴	⚪	skills/cc-skill-frontend-patterns
-자바스크립트 마스터리	⚪	skills/javascript-mastery
-린트 및 유효성 검사	⚪	skills/lint-and-validate
-팝업크로	⚪	skills/popup-cro
-리액트 패턴	⚪	skills/react-patterns
-react-ui-patterns	⚪	skills/react-ui-patterns
-타입스크립트 전문가	⚪	skills/typescript-expert
-ui-ux-pro-max	⚪	skills/ui-ux-pro-max
-아티팩트 빌더	⚪	skills/web-artifacts-builder
-웹 디자인 가이드라인	⚪	skills/web-design-guidelines
-웹 게임	⚪	skills/game-development/web-games
-웹 성능 최적화	⚪	skills/web-performance-optimization
-웹앱 테스트	⚪	skills/webapp-testin
-
-
-커뮤니케이션즈	⚪	Twilio를 사용하여 SMS 메시지, 음성 통화, WhatsApp Business API 및 사용자 인증(2FA)과 같은 커뮤니케이션 기능을 구축하세요. 간단한 알림부터 복잡한 IVR 시스템 및 다중 채널 인증에 이르기까지 모든 범위를 지원합니다. 규정 준수, 사용량 제한 및 오류 처리에 특히 중점을 둡니다. Twilio를 사용하여 SMS를 전송하거나, 문자 메시지를 보내거나, 음성 통화를 하거나, 전화번호를 인증할 때 사용하세요.	skills/twilio-communications
-
-
-타입스크립트 전문가	⚪	skills/typescript-expert
-ui-ux-pro-max	⚪	skills/ui-ux-pro-max
-바이럴 생성기 빌더	⚪	skills/viral-generator-builder
-ct 모범 사례	⚪	skills/react-best-practices
-
-글쓰기 계획	⚪	skills/writing-plans
+⏸️ app/v2/api/auth_routes.py 수정 중 멈춤

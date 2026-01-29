@@ -1,9 +1,10 @@
 문서 타입: 기술 가이드
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-28
+수정일: 2026-01-29
 작성자: GitHub Copilot
 대상: BE 개발자
-상태: SoT
+상태: 구현 완료 ✅
 
 ---
 
@@ -24,34 +25,12 @@ Telegram 공식 문서: https://core.telegram.org/bots/webapps#validating-data-r
 6. calculated_hash == provided_hash 검증
 ```
 
-### 1.2 현재 구현 문제점 (`app/core/telegram.py`)
+### 1.2 기존 문제점 (수정됨 ✅)
 
-```python
-# Line 22-35: 기존 구현
-def validate_init_data(init_data: str) -> dict:
-    if not settings.telegram_bot_token:
-        if settings.test_mode:
-            return {"user": json.dumps({"id": 1234567, "username": "test_user"})}
-        raise ValueError("TELEGRAM_BOT_TOKEN not configured")
+기존 `app/core/telegram.py`에서는 calculated_hash와 hash_val 비교가 누락되어 있었음.
+이제 `app/v2/core/telegram.py`에서 정상적으로 구현됨.
 
-    vals = dict(parse_qsl(init_data))
-    hash_val = vals.pop('hash', None)
-    if not hash_val:
-        raise ValueError("Missing hash in initData")
-
-    data_check_string = "\n".join([f"{k}={v}" for k, v in sorted(vals.items())])
-    secret_key = hmac.new(b"WebAppData", settings.telegram_bot_token.encode(), hashlib.sha256).digest()
-    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
-
-    # 🔴 여기서 calculated_hash와 hash_val 비교가 누락됨!
-
-    if 'user' in vals:
-        vals['user'] = json.loads(vals['user'])
-
-    return vals
-```
-
-### 1.3 수정된 구현 (`app/v2/core/telegram.py` 신규)
+### 1.3 현재 구현 (`app/v2/core/telegram.py`) ✅
 
 ```python
 """
@@ -1132,8 +1111,33 @@ if __name__ == "__main__":
 
 ---
 
-## 9. 변경 이력
+## 9. 구현 현황 (2026-01-29 기준)
+
+### ✅ 구현 완료
+
+| 항목 | 파일 | 상태 |
+|------|------|------|
+| initData hash 검증 | `app/v2/core/telegram.py` | ✅ |
+| Auth Event 모델 | `app/v2/models/auth_event.py` | ✅ |
+| Refresh Token 모델 | `app/v2/models/refresh_token.py` | ✅ |
+| Telegram 인증 API | `app/v2/api/telegram_routes.py` | ✅ |
+| /refresh 엔드포인트 | `app/v2/api/auth_routes.py` | ✅ |
+| /logout 엔드포인트 | `app/v2/api/auth_routes.py` | ✅ |
+| V2AuthService 확장 | `app/v2/services/auth_service.py` | ✅ |
+| DB Migration | `alembic/versions/20260128_1800_add_v2_auth_tables.py` | ✅ |
+
+### 🔴 핵심 변경사항: V1 의존성 완전 제거
+
+`app/v2/api/telegram_routes.py`는 **순수 V2 구현**입니다:
+- ❌ `from app.models.user import User` 미사용
+- ✅ `from app.v2.models.user import V2User` 사용
+- V2User가 단일 출처 (Single Source of Truth)
+
+---
+
+## 10. 변경 이력
 
 | 버전 | 일자 | 작성자 | 내용 |
 |------|------|--------|------|
 | v1.0 | 2026-01-28 | GitHub Copilot | 최초 작성 |
+| v1.1 | 2026-01-29 | GitHub Copilot | 구현 완료 상태 반영, V1 의존성 제거 |

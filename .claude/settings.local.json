@@ -6,7 +6,8 @@
       "Bash(python:*)",
       "Bash(npm run type-check:*)",
       "Bash(npx tsc:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(alembic upgrade:*)"
     ]
   }
 }

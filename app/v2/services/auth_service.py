@@ -158,8 +158,13 @@ class V2AuthService:
         Returns:
             tuple[str, str, V2UserRefreshToken]: (access_token, refresh_token, token_record)
         """
-        # Access Token
-        access_token = create_access_token(user_id, role=role)
+        settings = get_settings()
+        # Access Token (V2 전용 만료 시간 사용: 기본 15분)
+        access_token = create_access_token(
+            user_id,
+            role=role,
+            expires_minutes=settings.v2_access_token_expire_minutes,
+        )
 
         # Refresh Token
         refresh_token, jti = create_refresh_token(user_id)
@@ -215,8 +220,12 @@ class V2AuthService:
         if token_record.expires_at < datetime.now(timezone.utc):
             raise HTTPException(status_code=401, detail="TOKEN_EXPIRED")
 
-        # 5. 새 Access Token 발급
-        new_access_token = create_access_token(user_id)
+        # 5. 새 Access Token 발급 (V2 전용 만료 시간)
+        settings = get_settings()
+        new_access_token = create_access_token(
+            user_id,
+            expires_minutes=settings.v2_access_token_expire_minutes,
+        )
 
         # 6. last_used_at 갱신 (sliding window)
         token_record.last_used_at = datetime.now(timezone.utc)

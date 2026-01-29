@@ -1,12 +1,13 @@
 문서 타입: SoT
-버전: v1.0
+버전: v1.1
 작성일: 2026-01-28
+수정일: 2026-01-29
 작성자: GitHub Copilot
 대상: BE/FE/기획/운영
-상태: SoT
+상태: 구현 완료 ✅
 
-[최종 검토일: 2026-01-28]
-정책 최신화 필요 여부: 🟢 신규 작성
+[최종 검토일: 2026-01-29]
+정책 최신화 필요 여부: 🟢 코드 구현 완료, DB Migration 대기
 
 ---
 
@@ -83,12 +84,13 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 
 | 정책 문서 | 실제 코드 | DB 컬럼/제약 | FE API 경로 | 상태 |
 |----------|----------|-------------|------------|------|
-| Telegram initData 검증 | `app/v2/core/telegram.py::validate_init_data()` | - | `/api/v2/telegram/auth` | 🔴 신규 필요 (hash 비교 추가) |
-| Access Token 발급 | `app/core/security.py::create_access_token()` | - | - | 🟢 정합 (15분 만료로 변경 권장) |
-| Refresh Token 발급 | `app/v2/services/auth_service.py` (신규) | v2_user_refresh_token | `/api/v2/auth/refresh` | 🔴 신규 필요 |
-| DEV 로그인 | `app/v2/api/dev_login.py` | v2_user.cc_id | `/api/v2/dev/login` | 🟢 정합 (env 제한) |
-| RBAC 검증 | `app/api/deps.py::get_current_admin_info()` | admin_user_profile.tags | - | 🟢 정합 |
-| 로그인 이력 | `app/v2/models/auth_event.py` (신규) | v2_user_auth_event | - | 🔴 신규 필요 |
+| Telegram initData 검증 | `app/v2/core/telegram.py::validate_init_data()` | - | `/api/v2/telegram/auth` | ✅ 구현 완료 (hash 비교 포함) |
+| Access Token 발급 | `app/core/security.py::create_access_token()` | - | - | ✅ 정합 |
+| Refresh Token 발급 | `app/v2/services/auth_service.py::issue_tokens()` | v2_user_refresh_token | `/api/v2/auth/refresh` | ✅ 구현 완료 |
+| DEV 로그인 | `app/v2/api/dev_login.py` | v2_user.cc_id | `/api/v2/dev/login` | ✅ 정합 (env 제한) |
+| RBAC 검증 | `app/api/deps.py::get_current_admin_info()` | admin_user_profile.tags | - | ✅ 정합 |
+| 로그인 이력 | `app/v2/models/auth_event.py` | v2_user_auth_event | - | ✅ 구현 완료 |
+| 로그아웃 | `app/v2/api/auth_routes.py::v2_logout()` | v2_user_refresh_token | `/api/v2/auth/logout` | ✅ 구현 완료 |
 
 ---
 
@@ -123,7 +125,7 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 3. '\n'으로 연결하여 data_check_string 생성
 4. secret_key = HMAC-SHA256("WebAppData", bot_token)
 5. calculated_hash = HMAC-SHA256(secret_key, data_check_string)
-6. calculated_hash == provided_hash 검증 ← 🔴 현재 누락됨
+6. calculated_hash == provided_hash 검증 ← ✅ 구현 완료
 ```
 
 ### 6.3 신규 유저 생성 정책
@@ -424,33 +426,94 @@ CREATE TABLE v2_user_auth_event (
 
 ---
 
-## 14. 긴급 패치 필요 항목
+## 14. 구현 현황 (2026-01-29 기준)
 
-### 🔴 P0 (MVP 전 필수)
+### ✅ P0 완료 (MVP 전 필수)
 
-1. **Telegram initData hash 비교 누락**
-   - 현재: `app/core/telegram.py` Line 35에서 calculated_hash 계산 후 비교 없음
-   - 수정: `app/v2/core/telegram.py` 신규 생성, hash 비교 추가
+1. **Telegram initData hash 비교** ✅
+   - 파일: `app/v2/core/telegram.py`
+   - `hmac.compare_digest(calculated_hash, hash_val)` 구현
+   - 순수 V2 구현 (V1 User 테이블 미사용)
 
-2. **Auth Event 로깅 누락**
-   - 현재: V2 인증 시 로그인 이력 기록 없음
-   - 수정: `v2_user_auth_event` 테이블 + 기록 로직 추가
+2. **Auth Event 로깅** ✅
+   - 모델: `app/v2/models/auth_event.py`
+   - 서비스: `app/v2/services/auth_service.py::log_auth_event()`
+   - DB Migration: `alembic/versions/20260128_1800_add_v2_auth_tables.py`
 
-### 🟡 P1 (MVP 후 권장)
+3. **Refresh Token 구현** ✅
+   - 모델: `app/v2/models/refresh_token.py`
+   - 서비스: `app/v2/services/auth_service.py::V2AuthService`
+   - API: `app/v2/api/auth_routes.py` (/refresh, /logout)
+   - 30일 sliding window, 7일 미만 시 자동 갱신
 
-3. **Refresh Token 미구현**
-   - 현재: `/api/v2/auth/refresh` → 501 NOT_IMPLEMENTED
-   - 수정: `v2_user_refresh_token` 테이블 + 갱신 로직
+4. **Telegram 인증 엔드포인트** ✅
+   - 파일: `app/v2/api/telegram_routes.py`
+   - 엔드포인트: `POST /api/v2/telegram/auth`
+   - 순수 V2User 기반 (V1 의존성 완전 제거)
 
-4. **Activity 경로 불일치**
-   - FE: `/api/activity/record`
-   - BE: `/api/v2/activity/ingest`
-   - 수정: FE 경로 변경 또는 BE 별칭 추가
+### ✅ P1 완료
+
+5. **Activity 경로 불일치** ✅
+   - V1: `/api/activity/record` (기존 유지)
+   - V2: `/api/v2/activity/ingest` + `/api/v2/activity/record` (별칭 추가)
+   - 파일: `app/v2/api/activity_routes.py`
+
+### 📁 구현된 파일 목록
+
+```
+app/v2/core/
+├── __init__.py
+└── telegram.py          # initData 검증 (hash 비교 포함)
+
+app/v2/models/
+├── auth_event.py        # V2UserAuthEvent, AuthEventType
+└── refresh_token.py     # V2UserRefreshToken
+
+app/v2/api/
+├── telegram_routes.py   # POST /api/v2/telegram/auth (순수 V2)
+└── auth_routes.py       # /refresh, /logout 엔드포인트
+
+app/v2/services/
+└── auth_service.py      # log_auth_event, V2AuthService 확장
+
+alembic/versions/
+└── 20260128_1800_add_v2_auth_tables.py  # DB Migration
+```
 
 ---
+단위 테스트 결과 (14개 통과)
+
+tests/v2/test_telegram_auth.py - 14 passed
+테스트 도구
+파일	설명
+tests/v2/test_telegram_auth.py	initData 생성/검증 단위 테스트
+scripts/generate_test_init_data.py	수동 테스트용 initData 생성 스크립트
+사용법
+
+# 단위 테스트 실행
+python -m pytest tests/v2/test_telegram_auth.py -v
+
+# initData 생성 (수동 테스트용)
+python scripts/generate_test_init_data.py --verify
+
+# 특정 user_id로 생성
+python scripts/generate_test_init_data.py --user-id 123456 --username "my_user" --verify
+
+# 추천인 코드 포함
+python scripts/generate_test_init_data.py --start-param "ref_999" --verify
+API 테스트 (서버 실행 후)
+
+curl -X POST http://localhost:8000/api/v2/telegram/auth \
+  -H "Content-Type: application/json" \
+  -d '{"init_data": "<생성된_init_data>"}'
+
+
+---
+
 
 ## 15. 변경 이력
 
 | 버전 | 일자 | 작성자 | 내용 |
 |------|------|--------|------|
 | v1.0 | 2026-01-28 | GitHub Copilot | 최초 작성, 긴급 패치 항목 식별 |
+| v1.1 | 2026-01-29 | GitHub Copilot | P0 항목 모두 구현 완료, V1 의존성 완전 제거 |

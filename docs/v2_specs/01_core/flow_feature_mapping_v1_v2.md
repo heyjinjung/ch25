@@ -1,7 +1,7 @@
-# XMAS 지급/보상 시스템 v1→v2 이관 현황 맵핑 (2026-01-24 기준)
+# XMAS 지급/보상 시스템 v1→v2 이관 현황 맵핑 (2026-01-29 기준)
 
 > [!IMPORTANT]
-> **Full-stack 관찰(End-to-end Observability)** 기반 재검증 문서입니다. 
+> **Full-stack 관찰(End-to-end Observability)** 기반 재검증 문서입니다.
 > 모든 항목은 `app.v2` 네임스페이스 동작 및 실제 E2E 증거(로그/DB) 수렴 여부를 기준으로 관리합니다.
 
 ---
@@ -10,7 +10,7 @@
 
 | 도메인 | 기능 (내역) | 상태 | 검증 근거 (테스트/로그) | API / DB 필드 |
 | :--- | :--- | :---: | :--- | :--- |
-| **가입/인증** | 회원가입 / 로그인 / 2FA | 🟡 진행중 | `tests/v2/test_auth_v2.py` | `/api/v2/auth/*` <br> `user_v2`, `user_auth_v2` |
+| **가입/인증** | 텔레그램 인증 / Refresh Token / Auth Event | ✅ 완료 | **[2026-01-29]** V2 Telegram Auth SoT 구현 완료 <br> - `tests/v2/test_telegram_auth.py` (14개 유닛 테스트 PASSED) <br> - `tests/v2/test_telegram_auth_api.py` (API 통합 테스트) <br> - Hash 검증 (`app/v2/core/telegram.py`) <br> - Refresh Token 슬라이딩 윈도우 (30일/7일 갱신) <br> - Auth Event 로깅 (LOGIN_SUCCESS/FAILED, TOKEN_REFRESH, LOGOUT, RBAC_DENIED) <br> - DB Migration 완료 (`20260128_1800_add_v2_auth_tables.py`) <br> [상세 문서](docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md) | `/api/v2/telegram/auth` <br> `/api/v2/auth/refresh` <br> `/api/v2/auth/logout` <br> `v2_user`, `v2_user_auth_event`, `v2_user_refresh_token` |
 | **게임진행** | 룰렛 / 주사위 / 복권 | ✅ 완료 | **[2026-01-24] verify_game_engine_e2e.py** <br> Roulette/Dice/Lottery **Status 200** 응답 확인 <br> `pytest -q tests/v2_tests/phase3_game/test_game_ledger_separation.py` (원장 분리 검증) <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/*/play` <br> `v2_roulette`, `v2_dice`, `v2_lottery` |
 | **환경/SoT** | Phase 1 환경/SoT 정합성 | ✅ 완료 | `pytest -q tests/v2_tests/phase1_env/test_environment_sanity.py` <br> `pytest -q tests/v2_tests/phase1_env/test_sot_integrity.py` <br> `pytest -q tests/v2_tests/phase1_env/test_v2_architecture_sot.py` <br> /api/v2/health **200 OK** 확인 <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/health` <br> `alembic_version` |
 | **코어경제** | 금고(Vault) & 장부(Ledger) | ✅ 완료 | `pytest -q tests/v2_tests/phase2_core/test_vault2_service.py tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py` <br> `pytest -q tests/v2_tests/phase2_core/test_v2_vault_withdrawal_tiers.py` <br> /api/v2/vault/status **200 OK** 확인 <br> [상세 로그](docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md) | `/api/v2/vault/status` <br> `user`, `v2_user`, `vault_ledger` |
@@ -48,3 +48,15 @@
 - **Reset Hour**: 일일 초기화 기준 시간은 `09:00 KST` (시스템 설정값 확인 필요).
 - **Vault Shim**: 게임 엔진은 `V2VaultService`의 shim을 통해 V1 의존성 없이 안전하게 위임됨.
 - **V1 잔재 정리**: V2 라우트/서비스에서 V1 직접 import 제거 작업 반영(2026-01-24).
+- **V2 Auth 독립성**: V2 인증 시스템은 순수 V2 구현 (V1 User 테이블 의존성 없음, 2026-01-29).
+- **DEV 로그인 보안**: `DEV_LOGIN_ENABLED` 플래그 기본값 `False`로 PROD 안전 (2026-01-29).
+- **V2 Access Token**: 기본 만료 시간 15분 (`V2_ACCESS_TOKEN_EXPIRE_MINUTES`, 2026-01-29).
+
+---
+
+## 5. 변경 이력
+
+| 버전 | 일자 | 작성자 | 내용 |
+|------|------|--------|------|
+| v1.0 | 2026-01-24 | GitHub Copilot | 최초 작성 (게임 엔진 검증 완료) |
+| v1.1 | 2026-01-29 | GitHub Copilot | V2 Telegram Auth SoT 구현 완료 반영 |
