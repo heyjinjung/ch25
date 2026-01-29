@@ -18,9 +18,9 @@
 | **-** | **Circuit Breaker** | Phase 2 | ✅ 완료 | 과다 지급 사고 방지를 위한 운영 안전장치 |
 | **-** | **Latency Survival** | Phase 4 | ✅ 완료 | 입금 지연 시 유저 증거 기반 선지급 및 제재 예외 |
 | **-** | **Daily Nudge Scheduler** | Phase 2+ | ✅ 완료 | 리텐션 유지를 위한 일일 무료 토큰 자동 발송 |
-| **1 (High)** | **Rollback Policy** | Phase 3 | 대기 | 잘못된 개입(Intervention) 회수 자동화 |
-| **2 (Medium)** | **A/B Test Framework** | Phase 3+ | 대기 | 개입 시나리오별 효과 측정 및 최적화 |
-| **3 (Low)** | **ROI Calculator Service** | Phase 4 | 대기 | 개입 후 24시간 내 행동 추적 및 ROI 계산 |
+| **-** | **Rollback Policy** | Phase 3 | ✅ 완료 | 잘못된 개입(Intervention) 회수 자동화 |
+| **-** | **ROI Calculator Service** | Phase 4 | ✅ 완료 | 개입 후 24시간 내 행동 추적 및 ROI 계산 |
+| **-** | **A/B Test Framework** | Phase 3+ | ❌ 폐기 | 계획 폐기 (Deprecated) |
 
 ---
 
@@ -83,26 +83,20 @@
         - 3-A) 잔액 충분 시: 차감(`consume`) 후 '회수 완료' 마킹.
         - 3-B) 잔액 부족 시: 0으로 만들고 부족분은 `Audit Log`에 '미수금' 기록 (무리한 마이너스 처리 지양).
 
-### 2.4 [Medium] A/B Test Framework
+### 2.4 [Deprecated] A/B Test Framework (폐기) ❌
 
-**목적**: 어떤 개입(문구, 보상 종류)이 리텐션에 더 효과적인지 검증합니다.
+**상태**: 유저 요청에 의해 구현 계획 폐기.
 
-- **기술 스펙**:
-    - **Table**: `v2_ab_test_group` (User ID, Experiment ID, Group A/B)
-    - **Assignment**: `MurmurHash(user_id + experiment_id) % 100` 로직으로 결정론적(Deterministic) 그룹 배정.
-    - **Tracking**: 모든 이벤트 로그(`v2_intervention_log`, `v2_game_log`)에 `experiment_group` 태그 추가.
+- **사유**: 현재 시스템 복잡도 및 운영 효율을 고려하여 A/B 테스트 인프라 대신 ROI 계산 및 롤백 정책 고도화에 집중.
 
-### 2.5 [Low] ROI Calculator Service
+### 2.5 [Completed] ROI Calculator Service (완료) ✅
 
-**목적**: 개입(비용) 대비 효과(입금/플레이)를 정량화합니다.
+**상태**: 구현 및 검증 완료 (`tests/v2/test_roi_rollback_service.py`)
 
-- **기술 스펙**:
-    - **Trigger**: 개입(`Intervention`) 발생 24시간 후 Celery Task 실행.
-    - **Calculation**:
-        - **Cost**: 개입 시 지급된 재화의 가치 (KRW 환산).
-        - **Benefit**: 개입 후 24시간 내 `cc_deposit` 증가분 + 게임 플레이 수수료(Rake).
-        - **ROI**: `(Benefit - Cost) / Cost * 100` (%)
-    - **Storage**: `v2_retention_roi_log` 테이블에 저장 및 대시보드 시각화.
+- **주요 기능**:
+    - 개입 발생 24시간 후 ROI 자동 계산.
+    - 비용(Cost) 대비 수익(Benefit - 입금/레이크) 분석.
+    - `v2_retention_roi_log` 테이블에 결과 저장.
 
 ---
 

@@ -1,5 +1,19 @@
 ## [2026-01-29 구현 완료 항목]
 
+### [2026-01-29] V2 ROI Calculator & Rollback Policy 구현 완료 ✅
+- **ROI Calculator Service**:
+  - `app/v2/services/roi_analysis_service.py` - ROI 계산 및 분석
+  - `app/v2/api/admin/roi_routes.py` - Admin ROI API
+  - 24시간 윈도우 내 행동 추적 및 KRW 환산 ROI 계산
+  - 캠페인별 ROI 집계 및 상위 캠페인 조회
+- **Rollback Policy Service**:
+  - `app/v2/services/rollback_service.py` - 회수 로직 (금고/티켓/아이템)
+  - `app/v2/api/admin/rollback_routes.py` - Admin 회수 API
+  - 부분 회수 (Partial Clawback) 정책 적용
+  - 실행 전체 회수 및 가능 여부 사전 확인
+- **테스트**: `tests/v2/test_roi_rollback_service.py` - ROI 계산, 회수 로직, 엣지 케이스
+- **문서**: `docs/v2_specs/07_golden/2026_01_29_golden_v2_remaining_implementation_guide_ko.md` 업데이트
+
 ### [2026-01-29] V2 Daily Nudge Scheduler 구현 완료 ✅
 - **목적**: 리텐션 유지를 위한 일일 무료 토큰 자동 발송
 - **구현 항목**:
