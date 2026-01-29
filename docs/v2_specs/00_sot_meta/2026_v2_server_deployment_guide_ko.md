@@ -68,8 +68,9 @@ JWT_SECRET=your-strong-32-char-secret-key
 V2_ACCESS_TOKEN_EXPIRE_MINUTES=15
 
 # Golden V2 Safety (Circuit Breaker)
-CIRCUIT_LIMIT_VAULT=100000  # 시간당 금고 지급 한도 (KRW)
-CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장)
+# 아래 값은 SoT(변경 기준)입니다. 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 합니다.
+CIRCUIT_LIMIT_VAULT=100000  # 시간당 금고 지급 한도 (KRW, SoT)
+CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장, SoT)
 
 # External Integration
 TELEGRAM_BOT_TOKEN=your-production-bot-token

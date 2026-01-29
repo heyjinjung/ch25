@@ -248,10 +248,10 @@
 ## 9. V2 Golden Intervention (골든 개입)
 
 ### 9.1 Circuit Breaker ✅
-- [x] **Redis 연결** 확인
-- [x] **시간당 한도** 설정
-  - `CIRCUIT_LIMIT_VAULT=1000000` (100만원)
-  - `CIRCUIT_LIMIT_TICKET=500` (500장)
+  - [x] **Redis 연결** 확인
+  - [x] **시간당 한도** 설정 (아래 값은 SoT, 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 함)
+    - `CIRCUIT_LIMIT_VAULT=100000` (100,000원, SoT)
+    - `CIRCUIT_LIMIT_TICKET=30` (30장, SoT)
 - [x] **InventoryService, VaultService** 연동
 - [x] **Slack/Telegram Alert** 설정 (Mocked/Ready)
 - [x] **CircuitBreakerError** 발생 시 차단

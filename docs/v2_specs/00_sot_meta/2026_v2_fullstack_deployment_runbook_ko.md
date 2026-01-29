@@ -72,9 +72,9 @@ Golden V2 배포 품질 보장을 위해 아래 모든 영역에 대해 테스�
       tests/v2_tests/phase2_core/test_golden_intervention_service.py
       tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py
       tests/v2_tests/phase5_public/test_golden_v2_integrated.py
-**[]DB & Migration**: Alembic 마이그레이션, 필수 테이블/인덱스, DB 백업/복원 등
+**[x]DB & Migration**: Alembic 마이그레이션, 필수 테이블/인덱스, DB 백업/복원 등
       tests/v2_tests/phase1_env/test_environment_sanity.py (DB 구성 무결성)
-**[]환경 변수/설정**: .env 값, JWT/Telegram/Redis/Sentry 등 필수 환경 변수, 보안 검증
+**[x]환경 변수/설정**: .env 값, JWT/Telegram/Redis/Sentry 등 필수 환경 변수, 보안 검증
       tests/v2_tests/phase1_env/test_environment_sanity.py
       tests/v2_tests/phase2_core/test_v2_imports_smoke.py
 
@@ -91,8 +91,8 @@ tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오
 
 
 ### 2.2 프론트엔드 연동 (E2E)
-- [ ] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.
-- [ ] `POST /admin/csv-import/validate`: 표준 로그 CSV 검증 통과 확인.
+- [x] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.
+- [x] `POST /admin/csv-import/validate`: 표준 로그 CSV 검증 통과 확인.
 
 ---
 
