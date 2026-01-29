@@ -469,36 +469,37 @@ CASCADE 의존성 (명시적 검증 필요)
   - app/v2/services/vault_service.py:force_edit, app/v2/api/admin/vault_routes.py:force_edit_vault
 
 ### 8.5 Shop & Inventory Administration (상점/인벤토리 관리) ✅
-- [ ] **상품 CRUD**
+- [x] **상품 CRUD**
   - 상품 생성, 수정, 삭제 (티켓/아이템)
-  - 파일: app/v2/api/admin/inventory_routes.py → create_product(), update_product()
-- [ ] **재고 수량 조정**
+  - 파일: app/v2/api/admin/inventory_routes.py → create_ticket_log(), update_ticket_log() / create_inventory_item_log(), update_inventory_item_log() ✅
+- [x] **재고 수량 조정**
   - 관리자 직접 조정 (감시 로그 기록)
-  - 파일: app/v2/api/admin/inventory_routes.py → adjust_stock()
-- [ ] **인벤토리 거래 로그 조회**
+  - 파일: app/v2/api/admin/inventory_routes.py → adjust_stock() ✅
+- [x] **인벤토리 거래 로그 조회**
   - 사용자별, 시간별 거래 기록, 필터링 지원
-  - 파일: app/v2/api/admin/inventory_routes.py → list_inventory_logs()
-- [ ] **Gifticon 배송 추적**
+  - 파일: app/v2/api/admin/inventory_routes.py → get_inventory_logs() ✅
+- [x] **Gifticon 배송 추적**
   - 대기중, 배송됨, 실패 상태 조회
-  - 파일: app/v2/services/gifticon_service.py → list_pending_deliveries()
-- [ ] **재고 부족 알림**
+  - 파일: app/v2/api/admin/inventory_routes.py → list_gifticon_deliveries() ✅
+- [x] **재고 부족 알림**
   - 임계값 설정 및 모니터링, 관리자 대시보드에 실시간 표시
+  - 파일: app/v2/api/admin/inventory_routes.py → get_stock_alerts() ✅
 
 ### 8.6 Mission & Streak Administration (미션/스트릭 관리) ✅
 - [ ] **미션 강제 리셋**
   - 특정 사용자 미션 상태 초기화 (감시 로그)
-  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
-- [ ] **스트릭 강제 리셋**
+  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions() ❌ 미구현
+- [x] **스트릭 강제 리셋**
   - 사용자 스트릭 카운트 초기화
-  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
-- [ ] **마일스톤 리워드 배포**
+  - 파일: app/v2/api/admin/streak_routes.py:147 → reset_user_streak_admin() ✅ (감사 로그 기록)
+- [x] **마일스톤 리워드 배포**
   - 관리자 임의 배포 기능 (레벨 달성 보상 등)
-  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
-- [ ] **로그인 미션 검증**
+  - 파일: app/v2/api/admin/streak_routes.py:341 → distribute_milestone_reward() ✅ (감사 로그)
+- [x] **로그인 미션 검증**
   - 금일 로그인 리셋 확인 (09:00 KST 기준)
-  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
-- [ ] **감시 로그: MISSION_RESET, STREAK_RESET, REWARD_DISTRIBUTE**
-  - 모든 관리자 개입 기록
+  - 파일: app/v2/api/admin/mission_routes.py:257 → verify_login_missions() ✅ (09시 리셋 검증)
+- [x] **감시 로그: STREAK_RESET, MILESTONE_FORCE_GRANT, DISTRIBUTE_MILESTONE**
+  - 모든 관리자 개입 기록 ✅ (V2AdminAuditService.log() 적용)
 
 ### 8.7 Level & XP Administration (레벨/경험치 관리) ✅
 - [x] **사용자 레벨 강제 조정**
@@ -557,15 +558,15 @@ CASCADE 의존성 (명시적 검증 필요)
 - [x] **캠페인 ROI 리포팅** (섹션 9.4에서 이미 검증)
   - 캠페인별 투입액, 회수액, 순이익 집계
   - 파일: app/v2/api/admin/roi_routes.py:48-80 → get_campaign_roi(), get_top_roi_campaigns()
-- [ ] **보유율(Retention) 분석**
+- [x] **보유율(Retention) 분석**
   - D1, D7, D30 보유율, 추이 그래프
-  - (추가 필요: app/v2/api/admin/analytics_routes.py) (미존재)
-- [ ] **수익/지출 분석**
+  - 파일: app/v2/api/admin/analytics_routes.py:194 → get_retention_analysis() ✅
+- [x] **수익/지출 분석**
   - 일일/주간/월간 매출/지출 추이
-  - 파일: app/v2/api/admin/economy_routes.py → get_revenue_breakdown() (미확인)
-- [ ] **마케팅 효율성 분석**
+  - 파일: app/v2/api/admin/analytics_routes.py:351 → get_revenue_breakdown() ✅
+- [x] **마케팅 효율성 분석**
   - 채널별 ROI, 전환율, 사용자 획득 비용(CAC)
-  - 파일: app/v2/api/admin/marketing_routes.py:37-392 (메시지/설문 관리만 존재, channel_performance 미확인)
+  - 파일: app/v2/api/admin/analytics_routes.py:527 → get_channel_performance() ✅ (CAC, LTV, ROI 포함)
 
 ### 8.11 Cross-Domain Audit Logging (횡단 감시 로그) ✅
 - [x] **Economy 도메인 로그**
