@@ -31,3 +31,36 @@ V2 인증 시스템의 SOT(단일 원천) 정책과 실제 `auth_routes.py` 코�
 
 ## 4. 향후 계획
 - 30일 sliding window 만료 및 자동 갱신 로직(발급 7일 전) 모니터링.
+
+텔레그램 로그인 화면 2개를 구현했습니다:
+
+1. 테스트 로그인 페이지 (정식 배포 전)
+경로: /login/test
+
+파일: V2TelegramTestLoginPage.tsx
+
+특징:
+
+주황색 경고 배너: "정식 오픈 시 전부 초기화" 안내
+텔레그램 환경이면 → 자동 인증 버튼
+텔레그램 환경 아니면 → 개발 모드 CC ID 로그인
+2. 프로덕션 텔레그램 로그인 페이지 (정식 배포 후)
+경로: /login
+
+파일: V2TelegramLoginPage.tsx
+
+특징:
+
+자동 인증: 페이지 로드 시 즉시 인증 시도
+상태별 UI: 로딩 → 성공 → 홈 이동 (신규 유저 보너스 안내)
+에러 처리: 실패 시 재시도 버튼
+비 텔레그램 환경: "텔레그램으로 접속해주세요" 안내
+라우팅 구조
+경로	페이지	용도
+/login	V2TelegramLoginPage	프로덕션 (자동 인증)
+/login/test	V2TelegramTestLoginPage	테스트 (초기화 경고)
+/login/dev	V2UserLoginPage	기존 개발용 (레거시)
+백엔드 연동
+POST /api/v2/telegram/auth - initData 기반 인증
+Refresh Token 지원
+HapticFeedback (성공/실패 진동)

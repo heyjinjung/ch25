@@ -18,11 +18,12 @@ Golden V2의 실시간 개입(Intervention) 및 대량 로그 처리를 위해 �
 
 ### 1.2 유저 접점: 텔레그램 봇 설정 (User Portal)
 - **BotFather**: `SetWebApp` 메뉴를 통해 `https://cc-jm.com` (유저 도메인) 연결.
-- **Bot Token**: 프로덕션 전용 토큰 준비 (`ch25_prod_bot`).
+- **Bot Token**: 프로덕션 전용 토큰 준비 (`.env.production`에서 로드)
 
 ### 1.3 어드민 접점: 보안 및 도메인 (Admin Portal)
-- **도메인 분리**: `admin.cc-jm.com` (어드민) / `cc-jm.com` (유저).
-- **SSL**: 어드민 도메인은 반드시 HSTS(Strong SSL) 및 고정 IP 접근 제한 권장.
+- **도메인**: `cc-jm.com` (유저 & 어드민 통합 도메인)
+- **SSL**: HTTPS 반드시 활성화 (nginx 프록시 통해 SSL 종료)
+- **CORS**: https://cc-jm.com, https://www.cc-jm.com, http://149.28.135.147 (프리플라이트 요청 허용)
 
 ---
 
@@ -56,24 +57,35 @@ nano .env
 ENV=production
 TEST_MODE=false
 DEV_LOGIN_ENABLED=false  # 🚨 프로덕션 실무 차단 필수
+DOMAIN=cc-jm.com
 
 # Timezone (Golden V2 핵심: 09:00 KST 리셋)
 TIMEZONE=Asia/Seoul
 
-# Database (PostgreSQL)
-DATABASE_URL=postgresql://user:pass@db:5432/ch25_v2
+# Database (MySQL)
+DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
 
 # Security (JWT)
-JWT_SECRET=your-strong-32-char-secret-key
+JWT_SECRET=${JWT_SECRET}  # .env.production에서 로드 (민감정보 보호)
+JWT_ALGORITHM=HS256
 V2_ACCESS_TOKEN_EXPIRE_MINUTES=15
 
-# Golden V2 Safety (Circuit Breaker)
+# Telegram
+TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}  # .env.production에서 로드 (민감정보 보호)
+TELEGRAM_BOT_USERNAME=ccjm
+TELEGRAM_CHANNEL_USERNAME=-1003462656986
+TELEGRAM_MINI_APP_URL=https://cc-jm.com
+
+# CORS
+CORS_ORIGINS=["https://cc-jm.com","https://www.cc-jm.com","http://149.28.135.147"]
+
+# Redis (Circuit Breaker, Celery)
+REDIS_URL=redis://redis:6379/0
+
+# Golden V2 Safety (Circuit Breaker - SoT)
 # 아래 값은 SoT(변경 기준)입니다. 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 합니다.
 CIRCUIT_LIMIT_VAULT=100000  # 시간당 금고 지급 한도 (KRW, SoT)
 CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장, SoT)
-
-# External Integration
-TELEGRAM_BOT_TOKEN=your-production-bot-token
 ```
 
 ---
@@ -116,9 +128,10 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 
 | 컴포넌트 | 경로 | 확인 방법 |
 | :--- | :--- | :--- |
-| **Backend API** | `https://api.cc-jm.com/health` | `{"status": "ok"}` 확인 |
-| **Admin Panel** | `https://admin.cc-jm.com` | 관리자 로그인 및 CSRF 토큰 확인 |
-| **DB Sync** | `docker ps` | `ch25-v2-db` 컨테이너 상태 Healthy 확인 |
+| **Backend API** | `https://cc-jm.com/health` | `{"status": "ok"}` 확인 |
+| **Frontend** | `https://cc-jm.com/` | 메인 페이지 로딩 및 텔레그램 로그인 확인 |
+| **DB Health** | `docker ps` | `xmas-db` 컨테이너 상태 Healthy 확인 |
+| **Redis** | `redis-cli ping` | `PONG` 응답 확인 |
 
 > [!WARNING]
 > 대규모 배포 전 반드시 `scripts/validate_v2_readiness.py`를 실행하여 모든 V2 모듈이 정상 로딩되었는지 확인하십시오.

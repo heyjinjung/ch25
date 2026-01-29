@@ -49,3 +49,10 @@ def override_get_db(test_db_session):
     app.dependency_overrides[get_db] = lambda: test_db_session
     yield
     app.dependency_overrides.clear()
+
+# Global Mock for Redis Events
+@pytest.fixture(scope="session", autouse=True)
+def mock_golden_events():
+    from unittest.mock import patch
+    with patch("app.v2.services.golden_event_service.GoldenV2EventService.get_redis_client", return_value=None):
+        yield

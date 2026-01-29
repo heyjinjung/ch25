@@ -134,3 +134,46 @@ def test_vault2_program_helpers(db_session: Session) -> None:
     top = service.top_statuses(db_session)
     assert len(top) == 1
     assert top[0][0].locked_amount == 5000
+
+def test_vault2_balance_updates_and_details(db_session: Session) -> None:
+    service = Vault2Service()
+    user_id = 1
+    
+    # Ensure default program exists
+    service.get_default_program(db_session, ensure=True)
+    
+    # 1. Update Balance (Absolute Set in Vault2)
+    # Using set_balance which exists in Vault2Service
+    status = service.set_balance(db_session, user_id=user_id, locked_amount=1000, available_amount=500, reason="TEST_SET", admin_id=7)
+    assert status.locked_amount == 1000
+    assert status.available_amount == 500
+    
+    # 2. Get Detail Stats branches
+    # Mock some data for different stats types
+    # "liabilities"
+    details = service.get_vault_detail_stats(db_session, type="liabilities")
+    assert len(details) > 0
+    
+    # "today_accrual"
+    service.accrue_locked(db_session, user_id=user_id, amount=2000)
+    details = service.get_vault_detail_stats(db_session, type="today_accrual")
+    assert any(d["user_id"] == user_id for d in details)
+
+def test_vault2_config_management(db_session: Session) -> None:
+    service = Vault2Service()
+    # Ensure default program exists
+    program = service.get_default_program(db_session, ensure=True)
+    
+    # 1. Update program attributes
+    service.update_program_unlock_rules(db_session, program_key=program.key, unlock_rules_json={"new_rule": 1})
+    db_session.refresh(program)
+    assert program.unlock_rules_json["new_rule"] == 1
+    
+    service.update_program_ui_copy(db_session, program_key=program.key, ui_copy_json={"title": "New Title"})
+    db_session.refresh(program)
+    assert program.ui_copy_json["title"] == "New Title"
+    
+    # 2. Config helpers
+    # toggle_manual_overrides doesn't exist, using update_program_config
+    service.update_program_config(db_session, program_key=program.key, config_json={"feature_x": True})
+    assert service.get_config_value(db_session, "feature_x") is True

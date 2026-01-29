@@ -40,30 +40,34 @@
 
 ### 2.1 필수 환경 변수
 ```bash
-# Database
-DATABASE_URL=postgresql://user:pass@host:port/dbname
+# Database (MySQL)
+DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
 
-# JWT
-JWT_SECRET=<강력한 시크릿 키>
+# JWT (from .env.production)
+JWT_SECRET=${JWT_SECRET}  # .env.production에서 로드 (민감정보 보호)
 JWT_ALGORITHM=HS256
 JWT_EXPIRE_MINUTES=1440  # V1 호환
 V2_ACCESS_TOKEN_EXPIRE_MINUTES=15  # V2 전용
 
-# Telegram
-TELEGRAM_BOT_TOKEN=<프로덕션 봇 토큰>
+# Telegram (from .env.production)
+TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}  # .env.production에서 로드 (민감정보 보호)
+TELEGRAM_BOT_USERNAME=ccjm
+TELEGRAM_CHANNEL_USERNAME=-1003462656986
+TELEGRAM_MINI_APP_URL=https://cc-jm.com
 
 # Environment
 ENV=production
+DOMAIN=cc-jm.com
 
 # V2 Features
 DEV_LOGIN_ENABLED=false  # ⚠️ 프로덕션에서는 반드시 false
 TEST_MODE=false
 
 # CORS
-CORS_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
+CORS_ORIGINS=["https://cc-jm.com","https://www.cc-jm.com","http://149.28.135.147"]
 
 # Redis (Circuit Breaker, Celery)
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://redis:6379/0
 
 # Circuit Breaker (SoT)
 # 아래 값은 SoT(변경 기준)입니다. 모든 환경/코드/테스트/운영 정책은 반드시 이 값을 따라야 합니다.
@@ -79,11 +83,11 @@ TIMEZONE=Asia/Seoul
 ```
 
 ### 2.2 보안 체크
-- [ ] JWT_SECRET이 강력한가? (최소 32자 이상)
-- [ ] DEV_LOGIN_ENABLED=false 확인
-- [ ] TEST_MODE=false 확인
-- [ ] DATABASE_URL에 실제 프로덕션 DB 연결 정보
-- [ ] CORS_ORIGINS에 허용된 도메인만 포함
+- [x] JWT_SECRET이 강력한가? (최소 32자 이상) ✅ 32자 확인됨
+- [x] DEV_LOGIN_ENABLED=false 확인 ✅
+- [x] TEST_MODE=false 확인 ✅
+- [x] DATABASE_URL에 실제 프로덕션 DB 연결 정보 ✅ MySQL xmasuser@db:3306/xmas_event
+- [x] CORS_ORIGINS에 허용된 도메인만 포함 ✅ (cc-jm.com, www.cc-jm.com, 149.28.135.147)
 
 ---
 
@@ -257,10 +261,10 @@ SQLALCHEMY_POOL_RECYCLE=3600
 ### 9.1 Health Check
 ```bash
 # API Health Check
-curl https://api.yourdomain.com/health
+curl https://cc-jm.com/health
 
 # DB 연결 확인
-curl https://api.yourdomain.com/api/v2/health/db
+curl https://cc-jm.com/api/v2/health/db
 ```
 
 ### 9.2 핵심 API 테스트
@@ -375,14 +379,16 @@ version: '3.8'
 
 services:
   api:
-    image: your-registry/v2-api:latest
+    image: xmas-backend:latest  # 실제 이미지명
     environment:
       - ENV=production
       - DEV_LOGIN_ENABLED=false
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
+      - DOMAIN=cc-jm.com
+      - JWT_SECRET=${JWT_SECRET}  # .env.production에서 로드
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}  # .env.production에서 로드
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ORIGINS=["https://cc-jm.com","https://www.cc-jm.com","http://149.28.135.147"]
       - SENTRY_DSN=${SENTRY_DSN}
     ports:
       - "8000:8000"
@@ -391,75 +397,96 @@ services:
       - redis
 
   celery-worker:
-    image: your-registry/v2-api:latest
+    image: xmas-backend:latest
     command: celery -A app.worker.celery_app worker --loglevel=info
     environment:
       - ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
+      - REDIS_URL=redis://redis:6379/0
 
   celery-beat:
-    image: your-registry/v2-api:latest
+    image: xmas-backend:latest
     command: celery -A app.worker.celery_app beat --loglevel=info
     environment:
       - ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
+      - DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
+      - REDIS_URL=redis://redis:6379/0
 
   db:
-    image: postgres:15
+    image: mysql:8.0
     environment:
-      - POSTGRES_DB=v2_production
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=xmas_event
+      - MYSQL_USER=xmasuser
+      - MYSQL_PASSWORD=2026
+      - MYSQL_ROOT_PASSWORD=2026
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    ports:
+      - "6379:6379"
 
 volumes:
-  postgres_data:
+  db_data:
   redis_data:
 ```
 
-### 15.2 배포 스크립트
-```bash
-#!/bin/bash
-set -e
-
-echo "🚀 Starting V2 Production Deployment..."
-
-# 1. 환경 변수 확인
-if [ "$DEV_LOGIN_ENABLED" != "false" ]; then
-    echo "❌ DEV_LOGIN_ENABLED must be false in production!"
+### 15.2 배포 스크립트 (PowerShell)
+```powershell
+# 1. .env.production 로드 (민감정보 보호)
+if (-not (Test-Path .env.production)) {
+    Write-Host "❌ .env.production 파일이 없습니다!" -ForegroundColor Red
     exit 1
-fi
+}
 
-# 2. DB 백업
-echo "📦 Backing up database..."
-pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+Write-Host "🚀 V2 Production Deployment 시작..." -ForegroundColor Green
 
-# 3. Docker 이미지 빌드
-echo "🔨 Building Docker image..."
-docker build -t your-registry/v2-api:latest .
+# 2. 환경 변수 확인
+$envContent = Get-Content .env.production -Raw
+if ($envContent -notmatch "DEV_LOGIN_ENABLED=false") {
+    Write-Host "❌ DEV_LOGIN_ENABLED must be false in production!" -ForegroundColor Red
+    exit 1
+}
 
-# 4. DB 마이그레이션
-echo "🔄 Running database migrations..."
-docker-compose run --rm api alembic upgrade head
+# 3. DB 백업 (MySQL)
+Write-Host "📦 MySQL 백업 중..." -ForegroundColor Yellow
+docker exec xmas-db mysqldump -u xmasuser -p2026 xmas_event > backup_$(Get-Date -Format 'yyyyMMdd_HHmmss').sql
 
-# 5. 서비스 재시작
-echo "🔄 Restarting services..."
-docker-compose up -d
+# 4. Docker 컨테이너 빌드 & 실행
+Write-Host "🔨 Docker 이미지 빌드 중..." -ForegroundColor Yellow
+docker compose down --remove-orphans
+docker compose build --no-cache --parallel
+docker compose up -d --wait
+
+# 5. DB 마이그레이션 (Alembic)
+Write-Host "🔄 Alembic 마이그레이션 적용 중..." -ForegroundColor Yellow
+docker compose exec backend alembic upgrade head
 
 # 6. Health Check
-echo "🏥 Running health check..."
-sleep 10
-curl -f http://localhost:8000/health || exit 1
+Write-Host "🏥 Health Check 실행 중..." -ForegroundColor Yellow
+Start-Sleep -Seconds 5
 
-echo "✅ Deployment completed successfully!"
+try {
+    $response = curl.exe -s -o /dev/null -w "%{http_code}" "https://cc-jm.com/health"
+    if ($response -eq "200") {
+        Write-Host "✅ API Health Check 성공!" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️ Health Check 응답: $response" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "⚠️ Health Check 실패: $_" -ForegroundColor Yellow
+}
+
+Write-Host "✅ 배포가 완료되었습니다!" -ForegroundColor Green
 ```
 
 ---

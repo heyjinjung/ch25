@@ -7,10 +7,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.api.deps import get_current_user, get_db
+from app.v2.api import deps as v2_deps
 from app.db.base_class import Base
 from app.main import app
 from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
 
 @pytest.fixture()
@@ -43,18 +44,20 @@ def client(db_session) -> TestClient:
     def _override_get_db():
         yield db_session
 
-    app.dependency_overrides[get_db] = _override_get_db
+    from app.api.deps import get_db as legacy_get_db
+    app.dependency_overrides[legacy_get_db] = _override_get_db
+    app.dependency_overrides[v2_deps.get_db] = _override_get_db
     with TestClient(app) as test_client:
         yield test_client
-    app.dependency_overrides.pop(get_db, None)
+    app.dependency_overrides.pop(legacy_get_db, None)
+    app.dependency_overrides.pop(v2_deps.get_db, None)
 
-def _seed_user(db: Session, telegram_id: int = 12345) -> User:
-    user = User(
-        external_id=f"test-{uuid.uuid4().hex}",
+def _seed_user(db: Session, telegram_id: int = 12345) -> V2User:
+    user = V2User(
+        cc_id=f"test-{uuid.uuid4().hex}",
         nickname="Viral Tester",
         telegram_id=telegram_id,
         created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
     )
     db.add(user)
     db.commit()
@@ -79,7 +82,7 @@ def test_verify_channel_success(client: TestClient, db_session: Session):
     db_session.commit()
 
     # Override auth
-    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[v2_deps.get_current_user] = lambda: user
 
     try:
         with patch("app.api.routes.viral.NotificationService") as MockService:
@@ -101,13 +104,13 @@ def test_verify_channel_success(client: TestClient, db_session: Session):
                 # 환경/설정 문제로 400/500 발생 시 메시지만 출력
                 print(f"[WARN] status_code={resp.status_code}, body={resp.text}")
     finally:
-        app.dependency_overrides.pop(get_current_user, None)
+        app.dependency_overrides.pop(v2_deps.get_current_user, None)
 
 def test_verify_channel_not_member(client: TestClient, db_session: Session):
     user = _seed_user(db_session)
     
     # Override auth
-    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[v2_deps.get_current_user] = lambda: user
 
     try:
         with patch("app.api.routes.viral.NotificationService") as MockService:
@@ -124,7 +127,7 @@ def test_verify_channel_not_member(client: TestClient, db_session: Session):
             else:
                 print(f"[WARN] status_code={resp.status_code}, body={resp.text}")
     finally:
-        app.dependency_overrides.pop(get_current_user, None)
+        app.dependency_overrides.pop(v2_deps.get_current_user, None)
 
 def test_record_viral_action_trust_based(client: TestClient, db_session: Session):
     user = _seed_user(db_session)
@@ -144,7 +147,7 @@ def test_record_viral_action_trust_based(client: TestClient, db_session: Session
     db_session.commit()
 
     # Override auth
-    app.dependency_overrides[get_current_user] = lambda: user
+    app.dependency_overrides[v2_deps.get_current_user] = lambda: user
 
     try:
         payload = {"action_type": "SHARE_STORY", "mission_id": int(mission.id)}
@@ -158,4 +161,4 @@ def test_record_viral_action_trust_based(client: TestClient, db_session: Session
         assert progress is not None
         assert progress.current_value == 1
     finally:
-        app.dependency_overrides.pop(get_current_user, None)
+        app.dependency_overrides.pop(v2_deps.get_current_user, None)

@@ -2,8 +2,10 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import V2AppLayout from "../components/layout/V2AppLayout";
 
-// Lazy load pages
-const LoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
+// Lazy load pages - Auth
+const DevLoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
+const TelegramLoginPage = lazy(() => import("../pages/auth/V2TelegramLoginPage"));
+const TelegramTestLoginPage = lazy(() => import("../pages/auth/V2TelegramTestLoginPage"));
 const HomePage = lazy(() => import("../pages/home/HomePage"));
 const GamedashPage = lazy(() => import("../pages/game/GamedashPage"));
 const VaultPage = lazy(() => import("../pages/vault/VaultPage"));
@@ -30,8 +32,12 @@ export const V2UserRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* Auth - Telegram Login */}
+        <Route path="/login" element={<TelegramTestLoginPage />} />
+        {/* 프로덕션용 (정식 오픈 후 /login으로 변경) */}
+        <Route path="/login/prod" element={<TelegramLoginPage />} />
+        {/* 기존 개발용 로그인 (레거시) */}
+        <Route path="/login/dev" element={<DevLoginPage />} />
 
         {/* App Layout (V1-style bottom nav) */}
         <Route element={<V2AppLayout />}>
