@@ -452,7 +452,7 @@ iconv -f ISO-8859-1 -t UTF-8 input.csv > output.csv
 
 ### Admin API 접근
 
-- ✅ **SUPERADMIN 역할 필수**
+- ✅ **ADMIN 역할 필수**
 - ✅ JWT 토큰 인증 필요
 - ✅ CORS 설정 확인
 

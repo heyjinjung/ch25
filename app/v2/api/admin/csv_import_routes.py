@@ -29,8 +29,8 @@ def validate_csv_file(
     """
     admin_id, admin_role = admin_info
 
-    if admin_role != "SUPERADMIN":
-        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
 
     # Save uploaded file temporarily
     import tempfile
@@ -77,8 +77,8 @@ def upload_csv_file(
     """
     admin_id, admin_role = admin_info
 
-    if admin_role != "SUPERADMIN":
-        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
 
     # Validate file extension
     if not file.filename or not file.filename.endswith(".csv"):
@@ -122,8 +122,8 @@ def import_csv_file(
     """
     admin_id, admin_role = admin_info
 
-    if admin_role != "SUPERADMIN":
-        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
 
     from pathlib import Path
 
@@ -160,8 +160,8 @@ def estimate_import_time(
     """
     admin_id, admin_role = admin_info
 
-    if admin_role != "SUPERADMIN":
-        raise HTTPException(status_code=403, detail="Requires SUPERADMIN role")
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
 
     from pathlib import Path
 

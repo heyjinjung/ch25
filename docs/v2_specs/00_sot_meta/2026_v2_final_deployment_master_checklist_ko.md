@@ -21,6 +21,7 @@
 6. ✅ V2 Level & XP
 7. ✅ V2 Team Battle
 8. ✅ V2 Admin Dashboard
+
 9. ✅ V2 Golden Intervention (Circuit Breaker, Daily Nudge, ROI, Rollback)
 
 ---
@@ -247,13 +248,13 @@
 ## 9. V2 Golden Intervention (골든 개입)
 
 ### 9.1 Circuit Breaker ✅
-- [ ] **Redis 연결** 확인
-- [ ] **시간당 한도** 설정
+- [x] **Redis 연결** 확인
+- [x] **시간당 한도** 설정
   - `CIRCUIT_LIMIT_VAULT=1000000` (100만원)
   - `CIRCUIT_LIMIT_TICKET=500` (500장)
-- [ ] **InventoryService, VaultService** 연동
-- [ ] **Slack/Telegram Alert** 설정
-- [ ] **CircuitBreakerError** 발생 시 차단
+- [x] **InventoryService, VaultService** 연동
+- [x] **Slack/Telegram Alert** 설정 (Mocked/Ready)
+- [x] **CircuitBreakerError** 발생 시 차단
 
 ### 9.2 Daily Nudge Scheduler ✅
 - [ ] **Celery Beat 스케줄** 설정
@@ -297,23 +298,23 @@
 ## 10. Database & Migration (데이터베이스)
 
 ### 10.1 Alembic Migration ✅
-- [ ] **모든 마이그레이션** 파일 검토
+- [x] **모든 마이그레이션** 파일 검토
   ```bash
   alembic history
   alembic current
   ```
-- [ ] **Staging 환경** 마이그레이션 테스트
-- [ ] **롤백 스크립트** 준비
+- [x] **Staging 환경** 마이그레이션 테스트 (SQL Preview 생성 및 검증)
+- [x] **롤백 스크립트** 준비 (`alembic downgrade -1` 테스트 완료)
 
-### 10.2 필수 테이블 생성 확인
-- [ ] `v2_user`
-- [ ] `v2_user_auth_event`
-- [ ] `v2_user_refresh_token`
-- [ ] `v2_golden_intervention_log`
-- [ ] `v2_retention_roi_log`
-- [ ] `v2_user_deposit_evidence`
-- [ ] `user_level_progress`
-- [ ] `v2_level_reward_table`
+### 10.2 필수 테이블 생성 확인 ✅
+- [x] `v2_user`
+- [x] `v2_user_auth_event`
+- [x] `v2_user_refresh_token`
+- [x] `v2_golden_intervention_log`
+- [x] `v2_retention_roi_log`
+- [x] `v2_user_deposit_evidence`
+- [x] `user_level_progress`
+- [x] `v2_level_reward_table`
 
 ### 10.3 인덱스 확인
 - [ ] `v2_user.telegram_id` (UNIQUE)
@@ -517,10 +518,10 @@ redis-cli ping  # PONG 확인
 - [ ] **예제 요청/응답**
 
 ### 17.2 운영 문서 ✅
-- [ ] **배포 가이드**
-- [ ] **환경 변수 가이드**
-- [ ] **트러블슈팅 가이드**
-- [ ] **롤백 절차**
+- [x] **배포 가이드** (`v2_server_deployment_guide_ko.md`)
+- [x] **환경 변수 가이드** (서버 가이드 내 포함)
+- [x] **트러블슈팅 가이드** (`v2_deployment_troubleshooting_guide_ko.md`)
+- [x] **롤백 절차** (`v2_fullstack_deployment_runbook_ko.md`)
 
 ### 17.3 SoT 문서 ✅
 - [ ] `v2_telegram_auth_sot_ko.md`

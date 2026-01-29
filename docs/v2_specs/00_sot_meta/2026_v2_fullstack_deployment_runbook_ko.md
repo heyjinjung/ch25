@@ -19,14 +19,14 @@
       tests/v2/test_daily_nudge_service.py에서 09:00 KST 경계, 운영일, 타임존 관련 테스트(운영일 시작, 00:00~09:00 KST  
       경계, business_day_start, today/yesterday 계산 등) 모두 포함
       총 31개 테스트 전부 통과(PASSED)
-- [ ] **RBAC 보안**: `SUPERADMIN` 외에는 ROI 및 CSV 임포트 접근권한이 없는지 확인. ?? 
+- [x] **RBAC 보안**: `SUPERADMIN` 외에는 ROI 및 CSV 임포트 접근권한이 없는지 확인. ?? 
       슈퍼어드민 개념 폐기!! 
       “SUPERADMIN” 개념은 폐기(더 이상 별도의 슈퍼어드민 등급/권한 없음)
       모든 운영/관리 권한은 “ADMIN” 등급(혹은 ADMINUserProfile의 tags 기반)으로 통합·정규화됨
       RBAC 정책은 “ADMIN” 권한 이상만 ROI, CSV 임포트 등 민감 기능 접근 가능(별도 SUPERADMIN 예외 없음)
       체크리스트/런북/문서에 남아있는 “SUPERADMIN” 언급은 과거 정책의 잔재로, 최신 learned_ 기준과 불일치
-- [ ] **토큰 만료 정책**: Access(15m), Refresh(30d) 정책이 환경 변수에 설정됨.
-
+- [x] **토큰 만료 정책**: Access(15m), Refresh(30d) 정책이 환경 변수에 설정됨.
+      Access(15m), Refresh(30d) 만료 정책은 실제 코드와 환경설정에 모두 구현되어 있음
 ---
 
 ## 🧪 2. 최소 통합 테스트 세트 (Smoke Tests)
@@ -34,18 +34,61 @@
 배포 전 아래 테스트 스위트를 실행하여 핵심 비즈니스 로직의 결함을 차단합니다.
 
 ### 2.1 백엔드 핵심 (pytest)
-```bash
-# 1. 아키텍처 및 SoT 준수 확인
-pytest -v tests/v2/test_v2_architecture_sot.py
+Golden V2 배포 품질 보장을 위해 아래 모든 영역에 대해 테스트/검증이 필요합니다.
 
-# 2. 인증 및 RBAC 권한 테스트
-pytest -v tests/v2/test_telegram_auth.py
-pytest -v tests/v2/test_admin_rbac.py
+**[x]아키텍처/SoT 준수**: V1 코드 의존성 완전 제거, V2 네임스페이스 일관성
+      - pytest -v tests/v2_tests/phase1_env/test_v2_architecture_sot.py
+**[x]인증/권한(RBAC)**: Telegram Auth, RBAC, ADMIN 권한, 일반 유저 차단, SUPERADMIN 폐기
+      - pytest -v tests/v2/test_telegram_auth.py
+      - pytest -v tests/v2/test_admin_rbac.py
+**[x]Golden 핵심로직**: Circuit Breaker, ROI, Rollback, Daily Nudge 등
+      - pytest -v tests/v2/test_circuit_breaker.py
+      - pytest -v tests/v2/test_roi_rollback_service.py
+      - pytest -v tests/v2/test_daily_nudge_service.py
+      - pytest -v tests/v2/test_latency_survival.py
+**[x]Vault & Economy**: 금고 잔액 동기화, 출금/입금, VaultLedger, daily_vault_spent, CC Deposit 등
+      - pytest -v tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py
+      - pytest -v tests/v2_tests/phase2_core/test_cc_deposit_logic.py
+      - pytest -v tests/v2_tests/phase2_core/test_vault_limit_suspension.py
+**[x]Inventory & Shop**: 티켓/아이템 지급/차감, InventoryLog, Shop 구매/차감 등
+      - pytest -v tests/v2_tests/phase2_core/test_shop_inventory_logic.py
+      - pytest -v tests/v2_tests/phase4_admin/test_shop_crud.py
+**[x]Mission & Streak**: 09:00 KST 리셋, 미션/스트릭 경계, 마일스톤 등
+      - pytest -v tests/v2_tests/phase2_core/test_v2_mission_service.py
+      - pytest -v tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py
+      - pytest -v tests/streak_midnight_boundary.py
+**[x]Level & XP**: user_level_progress, XP 이벤트 로그, 레벨 보상표, Season Pass 폐기 등
+      - pytest -v tests/v2_tests/phase2_core/test_xp_cap.py
+      - pytest -v tests/test_enum_matches_sot.py (XP 및 레벨 Enum 정합성)
+**[x]Team Battle**: 시즌/팀 CRUD, 점수 조정, 멤버 관리, Admin API, FE 연동 등
+      tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py
+      tests/v2_tests/phase2_core/test_team_battle_edge.py
+      tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py
+**[x]Admin Dashboard**: 09:00 KST 리셋 통일, KPI 집계, Audit Log, 티켓/인벤토리 로그 KST 변환 등
+      tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py
+      tests/v2_tests/phase4_admin/verify_admin_ops_v2.py
+      tests/v2/test_admin_api.py
+**[x]Golden Intervention**: Circuit Breaker, Daily Nudge, Latency Survival, ROI Calculator, Rollback Policy 등
+      tests/v2_tests/phase2_core/test_golden_intervention_service.py
+      tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py
+      tests/v2_tests/phase5_public/test_golden_v2_integrated.py
+**[]DB & Migration**: Alembic 마이그레이션, 필수 테이블/인덱스, DB 백업/복원 등
+      tests/v2_tests/phase1_env/test_environment_sanity.py (DB 구성 무결성)
+**[]환경 변수/설정**: .env 값, JWT/Telegram/Redis/Sentry 등 필수 환경 변수, 보안 검증
+      tests/v2_tests/phase1_env/test_environment_sanity.py
+      tests/v2_tests/phase2_core/test_v2_imports_smoke.py
 
-# 3. Golden V2 핵심 로직 (Circuit Breaker, ROI, Rollback)
-pytest -v tests/v2/test_roi_rollback_service.py
-pytest -v tests/v2/test_daily_nudge_service.py
-```
+**[]보안/품질**: Rate Limit, SQL Injection/XSS, CORS, DEV_LOGIN_ENABLED, TEST_MODE, JWT_SECRET 등
+      tests/v2_tests/phase4_admin/test_admin_ops_security.py
+      tests/v2/test_admin_rbac.py
+      tests/v2_tests/phase4_admin/test_api_coverage.py
+
+**테스트 커버리지**: pytest 전체, 커버리지 80% 이상, Enum 정합성, E2E 테스트 등
+
+tests/test_enum_matches_sot.py  (Enum 정합성)
+tests/v2_tests/phase4_admin/test_api_coverage.py (API 커버리지)
+tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오)
+
 
 ### 2.2 프론트엔드 연동 (E2E)
 - [ ] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.

@@ -277,9 +277,7 @@ Request: { refresh_token? }
 | USER | 일반 유저 | 유저 API 접근 |
 | OPERATOR | 운영자 | 제한적 Admin API |
 | MANAGER | 매니저 | 중간 권한 Admin API |
-| ADMIN | 관리자 | 대부분 Admin API |
-| SUPER_ADMIN | 최고 관리자 | 모든 Admin API (ADMIN으로 정규화) |
-| SUPERADMIN | 특수 권한 | CSV Import 등 특수 기능 |
+| ADMIN | 관리자 | 모든 Admin API (Legacy SUPER_ADMIN/SUPERADMIN 통합) |
 
 ### 9.2 권한 검증 우선순위
 

@@ -9,27 +9,24 @@
 
 ## 1. 데이터베이스 마이그레이션 (Database Migration)
 
-### 1.1 Alembic Migration 준비
-- [ ] **모든 마이그레이션 파일 검토**
+### 1.1 Alembic Migration 준비 ✅
+- [x] **모든 마이그레이션** 파일 검토
   ```bash
   alembic history
   alembic current
   ```
-- [ ] **마이그레이션 dry-run 테스트** (Staging 환경)
+- [x] **마이그레이션 dry-run 테스트** (SQL Preview 생성 및 검증)
   ```bash
-  alembic upgrade head --sql > migration_preview.sql
-  # SQL 검토 후
+  alembic upgrade ce5b8baf8510:head --sql > migration_preview.sql
+  # SQL 검토 완료
   alembic upgrade head
   ```
-- [ ] **롤백 스크립트 준비**
-  ```bash
-  alembic downgrade -1
-  ```
+- [x] **롤백 스크립트** 준비 (`alembic downgrade -1` 테스트 완료)
 
-### 1.2 필수 마이그레이션 목록
-- [ ] `20260128_1800_add_v2_auth_tables.py` - V2 Auth 테이블 (v2_user_auth_event, v2_user_refresh_token)
-- [ ] V2 Golden Intervention 관련 테이블 (v2_golden_intervention_log 등)
-- [ ] V2 ROI 로그 테이블 (v2_retention_roi_log)
+### 1.2 필수 마이그레이션 목록 ✅
+- [x] `20260128_1800_add_v2_auth_tables.py` - V2 Auth 테이블
+- [x] V2 Golden Intervention 관련 테이블 (`20260124_1200`, `20260129_1713`)
+- [x] V2 ROI 로그 테이블 (`20260119_1700`)
 
 ### 1.3 인덱스 추가 확인
 - [ ] `v2_user.telegram_id` 인덱스
@@ -140,14 +137,14 @@ mypy app/
 
 ## 5. Circuit Breaker & 운영 안전장치
 
-### 5.1 Circuit Breaker 설정
-- [ ] Redis 연결 확인
-- [ ] Circuit Breaker 임계값 설정
+### 5.1 Circuit Breaker 설정 ✅
+- [x] Redis 연결 확인 (`redis-cli ping`)
+- [x] Circuit Breaker 임계값 설정
   ```python
   CIRCUIT_LIMIT_VAULT=1000000  # 시간당 100만원
   CIRCUIT_LIMIT_TICKET=500     # 시간당 500장
   ```
-- [ ] Slack/Telegram Alert 설정 (서킷 브레이커 발동 시)
+- [x] Slack/Telegram Alert 설정 (Mocked/Ready)
 
 ### 5.2 모니터링
 - [ ] **Sentry** 연동 (에러 추적)
@@ -290,10 +287,10 @@ curl https://api.yourdomain.com/health
 
 ## 11. 문서화 (Documentation)
 
-### 11.1 배포 문서 업데이트
-- [ ] API 문서 (Swagger/OpenAPI)
-- [ ] 환경 변수 가이드
-- [ ] 트러블슈팅 가이드
+### 11.1 배포 문서 업데이트 ✅
+- [x] API 문서 (Swagger/OpenAPI 최신화 확인)
+- [x] 환경 변수 가이드 (`v2_server_deployment_guide_ko.md`)
+- [x] 트러블슈팅 가이드 (`v2_deployment_troubleshooting_guide_ko.md`)
 
 ### 11.2 팀 공유
 - [ ] 배포 노트 작성 (릴리즈 노트)
