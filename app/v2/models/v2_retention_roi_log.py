@@ -1,7 +1,7 @@
 """V2 retention ROI log model for Golden."""
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Index
 
 from app.db.base_class import Base
 
@@ -20,3 +20,7 @@ class V2RetentionRoiLog(Base):
     reward_type = Column(String(50), nullable=True)
     reward_amount = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+
+    __table_args__ = (
+        Index("idx_v2_retention_roi_log_event_created", "event_type", "created_at"),
+    )

@@ -698,3 +698,278 @@ def get_user_inventory(
         )
 
     return result
+
+
+# ─────────────────────────────────────────────────────────────────
+# 8.5 재고 조정, Gifticon 배송 추적, 재고 부족 알림
+# ─────────────────────────────────────────────────────────────────
+
+class StockAdjustRequest(BaseModel):
+    """재고 수량 조정 요청"""
+    user_id: int
+    item_type: str
+    delta: int  # 양수: 증가, 음수: 감소
+    reason: str
+
+
+class StockAdjustResponse(BaseModel):
+    """재고 수량 조정 응답"""
+    success: bool
+    user_id: int
+    item_type: str
+    old_quantity: int
+    new_quantity: int
+    delta: int
+    message: str
+
+
+class GifticonDeliveryDto(BaseModel):
+    """Gifticon 배송 상태"""
+    id: int
+    user_id: int
+    nickname: str
+    item_type: str
+    item_name: str
+    status: str  # PENDING, DELIVERED, FAILED
+    created_at: datetime
+    delivered_at: Optional[datetime] = None
+    delivery_code: Optional[str] = None
+    error_message: Optional[str] = None
+
+
+class GifticonDeliveryListResponse(BaseModel):
+    """Gifticon 배송 목록 응답"""
+    total: int
+    pending: int
+    delivered: int
+    failed: int
+    items: List[GifticonDeliveryDto]
+
+
+class StockAlertDto(BaseModel):
+    """재고 부족 알림"""
+    item_type: str
+    current_stock: int
+    threshold: int
+    is_critical: bool
+    last_updated: Optional[datetime] = None
+
+
+class StockAlertListResponse(BaseModel):
+    """재고 부족 알림 목록"""
+    total_alerts: int
+    critical_count: int
+    alerts: List[StockAlertDto]
+
+
+@router.post("/inventory/adjust-stock", response_model=StockAdjustResponse)
+def adjust_stock(
+    payload: StockAdjustRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    재고 수량 직접 조정 (관리자)
+
+    - 양수 delta: 재고 증가
+    - 음수 delta: 재고 감소
+    - 감시 로그 기록
+    """
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    if payload.delta == 0:
+        raise HTTPException(status_code=400, detail="DELTA_CANNOT_BE_ZERO")
+
+    # 유저 확인
+    user = db.get(User, payload.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # 기존 인벤토리 아이템 조회
+    item = db.query(UserInventoryItem).filter(
+        UserInventoryItem.user_id == payload.user_id,
+        UserInventoryItem.item_type == payload.item_type,
+    ).first()
+
+    old_quantity = 0
+    if item:
+        old_quantity = int(item.quantity or 0)
+        new_quantity = max(0, old_quantity + payload.delta)
+        item.quantity = new_quantity
+    else:
+        if payload.delta < 0:
+            raise HTTPException(status_code=400, detail="CANNOT_REDUCE_NONEXISTENT_ITEM")
+        # 새 아이템 생성
+        new_quantity = payload.delta
+        item = UserInventoryItem(
+            user_id=payload.user_id,
+            item_type=payload.item_type,
+            quantity=new_quantity,
+        )
+        db.add(item)
+
+    # 로그 기록
+    log = UserInventoryLedger(
+        user_id=payload.user_id,
+        item_type=payload.item_type,
+        change_amount=payload.delta,
+        balance_after=new_quantity,
+        reason=f"ADMIN_ADJUST: {payload.reason}",
+        related_id=f"admin_{admin_id}",
+    )
+    db.add(log)
+
+    # 감사 로그
+    V2AdminAuditService.log(
+        db, admin_id, "STOCK_ADJUST", "INVENTORY", f"{payload.user_id}:{payload.item_type}",
+        before={"quantity": old_quantity},
+        after={"quantity": new_quantity, "delta": payload.delta, "reason": payload.reason}
+    )
+
+    db.commit()
+
+    logger.info(
+        f"[ADMIN] Stock adjust: user_id={payload.user_id}, item={payload.item_type}, "
+        f"old={old_quantity}, new={new_quantity}, delta={payload.delta}, admin_id={admin_id}"
+    )
+
+    return StockAdjustResponse(
+        success=True,
+        user_id=payload.user_id,
+        item_type=payload.item_type,
+        old_quantity=old_quantity,
+        new_quantity=new_quantity,
+        delta=payload.delta,
+        message="재고가 조정되었습니다.",
+    )
+
+
+@router.get("/inventory/gifticon/deliveries", response_model=GifticonDeliveryListResponse)
+def list_gifticon_deliveries(
+    status: Optional[str] = Query(None, description="PENDING, DELIVERED, FAILED"),
+    user_id: Optional[int] = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Gifticon 배송 목록 조회
+
+    - status: PENDING(대기중), DELIVERED(배송됨), FAILED(실패)
+    - 전체 / 상태별 통계 제공
+    """
+    # Gifticon 관련 아이템 타입 (예: GIFTICON_ prefix)
+    gifticon_types = ["GIFTICON", "GIFTICON_STARBUCKS", "GIFTICON_CU", "GIFTICON_GS25"]
+
+    query = db.query(UserInventoryLedger, User).outerjoin(
+        User, UserInventoryLedger.user_id == User.id
+    ).filter(
+        UserInventoryLedger.item_type.in_(gifticon_types)
+    )
+
+    if user_id:
+        query = query.filter(UserInventoryLedger.user_id == user_id)
+
+    # 상태별 필터링 (reason 필드에서 상태 추출)
+    if status:
+        if status == "PENDING":
+            query = query.filter(~UserInventoryLedger.reason.like("%DELIVERED%"))
+            query = query.filter(~UserInventoryLedger.reason.like("%FAILED%"))
+        elif status == "DELIVERED":
+            query = query.filter(UserInventoryLedger.reason.like("%DELIVERED%"))
+        elif status == "FAILED":
+            query = query.filter(UserInventoryLedger.reason.like("%FAILED%"))
+
+    logs = query.order_by(UserInventoryLedger.created_at.desc()).limit(limit).all()
+
+    # 통계 계산
+    all_logs = db.query(UserInventoryLedger).filter(
+        UserInventoryLedger.item_type.in_(gifticon_types)
+    ).all()
+
+    total = len(all_logs)
+    pending = sum(1 for l in all_logs if "DELIVERED" not in (l.reason or "") and "FAILED" not in (l.reason or ""))
+    delivered = sum(1 for l in all_logs if "DELIVERED" in (l.reason or ""))
+    failed = sum(1 for l in all_logs if "FAILED" in (l.reason or ""))
+
+    items = []
+    for log, user in logs:
+        # 상태 추출
+        reason = log.reason or ""
+        if "DELIVERED" in reason:
+            item_status = "DELIVERED"
+        elif "FAILED" in reason:
+            item_status = "FAILED"
+        else:
+            item_status = "PENDING"
+
+        items.append(GifticonDeliveryDto(
+            id=log.id,
+            user_id=log.user_id,
+            nickname=user.nickname if user else "(알 수 없음)",
+            item_type=log.item_type,
+            item_name=log.item_type,
+            status=item_status,
+            created_at=log.created_at,
+            delivered_at=None,  # 실제 구현 시 별도 필드 필요
+            delivery_code=None,
+            error_message=reason if "FAILED" in reason else None,
+        ))
+
+    return GifticonDeliveryListResponse(
+        total=total,
+        pending=pending,
+        delivered=delivered,
+        failed=failed,
+        items=items,
+    )
+
+
+@router.get("/inventory/stock-alerts", response_model=StockAlertListResponse)
+def get_stock_alerts(
+    threshold: int = Query(10, ge=0, description="부족 기준 수량"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    재고 부족 알림 조회
+
+    - threshold 이하인 아이템 타입 목록
+    - critical: threshold의 절반 이하
+    """
+    # 아이템 타입별 전체 재고 집계
+    stock_stats = db.query(
+        UserInventoryItem.item_type,
+        func.sum(UserInventoryItem.quantity).label("total_stock"),
+        func.max(UserInventoryItem.updated_at).label("last_updated"),
+    ).group_by(UserInventoryItem.item_type).all()
+
+    alerts = []
+    critical_count = 0
+    critical_threshold = threshold // 2
+
+    for stat in stock_stats:
+        total_stock = int(stat.total_stock or 0)
+
+        if total_stock <= threshold:
+            is_critical = total_stock <= critical_threshold
+            if is_critical:
+                critical_count += 1
+
+            alerts.append(StockAlertDto(
+                item_type=stat.item_type,
+                current_stock=total_stock,
+                threshold=threshold,
+                is_critical=is_critical,
+                last_updated=stat.last_updated,
+            ))
+
+    # 심각도 순 정렬
+    alerts.sort(key=lambda x: (not x.is_critical, x.current_stock))
+
+    return StockAlertListResponse(
+        total_alerts=len(alerts),
+        critical_count=critical_count,
+        alerts=alerts,
+    )

@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Check, Gift, Loader2, ExternalLink, Share2, ShieldCheck } from "lucide-react";
+import {
+  Check,
+  Gift,
+  Loader2,
+  ExternalLink,
+  Share2,
+  ShieldCheck,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../../components/ui/button";
 import { motion } from "framer-motion";
@@ -21,7 +28,8 @@ export const MissionCard: React.FC<MissionCardProps> = ({
   isClaiming,
 }) => {
   const [isJoined, setIsJoined] = useState(false);
-  const { recordAction, verifyChannel, isRecording, isVerifying } = useViralAction();
+  const { recordAction, verifyChannel, isRecording, isVerifying } =
+    useViralAction();
 
   const percent = Math.min(100, (mission.progress / mission.target) * 100);
   const isClaimable = mission.is_completed && !mission.is_claimed;
@@ -36,35 +44,59 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     // We assume these strings based on Mission schema and V2MissionService aliases
     const actionType = (mission as any).action_type || "";
 
-    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL" || actionType === "CHANNEL_JOIN") {
+    if (
+      actionType === "JOIN_CHANNEL" ||
+      actionType === "SUBSCRIBE_CHANNEL" ||
+      actionType === "CHANNEL_JOIN"
+    ) {
       if (!isJoined) {
         // Step 1: Open Channel Link
-        const channelUrl = (mission as any).metadata?.channel_url || "https://t.me/cc_jm_official";
+        const channelUrl =
+          (mission as any).metadata?.channel_url ||
+          "https://t.me/cc_jm_official";
         tg.openTelegramLink(channelUrl);
         setIsJoined(true);
       } else {
         // Step 2: Verify Subscription
-        await verifyChannel({ 
+        await verifyChannel({
           missionId: parseInt(mission.id),
-          channelUsername: (mission as any).metadata?.channel_username
+          channelUsername: (mission as any).metadata?.channel_username,
         });
       }
     } else if (actionType === "SHARE_STORY") {
       // SHARE_STORY: Trust-based immediate recording
-      const storyMedia = (mission as any).metadata?.media_url || "https://cc-jm.com/share-bg.png";
-      const storyText = (mission as any).metadata?.share_text || "CC 미팅 같이해요! 💎";
+      const storyMedia =
+        (mission as any).metadata?.media_url ||
+        "https://cc-jm.com/share-bg.png";
+      const storyText =
+        (mission as any).metadata?.share_text || "CC 미팅 같이해요! 💎";
       tg.shareToStory(storyMedia, { text: storyText });
-      await recordAction({ action_type: "SHARE_STORY", mission_id: parseInt(mission.id) });
+      await recordAction({
+        action_type: "SHARE_STORY",
+        mission_id: parseInt(mission.id),
+      });
     } else if (actionType === "SHARE_LINK" || actionType === "SHARE") {
       // SHARE_LINK: Trust-based immediate recording
-      const shareUrl = (mission as any).metadata?.share_url || `https://t.me/share/url?url=${encodeURIComponent("https://t.me/your_bot?start=ref_" + (tg.initDataUnsafe?.user?.id || ""))}&text=${encodeURIComponent("같이 게임하고 보상 받아요!")}`;
+      const shareUrl =
+        (mission as any).metadata?.share_url ||
+        `https://t.me/share/url?url=${encodeURIComponent("https://t.me/your_bot?start=ref_" + (tg.initDataUnsafe?.user?.id || ""))}&text=${encodeURIComponent("같이 게임하고 보상 받아요!")}`;
       tg.openTelegramLink(shareUrl);
-      await recordAction({ action_type: actionType === "SHARE" ? "SHARE_LINK" : actionType, mission_id: parseInt(mission.id) });
+      await recordAction({
+        action_type: actionType === "SHARE" ? "SHARE_LINK" : actionType,
+        mission_id: parseInt(mission.id),
+      });
     } else if (actionType === "SHARE_WALLET") {
-       // Support SHARE_WALLET alias as well
-       const walletUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://cc-jm.com/wallet/" + (tg.initDataUnsafe?.user?.id || ""));
-       tg.openTelegramLink(walletUrl);
-       await recordAction({ action_type: "SHARE_WALLET", mission_id: parseInt(mission.id) });
+      // Support SHARE_WALLET alias as well
+      const walletUrl =
+        "https://t.me/share/url?url=" +
+        encodeURIComponent(
+          "https://cc-jm.com/wallet/" + (tg.initDataUnsafe?.user?.id || ""),
+        );
+      tg.openTelegramLink(walletUrl);
+      await recordAction({
+        action_type: "SHARE_WALLET",
+        mission_id: parseInt(mission.id),
+      });
     }
   };
 
@@ -86,7 +118,11 @@ export const MissionCard: React.FC<MissionCardProps> = ({
           disabled={isClaiming}
           className="h-11 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs rounded-2xl shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all active:scale-95 border-none"
         >
-          {isClaiming ? <Loader2 className="w-4 h-4 animate-spin" /> : "보상 받기"}
+          {isClaiming ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            "보상 받기"
+          )}
         </Button>
       );
     }
@@ -103,7 +139,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({
           disabled={isProcessing}
           className={cn(
             "h-11 px-5 font-black text-xs rounded-2xl transition-all active:scale-95 border-none gap-2",
-            isJoined ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-white/10 hover:bg-white/20 text-white"
+            isJoined
+              ? "bg-amber-500 hover:bg-amber-400 text-black"
+              : "bg-white/10 hover:bg-white/20 text-white",
           )}
         >
           {isProcessing ? (
@@ -252,19 +290,14 @@ export const MissionCard: React.FC<MissionCardProps> = ({
                 )}
               >
                 {percent >= 100 && (
-                  <div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite]"
-                    style={{ backgroundSize: "200% 100%" }}
-                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_2s_infinite] bg-200" />
                 )}
               </motion.div>
             </div>
           </div>
 
           {/* Action Button - High Visual Priority */}
-          <div className="flex-shrink-0">
-            {renderActionButton()}
-          </div>
+          <div className="flex-shrink-0">{renderActionButton()}</div>
         </div>
       </div>
     </motion.div>

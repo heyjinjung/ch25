@@ -50,3 +50,67 @@ V2 관리자 페이지의 완성도를 높이기 위해 미구현 상태였던 �
 
 ---
 > **Note**: 본 문서는 2026-01-29 V2 Admin 기능 최적화 작업의 최종 결과 보고서(SOT)로 활용됨.
+
+
+구현 완료 요약
+8.4 Vault & Economy Monitoring (금고/경제 모니터링) ✅
+기능	엔드포인트	파일
+전체 금고 잔액 집계	GET /api/v2/admin/vault/aggregate	vault_routes.py:114
+지출 한도 추적	GET /api/v2/admin/vault/spend-limits	vault_routes.py:153
+지출 한도 요약	GET /api/v2/admin/vault/spend-limits/summary	vault_routes.py:193
+8.5 Shop & Inventory Administration (상점/인벤토리 관리) ✅
+기능	엔드포인트	파일
+재고 수량 조정	POST /api/v2/admin/inventory/adjust-stock	inventory_routes.py:756
+Gifticon 배송 추적	GET /api/v2/admin/inventory/gifticon/deliveries	inventory_routes.py:820
+재고 부족 알림	GET /api/v2/admin/inventory/stock-alerts	inventory_routes.py:890
+8.6 Mission & Streak Administration (미션/스트릭 관리) ✅
+기능	엔드포인트	파일
+로그인 미션 검증	GET /api/v2/admin/game/missions/login-verify	mission_routes.py:241
+미션 통계	GET /api/v2/admin/game/missions/stats	mission_routes.py:308
+새로 생성된 파일
+tests/v2/test_admin_monitoring.py - 28개 테스트 케이스
+수정된 파일
+파일	변경 내용
+vault_routes.py	+3 엔드포인트 (aggregate, spend-limits, summary)
+inventory_routes.py	+3 엔드포인트 (adjust-stock, gifticon/deliveries, stock-alerts)
+mission_routes.py	+2 엔드포인트 (login-verify, stats)
+
+V2 Golden Admin 미구현 기능 구현이 완료되었습니다. 구현된 내용을 정리합니다:
+
+구현 완료 요약
+1. 보유율(Retention) 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/retention	D1, D7, D30 보유율 분석 (코호트별)
+GET /admin/analytics/retention/trend	보유율 추이 그래프 데이터
+2. 수익/지출 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/revenue/breakdown	일일/주간/월간 매출/지출 추이
+GET /admin/analytics/revenue/summary	수익 요약 (대시보드용)
+3. 마케팅 효율성 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/marketing/channel-performance	채널별 ROI, 전환율, CAC
+구현된 스키마
+Retention: RetentionRateDto, RetentionSummaryDto, RetentionAnalysisResponse, RetentionTrendDto
+Revenue: DailyRevenueDto, RevenueBreakdownDto, RevenueSummaryDto
+Marketing: ChannelPerformanceDto, MarketingEfficiencyResponse
+
+구현 완료 요약
+1. 보유율(Retention) 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/retention	D1, D7, D30 보유율 분석 (코호트별)
+GET /admin/analytics/retention/trend	보유율 추이 그래프 데이터
+2. 수익/지출 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/revenue/breakdown	일일/주간/월간 매출/지출 추이
+GET /admin/analytics/revenue/summary	수익 요약 (대시보드용)
+3. 마케팅 효율성 분석 - analytics_routes.py
+엔드포인트	기능
+GET /admin/analytics/marketing/channel-performance	채널별 ROI, 전환율, CAC
+구현된 스키마
+Retention: RetentionRateDto, RetentionSummaryDto, RetentionAnalysisResponse, RetentionTrendDto
+Revenue: DailyRevenueDto, RevenueBreakdownDto, RevenueSummaryDto
+Marketing: ChannelPerformanceDto, MarketingEfficiencyResponse
+테스트
+test_admin_analytics.py - 37개 테스트 모두 통과
+API 등록
+init.py에 analytics_router 등록 완료

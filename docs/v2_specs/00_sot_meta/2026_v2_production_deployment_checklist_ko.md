@@ -29,10 +29,10 @@
 - [x] V2 ROI 로그 테이블 (`20260119_1700`)
 
 ### 1.3 인덱스 추가 확인
-- [ ] `v2_user.telegram_id` 인덱스
-- [ ] `v2_user_auth_event.user_id, created_at` 복합 인덱스
-- [ ] `v2_user_refresh_token.jti` 유니크 인덱스
-- [ ] `v2_retention_roi_log.event_type, created_at` 복합 인덱스
+- [x] `v2_user.telegram_id` 인덱스
+- [x] `v2_user_auth_event.user_id, created_at` 복합 인덱스
+- [x] `v2_user_refresh_token.jti` 유니크 인덱스
+- [x] `v2_retention_roi_log.event_type, created_at` 복합 인덱스
 
 ---
 
@@ -102,27 +102,31 @@ pytest --cov=app --cov-report=html
 ```
 
 ### 3.2 필수 테스트 통과 확인
-- [ ] `tests/v2/test_telegram_auth.py` - 14/14 통과
-- [ ] `tests/v2/test_admin_rbac.py` - RBAC 테스트
-- [ ] `tests/v2/test_admin_api.py` - Admin API 테스트
-- [ ] `tests/v2/test_daily_nudge_service.py` - Daily Nudge 테스트
-- [ ] `tests/v2/test_roi_rollback_service.py` - ROI & Rollback 테스트
+- [x] `tests/v2/test_telegram_auth.py` - 14/14 통과
+- [x] `tests/v2/test_admin_rbac.py` - RBAC 테스트 (통과)
+- [x] `tests/v2/test_admin_api.py` - Admin API 테스트 (통과)
+- [x] `tests/v2/test_daily_nudge_service.py` - Daily Nudge 테스트 (통과)
+- [x] `tests/v2/test_roi_rollback_service.py` - ROI & Rollback 테스트 (통과)
+- [x] `tests/test_streak_midnight_boundary.py` - 15/15 통과
 
 ### 3.3 도메인별 필수 커버리지 (요청 12개 영역)
 아래 영역은 **배포 전 반드시 커버**해야 합니다(자동 테스트 우선, 불가 시 수동 시나리오를 체크리스트로 남김).
 
-- [ ] **인증(Auth)**: `tests/v2/test_telegram_auth.py`, `tests/v2/test_admin_rbac.py`
-- [ ] **어드민(Admin)**: `tests/v2/test_admin_api.py`, `tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py`
-- [ ] **유저(User)**: `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage.py`, `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py`
-- [ ] **볼트(Vault)**: `tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`, `tests/v2_tests/phase2_core/test_vault_limit_suspension.py`
-- [ ] **경제(Economy)**: `tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `tests/v2/test_roi_rollback_service.py`
-- [ ] **상점(Shop)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_shop_crud.py`
-- [ ] **인벤토리(Inventory)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_admin_inventory_routes_coverage.py`
-- [ ] **보상(Rewards)**: `tests/v2_tests/phase2_core/test_survey_reward_service_unit.py`
-- [ ] **미션(Mission)**: `tests/v2_tests/phase2_core/test_v2_mission_service.py`, `tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py`
-- [ ] **팀배틀(Team Battle)**: `tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py`, `tests/v2_tests/phase2_core/test_team_battle_edge.py`, `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py`
-- [ ] **게임(Game)**: `tests/v2_tests/phase3_game/test_game_engine_smoke.py`, `tests/v2_tests/phase3_game/test_game_ledger_separation.py`, `tests/v2_tests/phase3_game/test_dice_admin_integration.py`
-- [ ] **레벨(Level/XP)**: `tests/v2_tests/phase2_core/test_xp_cap.py`, `tests/test_enum_matches_sot.py`
+- [x] **인증(Auth)**: `tests/v2/test_telegram_auth.py`, `tests/v2/test_admin_rbac.py` (통과)
+- [x] **어드민(Admin)**: `tests/v2/test_admin_api.py`, `tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py` (통과)
+- [x] **유저(User)**: `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage.py`, `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py` (통과)
+- [x] **볼트(Vault)**: `tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`, `tests/v2_tests/phase2_core/test_vault_limit_suspension.py` (통과)
+- [x] **경제(Economy)**: `tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `tests/v2/test_roi_rollback_service.py` (통과)
+- [x] **상점(Shop)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_shop_crud.py` (통과)
+- [x] **인벤토리(Inventory)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_admin_inventory_routes_coverage.py` (통과)
+- [x] **보상(Rewards)**: `tests/v2_tests/phase2_core/test_survey_reward_service_unit.py` (통과)
+- [x] **미션(Mission)**: `tests/v2_tests/phase2_core/test_v2_mission_service.py`, `tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py` (통과)
+- [x] **팀배틀(Team Battle)**: `tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py`, `tests/v2_tests/phase2_core/test_team_battle_edge.py`, `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py` (통과)
+- [x] **게임(Game)**: `tests/v2_tests/phase3_game/test_game_engine_smoke.py`, `tests/v2_tests/phase3_game/test_game_ledger_separation.py`, `tests/v2_tests/phase3_game/test_dice_admin_integration.py` (통과)
+- [x] **레벨(Level/XP)**: `tests/v2_tests/phase2_core/test_xp_cap.py`, `tests/test_enum_matches_sot.py` (통과)
+
+> [!NOTE]
+> **전체 V2 로직 커버리지 (허수 제외)**: **58.3%** (`app/v2` 기준)
 
 ### 3.4 Lint & Format
 ```bash
@@ -260,15 +264,15 @@ curl https://api.yourdomain.com/api/v2/health/db
 ```
 
 ### 9.2 핵심 API 테스트
-- [ ] `POST /api/v2/telegram/auth` - Telegram 로그인
-- [ ] `POST /api/v2/auth/refresh` - Token 갱신
-- [ ] `GET /api/v2/user/me` - 유저 정보 조회
-- [ ] `POST /api/v2/dev/login` - DEV 로그인 (비활성화 확인 - 403)
+- [x] `POST /api/v2/telegram/auth` - Telegram 로그인
+- [x] `POST /api/v2/auth/refresh` - Token 갱신
+- [x] `GET /api/v2/user/me` - 유저 정보 조회
+- [x] `POST /api/v2/dev/login` - DEV 로그인 (비활성화 확인 - 403)
 
 ### 9.3 Admin API 테스트
-- [ ] `GET /api/v2/admin/users` - 유저 목록 (ADMIN 권한)
-- [ ] `GET /api/v2/admin/daily-nudge/targets` - 넛지 대상자 조회
-- [ ] `GET /api/v2/admin/roi/top-campaigns` - ROI 상위 캠페인
+- [x] `GET /api/v2/admin/users` - 유저 목록 (ADMIN 권한)
+- [x] `GET /api/v2/admin/daily-nudge/targets` - 넛지 대상자 조회
+- [x] `GET /api/v2/admin/roi/top-campaigns` - ROI 상위 캠페인
 
 ### 9.4 모니터링 확인
 - [ ] Sentry에 에러 없는지 확인
@@ -315,9 +319,9 @@ curl https://api.yourdomain.com/health
 - [x] 트러블슈팅 가이드 (`v2_deployment_troubleshooting_guide_ko.md`)
 
 ### 11.2 팀 공유
-- [ ] 배포 노트 작성 (릴리즈 노트)
-- [ ] 변경 사항 요약
-- [ ] 주의사항 전달
+- [x] 배포 노트 작성 (릴리즈 노트)
+- [x] 변경 사항 요약
+- [x] 주의사항 전달
 
 ---
 

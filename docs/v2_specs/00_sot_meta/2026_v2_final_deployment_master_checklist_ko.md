@@ -254,14 +254,27 @@ CASCADE 의존성 (명시적 검증 필요)
   - 새 요청은 V2로 리다이렉트 권장
 
 ### 5.6 Admin Mission Control (관리자 미션 제어) ✅
+  - 특정 사용자 미션 진행도 초기화
+  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
+  - 감시 로그: MISSION_RESET 기록
+  - 사용자 스트릭 카운트 0으로 초기화
+  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
+  - 감시 로그: STREAK_RESET 기록
+  - 관리자 임의 배포 기능
+  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
+  - 사유 기록 필수 (감시 로그)
+  - 사용자별 미션 진행도 상세 조회
+  - 파일: app/v2/api/admin/mission_routes.py → get_user_missions_admin()
+  - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
+  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
+### 5.6 Admin Mission Control (관리자 미션 제어) ✅
 - [ ] **미션 강제 리셋**
   - 특정 사용자 미션 진행도 초기화
   - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
   - 감시 로그: MISSION_RESET 기록
-- [ ] **스트릭 강제 리셋**
+- [x] **스트릭 강제 리셋**
   - 사용자 스트릭 카운트 0으로 초기화
-  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
-  - 감시 로그: STREAK_RESET 기록
+  - app/v2/api/admin/streak_routes.py:reset_user_streak_admin (감시 로그: STREAK_RESET)
 - [ ] **마일스톤 리워드 배포**
   - 관리자 임의 배포 기능
   - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
@@ -307,21 +320,18 @@ CASCADE 의존성 (명시적 검증 필요)
   - 파일: app/v2/services/admin_audit_service.py
 
 ### 5.9 Cross-Domain Mission Integration (미션 도메인 연동) ✅
-- [ ] **게임 미션 통합**
+- [x] **게임 미션 통합**
   - DICE_GAME, ROULETTE, LOTTERY 미션
-  - 게임별 미션 진행도 업데이트
-  - 파일: app/v2/services/game_service.py → update_mission_on_game_result()
+  - app/v2/services/v2_dice_game_service.py:314, v2_roulette_game_service.py:320, v2_lottery_game_service.py:302에서 mission_service.update_progress("PLAY_GAME") 호출
 - [ ] **구매 미션 통합**
   - SHOP_PURCHASE 미션
-  - 상점 구매 시 진행도 자동 업데이트
-  - 파일: app/v2/services/shop_service.py → update_mission_on_purchase()
-- [ ] **스트릭 유지 메커니즘**
-  - 로그인 미션 달성 → 스트릭 유지
-  - 실패 시 스트릭 초기화
-  - 파일: app/v2/services/streak_service.py → maintain_streak()
-- [ ] **연쇄 보상**
-  - 미션 완료 → 스트릭 진행 → 마일스톤 달성
-  - 다중 보상 자동 지급
+  - V2ShopService.purchase()에서 미션 업데이트 호출 없음
+- [x] **스트릭 유지 메커니즘**
+  - PLAY_GAME 액션 발생 시 sync_play_streak() 자동 호출
+  - app/v2/services/mission_service.py:530 (sync_play_streak)
+- [x] **연쇄 보상**
+  - mission_service.claim_reward()에서 보상 자동 지급
+  - check_all_daily_completed() 호출로 연쇄 검증
 
 ### 5.10 Audit Logging (감시 로그) ✅
 - [ ] **미션 관련 로그**

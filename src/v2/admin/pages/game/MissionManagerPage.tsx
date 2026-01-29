@@ -564,34 +564,52 @@ export default function MissionManagerPage() {
               Mission System Blueprint
             </span>
           </div>
-          <span className="font-mono text-[10px] text-zinc-600">v2.ops.engine</span>
+          <span className="font-mono text-[10px] text-zinc-600">
+            v2.ops.engine
+          </span>
         </div>
         <div className="p-4">
           <div className="grid grid-cols-2 gap-x-8 gap-y-3">
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Category Scope</Label>
-              <div className="text-sm font-medium text-zinc-200">{catMeaning}</div>
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
+                Category Scope
+              </Label>
+              <div className="text-sm font-medium text-zinc-200">
+                {catMeaning}
+              </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Trigger Event</Label>
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
+                Trigger Event
+              </Label>
               <div className="font-mono text-sm text-emerald-400">{action}</div>
             </div>
             <div className="col-span-full space-y-1 py-2 border-y border-white/5">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Global Identifier (Logic Key)</Label>
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
+                Global Identifier (Logic Key)
+              </Label>
               <div className="font-mono text-sm tracking-tight text-indigo-400 break-all bg-indigo-500/5 p-2 rounded border border-indigo-500/10">
                 {normalizeLogicKey(vars.logicKey) || "UNDEFINED_KEY"}
               </div>
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Target Threshold</Label>
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
+                Target Threshold
+              </Label>
               <div className="text-xl font-bold text-zinc-100 italic">
                 {Number(vars.targetValue || 0).toLocaleString()}
-                <span className="ml-1 text-xs font-normal text-zinc-500 not-italic">counts</span>
+                <span className="ml-1 text-xs font-normal text-zinc-500 not-italic">
+                  counts
+                </span>
               </div>
             </div>
             <div className="space-y-1 text-right">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">Golden Hour Check</Label>
-              <div className={`text-sm font-bold ${golden ? "text-amber-400" : "text-zinc-600"}`}>
+              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
+                Golden Hour Check
+              </Label>
+              <div
+                className={`text-sm font-bold ${golden ? "text-amber-400" : "text-zinc-600"}`}
+              >
                 {golden ? "MATCHED" : "OFF"}
               </div>
             </div>
@@ -600,7 +618,9 @@ export default function MissionManagerPage() {
           <div className="mt-4 flex gap-3 text-[11px] text-zinc-500 leading-relaxed border-t border-white/5 pt-3">
             <div className="h-4 w-1 bg-zinc-800 rounded-full shrink-0" />
             <p>
-              Logic Key acts as a unique global ID. The mission engine evaluates progress based on the Action Type trigger and Category reset policy.
+              Logic Key acts as a unique global ID. The mission engine evaluates
+              progress based on the Action Type trigger and Category reset
+              policy.
             </p>
           </div>
 
@@ -1060,14 +1080,16 @@ export default function MissionManagerPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0" />
-          
+
           <DialogHeader className="p-6 pb-0">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                 <Plus className="w-5 h-5 text-emerald-500" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold tracking-tight">Mission Creator</DialogTitle>
+                <DialogTitle className="text-xl font-bold tracking-tight">
+                  Mission Creator
+                </DialogTitle>
                 <DialogDescription className="text-zinc-500 text-xs">
                   Create a new operational mission for Season 25.
                 </DialogDescription>
@@ -1080,26 +1102,40 @@ export default function MissionManagerPage() {
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">01. Identity & Config</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    01. Identity & Config
+                  </span>
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label className="text-xs text-zinc-400">Mission Preset</Label>
+                  <Label className="text-xs text-zinc-400">
+                    Mission Preset
+                  </Label>
                   <Select
                     value={selectedPreset}
                     onValueChange={(val) => {
                       setSelectedPreset(val);
-                      const recommendedActionType = PRESET_RECOMMENDED_ACTION_TYPE[val];
+                      const recommendedActionType =
+                        PRESET_RECOMMENDED_ACTION_TYPE[val];
                       const presetCategory = getPresetCategory(val);
                       const newTarget = createForm.targetValue;
-                      const newLogicKey = generateLogicKey(val, presetCategory, newTarget);
-                      const newTitle = generateTitle(val, presetCategory, newTarget);
+                      const newLogicKey = generateLogicKey(
+                        val,
+                        presetCategory,
+                        newTarget,
+                      );
+                      const newTitle = generateTitle(
+                        val,
+                        presetCategory,
+                        newTarget,
+                      );
                       setCreateForm({
                         ...createForm,
                         category: presetCategory,
                         logicKey: newLogicKey,
                         title: newTitle,
-                        actionType: recommendedActionType || createForm.actionType,
+                        actionType:
+                          recommendedActionType || createForm.actionType,
                       });
                     }}
                   >
@@ -1108,7 +1144,11 @@ export default function MissionManagerPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-[#18181B] border-white/10 text-white">
                       {LOGIC_KEY_PRESETS.map((p) => (
-                        <SelectItem key={p.value} value={p.value} className="focus:bg-emerald-500/10 focus:text-emerald-400">
+                        <SelectItem
+                          key={p.value}
+                          value={p.value}
+                          className="focus:bg-emerald-500/10 focus:text-emerald-400"
+                        >
                           {p.label}
                         </SelectItem>
                       ))}
@@ -1122,9 +1162,22 @@ export default function MissionManagerPage() {
                     <Select
                       value={createForm.category}
                       onValueChange={(val) => {
-                        const newLogicKey = generateLogicKey(selectedPreset, val, createForm.targetValue);
-                        const newTitle = generateTitle(selectedPreset, val, createForm.targetValue);
-                        setCreateForm({ ...createForm, category: val, logicKey: newLogicKey, title: newTitle });
+                        const newLogicKey = generateLogicKey(
+                          selectedPreset,
+                          val,
+                          createForm.targetValue,
+                        );
+                        const newTitle = generateTitle(
+                          selectedPreset,
+                          val,
+                          createForm.targetValue,
+                        );
+                        setCreateForm({
+                          ...createForm,
+                          category: val,
+                          logicKey: newLogicKey,
+                          title: newTitle,
+                        });
                       }}
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
@@ -1132,7 +1185,9 @@ export default function MissionManagerPage() {
                       </SelectTrigger>
                       <SelectContent className="bg-[#18181B] border-white/10 text-white">
                         {CATEGORIES.map((cat) => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1141,14 +1196,18 @@ export default function MissionManagerPage() {
                     <Label className="text-xs text-zinc-400">Action Type</Label>
                     <Select
                       value={createForm.actionType || "PLAY_GAME"}
-                      onValueChange={(val) => setCreateForm({ ...createForm, actionType: val })}
+                      onValueChange={(val) =>
+                        setCreateForm({ ...createForm, actionType: val })
+                      }
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-[#18181B] border-white/10 text-white">
                         {ACTION_TYPE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1159,32 +1218,59 @@ export default function MissionManagerPage() {
                   <Label className="text-xs text-zinc-400">Display Title</Label>
                   <Input
                     value={createForm.title}
-                    onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, title: e.target.value })
+                    }
                     className="bg-white/5 border-white/10 focus:border-emerald-500/50"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400 font-bold text-emerald-500/80">Target Count</Label>
+                    <Label className="text-xs text-zinc-400 font-bold text-emerald-500/80">
+                      Target Count
+                    </Label>
                     <Input
                       type="number"
                       min={1}
                       value={createForm.targetValue}
                       onChange={(e) => {
-                        const newTarget = Math.max(1, parseInt(e.target.value) || 1);
-                        const newLogicKey = generateLogicKey(selectedPreset, createForm.category, newTarget);
-                        const newTitle = generateTitle(selectedPreset, createForm.category, newTarget);
-                        setCreateForm({ ...createForm, targetValue: newTarget, logicKey: newLogicKey, title: newTitle });
+                        const newTarget = Math.max(
+                          1,
+                          parseInt(e.target.value) || 1,
+                        );
+                        const newLogicKey = generateLogicKey(
+                          selectedPreset,
+                          createForm.category,
+                          newTarget,
+                        );
+                        const newTitle = generateTitle(
+                          selectedPreset,
+                          createForm.category,
+                          newTarget,
+                        );
+                        setCreateForm({
+                          ...createForm,
+                          targetValue: newTarget,
+                          logicKey: newLogicKey,
+                          title: newTitle,
+                        });
                       }}
                       className="bg-emerald-500/5 border-emerald-500/20 text-emerald-400 font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">Display Condition</Label>
+                    <Label className="text-xs text-zinc-400">
+                      Display Condition
+                    </Label>
                     <Input
                       value={createForm.condition}
-                      onChange={(e) => setCreateForm({ ...createForm, condition: e.target.value })}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          condition: e.target.value,
+                        })
+                      }
                       placeholder="(Optional)"
                       className="bg-white/5 border-white/10"
                     />
@@ -1194,21 +1280,27 @@ export default function MissionManagerPage() {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">02. Reward Package</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    02. Reward Package
+                  </span>
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1 space-y-2">
                     <Label className="text-xs text-zinc-400">Asset Type</Label>
                     <Select
                       value={createForm.rewardType}
-                      onValueChange={(val) => setCreateForm({ ...createForm, rewardType: val })}
+                      onValueChange={(val) =>
+                        setCreateForm({ ...createForm, rewardType: val })
+                      }
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
                         {MISSION_REWARD_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1218,7 +1310,12 @@ export default function MissionManagerPage() {
                     <Input
                       type="number"
                       value={createForm.rewardAmount}
-                      onChange={(e) => setCreateForm({ ...createForm, rewardAmount: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          rewardAmount: parseInt(e.target.value) || 0,
+                        })
+                      }
                       className="bg-white/5 border-white/10 font-mono text-right"
                     />
                   </div>
@@ -1230,9 +1327,11 @@ export default function MissionManagerPage() {
             <div className="flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">03. Logic Preview</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                    03. Logic Preview
+                  </span>
                 </div>
-                
+
                 {renderMissionAssemblyPreview({
                   category: createForm.category,
                   logicKey: createForm.logicKey,
@@ -1244,9 +1343,13 @@ export default function MissionManagerPage() {
                 {createError && (
                   <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in slide-in-from-top-1">
                     <div className="flex items-center gap-2 text-red-400 mb-1">
-                      <span className="text-sm font-bold">CONFIGURATION ERROR</span>
+                      <span className="text-sm font-bold">
+                        CONFIGURATION ERROR
+                      </span>
                     </div>
-                    <p className="text-xs text-red-300 opacity-90 leading-snug">{createError}</p>
+                    <p className="text-xs text-red-300 opacity-90 leading-snug">
+                      {createError}
+                    </p>
                   </div>
                 )}
               </div>
@@ -1264,7 +1367,9 @@ export default function MissionManagerPage() {
                   disabled={createMutation.isPending}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-10 shadow-lg shadow-emerald-900/20"
                 >
-                  {createMutation.isPending ? "INITIALIZING..." : "EXECUTE DEPLOY"}
+                  {createMutation.isPending
+                    ? "INITIALIZING..."
+                    : "EXECUTE DEPLOY"}
                 </Button>
               </div>
             </div>
@@ -1275,7 +1380,7 @@ export default function MissionManagerPage() {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
           <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0" />
-          
+
           <DialogHeader className="p-6 pb-0">
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
@@ -1283,23 +1388,31 @@ export default function MissionManagerPage() {
                   <Edit2 className="w-5 h-5 text-indigo-500" />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold tracking-tight">Modify Parameters</DialogTitle>
+                  <DialogTitle className="text-xl font-bold tracking-tight">
+                    Modify Parameters
+                  </DialogTitle>
                   <DialogDescription className="text-zinc-500 text-xs font-mono">
                     MISSION_ID: #{editForm?.id}
                   </DialogDescription>
                 </div>
               </div>
-              
+
               {editForm && (
                 <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-lg border border-white/5">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase">Status</span>
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase">
+                    Status
+                  </span>
                   <span className="flex items-center gap-2">
                     <Switch
                       checked={editForm.isActive}
-                      onCheckedChange={(checked) => setEditForm({ ...editForm, isActive: checked })}
+                      onCheckedChange={(checked) =>
+                        setEditForm({ ...editForm, isActive: checked })
+                      }
                       className="data-[state=checked]:bg-indigo-500"
                     />
-                    <span className={`text-[10px] font-bold uppercase ${editForm.isActive ? "text-indigo-400" : "text-zinc-600"}`}>
+                    <span
+                      className={`text-[10px] font-bold uppercase ${editForm.isActive ? "text-indigo-400" : "text-zinc-600"}`}
+                    >
                       {editForm.isActive ? "Active" : "Disabled"}
                     </span>
                   </span>
@@ -1314,47 +1427,65 @@ export default function MissionManagerPage() {
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">01. Identity & Condition</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      01. Identity & Condition
+                    </span>
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">Display Title</Label>
+                    <Label className="text-xs text-zinc-400">
+                      Display Title
+                    </Label>
                     <Input
                       value={editForm.title}
-                      onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, title: e.target.value })
+                      }
                       className="bg-white/5 border-white/10 focus:border-indigo-500/50"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">Category Scope</Label>
+                      <Label className="text-xs text-zinc-400">
+                        Category Scope
+                      </Label>
                       <Select
                         value={editForm.category}
-                        onValueChange={(val) => setEditForm({ ...editForm, category: val as any })}
+                        onValueChange={(val) =>
+                          setEditForm({ ...editForm, category: val as any })
+                        }
                       >
                         <SelectTrigger className="bg-white/5 border-white/10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-[#18181B] border-white/10 text-white">
                           {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            <SelectItem key={cat} value={cat}>
+                              {cat}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">Action Type</Label>
+                      <Label className="text-xs text-zinc-400">
+                        Action Type
+                      </Label>
                       <Select
                         value={editForm.actionType || "PLAY_GAME"}
-                        onValueChange={(val) => setEditForm({ ...editForm, actionType: val })}
+                        onValueChange={(val) =>
+                          setEditForm({ ...editForm, actionType: val })
+                        }
                       >
                         <SelectTrigger className="bg-white/5 border-white/10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-[#18181B] border-white/10 text-white">
                           {ACTION_TYPE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1362,20 +1493,26 @@ export default function MissionManagerPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">Identifier (Logic Key)</Label>
+                    <Label className="text-xs text-zinc-400">
+                      Identifier (Logic Key)
+                    </Label>
                     <div className="space-y-2">
                       <Input
                         value={editForm.logicKey}
-                        onChange={(e) => setEditForm({ ...editForm, logicKey: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, logicKey: e.target.value })
+                        }
                         className="font-mono text-sm bg-white/5 border-white/10 focus:border-indigo-500/50"
                       />
                       <Select
                         onValueChange={(val) => {
-                          const recommendedActionType = PRESET_RECOMMENDED_ACTION_TYPE[val];
+                          const recommendedActionType =
+                            PRESET_RECOMMENDED_ACTION_TYPE[val];
                           setEditForm({
                             ...editForm,
                             logicKey: val,
-                            actionType: recommendedActionType || editForm.actionType,
+                            actionType:
+                              recommendedActionType || editForm.actionType,
                           });
                         }}
                       >
@@ -1384,7 +1521,9 @@ export default function MissionManagerPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-[#18181B] border-white/10 text-white">
                           {LOGIC_KEY_PRESETS.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                            <SelectItem key={p.value} value={p.value}>
+                              {p.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1394,23 +1533,39 @@ export default function MissionManagerPage() {
 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">02. Threshold & Reward</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      02. Threshold & Reward
+                    </span>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400 font-bold text-indigo-400">Target Value</Label>
+                      <Label className="text-xs font-bold text-indigo-400">
+                        Target Value
+                      </Label>
                       <Input
                         type="number"
                         value={editForm.targetValue}
-                        onChange={(e) => setEditForm({ ...editForm, targetValue: parseInt(e.target.value) || 1 })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            targetValue: parseInt(e.target.value) || 1,
+                          })
+                        }
                         className="bg-indigo-500/5 border-indigo-500/20 font-bold"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">Display Desc</Label>
+                      <Label className="text-xs text-zinc-400">
+                        Display Desc
+                      </Label>
                       <Input
                         value={editForm.condition || ""}
-                        onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            condition: e.target.value,
+                          })
+                        }
                         className="bg-white/5 border-white/10"
                       />
                     </div>
@@ -1418,27 +1573,40 @@ export default function MissionManagerPage() {
 
                   <div className="flex gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
                     <div className="flex-1 space-y-2">
-                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">Award Asset</Label>
+                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">
+                        Award Asset
+                      </Label>
                       <Select
                         value={editForm.rewardType}
-                        onValueChange={(val) => setEditForm({ ...editForm, rewardType: val })}
+                        onValueChange={(val) =>
+                          setEditForm({ ...editForm, rewardType: val })
+                        }
                       >
                         <SelectTrigger className="bg-transparent border-white/10">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
                           {MISSION_REWARD_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="w-28 space-y-2">
-                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">Amount</Label>
+                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">
+                        Amount
+                      </Label>
                       <Input
                         type="number"
                         value={editForm.rewardAmount}
-                        onChange={(e) => setEditForm({ ...editForm, rewardAmount: parseInt(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            rewardAmount: parseInt(e.target.value) || 0,
+                          })
+                        }
                         className="bg-transparent border-white/10 font-mono text-xl font-bold"
                       />
                     </div>
@@ -1450,9 +1618,11 @@ export default function MissionManagerPage() {
               <div className="flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">03. Deployment Preview</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                      03. Deployment Preview
+                    </span>
                   </div>
-                  
+
                   {renderMissionAssemblyPreview({
                     category: editForm.category,
                     logicKey: editForm.logicKey,
@@ -1464,9 +1634,13 @@ export default function MissionManagerPage() {
                   {editError && (
                     <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in">
                       <div className="flex items-center gap-2 text-red-400 mb-1">
-                        <span className="text-sm font-bold uppercase">Update Blocked</span>
+                        <span className="text-sm font-bold uppercase">
+                          Update Blocked
+                        </span>
                       </div>
-                      <p className="text-xs text-red-300 leading-snug">{editError}</p>
+                      <p className="text-xs text-red-300 leading-snug">
+                        {editError}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1484,7 +1658,9 @@ export default function MissionManagerPage() {
                     disabled={updateMutation.isPending}
                     className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-10 shadow-lg shadow-indigo-900/20"
                   >
-                    {updateMutation.isPending ? "PATCHING..." : "COMMIT CHANGES"}
+                    {updateMutation.isPending
+                      ? "PATCHING..."
+                      : "COMMIT CHANGES"}
                   </Button>
                 </div>
               </div>

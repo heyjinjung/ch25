@@ -481,9 +481,6 @@ def use_inventory_item(
         idempotency_key=resolved_key,
         legacy_user_id=master_user_id,
     )
-    reward_token = result.get("reward_token")
-    if isinstance(reward_token, str):
-        result["reward_token"] = _map_legacy_token_to_v2(reward_token)
     return result
 
 
@@ -505,15 +502,7 @@ def list_shop_products(
     if not products:
         import logging
         logger = logging.getLogger(__name__)
-        logger.warning("[SHOP] Empty shop products config detected - check v2_shop_products UI config")
-        try:
-            import sentry_sdk
-            sentry_sdk.capture_message(
-                "[SHOP] shop_empty_products: v2_shop_products config is empty or missing",
-                level="warning",
-            )
-        except ImportError:
-            pass  # Sentry 미설치 환경
+        logger.error("[SHOP] Empty shop products config detected - check v2_shop_products UI config")
         # Return empty list with status (FE에서 maintenance UI 표시 가능)
         return []
     
