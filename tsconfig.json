@@ -32,7 +32,8 @@
             "vite/client",
             "vitest/globals",
             "vitest/importMeta",
-            "@testing-library/jest-dom"
+            "@testing-library/jest-dom",
+            "./src/types/telegram"
         ],
         /* Path mapping */
         "paths": {

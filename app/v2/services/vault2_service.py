@@ -348,7 +348,7 @@ class Vault2Service:
 
     @staticmethod
     def _append_event(status: VaultStatus, event: dict[str, Any]) -> None:
-        payload = status.progress_json or {}
+        payload = deepcopy(status.progress_json) if status.progress_json else {}
         if not isinstance(payload, dict):
             payload = {}
         events = payload.get("events")

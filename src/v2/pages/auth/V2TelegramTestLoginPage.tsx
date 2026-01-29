@@ -7,7 +7,7 @@
  */
 import { useState, useEffect, type FC } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, TestTube, Sparkles, Send, ChevronRight } from "lucide-react";
+import { AlertTriangle, Send, Sparkles } from "lucide-react";
 
 import { setAuth } from "../../../auth/authStore";
 import { v2Client } from "../../api/client";
@@ -117,20 +117,20 @@ const V2TelegramTestLoginPage: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#111] to-[#0a0a0a] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-obsidian-bg flex items-center justify-center p-6">
+      <div className="w-full max-w-[420px]">
         {/* 경고 배너 */}
-        <div className="mb-6 rounded-2xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-2 border-amber-500/50 p-4 animate-pulse">
+        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-bold text-amber-300 text-lg mb-1">
+              <h3 className="font-bold text-amber-300 text-sm mb-1">
                 테스트 환경 안내
               </h3>
-              <p className="text-sm text-amber-200/90 leading-relaxed">
+              <p className="text-xs text-amber-200/80 leading-relaxed">
                 현재 <span className="font-bold text-white">정식 배포 전 테스트</span> 중입니다.
                 <br />
-                지금 쌓은 모든 데이터(포인트, 아이템, 기록 등)는
+                지금 쌓은 모든 데이터(포인트, 아이템 등)는
                 <br />
                 <span className="font-bold text-red-300">정식 오픈 시 전부 초기화</span>됩니다.
               </p>
@@ -139,119 +139,105 @@ const V2TelegramTestLoginPage: FC = () => {
         </div>
 
         {/* 헤더 */}
-        <header className="text-center mb-8">
-          <div className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/40 mb-4">
-            <TestTube className="h-4 w-4 text-purple-400" />
-            <span className="text-sm font-medium text-purple-300">Beta Test</span>
+        <header className="text-center mb-8 space-y-3">
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-obsidian-surface border border-obsidian-border mb-2">
+            <Send className="h-8 w-8 text-obsidian-accent" />
           </div>
-          <h1 className="text-3xl font-black text-white mb-2">
-            <span className="bg-gradient-to-r from-[#30FF75] to-[#00D4FF] bg-clip-text text-transparent">
-              텔레그램 테스트
-            </span>
+          <h1 className="text-3xl font-black text-white tracking-tight">
+            텔레그램 로그인
           </h1>
-          <p className="text-sm text-gray-400">
-            정식 오픈 전 체험 버전
-          </p>
+          <p className="text-sm text-obsidian-muted">Beta Test</p>
         </header>
 
         {/* 메인 카드 */}
-        <main className="rounded-3xl bg-[#1a1a1a] border border-[#333] p-6 space-y-6">
-          {/* 텔레그램 환경인 경우 */}
-          {isTelegramEnv && telegramUser && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-4 rounded-2xl bg-[#252525] border border-[#333]">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                  <Send className="h-6 w-6 text-white" />
+        <main className="rounded-[2rem] border border-obsidian-border bg-obsidian-surface p-8">
+          <div className="space-y-5">
+            {/* 텔레그램 환경인 경우 */}
+            {isTelegramEnv && telegramUser && (
+              <>
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-obsidian-bg border border-obsidian-border">
+                  <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <Send className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">
+                      {telegramUser.first_name}
+                      {telegramUser.username && (
+                        <span className="text-obsidian-muted font-normal ml-2">
+                          @{telegramUser.username}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-xs text-obsidian-muted">ID: {telegramUser.id}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-white font-semibold">
-                    {telegramUser.first_name}
-                    {telegramUser.username && (
-                      <span className="text-gray-400 font-normal ml-2">
-                        @{telegramUser.username}
-                      </span>
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-500">Telegram ID: {telegramUser.id}</p>
-                </div>
-              </div>
 
-              <button
-                onClick={handleTelegramLogin}
-                disabled={isLoading}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#30FF75] to-[#00D4FF] text-black font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all"
-              >
-                {isLoading ? (
-                  <div className="h-5 w-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles className="h-5 w-5" />
-                    테스트 참여하기
-                    <ChevronRight className="h-5 w-5" />
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* 텔레그램 환경이 아닌 경우 (개발자용) */}
-          {!isTelegramEnv && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30">
-                <p className="text-sm text-blue-300 text-center">
-                  텔레그램 앱 외부에서 접속하셨습니다.
-                  <br />
-                  개발자 모드로 테스트할 수 있습니다.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">
-                  테스트 CC ID
-                </label>
-                <input
-                  type="text"
-                  value={devCcId}
-                  onChange={(e) => setDevCcId(e.target.value)}
-                  placeholder="test 또는 원하는 ID 입력"
-                  className="w-full rounded-xl border border-[#333] bg-[#0a0a0a] px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#30FF75]/40"
+                <button
+                  type="button"
+                  onClick={handleTelegramLogin}
                   disabled={isLoading}
-                />
+                  className="w-full rounded-xl bg-obsidian-accent px-4 py-3 font-bold text-black hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    "인증 중..."
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      테스트 참여하기
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+
+            {/* 텔레그램 환경이 아닌 경우 (개발자용) */}
+            {!isTelegramEnv && (
+              <>
+                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-xs text-blue-300 text-center">
+                    텔레그램 앱 외부에서 접속하셨습니다.
+                    <br />
+                    개발자 모드로 테스트할 수 있습니다.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-obsidian-muted mb-2">
+                    테스트 CC ID
+                  </label>
+                  <input
+                    type="text"
+                    value={devCcId}
+                    onChange={(e) => setDevCcId(e.target.value)}
+                    placeholder="test 또는 원하는 ID 입력"
+                    className="w-full rounded-xl border border-obsidian-border bg-obsidian-bg px-4 py-3 text-white placeholder:text-obsidian-muted focus:outline-none focus:ring-2 focus:ring-obsidian-accent/40"
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDevLogin}
+                  disabled={isLoading}
+                  className="w-full rounded-xl bg-obsidian-accent px-4 py-3 font-bold text-black hover:opacity-90 disabled:opacity-50"
+                >
+                  {isLoading ? "로그인 중..." : "개발 모드 로그인"}
+                </button>
+              </>
+            )}
+
+            {/* 에러 메시지 */}
+            {error && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+                {error}
               </div>
-
-              <button
-                onClick={handleDevLogin}
-                disabled={isLoading}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-lg flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all"
-              >
-                {isLoading ? (
-                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <TestTube className="h-5 w-5" />
-                    개발 모드 로그인
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* 에러 메시지 */}
-          {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30">
-              <p className="text-sm text-red-300 text-center">{error}</p>
-            </div>
-          )}
+            )}
+          </div>
         </main>
 
-        {/* 푸터 안내 */}
-        <footer className="mt-6 text-center space-y-2">
-          <p className="text-xs text-gray-500">
-            테스트 참여 시 수집되는 데이터는 서비스 개선에만 사용됩니다.
-          </p>
-          <p className="text-xs text-gray-600">
-            문의: @support_channel
-          </p>
+        {/* 푸터 */}
+        <footer className="mt-10 text-center text-xs text-obsidian-muted">
+          테스트 데이터는 정식 오픈 시 초기화됩니다
         </footer>
       </div>
     </div>
