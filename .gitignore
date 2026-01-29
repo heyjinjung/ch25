@@ -406,6 +406,13 @@ docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md
 docs/v2_specs/00_sot_meta/v2_backend_test_master_flowchart_v2.md
 docs/06_ops/202601/exterior/도파민엑셀/260121입급업로드.CSV
 
+# Windows reserved filenames (Git indexing issue)
+nul
+PRN
+CON
+AUX
+NUL
+
 # 운영 환경 변수 (민감한 정보 - 절대 커밋 금지)
 .env.production
 .env.server
