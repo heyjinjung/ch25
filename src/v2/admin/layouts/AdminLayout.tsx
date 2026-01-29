@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronRight,
   Store,
+  FileUp,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -95,6 +96,11 @@ export default function AdminLayout() {
           icon: MessageSquare,
           label: "메시지 관리",
           path: "/admin/marketing/messages",
+        },
+        {
+          icon: FileUp,
+          label: "로그 임포트 (CSV)",
+          path: "/admin/ops/csv-import",
         },
       ],
     },

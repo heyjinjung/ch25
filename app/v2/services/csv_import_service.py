@@ -181,6 +181,15 @@ class CSVImportService:
         successful_rows = 0
         failed_rows = 0
         skipped_rows = 0
+        
+        # Analytics
+        total_bet = 0.0
+        total_payout = 0.0
+        win_count = 0
+        loss_count = 0
+        jackpot_count = 0
+        unique_users: set[int] = set()
+
         errors: list[str] = []
         warnings: list[str] = []
 
@@ -220,7 +229,19 @@ class CSVImportService:
                                     record.balance_after,
                                 )
 
+                        # Update analytics
                         successful_rows += 1
+                        total_bet += record.bet_amount
+                        total_payout += record.payout_amount
+                        unique_users.add(record.user_id)
+                        
+                        if record.result == "WIN":
+                            win_count += 1
+                        elif record.result == "LOSE":
+                            loss_count += 1
+                        elif record.result == "JACKPOT":
+                            win_count += 1
+                            jackpot_count += 1
 
                         # Report progress every 100 rows
                         if total_rows % 100 == 0:
@@ -266,6 +287,12 @@ class CSVImportService:
             failed_rows=failed_rows,
             skipped_rows=skipped_rows,
             duration_seconds=duration,
+            total_bet=total_bet,
+            total_payout=total_payout,
+            win_count=win_count,
+            loss_count=loss_count,
+            jackpot_count=jackpot_count,
+            unique_user_count=len(unique_users),
             errors=errors[:100],  # Limit error list
             warnings=warnings[:100],  # Limit warning list
         )

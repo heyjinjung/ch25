@@ -13,6 +13,8 @@
 | **경제 시스템** | **Vault Control** | `VaultService`, `AdminEconomyService` | `/api/v2/admin/vault/*` | `/admin/economy/vault` |
 | **자산 관리** | **Deposit Sync** | `AdminCCDepositService` | `/api/v2/admin/economy/deposits` | `/admin/economy/deposits` |
 | **운영 설정** | **Shop & Mission** | `UiConfigService`, `MissionService` | `/api/v2/admin/economy/shop/*` | `/admin/economy/shop` |
+| **복구 정책** | **Rollback Policy** | `V2AdminOpsService` | `/api/v2/admin/ops/rollback/*` | `/admin/ops/logs` (Rollback) |
+| **비용 분석** | **ROI Calculator** | `V2RetentionRoiService` | `/api/v2/admin/ops/roi/*` | `/admin/dashboard` (ROI) |
 
 ---
 
@@ -42,6 +44,22 @@
 - **API Mapping**:
     - `GET /api/v2/admin/daily-nudge/configs`: 넛지 정책 목록 조회
     - `POST /api/v2/admin/daily-nudge/run`: 특정 넛지 즉시 실행(테스트용)
+
+---
+
+### 2.4 Rollback Policy (개입 회수)
+- **목적**: 오발송된 보상이나 개입 액션을 안전하게 회수하여 경제 밸런스 유지.
+- **Backend Service**: `V2AdminOpsService.rollback_execution`
+- **API Mapping**:
+    - `POST /api/v2/admin/ops/rollback/{execution_id}`: 특정 실행 건 전체 회수
+    - `POST /api/v2/admin/ops/rollback/user`: 특정 유저의 개별 지급 건 회수
+
+### 2.5 ROI Calculator (투자 효과 분석)
+- **목적**: 개입 비용 대비 유저의 추가 입금 및 게임 활동을 분석하여 운영 효율성 측정.
+- **Backend Service**: `V2RetentionRoiService.calculate_roi`
+- **API Mapping**:
+    - `GET /api/v2/admin/ops/roi/summary`: 글로벌 ROI 요약
+    - `GET /api/v2/admin/ops/roi/campaign/{id}`: 캠페인별 상세 분석
 
 ---
 

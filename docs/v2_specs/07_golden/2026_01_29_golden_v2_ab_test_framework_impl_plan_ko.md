@@ -1,8 +1,14 @@
-# Golden V2: A/B Test Framework 구현 계획서 (2026_01_29)
+# Golden V2: A/B Test Framework 구현 계획서 (2026_01_29) [❌ 폐기/CANCELLED]
 
-**문서 타입**: 상세 구현 계획 (Implementation Plan)
+> [!CAUTION]
+> **본 계획은 폐기되었습니다.**  
+> 2026-01-29 유저 요청에 의해 A/B 테스트 프레임워크 구현 계획은 중단되었으며, 프로젝트의 핵심 개발 범위에서 제외되었습니다. 
+> 현재 시스템은 ROI 계산 및 롤백 정책 고도화에 집중하고 있습니다.
+
+**문서 타입**: **상제 구현 계획 (DEPRECATED)**
 **작성일**: 2026-01-29
-**대상**: Golden V2 개발팀 (Phase 3+ - Optimization)
+**업데이트**: 2026-01-29 (폐기 확정)
+**대상**: Golden V2 개발팀
 **프로젝트**: Golden V2
 
 ---

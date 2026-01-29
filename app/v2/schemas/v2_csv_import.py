@@ -167,5 +167,12 @@ class CSVImportResult(BaseModel):
     failed_rows: int
     skipped_rows: int
     duration_seconds: float
+    # Analytics
+    total_bet: float = 0.0
+    total_payout: float = 0.0
+    win_count: int = 0
+    loss_count: int = 0
+    jackpot_count: int = 0
+    unique_user_count: int = 0
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

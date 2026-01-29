@@ -2345,3 +2345,93 @@ export const updateCircuitBreakerLimit = async (params: {
     params,
   );
 };
+// ============================================================================
+// CSV Import API
+// ============================================================================
+
+export interface CSVImportValidateResponse {
+  is_valid: boolean;
+  error: string | null;
+  filename: string;
+  file_size_bytes: number;
+  total_rows?: number;
+  estimated_minutes?: number;
+}
+
+export interface CSVImportUploadResponse {
+  file_id: string;
+  file_path: string;
+  message: string;
+}
+
+export interface CSVImportRequest {
+  file_path: string;
+  batch_size?: number;
+  emit_to_redis?: boolean;
+  historical_mode?: boolean;
+  skip_duplicate_check?: boolean;
+}
+
+export interface CSVImportResult {
+  job_id: string;
+  total_rows: number;
+  successful_rows: number;
+  failed_rows: number;
+  skipped_rows: number;
+  duration_seconds: number;
+  // Analysis
+  total_bet: number;
+  total_payout: number;
+  win_count: number;
+  loss_count: number;
+  jackpot_count: number;
+  unique_user_count: number;
+  errors: string[];
+  warnings: string[];
+}
+
+export const validateCSVFile = async (
+  file: File,
+): Promise<CSVImportValidateResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await v2Client.post<CSVImportValidateResponse>(
+    "/api/v2/admin/csv-import/validate",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return response.data;
+};
+
+export const uploadCSVFile = async (
+  file: File,
+): Promise<CSVImportUploadResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await v2Client.post<CSVImportUploadResponse>(
+    "/api/v2/admin/csv-import/upload",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return response.data;
+};
+
+export const startCSVImport = async (
+  request: CSVImportRequest,
+): Promise<CSVImportResult> => {
+  const response = await v2Client.post<CSVImportResult>(
+    "/api/v2/admin/csv-import/import",
+    request,
+  );
+  return response.data;
+};
+
+export const getCSVImportEstimate = async (
+  filePath: string,
+): Promise<{ total_rows: number; estimated_minutes: number }> => {
+  const response = await v2Client.get<{
+    total_rows: number;
+    estimated_minutes: number;
+  }>("/api/v2/admin/csv-import/estimate", { params: { file_path: filePath } });
+  return response.data;
+};
