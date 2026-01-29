@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 
 import { MissionDto } from "../../api/missionApi";
 import { BorderBeam } from "../../components/ui/BorderBeam";
-import { useViralAction } from "../../v2/hooks/useViralAction";
-import { triggerHaptic } from "../../v2/utils/haptic";
+import { useViralAction } from "../../hooks/useViralAction";
+import { triggerHaptic } from "../../utils/haptic";
 
 interface MissionCardProps {
   mission: MissionDto;
@@ -34,26 +34,37 @@ export const MissionCard: React.FC<MissionCardProps> = ({
 
     // Action Type based logic
     // We assume these strings based on Mission schema and V2MissionService aliases
-    const logicKey = (mission as any).logic_key || "";
     const actionType = (mission as any).action_type || "";
 
-    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL") {
+    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL" || actionType === "CHANNEL_JOIN") {
       if (!isJoined) {
-        // Step 1: Join
-        const channelUrl = "https://t.me/cc_jm_official"; // Fallback URL or get from metadata
+        // Step 1: Open Channel Link
+        const channelUrl = (mission as any).metadata?.channel_url || "https://t.me/cc_jm_official";
         tg.openTelegramLink(channelUrl);
         setIsJoined(true);
       } else {
-        // Step 2: Verify
-        await verifyChannel({ missionId: parseInt(mission.id) });
+        // Step 2: Verify Subscription
+        await verifyChannel({ 
+          missionId: parseInt(mission.id),
+          channelUsername: (mission as any).metadata?.channel_username
+        });
       }
     } else if (actionType === "SHARE_STORY") {
-      tg.shareToStory("https://cc-jm.com/share-bg.png", { text: "CC 미팅 같이해요! 💎" });
+      // SHARE_STORY: Trust-based immediate recording
+      const storyMedia = (mission as any).metadata?.media_url || "https://cc-jm.com/share-bg.png";
+      const storyText = (mission as any).metadata?.share_text || "CC 미팅 같이해요! 💎";
+      tg.shareToStory(storyMedia, { text: storyText });
       await recordAction({ action_type: "SHARE_STORY", mission_id: parseInt(mission.id) });
     } else if (actionType === "SHARE_LINK" || actionType === "SHARE") {
-      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent("https://t.me/your_bot?start=ref_" + (tg.initDataUnsafe?.user?.id || ""))}&text=${encodeURIComponent("같이 게임하고 보상 받아요!")}`;
+      // SHARE_LINK: Trust-based immediate recording
+      const shareUrl = (mission as any).metadata?.share_url || `https://t.me/share/url?url=${encodeURIComponent("https://t.me/your_bot?start=ref_" + (tg.initDataUnsafe?.user?.id || ""))}&text=${encodeURIComponent("같이 게임하고 보상 받아요!")}`;
       tg.openTelegramLink(shareUrl);
-      await recordAction({ action_type: actionType, mission_id: parseInt(mission.id) });
+      await recordAction({ action_type: actionType === "SHARE" ? "SHARE_LINK" : actionType, mission_id: parseInt(mission.id) });
+    } else if (actionType === "SHARE_WALLET") {
+       // Support SHARE_WALLET alias as well
+       const walletUrl = "https://t.me/share/url?url=" + encodeURIComponent("https://cc-jm.com/wallet/" + (tg.initDataUnsafe?.user?.id || ""));
+       tg.openTelegramLink(walletUrl);
+       await recordAction({ action_type: "SHARE_WALLET", mission_id: parseInt(mission.id) });
     }
   };
 

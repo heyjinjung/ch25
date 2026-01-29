@@ -21,9 +21,17 @@ def v2_issue_token(
     request: Request,
     db: Session = Depends(get_db),
 ) -> AuthTokenResponse:
-    _ = request
+    """
+    순수 V2 JWT 발급 (Access + Refresh)
+    
+    기존 Password 기반 인증 또는 CC_ID 기반 인증 지원
+    """
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
     try:
-        token, user = V2AuthService.issue_token(
+        # 1. 토큰 발급 (V2 전용 - Refresh Token 포함)
+        access_token, refresh_token, user = V2AuthService.issue_v2_tokens(
             db,
             user_id=payload.user_id,
             cc_id=payload.cc_id,
@@ -31,24 +39,43 @@ def v2_issue_token(
             password=payload.password,
         )
     except ValueError as exc:
+        # 실패 이벤트 기록
+        from app.v2.services.auth_service import log_auth_event
+        from app.v2.models.auth_event import AuthEventType
+        log_auth_event(
+            db=db,
+            user_id=0,
+            event_type=AuthEventType.LOGIN_FAILED,
+            ip_address=client_ip,
+            user_agent=user_agent,
+            success=False,
+            error_message=str(exc),
+        )
         detail = str(exc) if str(exc) else "USER_NOT_FOUND"
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail) from exc
 
-    master_user_id = V2UserService.ensure_legacy_user_id(db, int(user.id))
+    # 2. 로그인 성공 이벤트 기록
+    from app.v2.services.auth_service import log_auth_event
+    from app.v2.models.auth_event import AuthEventType
+    log_auth_event(
+        db=db,
+        user_id=user.id,
+        event_type=AuthEventType.LOGIN_SUCCESS,
+        ip_address=client_ip,
+        user_agent=user_agent,
+        success=True,
+    )
 
-    # Best-effort: login(출석) 미션 진행 반영 (V2 SoT 기준)
+    # 3. LOGIN 미션 트리거 (V2 전용)
     try:
         from app.v2.services.mission_service import V2MissionService
-
-        V2MissionService(db).update_progress(master_user_id, "LOGIN", delta=1)
+        V2MissionService.ensure_login_progress(db, user.id)
     except Exception:
         pass
 
-    master_user = db.get(User, master_user_id)
-    vault_balance = int(master_user.vault_locked_balance or 0) if master_user else int(user.vault_locked_balance or 0)
-
     return AuthTokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         user=AuthUser(
             id=int(user.id),
             external_id=user.cc_id,
@@ -56,7 +83,7 @@ def v2_issue_token(
             nickname=user.nickname,
             telegram_id=user.telegram_id,
             telegram_username=user.telegram_username,
-            vault_locked_balance=vault_balance,
+            vault_locked_balance=int(user.vault_locked_balance or 0),
         ),
     )
 

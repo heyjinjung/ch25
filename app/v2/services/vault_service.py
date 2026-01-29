@@ -23,6 +23,9 @@ from app.v2.services.vault_legacy_bridge import (
     record_game_play_earn_event as _record_game_play_earn_event,
     handle_deposit_increase_signal as _handle_deposit_increase_signal,
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class V2VaultService:
@@ -232,6 +235,93 @@ class V2VaultService:
                 is_suspended = False
         
         return is_suspended, int(deposit_7d)
+
+    @staticmethod
+    def log_suspension_change(
+        db: Session,
+        user_id: int,
+        was_suspended: bool,
+        is_suspended: bool,
+        deposit_7d: int,
+        *,
+        trigger: str = "DEPOSIT",
+    ) -> None:
+        """제재 상태 변경 로깅.
+
+        Args:
+            db: SQLAlchemy 세션
+            user_id: 유저 ID
+            was_suspended: 이전 제재 상태
+            is_suspended: 현재 제재 상태
+            deposit_7d: 최근 7일 입금 합계
+            trigger: 트리거 원인 (DEPOSIT, MANUAL, etc.)
+        """
+        if was_suspended == is_suspended:
+            return  # 상태 변화 없음
+
+        event_type = "SUSPENSION_REMOVED" if was_suspended and not is_suspended else "SUSPENSION_APPLIED"
+
+        logger.info(
+            f"[VAULT] Suspension change: user_id={user_id}, "
+            f"was_suspended={was_suspended}, is_suspended={is_suspended}, "
+            f"deposit_7d={deposit_7d}, trigger={trigger}"
+        )
+
+        # V2AdminAuditService를 통한 감사 로그 기록
+        try:
+            from app.v2.services import V2AdminAuditService
+            V2AdminAuditService.log(
+                db,
+                admin_id=0,  # 시스템 자동 처리
+                action=event_type,
+                target_type="USER",
+                target_id=str(user_id),
+                before={"benefits_suspended": was_suspended},
+                after={
+                    "benefits_suspended": is_suspended,
+                    "deposit_7d": deposit_7d,
+                    "trigger": trigger,
+                }
+            )
+        except Exception as e:
+            logger.warning(f"[VAULT] Failed to log suspension change: {e}")
+
+    @staticmethod
+    def check_and_log_suspension_on_deposit(
+        db: Session,
+        user_id: int,
+        *,
+        before_deposit_7d: int | None = None,
+    ) -> tuple[bool, int]:
+        """입금 후 제재 상태 확인 및 변경 로깅.
+
+        입금 후 호출하여 제재 상태가 해제되었는지 확인하고 로깅합니다.
+
+        Args:
+            db: SQLAlchemy 세션
+            user_id: 유저 ID
+            before_deposit_7d: 입금 전 7일 합계 (없으면 0으로 간주하여 이전에 제재 상태였다고 가정)
+
+        Returns:
+            (is_suspended, deposit_7d) tuple
+        """
+        # 이전 상태 추정: before_deposit_7d가 0이면 제재 상태였음
+        was_suspended = (before_deposit_7d or 0) < 1
+
+        # 현재 상태 확인
+        is_suspended, deposit_7d = V2VaultService.is_benefits_suspended(db, user_id)
+
+        # 상태 변경 로깅
+        V2VaultService.log_suspension_change(
+            db,
+            user_id,
+            was_suspended=was_suspended,
+            is_suspended=is_suspended,
+            deposit_7d=deposit_7d,
+            trigger="DEPOSIT",
+        )
+
+        return is_suspended, deposit_7d
 
     def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
         """V2 adapted get_status mimicking V1 VaultService behavior.

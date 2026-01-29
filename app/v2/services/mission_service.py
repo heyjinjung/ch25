@@ -142,7 +142,8 @@ class V2MissionService:
         if category == MissionCategory.DAILY:
             return self._operational_play_date(now_tz).isoformat()
         if category == MissionCategory.WEEKLY:
-            # ISO Year-Week
+            # ISO Year-Week (e.g., 2026-W05)
+            # Ensure week starts on Monday (ISO standard)
             return now_tz.strftime("%Y-W%V")
         return "NON_RESET"
 
@@ -619,5 +620,15 @@ class V2MissionService:
         return
 
 
-    def _maybe_grant_streak_day_tickets(self, *, user: User, play_day: date) -> None:
-        return
+    @classmethod
+    def ensure_login_progress(cls, db: Session, user_id: int) -> None:
+        """
+        LOGIN 미션 진행을 보장합니다 (V2 Auth 전용).
+        
+        기존 V1 의존성 없이 순수 V2 로직으로 미션 정보를 업데이트합니다.
+        """
+        service = cls(db)
+        # 1. 'LOGIN' 액션 타입 미션 진행 (출석 등)
+        service.update_progress(user_id, "LOGIN", delta=1)
+        
+        # 2. (Optional) 추후 가입 보너스 등 추가 로직 확장 가능

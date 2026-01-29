@@ -129,7 +129,7 @@ class V2AuthService:
         *,
         user_id: int | None = None,
         cc_id: str | None = None,
-        external_id: str | None = None, # Legacy alias for cc_id
+        external_id: str | None = None,  # Legacy alias for cc_id
         password: str | None = None,
     ) -> tuple[str, V2User]:
         _ = password
@@ -146,6 +146,37 @@ class V2AuthService:
 
         token = create_access_token(user_id=int(user.id))
         return token, user
+
+    @staticmethod
+    def issue_v2_tokens(
+        db: Session,
+        *,
+        user_id: int | None = None,
+        cc_id: str | None = None,
+        external_id: str | None = None,
+        password: str | None = None,
+        role: str | None = None,
+    ) -> tuple[str, str, V2User]:
+        """
+        사용자 식별 후 Access + Refresh Token 동시 발급 (V2 표준)
+        """
+        # 1. 사용자 식별 (기존 issue_token 로직 재사용)
+        resolved_cc_id = (cc_id or external_id or "").strip()
+
+        from app.v2.services.user_service import V2UserService
+        user = None
+        if resolved_cc_id:
+            user = V2UserService.get_or_create_v2_user_from_legacy(db, resolved_cc_id)
+        if user is None and user_id is not None:
+            user = db.get(V2User, user_id)
+        
+        if user is None:
+            raise ValueError("USER_NOT_FOUND")
+
+        # 2. 다중 토큰 발급
+        access_token, refresh_token, _ = V2AuthService.issue_tokens(db, user.id, role=role)
+        
+        return access_token, refresh_token, user
 
     @staticmethod
     def issue_tokens(

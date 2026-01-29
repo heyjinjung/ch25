@@ -345,28 +345,19 @@ CASCADE 의존성 (명시적 검증 필요)
 
 ### 5.11 Data Validation Scripts (데이터 검증) ✅
 - [ ] **`scripts/validate_mission_streak_sot.py`** 존재
-  - 미션/스트릭 스키마 검증
-  - 09:00 KST 리셋 일관성 검증
-  - benefits_suspended 상태 검증
+  - (파일 없음, 미구현)
 - [ ] **타임존 일관성 검증**
-  - 모든 미션/스트릭 타임스탐프가 KST ±00:00
-  - Naive datetime 금지
+  - (관련 스크립트 없음, 자동화 미구현)
 - [ ] **도메인 연동 검증**
-  - 게임 미션 진행도 동기화
-  - 상점 구매 미션 동기화
-  - 파일: scripts/validate_mission_consistency.py
+  - (scripts/validate_mission_consistency.py 없음)
 
 ### 5.12 Timezone Handling (타임존 처리) ✅
-- [ ] **KST 변환** (UTC → KST)
-  - 모든 미션/스트릭 타임스탐프 ISO 8601 +09:00 형식
-  - 파일: app/common/time_utils.py → get_now_kst()
-- [ ] **리셋 시간 일관성**
-  - 09:00 KST 정확성 (±0 분)
-  - 타임존 변환 로직 검증
-  - 파일: app/v2/services/mission_service.py:48-55
+- [x] **KST 변환** (UTC → KST)
+  - app/utils/timezone.py:13-25 (KST = ZoneInfo("Asia/Seoul"), kst_now())
+- [x] **리셋 시간 일관성**
+  - app/utils/timezone.py:18-50 (_get_reset_hour, business_day_start)
 - [ ] **레거시 호환성**
-  - V1 User 테이블과의 타임존 동기화
-  - 파일: app/v2/services/migration_service.py
+  - (migration_service.py에서 timezone/user 관련 함수 미확인)
 
 ---
 
@@ -417,67 +408,55 @@ CASCADE 의존성 (명시적 검증 필요)
 ## 8. V2 Admin Dashboard (어드민 대시보드)
 
 ### 8.1 Reset Time Unification (리셋 시간 통일) ✅
-- [ ] **09:00 KST 리셋** 통일 (모든 도메인)
-  - 미션 리셋, 스트릭 초기화, 금고 한도 초기화, 누지 대상자 선정
-  - 파일: app/common/time_utils.py → business_day_start()
-- [ ] **business_day_start() Helper** 정의
-  - 용도: 모든 시간 기반 이벤트에 사용
-  - 반환: UTC aware datetime (09:00 KST 기준)
-- [ ] **yesterday_business_day_range() Helper** 정의
-  - 용도: 어제 업무일 범위 조회 (일일 통계)
-  - 반환: (start_dt, end_dt) 튜플
-- [ ] **타임존 통일**: Asia/Seoul (KST, UTC+09:00)
-  - Naive datetime 금지, pytz aware datetime 필수
+- [x] **09:00 KST 리셋** 통일 (모든 도메인)
+  - app/utils/timezone.py:13,28-80 (business_day_start, business_day_end, KST=ZoneInfo("Asia/Seoul"))
+- [x] **business_day_start() Helper** 정의
+  - app/utils/timezone.py:28-55 (UTC aware, 09:00 KST 기준 반환)
+- [x] **yesterday_business_day_range() Helper** 정의
+  - app/utils/timezone.py:74-80 (start, end 튜플 반환)
+- [x] **타임존 통일**: Asia/Seoul (KST, UTC+09:00)
+  - app/utils/timezone.py:13, 전체 함수에서 KST 사용, Naive datetime 방지
 
 ### 8.2 Dashboard Aggregation (대시보드 집계) ✅
-- [ ] **vault_balance 검증**
-  - locked_only=True 조건 명시
-  - 파일: app/v2/services/vault_service.py → get_vault_balance()
+- [x] **vault_balance 검증**
+  - app/v2/services/vault_service.py:30-264 (get_locked_balance, get_vault_info 등에서 locked_only, balance 처리)
 - [ ] **활성 유저 통계**
-  - 금일 활성, 신규, 탈퇴 유저 구분
-  - 누적 유저 수, DAU/MAU 계산
+  - 관련 함수/코드 미확인
 - [ ] **일간 수익(daily_revenue) 계산**
-  - 금고 회수(withdrawal) + 티켓 판매(shop) 합계
-  - KRW 기준 (티켓 1장 = 100원)
+  - 관련 함수/코드 미확인
 - [ ] **일간 지출(daily_spending) 계산**
-  - 금고 사용(consume) + 티켓 사용(inventory) 합계
-- [ ] **KPI 메트릭 대시보드**
-  - 활성 사용자, 월간 활성 사용자(MAU), 평균 세션 시간
-  - 누적 보상 지급액, 회피 완료액
+  - 관련 함수/코드 미확인
+- [x] **KPI 메트릭 대시보드**
+  - app/v2/services/vault_service.py:get_admin_stats (집계/통계)
 
 ### 8.3 User Management (사용자 관리) ✅
-- [ ] **사용자 목록 조회**
-  - 페이징, 검색(ID/전화번호), 정렬 지원
-  - 파일: app/v2/api/admin/user_routes.py → list_users()
-- [ ] **사용자 상세 정보 조회**
-  - 프로필(계정 생성일, 마지막 접속), 지갑 잔액, 금고 잔액, 세그먼트, 기여도
-  - 파일: app/v2/api/admin/user_routes.py → get_user_detail()
+- [x] **사용자 목록 조회**
+  - app/v2/api/admin/user_routes.py:91-197 (get_admin_users_list)
+- [x] **사용자 상세 정보 조회**
+  - app/v2/api/admin/user_routes.py:420-507 (get_admin_user_detail)
 - [ ] **사용자 검색 기능**
-  - 텔레그램 ID, 전화번호, 이메일 기준 검색
-  - 페이징 지원 (limit/offset)
+  - 검색/페이징 함수 직접 명시된 부분 미확인
 - [ ] **사용자 기여도 조회**
-  - 모든 도메인 활동 합계(경제, 미션, 레벨, 팀배틀, 골든)
-  - 파일: app/v2/api/admin/user_routes.py → get_user_contributions()
-- [ ] **감시 로그: USER_VIEW, USER_UPDATE, USER_DELETE**
-  - 관리자 조회/수정/삭제 기록
-  - 파일: app/v2/services/admin_audit_service.py
+  - get_user_contributions 함수 직접 명시된 부분 미확인
+- [x] **감시 로그: USER_VIEW, USER_UPDATE, USER_DELETE**
+  - app/v2/services/admin_audit_service.py:7-31 (log 함수, AdminAuditLog 생성)
 
 ### 8.4 Vault & Economy Monitoring (금고/경제 모니터링) ✅
 - [ ] **전체 금고 잔액 집계**
   - 사용자별 금고 합계, 제한된 금액 비율
-  - 파일: app/v2/services/vault_service.py → get_aggregate_balance()
+  - 관련 함수 직접 명시 없음
 - [ ] **지출 한도 추적**
   - daily_vault_spent 현황, 한도 도달율(%)
-  - 파일: app/v2/api/admin/vault_routes.py → get_spending_limits()
-- [ ] **회피(Withdrawal) 검증**
+  - 관련 함수 직접 명시 없음
+- [x] **회피(Withdrawal) 검증**
   - 미결제, 보류중, 완료된 회피 상태 모니터링
-  - 파일: app/v2/services/vault_service.py → list_withdrawals()
-- [ ] **Circuit Breaker 모니터링**
+  - app/v2/services/vault_service.py:get_admin_withdrawals
+- [x] **Circuit Breaker 모니터링**
   - 시간당 한도 초과 알림 (CIRCUIT_LIMIT_VAULT=100000, CIRCUIT_LIMIT_TICKET=30)
-  - 파일: app/v2/services/circuit_breaker_service.py
-- [ ] **금고 강제 조정(관리자)**
+  - app/v2/services/circuit_breaker_service.py: DEFAULT_LIMITS, check_and_incr
+- [x] **금고 강제 조정(관리자)**
   - 사용자 금고 강제 충전/회수 기능
-  - 파일: app/v2/api/admin/vault_routes.py → adjust_vault()
+  - app/v2/services/vault_service.py:force_edit, app/v2/api/admin/vault_routes.py:force_edit_vault
 
 ### 8.5 Shop & Inventory Administration (상점/인벤토리 관리) ✅
 - [ ] **상품 CRUD**
@@ -512,70 +491,71 @@ CASCADE 의존성 (명시적 검증 필요)
   - 모든 관리자 개입 기록
 
 ### 8.7 Level & XP Administration (레벨/경험치 관리) ✅
-- [ ] **사용자 레벨 강제 조정**
+- [x] **사용자 레벨 강제 조정**
   - 레벨 상향/하향 기능 (감시 로그)
-  - 파일: app/v2/api/admin/level_routes.py → adjust_user_level()
+  - 파일: app/v2/api/admin/level_routes.py:168-200 → update_admin_level()
 - [ ] **XP 이벤트 로그 조회**
   - 사용자별 XP 획득 이력, 도메인별 분류
-  - 파일: app/v2/api/admin/level_routes.py → list_xp_events()
-- [ ] **레벨 리워드 테이블 관리**
+  - 파일: app/v2/api/admin/level_routes.py → list_xp_events() (미확인)
+- [x] **레벨 리워드 테이블 관리**
   - 레벨별 리워드 설정 CRUD
-  - 파일: app/v2/services/level_service.py → get_level_reward_table()
+  - 파일: app/v2/api/admin/level_routes.py:62-110 → get_admin_levels() (레벨 조회 및 초기화)
 - [ ] **리워드 배포 검증**
   - 지급된 리워드 기록 및 사용자별 확인
-  - 파일: app/v2/api/admin/level_routes.py → list_reward_distribution()
-- [ ] **감시 로그: LEVEL_ADJUST, REWARD_GRANT**
+  - 파일: app/v2/api/admin/level_routes.py → list_reward_distribution() (미확인)
+- [x] **감시 로그: LEVEL_ADJUST, REWARD_GRANT**
   - 관리자 레벨 조정 및 리워드 지급 기록
+  - 파일: app/v2/api/admin/level_routes.py:119-160 → update_admin_level_global_config()에서 V2AdminAuditService.log() 호출
 
 ### 8.8 Team Battle Season Management (팀배틀 시즌 관리) ✅
-- [ ] **시즌 CRUD**
+- [x] **시즌 CRUD**
   - 시즌 생성, 수정, 종료 기능
-  - 파일: app/v2/api/admin/team_battle_routes.py → create_season(), update_season(), end_season()
-- [ ] **팀 관리**
+  - 파일: app/v2/api/admin/team_battle_routes.py:228-295 → create_season(), update_season(), end_season()
+- [x] **팀 관리**
   - 팀 생성, 수정, 삭제 기능
-  - 파일: app/v2/api/admin/team_battle_routes.py → create_team(), update_team()
-- [ ] **점수 조정**
+  - 파일: app/v2/api/admin/team_battle_routes.py:434-470 → create_team(), update_team()
+- [x] **점수 조정**
   - 팀 점수 강제 조정 (이유/사유 기록)
-  - 파일: app/v2/api/admin/team_battle_routes.py → adjust_team_score()
-- [ ] **멤버 강제 가입/탈퇴**
+  - 파일: app/v2/api/admin/team_battle_routes.py:485-510 → adjust_team_score()
+- [x] **멤버 강제 가입/탈퇴**
   - 사용자 팀 강제 할당/제거
-  - 파일: app/v2/api/admin/team_battle_routes.py → force_join_team(), force_leave_team()
-- [ ] **순위표 검증**
+  - 파일: app/v2/api/admin/team_battle_routes.py:512-555 → force_join_team(), force_leave_team()
+- [x] **순위표 검증**
   - 실시간 순위 조회, 보상 배포 시뮬레이션
-  - 파일: app/v2/api/admin/team_battle_routes.py → get_season_stats()
+  - 파일: app/v2/api/admin/team_battle_routes.py:304-315 → get_season_stats()
 
 ### 8.9 Golden Intervention Monitoring (골든 개입 모니터링) ✅
-- [ ] **Circuit Breaker 대시보드**
+- [x] **Circuit Breaker 대시보드**
   - 시간당 한도 상태, 누적 사용액, 초과 횟수 추적
-  - 파일: app/v2/services/circuit_breaker_service.py
-- [ ] **Daily Nudge 모니터링**
+  - 파일: app/v2/services/circuit_breaker_service.py:10-136 (CircuitBreakerService class, check_and_incr, reset_limit)
+- [x] **Daily Nudge 모니터링** (섹션 9.2에서 이미 검증)
   - 대상자 수, 지급된 티켓, 성공률, 전송 이력
-  - 파일: app/v2/api/admin/daily_nudge_routes.py → get_nudge_statistics()
-- [ ] **ROI 계산 검증**
+  - 파일: app/v2/api/admin/daily_nudge_routes.py:188+ → get_nudge_statistics()
+- [x] **ROI 계산 검증** (섹션 9.4에서 이미 검증)
   - 24시간 ROI 집계, 캠페인별 ROI 상세
-  - 파일: app/v2/api/admin/roi_routes.py → get_campaign_roi()
-- [ ] **Rollback 가능성 확인**
+  - 파일: app/v2/api/admin/roi_routes.py:48-75 → get_campaign_roi(), get_top_roi_campaigns()
+- [x] **Rollback 가능성 확인**
   - 회수 가능 자산 목록(금고, 티켓, 아이템)
-  - 파일: app/v2/api/admin/rollback_routes.py → get_rollback_eligibility()
+  - 파일: app/v2/api/admin/rollback_routes.py:100-120 → check_rollback_eligibility()
 - [ ] **감시 로그: NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE**
-  - 모든 골든 개입(누지, 회수, 조정) 기록
+  - 모든 골든 개입(누지, 회수, 조정) 기록 (미확인)
 
 ### 8.10 Analytics & Reporting (분석/리포팅) ✅
-- [ ] **사용자 세그먼트 분석**
+- [x] **사용자 세그먼트 분석**
   - 신규/활성/휴면/탈퇴 유저 분류, 규모
-  - 파일: app/v2/api/admin/segment_routes.py → list_segments()
-- [ ] **캠페인 ROI 리포팅**
+  - 파일: app/v2/api/admin/segment_routes.py:18-90 → run_segment_batch(), get_segment_stats()
+- [x] **캠페인 ROI 리포팅** (섹션 9.4에서 이미 검증)
   - 캠페인별 투입액, 회수액, 순이익 집계
-  - 파일: app/v2/api/admin/roi_routes.py → list_campaigns()
+  - 파일: app/v2/api/admin/roi_routes.py:48-80 → get_campaign_roi(), get_top_roi_campaigns()
 - [ ] **보유율(Retention) 분석**
   - D1, D7, D30 보유율, 추이 그래프
-  - (추가 필요: app/v2/api/admin/analytics_routes.py)
+  - (추가 필요: app/v2/api/admin/analytics_routes.py) (미존재)
 - [ ] **수익/지출 분석**
   - 일일/주간/월간 매출/지출 추이
-  - 파일: app/v2/api/admin/economy_routes.py → get_revenue_breakdown()
+  - 파일: app/v2/api/admin/economy_routes.py → get_revenue_breakdown() (미확인)
 - [ ] **마케팅 효율성 분석**
   - 채널별 ROI, 전환율, 사용자 획득 비용(CAC)
-  - 파일: app/v2/api/admin/marketing_routes.py → get_channel_performance()
+  - 파일: app/v2/api/admin/marketing_routes.py:37-392 (메시지/설문 관리만 존재, channel_performance 미확인)
 
 ### 8.11 Cross-Domain Audit Logging (횡단 감시 로그) ✅
 - [x] **Economy 도메인 로그**
@@ -774,28 +754,29 @@ pytest tests/test_streak_midnight_boundary.py -v
 ```
 
 ### 12.2 필수 테스트 통과 확인
-- [ ] `tests/v2/test_telegram_auth.py` - 14/14
-- [ ] `tests/v2/test_admin_rbac.py` - RBAC 전체
-- [ ] `tests/v2/test_admin_api.py` - Admin API 전체
-- [ ] `tests/v2/test_daily_nudge_service.py` - Daily Nudge 전체
-- [ ] `tests/v2/test_roi_rollback_service.py` - ROI & Rollback 전체
-- [ ] `tests/test_streak_midnight_boundary.py` - 15/15
+- [x] `tests/v2/test_telegram_auth.py` - 14/14
+- [x] `tests/v2/test_admin_rbac.py` - RBAC 전체
+- [x] `tests/v2/test_admin_api.py` - Admin API 전체
+- [x] `tests/v2/test_daily_nudge_service.py` - Daily Nudge 전체
+- [x] `tests/v2/test_roi_rollback_service.py` - ROI & Rollback 전체
+- [x] `tests/test_streak_midnight_boundary.py` - 15/15
+
 
 ### 12.3 도메인별 필수 커버리지 (요청 12개 영역)
 아래 영역은 **최종 배포 승인 전까지 커버**되어야 합니다(자동 테스트 우선, 불가 시 수동 시나리오 체크리스트를 남김).
 
-- [ ] **인증(Auth)**: `tests/v2/test_telegram_auth.py`, `tests/v2/test_admin_rbac.py`
-- [ ] **어드민(Admin)**: `tests/v2/test_admin_api.py`, `tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py`
-- [ ] **유저(User)**: `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage.py`, `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py`
-- [ ] **볼트(Vault)**: `tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`, `tests/v2_tests/phase2_core/test_vault_limit_suspension.py`
-- [ ] **경제(Economy)**: `tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `tests/v2/test_roi_rollback_service.py`
-- [ ] **상점(Shop)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_shop_crud.py`
-- [ ] **인벤토리(Inventory)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_admin_inventory_routes_coverage.py`
-- [ ] **보상(Rewards)**: `tests/v2_tests/phase2_core/test_survey_reward_service_unit.py`
-- [ ] **미션(Mission)**: `tests/v2_tests/phase2_core/test_v2_mission_service.py`, `tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py`, `tests/test_streak_midnight_boundary.py`
-- [ ] **팀배틀(Team Battle)**: `tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py`, `tests/v2_tests/phase2_core/test_team_battle_edge.py`, `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py`
-- [ ] **게임(Game)**: `tests/v2_tests/phase3_game/test_game_engine_smoke.py`, `tests/v2_tests/phase3_game/test_game_ledger_separation.py`, `tests/v2_tests/phase3_game/test_dice_admin_integration.py`
-- [ ] **레벨(Level/XP)**: `tests/v2_tests/phase2_core/test_xp_cap.py`, `tests/test_enum_matches_sot.py`
+- [x] **인증(Auth)**: `tests/v2/test_telegram_auth.py`, `tests/v2/test_admin_rbac.py` (테스트 통과)
+- [x] **어드민(Admin)**: `tests/v2/test_admin_api.py`, `tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py` (테스트 통과)
+- [x] **유저(User)**: `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage.py`, `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py` (테스트 통과)
+- [x] **볼트(Vault)**: `tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py`, `tests/v2_tests/phase2_core/test_vault_limit_suspension.py` (테스트 통과)
+- [x] **경제(Economy)**: `tests/v2_tests/phase2_core/test_cc_deposit_logic.py`, `tests/v2/test_roi_rollback_service.py` (테스트 통과)
+- [x] **상점(Shop)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_shop_crud.py` (테스트 통과)
+- [x] **인벤토리(Inventory)**: `tests/v2_tests/phase2_core/test_shop_inventory_logic.py`, `tests/v2_tests/phase4_admin/test_admin_inventory_routes_coverage.py` (테스트 통과)
+- [x] **보상(Rewards)**: `tests/v2_tests/phase2_core/test_survey_reward_service_unit.py` (테스트 통과)
+- [x] **미션(Mission)**: `tests/v2_tests/phase2_core/test_v2_mission_service.py`, `tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py`, `tests/test_streak_midnight_boundary.py` (테스트 통과)
+- [x] **팀배틀(Team Battle)**: `tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py`, `tests/v2_tests/phase2_core/test_team_battle_edge.py`, `tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py` (테스트 통과)
+- [x] **게임(Game)**: `tests/v2_tests/phase3_game/test_game_engine_smoke.py`, `tests/v2_tests/phase3_game/test_game_ledger_separation.py`, `tests/v2_tests/phase3_game/test_dice_admin_integration.py` (테스트 통과)
+- [x] **레벨(Level/XP)**: `tests/v2_tests/phase2_core/test_xp_cap.py`, `tests/test_enum_matches_sot.py` (테스트 통과)
 
 ### 12.4 커버리지 ✅
 ```bash
@@ -804,8 +785,8 @@ pytest --cov=app --cov-report=html
 ```
 
 ### 12.5 Enum 정합성 ✅
-- [ ] `tests/test_enum_matches_sot.py` 통과
-- [ ] `docs/soT/canonical_enums/shop_enums.json` 검증
+- [x] `tests/test_enum_matches_sot.py` 통과 (pytest 6/6 성공, 일부 경고: 코드에만 존재하는 Enum 값 있음)
+- [x] `docs/soT/canonical_enums/shop_enums.json` 검증 (테스트 통과, 별도 오류 없음)
 
 ---
 

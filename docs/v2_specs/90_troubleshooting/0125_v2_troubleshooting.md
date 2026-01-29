@@ -496,29 +496,7 @@ models/__init__.py에 새 모델 export 추가
 routes.py에 telegram_routes 등록 확인
 문서 업데이트 (SoT, Trouble Mapping, Technical Guide)
 
----------------------------------------
-
-
-연속스트릭모달
-골든아워 모달
-룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
-인증 
-
-시나리오 테스트 
-c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
-c:\Users\JAVIS\ch\ch25\tests\v2_tests\phase5_scenarios\test_v2_backend_scenario.py::test_roulette_play_fallback
-
-
-
-
-----------
-https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
- docker compose build --no-cache; docker compose up -d
-
------------------
-
-
-검증 계획
+✅ 검증 계획
  app/v2/core/telegram.py: initData 검증 성공/실패
  V2UserAuthEvent: 이벤트 기록 CRUD
  V2UserRefreshToken: 토큰 생성/갱신/폐기
@@ -533,24 +511,42 @@ Telegram initData는 HMAC-SHA256 서명 기반이라 테스트용 토큰을 생�
 테스트용 initData 생성 스크립트를 만들고 pytest로 백테스트를 실행하겠습니다.
 Write C:\Users\JAVIS\ch\ch25\tests\v2\test_telegram_auth.py
 
+---------------------------------------
 
+
+연속스트릭모달
+골든아워 모달
+룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
+
+
+
+
+
+
+----------
+https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
+ docker compose build --no-cache; docker compose up -d
 -----------------------------------
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_telegram_auth_sot_ko.md
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\v2_auth_trouble_mapping_ko.md
-docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md	
 
 
-@systematic-debugging 활용하여 수정해줘 
+
 
 기술기준문서 :
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_final_deployment_master_checklist_ko.md
+docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_production_deployment_checklist_ko.md
 
 
-Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
-트러블 매핑표: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_trouble_mapping_ko.md
-기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
+
+
+제시된 부분만 확인하여
+체크박스 업데이트
+
+근거를 먼저 grep/read로 확인 후
+확인된 항목만 체크박스를 x 로 업데이트
+불확실한 항목은 그래도 []로 남겨놔
 
 
 
@@ -563,5 +559,5 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
 문서이름 : 20260126_mission_error_update.md
 
-
-⏸️ app/v2/api/auth_routes.py 수정 중 멈춤
+---------
+http://localhost:8501/ - 엑셀 누적 데이터! 
