@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.event import EventConfig
-from app.models.user import User
 from app.models.user_segment import UserSegment
+from app.v2.models.user import V2User
 from app.v2.services.vault2_service import Vault2Service
 
 
@@ -155,7 +155,7 @@ class V2EventService:
         return active
 
     def get_segment_campaign_events(self, db: Session, user_id: int, now: datetime | None = None) -> list[dict]:
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             return []
 

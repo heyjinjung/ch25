@@ -78,12 +78,12 @@ class V2TeamBattleService:
     def _prune_team_memberships_for_deleted_users(self, db: Session, team_id: int | None = None) -> int:
         from sqlalchemy import delete, exists
 
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
         active_user_exists = exists(
-            select(User.id).where(
-                User.id == TeamMember.user_id,
-                User.status == "ACTIVE",
+            select(V2User.id).where(
+                V2User.id == TeamMember.user_id,
+                V2User.status == "ACTIVE",
             )
         )
 
@@ -150,16 +150,16 @@ class V2TeamBattleService:
         if not season:
             return []
 
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
-        member_count = func.count(func.distinct(User.id)).label("member_count")
+        member_count = func.count(func.distinct(V2User.id)).label("member_count")
         latest_event = func.max(TeamEventLog.created_at).label("latest_event_at")
         latest_nulls_last = case((latest_event.is_(None), 1), else_=0)
         stmt = (
             select(TeamScore.team_id, Team.name, TeamScore.points, member_count, latest_event)
             .join(Team, Team.id == TeamScore.team_id)
             .outerjoin(TeamMember, TeamMember.team_id == TeamScore.team_id)
-            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(V2User, and_(V2User.id == TeamMember.user_id, V2User.status == "ACTIVE"))
             .outerjoin(
                 TeamEventLog,
                 and_(

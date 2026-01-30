@@ -14,9 +14,8 @@ from typing import Any
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.models.user_activity import UserActivity
 from app.v2.models.user import V2User
+from app.models.user_activity import UserActivity
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 from app.utils.timezone import business_day_start
@@ -66,7 +65,6 @@ class DailyNudgeService:
         # 2. V2User 중 benefits_suspended가 아닌 유저
         query = (
             db.query(V2User.id, V2User.cc_id)
-            .join(User, V2User.id == User.id)
             .filter(
                 V2User.id.in_(select(recent_active_users.c.user_id))
             )
@@ -75,7 +73,7 @@ class DailyNudgeService:
         # 3. 7일 무입금 유저 제외 (benefits_suspended)
         target_users = []
         for user_id, cc_id in query.all():
-            user = db.get(User, user_id)
+            user = db.get(V2User, user_id)
             if not user:
                 continue
 
@@ -111,7 +109,7 @@ class DailyNudgeService:
                 - ticket_granted: int
                 - message: str
         """
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             return {
                 "success": False,
@@ -261,9 +259,9 @@ class DailyNudgeService:
         target_users = DailyNudgeService.get_nudge_target_users(db, lookback_days=3)
 
         # 제재 유저 수 (7일 무입금)
-        all_users_count = db.query(func.count(User.id)).scalar()
+        all_users_count = db.query(func.count(V2User.id)).scalar()
         suspended_count = 0
-        for user in db.query(User).all():
+        for user in db.query(V2User).all():
             is_suspended, _ = V2VaultService.is_benefits_suspended(user)
             if is_suspended:
                 suspended_count += 1

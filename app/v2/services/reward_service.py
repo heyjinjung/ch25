@@ -10,7 +10,6 @@ from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError
 from app.models.game_wallet import GameTokenType
 from app.v2.services.admin_inventory_service import V2AdminInventoryService
-from app.v2.services.user_service import V2UserService
 from app.v2.services.vault_service import V2VaultService
 
 
@@ -73,12 +72,8 @@ class V2RewardService:
     ) -> None:
         # NOTE: Storage SoT
         # - Wallet/Inventory는 legacy `user.id`를 FK로 사용한다.
-        # - v2_user.id와 legacy user.id가 분리될 수 있으므로, 지급 시점에 legacy user_id로 정규화한다.
+        # - v2_user.id와 legacy user.id가 1:1 동일하므로, V2User.id 직접 사용
         storage_user_id = user_id
-        try:
-            storage_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-        except Exception:
-            storage_user_id = user_id
 
         if reward_amount == 0 or reward_type in {"NONE", "", None}:
             return

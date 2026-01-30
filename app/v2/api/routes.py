@@ -16,7 +16,6 @@ from app.models.admin_message import AdminMessageInbox
 from app.models.game_wallet import GameTokenType
 from app.models.mission import MissionCategory
 from app.models.inventory import UserInventoryItem
-from app.models.user import User
 from app.v2.models.user import V2User
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse, DicePlayRequest
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
@@ -48,7 +47,6 @@ from app.v2.schemas.v2_golden import (
 )
 from app.v2.schemas.v2_ticket_zero import V2TicketZeroBailoutResponse, V2TicketZeroStatusResponse
 from app.v2.services.ticket_zero_service import TicketZeroEligibilityInput, V2TicketZeroService
-from app.v2.services.user_service import V2UserService
 from app.v2.services.admin_message_service import V2AdminMessageService
 from app.v2.services.segment_service import V2SegmentService
 from app.v2.models.v2_admin_message import V2AdminMessageInbox
@@ -362,13 +360,13 @@ def list_missions(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> MissionListResponse:
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    user = db.query(User).filter(User.id == master_user_id).first()
-    if not user:
+    # V2User 직접 검증 (레거시 User 테이블 폐기)
+    v2_user = db.query(V2User).filter(V2User.id == user_id).first()
+    if not v2_user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     service = V2MissionService(db)
-    missions = service.get_user_missions(master_user_id, category=category)
-    streak_info = service.get_streak_info(master_user_id)
+    missions = service.get_user_missions(user_id, category=category)
+    streak_info = service.get_streak_info(user_id)
     return MissionListResponse(missions=missions, streak_info=streak_info)
 
 
@@ -381,9 +379,8 @@ def claim_mission(
 ):
     if not idempotency_key:
         raise HTTPException(status_code=400, detail="X-Idempotency-Key header required")
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     service = V2MissionService(db)
-    success, reward_type, amount = service.claim_reward(master_user_id, mission_id)
+    success, reward_type, amount = service.claim_reward(user_id, mission_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
     return {"success": True, "reward_type": reward_type, "amount": amount}
@@ -395,8 +392,7 @@ def claim_daily_gift(
     user_id: int = Depends(get_current_user_id),
 ):
     service = V2MissionService(db)
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    success, reward_type, amount = service.claim_daily_gift(master_user_id)
+    success, reward_type, amount = service.claim_daily_gift(user_id)
     if not success:
         raise HTTPException(status_code=400, detail=reward_type)
     return {"success": True, "reward_type": reward_type, "amount": amount}
@@ -433,11 +429,10 @@ def claim_streak_reward(
     user_id: int = Depends(get_current_user_id),
 ):
     service = V2MissionService(db)
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    result = service.claim_streak_reward(master_user_id)
+    result = service.claim_streak_reward(user_id)
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("message"))
-    streak_info = service.get_streak_info(master_user_id)
+    streak_info = service.get_streak_info(user_id)
     return {"success": True, "streak_info": streak_info, "grants": result.get("grants")}
 
 
@@ -479,14 +474,13 @@ def use_inventory_item(
     if not resolved_key:
         raise HTTPException(status_code=400, detail="IDEMPOTENCY_KEY_REQUIRED")
 
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     result = V2InventoryService.use_voucher(
         db,
         user_id,
         item_type,
         amount,
         idempotency_key=resolved_key,
-        legacy_user_id=master_user_id,
+        legacy_user_id=user_id,
     )
     return result
 
@@ -573,10 +567,9 @@ def purchase_shop_product(
 
     from app.v2.services.idempotency_service import IdempotencyService
 
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
     idem_record, existing = IdempotencyService.begin(
         db,
-        user_id=master_user_id,
+        user_id=user_id,
         scope="v2_shop_purchase",
         idempotency_key=resolved_key,
         request_payload={"sku": sku},
@@ -660,28 +653,24 @@ def team_battle_join(payload: dict, db: Session = Depends(get_db), v2_user_id: i
     team_id = payload.get("team_id")
     if not team_id:
         raise HTTPException(status_code=400, detail="TEAM_ID_REQUIRED")
-    master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    member = _team_battle_service.join_team(db, team_id=int(team_id), user_id=master_user_id)
+    member = _team_battle_service.join_team(db, team_id=int(team_id), user_id=v2_user_id)
     return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
 
 
 @router.post("/team-battle/teams/leave", tags=["v2-team-battle"])
 def team_battle_leave(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
-    master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    _team_battle_service.leave_team(db, user_id=master_user_id)
+    _team_battle_service.leave_team(db, user_id=v2_user_id)
     return {"left": True}
 
 
 @router.get("/team-battle/teams/me", tags=["v2-team-battle"])
 def team_battle_me(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
-    master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    return _team_battle_service.get_membership_view(db, user_id=master_user_id)
+    return _team_battle_service.get_membership_view(db, user_id=v2_user_id)
 
 
 @router.post("/team-battle/teams/auto-assign", tags=["v2-team-battle"])
 def team_battle_auto_assign(db: Session = Depends(get_db), v2_user_id: int = Depends(get_current_user_id)):
-    master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    member = _team_battle_service.auto_assign_team(db, user_id=master_user_id)
+    member = _team_battle_service.auto_assign_team(db, user_id=v2_user_id)
     return {"team_id": member.team_id, "user_id": member.user_id, "role": member.role}
 
 
@@ -705,8 +694,7 @@ def ticket_zero_status(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> V2TicketZeroStatusResponse:
-    master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-    user = db.query(User).filter(User.id == master_user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -756,7 +744,7 @@ def ticket_zero_status(
 
     if not has_pending_rewards:
         service = V2MissionService(db)
-        missions = service.get_user_missions(master_user_id)
+        missions = service.get_user_missions(user_id)
         has_pending_rewards = any(
             m.progress.is_completed and not m.progress.is_claimed for m in missions
         )
@@ -1061,9 +1049,7 @@ def get_team_battle_status(
 
     from app.v2.services.user_service import V2UserService
 
-    master_user_id = V2UserService.ensure_legacy_user_id(db, int(v2_user_id))
-
-    my_view = _team_battle_service.get_membership_view(db, user_id=master_user_id)
+    my_view = _team_battle_service.get_membership_view(db, user_id=int(v2_user_id))
     has_team = bool(my_view.get("has_team"))
     my_team_payload = my_view.get("team")
 

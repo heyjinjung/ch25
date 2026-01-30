@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 import logging
 from typing import List, Optional
 
@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.v2.services import V2AdminAuditService, V2AdminEconomyService, V2AdminInventoryService
 from app.v2.schemas.v2_admin_economy import (
@@ -260,8 +260,8 @@ def list_admin_withdrawals(
             risk = "MEDIUM"
 
         safe_nickname = "Unknown"
-        if r.user and (r.user.nickname is not None):
-            safe_nickname = r.user.nickname or "(미설정)"
+        if r.user and (r.V2User.nickname is not None):
+            safe_nickname = r.V2User.nickname or "(미설정)"
 
         safe_status = str(r.status or "").strip().upper()
         if safe_status not in {"PENDING", "APPROVED", "REJECTED"}:
@@ -290,14 +290,14 @@ def list_deposit_logs(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    query = db.query(ExternalRankingDailyDepositDelta, User).join(
-        User, ExternalRankingDailyDepositDelta.user_id == User.id
+    query = db.query(ExternalRankingDailyDepositDelta, V2User).join(
+        User, ExternalRankingDailyDepositDelta.user_id == V2User.id
     )
 
     if search:
         query = query.filter(
-            (User.nickname.ilike(f"%{search}%"))
-            | (User.telegram_username.ilike(f"%{search}%"))
+            (V2User.nickname.ilike(f"%{search}%"))
+            | (V2User.telegram_username.ilike(f"%{search}%"))
         )
 
     offset_val = (page - 1) * limit
@@ -312,7 +312,7 @@ def list_deposit_logs(
         AdminDepositLogDto(
             id=r.ExternalRankingDailyDepositDelta.id,
             userId=r.ExternalRankingDailyDepositDelta.user_id,
-            nickname=r.User.nickname,
+            nickname=r.V2User.nickname,
             amount=r.ExternalRankingDailyDepositDelta.deposit_delta,
             kstDate=r.ExternalRankingDailyDepositDelta.kst_date.isoformat(),
             createdAt=r.ExternalRankingDailyDepositDelta.created_at,
@@ -361,7 +361,7 @@ def create_deposit_log(
 
     _sync_cumulative_deposit(db, payload.user_id)
 
-    user = db.query(User).filter(User.id == payload.user_id).first()
+    user = db.query(V2User).filter(V2User.id == payload.user_id).first()
 
     V2AdminAuditService.log(
         db,
@@ -375,7 +375,7 @@ def create_deposit_log(
     return AdminDepositLogDto(
         id=row.id,
         userId=row.user_id,
-        nickname=user.nickname if user else None,
+        nickname=V2User.nickname if user else None,
         amount=row.deposit_delta,
         kstDate=row.kst_date.isoformat(),
         createdAt=row.created_at,
@@ -424,11 +424,11 @@ def update_deposit_log(
         after={"amount": row.deposit_delta, "date": row.kst_date.isoformat()},
     )
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     return AdminDepositLogDto(
         id=row.id,
         userId=row.user_id,
-        nickname=user.nickname if user else None,
+        nickname=V2User.nickname if user else None,
         amount=row.deposit_delta,
         kstDate=row.kst_date.isoformat(),
         createdAt=row.created_at,
@@ -484,7 +484,7 @@ def list_pending_deposits(
     deposit_count_map = {}
 
     if user_ids:
-        users = db.query(User).filter(User.id.in_(user_ids)).all()
+        users = db.query(V2User).filter(V2User.id.in_(user_ids)).all()
         user_map = {u.id: u.nickname for u in users}
 
         raw_counts = (
@@ -921,11 +921,11 @@ def get_user_tickets(search: str | None = None, db: Session = Depends(get_db)):
     
     if search:
         if search.isdigit():
-            query = query.filter(User.id == int(search))
+            query = query.filter(V2User.id == int(search))
         else:
             query = query.filter(
-                (User.nickname.ilike(f"%{search}%")) | 
-                (User.telegram_username.ilike(f"%{search}%"))
+                (V2User.nickname.ilike(f"%{search}%")) | 
+                (V2User.telegram_username.ilike(f"%{search}%"))
             )
             
     wallets = query.limit(100).all()
@@ -943,8 +943,8 @@ def get_user_tickets(search: str | None = None, db: Session = Depends(get_db)):
         
         result.append(UserTicketDto(
             userId=w.user_id,
-            nickname=w.user.nickname or "Unknown",
-            telegramUsername=w.user.telegram_username,
+            nickname=w.V2User.nickname or "Unknown",
+            telegramUsername=w.V2User.telegram_username,
             ticketType=w.token_type.value,
             currentBalance=w.balance,
             totalUsed=int(usage.total_used or 0) if usage else 0,
@@ -1038,11 +1038,11 @@ def get_user_inventory_list(search: str | None = None, db: Session = Depends(get
     
     if search:
         if search.isdigit():
-            query = query.filter(User.id == int(search))
+            query = query.filter(V2User.id == int(search))
         else:
             query = query.filter(
-                (User.nickname.ilike(f"%{search}%")) | 
-                (User.telegram_username.ilike(f"%{search}%"))
+                (V2User.nickname.ilike(f"%{search}%")) | 
+                (V2User.telegram_username.ilike(f"%{search}%"))
             )
             
     items = query.limit(100).all()
@@ -1060,8 +1060,8 @@ def get_user_inventory_list(search: str | None = None, db: Session = Depends(get
         
         result.append(UserInventoryItemDto(
             userId=item.user_id,
-            nickname=item.user.nickname or "Unknown",
-            telegramUsername=item.user.telegram_username,
+            nickname=item.V2User.nickname or "Unknown",
+            telegramUsername=item.V2User.telegram_username,
             itemType=item.item_type,
             currentQuantity=item.quantity,
             totalUsed=int(usage.total_used or 0) if usage else 0,
@@ -1075,7 +1075,7 @@ def create_inventory_item(
     db: Session = Depends(get_db), 
     admin_info: tuple[int, str] = Depends(get_current_admin_info)
 ):
-    user = db.query(User).filter(User.id == payload.user_id).first()
+    user = db.query(V2User).filter(V2User.id == payload.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -1133,8 +1133,8 @@ def get_ticket_logs(
     db: Session = Depends(get_db)
 ):
     # Fetch Wallet Logs
-    w_query = db.query(UserGameWalletLedger, User).outerjoin(
-        User, UserGameWalletLedger.user_id == User.id
+    w_query = db.query(UserGameWalletLedger, V2User).outerjoin(
+        User, UserGameWalletLedger.user_id == V2User.id
     )
     if user_id:
         w_query = w_query.filter(UserGameWalletLedger.user_id == user_id)
@@ -1146,8 +1146,8 @@ def get_ticket_logs(
     w_logs = w_query.order_by(UserGameWalletLedger.created_at.desc()).limit(100).all()
     
     # Fetch Inventory Logs
-    i_query = db.query(UserInventoryLedger, User).outerjoin(
-        User, UserInventoryLedger.user_id == User.id
+    i_query = db.query(UserInventoryLedger, V2User).outerjoin(
+        User, UserInventoryLedger.user_id == V2User.id
     )
     if user_id:
         i_query = i_query.filter(UserInventoryLedger.user_id == user_id)
@@ -1180,7 +1180,7 @@ def get_ticket_logs(
             balanceAfter=l.balance_after,
             reason=l.reason or "",
             timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
-            nickname=(user.nickname if user else "")
+            nickname=(V2User.nickname if user else "")
         ))
         
     for l, user in i_logs:
@@ -1194,7 +1194,7 @@ def get_ticket_logs(
             balanceAfter=l.balance_after,
             reason=l.reason or "",
             timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
-            nickname=(user.nickname if user else "")
+            nickname=(V2User.nickname if user else "")
         ))
         
     # Sort desc

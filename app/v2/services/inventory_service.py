@@ -20,7 +20,7 @@ from app.v2.services.user_service import V2UserService
 class V2InventoryService:
     @staticmethod
     def _resolve_storage_user_id(db: Session, v2_user_id: int) -> int:
-        return V2UserService.ensure_legacy_user_id(db, v2_user_id)
+        return v2_user_id
 
     @staticmethod
     def _get_or_create_wallet(

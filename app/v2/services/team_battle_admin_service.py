@@ -17,7 +17,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.team_battle import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.admin_audit_service import V2AdminAuditService
 
 logger = logging.getLogger(__name__)
@@ -265,8 +265,8 @@ class TeamBattleAdminService:
         # 멤버 목록
         members = (
             db.execute(
-                select(TeamMember, User)
-                .join(User, User.id == TeamMember.user_id)
+                select(TeamMember, V2User)
+                .join(V2User, V2User.id == TeamMember.user_id)
                 .where(TeamMember.team_id == team_id)
             )
             .all()
@@ -465,8 +465,8 @@ class TeamBattleAdminService:
 
         rows = (
             db.execute(
-                select(TeamMember, User, contrib_subq.c.points, contrib_subq.c.latest_event_at)
-                .join(User, User.id == TeamMember.user_id)
+                select(TeamMember, V2User, contrib_subq.c.points, contrib_subq.c.latest_event_at)
+                .join(V2User, V2User.id == TeamMember.user_id)
                 .outerjoin(contrib_subq, contrib_subq.c.user_id == TeamMember.user_id)
                 .where(TeamMember.team_id == team_id)
                 .order_by(TeamMember.joined_at.asc())
@@ -510,8 +510,8 @@ class TeamBattleAdminService:
         resolved_season_id = season_id or self._get_active_or_latest_season_id(db)
 
         stmt = (
-            select(TeamEventLog, User)
-            .join(User, User.id == TeamEventLog.user_id)
+            select(TeamEventLog, V2User)
+            .join(V2User, V2User.id == TeamEventLog.user_id)
             .where(TeamEventLog.team_id == team_id)
             .where(TeamEventLog.user_id == user_id)
             .order_by(TeamEventLog.created_at.desc())

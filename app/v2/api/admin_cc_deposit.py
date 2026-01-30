@@ -1,4 +1,4 @@
-"""Admin endpoints for CC deposit data.
+﻿"""Admin endpoints for CC deposit data.
 
 V2 location (Source of Truth). Legacy import paths should re-export this router.
 
@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositEntry, CCDepositListResponse, CCDepositUpdate
 from app.v2.services import V2AdminAuditService, V2AdminCCDepositService, V2AdminUserService
 
@@ -23,9 +23,9 @@ def list_cc_deposit(db: Session = Depends(get_db)) -> CCDepositListResponse:
     rows = V2AdminCCDepositService.list_all(db)
     user_ids = [r.user_id for r in rows]
     users = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id.in_(user_ids))
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id.in_(user_ids))
         .all()
         if user_ids
         else []
@@ -65,9 +65,9 @@ def upsert_cc_deposit_batch(
     rows = V2AdminCCDepositService.upsert_many(db, payloads)
     user_ids = [r.user_id for r in rows]
     users = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id.in_(user_ids))
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id.in_(user_ids))
         .all()
         if user_ids
         else []
@@ -107,9 +107,9 @@ def update_cc_deposit(
 ) -> CCDepositEntry:
     row = V2AdminCCDepositService.update(db, user_id, payload)
     user = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id == row.user_id)
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id == row.user_id)
         .first()
     )
     summary = V2AdminUserService.build_summary(user) if user else None
@@ -140,9 +140,9 @@ def update_cc_deposit_by_identifier(
     row = V2AdminCCDepositService.update(db, resolved_user_id, payload)
 
     user = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id == row.user_id)
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id == row.user_id)
         .first()
     )
     summary = V2AdminUserService.build_summary(user) if user else None

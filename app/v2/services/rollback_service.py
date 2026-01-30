@@ -13,7 +13,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 
@@ -100,7 +100,7 @@ class V2RollbackService:
                 - recovered: int (실제 회수된 금액)
                 - message: str
         """
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             return {
                 "success": False,
@@ -173,7 +173,7 @@ class V2RollbackService:
         Returns:
             dict: 회수 결과
         """
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             return {
                 "success": False,

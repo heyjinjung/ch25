@@ -8,7 +8,6 @@ from sqlalchemy import func, select, case
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.user import User
 from app.models.game_wallet import GameTokenType
 from app.v2.models.user import V2User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
@@ -31,10 +30,6 @@ logger = logging.getLogger(__name__)
 class V2VaultService:
     @staticmethod
     def get_locked_balance(db: Session, user_id: int) -> int:
-        legacy = db.execute(select(User.vault_locked_balance).where(User.id == user_id)).scalar_one_or_none()
-        if legacy is not None:
-            return int(legacy)
-
         v2_balance = db.execute(select(V2User.vault_locked_balance).where(V2User.id == user_id)).scalar_one_or_none()
         if v2_balance is None:
             raise ValueError("user not found")
@@ -49,12 +44,11 @@ class V2VaultService:
         from app.v2.services.circuit_breaker_service import CircuitBreakerService
         CircuitBreakerService.check_and_incr(db, "VAULT", amount, user_id)
 
-        legacy_user = db.get(User, user_id)
         v2_user = db.get(V2User, user_id)
-        if legacy_user is None and v2_user is None:
+        if v2_user is None:
             raise ValueError("user not found")
 
-        primary_balance = int((legacy_user.vault_locked_balance if legacy_user is not None else v2_user.vault_locked_balance) or 0)
+        primary_balance = int(v2_user.vault_locked_balance or 0)
         
         # === Strict Vault Policy: 30k Cap for Inactive Users ===
         is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
@@ -66,12 +60,8 @@ class V2VaultService:
         else:
             new_balance = primary_balance + int(amount)
 
-        if legacy_user is not None:
-            legacy_user.vault_locked_balance = new_balance
-            db.add(legacy_user)
-        if v2_user is not None:
-            v2_user.vault_locked_balance = new_balance
-            db.add(v2_user)
+        v2_user.vault_locked_balance = new_balance
+        db.add(v2_user)
 
         db.flush()
         return int(new_balance)
@@ -81,29 +71,24 @@ class V2VaultService:
         if amount <= 0:
             raise ValueError("amount must be > 0")
 
-        legacy_user = db.get(User, user_id)
         v2_user = db.get(V2User, user_id)
-        if legacy_user is None and v2_user is None:
+        if v2_user is None:
             raise ValueError("user not found")
 
-        primary_balance = int((legacy_user.vault_locked_balance if legacy_user is not None else v2_user.vault_locked_balance) or 0)
+        primary_balance = int(v2_user.vault_locked_balance or 0)
         if primary_balance < amount:
             raise ValueError("insufficient locked balance")
 
         new_balance = primary_balance - int(amount)
 
-        if legacy_user is not None:
-            legacy_user.vault_locked_balance = new_balance
-            db.add(legacy_user)
-        if v2_user is not None:
-            v2_user.vault_locked_balance = new_balance
-            db.add(v2_user)
+        v2_user.vault_locked_balance = new_balance
+        db.add(v2_user)
 
         db.flush()
         return int(new_balance)
 
     @staticmethod
-    def _ensure_daily_vault_spent_reset(user: User, now: datetime) -> None:
+    def _ensure_daily_vault_spent_reset(user: V2User, now: datetime) -> None:
         """운영일(KST 09:00 리셋) 기준으로 vault_spent_today를 리셋한다."""
         op_date = V2VaultService._operational_date_kst(now)
         op_date_str = op_date.strftime("%Y-%m-%d")
@@ -122,51 +107,44 @@ class V2VaultService:
     ) -> int:
         """상점 구매 등 '소비'로 인한 금고 차감.
 
-        - daily_vault_spent(=User.vault_spent_today)가 실제 소비를 반영하도록 누적
+        - daily_vault_spent가 실제 소비를 반영하도록 누적
         - 운영일(KST 09:00) 기준으로 일일 리셋 처리
         - VaultLedger에 소비 내역 기록
-        - v2_user 미러(balance) 동기화
         """
         if amount <= 0:
             raise ValueError("amount must be > 0")
 
         now_dt = now or datetime.utcnow()
-        master_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
 
-        q = db.query(User).filter(User.id == master_user_id)
+        q = db.query(V2User).filter(V2User.id == v2_user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
-        legacy_user = q.one_or_none()
-        if legacy_user is None:
+        v2_user = q.one_or_none()
+        if v2_user is None:
             raise ValueError("user not found")
 
-        current = int(getattr(legacy_user, "vault_locked_balance", 0) or 0)
+        current = int(getattr(v2_user, "vault_locked_balance", 0) or 0)
         if current < amount:
             raise ValueError("insufficient locked balance")
 
-        legacy_user.vault_locked_balance = current - int(amount)
-        legacy_user.vault_spent_total = int(getattr(legacy_user, "vault_spent_total", 0) or 0) + int(amount)
-        V2VaultService._ensure_daily_vault_spent_reset(legacy_user, now_dt)
-        legacy_user.vault_spent_today = int(getattr(legacy_user, "vault_spent_today", 0) or 0) + int(amount)
-        db.add(legacy_user)
+        v2_user.vault_locked_balance = current - int(amount)
+        v2_user.vault_spent_total = int(getattr(v2_user, "vault_spent_total", 0) or 0) + int(amount)
+        V2VaultService._ensure_daily_vault_spent_reset(v2_user, now_dt)
+        v2_user.vault_spent_today = int(getattr(v2_user, "vault_spent_today", 0) or 0) + int(amount)
+        db.add(v2_user)
 
         db.add(
             VaultLedger(
-                user_id=int(master_user_id),
+                user_id=v2_user_id,
                 amount=-int(amount),
-                balance_after=int(legacy_user.vault_locked_balance or 0),
+                balance_after=int(v2_user.vault_locked_balance or 0),
                 reason=reason,
                 ref_type="SHOP",
             )
         )
 
-        v2_user = db.get(V2User, v2_user_id)
-        if v2_user is not None:
-            v2_user.vault_locked_balance = int(legacy_user.vault_locked_balance or 0)
-            db.add(v2_user)
-
         db.flush()
-        return int(legacy_user.vault_locked_balance or 0)
+        return int(v2_user.vault_locked_balance or 0)
 
     @staticmethod
     def _to_utc(now: datetime) -> datetime:
@@ -323,24 +301,21 @@ class V2VaultService:
 
         return is_suspended, deposit_7d
 
-    def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
-        """V2 adapted get_status mimicking V1 VaultService behavior.
-        
-        SoT: V2User.vault_locked_balance (but synced with legacy User).
+    def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, V2User, bool]:
+        """V2 adapted get_status.
+
+        SoT: V2User.vault_locked_balance.
         """
-        now_dt = now or datetime.utcnow()
         v2s2 = Vault2Service()
         eligible = v2s2.get_eligibility(db, program_key=v2s2.DEFAULT_PROGRAM_KEY, user_id=user_id)
 
-        master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-        user = db.get(User, master_user_id)
+        user = db.get(V2User, user_id)
         if not user:
-             # Fallback to creating/fetching User if only V2User exists? 
-             # For now, we assume ensure_legacy_user_id handles it or we fail.
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
-        # Sync legacy mirror for UI compatibility
-        user.vault_balance = int(user.vault_locked_balance or 0)
+        # Sync legacy mirror for UI compatibility if needed
+        # V2User uses individual fields, but we can set this attribute for the response object
+        setattr(user, "vault_balance", int(user.vault_locked_balance or 0))
         return eligible, user, False
 
     def get_withdrawal_reserved_amount(self, db: Session, user_id: int) -> int:
@@ -355,10 +330,9 @@ class V2VaultService:
         """Consolidated vault status info for V2 UI."""
         now_dt = now or datetime.utcnow()
         eligible, user, _ = self.get_status(db, user_id, now_dt)
-        master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
 
         locked_balance = int(getattr(user, "vault_locked_balance", 0) or 0)
-        reserved_amount = self.get_withdrawal_reserved_amount(db=db, user_id=master_user_id)
+        reserved_amount = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
         available_amount = max(locked_balance - reserved_amount, 0)
 
         # CC Deposit (External Ranking) check
@@ -370,7 +344,7 @@ class V2VaultService:
         delta_today = (
             db.query(ExternalRankingDailyDepositDelta.deposit_delta)
             .filter(
-                ExternalRankingDailyDepositDelta.user_id == master_user_id,
+                ExternalRankingDailyDepositDelta.user_id == user_id,
                 ExternalRankingDailyDepositDelta.kst_date == op_date_kst,
             )
             .scalar()
@@ -379,7 +353,7 @@ class V2VaultService:
         has_cc_deposit_today = int(delta_today) > 0
 
         if not has_cc_deposit_today:
-            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == master_user_id).first()
+            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
             if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
@@ -388,7 +362,7 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
-            activity = db.query(UserActivity).filter(UserActivity.user_id == master_user_id).first()
+            activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
             if activity and activity.last_charge_at:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
@@ -405,9 +379,9 @@ class V2VaultService:
         from app.models.roulette import RouletteLog
         from app.models.lottery import LotteryLog
         
-        l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == master_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
-        l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == master_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
-        l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == master_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+        l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+        l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+        l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
         
         # 2. V2 logs
         from app.v2.models.v2_dice import V2DiceLog
@@ -422,7 +396,7 @@ class V2VaultService:
 
         seven_days_ago_date = (now_dt - timedelta(days=6)).date()
         deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-            ExternalRankingDailyDepositDelta.user_id == master_user_id,
+            ExternalRankingDailyDepositDelta.user_id == user_id,
             ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
         ).scalar() or 0
 
@@ -444,7 +418,7 @@ class V2VaultService:
             spend_target = 20000
 
         withdrawal_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
-            VaultWithdrawalRequest.user_id == master_user_id,
+            VaultWithdrawalRequest.user_id == user_id,
             VaultWithdrawalRequest.status.in_(["PENDING", "APPROVED"]),
         ).scalar() or 0
 
@@ -524,7 +498,7 @@ class V2VaultService:
         op_start_utc = op_start_kst.astimezone(timezone.utc).replace(tzinfo=None) # naive for DB
 
         today_earnings = db.query(func.coalesce(func.sum(VaultLedger.amount), 0)).filter(
-            VaultLedger.user_id == master_user_id,
+            VaultLedger.user_id == user_id,
             VaultLedger.amount > 0,
             VaultLedger.created_at >= op_start_utc
         ).scalar() or 0
@@ -533,7 +507,7 @@ class V2VaultService:
         # New Field: Next Tier Goal (Dynamic Withdrawal Goal)
         # ---------------------------------------------------------------------
         approved_count_val = db.query(func.count(VaultWithdrawalRequest.id)).filter(
-            VaultWithdrawalRequest.user_id == master_user_id,
+            VaultWithdrawalRequest.user_id == user_id,
             VaultWithdrawalRequest.status == "APPROVED",
         ).scalar() or 0
         
@@ -630,7 +604,7 @@ class V2VaultService:
 
         # Using sqlalchemy select/scalars for V2 standard
         today_total = db.execute(
-            select(func.sum(User.vault_available_balance) + func.sum(User.vault_locked_balance))
+            select(func.sum(V2User.vault_available_balance) + func.sum(V2User.vault_locked_balance))
         ).scalar() or 0
 
         today_approved = db.execute(
@@ -671,14 +645,14 @@ class V2VaultService:
 
     def get_admin_users(self, db: Session, limit: int = 50, offset: int = 0, sort_by: str = "vault_balance") -> list:
         """List users with their vault summary for admin."""
-        query = select(User)
+        query = select(V2User)
         if sort_by == "vault_balance":
-            order_col = func.coalesce(User.vault_available_balance, 0) + func.coalesce(User.vault_locked_balance, 0)
+            order_col = func.coalesce(V2User.vault_available_balance, 0) + func.coalesce(V2User.vault_locked_balance, 0)
             query = query.order_by(order_col.desc())
         elif sort_by == "total_deposit":
-            query = query.order_by(User.total_charge_amount.desc())
+            query = query.order_by(V2User.total_charge_amount.desc())
         else:
-            query = query.order_by(User.updated_at.desc())
+            query = query.order_by(V2User.updated_at.desc())
 
         users = db.execute(query.offset(offset).limit(limit)).scalars().all()
         result = []
@@ -712,7 +686,7 @@ class V2VaultService:
     def get_admin_user_ledger(self, db: Session, user_id: int, limit: int = 50, offset: int = 0) -> dict:
         """Get detailed vault ledger for a specific user."""
         from app.models.vault_ledger import VaultLedger
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -760,8 +734,9 @@ class V2VaultService:
         """Forcefully edit user vault balance (Admin only)."""
         from app.models.vault_ledger import VaultLedger
         from app.v2.services.admin_audit_service import V2AdminAuditService
+        from app.v2.models.user import V2User
 
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -851,7 +826,7 @@ class V2VaultService:
             withdrawal_amount = sum(w.amount for w in approved_ws)
 
             total_vault = db.execute(
-                select(func.sum(User.vault_available_balance) + func.sum(User.vault_locked_balance))
+                select(func.sum(V2User.vault_available_balance) + func.sum(V2User.vault_locked_balance))
             ).scalar() or 0
 
             result.append({
@@ -896,7 +871,7 @@ class V2VaultService:
         
         items = []
         for w in withdrawals:
-            user = db.get(User, w.user_id)
+            user = db.get(V2User, w.user_id)
             items.append({
                 "id": w.id,
                 "user_id": w.user_id,
@@ -919,8 +894,7 @@ class V2VaultService:
 
     def request_withdrawal(self, db: Session, user_id: int, amount: int) -> dict:
         """V2 adapted withdrawal request (CC Deposit based)."""
-        master_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-        user = db.get(User, master_user_id)
+        user = db.get(V2User, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
@@ -937,7 +911,7 @@ class V2VaultService:
         delta_today = (
             db.query(ExternalRankingDailyDepositDelta.deposit_delta)
             .filter(
-                ExternalRankingDailyDepositDelta.user_id == master_user_id,
+                ExternalRankingDailyDepositDelta.user_id == user_id,
                 ExternalRankingDailyDepositDelta.kst_date == op_date_kst,
             )
             .scalar()
@@ -946,7 +920,7 @@ class V2VaultService:
         has_cc_deposit_today = int(delta_today) > 0
 
         if not has_cc_deposit_today:
-            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == master_user_id).first()
+            rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
             if rank_data and rank_data.deposit_amount > 0 and rank_data.updated_at:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
@@ -955,7 +929,7 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
-            activity = db.query(UserActivity).filter(UserActivity.user_id == master_user_id).first()
+            activity = db.query(UserActivity).filter(UserActivity.user_id == user_id).first()
             if activity and activity.last_charge_at:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
@@ -964,7 +938,6 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         # 1. Strict Withdrawal Eligibility (SoT): deposit today + play target + spend target
-        # Re-calculate segments and targets to ensure consistency with get_vault_info
         from app.v2.models.v2_user_segment import V2UserSegment
 
         current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
@@ -972,7 +945,7 @@ class V2VaultService:
 
         seven_days_ago_date = (now - timedelta(days=6)).date()
         deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
-            ExternalRankingDailyDepositDelta.user_id == master_user_id,
+            ExternalRankingDailyDepositDelta.user_id == user_id,
             ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
         ).scalar() or 0
 
@@ -1003,9 +976,9 @@ class V2VaultService:
             from app.v2.models.v2_roulette import V2RouletteLog
             from app.v2.models.v2_lottery import V2LotteryLog
 
-            l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == master_user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
-            l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == master_user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
-            l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == master_user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
+            l_lott = db.query(func.count(LotteryLog.id)).filter(LotteryLog.user_id == user_id, LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_dice = db.query(func.count(V2DiceLog.id)).filter(V2DiceLog.user_id == user_id, V2DiceLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_roul = db.query(func.count(V2RouletteLog.id)).filter(V2RouletteLog.user_id == user_id, V2RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
             v2_lott = db.query(func.count(V2LotteryLog.id)).filter(V2LotteryLog.user_id == user_id, V2LotteryLog.created_at >= three_days_ago_ts).scalar() or 0
@@ -1023,7 +996,7 @@ class V2VaultService:
         approved_count = (
             db.query(func.count(VaultWithdrawalRequest.id))
             .filter(
-                VaultWithdrawalRequest.user_id == master_user_id,
+                VaultWithdrawalRequest.user_id == user_id,
                 VaultWithdrawalRequest.status == "APPROVED",
             )
             .scalar()
@@ -1043,18 +1016,18 @@ class V2VaultService:
         # 3. Concurrency & Balance checks
         pending_exists = (
             db.query(func.count(VaultWithdrawalRequest.id))
-            .filter(VaultWithdrawalRequest.user_id == master_user_id, VaultWithdrawalRequest.status == "PENDING")
+            .filter(VaultWithdrawalRequest.user_id == user_id, VaultWithdrawalRequest.status == "PENDING")
             .scalar()
             or 0
         )
         if int(pending_exists) > 0:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="WITHDRAWAL_REQUEST_ALREADY_PENDING")
-        reserved = self.get_withdrawal_reserved_amount(db=db, user_id=master_user_id)
+        reserved = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
         if total - reserved < amount:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="INSUFFICIENT_FUNDS")
 
         req = VaultWithdrawalRequest(
-            user_id=master_user_id,
+            user_id=user_id,
             amount=amount,
             status="PENDING",
             created_at=now

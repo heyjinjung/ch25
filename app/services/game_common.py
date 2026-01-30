@@ -332,25 +332,6 @@ def _log_team_battle_points(ctx: GamePlayContext, db: Session, result_payload: d
     svc = TeamBattleService()
     try:
         user_id = int(ctx.user_id)
-        try:
-            from app.models.user import User
-
-            legacy_user_exists = (
-                db.query(User.id)
-                .filter(User.id == user_id)
-                .first()
-                is not None
-            )
-        except Exception:
-            legacy_user_exists = False
-
-        if not legacy_user_exists:
-            try:
-                from app.v2.services.user_service import V2UserService
-
-                user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-            except Exception:
-                return
 
         member = svc.get_membership(db, user_id)
         if not member:

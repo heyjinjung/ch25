@@ -22,7 +22,7 @@ from app.models.vault2 import VaultProgram, VaultStatus
 from app.models.admin_audit_log import AdminAuditLog
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.user_cash_ledger import UserCashLedger
-from app.models.user import User
+from app.v2.models.user import V2User
 from sqlalchemy import func, select
 from app.v2.services.audit_service import AuditService
 
@@ -367,10 +367,9 @@ class Vault2Service:
         if row is not None:
             return row
 
-        # [PHASE 1 SYNC] Sync initial state from User table (Legacy/V1 Source)
-        # Admins might interact with users who only have User-table balances.
-        from app.models.user import User
-        user = db.query(User).filter(User.id == user_id).one_or_none()
+        # [PHASE 1 SYNC] Sync initial state from V2User table (SoT Source)
+        # Admins might interact with users who only have V2User-table balances.
+        user = db.query(V2User).filter(V2User.id == user_id).one_or_none()
 
         initial_locked = int(getattr(user, "vault_locked_balance", 0) or 0) if user else 0
         initial_available = int(getattr(user, "vault_available_balance", 0) or 0) if user else 0
@@ -613,8 +612,8 @@ class Vault2Service:
 
         # 3. Expirations in next 24h (Critical for retention ops)
         expiring_soon_count = (
-            db.query(func.count(User.id))
-            .filter(User.vault_locked_balance > 0, User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+            db.query(func.count(V2User.id))
+            .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
             .scalar()
         )
 
@@ -632,8 +631,8 @@ class Vault2Service:
         total_assets = db.query(func.sum(ExternalRankingData.deposit_amount)).scalar() or 0
 
         # Breakdown of Vault states
-        total_locked = db.query(func.sum(User.vault_locked_balance)).scalar() or 0
-        total_available = db.query(func.sum(User.vault_available_balance)).scalar() or 0
+        total_locked = db.query(func.sum(V2User.vault_locked_balance)).scalar() or 0
+        total_available = db.query(func.sum(V2User.vault_available_balance)).scalar() or 0
 
         # Reserved: Sum of pending withdrawal requests
         total_reserved = db.query(func.sum(VaultWithdrawalRequest.amount))\
@@ -671,16 +670,16 @@ class Vault2Service:
 
         if type == "expiring_soon_24h":
             rows = (
-                db.query(User)
-                .filter(User.vault_locked_balance > 0, User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
-                .order_by(User.vault_locked_expires_at.asc())
+                db.query(V2User)
+                .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+                .order_by(V2User.vault_locked_expires_at.asc())
                 .limit(limit)
                 .all()
             )
             for u in rows:
                 results.append({
                     "user_id": u.id,
-                    "external_id": u.external_id,
+                    "external_id": u.cc_id,
                     "nickname": u.nickname,
                     "telegram_username": u.telegram_username,
                     "amount": u.vault_locked_balance,
@@ -690,8 +689,8 @@ class Vault2Service:
 
         elif type == "today_unlock_cash":
             rows = (
-                db.query(UserCashLedger, User)
-                .join(User, User.id == UserCashLedger.user_id)
+                db.query(UserCashLedger, V2User)
+                .join(V2User, V2User.id == UserCashLedger.user_id)
                 .filter(UserCashLedger.reason == "VAULT_UNLOCK", UserCashLedger.created_at >= today_start)
                 .order_by(UserCashLedger.created_at.desc())
                 .limit(limit)
@@ -700,7 +699,7 @@ class Vault2Service:
             for ledger, u in rows:
                 results.append({
                     "user_id": u.id,
-                    "external_id": u.external_id,
+                    "external_id": u.cc_id,
                     "nickname": u.nickname,
                     "telegram_username": u.telegram_username,
                     "amount": ledger.delta,
@@ -725,13 +724,13 @@ class Vault2Service:
             )
             # Need to fetch user details separately or join
             user_ids = [r[0] for r in rows]
-            users = {u.id: u for u in db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+            users = {u.id: u for u in db.query(V2User).filter(V2User.id.in_(user_ids)).all()} if user_ids else {}
 
             for uid, total, cnt, last_at in rows:
                 u = users.get(uid)
                 results.append({
                     "user_id": uid,
-                    "external_id": u.external_id if u else None,
+                    "external_id": u.cc_id if u else None,
                     "nickname": u.nickname if u else None,
                     "telegram_username": u.telegram_username if u else None,
                     "amount": int(total),
@@ -744,15 +743,15 @@ class Vault2Service:
             # Per-user liabilities = locked + available (excluding reserved withdrawal amounts).
             rows = (
                 db.query(
-                    User.id,
-                    User.external_id,
-                    User.nickname,
-                    User.telegram_username,
-                    User.vault_locked_balance,
-                    User.vault_available_balance,
-                    User.vault_locked_expires_at,
+                    V2User.id,
+                    V2User.external_id,
+                    V2User.nickname,
+                    V2User.telegram_username,
+                    V2User.vault_locked_balance,
+                    V2User.vault_available_balance,
+                    V2User.vault_locked_expires_at,
                 )
-                .order_by((User.vault_locked_balance + User.vault_available_balance).desc(), User.id.asc())
+                .order_by((V2User.vault_locked_balance + V2User.vault_available_balance).desc(), V2User.id.asc())
                 .limit(limit)
                 .all()
             )
@@ -775,8 +774,8 @@ class Vault2Service:
             from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 
             rows = (
-                db.query(VaultWithdrawalRequest, User)
-                .join(User, User.id == VaultWithdrawalRequest.user_id)
+                db.query(VaultWithdrawalRequest, V2User)
+                .join(V2User, V2User.id == VaultWithdrawalRequest.user_id)
                 .filter(VaultWithdrawalRequest.status == "PENDING")
                 .order_by(VaultWithdrawalRequest.created_at.desc())
                 .limit(limit)
@@ -856,8 +855,8 @@ class Vault2Service:
 
         db.add(status)
 
-        # [PHASE 1 SYNC] Sync to User table as it's the current live source of truth
-        user = db.query(User).filter(User.id == user_id).one_or_none()
+        # [PHASE 1 SYNC] Sync to V2User table as it's the current live source of truth
+        user = db.query(V2User).filter(V2User.id == user_id).one_or_none()
         if user:
             user.vault_locked_balance = new_locked
             user.vault_available_balance = new_avail
@@ -949,8 +948,8 @@ class Vault2Service:
 
         db.add(status)
 
-        # [PHASE 1 SYNC] Sync to User table as it's the current live source of truth
-        user = db.query(User).filter(User.id == user_id).one_or_none()
+        # [PHASE 1 SYNC] Sync to V2User table as it's the current live source of truth
+        user = db.query(V2User).filter(V2User.id == user_id).one_or_none()
         if user:
             user.vault_locked_balance = int(next_locked)
             user.vault_available_balance = int(next_available)

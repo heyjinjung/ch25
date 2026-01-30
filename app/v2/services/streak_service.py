@@ -21,7 +21,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.feature import UserEventLog
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.ui_config_service import UiConfigService
@@ -94,7 +94,7 @@ class V2StreakService:
             - claimable_day: 클레임 가능한 마일스톤 일수
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
         
         if not user:
@@ -154,7 +154,7 @@ class V2StreakService:
             클레임 가능한 마일스톤 일수 (없으면 None)
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
         
         if not user or not user.play_streak:
@@ -228,7 +228,7 @@ class V2StreakService:
             return {"success": False, "message": "NO_CLAIMABLE_REWARD"}
         
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
         
         if not user:
@@ -314,7 +314,7 @@ class V2StreakService:
             성공 여부
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
         
         if not user:
@@ -349,7 +349,7 @@ class V2StreakService:
             dict: 설정 결과
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
 
         if not user:
@@ -403,7 +403,7 @@ class V2StreakService:
             dict: 지급 결과
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
 
         if not user:
@@ -512,7 +512,7 @@ class V2StreakService:
             list: 각 마일스톤별 달성/클레임 여부
         """
         user = self.db.execute(
-            select(User).where(User.id == user_id)
+            select(V2User).where(V2User.id == user_id)
         ).scalar_one_or_none()
 
         if not user:

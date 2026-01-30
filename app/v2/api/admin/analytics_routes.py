@@ -2,10 +2,11 @@
 V2 Admin Analytics Routes
 
 분석 관리 API:
-- 보유율(Retention) 분석 - D1, D7, D30 보유율, 추이 그래프
-- 수익/지출 분석 - 일일/주간/월간 매출/지출 추이
-- 마케팅 효율성 분석 - 채널별 ROI, 전환율, CAC
+- 보유율(Retention) 분석 - D1, D7, D30 보유율 추이 그래프
+- 수익/지출 분석 - 일/주간/월간 매출/지출 추이
+- 마케팅 효율 분석 - 채널별 ROI, 전환율 CAC
 """
+
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 from zoneinfo import ZoneInfo
@@ -16,7 +17,7 @@ from sqlalchemy import func, and_, or_, case
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.v2.services import V2AdminAuditService
@@ -28,12 +29,13 @@ router = APIRouter(prefix="/analytics", tags=["admin-analytics"])
 # Retention Analysis Schemas (보유율 분석)
 # ============================================================================
 
+
 class RetentionRateDto(BaseModel):
     """보유율 데이터"""
     cohort_date: str  # 코호트 날짜 (가입일 기준)
     total_users: int  # 해당 날짜 가입자 수
     d1_retained: int  # D1 보유자 수
-    d1_rate: float  # D1 보유율 (0.0 ~ 1.0)
+    d1_rate: float  # D1 보유율(0.0 ~ 1.0)
     d7_retained: int  # D7 보유자 수
     d7_rate: float  # D7 보유율
     d30_retained: int  # D30 보유자 수
@@ -76,19 +78,20 @@ class RetentionTrendResponse(BaseModel):
 # Revenue/Expenditure Analysis Schemas (수익/지출 분석)
 # ============================================================================
 
+
 class DailyRevenueDto(BaseModel):
     """일일 수익 데이터"""
     date: str
-    total_deposits: int  # 총 입금액
-    total_withdrawals: int  # 총 출금액
-    net_revenue: int  # 순수익 (입금 - 출금)
+    total_deposits: int  # 총입금액
+    total_withdrawals: int  # 총출금액
+    net_revenue: int  # 순수익(입금 - 출금)
     deposit_count: int  # 입금 건수
     withdrawal_count: int  # 출금 건수
-    active_depositors: int  # 입금한 유저 수
+    active_depositors: int  # 입금자 수
 
 
 class RevenueBreakdownDto(BaseModel):
-    """수익 상세 내역"""
+    """수익 세부 내역"""
     period: str  # "daily" | "weekly" | "monthly"
     start_date: str
     end_date: str
@@ -108,28 +111,29 @@ class RevenueSummaryDto(BaseModel):
     this_week_expenses: int
     this_month_revenue: int
     this_month_expenses: int
-    revenue_growth_rate: float  # 전주 대비 성장률
+    revenue_growth_rate: float
 
 
 # ============================================================================
-# Marketing Efficiency Schemas (마케팅 효율성)
+# Marketing Efficiency Schemas
 # ============================================================================
+
 
 class ChannelPerformanceDto(BaseModel):
-    """채널별 성과"""
+    """채널 성과"""
     channel: str  # 채널명 (telegram, referral 등)
     new_users: int  # 신규 유저 수
     active_users: int  # 활성 유저 수
     total_deposits: int  # 총 입금액
     avg_deposit_per_user: float  # 유저당 평균 입금
-    conversion_rate: float  # 전환율 (입금한 유저 / 전체 유저)
+    conversion_rate: float  # 전환율 (입금 유저 / 전체 유저)
     cac: float  # Customer Acquisition Cost (추정)
     ltv: float  # Lifetime Value (추정)
     roi: float  # ROI ((LTV - CAC) / CAC)
 
 
 class MarketingEfficiencyResponse(BaseModel):
-    """마케팅 효율성 응답"""
+    """마케팅효율응답"""
     period_start: str
     period_end: str
     channels: List[ChannelPerformanceDto]
@@ -143,6 +147,7 @@ class MarketingEfficiencyResponse(BaseModel):
 # Helper Functions
 # ============================================================================
 
+
 def _get_kst_date(dt: datetime | None = None) -> date:
     """KST 기준 날짜 반환"""
     tz = ZoneInfo("Asia/Seoul")
@@ -153,7 +158,7 @@ def _get_kst_date(dt: datetime | None = None) -> date:
 
 def _calculate_retention(db: Session, cohort_date: date, retention_days: int) -> tuple[int, int]:
     """
-    특정 코호트(가입일)의 N일 후 보유율 계산
+    특정 코호트(가입일)별 N일 보유율 계산
 
     Returns:
         (retained_count, total_count)
@@ -161,10 +166,9 @@ def _calculate_retention(db: Session, cohort_date: date, retention_days: int) ->
     cohort_start = datetime.combine(cohort_date, datetime.min.time())
     cohort_end = cohort_start + timedelta(days=1)
 
-    # 해당 날짜에 가입한 유저
-    cohort_users = db.query(User.id).filter(
-        User.created_at >= cohort_start,
-        User.created_at < cohort_end,
+    cohort_users = db.query(V2User.id).filter(
+        V2User.created_at >= cohort_start,
+        V2User.created_at < cohort_end,
     ).subquery()
 
     total_count = db.query(func.count()).select_from(cohort_users).scalar() or 0
@@ -172,15 +176,15 @@ def _calculate_retention(db: Session, cohort_date: date, retention_days: int) ->
     if total_count == 0:
         return 0, 0
 
-    # N일 후에 로그인한 유저
+    # N일에 로그인한 유저 수
     target_date = cohort_date + timedelta(days=retention_days)
     target_start = datetime.combine(target_date, datetime.min.time())
     target_end = target_start + timedelta(days=1)
 
-    retained_count = db.query(func.count(User.id)).filter(
-        User.id.in_(db.query(cohort_users)),
-        User.last_login_at >= target_start,
-        User.last_login_at < target_end,
+    retained_count = db.query(func.count(V2User.id)).filter(
+        V2User.id.in_(db.query(cohort_users)),
+        V2User.last_login_at >= target_start,
+        V2User.last_login_at < target_end,
     ).scalar() or 0
 
     return retained_count, total_count
@@ -190,18 +194,19 @@ def _calculate_retention(db: Session, cohort_date: date, retention_days: int) ->
 # Retention Analysis Endpoints
 # ============================================================================
 
+
 @router.get("/retention", response_model=RetentionAnalysisResponse)
 def get_retention_analysis(
-    start_date: str = Query(None, description="시작일 (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="종료일 (YYYY-MM-DD)"),
+    start_date: str = Query(None, description="시작일(YYYY-MM-DD)"),
+    end_date: str = Query(None, description="종료일(YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
-    보유율(Retention) 분석
+    보유(Retention) 분석
 
     - D1, D7, D30 보유율을 코호트별로 계산
-    - 가입일 기준으로 N일 후 재방문 여부 측정
+    - 가입일 기준으로 N일차 방문율 측정
     """
     today = _get_kst_date()
 
@@ -216,7 +221,7 @@ def get_retention_analysis(
     else:
         period_start = period_end - timedelta(days=29)  # 30일간
 
-    # D30 측정을 위해 31일 이전까지만 분석 가능
+    # D30 측정을 위해 31일전까지 분석 가능
     max_measurable_date = today - timedelta(days=31)
     if period_end > max_measurable_date:
         period_end = max_measurable_date
@@ -229,13 +234,13 @@ def get_retention_analysis(
 
     current_date = period_start
     while current_date <= period_end:
-        # 코호트 사이즈 (해당 날짜 가입자)
+        # 코호트(당일 가입자)
         cohort_start = datetime.combine(current_date, datetime.min.time())
         cohort_end = cohort_start + timedelta(days=1)
 
-        cohort_size = db.query(func.count(User.id)).filter(
-            User.created_at >= cohort_start,
-            User.created_at < cohort_end,
+        cohort_size = db.query(func.count(V2User.id)).filter(
+            V2User.created_at >= cohort_start,
+            V2User.created_at < cohort_end,
         ).scalar() or 0
 
         if cohort_size > 0:
@@ -292,13 +297,13 @@ def get_retention_trend(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
-    보유율 추이 그래프 데이터
+    보유율 추이그래프
 
     - 일별 D1, D7, D30 보유율 추이
-    - 그래프 시각화용 데이터
+    - 그래프 작성용 데이터
     """
     today = _get_kst_date()
-    period_end = today - timedelta(days=31)  # D30 측정 가능한 마지막 날
+    period_end = today - timedelta(days=31)  # D30 측정 가능한 마지막 날짜
     period_start = period_end - timedelta(days=days - 1)
 
     trend: List[RetentionTrendDto] = []
@@ -308,9 +313,9 @@ def get_retention_trend(
         cohort_start = datetime.combine(current_date, datetime.min.time())
         cohort_end = cohort_start + timedelta(days=1)
 
-        new_users = db.query(func.count(User.id)).filter(
-            User.created_at >= cohort_start,
-            User.created_at < cohort_end,
+        new_users = db.query(func.count(V2User.id)).filter(
+            V2User.created_at >= cohort_start,
+            V2User.created_at < cohort_end,
         ).scalar() or 0
 
         if new_users > 0:
@@ -347,18 +352,19 @@ def get_retention_trend(
 # Revenue/Expenditure Analysis Endpoints
 # ============================================================================
 
+
 @router.get("/revenue/breakdown", response_model=RevenueBreakdownDto)
 def get_revenue_breakdown(
     period: str = Query("daily", description="기간 단위: daily, weekly, monthly"),
-    start_date: str = Query(None, description="시작일 (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="종료일 (YYYY-MM-DD)"),
+    start_date: str = Query(None, description="시작일(YYYY-MM-DD)"),
+    end_date: str = Query(None, description="종료일(YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
-    수익/지출 분석
+    수익/지출분석
 
-    - 일일/주간/월간 매출/지출 추이
+    - 일별/주간/월간 매출/지출추이
     - 입금(수익) vs 출금(지출) 비교
     """
     today = _get_kst_date()
@@ -399,9 +405,8 @@ def get_revenue_breakdown(
         deposit_count = int(deposit_stats.count or 0)
         active_depositors = int(deposit_stats.users or 0)
 
-        # 출금 (지출) - 승인된 출금만
+        # 출금 (지출)
         withdrawal_stats = db.query(
-            func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0).label("total"),
             func.count(VaultWithdrawalRequest.id).label("count"),
         ).filter(
             func.date(VaultWithdrawalRequest.created_at) == current_date,
@@ -446,11 +451,9 @@ def get_revenue_summary(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    """
-    수익 요약 (대시보드용)
-
+    """수익요약
     - 오늘, 이번 주, 이번 달 수익/지출
-    - 전주 대비 성장률
+    - 주간 성장률
     """
     today = _get_kst_date()
 
@@ -465,8 +468,9 @@ def get_revenue_summary(
         VaultWithdrawalRequest.status == "APPROVED",
     ).scalar() or 0
 
-    # 이번 주 (월요일 기준)
+    # 이번 주(월요일 기준)
     week_start = today - timedelta(days=today.weekday())
+
     week_deposits = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
         ExternalRankingDailyDepositDelta.kst_date >= week_start,
         ExternalRankingDailyDepositDelta.kst_date <= today,
@@ -481,6 +485,7 @@ def get_revenue_summary(
 
     # 이번 달
     month_start = today.replace(day=1)
+
     month_deposits = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
         ExternalRankingDailyDepositDelta.kst_date >= month_start,
         ExternalRankingDailyDepositDelta.kst_date <= today,
@@ -493,7 +498,7 @@ def get_revenue_summary(
         VaultWithdrawalRequest.status == "APPROVED",
     ).scalar() or 0
 
-    # 전주 대비 성장률
+    # 지난주 성장률
     prev_week_start = week_start - timedelta(weeks=1)
     prev_week_end = week_start - timedelta(days=1)
 
@@ -523,17 +528,18 @@ def get_revenue_summary(
 # Marketing Efficiency Endpoints
 # ============================================================================
 
+
 @router.get("/marketing/channel-performance", response_model=MarketingEfficiencyResponse)
 def get_channel_performance(
-    start_date: str = Query(None, description="시작일 (YYYY-MM-DD)"),
-    end_date: str = Query(None, description="종료일 (YYYY-MM-DD)"),
+    start_date: str = Query(None, description="시작일(YYYY-MM-DD)"),
+    end_date: str = Query(None, description="종료일(YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
     마케팅 채널별 성과 분석
 
-    - 채널별 신규 유저, 전환율, ROI
+    - 채널별 신규 유저, 전환율 ROI
     - CAC (Customer Acquisition Cost) 추정
     - LTV (Lifetime Value) 추정
     """
@@ -552,28 +558,28 @@ def get_channel_performance(
     period_start_dt = datetime.combine(period_start, datetime.min.time())
     period_end_dt = datetime.combine(period_end, datetime.max.time())
 
-    # 채널별 유저 분석
+    # 채널별 분석
     # 현재는 referral_code 기반으로 채널 추정 (telegram, organic, referral 등)
     channels_data: List[ChannelPerformanceDto] = []
 
     # 전체 신규 유저
-    total_new_users = db.query(func.count(User.id)).filter(
-        User.created_at >= period_start_dt,
-        User.created_at <= period_end_dt,
+    total_new_users = db.query(func.count(V2User.id)).filter(
+        V2User.created_at >= period_start_dt,
+        V2User.created_at <= period_end_dt,
     ).scalar() or 0
 
     # 채널별 분석 (telegram_id 기준 분류)
     channel_configs = [
-        ("telegram", User.telegram_id.isnot(None)),
-        ("organic", User.telegram_id.is_(None)),
+        ("telegram", V2User.telegram_id.isnot(None)),
+        ("organic", V2User.telegram_id.is_(None)),
     ]
 
     total_marketing_cost = 0.0
 
     for channel_name, channel_filter in channel_configs:
-        channel_users_query = db.query(User.id).filter(
-            User.created_at >= period_start_dt,
-            User.created_at <= period_end_dt,
+        channel_users_query = db.query(V2User.id).filter(
+            V2User.created_at >= period_start_dt,
+            V2User.created_at <= period_end_dt,
             channel_filter,
         )
 
@@ -594,11 +600,11 @@ def get_channel_performance(
             ))
             continue
 
-        # 활성 유저 (최근 7일 내 로그인)
+        # 활성 유저 (최근 7일 로그인)
         active_threshold = datetime.utcnow() - timedelta(days=7)
-        active_users = db.query(func.count(User.id)).filter(
-            User.id.in_(channel_user_ids),
-            User.last_login_at >= active_threshold,
+        active_users = db.query(func.count(V2User.id)).filter(
+            V2User.id.in_(channel_user_ids),
+            V2User.last_login_at >= active_threshold,
         ).scalar() or 0
 
         # 입금 통계
@@ -613,23 +619,23 @@ def get_channel_performance(
         total_deposits = int(deposit_stats.total or 0)
         depositors_count = int(deposit_stats.depositors or 0)
 
-        # 전환율 (입금한 유저 / 전체 유저)
+        # 전환율(입금한 유저 / 전체 유저)
         conversion_rate = depositors_count / new_users if new_users > 0 else 0.0
 
         # 유저당 평균 입금
         avg_deposit = total_deposits / new_users if new_users > 0 else 0.0
 
         # CAC 추정 (마케팅 비용 / 신규 유저)
-        # 채널별 추정 비용 (설정 가능하도록 하드코딩)
+        # 채널별 추정 비용 (정책 가능하도록 하드코딩)
         channel_cost_map = {
-            "telegram": 1000,  # 유저당 추정 1000원
+            "telegram": 1000,  # 텔레그램 추정 1000원
             "referral": 500,   # 추천 보상 추정 500원
             "organic": 0,      # 자연 유입 비용 없음
         }
         estimated_cost = channel_cost_map.get(channel_name, 0) * new_users
         cac = estimated_cost / new_users if new_users > 0 else 0.0
 
-        # LTV 추정 (평균 입금액 기반 간단 추정)
+        # LTV 추정 (평균 입금 기반 간단 추정)
         ltv = avg_deposit * 1.5  # 입금액의 1.5배로 추정
 
         # ROI
@@ -670,3 +676,4 @@ def get_channel_performance(
         overall_cac=round(overall_cac, 2),
         overall_roi=round(overall_roi, 4),
     )
+

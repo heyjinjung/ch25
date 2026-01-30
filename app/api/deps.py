@@ -9,8 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import decode_access_token
 from app.db.session import SessionLocal
-from app.models.user import User
-from app.v2.models.user import V2User
+from app.v2.models.user import V2User, V2UserRole, V2UserStatus
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -49,19 +48,18 @@ def get_current_user_id(
 ) -> int:
     """Extract user id from Bearer token; raise 401 if missing or invalid.
 
-    In TEST_MODE, allow anonymous access by selecting an existing user id.
+    V2-only: JWT의 sub는 V2User.id를 의미함. V1 User 테이블 참조 완전 제거.
     """
     settings = get_settings()
 
-    # In TEST_MODE, allow anonymous access. Do NOT hardcode a user id because
-    # server dumps may not include user 1, which can cause FK failures.
+    # In TEST_MODE, allow anonymous access using V2User
     if credentials is None or not credentials.credentials:
         if settings.test_mode:
-            demo_user_id = db.execute(select(func.min(User.id))).scalar_one_or_none()
+            demo_user_id = db.execute(select(func.min(V2User.id))).scalar_one_or_none()
             if demo_user_id is not None:
                 return int(demo_user_id)
 
-            demo_user = User(external_id="test_mode_demo", nickname="Test Mode Demo")
+            demo_user = V2User(cc_id="test_mode_demo", nickname="Test Mode Demo")
             db.add(demo_user)
             db.commit()
             db.refresh(demo_user)
@@ -75,11 +73,10 @@ def get_current_user_id(
     except (TypeError, ValueError) as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID") from exc
 
-    user_exists = db.execute(select(User.id).where(User.id == user_id)).scalar_one_or_none()
-    if user_exists is None:
-        v2_exists = db.execute(select(V2User.id).where(V2User.id == user_id)).scalar_one_or_none()
-        if v2_exists is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID")
+    # V2-only: V2User 테이블에서만 유효성 확인
+    v2_user = db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
+    if v2_user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="TOKEN_INVALID")
 
     return user_id
 
@@ -91,8 +88,8 @@ def get_current_admin_info(
 ) -> tuple[int, str]:
     """Return (admin_id, role) for admin APIs.
 
-    Admin 인증은 Bearer 토큰 + role(클레임 또는 AdminUserProfile.tags의 ROLE_*)가 모두 필요하다.
-    role이 없는 일반 유저 토큰에 ADMIN을 기본 부여하면 보안상 위험하므로 금지한다.
+    V2-only: JWT의 role 클레임 또는 V2User.role 필드에서 권한 확인.
+    V1 AdminUserProfile 참조 완전 제거.
     """
 
     if credentials is None or not credentials.credentials:
@@ -111,16 +108,13 @@ def get_current_admin_info(
 
     role_str = str(role).upper() if role else None
 
+    # V2-only: JWT에 role이 없으면 V2User.role에서 확인
     if not role_str:
-        from app.models.admin_user_profile import AdminUserProfile
+        v2_user = db.execute(select(V2User).where(V2User.id == admin_id)).scalar_one_or_none()
+        if v2_user and v2_user.role:
+            role_str = v2_user.role.value if hasattr(v2_user.role, 'value') else str(v2_user.role).upper()
 
-        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == admin_id).first()
-        if profile and isinstance(profile.tags, list):
-            tag_role = next((t for t in profile.tags if isinstance(t, str) and t.upper().startswith("ROLE_")), None)
-            if tag_role:
-                role_str = tag_role.replace("ROLE_", "", 1).upper()
-
-    if not role_str:
+    if not role_str or role_str == V2UserRole.USER.value:
         # RBAC_DENIED 이벤트 기록
         client_ip = request.client.host if request.client else None
         user_agent = request.headers.get("user-agent")
@@ -137,9 +131,9 @@ def get_current_admin_info(
 def get_current_user(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
-) -> User:
-    """Fetch the current user from the database."""
-    user = db.query(User).filter(User.id == user_id).first()
+) -> V2User:
+    """Fetch the current V2User from the database."""
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.feature import UserEventLog
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.ui_config_service import UiConfigService
@@ -68,7 +68,7 @@ class V2MissionService:
 
     def _is_new_user(self, user_id: int) -> bool:
         """Check if user is considered 'New User' (within 7 days of creation)."""
-        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = self.db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
         if not user:
             return False
         
@@ -148,7 +148,7 @@ class V2MissionService:
         return "NON_RESET"
 
     def get_streak_info(self, user_id: int) -> StreakInfoSchema:
-        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = self.db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
         if not user:
             return StreakInfoSchema(
                 current_streak=0,
@@ -196,7 +196,7 @@ class V2MissionService:
 
     def get_pending_streak_milestone(self, user_id: int) -> Optional[int]:
         """Verify if the user has an unclaimed milestone reward for the current streak."""
-        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = self.db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
         if not user or not user.play_streak:
             return None
 
@@ -255,7 +255,7 @@ class V2MissionService:
         if is_suspended:
             return {"success": False, "message": "BENEFITS_SUSPENDED"}
             
-        user = self.db.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        user = self.db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
         streak_days = int(user.play_streak)
         hit_date = user.last_play_date - timedelta(days=(streak_days - target_day))
         event_name = f"streak.reward_grant.{target_day}.{hit_date.isoformat()}"
@@ -343,7 +343,7 @@ class V2MissionService:
         if progress.is_claimed:
             return False, "ALREADY_CLAIMED", 0
 
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return False, "USER_NOT_FOUND", 0
 
@@ -524,12 +524,12 @@ class V2MissionService:
                 pass
         return updated_list
 
-    def sync_play_streak(self, user_id: int, now_tz: datetime) -> User:
+    def sync_play_streak(self, user_id: int, now_tz: datetime) -> V2User:
         play_day = self._operational_play_date(now_tz)
 
         user = (
-            self.db.query(User)
-            .filter(User.id == user_id)
+            self.db.query(V2User)
+            .filter(V2User.id == user_id)
             .with_for_update()
             .one()
         )
@@ -606,7 +606,7 @@ class V2MissionService:
     def _maybe_grant_streak_milestone_rewards(
         self,
         *,
-        user: User,
+        user: V2User,
         play_day: date,
         prev_streak_days: int,
         new_streak_days: int,

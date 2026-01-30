@@ -280,7 +280,6 @@ class V2LotteryGameService:
         except NotEnoughTokensError:
             raise
         except ValueError as e:
-            # Likely from ensure_legacy_user_id or similar
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
         if chosen.stock is not None:

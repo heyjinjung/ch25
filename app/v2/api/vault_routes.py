@@ -8,7 +8,6 @@ from app.api.deps import get_db
 from app.models.game_wallet import GameTokenType, UserGameWallet
 from app.v2.api.deps import get_current_user_id
 from app.v2.services.vault_service import V2VaultService
-from app.v2.services.user_service import V2UserService
 
 router = APIRouter(prefix="/vault", tags=["Vault"])
 service = V2VaultService()
@@ -36,8 +35,7 @@ def v2_withdraw(
     user_id: int = Depends(get_current_user_id)
 ):
     try:
-        legacy_user_id = V2UserService.ensure_legacy_user_id(db, user_id)
-        result = service.request_withdrawal(db=db, user_id=legacy_user_id, amount=int(payload.amount))
+        result = service.request_withdrawal(db=db, user_id=user_id, amount=int(payload.amount))
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
