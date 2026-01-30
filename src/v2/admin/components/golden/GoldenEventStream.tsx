@@ -13,11 +13,21 @@ interface GameEvent {
   sessionId?: string;
 }
 
-export const GoldenEventStream = () => {
+interface GoldenEventStreamProps {
+  onConnectionChange?: (connected: boolean) => void;
+  onEventsPerSecondChange?: (eventsPerSecond: number) => void;
+}
+
+export const GoldenEventStream = ({
+  onConnectionChange,
+  onEventsPerSecondChange,
+}: GoldenEventStreamProps) => {
   const [events, setEvents] = useState<GameEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const eventCountRef = useRef(0);
+  const rateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const connectWebSocket = () => {
     // Get WebSocket URL from environment
@@ -30,6 +40,7 @@ export const GoldenEventStream = () => {
 
       ws.onopen = () => {
         setIsConnected(true);
+        onConnectionChange?.(true);
         console.log("Golden Event Stream connected");
       };
 
@@ -57,6 +68,7 @@ export const GoldenEventStream = () => {
             };
 
             setEvents((prev) => [event, ...prev].slice(0, 100)); // Keep latest 100 events
+            eventCountRef.current += 1;
           }
 
           if (message.type === "error") {
@@ -71,11 +83,13 @@ export const GoldenEventStream = () => {
         console.error("WebSocket error:", error);
         console.error("Golden 이벤트 스트림 연결 오류");
         setIsConnected(false);
+        onConnectionChange?.(false);
       };
 
       ws.onclose = () => {
         console.log("WebSocket closed, will reconnect in 3s");
         setIsConnected(false);
+        onConnectionChange?.(false);
 
         // Reconnect after 3 seconds
         reconnectTimeoutRef.current = setTimeout(() => {
@@ -91,17 +105,27 @@ export const GoldenEventStream = () => {
   useEffect(() => {
     connectWebSocket();
 
+    rateIntervalRef.current = setInterval(() => {
+      const count = eventCountRef.current;
+      eventCountRef.current = 0;
+      onEventsPerSecondChange?.(count);
+    }, 1000);
+
     return () => {
       // Cleanup
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
 
+      if (rateIntervalRef.current) {
+        clearInterval(rateIntervalRef.current);
+      }
+
       if (wsRef.current) {
         wsRef.current.close();
       }
     };
-  }, []);
+  }, [onConnectionChange, onEventsPerSecondChange]);
 
   const getResultColor = (result: string) => {
     switch (result.toUpperCase()) {

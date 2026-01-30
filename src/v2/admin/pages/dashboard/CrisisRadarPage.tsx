@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { useOpsStatus } from "../../../hooks/useV2Admin";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { UserDetailDrawer } from "../users/UserDetailDrawer";
 import styles from "./CrisisRadarPage.module.css";
 
@@ -33,6 +33,11 @@ export default function CrisisRadarPage() {
   };
 
   const riskyUsers = status?.goldenRadar.riskUsers || [];
+  const avgChurnScore = useMemo(() => {
+    if (!riskyUsers.length) return null;
+    const sum = riskyUsers.reduce((acc, cur) => acc + cur.churnScore, 0);
+    return sum / riskyUsers.length;
+  }, [riskyUsers]);
 
   return (
     <div className="p-6 space-y-8 bg-obsidian-bg min-h-screen text-white">
@@ -49,7 +54,8 @@ export default function CrisisRadarPage() {
             위기 레이더(Crisis Radar)
           </h1>
           <p className="text-sm text-obsidian-muted mt-1">
-            AI가 실시간으로 분석한 이탈 위기 사용자 목록입니다. 즉각적인 개입이 필요한 시점입니다.
+            AI가 실시간으로 분석한 이탈 위기 사용자 목록입니다. 즉각적인 개입이
+            필요한 시점입니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -104,9 +110,13 @@ export default function CrisisRadarPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">82%</div>
+            <div className="text-3xl font-bold text-white">
+              {avgChurnScore === null
+                ? "-"
+                : `${Math.round(avgChurnScore * 100)}%`}
+            </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              레이더 탐지 정확도: 94%
+              레이더 탐지 정확도: 데이터 없음
             </p>
           </CardContent>
         </Card>
@@ -117,10 +127,8 @@ export default function CrisisRadarPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-indigo-400">24</div>
-            <p className="text-[10px] text-indigo-400/60 mt-1">
-              성공률: 75%
-            </p>
+            <div className="text-3xl font-bold text-indigo-400">-</div>
+            <p className="text-[10px] text-indigo-400/60 mt-1">데이터 없음</p>
           </CardContent>
         </Card>
       </div>
@@ -139,7 +147,11 @@ export default function CrisisRadarPage() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" className="h-9 border-obsidian-border">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 border-obsidian-border"
+            >
               <Filter className="w-4 h-4 mr-2" /> 필터
             </Button>
           </div>

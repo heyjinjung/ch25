@@ -141,26 +141,44 @@ jobs:
             done
 
             echo "[DUMP] Creating dump: ${DUMP_BASENAME}"
-            docker compose exec -T db sh -lc 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --routines --triggers "$MYSQL_DATABASE"' > "${DUMP_BASENAME}"
+            DUMP_OK=0
+            for USERPASS in "root:${MYSQL_ROOT_PASSWORD}" "${MYSQL_USER}:${MYSQL_PASSWORD}"; do
+              USERNAME="${USERPASS%%:*}"
+              PASS="${USERPASS#*:}"
+              if [ -z "$USERNAME" ] || [ -z "$PASS" ]; then
+                continue
+              fi
+              if docker compose exec -T db sh -lc "mysqldump -u\"${USERNAME}\" -p\"${PASS}\" --single-transaction --routines --triggers \"${MYSQL_DATABASE}\"" > "${DUMP_BASENAME}"; then
+                DUMP_OK=1
+                break
+              else
+                echo "[DUMP] failed for user=${USERNAME}" >&2
+              fi
+            done
 
-            if [ ! -s "${DUMP_BASENAME}" ]; then
-              echo "[DUMP] Dump file is empty (0 bytes)" >&2
-              ls -lh "${DUMP_BASENAME}" || true
-              exit 1
-            fi
-
-            if command -v gzip >/dev/null 2>&1; then
-              gzip -f "${DUMP_BASENAME}"
-              export DUMP_PATH="${DUMP_BASENAME}.gz"
+            if [ "$DUMP_OK" -ne 1 ]; then
+              echo "[DUMP] dump failed; continue without backup" >&2
+              rm -f "${DUMP_BASENAME}" || true
             else
-              export DUMP_PATH="${DUMP_BASENAME}"
-            fi
+              if [ ! -s "${DUMP_BASENAME}" ]; then
+                echo "[DUMP] Dump file is empty (0 bytes)" >&2
+                ls -lh "${DUMP_BASENAME}" || true
+                exit 1
+              fi
 
-            ls -lh "${DUMP_PATH}"
-            if command -v sha256sum >/dev/null 2>&1; then
-              sha256sum "${DUMP_PATH}" | tee -a backups/db/SHA256SUMS.txt
-            else
-              echo "[DUMP] sha256sum not found; skipped" >&2
+              if command -v gzip >/dev/null 2>&1; then
+                gzip -f "${DUMP_BASENAME}"
+                export DUMP_PATH="${DUMP_BASENAME}.gz"
+              else
+                export DUMP_PATH="${DUMP_BASENAME}"
+              fi
+
+              ls -lh "${DUMP_PATH}"
+              if command -v sha256sum >/dev/null 2>&1; then
+                sha256sum "${DUMP_PATH}" | tee -a backups/db/SHA256SUMS.txt
+              else
+                echo "[DUMP] sha256sum not found; skipped" >&2
+              fi
             fi
 
             # 이미지 pull (최대 3회 재시도)

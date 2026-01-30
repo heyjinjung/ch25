@@ -59,6 +59,23 @@ export default function AnalyticsDashboard() {
 
   const formatPercent = (val: number) => `${(val * 100).toFixed(1)}%`;
   const formatCurrency = (val: number) => `₩${val.toLocaleString()}`;
+  const formatCurrencyMaybe = (val?: number) =>
+    typeof val === "number" ? formatCurrency(val) : "-";
+  const formatCountMaybe = (val?: number) =>
+    typeof val === "number" ? val.toLocaleString() : "-";
+
+  const todayRevenue =
+    dailyFinance?.revenue?.total_deposits ?? revenueSummary?.today_revenue;
+  const todayDepositCount = dailyFinance?.revenue?.deposit_count;
+  const todayExpenses =
+    dailyFinance?.spending?.total_withdrawals ?? revenueSummary?.today_expenses;
+  const pendingWithdrawals = dailyFinance?.spending?.pending_withdrawals;
+  const netIncome =
+    typeof dailyFinance?.net_income === "number"
+      ? dailyFinance.net_income
+      : typeof todayRevenue === "number" && typeof todayExpenses === "number"
+        ? todayRevenue - todayExpenses
+        : undefined;
 
   return (
     <div className="space-y-6 min-h-screen p-6 text-white pb-20">
@@ -89,14 +106,10 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-400">
-              {formatCurrency(
-                dailyFinance?.revenue?.total_deposits ??
-                  revenueSummary?.today_revenue ??
-                  0,
-              )}
+              {formatCurrencyMaybe(todayRevenue)}
             </div>
             <p className="text-xs text-zinc-500 mt-1">
-              입금 {dailyFinance?.revenue?.deposit_count ?? 0}건
+              입금 {formatCountMaybe(todayDepositCount)}건
             </p>
           </CardContent>
         </Card>
@@ -110,15 +123,10 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-rose-400">
-              {formatCurrency(
-                dailyFinance?.spending?.total_withdrawals ??
-                  revenueSummary?.today_expenses ??
-                  0,
-              )}
+              {formatCurrencyMaybe(todayExpenses)}
             </div>
             <p className="text-xs text-zinc-500 mt-1">
-              대기{" "}
-              {formatCurrency(dailyFinance?.spending?.pending_withdrawals ?? 0)}
+              대기 {formatCurrencyMaybe(pendingWithdrawals)}
             </p>
           </CardContent>
         </Card>
@@ -128,7 +136,7 @@ export default function AnalyticsDashboard() {
             <CardTitle className="text-sm font-medium text-zinc-400">
               순수익
             </CardTitle>
-            {(dailyFinance?.net_income ?? 0) >= 0 ? (
+            (netIncome ?? 0) >= 0 ? (
               <TrendingUp className="h-4 w-4 text-emerald-500" />
             ) : (
               <TrendingDown className="h-4 w-4 text-rose-500" />
@@ -136,9 +144,9 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${(dailyFinance?.net_income ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+              className={`text-2xl font-bold ${(netIncome ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}
             >
-              {formatCurrency(dailyFinance?.net_income ?? 0)}
+              {formatCurrencyMaybe(netIncome)}
             </div>
             <p className="text-xs text-zinc-500 mt-1">입금 - 출금</p>
           </CardContent>
