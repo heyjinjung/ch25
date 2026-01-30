@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CheckCircle2, Search, Wallet, TrendingUp, ArrowUpRight } from "lucide-react";
+import { CheckCircle2, Search, Wallet, TrendingUp, ArrowUpRight, BarChart3, AlertTriangle, Users } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -36,6 +36,13 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { Textarea } from "../../../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 import {
   useAdminWithdrawals,
@@ -45,6 +52,11 @@ import {
   useForceEditVault,
   useVaultStats,
 } from "../../../hooks/useV2Admin";
+import {
+  useAdminVaultAggregate,
+  useAdminVaultSpendLimits,
+  useAdminVaultSpendLimitSummary,
+} from "../../../hooks/useAdminGame";
 import { AdminWithdrawalDto, UserVaultDto } from "../../../api/adminApi";
 
 export default function VaultControlPage() {
@@ -72,6 +84,15 @@ export default function VaultControlPage() {
 
   // Vault Users State
   const { data: vaultUsers, isLoading: isLoadingUsers } = useVaultUsers();
+
+  // Vault Aggregate & Spend Limits
+  const { data: vaultAggregate, isLoading: isLoadingAggregate } = useAdminVaultAggregate();
+  const [minUsageRate, setMinUsageRate] = useState(0);
+  const { data: spendLimits, isLoading: isLoadingSpendLimits } = useAdminVaultSpendLimits({
+    min_usage_rate: minUsageRate,
+    limit: 50,
+  });
+  const { data: spendLimitSummary } = useAdminVaultSpendLimitSummary();
 
   // Handlers
   const handleApprove = async (withdrawal: AdminWithdrawalDto) => {
@@ -209,6 +230,18 @@ export default function VaultControlPage() {
             className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
             금고 보유 유저
+          </TabsTrigger>
+          <TabsTrigger
+            value="aggregate"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+          >
+            금고 집계
+          </TabsTrigger>
+          <TabsTrigger
+            value="spend-limits"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+          >
+            지출 한도
           </TabsTrigger>
         </TabsList>
 

@@ -348,6 +348,109 @@ def verify_login_missions(
     )
 
 
+# ─────────────────────────────────────────────────────────────────
+# 미션 강제 리셋 (5.6)
+# ─────────────────────────────────────────────────────────────────
+
+class MissionResetRequest(BaseModel):
+    """미션 리셋 요청"""
+    mission_id: Optional[int] = None  # None이면 전체 미션
+    reason: str
+
+
+class MissionResetResponse(BaseModel):
+    """미션 리셋 응답"""
+    user_id: int
+    reset_count: int
+    missions_reset: List[int]
+
+
+@router.post("/game/missions/reset-user/{user_id}", response_model=MissionResetResponse)
+def reset_user_missions(
+    user_id: int,
+    payload: MissionResetRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    미션 강제 리셋
+
+    특정 사용자의 미션 상태를 초기화합니다.
+    - mission_id가 지정되면 해당 미션만 리셋
+    - mission_id가 None이면 모든 미션 리셋
+    - 감시 로그에 기록됨
+    """
+    admin_id, admin_role = admin_info
+
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+
+    # 유저 존재 확인
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # 미션 진행 상태 조회
+    query = db.query(UserMissionProgress).filter(UserMissionProgress.user_id == user_id)
+
+    if payload.mission_id:
+        query = query.filter(UserMissionProgress.mission_id == payload.mission_id)
+
+    progresses = query.all()
+
+    if not progresses:
+        raise HTTPException(status_code=404, detail="NO_MISSION_PROGRESS_FOUND")
+
+    # 리셋 수행
+    reset_mission_ids = []
+    for progress in progresses:
+        before_state = {
+            "progress": progress.progress,
+            "is_completed": progress.is_completed,
+            "is_claimed": progress.is_claimed,
+        }
+
+        progress.progress = 0
+        progress.is_completed = False
+        progress.is_claimed = False
+        progress.reset_date = None
+
+        reset_mission_ids.append(progress.mission_id)
+
+        # 개별 미션 리셋 로그
+        V2AdminAuditService.log(
+            db,
+            admin_id,
+            "MISSION_RESET",
+            "MISSION",
+            f"user:{user_id}:mission:{progress.mission_id}",
+            before=before_state,
+            after={"progress": 0, "is_completed": False, "is_claimed": False, "reason": payload.reason},
+        )
+
+    db.commit()
+
+    # 전체 리셋 로그
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "MISSION_BULK_RESET",
+        "MISSION",
+        f"user:{user_id}",
+        after={
+            "missions_reset": reset_mission_ids,
+            "count": len(reset_mission_ids),
+            "reason": payload.reason,
+        },
+    )
+
+    return MissionResetResponse(
+        user_id=user_id,
+        reset_count=len(reset_mission_ids),
+        missions_reset=reset_mission_ids,
+    )
+
+
 @router.get("/game/missions/stats", response_model=MissionStatsResponse)
 def get_mission_stats(
     db: Session = Depends(get_db),

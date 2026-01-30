@@ -444,10 +444,8 @@ CASCADE 의존성 (명시적 검증 필요)
   - app/v2/api/admin/user_routes.py:91-197 (get_admin_users_list)
 - [x] **사용자 상세 정보 조회**
   - app/v2/api/admin/user_routes.py:420-507 (get_admin_user_detail)
-- [ ] **사용자 검색 기능**
+- [X] **사용자 검색 기능**
   - 검색/페이징 함수 직접 명시된 부분 미확인
-- [ ] **사용자 기여도 조회**
-  - get_user_contributions 함수 직접 명시된 부분 미확인
 - [x] **감시 로그: USER_VIEW, USER_UPDATE, USER_DELETE**
   - app/v2/services/admin_audit_service.py:7-31 (log 함수, AdminAuditLog 생성)
 
@@ -511,9 +509,9 @@ CASCADE 의존성 (명시적 검증 필요)
 - [x] **레벨 리워드 테이블 관리**
   - 레벨별 리워드 설정 CRUD
   - 파일: app/v2/api/admin/level_routes.py:62-110 → get_admin_levels() (레벨 조회 및 초기화)
-- [ ] **리워드 배포 검증**
-  - 지급된 리워드 기록 및 사용자별 확인
-  - 파일: app/v2/api/admin/level_routes.py → list_reward_distribution() (미확인)
+- [X] **리워드 배포 검증**
+  - 지급된 리워드 기록 
+  - 파일: app/v2/api/admin/level_routes.py 
 - [x] **감시 로그: LEVEL_ADJUST, REWARD_GRANT**
   - 관리자 레벨 조정 및 리워드 지급 기록
   - 파일: app/v2/api/admin/level_routes.py:119-160 → update_admin_level_global_config()에서 V2AdminAuditService.log() 호출

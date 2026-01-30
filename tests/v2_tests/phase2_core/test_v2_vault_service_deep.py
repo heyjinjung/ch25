@@ -135,7 +135,8 @@ def test_vault_info_aggregation(db_session: Session) -> None:
     user_id = 1
     
     # Mock some data for info
-    delta = ExternalRankingDailyDepositDelta(user_id=1, kst_date=date.today(), deposit_delta=10000)
+    op_date = service._operational_date_kst(datetime.utcnow())
+    delta = ExternalRankingDailyDepositDelta(user_id=1, kst_date=op_date, deposit_delta=10000)
     db_session.add(delta)
     db_session.commit()
     

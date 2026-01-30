@@ -114,3 +114,92 @@ Marketing: ChannelPerformanceDto, MarketingEfficiencyResponse
 test_admin_analytics.py - 37개 테스트 모두 통과
 API 등록
 init.py에 analytics_router 등록 완료
+
+새로 추가된 어드민 기능
+1. 활성 유저 통계 - ops_routes.py
+엔드포인트	기능
+GET /admin/ops/active-users	DAU, WAU, MAU 통계 + 일별 추이
+2. 일간 수익/지출 계산 - ops_routes.py
+엔드포인트	기능
+GET /admin/ops/daily-revenue	일간 CC입금액 (총액, 건수, 유저수)
+GET /admin/ops/daily-spending	일간 지출 (승인된 출금, 대기 출금)
+GET /admin/ops/daily-finance	수익+지출 종합 (순수익 포함)
+3. 전체 금고 잔액 집계 - vault_routes.py (기존)
+엔드포인트	기능
+GET /admin/vault/aggregate	전체 유저 잔액 합계, 평균, 중간값, 최대값
+4. 지출 한도 추적 - vault_routes.py (기존)
+엔드포인트	기능
+GET /admin/vault/spend-limits	유저별 지출 현황
+GET /admin/vault/spend-limits/summary	한도 도달율 요약
+5. 미션 강제 리셋 - mission_routes.py
+엔드포인트	기능
+POST /admin/game/missions/reset-user/{user_id}	특정 유저 미션 초기화 (감시 로그 기록)
+6. 감시 로그 - ops_routes.py
+엔드포인트	기능
+GET /admin/ops/audit-logs	NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE 등 조회
+POST /admin/ops/log-action	어드민 액션 로그 기록
+
+
+작업이 완료되었습니다. 다음은 구현한 내용 요약입니다:
+
+구현 완료 항목
+1. API 함수 추가 (adminApi.ts)
+Streak & Milestone API:
+
+getAdminUserStreak(userId) - 유저 스트릭 조회
+resetAdminUserStreak(userId) - 유저 스트릭 리셋
+setAdminUserStreakCount(userId, payload) - 스트릭 일수 직접 설정
+getAdminUserMilestoneProgress(userId) - 마일스톤 진행 현황 조회
+forceGrantAdminMilestone(userId, payload) - 마일스톤 보상 강제 지급
+distributeAdminMilestoneReward(payload) - 다수 유저 마일스톤 보상 일괄 배포
+Mission Stats & Validation API:
+
+resetAdminUserMissions(userId, payload) - 유저 미션 강제 리셋
+verifyAdminLoginMissions(params) - 로그인 미션 검증
+getAdminMissionStats() - 미션 통계 조회
+Active User Stats API:
+
+getAdminActiveUserStats(days) - 활성 유저 통계 (DAU/WAU/MAU)
+2. React Hooks 추가 (useAdminGame.ts)
+useAdminUserStreak, useAdminResetUserStreak, useAdminSetUserStreakCount
+useAdminUserMilestoneProgress, useAdminForceGrantMilestone, useAdminDistributeMilestoneReward
+useAdminResetUserMissions, useAdminLoginMissionVerify, useAdminMissionStats
+useAdminActiveUserStats
+3. UI 구현 (MissionManagerPage.tsx)
+스트릭 & 마일스톤 관리 섹션:
+
+유저 스트릭 조회 (일수, HOT/LEGEND 상태, 다음 마일스톤, 배율)
+스트릭 일수 직접 설정
+스트릭 리셋
+마일스톤 진행 현황 표시 (달성/수령 상태)
+마일스톤 보상 강제 지급
+미션 통계 섹션:
+
+전체/활성 미션 수
+미션별 완료 수, 클레임 수, 완료율
+로그인 미션 검증 섹션:
+
+오늘 로그인 유저 수, 완료/미완료 수, 완료율
+유저별 로그인 미션 완료 상태 목록
+활성 유저 통계 섹션:
+
+DAU/WAU/MAU 표시
+전일/전주 대비 변화율
+신규 가입자 (오늘/이번주)
+7일 DAU 추이 차트
+유저 미션 일괄 리셋 섹션:
+
+특정 유저의 전체 미션 또는 특정 미션 리셋 - 어드민 유아이스타일 미적용 
+BE 엔드포인트 매핑
+기능	BE 엔드포인트
+reset_user_missions	POST /api/v2/admin/game/missions/reset-user/{user_id}
+get_user_missions_admin	GET /api/v2/admin/users/{user_id}/missions (기존)
+reset_user_streak	POST /api/v2/admin/streak-rewards/users/{user_id}/reset
+set_streak_count	POST /api/v2/admin/streak-rewards/users/{user_id}/set-count
+get_user_streak_admin	GET /api/v2/admin/streak-rewards/users/{user_id}
+get_milestone_progress	GET /api/v2/admin/streak-rewards/users/{user_id}/milestone-progress
+force_grant_milestone	POST /api/v2/admin/streak-rewards/users/{user_id}/force-grant-milestone
+distribute_milestone_reward	POST /api/v2/admin/streak-rewards/distribute-milestone-reward
+로그인 미션 검증	GET /api/v2/admin/game/missions/login-verify
+미션 통계	GET /api/v2/admin/game/missions/stats
+활성 유저 통계	GET /api/v2/admin/ops/active-users

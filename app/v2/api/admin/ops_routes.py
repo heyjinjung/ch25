@@ -1,14 +1,19 @@
-from datetime import datetime
-from typing import List
+from datetime import datetime, date, timedelta
+from typing import List, Optional
 import json
 import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
+from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.v2.services import V2AdminAuditService
 from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 from app.v2.schemas.v2_admin_dashboard import DashboardMetricsResponse, MetricValue
 from app.v2.schemas.v2_admin_feature_schedule import (
@@ -398,3 +403,377 @@ async def ws_golden_events(websocket: WebSocket):
             await websocket.close()
         except:  # noqa: E722
             pass
+
+
+# ─────────────────────────────────────────────────────────────────
+# Active User Statistics (활성 유저 통계)
+# ─────────────────────────────────────────────────────────────────
+
+class ActiveUserStatsDto(BaseModel):
+    """활성 유저 통계"""
+    dau: int  # Daily Active Users
+    wau: int  # Weekly Active Users
+    mau: int  # Monthly Active Users
+    dau_change: float  # 전일 대비 변화율
+    wau_change: float  # 전주 대비 변화율
+    new_users_today: int
+    new_users_this_week: int
+    avg_session_count: float
+
+
+class ActiveUserTrendDto(BaseModel):
+    """활성 유저 추이"""
+    date: str
+    dau: int
+    new_users: int
+
+
+class ActiveUserStatsResponse(BaseModel):
+    """활성 유저 통계 응답"""
+    stats: ActiveUserStatsDto
+    trend: List[ActiveUserTrendDto]
+
+
+@router.get("/ops/active-users", response_model=ActiveUserStatsResponse)
+def get_active_user_stats(
+    days: int = Query(7, ge=1, le=30, description="추이 기간 (일)"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    활성 유저 통계
+
+    - DAU (Daily Active Users)
+    - WAU (Weekly Active Users)
+    - MAU (Monthly Active Users)
+    - 신규 가입자 수
+    - 일별 추이
+    """
+    from zoneinfo import ZoneInfo
+
+    tz = ZoneInfo("Asia/Seoul")
+    now = datetime.now(tz)
+    today = now.date()
+
+    today_start = datetime.combine(today, datetime.min.time())
+    week_start = datetime.combine(today - timedelta(days=7), datetime.min.time())
+    month_start = datetime.combine(today - timedelta(days=30), datetime.min.time())
+    yesterday_start = datetime.combine(today - timedelta(days=1), datetime.min.time())
+    prev_week_start = datetime.combine(today - timedelta(days=14), datetime.min.time())
+
+    # DAU
+    dau = db.query(func.count(User.id)).filter(
+        User.last_login_at >= today_start,
+    ).scalar() or 0
+
+    # WAU
+    wau = db.query(func.count(User.id)).filter(
+        User.last_login_at >= week_start,
+    ).scalar() or 0
+
+    # MAU
+    mau = db.query(func.count(User.id)).filter(
+        User.last_login_at >= month_start,
+    ).scalar() or 0
+
+    # 전일 DAU
+    yesterday_dau = db.query(func.count(User.id)).filter(
+        User.last_login_at >= yesterday_start,
+        User.last_login_at < today_start,
+    ).scalar() or 0
+
+    # 전주 WAU
+    prev_wau = db.query(func.count(User.id)).filter(
+        User.last_login_at >= prev_week_start,
+        User.last_login_at < week_start,
+    ).scalar() or 0
+
+    # 변화율 계산
+    dau_change = ((dau - yesterday_dau) / yesterday_dau) if yesterday_dau > 0 else 0.0
+    wau_change = ((wau - prev_wau) / prev_wau) if prev_wau > 0 else 0.0
+
+    # 신규 유저
+    new_users_today = db.query(func.count(User.id)).filter(
+        User.created_at >= today_start,
+    ).scalar() or 0
+
+    new_users_this_week = db.query(func.count(User.id)).filter(
+        User.created_at >= week_start,
+    ).scalar() or 0
+
+    # 추이 데이터
+    trend = []
+    for i in range(days):
+        target_date = today - timedelta(days=i)
+        target_start = datetime.combine(target_date, datetime.min.time())
+        target_end = datetime.combine(target_date + timedelta(days=1), datetime.min.time())
+
+        day_dau = db.query(func.count(User.id)).filter(
+            User.last_login_at >= target_start,
+            User.last_login_at < target_end,
+        ).scalar() or 0
+
+        day_new = db.query(func.count(User.id)).filter(
+            User.created_at >= target_start,
+            User.created_at < target_end,
+        ).scalar() or 0
+
+        trend.append(ActiveUserTrendDto(
+            date=target_date.isoformat(),
+            dau=day_dau,
+            new_users=day_new,
+        ))
+
+    trend.reverse()
+
+    return ActiveUserStatsResponse(
+        stats=ActiveUserStatsDto(
+            dau=dau,
+            wau=wau,
+            mau=mau,
+            dau_change=round(dau_change, 4),
+            wau_change=round(wau_change, 4),
+            new_users_today=new_users_today,
+            new_users_this_week=new_users_this_week,
+            avg_session_count=0.0,
+        ),
+        trend=trend,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────
+# Daily Revenue & Spending (일간 수익/지출 계산)
+# ─────────────────────────────────────────────────────────────────
+
+class DailyRevenueStatsDto(BaseModel):
+    """일간 수익 통계"""
+    date: str
+    total_deposits: int  # 총 입금액
+    deposit_count: int  # 입금 건수
+    unique_depositors: int  # 입금한 유저 수
+
+
+class DailySpendingStatsDto(BaseModel):
+    """일간 지출 통계"""
+    date: str
+    total_withdrawals: int  # 총 출금액 (승인된 것만)
+    withdrawal_count: int  # 출금 건수
+    pending_withdrawals: int  # 대기 중인 출금액
+
+
+class DailyFinanceResponse(BaseModel):
+    """일간 재무 통계 응답"""
+    date: str
+    revenue: DailyRevenueStatsDto
+    spending: DailySpendingStatsDto
+    net_income: int  # 순수익 (입금 - 출금)
+
+
+@router.get("/ops/daily-revenue", response_model=DailyRevenueStatsDto)
+def get_daily_revenue(
+    target_date: str = Query(None, description="날짜 (YYYY-MM-DD), 기본값: 오늘"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    일간 CC입금액 확인 (daily_revenue)
+
+    - 해당 날짜의 총 입금액
+    - 입금 건수
+    - 입금한 유저 수
+    """
+    if target_date:
+        query_date = date.fromisoformat(target_date)
+    else:
+        from zoneinfo import ZoneInfo
+        query_date = datetime.now(ZoneInfo("Asia/Seoul")).date()
+
+    stats = db.query(
+        func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0).label("total"),
+        func.count(ExternalRankingDailyDepositDelta.id).label("count"),
+        func.count(func.distinct(ExternalRankingDailyDepositDelta.user_id)).label("users"),
+    ).filter(
+        ExternalRankingDailyDepositDelta.kst_date == query_date,
+        ExternalRankingDailyDepositDelta.deposit_delta > 0,
+    ).first()
+
+    return DailyRevenueStatsDto(
+        date=query_date.isoformat(),
+        total_deposits=int(stats.total or 0),
+        deposit_count=int(stats.count or 0),
+        unique_depositors=int(stats.users or 0),
+    )
+
+
+@router.get("/ops/daily-spending", response_model=DailySpendingStatsDto)
+def get_daily_spending(
+    target_date: str = Query(None, description="날짜 (YYYY-MM-DD), 기본값: 오늘"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    일간 지출(출금) 확인 (daily_spending)
+
+    - 해당 날짜의 승인된 출금액
+    - 출금 건수
+    - 대기 중인 출금액
+    """
+    if target_date:
+        query_date = date.fromisoformat(target_date)
+    else:
+        from zoneinfo import ZoneInfo
+        query_date = datetime.now(ZoneInfo("Asia/Seoul")).date()
+
+    target_start = datetime.combine(query_date, datetime.min.time())
+    target_end = datetime.combine(query_date + timedelta(days=1), datetime.min.time())
+
+    # 승인된 출금
+    approved_stats = db.query(
+        func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0).label("total"),
+        func.count(VaultWithdrawalRequest.id).label("count"),
+    ).filter(
+        VaultWithdrawalRequest.created_at >= target_start,
+        VaultWithdrawalRequest.created_at < target_end,
+        VaultWithdrawalRequest.status == "APPROVED",
+    ).first()
+
+    # 대기 중인 출금
+    pending_total = db.query(
+        func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0)
+    ).filter(
+        VaultWithdrawalRequest.created_at >= target_start,
+        VaultWithdrawalRequest.created_at < target_end,
+        VaultWithdrawalRequest.status == "PENDING",
+    ).scalar() or 0
+
+    return DailySpendingStatsDto(
+        date=query_date.isoformat(),
+        total_withdrawals=int(approved_stats.total or 0),
+        withdrawal_count=int(approved_stats.count or 0),
+        pending_withdrawals=int(pending_total),
+    )
+
+
+@router.get("/ops/daily-finance", response_model=DailyFinanceResponse)
+def get_daily_finance(
+    target_date: str = Query(None, description="날짜 (YYYY-MM-DD), 기본값: 오늘"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    일간 재무 종합 (수익 + 지출)
+
+    - 일간 입금액 (수익)
+    - 일간 출금액 (지출)
+    - 순수익 (입금 - 출금)
+    """
+    revenue = get_daily_revenue(target_date, db, admin_info)
+    spending = get_daily_spending(target_date, db, admin_info)
+
+    return DailyFinanceResponse(
+        date=revenue.date,
+        revenue=revenue,
+        spending=spending,
+        net_income=revenue.total_deposits - spending.total_withdrawals,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────
+# Audit Log Types (감시 로그)
+# ─────────────────────────────────────────────────────────────────
+
+class AuditLogDto(BaseModel):
+    """감사 로그"""
+    id: int
+    admin_id: int
+    action: str
+    category: str
+    target_id: Optional[str]
+    before_data: Optional[dict]
+    after_data: Optional[dict]
+    created_at: datetime
+
+
+class AuditLogResponse(BaseModel):
+    """감사 로그 응답"""
+    total: int
+    logs: List[AuditLogDto]
+
+
+@router.get("/ops/audit-logs", response_model=AuditLogResponse)
+def get_audit_logs(
+    action_filter: str = Query(None, description="액션 필터 (NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE 등)"),
+    category_filter: str = Query(None, description="카테고리 필터"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    감시 로그 조회
+
+    - NUDGE_SEND: 넛지 발송 기록
+    - ROI_CALCULATE: ROI 계산 기록
+    - ROLLBACK_EXECUTE: 롤백 실행 기록
+    - 기타 골든 개입 기록
+    """
+    from app.v2.models.v2_admin_audit_log import V2AdminAuditLog
+
+    query = db.query(V2AdminAuditLog)
+
+    if action_filter:
+        query = query.filter(V2AdminAuditLog.action == action_filter)
+    if category_filter:
+        query = query.filter(V2AdminAuditLog.category == category_filter)
+
+    total = query.count()
+
+    logs = query.order_by(V2AdminAuditLog.created_at.desc()).offset(offset).limit(limit).all()
+
+    return AuditLogResponse(
+        total=total,
+        logs=[
+            AuditLogDto(
+                id=log.id,
+                admin_id=log.admin_id,
+                action=log.action,
+                category=log.category,
+                target_id=log.target_id,
+                before_data=log.before_data,
+                after_data=log.after_data,
+                created_at=log.created_at,
+            )
+            for log in logs
+        ],
+    )
+
+
+@router.post("/ops/log-action")
+def log_admin_action(
+    action: str = Query(..., description="액션 타입 (NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE)"),
+    category: str = Query("GOLDEN", description="카테고리"),
+    target_id: str = Query(None, description="대상 ID"),
+    metadata: dict = None,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    어드민 액션 로그 기록
+
+    - NUDGE_SEND: 넛지 발송 시
+    - ROI_CALCULATE: ROI 계산 시
+    - ROLLBACK_EXECUTE: 롤백 실행 시
+    """
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        action,
+        category,
+        target_id,
+        after=metadata,
+    )
+
+    return {"success": True, "action": action}

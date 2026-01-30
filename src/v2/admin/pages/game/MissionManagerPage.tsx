@@ -9,6 +9,18 @@ import {
   useAdminUpdateUserMissionProgress,
   useAdminResetUserMissionProgress,
   useAdminClaimUserMissionReward,
+  // Streak & Milestone hooks
+  useAdminUserStreak,
+  useAdminResetUserStreak,
+  useAdminSetUserStreakCount,
+  useAdminUserMilestoneProgress,
+  useAdminForceGrantMilestone,
+  // Mission stats & validation hooks
+  useAdminResetUserMissions,
+  useAdminLoginMissionVerify,
+  useAdminMissionStats,
+  // Active user stats hooks
+  useAdminActiveUserStats,
 } from "../../../hooks/useAdminGame";
 import {
   resolveAdminUserIdentifier,
@@ -40,7 +52,7 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
-import { Ticket, Gift, Coins, Plus, Trash2, Edit2 } from "lucide-react";
+import { Ticket, Gift, Coins, Plus, Trash2, Edit2, Users, TrendingUp, Award, RotateCcw, Flame, Target, BarChart3 } from "lucide-react";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
 /**
@@ -353,6 +365,30 @@ export default function MissionManagerPage() {
   const [progressEdits, setProgressEdits] = useState<Record<number, string>>(
     {},
   );
+
+  // Streak & Milestone states
+  const [streakUserIdInput, setStreakUserIdInput] = useState("");
+  const [streakUserId, setStreakUserId] = useState<number | null>(null);
+  const [streakEditValue, setStreakEditValue] = useState("");
+  const [milestoneDay, setMilestoneDay] = useState(3);
+  const [milestoneReason, setMilestoneReason] = useState("");
+
+  // Mission reset states
+  const [missionResetReason, setMissionResetReason] = useState("");
+  const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<number | null>(null);
+
+  // Streak hooks
+  const { data: streakData, isLoading: isStreakLoading } = useAdminUserStreak(streakUserId ?? undefined);
+  const { data: milestoneData, isLoading: isMilestoneLoading } = useAdminUserMilestoneProgress(streakUserId ?? undefined);
+  const resetStreakMutation = useAdminResetUserStreak();
+  const setStreakCountMutation = useAdminSetUserStreakCount();
+  const forceGrantMilestoneMutation = useAdminForceGrantMilestone();
+  const resetUserMissionsMutation = useAdminResetUserMissions();
+
+  // Stats hooks
+  const { data: missionStats, isLoading: isMissionStatsLoading } = useAdminMissionStats();
+  const { data: loginVerifyData, isLoading: isLoginVerifyLoading } = useAdminLoginMissionVerify({ limit: 20 });
+  const { data: activeUserStats, isLoading: isActiveUserStatsLoading } = useAdminActiveUserStats(7);
 
   const [activeTab, setActiveTab] = useState("DAILY");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1072,6 +1108,425 @@ export default function MissionManagerPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          스트릭 & 마일스톤 관리
+      ───────────────────────────────────────────────────────────────── */}
+      <Card className="bg-[#18181B] border-white/5">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-orange-500" />
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-100">스트릭 & 마일스톤 관리</h2>
+              <p className="text-xs text-zinc-500">유저 스트릭 조회/수정, 마일스톤 보상 강제 지급</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={streakUserIdInput}
+              onChange={(e) => setStreakUserIdInput(e.target.value)}
+              placeholder="유저 ID"
+              className="w-32 bg-black/50 border-white/10"
+            />
+            <Button
+              size="sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              onClick={() => {
+                const parsed = parseInt(streakUserIdInput, 10);
+                if (parsed > 0) setStreakUserId(parsed);
+              }}
+            >
+              조회
+            </Button>
+            {streakUserId && (
+              <Badge variant="outline" className="bg-white/5 text-zinc-300 border-white/10">
+                USER #{streakUserId}
+              </Badge>
+            )}
+          </div>
+
+          {isStreakLoading && <div className="text-sm text-zinc-500">로딩 중...</div>}
+
+          {streakData && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-black/30 border border-white/5">
+              <div>
+                <div className="text-xs text-zinc-500">스트릭 일수</div>
+                <div className="text-2xl font-bold text-orange-400">{streakData.streak_days}일</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500">상태</div>
+                <div className="flex gap-2 mt-1">
+                  {streakData.is_hot && <Badge className="bg-red-500/20 text-red-400">HOT</Badge>}
+                  {streakData.is_legend && <Badge className="bg-purple-500/20 text-purple-400">LEGEND</Badge>}
+                  {!streakData.is_hot && !streakData.is_legend && <Badge className="bg-zinc-500/20 text-zinc-400">일반</Badge>}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500">다음 마일스톤</div>
+                <div className="text-lg font-semibold text-zinc-200">{streakData.next_milestone ?? "-"}일</div>
+              </div>
+              <div>
+                <div className="text-xs text-zinc-500">배율</div>
+                <div className="text-lg font-semibold text-emerald-400">x{streakData.current_multiplier}</div>
+              </div>
+            </div>
+          )}
+
+          {streakUserId && (
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              <Input
+                value={streakEditValue}
+                onChange={(e) => setStreakEditValue(e.target.value)}
+                placeholder="스트릭 일수"
+                className="w-28 bg-black/50 border-white/10"
+                type="number"
+              />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  const val = parseInt(streakEditValue, 10);
+                  if (val >= 0 && streakUserId) {
+                    setStreakCountMutation.mutate({ userId: streakUserId, payload: { streak_days: val } });
+                  }
+                }}
+                disabled={setStreakCountMutation.isPending}
+              >
+                스트릭 설정
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="text-red-400 hover:text-red-300"
+                onClick={() => {
+                  if (streakUserId && confirm("스트릭을 0으로 초기화하시겠습니까?")) {
+                    resetStreakMutation.mutate(streakUserId);
+                  }
+                }}
+                disabled={resetStreakMutation.isPending}
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                스트릭 리셋
+              </Button>
+            </div>
+          )}
+
+          {/* 마일스톤 진행 현황 */}
+          {isMilestoneLoading && <div className="text-sm text-zinc-500">마일스톤 로딩 중...</div>}
+          {milestoneData && (
+            <div className="space-y-2 pt-2">
+              <div className="text-sm font-semibold text-zinc-300">마일스톤 진행 현황</div>
+              <div className="flex flex-wrap gap-2">
+                {milestoneData.milestones.map((m) => (
+                  <div
+                    key={m.day}
+                    className={`px-3 py-2 rounded-lg border ${
+                      m.claimed
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                        : m.achieved
+                          ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                          : "bg-zinc-800/50 border-white/5 text-zinc-500"
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{m.day}일</div>
+                    <div className="text-[10px]">
+                      {m.claimed ? "수령완료" : m.achieved ? "달성" : "미달성"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 마일스톤 강제 지급 */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <Select value={String(milestoneDay)} onValueChange={(v) => setMilestoneDay(Number(v))}>
+                  <SelectTrigger className="w-24 bg-black/50 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                    {[3, 7, 14, 30].map((d) => (
+                      <SelectItem key={d} value={String(d)}>{d}일</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={milestoneReason}
+                  onChange={(e) => setMilestoneReason(e.target.value)}
+                  placeholder="지급 사유"
+                  className="w-40 bg-black/50 border-white/10"
+                />
+                <Button
+                  size="sm"
+                  className="bg-purple-500 hover:bg-purple-600 text-white"
+                  onClick={() => {
+                    if (streakUserId && milestoneReason) {
+                      forceGrantMilestoneMutation.mutate({
+                        userId: streakUserId,
+                        payload: { milestone_day: milestoneDay, reason: milestoneReason },
+                      });
+                    }
+                  }}
+                  disabled={forceGrantMilestoneMutation.isPending}
+                >
+                  <Award className="w-4 h-4 mr-1" />
+                  마일스톤 보상 지급
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          미션 통계 & 로그인 미션 검증
+      ───────────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 미션 통계 */}
+        <Card className="bg-[#18181B] border-white/5">
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-indigo-500" />
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">미션 통계</h2>
+                <p className="text-xs text-zinc-500">미션별 완료율 및 클레임 현황</p>
+              </div>
+            </div>
+
+            {isMissionStatsLoading ? (
+              <div className="text-sm text-zinc-500">로딩 중...</div>
+            ) : missionStats ? (
+              <div className="space-y-3">
+                <div className="flex gap-4 text-sm">
+                  <div>
+                    <span className="text-zinc-500">전체 미션: </span>
+                    <span className="font-bold text-zinc-200">{missionStats.total_missions}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">활성 미션: </span>
+                    <span className="font-bold text-emerald-400">{missionStats.active_missions}</span>
+                  </div>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {missionStats.stats.slice(0, 10).map((stat) => (
+                    <div key={stat.mission_id} className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-zinc-200 truncate">{stat.title}</div>
+                        <div className="text-xs text-zinc-500">{stat.category}</div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <div className="text-center">
+                          <div className="text-zinc-500">완료</div>
+                          <div className="font-bold text-emerald-400">{stat.completed_count}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-zinc-500">클레임</div>
+                          <div className="font-bold text-indigo-400">{stat.claimed_count}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-zinc-500">완료율</div>
+                          <div className="font-bold text-yellow-400">{(stat.completion_rate * 100).toFixed(1)}%</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Card>
+
+        {/* 로그인 미션 검증 */}
+        <Card className="bg-[#18181B] border-white/5">
+          <div className="p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-cyan-500" />
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">로그인 미션 검증</h2>
+                <p className="text-xs text-zinc-500">오늘 로그인 미션 완료 현황 (09:00 KST 리셋)</p>
+              </div>
+            </div>
+
+            {isLoginVerifyLoading ? (
+              <div className="text-sm text-zinc-500">로딩 중...</div>
+            ) : loginVerifyData ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="p-2 rounded bg-black/30 border border-white/5">
+                    <div className="text-xs text-zinc-500">전체 로그인</div>
+                    <div className="text-lg font-bold text-zinc-200">{loginVerifyData.total_users}</div>
+                  </div>
+                  <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="text-xs text-zinc-500">완료</div>
+                    <div className="text-lg font-bold text-emerald-400">{loginVerifyData.completed_today}</div>
+                  </div>
+                  <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                    <div className="text-xs text-zinc-500">미완료</div>
+                    <div className="text-lg font-bold text-red-400">{loginVerifyData.not_completed_today}</div>
+                  </div>
+                  <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                    <div className="text-xs text-zinc-500">완료율</div>
+                    <div className="text-lg font-bold text-yellow-400">{(loginVerifyData.completion_rate * 100).toFixed(1)}%</div>
+                  </div>
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {loginVerifyData.users.slice(0, 10).map((user) => (
+                    <div key={user.user_id} className="flex items-center justify-between p-2 rounded bg-black/30 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-zinc-400">#{user.user_id}</span>
+                        <span className="text-zinc-200">{user.nickname}</span>
+                      </div>
+                      <Badge className={user.today_login_completed ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-500/20 text-zinc-400"}>
+                        {user.today_login_completed ? "완료" : "미완료"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Card>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          활성 유저 통계 (DAU/WAU/MAU)
+      ───────────────────────────────────────────────────────────────── */}
+      <Card className="bg-[#18181B] border-white/5">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-emerald-500" />
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-100">활성 유저 통계</h2>
+              <p className="text-xs text-zinc-500">DAU / WAU / MAU 및 신규 가입자 현황</p>
+            </div>
+          </div>
+
+          {isActiveUserStatsLoading ? (
+            <div className="text-sm text-zinc-500">로딩 중...</div>
+          ) : activeUserStats ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                  <div className="text-xs text-zinc-500">DAU (오늘)</div>
+                  <div className="text-2xl font-bold text-emerald-400">{activeUserStats.stats.dau.toLocaleString()}</div>
+                  <div className={`text-xs ${activeUserStats.stats.dau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <TrendingUp className="w-3 h-3 inline mr-1" />
+                    {activeUserStats.stats.dau_change >= 0 ? "+" : ""}{(activeUserStats.stats.dau_change * 100).toFixed(1)}%
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                  <div className="text-xs text-zinc-500">WAU (7일)</div>
+                  <div className="text-2xl font-bold text-indigo-400">{activeUserStats.stats.wau.toLocaleString()}</div>
+                  <div className={`text-xs ${activeUserStats.stats.wau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <TrendingUp className="w-3 h-3 inline mr-1" />
+                    {activeUserStats.stats.wau_change >= 0 ? "+" : ""}{(activeUserStats.stats.wau_change * 100).toFixed(1)}%
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                  <div className="text-xs text-zinc-500">MAU (30일)</div>
+                  <div className="text-2xl font-bold text-yellow-400">{activeUserStats.stats.mau.toLocaleString()}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                  <div className="text-xs text-zinc-500">신규 (오늘/이번주)</div>
+                  <div className="text-xl font-bold text-cyan-400">
+                    {activeUserStats.stats.new_users_today} / {activeUserStats.stats.new_users_this_week}
+                  </div>
+                </div>
+              </div>
+
+              {/* 7일 추이 차트 (간단한 바 형태) */}
+              <div className="space-y-2">
+                <div className="text-sm font-semibold text-zinc-300">7일 DAU 추이</div>
+                <div className="flex items-end gap-1 h-20">
+                  {activeUserStats.trend.map((day, idx) => {
+                    const maxDau = Math.max(...activeUserStats.trend.map((d) => d.dau), 1);
+                    const height = (day.dau / maxDau) * 100;
+                    return (
+                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                        <div
+                          className="w-full bg-emerald-500/50 rounded-t"
+                          style={{ height: `${height}%` }}
+                          title={`${day.date}: ${day.dau}명`}
+                        />
+                        <div className="text-[10px] text-zinc-500">{day.date.slice(5)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </Card>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          유저 미션 일괄 리셋
+      ───────────────────────────────────────────────────────────────── */}
+      <Card className="bg-[#18181B] border-white/5">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <RotateCcw className="w-5 h-5 text-red-500" />
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-100">유저 미션 일괄 리셋</h2>
+              <p className="text-xs text-zinc-500">특정 유저의 모든 미션 또는 특정 미션 진행 상태 초기화</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              value={userMissionUserIdInput}
+              onChange={(e) => setUserMissionUserIdInput(e.target.value)}
+              placeholder="유저 ID"
+              className="w-32 bg-black/50 border-white/10"
+            />
+            <Select
+              value={selectedMissionIdForReset === null ? "all" : String(selectedMissionIdForReset)}
+              onValueChange={(v) => setSelectedMissionIdForReset(v === "all" ? null : Number(v))}
+            >
+              <SelectTrigger className="w-48 bg-black/50 border-white/10">
+                <SelectValue placeholder="미션 선택" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-60">
+                <SelectItem value="all">전체 미션</SelectItem>
+                {missions.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              value={missionResetReason}
+              onChange={(e) => setMissionResetReason(e.target.value)}
+              placeholder="리셋 사유"
+              className="w-40 bg-black/50 border-white/10"
+            />
+            <Button
+              size="sm"
+              className="bg-red-500 hover:bg-red-600 text-white"
+              onClick={() => {
+                const userId = parseInt(userMissionUserIdInput, 10);
+                if (userId > 0 && missionResetReason) {
+                  resetUserMissionsMutation.mutate({
+                    userId,
+                    payload: {
+                      mission_id: selectedMissionIdForReset,
+                      reason: missionResetReason,
+                    },
+                  });
+                }
+              }}
+              disabled={resetUserMissionsMutation.isPending}
+            >
+              <RotateCcw className="w-4 h-4 mr-1" />
+              미션 리셋
+            </Button>
+          </div>
+
+          {resetUserMissionsMutation.isSuccess && resetUserMissionsMutation.data && (
+            <div className="text-sm text-emerald-400">
+              리셋 완료: {resetUserMissionsMutation.data.reset_count}개 미션 (ID: {resetUserMissionsMutation.data.missions_reset.join(", ")})
             </div>
           )}
         </div>

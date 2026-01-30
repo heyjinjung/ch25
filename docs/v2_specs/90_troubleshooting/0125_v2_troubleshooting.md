@@ -511,16 +511,59 @@ Telegram initData는 HMAC-SHA256 서명 기반이라 테스트용 토큰을 생�
 테스트용 initData 생성 스크립트를 만들고 pytest로 백테스트를 실행하겠습니다.
 Write C:\Users\JAVIS\ch\ch25\tests\v2\test_telegram_auth.py
 
+✅ 어드민 기능구현
+- **활성 유저 통계**
+  - 관련 함수/코드 미확인
+- **일간 CC입금액 확익(daily_revenue) 계산**
+  - 관련 함수/코드 미확인
+- **일간 지출(daily_spending) 계산**
+  - 관련 함수/코드 미확인
+- **전체 금고 잔액 집계**
+  - 사용자별 금고 합계, 제한된 금액 비율
+  - 관련 함수 직접 명시 없음
+- **지출 한도 추적**
+  - daily_vault_spent 현황, 한도 도달율(%)
+  - 관련 함수 직접 명시 없음
+- **미션 강제 리셋**
+  - 특정 사용자 미션 상태 초기화 (감시 로그)
+  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions() ❌ 미구현
+- **감시 로그: NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE**
+  - 모든 골든 개입(누지, 회수, 조정) 기록 (미확인)
+
+✅ admin fe 구현 
+reset_user_missions
+get_user_missions_admin
+reset_user_streak
+set_streak_count
+get_user_streak_admin
+get_milestone_progress
+force_grant_milestone
+distribute_milestone_reward
+유저 개별 미션 강제 리셋
+로그인 미션 검증
+미션 통계
+활성 유저 통계
+
+제재 해제 로깅
+감사 로그 (MISSION_RESET_ALL, STREAK_RESET 등)
+전체 금고 잔액 집계
+지출 한도 추적
+지출 한도 요약
+재고 수량 조정
+재고 부족 알림
+보유율 분석
+보유율 추이
+수익/지출 분석
+수익 요약
+마케팅 효율성 분석
+일간 수익/지출 계산
+
 ---------------------------------------
 
 
 연속스트릭모달
 골든아워 모달
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
-
-
-
-
 
 
 ----------
@@ -538,7 +581,8 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_final_deployment_master_checklist_ko.md
 docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_production_deployment_checklist_ko.md
 
-
+트러블슈팅문서 
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\1차_2026_v2_deployment_troubleshooting_guide_ko.md
 
 
 제시된 부분만 확인하여

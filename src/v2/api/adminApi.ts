@@ -2435,3 +2435,641 @@ export const getCSVImportEstimate = async (
   }>("/api/v2/admin/csv-import/estimate", { params: { file_path: filePath } });
   return response.data;
 };
+
+// ============================================================================
+// Admin Streak & Milestone API
+// ============================================================================
+
+export interface UserStreakAdminDto {
+  user_id: number;
+  streak_days: number;
+  last_play_date: string | null;
+  is_hot: boolean;
+  is_legend: boolean;
+  next_milestone: number | null;
+  claimable_day: number | null;
+  current_multiplier: number;
+}
+
+export interface MilestoneProgressDto {
+  day: number;
+  achieved: boolean;
+  claimed: boolean;
+  claim_date: string | null;
+  rewards: { type: string; amount: number }[] | null;
+}
+
+export interface UserMilestoneProgressResponse {
+  user_id: number;
+  streak_days: number;
+  milestones: MilestoneProgressDto[];
+}
+
+export interface SetStreakCountRequest {
+  streak_days: number;
+  adjust_last_play_date?: boolean;
+}
+
+export interface ForceGrantMilestoneRequest {
+  milestone_day: number;
+  reason: string;
+}
+
+export interface ForceGrantMilestoneResponse {
+  success: boolean;
+  user_id: number;
+  milestone_day: number;
+  grants: { type: string; amount: number }[];
+  message: string;
+}
+
+export interface DistributeMilestoneRequest {
+  milestone_day: number;
+  user_ids?: number[] | null;
+  segment?: string | null;
+  reason: string;
+}
+
+export interface DistributeMilestoneResponse {
+  success: boolean;
+  milestone_day: number;
+  total_users: number;
+  success_count: number;
+  failed_count: number;
+  details: { user_id: number; status: string; grants?: { type: string; amount: number }[]; message?: string }[];
+}
+
+export const getAdminUserStreak = async (
+  userId: number,
+): Promise<UserStreakAdminDto> => {
+  const response = await v2Client.get<UserStreakAdminDto>(
+    `/api/v2/admin/streak-rewards/users/${userId}`,
+  );
+  return response.data;
+};
+
+export const resetAdminUserStreak = async (
+  userId: number,
+): Promise<{ success: boolean; user_id: number; old_streak: number; new_streak: number }> => {
+  const response = await v2Client.post<{ success: boolean; user_id: number; old_streak: number; new_streak: number }>(
+    `/api/v2/admin/streak-rewards/users/${userId}/reset`,
+  );
+  return response.data;
+};
+
+export const setAdminUserStreakCount = async (
+  userId: number,
+  payload: SetStreakCountRequest,
+): Promise<{ success: boolean; user_id: number; old_streak: number; new_streak: number }> => {
+  const response = await v2Client.post<{ success: boolean; user_id: number; old_streak: number; new_streak: number }>(
+    `/api/v2/admin/streak-rewards/users/${userId}/set-count`,
+    payload,
+  );
+  return response.data;
+};
+
+export const getAdminUserMilestoneProgress = async (
+  userId: number,
+): Promise<UserMilestoneProgressResponse> => {
+  const response = await v2Client.get<UserMilestoneProgressResponse>(
+    `/api/v2/admin/streak-rewards/users/${userId}/milestone-progress`,
+  );
+  return response.data;
+};
+
+export const forceGrantAdminMilestone = async (
+  userId: number,
+  payload: ForceGrantMilestoneRequest,
+): Promise<ForceGrantMilestoneResponse> => {
+  const response = await v2Client.post<ForceGrantMilestoneResponse>(
+    `/api/v2/admin/streak-rewards/users/${userId}/force-grant-milestone`,
+    payload,
+  );
+  return response.data;
+};
+
+export const distributeAdminMilestoneReward = async (
+  payload: DistributeMilestoneRequest,
+): Promise<DistributeMilestoneResponse> => {
+  const response = await v2Client.post<DistributeMilestoneResponse>(
+    "/api/v2/admin/streak-rewards/distribute-milestone-reward",
+    payload,
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Mission Stats & Validation API
+// ============================================================================
+
+export interface MissionResetRequest {
+  mission_id?: number | null;
+  reason: string;
+}
+
+export interface MissionResetResponse {
+  user_id: number;
+  reset_count: number;
+  missions_reset: number[];
+}
+
+export interface LoginMissionStatusDto {
+  user_id: number;
+  nickname: string;
+  today_login_completed: boolean;
+  last_login_at: string | null;
+  login_streak: number;
+  reset_hour_kst: number;
+  current_operational_date: string;
+}
+
+export interface LoginMissionVerifyResponse {
+  total_users: number;
+  completed_today: number;
+  not_completed_today: number;
+  completion_rate: number;
+  users: LoginMissionStatusDto[];
+}
+
+export interface MissionCompletionStatsDto {
+  mission_id: number;
+  title: string;
+  category: string;
+  total_attempts: number;
+  completed_count: number;
+  claimed_count: number;
+  completion_rate: number;
+}
+
+export interface MissionStatsResponse {
+  total_missions: number;
+  active_missions: number;
+  stats: MissionCompletionStatsDto[];
+}
+
+export const resetAdminUserMissions = async (
+  userId: number,
+  payload: MissionResetRequest,
+): Promise<MissionResetResponse> => {
+  const response = await v2Client.post<MissionResetResponse>(
+    `/api/v2/admin/game/missions/reset-user/${userId}`,
+    payload,
+  );
+  return response.data;
+};
+
+export const verifyAdminLoginMissions = async (params?: {
+  limit?: number;
+  completed_only?: boolean;
+}): Promise<LoginMissionVerifyResponse> => {
+  const response = await v2Client.get<LoginMissionVerifyResponse>(
+    "/api/v2/admin/game/missions/login-verify",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminMissionStats = async (): Promise<MissionStatsResponse> => {
+  const response = await v2Client.get<MissionStatsResponse>(
+    "/api/v2/admin/game/missions/stats",
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Active User Stats API
+// ============================================================================
+
+export interface ActiveUserStatsDto {
+  dau: number;
+  wau: number;
+  mau: number;
+  dau_change: number;
+  wau_change: number;
+  new_users_today: number;
+  new_users_this_week: number;
+  avg_session_count: number;
+}
+
+export interface ActiveUserTrendDto {
+  date: string;
+  dau: number;
+  new_users: number;
+}
+
+export interface ActiveUserStatsResponse {
+  stats: ActiveUserStatsDto;
+  trend: ActiveUserTrendDto[];
+}
+
+export const getAdminActiveUserStats = async (
+  days: number = 7,
+): Promise<ActiveUserStatsResponse> => {
+  const response = await v2Client.get<ActiveUserStatsResponse>(
+    "/api/v2/admin/ops/active-users",
+    { params: { days } },
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Daily Finance API (일간 수익/지출)
+// ============================================================================
+
+export interface DailyRevenueStatsDto {
+  date: string;
+  total_deposits: number;
+  deposit_count: number;
+  unique_depositors: number;
+}
+
+export interface DailySpendingStatsDto {
+  date: string;
+  total_withdrawals: number;
+  withdrawal_count: number;
+  pending_withdrawals: number;
+}
+
+export interface DailyFinanceResponse {
+  date: string;
+  revenue: DailyRevenueStatsDto;
+  spending: DailySpendingStatsDto;
+  net_income: number;
+}
+
+export const getAdminDailyRevenue = async (
+  targetDate?: string,
+): Promise<DailyRevenueStatsDto> => {
+  const response = await v2Client.get<DailyRevenueStatsDto>(
+    "/api/v2/admin/ops/daily-revenue",
+    { params: targetDate ? { target_date: targetDate } : undefined },
+  );
+  return response.data;
+};
+
+export const getAdminDailySpending = async (
+  targetDate?: string,
+): Promise<DailySpendingStatsDto> => {
+  const response = await v2Client.get<DailySpendingStatsDto>(
+    "/api/v2/admin/ops/daily-spending",
+    { params: targetDate ? { target_date: targetDate } : undefined },
+  );
+  return response.data;
+};
+
+export const getAdminDailyFinance = async (
+  targetDate?: string,
+): Promise<DailyFinanceResponse> => {
+  const response = await v2Client.get<DailyFinanceResponse>(
+    "/api/v2/admin/ops/daily-finance",
+    { params: targetDate ? { target_date: targetDate } : undefined },
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Audit Logs API (감사 로그)
+// ============================================================================
+
+export interface AuditLogDto {
+  id: number;
+  admin_id: number;
+  action: string;
+  category: string;
+  target_id: string | null;
+  before_data: Record<string, any> | null;
+  after_data: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface AuditLogResponse {
+  total: number;
+  logs: AuditLogDto[];
+}
+
+export const getAdminAuditLogs = async (params?: {
+  action_filter?: string;
+  category_filter?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<AuditLogResponse> => {
+  const response = await v2Client.get<AuditLogResponse>(
+    "/api/v2/admin/ops/audit-logs",
+    { params },
+  );
+  return response.data;
+};
+
+export const logAdminAction = async (params: {
+  action: string;
+  category?: string;
+  target_id?: string;
+  metadata?: Record<string, any>;
+}): Promise<{ success: boolean; action: string }> => {
+  const response = await v2Client.post<{ success: boolean; action: string }>(
+    "/api/v2/admin/ops/log-action",
+    params.metadata,
+    {
+      params: {
+        action: params.action,
+        category: params.category ?? "GOLDEN",
+        target_id: params.target_id,
+      },
+    },
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Vault Aggregate & Spend Limits API (금고 집계 및 지출 한도)
+// ============================================================================
+
+export interface VaultAggregateDto {
+  total_users: number;
+  total_locked_balance: number;
+  total_available_balance: number;
+  suspended_users_count: number;
+  suspended_users_balance: number;
+  average_balance: number;
+  median_balance: number;
+  max_balance: number;
+}
+
+export interface VaultSpendLimitDto {
+  user_id: number;
+  nickname: string;
+  daily_spent: number;
+  daily_limit: number;
+  usage_rate: number;
+  is_limit_reached: boolean;
+  reset_date: string | null;
+}
+
+export interface VaultSpendLimitSummaryDto {
+  total_users: number;
+  users_at_limit: number;
+  users_above_80_percent: number;
+  total_daily_spent: number;
+  average_usage_rate: number;
+}
+
+export const getAdminVaultAggregate = async (): Promise<VaultAggregateDto> => {
+  const response = await v2Client.get<VaultAggregateDto>(
+    "/api/v2/admin/vault/aggregate",
+  );
+  return response.data;
+};
+
+export const getAdminVaultSpendLimits = async (params?: {
+  min_usage_rate?: number;
+  limit?: number;
+}): Promise<VaultSpendLimitDto[]> => {
+  const response = await v2Client.get<VaultSpendLimitDto[]>(
+    "/api/v2/admin/vault/spend-limits",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminVaultSpendLimitSummary = async (): Promise<VaultSpendLimitSummaryDto> => {
+  const response = await v2Client.get<VaultSpendLimitSummaryDto>(
+    "/api/v2/admin/vault/spend-limits/summary",
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Analytics API (보유율/수익/마케팅)
+// ============================================================================
+
+export interface RetentionRateDto {
+  cohort_date: string;
+  total_users: number;
+  d1_retained: number;
+  d1_rate: number;
+  d7_retained: number;
+  d7_rate: number;
+  d30_retained: number;
+  d30_rate: number;
+}
+
+export interface RetentionSummaryDto {
+  period_start: string;
+  period_end: string;
+  total_cohort_users: number;
+  avg_d1_rate: number;
+  avg_d7_rate: number;
+  avg_d30_rate: number;
+}
+
+export interface RetentionAnalysisResponse {
+  summary: RetentionSummaryDto;
+  daily_retention: RetentionRateDto[];
+}
+
+export interface RetentionTrendDto {
+  date: string;
+  d1_rate: number;
+  d7_rate: number;
+  d30_rate: number;
+  new_users: number;
+}
+
+export interface RetentionTrendResponse {
+  trend: RetentionTrendDto[];
+  period_start: string;
+  period_end: string;
+}
+
+export interface DailyRevenueDto {
+  date: string;
+  total_deposits: number;
+  total_withdrawals: number;
+  net_revenue: number;
+  deposit_count: number;
+  withdrawal_count: number;
+  active_depositors: number;
+}
+
+export interface RevenueBreakdownDto {
+  period: string;
+  start_date: string;
+  end_date: string;
+  total_revenue: number;
+  total_expenses: number;
+  net_income: number;
+  avg_daily_revenue: number;
+  avg_daily_expenses: number;
+  data: DailyRevenueDto[];
+}
+
+export interface RevenueSummaryDto {
+  today_revenue: number;
+  today_expenses: number;
+  this_week_revenue: number;
+  this_week_expenses: number;
+  this_month_revenue: number;
+  this_month_expenses: number;
+  revenue_growth_rate: number;
+}
+
+export interface ChannelPerformanceDto {
+  channel: string;
+  new_users: number;
+  active_users: number;
+  total_deposits: number;
+  avg_deposit_per_user: number;
+  conversion_rate: number;
+  cac: number;
+  ltv: number;
+  roi: number;
+}
+
+export interface MarketingEfficiencyResponse {
+  period_start: string;
+  period_end: string;
+  channels: ChannelPerformanceDto[];
+  total_new_users: number;
+  total_marketing_cost: number;
+  overall_cac: number;
+  overall_roi: number;
+}
+
+export const getAdminRetentionAnalysis = async (params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<RetentionAnalysisResponse> => {
+  const response = await v2Client.get<RetentionAnalysisResponse>(
+    "/api/v2/admin/analytics/retention",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminRetentionTrend = async (
+  days: number = 30,
+): Promise<RetentionTrendResponse> => {
+  const response = await v2Client.get<RetentionTrendResponse>(
+    "/api/v2/admin/analytics/retention/trend",
+    { params: { days } },
+  );
+  return response.data;
+};
+
+export const getAdminRevenueBreakdown = async (params?: {
+  period?: "daily" | "weekly" | "monthly";
+  start_date?: string;
+  end_date?: string;
+}): Promise<RevenueBreakdownDto> => {
+  const response = await v2Client.get<RevenueBreakdownDto>(
+    "/api/v2/admin/analytics/revenue/breakdown",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminRevenueSummary = async (): Promise<RevenueSummaryDto> => {
+  const response = await v2Client.get<RevenueSummaryDto>(
+    "/api/v2/admin/analytics/revenue/summary",
+  );
+  return response.data;
+};
+
+export const getAdminMarketingChannelPerformance = async (params?: {
+  start_date?: string;
+  end_date?: string;
+}): Promise<MarketingEfficiencyResponse> => {
+  const response = await v2Client.get<MarketingEfficiencyResponse>(
+    "/api/v2/admin/analytics/marketing/channel-performance",
+    { params },
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Admin Inventory Stock API (재고 관리)
+// ============================================================================
+
+export interface StockAdjustRequest {
+  user_id: number;
+  item_type: string;
+  delta: number;
+  reason: string;
+}
+
+export interface StockAdjustResponse {
+  success: boolean;
+  user_id: number;
+  item_type: string;
+  old_quantity: number;
+  new_quantity: number;
+  delta: number;
+  message: string;
+}
+
+export interface GifticonDeliveryDto {
+  id: number;
+  user_id: number;
+  nickname: string;
+  item_type: string;
+  item_name: string;
+  status: "PENDING" | "DELIVERED" | "FAILED";
+  created_at: string;
+  delivered_at: string | null;
+  delivery_code: string | null;
+  error_message: string | null;
+}
+
+export interface GifticonDeliveryListResponse {
+  total: number;
+  pending: number;
+  delivered: number;
+  failed: number;
+  items: GifticonDeliveryDto[];
+}
+
+export interface StockAlertDto {
+  item_type: string;
+  current_stock: number;
+  threshold: number;
+  is_critical: boolean;
+  last_updated: string | null;
+}
+
+export interface StockAlertListResponse {
+  total_alerts: number;
+  critical_count: number;
+  alerts: StockAlertDto[];
+}
+
+export const adjustAdminStock = async (
+  payload: StockAdjustRequest,
+): Promise<StockAdjustResponse> => {
+  const response = await v2Client.post<StockAdjustResponse>(
+    "/api/v2/admin/inventory/adjust-stock",
+    payload,
+  );
+  return response.data;
+};
+
+export const getAdminGifticonDeliveries = async (params?: {
+  status?: "PENDING" | "DELIVERED" | "FAILED";
+  user_id?: number;
+  limit?: number;
+}): Promise<GifticonDeliveryListResponse> => {
+  const response = await v2Client.get<GifticonDeliveryListResponse>(
+    "/api/v2/admin/inventory/gifticon/deliveries",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminStockAlerts = async (
+  threshold: number = 10,
+): Promise<StockAlertListResponse> => {
+  const response = await v2Client.get<StockAlertListResponse>(
+    "/api/v2/admin/inventory/stock-alerts",
+    { params: { threshold } },
+  );
+  return response.data;
+};

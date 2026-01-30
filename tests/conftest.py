@@ -53,6 +53,9 @@ def override_get_db(test_db_session):
 # Global Mock for Redis Events
 @pytest.fixture(scope="session", autouse=True)
 def mock_golden_events():
-    from unittest.mock import patch
-    with patch("app.v2.services.golden_event_service.GoldenV2EventService.get_redis_client", return_value=None):
+    from unittest.mock import patch, MagicMock
+    # Use a MagicMock for the redis client to prevent real connections
+    mock_client = MagicMock()
+    with patch("redis.from_url", return_value=mock_client), \
+         patch("app.v2.services.golden_event_service.GoldenV2EventService.get_redis_client", return_value=mock_client):
         yield

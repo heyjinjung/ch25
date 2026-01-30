@@ -7,7 +7,13 @@ from sqlalchemy.pool import StaticPool
 from app.db.base_class import Base
 from app.models.user import User
 from app.models.vault2 import VaultProgram, VaultStatus
+from app.models.vault_earn_event import VaultEarnEvent
+from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.models.user_cash_ledger import UserCashLedger
+from app.models.external_ranking import ExternalRankingData
 from app.v2.services.vault2_service import Vault2Service
+from unittest.mock import MagicMock, patch
+from typing import Any
 
 @pytest.fixture()
 def db_session() -> Session:
@@ -119,6 +125,8 @@ def test_vault2_state_transitions(db_session: Session) -> None:
 
 def test_vault2_program_helpers(db_session: Session) -> None:
     service = Vault2Service()
+    # Ensure default program exists
+    service.get_default_program(db_session, ensure=True)
     
     # list_programs
     programs = service.list_programs(db_session)
@@ -155,9 +163,81 @@ def test_vault2_balance_updates_and_details(db_session: Session) -> None:
     assert len(details) > 0
     
     # "today_accrual"
-    service.accrue_locked(db_session, user_id=user_id, amount=2000)
+    from app.models.vault_earn_event import VaultEarnEvent
+    event = VaultEarnEvent(
+        user_id=user_id,
+        earn_event_id="test_accrual_x",
+        amount=2000,
+        earn_type="POINT",
+        source="DICE",
+        reward_kind="VAULT",
+        created_at=datetime.utcnow()
+    )
+    db_session.add(event)
+    db_session.commit()
+    
     details = service.get_vault_detail_stats(db_session, type="today_accrual")
     assert any(d["user_id"] == user_id for d in details)
+
+def test_vault2_extended_admin_and_stats(db_session: Session) -> None:
+    service = Vault2Service()
+    user_id = 1
+    program = service.get_default_program(db_session, ensure=True)
+    
+    # 1. Eligibility & Upsert
+    service.upsert_eligibility(db_session, program_key=program.key, user_id=user_id, eligible=True)
+    assert service.get_eligibility(db_session, program_key=program.key, user_id=user_id) is True
+    
+    service.upsert_eligibility(db_session, program_key=program.key, user_id=user_id, eligible=False)
+    assert service.get_eligibility(db_session, program_key=program.key, user_id=user_id) is False
+    
+    # 2. Program Active Toggle
+    service.update_program_active(db_session, program_key=program.key, is_active=False)
+    db_session.refresh(program)
+    assert program.is_active is False
+    
+    # 3. get_vault_stats deeper branches
+    # Seed data for stats
+    db_session.add(ExternalRankingData(user_id=user_id, deposit_amount=5000000))
+    db_session.add(VaultWithdrawalRequest(user_id=user_id, amount=10000, status="PENDING"))
+    db_session.commit()
+    
+    stats = service.get_vault_stats(db_session)
+    assert stats["total_liabilities"] > 0
+    assert stats["total_assets"] >= 5000000
+    
+    # 4. get_vault_detail_stats other types
+    # withdrawal
+    details = service.get_vault_detail_stats(db_session, type="withdrawal")
+    assert any(d["user_id"] == user_id for d in details)
+    
+    # audit
+    details = service.get_vault_detail_stats(db_session, type="audit")
+    assert isinstance(details, list)
+    
+    # expiring_soon_24h
+    user = db_session.get(User, user_id)
+    user.vault_locked_balance = 1000
+    user.vault_locked_expires_at = datetime.utcnow() + timedelta(hours=10)
+    db_session.commit()
+    details = service.get_vault_detail_stats(db_session, type="expiring_soon_24h")
+    assert any(d["user_id"] == user_id for d in details)
+
+def test_vault2_internal_helpers(db_session: Session) -> None:
+    service = Vault2Service()
+    
+    # _deep_merge_dict
+    base = {"a": 1, "b": {"c": 2}}
+    override = {"b": {"d": 3}, "e": 4}
+    merged = service._deep_merge_dict(base, override)
+    assert merged["b"]["c"] == 2
+    assert merged["b"]["d"] == 3
+    assert merged["e"] == 4
+    
+    # _build_effective_config
+    eff = service._build_effective_config({"eligibility_mode": "allowlist"})
+    assert eff["eligibility_mode"] == "allowlist"
+    assert eff["enable_game_earn_events"] is True # default preserved
 
 def test_vault2_config_management(db_session: Session) -> None:
     service = Vault2Service()
