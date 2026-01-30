@@ -11,6 +11,11 @@
 | 12 | FK IntegrityError (1452) | 배포 | 🔴 높음 | ✅ 옵션A 적용 |
 | 13 | v2_dice_config 컬럼 누락 (1054) | 전체 | 🔴 높음 | ✅ 마이그레이션 작성 |
 | 14 | v2_lottery_config 컬럼 누락 | 전체 | 🔴 높음 | ✅ 마이그레이션 작성 |
+| 15 | external_ranking FK (1452) | 어드민 | 🔴 높음 | ✅ 마이그레이션 작성 |
+| 16 | V2User.login_streak AttributeError | 어드민 | 🔴 높음 | ✅ 코드수정 |
+| 17 | Sentry 에러 캡처 안됨 | 모니터링 | 🟡 중 | ✅ 코드수정 |
+
+**상세 문서**: [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
 
 ---
 
