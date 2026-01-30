@@ -2,7 +2,7 @@ name: XMAS Event V2 Deployment
 
 on:
   push:
-    branches: [main]
+    branches: [deploy]
   workflow_dispatch:
 
 concurrency:
