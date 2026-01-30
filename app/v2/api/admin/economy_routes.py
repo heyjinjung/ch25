@@ -375,7 +375,7 @@ def create_deposit_log(
     return AdminDepositLogDto(
         id=row.id,
         userId=row.user_id,
-        nickname=V2User.nickname if user else None,
+        nickname=user.nickname if user else None,
         amount=row.deposit_delta,
         kstDate=row.kst_date.isoformat(),
         createdAt=row.created_at,
@@ -428,7 +428,7 @@ def update_deposit_log(
     return AdminDepositLogDto(
         id=row.id,
         userId=row.user_id,
-        nickname=V2User.nickname if user else None,
+        nickname=user.nickname if user else None,
         amount=row.deposit_delta,
         kstDate=row.kst_date.isoformat(),
         createdAt=row.created_at,
@@ -1186,7 +1186,7 @@ def get_ticket_logs(
             balanceAfter=l.balance_after,
             reason=l.reason or "",
             timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
-            nickname=(V2User.nickname if user else "")
+            nickname=(user.nickname if user else "") or ""
         ))
         
     for l, user in i_logs:
@@ -1200,7 +1200,7 @@ def get_ticket_logs(
             balanceAfter=l.balance_after,
             reason=l.reason or "",
             timestamp=utc_to_kst_iso(l.created_at) or l.created_at.isoformat(),
-            nickname=(V2User.nickname if user else "")
+            nickname=(user.nickname if user else "") or ""
         ))
         
     # Sort desc

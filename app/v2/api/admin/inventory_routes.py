@@ -138,7 +138,7 @@ def get_inventory_logs(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
-                nickname=V2User.nickname if user else "",
+                nickname=(user.nickname if user else "") or "",
                 type="GRANT" if log.delta > 0 else "USE",
                 itemType=log.token_type.value if hasattr(log.token_type, "value") else str(log.token_type),
                 amount=abs(log.delta),
@@ -154,7 +154,7 @@ def get_inventory_logs(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
-                nickname=V2User.nickname if user else "",
+                nickname=(user.nickname if user else "") or "",
                 type="GRANT" if log.change_amount > 0 else "USE",
                 itemType=log.item_type,
                 amount=abs(log.change_amount),
