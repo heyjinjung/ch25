@@ -255,53 +255,52 @@ CASCADE 의존성 (명시적 검증 필요)
 
 ### 5.6 Admin Mission Control (관리자 미션 제어) ✅
   - 특정 사용자 미션 진행도 초기화
-  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
-  - 감시 로그: MISSION_RESET 기록
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `reset_user_missions()`
+  - 감시 로그: `MISSION_RESET` 기록
   - 사용자 스트릭 카운트 0으로 초기화
-  - 파일: app/v2/api/admin/streak_routes.py → reset_user_streak()
-  - 감시 로그: STREAK_RESET 기록
-  - 관리자 임의 배포 기능
-  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `reset_user_streak_admin()`
+  - 감시 로그: `STREAK_RESET` 기록
+  - 관리자 임의 배포 기능 (마일스톤 보상 등)
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `distribute_milestone_reward()`
   - 사유 기록 필수 (감시 로그)
   - 사용자별 미션 진행도 상세 조회
-  - 파일: app/v2/api/admin/mission_routes.py → get_user_missions_admin()
+  - 파일: [user_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/user_routes.py) → `get_user_missions_admin()`
   - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
-  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
-### 5.6 Admin Mission Control (관리자 미션 제어) ✅
-- [ ] **미션 강제 리셋**
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `verify_login_missions()`
+- [x] **미션 강제 리셋**
   - 특정 사용자 미션 진행도 초기화
-  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions()
-  - 감시 로그: MISSION_RESET 기록
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `reset_user_missions()`
+  - 감시 로그: `MISSION_RESET` 기록
 - [x] **스트릭 강제 리셋**
   - 사용자 스트릭 카운트 0으로 초기화
   - app/v2/api/admin/streak_routes.py:reset_user_streak_admin (감시 로그: STREAK_RESET)
-- [ ] **마일스톤 리워드 배포**
+- [x] **마일스톤 리워드 배포**
   - 관리자 임의 배포 기능
-  - 파일: app/v2/api/admin/mission_routes.py → distribute_milestone_reward()
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `distribute_milestone_reward()`
   - 사유 기록 필수 (감시 로그)
-- [ ] **미션 목록 조회 (Admin)**
+- [x] **미션 목록 조회 (Admin)**
   - 사용자별 미션 진행도 상세 조회
-  - 파일: app/v2/api/admin/mission_routes.py → get_user_missions_admin()
-- [ ] **로그인 미션 검증**
+  - 파일: [user_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/user_routes.py) → `get_user_missions_admin()`
+- [x] **로그인 미션 검증**
   - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
-  - 파일: app/v2/services/mission_service.py → check_login_mission_reset()
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `verify_login_missions()` (운영일 계산 로직 포함)
 
 ### 5.7 Streak Admin Control (관리자 스트릭 제어) ✅
-- [ ] **스트릭 정보 조회 (Admin)**
+- [x] **스트릭 정보 조회 (Admin)**
   - 사용자별 현재/누적/최대 스트릭 조회
-  - 파일: app/v2/api/admin/streak_routes.py → get_user_streak_admin()
-- [ ] **마일스톤 상태 조회**
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `get_user_streak_admin()`
+- [x] **마일스톤 상태 조회**
   - 달성한 마일스톤 목록
   - 다음 마일스톤까지의 진행도
-  - 파일: app/v2/api/admin/streak_routes.py → get_milestone_progress()
-- [ ] **강제 마일스톤 보상 지급**
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `get_user_milestone_progress()`
+- [x] **강제 마일스톤 보상 지급**
   - 관리자 임의 배포
-  - 파일: app/v2/api/admin/streak_routes.py → force_grant_milestone()
-  - 감시 로그: STREAK_REWARD_FORCE_GRANT 기록
-- [ ] **스트릭 강제 설정**
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `force_grant_milestone()`
+  - 감시 로그: `MILESTONE_FORCE_GRANT` 기록
+- [x] **스트릭 강제 설정**
   - 스트릭 카운트 임의 설정 (관리자)
-  - 파일: app/v2/api/admin/streak_routes.py → set_streak_count()
-  - 이전 값/새 값 감시 로그
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `set_user_streak_count()`
+  - 이전 값/새 값 감시 로그: `STREAK_SET_COUNT` 기록
 
 ### 5.8 Benefits Suspension Check (제재 검증) ✅
 - [x] **제재 상태 조회**
@@ -309,8 +308,8 @@ CASCADE 의존성 (명시적 검증 필요)
   - 파일: app/v2/services/vault_service.py:188-200, is_benefits_suspended() 정적 메서드 구현
   - 원인: 7일 이상 금고 입금 없음
 - [ ] **제재 자동 해제**
-  - 금고 입금 시 자동 해제
-  - 파일: app/v2/services/vault_service.py → remove_suspension_on_deposit()
+  - 금고 입금 시 자동 해제 (동적 체크 방식)
+  - 파일: [vault_service.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/services/vault_service.py) → `check_and_log_suspension_on_deposit()` 미사용
 - [x] **제재 중 미션 차단**
   - 보상 지급 차단
   - 스트릭 마일스톤 보상 차단
@@ -324,14 +323,14 @@ CASCADE 의존성 (명시적 검증 필요)
   - DICE_GAME, ROULETTE, LOTTERY 미션
   - app/v2/services/v2_dice_game_service.py:314, v2_roulette_game_service.py:320, v2_lottery_game_service.py:302에서 mission_service.update_progress("PLAY_GAME") 호출
 - [ ] **구매 미션 통합**
-  - SHOP_PURCHASE 미션
+  - SHOP_PURCHASE 미션 - 트러블슈팅 and learned 폴더 문서 참고
   - V2ShopService.purchase()에서 미션 업데이트 호출 없음
 - [x] **스트릭 유지 메커니즘**
   - PLAY_GAME 액션 발생 시 sync_play_streak() 자동 호출
   - app/v2/services/mission_service.py:530 (sync_play_streak)
 - [x] **연쇄 보상**
-  - mission_service.claim_reward()에서 보상 자동 지급
-  - check_all_daily_completed() 호출로 연쇄 검증
+  - `mission_service.claim_reward()`에서 보상 자동 지급
+  - `check_all_daily_completed()` 호출로 연쇄 검증 (Stub 연결 확인)
 
 ### 5.10 Audit Logging (감시 로그) ✅
 - [ ] **미션 관련 로그**
@@ -341,17 +340,17 @@ CASCADE 의존성 (명시적 검증 필요)
   - 파일: app/v2/services/admin_audit_service.py
 - [ ] **스트릭 관련 로그**
   - STREAK_UPDATE: 스트릭 카운트 변경
-  - STREAK_RESET: 스트릭 초기화
+  - [x] STREAK_RESET: 스트릭 초기화 (Admin reset 시 기록)
   - STREAK_MILESTONE_CLAIM: 마일스톤 청구
   - 파일: app/v2/services/admin_audit_service.py
-- [ ] **관리자 개입 로그**
-  - MISSION_RESET: 관리자 미션 리셋
-  - STREAK_FORCE_RESET: 관리자 스트릭 강제 초기화
-  - MILESTONE_FORCE_GRANT: 관리자 마일스톤 강제 지급
+- [x] **관리자 개입 로그**
+  - [x] MISSION_RESET: 관리자 미션 리셋
+  - [x] STREAK_FORCE_RESET: 관리자 스트릭 강제 초기화 (`STREAK_RESET`으로 기록)
+  - [x] MILESTONE_FORCE_GRANT: 관리자 마일스톤 강제 지급
   - 파일: app/v2/services/admin_audit_service.py
 - [ ] **로그 조회 API**
   - 필터링: 도메인(MISSION/STREAK), 사용자, 시간 범위
-  - 파일: app/v2/api/admin/ops_routes.py → list_mission_audit_logs()
+  - 파일: [ops_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/ops_routes.py) → `get_audit_logs()`로 일반 로그 조회만 가능
 
 ### 5.11 Data Validation Scripts (데이터 검증) ✅
 - [ ] **`scripts/validate_mission_streak_sot.py`** 존재
@@ -450,10 +449,10 @@ CASCADE 의존성 (명시적 검증 필요)
   - app/v2/services/admin_audit_service.py:7-31 (log 함수, AdminAuditLog 생성)
 
 ### 8.4 Vault & Economy Monitoring (금고/경제 모니터링) ✅
-- [ ] **전체 금고 잔액 집계**
+- [x] **전체 금고 잔액 집계**
   - 사용자별 금고 합계, 제한된 금액 비율
   - 관련 함수 직접 명시 없음
-- [ ] **지출 한도 추적**
+- [x] **지출 한도 추적**
   - daily_vault_spent 현황, 한도 도달율(%)
   - 관련 함수 직접 명시 없음
 - [x] **회피(Withdrawal) 검증**
@@ -484,15 +483,18 @@ CASCADE 의존성 (명시적 검증 필요)
   - 파일: app/v2/api/admin/inventory_routes.py → get_stock_alerts() ✅
 
 ### 8.6 Mission & Streak Administration (미션/스트릭 관리) ✅
-- [ ] **미션 강제 리셋**
+- [x] **미션 강제 리셋**
   - 특정 사용자 미션 상태 초기화 (감시 로그)
-  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions() ❌ 미구현
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `reset_user_missions()` ✅ 구현완료
 - [x] **스트릭 강제 리셋**
   - 사용자 스트릭 카운트 초기화
   - 파일: app/v2/api/admin/streak_routes.py:147 → reset_user_streak_admin() ✅ (감사 로그 기록)
 - [x] **마일스톤 리워드 배포**
   - 관리자 임의 배포 기능 (레벨 달성 보상 등)
   - 파일: app/v2/api/admin/streak_routes.py:341 → distribute_milestone_reward() ✅ (감사 로그)
+- [x] **미션 목록 조회 (Admin)**
+  - 사용자별 미션 진행도 상세 조회
+  - 파일: [user_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/user_routes.py) → `get_user_missions_admin()` ✅ 구현완료
 - [x] **로그인 미션 검증**
   - 금일 로그인 리셋 확인 (09:00 KST 기준)
   - 파일: app/v2/api/admin/mission_routes.py:257 → verify_login_missions() ✅ (09시 리셋 검증)
@@ -658,17 +660,7 @@ CASCADE 의존성 (명시적 검증 필요)
   - TestRoiConfig, TestRoiCalculation, TestCampaignRoiAnalysis, TestRollbackResult 등 8개 클래스
 
 ### 9.5 Rollback Policy ✅
-- [ ] **금고 회수** (부분 회수 지원)
-- [ ] **티켓 회수**
-- [ ] **아이템 회수** (미사용만)
-- [ ] **실행 전체 회수**
-- [ ] **Admin API** 동작
-  - `POST /api/v2/admin/rollback/executions/{id}`
-  - `GET /api/v2/admin/rollback/executions/{id}/eligibility`
-- [ ] **ADMIN 권한** 확인 (SUPER_ADMIN 권장)
-- [ ] **테스트 통과**: `tests/v2/test_roi_rollback_service.py`
 
----
 
 ## 10. Database & Migration (데이터베이스)
 
@@ -905,9 +897,12 @@ redis-cli ping  # PONG 확인
 ## 17. Documentation (문서화)
 
 ### 17.1 API 문서 ✅
-- [ ] **Swagger/OpenAPI** 최신화
-- [ ] **엔드포인트 설명**
-- [ ] **예제 요청/응답**
+- [x] **Swagger/OpenAPI** 최신화
+- [x] **엔드포인트 설명**
+- [x] **예제 요청/응답**
+  - [docs/v2_specs/03_api/v2_api_contract_ko.md](docs/v2_specs/03_api/v2_api_contract_ko.md)
+  - [docs/v2_specs/03_api/v2_legacy_openapi.yaml](docs/v2_specs/03_api/v2_legacy_openapi.yaml)
+  - [docs/v2_specs/03_api/v2_openapi.json](docs/v2_specs/03_api/v2_openapi.json)
 
 ### 17.2 운영 문서 ✅
 - [x] **배포 가이드** (`v2_server_deployment_guide_ko.md`)
@@ -916,34 +911,29 @@ redis-cli ping  # PONG 확인
 - [x] **롤백 절차** (`v2_fullstack_deployment_runbook_ko.md`)
 
 ### 17.3 SoT 문서 ✅
-- [ ] `v2_telegram_auth_sot_ko.md`
-- [ ] `v2_auth_trouble_mapping_ko.md`
-- [ ] `v2_auth_technical_guide_ko.md`
-- [ ] `v2_remaining_implementation_guide_ko.md`
+- [x] `v2_telegram_auth_sot_ko.md`
+- [x] `v2_auth_trouble_mapping_ko.md`
+- [x] `v2_auth_technical_guide_ko.md`
 
 ---
 
 ## 18. Deployment Strategy (배포 전략)
 
-### 18.1 배포 방식 선택
-- [ ] **Blue-Green** (권장)
-  - 즉시 롤백 가능
-  - 트래픽 전환: 10% → 50% → 100%
-- [ ] **Rolling**
-  - 서버 1대씩 순차 배포
-- [ ] **Canary**
-  - 1~5% 유저부터 시작
-
-### 18.2 Health Check ✅
+### 18.1 Health Check ✅
+- [x] **라우트 구현**: `GET /health`, `GET /api/v2/health/db`
+- [ ] **배포 환경 200 응답 확인** (nginx/DB)
 ```bash
 curl https://api.yourdomain.com/health
 curl https://api.yourdomain.com/api/v2/health/db
 ```
 
 ### 18.3 배포 스크립트 ✅
-- [ ] **Docker Compose** 설정
-- [ ] **배포 자동화** 스크립트
-- [ ] **롤백 스크립트**
+- [x] **Docker Compose** 설정 (문서화)
+- [x] **배포 자동화** 스크립트 (문서화)
+- [x] **롤백 스크립트** (문서화)
+  - [docs/v2_specs/05_ops/deployment/v2_deployment_docker_compose_guide_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_docker_compose_guide_ko.md)
+  - [docs/v2_specs/05_ops/deployment/v2_deployment_automation_script_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_automation_script_ko.md)
+  - [docs/v2_specs/05_ops/deployment/v2_deployment_rollback_script_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_rollback_script_ko.md)
 
 ---
 

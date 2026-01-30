@@ -27,7 +27,7 @@
       체크리스트/런북/문서에 남아있는 “SUPERADMIN” 언급은 과거 정책의 잔재로, 최신 learned_ 기준과 불일치
 - [x] **토큰 만료 정책**: Access(15m), Refresh(30d) 정책이 환경 변수에 설정됨.
       Access(15m), Refresh(30d) 만료 정책은 실제 코드와 환경설정에 모두 구현되어 있음
-- [ ] **Circuit Breaker 한도(SoT) 정합성**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 환경/코드/테스트/운영 정책에 일치하는지 확인.
+- [x] **Circuit Breaker 한도(SoT) 정합성**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 환경/코드/테스트/운영 정책에 일치하는지 확인.
 ---
 
 ## 🧪 2. 최소 통합 테스트 세트 (Smoke Tests)
@@ -142,5 +142,31 @@ tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오
 4. **CSV 분석 엔진**: 외부 로그 CSV를 업로드했을 때, 베팅액 집계(GGR)가 소수점 단위 오차 없이 계산되는가?
 
 ---
-**최종 업데이트**: 2026-01-29
+## ✅ 6. 점검 결과 (2026-01-30)
+
+### 6.1 환경/인프라
+- Docker Compose 상태: backend/frontend/nginx/db/redis 모두 Healthy
+- Redis: `PONG` 확인
+- Alembic: `96be4ed554ee (head)` 확인
+- ENV: `DEV_LOGIN_ENABLED=false`, `TEST_MODE=false`, `TIMEZONE=Asia/Seoul`, `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 확인
+- JWT/Telegram 시크릿: 값 존재 확인(문서에는 노출하지 않음)
+- 헬스 체크: `/health`, `/api/v2/health/db` → 404 (Not Found)
+
+### 6.2 테스트 실행 결과
+- `pytest tests/v2/ -v` → **313 passed**
+- `pytest tests/v2_tests/ -v` → **208 passed, 4 failed, 3 skipped**
+      - 실패:
+            - `tests/v2_tests/phase4_admin/test_admin_analytics_baseline.py::test_vault2_stats_aggregation` (SQLite NOT NULL: `vault_earn_event.earn_event_id`)
+            - `tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py::test_v2_public_routes_smoke_extended` (401 AUTH_REQUIRED)
+            - `tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_verify_full_scenario_v2` (401 AUTH_REQUIRED)
+            - `tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_full_scenario_v2` (401 AUTH_REQUIRED)
+- `pytest tests/test_streak_midnight_boundary.py -v` → **15 passed**
+- `pytest tests/test_enum_matches_sot.py -v` → **6 passed, 1 error**
+      - 에러: teardown 시 `season_pass_reward_log` 테이블 누락
+
+---
+**최종 업데이트**: 2026-01-30
 **승인**: CTO / Product Owner
+
+## 7. 변경 이력
+- 2026-01-30: 체크리스트 기반 점검 결과 추가

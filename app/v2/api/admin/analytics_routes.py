@@ -562,34 +562,36 @@ def get_channel_performance(
         User.created_at <= period_end_dt,
     ).scalar() or 0
 
-    # 채널별 분석 (referral_code 기반 분류)
+    # 채널별 분석 (telegram_id 기준 분류)
     channel_configs = [
-        ("telegram", "telegram%"),  # 텔레그램에서 유입
-        ("referral", "%"),  # 추천 코드 사용
-        ("organic", None),  # 추천 코드 없음 (자연 유입)
+        ("telegram", User.telegram_id.isnot(None)),
+        ("organic", User.telegram_id.is_(None)),
     ]
 
     total_marketing_cost = 0.0
 
-    for channel_name, ref_pattern in channel_configs:
-        if ref_pattern is None:
-            # Organic: referral_code가 NULL인 경우
-            channel_users_query = db.query(User.id).filter(
-                User.created_at >= period_start_dt,
-                User.created_at <= period_end_dt,
-                or_(User.referral_code.is_(None), User.referral_code == ""),
-            )
-        else:
-            channel_users_query = db.query(User.id).filter(
-                User.created_at >= period_start_dt,
-                User.created_at <= period_end_dt,
-                User.referral_code.ilike(ref_pattern),
-            )
+    for channel_name, channel_filter in channel_configs:
+        channel_users_query = db.query(User.id).filter(
+            User.created_at >= period_start_dt,
+            User.created_at <= period_end_dt,
+            channel_filter,
+        )
 
         channel_user_ids = [u.id for u in channel_users_query.all()]
         new_users = len(channel_user_ids)
 
         if new_users == 0:
+            channels_data.append(ChannelPerformanceDto(
+                channel=channel_name,
+                new_users=0,
+                active_users=0,
+                total_deposits=0,
+                avg_deposit_per_user=0.0,
+                conversion_rate=0.0,
+                cac=0.0,
+                ltv=0.0,
+                roi=0.0,
+            ))
             continue
 
         # 활성 유저 (최근 7일 내 로그인)

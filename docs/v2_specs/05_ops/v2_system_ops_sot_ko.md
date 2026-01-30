@@ -1,6 +1,6 @@
 문서 타입: SoT
-버전: v1.0
-작성일: 2026-01-19
+버전: v1.1
+작성일: 2026-01-30
 작성자: GitHub Copilot
 대상: BE/운영/QA
 상태: SoT
@@ -30,6 +30,13 @@ V2 시스템/운영(System/Ops) 라우트의 **기준 응답/정책**을 정의�
 { "status": "ok" }
 ```
 
+- Endpoint: `GET /api/v2/health/db`
+- Auth: 없음
+- Response (JSON):
+```json
+{ "status": "ok" }
+```
+
 ### 4.2 Today Feature
 - Endpoint: `GET /api/v2/today-feature`
 - Auth: 선택적 (Bearer 토큰이 있으면 user_id 포함)
@@ -48,9 +55,11 @@ V2 시스템/운영(System/Ops) 라우트의 **기준 응답/정책**을 정의�
 
 ## 5. 운영/검증 (QA)
 - [ ] `/api/v2/health`가 200 OK + `{status: ok}` 반환
+- [ ] `/api/v2/health/db`가 200 OK + `{status: ok}` 반환
 - [ ] `/api/v2/today-feature`가 200 OK + feature_type 반환
 - [ ] 토큰 포함 호출 시 user_id 포함 여부 확인
 - [ ] `/api/v2/metrics`가 Prometheus 포맷 응답
 
 ## 6. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v1.1 (2026-01-30, GitHub Copilot): `/api/v2/health/db` 헬스 체크 추가

@@ -149,17 +149,17 @@ mypy app/
 ## 4. 보안 체크 (Security Checklist)
 
 ### 4.1 인증 & 권한
-- [ ] **Telegram hash 검증** 활성화 (`app/v2/core/telegram.py`)
-- [ ] **RBAC 로깅** 활성화 (`app/api/deps.py` - RBAC_DENIED 이벤트)
-- [ ] **Admin API 권한** 확인 (ADMIN, SUPER_ADMIN만 접근)
-- [ ] **DEV 로그인** 비활성화 (`DEV_LOGIN_ENABLED=false`)
+- [x] **Telegram hash 검증** 활성화 ([app/v2/core/telegram.py](app/v2/core/telegram.py))
+- [x] **RBAC 로깅** 활성화 ([app/api/deps.py](app/api/deps.py) - RBAC_DENIED 이벤트)
+- [x] **Admin API 권한** 확인 (ADMIN, SUPER_ADMIN만 접근)
+- [x] **DEV 로그인** 비활성화 (`DEV_LOGIN_ENABLED=false`)
 
 ### 4.2 Rate Limiting
 - [ ] API Rate Limiting 설정 (예: FastAPI Limiter)
 - [ ] Telegram Auth 엔드포인트에 Rate Limit 적용 (DDoS 방지)
 
 ### 4.3 SQL Injection & XSS
-- [ ] SQLAlchemy ORM 사용 확인 (raw SQL 최소화)
+- [x] SQLAlchemy ORM 사용 확인 (raw SQL 최소화)
 - [ ] 사용자 입력 검증 (Pydantic 스키마)
 
 ---

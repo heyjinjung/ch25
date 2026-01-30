@@ -57,7 +57,7 @@ def log_auth_event(
         error_message=error_message[:500] if error_message else None,
     )
     db.add(event)
-    db.commit()
+    db.flush()  # Use flush for better test isolation; caller/middleware can commit
     return event
 
 

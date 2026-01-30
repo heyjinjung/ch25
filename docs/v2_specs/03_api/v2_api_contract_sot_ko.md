@@ -22,9 +22,11 @@ V2 API 계약의 단일 기준(SoT)을 정의하여, FE/BE 구현과 테스트�
 2) 도메인별 계약 문서 (상세 규칙/예시)
 
 ### 4.1 OpenAPI
-- docs/v2_specs/03_api/v2_openapi.yaml
+- docs/v2_specs/03_api/v2_legacy_openapi.yaml
+- docs/v2_specs/03_api/v2_openapi.json
 
 ### 4.2 도메인별 계약 문서
+- System: docs/v2_specs/03_api/v2_system_api_contract_ko.md
 - Auth/User: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
 - Game: docs/v2_specs/03_api/v2_game_api_contract_ko.md
 - Mission/Streak: docs/v2_specs/03_api/v2_mission_streak_api_contract_ko.md

@@ -526,9 +526,18 @@ Write C:\Users\JAVIS\ch\ch25\tests\v2\test_telegram_auth.py
   - 관련 함수 직접 명시 없음
 - **미션 강제 리셋**
   - 특정 사용자 미션 상태 초기화 (감시 로그)
-  - 파일: app/v2/api/admin/mission_routes.py → reset_user_missions() ❌ 미구현
-- **감시 로그: NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE**
-  - 모든 골든 개입(누지, 회수, 조정) 기록 (미확인)
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `reset_user_missions()` ✅ 구현완료
+- **마일스톤 리워드 배포**
+  - 관리자 임의 배포 기능 (사유 기록 필수)
+  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `distribute_milestone_reward()` ✅ 구현완료
+- **미션 목록 조회 (Admin)**
+  - 사용자별 미션 진행도 상세 조회
+  - 파일: [user_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/user_routes.py) → `get_user_missions_admin()` ✅ 구현완료
+- **로그인 미션 검증**
+  - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
+  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `verify_login_missions()` ✅ 구현완료
+- **감시 로그: MISSION_RESET, STREAK_REWARD_DISTRIBUTE**
+  - 관리자 개입(미션/스트릭 초기화 및 지급) 기록 ✅ 구현완료 (V2AdminAuditService 연동)
 
 ✅ admin fe 구현 
 reset_user_missions
@@ -607,13 +616,7 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
 
-
-
 ----
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-=========================== short test summary info ===========================
-FAILED tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py::test_v2_public_routes_smoke_extended
-FAILED tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_verify_full_scenario_v2
-FAILED tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_full_scenario_v2
-ERROR tests/v2_tests/phase5_public/test_golden_v2_integrated.py::test_golden_v2_full_lifecycle_integrated
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_automation_script_ko.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_docker_compose_guide_ko.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_rollback_script_ko.md

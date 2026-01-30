@@ -1,147 +1,195 @@
 문서 타입: API 계약
-버전: v1.0
-작성일: 2026-01-19
+버전: v2.0
+작성일: 2026-01-30
 작성자: GitHub Copilot
-대상: BE/FE/기획
+대상: BE/FE/QA/운영
 상태: SoT
 
 # V2 Auth & User API 계약
 
 ## 1. 목적 (Purpose)
-웹 우선 개발(Web-First)을 위한 인증/유저 API 계약을 정의한다.
+V2 인증/유저/텔레그램/활동 기록/온보딩/DevLogin의 상세 계약을 정의한다.
 
 ## 2. 범위 (Scope)
-- 토큰 발급
-- 활동 기록
-- 텔레그램 연동/해제
-- 신규 유저 온보딩
-- DevLogin (개발환경 한정)
+- Auth (토큰 발급/갱신/로그아웃)
+- Telegram (연동/링크 토큰/연결 해제)
+- User (내 정보/잔액)
+- Activity (활동 기록)
+- New User (온보딩)
+- Dev Login (개발환경 전용)
+- UI Config (공개 조회)
 
-## 3. API 계약 (Contract)
-### 3.1 토큰 발급
-- Endpoint: `POST /api/auth/token`
-- Request:
-```json
-{
-  "user_id": 123,
-  "external_id": "cc_123",
-  "password": "optional"
-}
-```
-- Response:
-```json
-{
-  "access_token": "jwt...",
-  "token_type": "bearer",
-  "user": {
-    "id": 123,
-    "external_id": "cc_123",
-    "nickname": "nick",
-    "status": "ACTIVE",
-    "level": 1,
-    "segment": "NEW",
-    "telegram_id": 123456789,
-    "login_streak": 3
-  }
-}
-```
+## 3. 공통 규칙
+### 3.1 권한/헤더
+- Bearer 토큰 필요: User, Activity, Logout
+- 선택적: Today-Feature와 동일한 방식의 Public 호출은 허용하지 않음
+- 헤더: `Authorization: Bearer <token>`
 
-#### 3.1.1 JWT Claim 규칙 (Role)
-- `access_token`은 JWT이며, 기본 클레임은 `sub`, `iat`, `exp`, `typ`를 포함한다.
-- 어드민 권한이 있는 경우(SoT: `AdminUserProfile.tags`의 `ROLE_*`) 아래 클레임을 추가로 포함할 수 있다.
-  - `role`: string (예: `SUPER_ADMIN`, `OPERATOR`)
-  - `roles`: string[] (예: `["SUPER_ADMIN"]`)
-- FE 권한 판별 우선순위: `roles[0]` → `role` → (없으면) `ADMIN` 기본값
+### 3.2 공통 에러 코드
+- 400: 잘못된 요청
+- 401: 인증 필요 (AUTH_REQUIRED)
+- 403: 권한 없음
+- 404: 리소스 없음
+- 422: 유효성 검증 실패
+- 500: 서버 오류
 
-### 3.2 활동 기록
-- Endpoint: `POST /api/activity/record`
-- Request:
+## 4. API 상세
+
+### 4.1 토큰 발급
+- Method/Path: `POST /api/v2/auth/token`
+- Auth: 없음
+- Request Schema: `AuthTokenRequest`
+- Response Schema: `AuthTokenResponse`
+- Example Request:
 ```json
-{
-  "event_type": "ROULETTE_PLAY",
-  "event_id": "uuid",
-  "value": 10,
-  "meta_json": {"source": "web"}
-}
+{ "telegram_id": 123456, "auth_date": "1706432000", "hash": "<hash>" }
 ```
-- Response:
+- Example Response:
 ```json
-{
-  "user_id": 123,
-  "updated_at": "2026-01-19T12:00:00"
-}
+{ "access_token": "<token>", "refresh_token": "<token>", "token_type": "bearer" }
 ```
 
-### 3.3 텔레그램 연동
-- Endpoint: `POST /api/telegram/auth`
-- Request:
+### 4.2 로그인(alias)
+- Method/Path: `POST /api/v2/auth/login`
+- Auth: 없음
+- Request Schema: `AuthTokenRequest`
+- Response Schema: `AuthTokenResponse`
+- Example Request/Response: 4.1과 동일
+
+### 4.3 토큰 갱신
+- Method/Path: `POST /api/v2/auth/refresh`
+- Auth: Bearer
+- Request Body: 없음
+- Response Schema: `AuthTokenResponse`
+- Example Response:
 ```json
-{
-  "init_data": "...",
-  "start_param": "optional"
-}
-```
-- Response:
-```json
-{
-  "access_token": "jwt...",
-  "token_type": "bearer",
-  "is_new_user": false,
-  "linked_to_existing": true,
-  "user": {
-    "id": 123,
-    "external_id": "cc_123",
-    "nickname": "nick",
-    "status": "ACTIVE",
-    "level": 1,
-    "segment": "NEW",
-    "telegram_id": 123456789
-  }
-}
+{ "access_token": "<token>", "refresh_token": "<token>", "token_type": "bearer" }
 ```
 
-### 3.4 텔레그램 링크용 토큰 발급
-- Endpoint: `POST /api/telegram/link-token`
-- Response:
+### 4.4 로그아웃
+- Method/Path: `POST /api/v2/auth/logout`
+- Auth: Bearer
+- Request Body: 없음
+- Response Schema: `LogoutResponse`
+- Example Response:
 ```json
-{
-  "expires_at_utc": "2026-01-19T12:00:00Z",
-  "start_param": "token",
-  "open_url": "https://t.me/..."
-}
+{ "success": true }
 ```
 
-### 3.5 텔레그램 연결 해제 요청
-- Endpoint: `POST /api/telegram/unlink-request`
-- Request:
+### 4.5 활동 기록
+- Method/Path: `POST /api/v2/activity/record`
+- Auth: Bearer
+- Request Schema: `ActivityRecordRequest`
+- Response Schema: `ActivityRecordResponse`
+- Example Request:
 ```json
-{
-  "init_data": "..."
-}
+{ "event_type": "ROULETTE_PLAY", "event_id": "uuid", "value": 1, "meta_json": {"source": "web"} }
+```
+- Example Response:
+```json
+{ "user_id": 123, "updated_at": "2026-01-30T12:00:00+09:00" }
 ```
 
-### 3.6 신규 유저 상태/웰컴 보상
-- Endpoint: `GET /api/new-user/status`
-- Endpoint: `POST /api/new-user/claim-welcome`
-
-### 3.7 DevLogin (개발환경)
-- Endpoint: `POST /api/v2/dev/login`
-- Request:
+### 4.6 텔레그램 연동
+- Method/Path: `POST /api/v2/telegram/auth`
+- Auth: 없음
+- Request Schema: `TelegramAuthRequest`
+- Response Schema: `TelegramAuthResponse`
+- Example Request:
 ```json
-{
-  "external_id": "dev_web_user",
-  "nickname": "Web Dev User",
-  "create_if_missing": true
-}
+{ "init_data": "<init_data>", "start_param": "optional" }
+```
+- Example Response:
+```json
+{ "access_token": "<token>", "token_type": "bearer", "is_new_user": false, "linked_to_existing": true }
 ```
 
-## 4. 오류 규칙 (Errors)
-- `USER_NOT_FOUND`
-- `INVALID_CREDENTIALS`
-- `DEV_LOGIN_DISABLED`
+### 4.7 텔레그램 링크 토큰 발급
+- Method/Path: `POST /api/v2/telegram/link-token`
+- Auth: Bearer
+- Request Body: 없음
+- Response Schema: `TelegramLinkTokenResponse`
+- Example Response:
+```json
+{ "expires_at_utc": "2026-01-30T00:00:00Z", "start_param": "token", "open_url": "https://t.me/..." }
+```
 
-## 5. 비고 (Notes)
-- 본 문서는 V2 웹 개발을 위한 계약이며, 텔레그램 인증은 V1과 호환 유지.
+### 4.8 텔레그램 연결 해제 요청
+- Method/Path: `POST /api/v2/telegram/unlink-request`
+- Auth: Bearer
+- Request Schema: `TelegramUnlinkRequest`
+- Response Schema: 없음
+- Example Request:
+```json
+{ "init_data": "<init_data>" }
+```
+
+### 4.9 Dev Login (개발환경)
+- Method/Path: `POST /api/v2/dev/login`
+- Auth: 없음 (환경 제한)
+- Request Schema: `DevLoginRequest`
+- Response Schema: 없음
+- Example Request:
+```json
+{ "external_id": "dev_web_user", "nickname": "Web Dev User", "create_if_missing": true }
+```
+
+### 4.10 신규 유저 상태
+- Method/Path: `GET /api/v2/new-user/status`
+- Auth: Bearer
+- Response Schema: OpenAPI 미정의
+- Example Response:
+```json
+{ "is_new_user": false }
+```
+
+### 4.11 신규 유저 웰컴 보상
+- Method/Path: `POST /api/v2/new-user/claim-welcome`
+- Auth: Bearer
+- Response Schema: OpenAPI 미정의
+- Example Response:
+```json
+{ "claimed": true }
+```
+
+### 4.12 내 정보 조회
+- Method/Path: `GET /api/v2/user/me`
+- Auth: Bearer
+- Response Schema: `UserMeResponse`
+- Example Response:
+```json
+{ "id": 1, "nickname": "user", "telegram_id": 123456 }
+```
+
+### 4.13 내 잔액 조회
+- Method/Path: `GET /api/v2/user/balance`
+- Auth: Bearer
+- Response Schema: `UserBalanceResponse`
+- Example Response:
+```json
+{ "vault_balance": 0, "ticket_balance": 0 }
+```
+
+### 4.14 UI 설정 조회
+- Method/Path: `GET /api/v2/ui-config/{key}`
+- Auth: 없음
+- Parameters: `key` (path)
+- Response Schema: `UiConfigResponse`
+- Example Response:
+```json
+{ "key": "v2_shop_products", "value": {"products": []} }
+```
+
+## 5. 근거 (Source)
+- OpenAPI: [docs/v2_specs/03_api/v2_legacy_openapi.yaml](docs/v2_specs/03_api/v2_legacy_openapi.yaml)
+- 라우터:
+  - [app/v2/api/auth_routes.py](app/v2/api/auth_routes.py)
+  - [app/v2/api/telegram_routes.py](app/v2/api/telegram_routes.py)
+  - [app/v2/api/dev_login.py](app/v2/api/dev_login.py)
+  - [app/v2/api/user_routes.py](app/v2/api/user_routes.py)
+  - [app/v2/api/activity_routes.py](app/v2/api/activity_routes.py)
+  - [app/v2/api/v1_auth_user_alias.py](app/v2/api/v1_auth_user_alias.py)
+  - [app/v2/api/routes.py](app/v2/api/routes.py)
 
 ## 6. 변경 이력
-- v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v2.0 (2026-01-30, GitHub Copilot): V2 경로/스키마 기준 상세 계약으로 전면 교체

@@ -40,14 +40,14 @@ def auth_client(test_client, test_user):
     if get_current_user in app.dependency_overrides:
         del app.dependency_overrides[get_current_user]
 
-def test_mission_action_type_aliases(test_db_session: Session):
-    """MissionService의 Action Type Alias 처리가 정상인지 확인"""
-    from app.services.mission_service import MissionService
+def test_mission_action_type_aliases(test_db_session: Session, test_user):
+    """V2MissionService의 Action Type Alias 처리가 정상인지 확인"""
+    from app.v2.services.mission_service import V2MissionService
     
     # 1. 미션 생성 (SUBSCRIBE_CHANNEL 타입)
     mission = Mission(
         title="채널 가입 테스트",
-        logic_key="test_channel_join",
+        logic_key="test_channel_join_v2",
         action_type="SUBSCRIBE_CHANNEL",
         target_value=1,
         reward_type=MissionRewardType.DIAMOND,
@@ -58,14 +58,14 @@ def test_mission_action_type_aliases(test_db_session: Session):
     test_db_session.add(mission)
     test_db_session.commit()
     
-    service = MissionService(test_db_session)
+    service = V2MissionService(test_db_session)
     
     # 2. 'JOIN_CHANNEL' 액션으로 업데이트 시도 (Alias 매칭 확인)
-    user_id = 12345 # Any unique ID
-    service.update_progress(user_id, "JOIN_CHANNEL", delta=1)
+    # V2 Native: test_user (V2User) fixture 사용
+    service.update_progress(test_user.id, "JOIN_CHANNEL", delta=1)
     
     progress = test_db_session.query(UserMissionProgress).filter(
-        UserMissionProgress.user_id == user_id,
+        UserMissionProgress.user_id == test_user.id,
         UserMissionProgress.mission_id == mission.id
     ).first()
     

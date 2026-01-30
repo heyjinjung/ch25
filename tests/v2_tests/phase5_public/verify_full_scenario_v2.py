@@ -8,7 +8,12 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 
-from app.api.deps import get_db, get_current_admin_info
+from app.api.deps import (
+    get_db, 
+    get_current_admin_info, 
+    get_current_user_id as get_v1_user_id,
+    get_current_admin_id
+)
 from app.main import app as fastapi_app
 from app.models.game_wallet import GameTokenType
 from app.models.game_wallet_ledger import UserGameWalletLedger
@@ -17,7 +22,7 @@ from app.models.inventory import UserInventoryItem
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.user import User
 from app.models.vault_ledger import VaultLedger
-from app.v2.api.deps import get_current_user_id
+from app.v2.api.deps import get_current_user_id as get_v2_user_id
 from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
 from app.v2.models.v2_level_reward import V2LevelRewardTable
 from app.v2.models.v2_ticket_zero_log import V2TicketZeroLog
@@ -162,14 +167,16 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
 
         db.commit()
 
-        fastapi_app.dependency_overrides[get_current_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_v1_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_v2_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_current_admin_id] = lambda: int(v2_user.id)
 
         print("\n========== Phase5 Scenario 1: New User Journey ==========")
         r_roulette = client.post("/api/v2/roulette/play")
         print("Roulette Response:", r_roulette.status_code, r_roulette.json())
         assert r_roulette.status_code == 200
 
-        r_dice = client.post("/api/v2/dice/play", json={"bet_count": 1})
+        r_dice = client.post("/api/v2/dice/play", json={"bet_amount": 1, "prediction": "EVEN"})
         print("Dice Response:", r_dice.status_code, r_dice.json())
         assert r_dice.status_code == 200
 
@@ -261,7 +268,9 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         print("Admin Message:", r_msg.status_code, r_msg.json())
         assert r_msg.status_code == 200
 
-        fastapi_app.dependency_overrides[get_current_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_v1_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_v2_user_id] = lambda: int(v2_user.id)
+        fastapi_app.dependency_overrides[get_current_admin_id] = lambda: int(admin.id)
         r_inbox = client.get("/api/v2/inbox")
         print("Inbox:", r_inbox.status_code, r_inbox.json())
         assert r_inbox.status_code == 200

@@ -10,20 +10,25 @@ class DummyDB:
         self.events.append(event)
     def commit(self):
         pass
+    def flush(self):
+        pass
 
 class DummyEvent:
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
 # log_auth_event 테스트
-@pytest.mark.parametrize("success,error_message", [(True, None), (False, "에러")])
-def test_log_auth_event_basic(monkeypatch, success, error_message):
+@pytest.mark.parametrize("event_type,success,error_message", [
+    (auth_service.AuthEventType.LOGIN_SUCCESS, True, None), 
+    (auth_service.AuthEventType.LOGIN_FAILED, False, "에러")
+])
+def test_log_auth_event_basic(monkeypatch, event_type, success, error_message):
     db = DummyDB()
     monkeypatch.setattr(auth_service, "V2UserAuthEvent", lambda **kwargs: DummyEvent(**kwargs))
     event = auth_service.log_auth_event(
         db=db,
         user_id=1,
-        event_type="LOGIN",
+        event_type=event_type,
         ip_address="127.0.0.1",
         user_agent="test-agent",
         telegram_id=12345,
@@ -31,7 +36,7 @@ def test_log_auth_event_basic(monkeypatch, success, error_message):
         error_message=error_message,
     )
     assert event.user_id == 1
-    assert event.event_type == "LOGIN"
+    assert event.event_type == event_type
     assert event.ip_address == "127.0.0.1"
     assert event.user_agent == "test-agent"
     assert event.telegram_id == 12345

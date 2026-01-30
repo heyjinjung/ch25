@@ -1,8 +1,9 @@
-name: XMAS Event Fast Deployment
+name: XMAS Event V2 Deployment
 
 on:
   push:
-    branches: [main, temp-merge2]
+    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -41,8 +42,8 @@ jobs:
           file: ./Dockerfile.frontend
           push: true
           build-args: |
-            VITE_API_URL=/api
-            VITE_ADMIN_API_URL=/admin/api
+            VITE_API_URL=
+            VITE_ADMIN_API_URL=
           tags: ghcr.io/${{ github.repository_owner }}/xmas-frontend:latest
 
   deploy:
@@ -59,7 +60,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "docker-compose.yml,nginx/*,scripts/init.sql"
-          target: "/opt/xmas-event"
+          target: "/opt/ch25"
 
       - name: Deploy to Vultr via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -83,7 +84,7 @@ jobs:
             # 깃허브 레지스트리 로그인
             echo "${GH_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
 
-            cd /opt/xmas-event
+            cd /opt/ch25
 
             # Preflight: .env 존재 여부 기록(민감정보 출력 금지)
             if [ -f .env ]; then
@@ -102,6 +103,14 @@ jobs:
             MYSQL_USER=xmasuser
             MYSQL_PASSWORD=2026
             TZ=Asia/Seoul
+            ENV=production
+            TEST_MODE=false
+            DEV_LOGIN_ENABLED=false
+            DOMAIN=cc-jm.com
+            TIMEZONE=Asia/Seoul
+            CORS_ORIGINS=["https://cc-jm.com","https://www.cc-jm.com","http://149.28.135.147"]
+            CIRCUIT_LIMIT_VAULT=100000
+            CIRCUIT_LIMIT_TICKET=30
             ENVEOF
             echo "JWT_SECRET=${JWT_SECRET}" >> .env
             echo "TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}" >> .env
@@ -120,11 +129,11 @@ jobs:
             # DB가 떠있지 않으면 최소 기동
             docker compose up -d db
 
-            # DB readiness (최대 60초)
+            # DB readiness (최대 90초)
             i=0
             until docker compose exec -T db sh -lc 'mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --silent' >/dev/null 2>&1; do
               i=$((i+1))
-              if [ "$i" -ge 30 ]; then
+              if [ "$i" -ge 45 ]; then
                 echo "[DUMP] DB not ready (timeout)" >&2
                 exit 1
               fi
@@ -154,30 +163,58 @@ jobs:
               echo "[DUMP] sha256sum not found; skipped" >&2
             fi
 
-            docker compose pull
+            # 이미지 pull (최대 3회 재시도)
+            pull_try=0
+            until docker compose pull; do
+              pull_try=$((pull_try+1))
+              if [ "$pull_try" -ge 3 ]; then
+                echo "[PULL] docker compose pull failed" >&2
+                exit 1
+              fi
+              sleep 5
+            done
             docker compose up -d --remove-orphans
 
             # Fast fix for transient 502: nginx가 backend 재생성 직후 upstream을 못 잡는 케이스가 있어 1회 재시작
             docker compose restart nginx || true
             sleep 2
 
-            # Gate(3.5/3.8): 마이그레이션
-            if ! docker compose exec -T backend alembic upgrade head; then
-              echo "[MIGRATION] alembic upgrade head failed; retry once" >&2
+            # Gate(3.5/3.8): 마이그레이션 (최대 3회 재시도)
+            mig_try=0
+            until docker compose exec -T backend alembic upgrade head; do
+              mig_try=$((mig_try+1))
+              if [ "$mig_try" -ge 3 ]; then
+                echo "[MIGRATION] alembic upgrade head failed" >&2
+                docker compose exec -T backend alembic current || true
+                docker compose exec -T backend alembic heads || true
+                exit 1
+              fi
+              echo "[MIGRATION] retrying (${mig_try})" >&2
               sleep 5
-              docker compose exec -T backend alembic upgrade head
-            fi
+            done
             docker compose exec -T backend alembic current
             docker compose exec -T backend alembic heads
 
             # Gate(3.6): 헬스 체크
             # 1) backend 자체가 준비됐는지 먼저 확인(nginx 영향 제거)
-            echo "[HEALTH] waiting backend container /api/health"
+            echo "[HEALTH] waiting backend container /api/v2/health"
             k=0
-            until docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2).read()" >/dev/null 2>&1; do
+            until docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v2/health', timeout=2).read()" >/dev/null 2>&1; do
               k=$((k+1))
               if [ "$k" -ge 45 ]; then
-                echo "[HEALTH] backend container /api/health failed" >&2
+                echo "[HEALTH] backend container /api/v2/health failed" >&2
+                docker compose logs --tail=200 backend || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "[HEALTH] waiting backend container /api/v2/health/db"
+            k=0
+            until docker compose exec -T backend python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v2/health/db', timeout=2).read()" >/dev/null 2>&1; do
+              k=$((k+1))
+              if [ "$k" -ge 45 ]; then
+                echo "[HEALTH] backend container /api/v2/health/db failed" >&2
                 docker compose logs --tail=200 backend || true
                 exit 1
               fi
@@ -197,19 +234,39 @@ jobs:
               sleep 2
             done
 
-            echo "[HEALTH] waiting nginx /api/health"
+            echo "[HEALTH] waiting nginx /api/v2/health"
             a=0
             API_CODE=""
             until [ "$API_CODE" = "200" ]; do
-              API_CODE=$(curl -sS -D /tmp/api_headers.txt -o /tmp/api_body.txt -w "%{http_code}" http://127.0.0.1/api/health || true)
+              API_CODE=$(curl -sS -D /tmp/api_headers.txt -o /tmp/api_body.txt -w "%{http_code}" http://127.0.0.1/api/v2/health || true)
               if [ "$API_CODE" = "200" ]; then
                 break
               fi
               a=$((a+1))
               if [ "$a" -ge 45 ]; then
-                echo "[HEALTH] /api/health failed (last HTTP ${API_CODE})" >&2
+                echo "[HEALTH] /api/v2/health failed (last HTTP ${API_CODE})" >&2
                 head -n 30 /tmp/api_headers.txt || true
                 head -n 30 /tmp/api_body.txt || true
+                docker compose logs --tail=200 nginx || true
+                docker compose logs --tail=200 backend || true
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "[HEALTH] waiting nginx /api/v2/health/db"
+            b=0
+            DB_CODE=""
+            until [ "$DB_CODE" = "200" ]; do
+              DB_CODE=$(curl -sS -D /tmp/db_headers.txt -o /tmp/db_body.txt -w "%{http_code}" http://127.0.0.1/api/v2/health/db || true)
+              if [ "$DB_CODE" = "200" ]; then
+                break
+              fi
+              b=$((b+1))
+              if [ "$b" -ge 45 ]; then
+                echo "[HEALTH] /api/v2/health/db failed (last HTTP ${DB_CODE})" >&2
+                head -n 30 /tmp/db_headers.txt || true
+                head -n 30 /tmp/db_body.txt || true
                 docker compose logs --tail=200 nginx || true
                 docker compose logs --tail=200 backend || true
                 exit 1

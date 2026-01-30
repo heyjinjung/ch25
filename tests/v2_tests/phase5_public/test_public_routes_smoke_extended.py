@@ -7,10 +7,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.api.deps import get_current_user_id, get_db
+from app.api.deps import get_current_user_id as get_v1_user_id, get_db
+from app.v2.api.deps import get_current_user_id as get_v2_user_id
 from app.db.base_class import Base
 from app.main import app
 from app.models.user import User
+from app.v2.services.user_service import V2UserService
 
 
 @pytest.fixture()
@@ -63,8 +65,9 @@ def client(test_engine) -> TestClient:
 
 
 def _seed_user(db: Session) -> User:
+    cc_id = f"test-{uuid.uuid4().hex}"
     user = User(
-        external_id=f"test-{uuid.uuid4().hex}",
+        external_id=cc_id,
         nickname="V2 Public Smoke",
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow(),
@@ -72,15 +75,22 @@ def _seed_user(db: Session) -> User:
     )
     db.add(user)
     db.flush()
+    
+    # [V2 Native] Ensure user exists in v2_user table
+    V2UserService.get_or_create_v2_user_from_legacy(db, cc_id)
+    db.commit()
     return user
 
 
 def _override_auth(user_id: int) -> None:
-    app.dependency_overrides[get_current_user_id] = lambda: user_id
+    # Both V1 and V2 dependencies must be overridden
+    app.dependency_overrides[get_v1_user_id] = lambda: user_id
+    app.dependency_overrides[get_v2_user_id] = lambda: user_id
 
 
 def _clear_auth_override() -> None:
-    app.dependency_overrides.pop(get_current_user_id, None)
+    app.dependency_overrides.pop(get_v1_user_id, None)
+    app.dependency_overrides.pop(get_v2_user_id, None)
 
 
 def test_v2_public_routes_smoke_extended(client: TestClient, seed_session: Session) -> None:

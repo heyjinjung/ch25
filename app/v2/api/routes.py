@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Header, Request, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -115,6 +116,12 @@ def _get_optional_user_id(
 
 @router.get("/health", tags=["v2-system"])
 def v2_health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@router.get("/health/db", tags=["v2-system"])
+def v2_health_db(db: Session = Depends(get_db)) -> dict[str, str]:
+    db.execute(text("SELECT 1"))
     return {"status": "ok"}
 
 

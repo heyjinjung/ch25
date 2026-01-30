@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
-# [최종 검토일: 2026-01-26]
+# [최종 검토일: 2026-01-30]
 # [정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Vault 응답에 `available` 계열 필드가 포함되어 단일 SoT(`vault_locked_balance`)와 표현 충돌 가능. Deprecated/별칭 여부를 문서/스키마로 명시 필요.
 openapi: 3.0.3
 info:
@@ -81,6 +81,18 @@ paths:
     get:
       tags: [System]
       summary: 헬스 체크
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v2/health/db:
+    get:
+      tags: [System]
+      summary: DB 헬스 체크
       responses:
         "200":
           description: OK
@@ -2400,39 +2412,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UiConfigResponse"
-
-  # ============================================================================
-  # Legacy Ops
-  # ============================================================================
-  /api/v2/segments/run:
-    post:
-      tags: [AdminOps]
-      summary: 세그먼트 배치 실행 (레거시)
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/SegmentsRunResponse"
-
-  /api/v2/messages:
-    post:
-      tags: [AdminOps]
-      summary: 운영 메시지 생성/팬아웃
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AdminLegacyMessageRequest"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AdminLegacyMessageResponse"
 
 components:
   securitySchemes:
