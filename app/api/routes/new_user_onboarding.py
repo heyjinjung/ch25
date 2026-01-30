@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db
 from app.models.external_ranking import ExternalRankingData
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_activity import UserActivity
 from app.models.mission import Mission, MissionCategory, UserMissionProgress
 from app.services.mission_service import MissionService

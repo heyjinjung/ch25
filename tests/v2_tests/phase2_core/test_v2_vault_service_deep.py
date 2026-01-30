@@ -32,9 +32,7 @@ def db_session() -> Session:
     db = SessionLocal()
     try:
         # Create a test user
-        user = User(id=1, external_id="v2_master_01", nickname="Master")
         v2_user = V2User(id=1, cc_id="v2_master_01", nickname="Master")
-        db.add(user)
         db.add(v2_user)
         db.commit()
         yield db
@@ -56,7 +54,7 @@ def test_vault_deposit_with_suspension_cap(db_session: Session) -> None:
     
     # Deposit more than 30k
     service.deposit(db_session, user_id, 40000)
-    db_session.refresh(db_session.get(User, user_id))
+    db_session.refresh(db_session.get(V2User, user_id))
     # Should be capped at 30k
     assert service.get_locked_balance(db_session, user_id) == 30000
 
@@ -87,7 +85,7 @@ def test_vault_consume_locked_for_spend(db_session: Session) -> None:
     user_id = 1
     
     # Set initial balance
-    user = db_session.get(User, user_id)
+    user = db_session.get(V2User, user_id)
     user.vault_locked_balance = 10000
     db_session.commit()
     
@@ -110,7 +108,7 @@ def test_vault_admin_operations(db_session: Session) -> None:
     
     # 1. Force Edit
     service.force_edit(db_session, admin_id=99, user_id=user_id, amount=15000, reason="ADMIN_BONUS")
-    user = db_session.get(User, user_id)
+    user = db_session.get(V2User, user_id)
     assert user.vault_locked_balance == 15000
     
     # 2. Get Admin Stats

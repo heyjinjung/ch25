@@ -35,18 +35,10 @@ def setup_valid_user(db, user_id: int, locked: int):
         cc_id=cc_id,
         nickname=f"u{user_id}",
         vault_locked_balance=locked,
-    )
-    db.add(v2_user)
-
-    user = User(
-        id=user_id,
-        nickname=f"u{user_id}",
-        external_id=cc_id,
-        vault_locked_balance=locked,
         vault_spent_today=10_000,
         vault_spent_reset_date=datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d"),
     )
-    db.add(user)
+    db.add(v2_user)
 
     cfg = DiceConfig(
         name=f"test_cfg_{user_id}",
@@ -86,7 +78,7 @@ def setup_valid_user(db, user_id: int, locked: int):
         )
 
     db.commit()
-    return user
+    return v2_user
 
 
 def seed_approved_withdrawals(db, user_id: int, count: int):

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
+from app.v2.models.user import V2User
 
 router = APIRouter(prefix="/admin/api/user", tags=["admin-user"])
 
@@ -36,7 +36,7 @@ class MergeResult(BaseModel):
     audit_log_id: int | None = None
 
 
-def _get_user_summary(user: User) -> dict:
+def _get_user_summary(user: V2User) -> dict:
     return {
         "id": user.id,
         "external_id": user.external_id,
@@ -81,8 +81,8 @@ def merge_dry_run(
     admin_id: int = Depends(deps.get_current_admin_id),
 ) -> MergePreview:
     """Preview the impact of merging two user accounts."""
-    source = db.query(User).filter(User.id == payload.source_user_id).first()
-    target = db.query(User).filter(User.id == payload.target_user_id).first()
+    source = db.query(V2User).filter(V2User.id == payload.source_user_id).first()
+    target = db.query(V2User).filter(V2User.id == payload.target_user_id).first()
     
     if not source:
         raise HTTPException(status_code=404, detail="SOURCE_USER_NOT_FOUND")
@@ -136,8 +136,8 @@ def merge_execute(
     """Execute account merge. Source user will be deactivated."""
     from sqlalchemy import text
     
-    source = db.query(User).filter(User.id == payload.source_user_id).with_for_update().first()
-    target = db.query(User).filter(User.id == payload.target_user_id).with_for_update().first()
+    source = db.query(V2User).filter(V2User.id == payload.source_user_id).with_for_update().first()
+    target = db.query(V2User).filter(V2User.id == payload.target_user_id).with_for_update().first()
     
     if not source:
         raise HTTPException(status_code=404, detail="SOURCE_USER_NOT_FOUND")

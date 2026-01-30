@@ -7,7 +7,7 @@ from time import perf_counter
 from app.api import deps
 from app.core.config import get_settings
 from app.core.metrics import mission_claim_result_total, mission_claim_latency_seconds
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.services.mission_service import MissionService
 from app.schemas.mission import MissionListResponse, MissionWithProgress
 from app.utils.idempotency import idempotency_cache
@@ -34,7 +34,7 @@ def _add_deprecation_headers(response: Response) -> None:
 def claim_streak_reward(
     response: Response,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Claim a pending streak milestone reward.
@@ -59,7 +59,7 @@ def claim_streak_reward(
 def get_streak_rules(
     response: Response,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user), # Require auth for consistency
+    current_user: V2User = Depends(deps.get_current_user), # Require auth for consistency
 ) -> Any:
     """
     Get streak reward rules for the UI.
@@ -90,7 +90,7 @@ def get_streak_rules(
 def read_missions(
     response: Response,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Get all daily missions and current user progress.
@@ -136,7 +136,7 @@ def claim_mission_reward(
     request: Request,
     response: Response,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
     idempotency_key: str | None = Header(None, alias="X-Idempotency-Key"),
 ) -> Any:
     """
@@ -206,7 +206,7 @@ def claim_mission_reward(
 def claim_daily_gift(
     response: Response,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Claim the immediate daily login gift.

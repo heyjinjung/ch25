@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
 from app.models.mission import Mission, MissionCategory, MissionRewardType, UserMissionProgress
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.v2.services.mission_service import V2MissionService
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
@@ -33,7 +33,7 @@ def db_session():
 
 
 def _seed_user(db, user_id=1):
-    user = User(id=user_id, external_id=f"ext_{user_id}", nickname=f"user_{user_id}")
+    user = V2User(id=user_id, cc_id=f"ext_{user_id}", nickname=f"user_{user_id}")
     db.add(user)
     # Add deposit to avoid BENEFITS_SUSPENDED
     deposit = ExternalRankingDailyDepositDelta(user_id=user_id, kst_date=date.today(), deposit_delta=10000)

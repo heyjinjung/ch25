@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.core import security, telegram
 from app.core.config import get_settings
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.telegram import TelegramAuthRequest, TelegramAuthResponse, TelegramLinkTokenResponse
 
 import secrets

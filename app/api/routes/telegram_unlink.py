@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api import deps
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.telegram_unlink_request import TelegramUnlinkRequest
 
 router = APIRouter(prefix="/api/telegram", tags=["telegram-unlink"])

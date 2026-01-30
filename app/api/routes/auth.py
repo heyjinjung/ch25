@@ -10,7 +10,7 @@ from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
 from app.models.feature import UserEventLog
 from app.v2.models.user import V2User, V2UserRole
-from app.v2.models.segment import V2UserSegment
+from app.v2.models.v2_user_segment import V2UserSegment
 
 from app.services.mission_service import MissionService
 

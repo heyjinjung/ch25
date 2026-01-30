@@ -6,7 +6,7 @@ from app.api.deps import get_db
 from app.core.config import get_settings
 from app.core.security import create_access_token
 from app.models.game_wallet import GameTokenType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
 

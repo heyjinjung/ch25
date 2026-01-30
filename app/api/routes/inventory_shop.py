@@ -6,7 +6,7 @@ from datetime import datetime
 from app.api import deps
 from app.services.inventory_service import InventoryService
 from app.services.shop_service import ShopService
-from app.models.user import User
+from app.v2.models.user import V2User
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get("/inventory", response_model=dict)
 def get_my_inventory(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
 ) -> Any:
     """
     Get current user's inventory (items) and wallet (tokens).
@@ -63,7 +63,7 @@ def get_my_inventory(
 def use_item(
     payload: dict,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Any:
     """
@@ -85,7 +85,7 @@ def use_item(
 @router.get("/shop/products", response_model=list[dict])
 def list_products(
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
 ) -> Any:
     """
     List all available shop products.
@@ -97,7 +97,7 @@ def list_products(
 def purchase_product(
     payload: dict,
     db: Session = Depends(deps.get_db),
-    current_user: User = Depends(deps.get_current_user),
+    current_user: V2User = Depends(deps.get_current_user),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> Any:
     """

@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.api.deps import get_db, get_current_user
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.admin_message import AdminMessage, AdminMessageInbox
 
 router = APIRouter(prefix="/api/crm/messages", tags=["crm-inbox"])
@@ -24,7 +24,7 @@ class InboxMessageResponse(BaseModel):
 @router.get("/inbox", response_model=List[InboxMessageResponse])
 def get_my_inbox(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: V2User = Depends(get_current_user)
 ):
     """Get current user's inbox messages."""
     # Join AdminMessageInbox with AdminMessage
@@ -59,7 +59,7 @@ def get_my_inbox(
 def mark_as_read(
     message_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: V2User = Depends(get_current_user)
 ):
     """Mark a message as read."""
     inbox_item = db.query(AdminMessageInbox).filter(
