@@ -48,6 +48,8 @@ class V2User(Base):
     last_play_date = Column(Date, nullable=True)
     # Login tracking for retention/analytics
     last_login_at = Column(DateTime, nullable=True, index=True)
+    first_deposit_at = Column(DateTime, nullable=True)
+    first_deposit_amount = Column(BigInteger, nullable=True)
 
     # V2-only: status and role for direct V2 auth
     status = Column(Enum(V2UserStatus), nullable=False, default=V2UserStatus.ACTIVE)

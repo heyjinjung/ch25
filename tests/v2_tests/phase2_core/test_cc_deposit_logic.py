@@ -3,7 +3,7 @@ from datetime import datetime, date
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from app.db.base_class import Base
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.external_ranking import ExternalRankingData
 from app.models.user_activity import UserActivity
 from app.models.admin_user_profile import AdminUserProfile
@@ -34,7 +34,7 @@ def test_cc_deposit_idempotency(db_session):
     NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
     # 1. Setup User
-    user = User(id=1, nickname="tester", external_id="ext_01")
+    user = V2User(id=1, nickname="tester", cc_id="ext_01")
     db_session.add(user)
     db_session.commit()
 
@@ -93,7 +93,7 @@ def test_cc_deposit_delta_logic(db_session):
     
     NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
-    user = User(id=2, nickname="delta_tester", external_id="ext_02")
+    user = V2User(id=2, nickname="delta_tester", cc_id="ext_02")
     db_session.add(user)
     db_session.commit()
 
@@ -140,7 +140,7 @@ def test_first_deposit_trigger(db_session):
     
     NOTE: Season Pass 관련 mock 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템
     """
-    user = User(id=3, nickname="newbie", external_id="ext_03")
+    user = V2User(id=3, nickname="newbie", cc_id="ext_03")
     db_session.add(user)
     db_session.commit()
 

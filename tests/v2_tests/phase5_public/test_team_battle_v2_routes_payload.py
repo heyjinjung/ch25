@@ -73,10 +73,7 @@ def _clear_v2_auth_override() -> None:
 def test_v2_team_battle_payloads(client: TestClient, seed_session: Session) -> None:
     from app.models.team_battle import Team, TeamSeason, TeamScore
 
-    # Seed V2 user and ensure legacy mapping exists.
     v2_user = V2UserService.create_user(seed_session, cc_id="tb-test-user", nickname="TB")
-    seed_session.commit()
-    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, int(v2_user.id))
     seed_session.commit()
 
     now = datetime.utcnow()
@@ -123,7 +120,7 @@ def test_v2_team_battle_payloads(client: TestClient, seed_session: Session) -> N
         resp = client.post("/api/v2/team-battle/teams/auto-assign")
         assert resp.status_code == 200, resp.text
         join_payload = resp.json()
-        assert join_payload["user_id"] == legacy_user_id
+        assert join_payload["user_id"] == v2_user.id
         assert join_payload["team_id"] in {team_a.id, team_b.id}
 
         resp = client.get("/api/v2/team-battle/teams/me")

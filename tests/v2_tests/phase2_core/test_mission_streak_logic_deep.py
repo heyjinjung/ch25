@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.streak_service import V2StreakService
 from app.v2.services.ui_config_service import UiConfigService
 
@@ -28,7 +28,7 @@ def db_session() -> Session:
     db = SessionLocal()
     try:
         # Create a test user
-        user = User(id=1, external_id="test_user", nickname="Tester", play_streak=0)
+        user = V2User(id=1, cc_id="test_user", nickname="Tester", play_streak=0)
         db.add(user)
         db.commit()
         yield db
@@ -64,7 +64,7 @@ def test_streak_milestone_claim_flow(db_session: Session) -> None:
     user_id = 1
     
     # 1. Reach 3-day streak
-    user = db_session.query(User).get(user_id)
+    user = db_session.query(V2User).get(user_id)
     user.play_streak = 3
     user.last_play_date = date(2026, 1, 29)
     db_session.commit()
@@ -109,7 +109,7 @@ def test_streak_force_grant_and_reset(db_session: Session) -> None:
     
     # Set streak count
     service.set_streak_count(user_id, 10)
-    user = db_session.query(User).get(user_id)
+    user = db_session.query(V2User).get(user_id)
     assert user.play_streak == 10
     
     # Reset streak
@@ -126,7 +126,7 @@ def test_streak_milestone_progress_listing(db_session: Session) -> None:
     assert all(not p["achieved"] for p in progress)
     
     # Achieve one
-    user = db_session.query(User).get(user_id)
+    user = db_session.query(V2User).get(user_id)
     user.play_streak = 5
     user.last_play_date = date.today()
     db_session.commit()

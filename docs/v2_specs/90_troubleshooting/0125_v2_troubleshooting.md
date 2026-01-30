@@ -624,3 +624,4 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_docker_comp
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_rollback_script_ko.md
 
 
+C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149

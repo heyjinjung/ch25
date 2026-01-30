@@ -8,7 +8,6 @@ from fastapi import HTTPException
 from datetime import datetime
 
 from app.db.base_class import Base
-from app.models.user import User
 from app.v2.models.user import V2User
 from app.v2.services.vault_service import V2VaultService
 from app.models.admin_audit_log import AdminAuditLog
@@ -26,10 +25,10 @@ def db_session():
     finally:
         db.close()
 
-def setup_test_user(db, user_id=100, balance=10000):
-    user = User(
+def setup_test_user(db, user_id=1, balance=10000):
+    user = V2User(
         id=user_id,
-        external_id=f"ext_{user_id}",
+        cc_id=f"ext_{user_id}",
         nickname=f"user_{user_id}",
         vault_locked_balance=balance
     )
@@ -54,7 +53,7 @@ def test_admin_economy_floor_logic(db_session):
     assert exc.value.detail == "INSUFFICIENT_BALANCE"
     
     # Verify balance remains 5000
-    user = db_session.get(User, 1)
+    user = db_session.get(V2User, 1)
     assert (user.vault_locked_balance + user.vault_available_balance) == 5000
 
 def test_admin_economy_atomicity(db_session):
@@ -102,7 +101,7 @@ def test_admin_economy_race_condition_simulation(db_session):
     # Since we are using a single session in this test, we mimic the interleaving.
     
     # Thread 1 starts
-    user1 = db_session.get(User, 2)
+    user1 = db_session.get(V2User, 2)
     current1 = user1.vault_locked_balance + user1.vault_available_balance # 10000
     
     # Thread 2 starts and completes
@@ -111,7 +110,7 @@ def test_admin_economy_race_condition_simulation(db_session):
     
     # Thread 1 continues with STALE 'current1' of 10000
     # If the code doesn't use DB-level atomic increment or SELECT FOR UPDATE, it might overwrite.
-    # V2VaultService.force_edit uses db.get(User, user_id) within the session.
+    # V2VaultService.force_edit uses db.get(V2User, user_id) within the session.
     # Let's see if it correctly adds to the LATEST balance.
     
     db_session.refresh(user1)

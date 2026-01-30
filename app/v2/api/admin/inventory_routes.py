@@ -228,7 +228,7 @@ def create_ticket_log(
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(V2User.nickname if user else ""),
+            nickname=(user.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -289,7 +289,7 @@ def update_ticket_log(
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(V2User.nickname if user else ""),
+            nickname=(user.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -387,7 +387,7 @@ def create_inventory_item_log(
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(V2User.nickname if user else ""),
+            nickname=(user.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -445,7 +445,7 @@ def update_inventory_item_log(
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(V2User.nickname if user else ""),
+            nickname=(user.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -561,7 +561,7 @@ def get_user_tickets(
         total_used = (
             db.query(func.sum(func.least(UserInventoryLedger.change_amount, 0)))
             .filter(
-                UserInventoryLedger.user_id == V2User.id,
+                UserInventoryLedger.user_id == user.id,
                 UserInventoryLedger.item_type == wallet.token_type,
             )
             .scalar()
@@ -573,7 +573,7 @@ def get_user_tickets(
         last_used_log = (
             db.query(UserInventoryLedger)
             .filter(
-                UserInventoryLedger.user_id == V2User.id,
+                UserInventoryLedger.user_id == user.id,
                 UserInventoryLedger.item_type == wallet.token_type,
                 UserInventoryLedger.change_amount < 0,
             )
@@ -583,8 +583,8 @@ def get_user_tickets(
 
         result.append(
             UserTicketDto(
-                userId=V2User.id,
-                nickname=V2User.nickname or "(미설정)",
+                userId=user.id,
+                nickname=user.nickname or "(미설정)",
                 telegramUsername=user.telegram_username,
                 ticketType=wallet.token_type,
                 currentBalance=int(wallet.balance or 0),
@@ -665,7 +665,7 @@ def get_user_inventory(
         total_used = (
             db.query(func.sum(func.least(UserInventoryLedger.change_amount, 0)))
             .filter(
-                UserInventoryLedger.user_id == V2User.id,
+                UserInventoryLedger.user_id == user.id,
                 UserInventoryLedger.item_type == item.item_type,
             )
             .scalar()
@@ -675,7 +675,7 @@ def get_user_inventory(
         last_used_log = (
             db.query(UserInventoryLedger)
             .filter(
-                UserInventoryLedger.user_id == V2User.id,
+                UserInventoryLedger.user_id == user.id,
                 UserInventoryLedger.item_type == item.item_type,
                 UserInventoryLedger.change_amount < 0,
             )
@@ -685,8 +685,8 @@ def get_user_inventory(
 
         result.append(
             UserInventoryDto(
-                userId=V2User.id,
-                nickname=V2User.nickname or "(미설정)",
+                userId=user.id,
+                nickname=user.nickname or "(미설정)",
                 telegramUsername=user.telegram_username,
                 itemType=item.item_type,
                 itemName=item.item_type,
@@ -907,7 +907,7 @@ def list_gifticon_deliveries(
         items.append(GifticonDeliveryDto(
             id=log.id,
             user_id=log.user_id,
-            nickname=V2User.nickname if user else "(알 수 없음)",
+            nickname=user.nickname if user else "(알 수 없음)",
             item_type=log.item_type,
             item_name=log.item_type,
             status=item_status,

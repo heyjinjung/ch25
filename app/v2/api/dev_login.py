@@ -46,7 +46,7 @@ def dev_login(payload: DevLoginRequest, request: Request, db: Session = Depends(
     if not cc_id:
         raise HTTPException(status_code=400, detail="MISSING_CC_ID")
 
-    user = V2UserService.get_or_create_v2_user_from_legacy(db, cc_id)
+    user = V2UserService.get_by_cc_id(db, cc_id)
     if user is None:
         if not payload.create_if_missing:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")

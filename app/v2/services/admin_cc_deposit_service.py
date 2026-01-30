@@ -82,11 +82,11 @@ class V2AdminCCDepositService:
             if not key:
                 continue
 
-            # 1) External ID (case-insensitive exact)
+            # 1) External ID / CC ID (case-insensitive exact)
             user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                 db,
-                func.lower(V2User.external_id) == key.lower(),
-                ambiguous_detail="USER_AMBIGUOUS (External ID)",
+                func.lower(V2User.cc_id) == key.lower(),
+                ambiguous_detail="USER_AMBIGUOUS (CC ID)",
             )
             if user_id is not None:
                 return user_id

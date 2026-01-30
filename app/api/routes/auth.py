@@ -1,5 +1,6 @@
 """Simple token issuance endpoint."""
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, Field
@@ -8,13 +9,10 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
 from app.models.feature import UserEventLog
-from app.models.user import User
-from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from app.v2.models.user import V2User, V2UserRole
+from app.v2.models.segment import V2UserSegment
 
 from app.services.mission_service import MissionService
-from app.models.mission import MissionCategory
-from app.models.user_segment import UserSegment
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -46,14 +44,15 @@ class TokenResponse(BaseModel):
 
 @router.post("/token", response_model=TokenResponse, summary="Issue JWT for user")
 def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
+    """V2-only: V2User 테이블에서 사용자 조회 및 JWT 발급."""
     # cc_id 우선, 없으면 user_id로 조회. 둘 다 없으면 401.
     cleaned_cc = (payload.cc_id or payload.external_id or "").strip()
 
     user = None
     if cleaned_cc:
-        user = db.query(User).filter(User.external_id == cleaned_cc).first()
+        user = db.query(V2User).filter(V2User.cc_id == cleaned_cc).first()
     if user is None and payload.user_id is not None:
-        user = db.get(User, payload.user_id)
+        user = db.get(V2User, payload.user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="USER_NOT_FOUND")
     # Capture client IP best-effort
@@ -84,7 +83,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         except Exception:
             pass # Do not block login
 
-        # [Grinder Rule] Streak Logic
+        # [Grinder Rule] Streak Logic - V2User 필드 사용
         try:
             from app.services.team_battle_service import TeamBattleService
             from app.core.config import get_settings
@@ -93,29 +92,23 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
             now_kst = datetime.now(kst)
             today_kst = now_kst.date()
             
-            last_streak_date = None
-            if user.last_streak_updated_at:
-                # Ensure UTC awareness for correct conversion
-                base_time = user.last_streak_updated_at
-                if base_time.tzinfo is None:
-                    base_time = base_time.replace(tzinfo=timezone.utc)
-                last_streak_date = base_time.astimezone(kst).date()
+            last_streak_date = user.last_play_date  # V2User는 Date 타입
             
             # Update streak if it's a new day
             if last_streak_date != today_kst:
                 if last_streak_date == today_kst - timedelta(days=1):
-                    user.login_streak += 1
+                    user.play_streak = (user.play_streak or 0) + 1
                 else:
-                    user.login_streak = 1  # Reset to 1 (Day 1)
+                    user.play_streak = 1  # Reset to 1 (Day 1)
                 
-                user.last_streak_updated_at = datetime.utcnow()
+                user.last_play_date = today_kst
                 
                 # Check for Streak Bonus (3 days, 7 days)
                 settings = get_settings()
                 bonus_points = 0
-                if user.login_streak == 3:
+                if user.play_streak == 3:
                      bonus_points = settings.team_battle_streak_3d_bonus
-                elif user.login_streak == 7:
+                elif user.play_streak == 7:
                      bonus_points = settings.team_battle_streak_7d_bonus
                 
                 if bonus_points > 0:
@@ -129,7 +122,7 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
                              action="STREAK_BONUS", 
                              user_id=user.id, 
                              season_id=None, 
-                             meta={"streak": user.login_streak},
+                             meta={"streak": user.play_streak},
                              enforce_usage=False
                          )
         except Exception as e:
@@ -137,7 +130,6 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
             print(f"Streak update failed: {e}")
 
         user.last_login_at = datetime.utcnow()
-        user.last_login_ip = client_ip
 
         # Insert login event log
         db.add(
@@ -154,37 +146,34 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="LOGIN_FAILED")
 
+    # V2-only: V2User.role 필드에서 직접 권한 확인
     role_str = None
-    try:
-        from app.models.admin_user_profile import AdminUserProfile
-
-        profile = db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user.id).first()
-        if profile and isinstance(profile.tags, list):
-            tag_role = next(
-                (t for t in profile.tags if isinstance(t, str) and t.upper().startswith("ROLE_")),
-                None,
-            )
-            if tag_role:
-                role_str = tag_role.replace("ROLE_", "", 1).upper()
-    except Exception:
-        role_str = None
+    if user.role and user.role != V2UserRole.USER:
+        role_str = user.role.value if hasattr(user.role, 'value') else str(user.role).upper()
+        # Backward compatibility: treat SUPER_ADMIN as ADMIN
+        if role_str == "SUPER_ADMIN":
+            role_str = "ADMIN"
 
     token = (
         create_access_token(user_id=user.id, role=role_str, roles=[role_str])
         if role_str
         else create_access_token(user_id=user.id)
     )
+    
+    # V2-only: V2UserSegment에서 segment 조회
+    segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user.id).scalar()
+    
     return TokenResponse(
         access_token=token,
         user=AuthUser(
             id=user.id,
-            cc_id=user.external_id,
-            external_id=user.external_id,
+            cc_id=user.cc_id,
+            external_id=user.cc_id,  # Backward compatibility
             nickname=user.nickname,
-            status=user.status,
+            status=user.status.value if hasattr(user.status, 'value') else str(user.status) if user.status else None,
             level=user.level,
-            segment=db.query(UserSegment.segment).filter(UserSegment.user_id == user.id).scalar(),
+            segment=segment,
             telegram_id=user.telegram_id,
-            login_streak=user.login_streak,
+            login_streak=user.play_streak or 0,
         ),
     )

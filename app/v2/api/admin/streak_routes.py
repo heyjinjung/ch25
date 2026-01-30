@@ -92,7 +92,7 @@ def get_streak_user_events(
     return StreakRewardUserEventsResponse(
         user=StreakRewardUserInfo(
             id=user.id,
-            external_id=user.external_id,
+            external_id=user.cc_id,
             nickname=user.nickname
         ),
         items=[

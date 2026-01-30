@@ -7,7 +7,7 @@ from fastapi import HTTPException
 
 # Models
 from app.db.base_class import Base
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.app_ui_config import AppUiConfig
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.inventory import UserInventoryItem
@@ -43,26 +43,15 @@ def db_session():
     finally:
         db.close()
 
-from app.v2.models.user import V2User
-
 def setup_user(db, user_id=1, locked=5000):
-    # Legacy/Core User
-    user = User(
-        id=user_id,
-        external_id=f"ext_{user_id}",
-        nickname=f"user_{user_id}",
-        vault_locked_balance=locked
-    )
-    db.add(user)
-    
-    # V2-specific User table (if exists separately in scaffold)
-    v2_user = V2User(
+    # V2-specific User table as SoT
+    user = V2User(
         id=user_id,
         cc_id=f"ext_{user_id}",
         nickname=f"user_{user_id}",
         vault_locked_balance=locked
     )
-    db.add(v2_user)
+    db.add(user)
     
     # Add deposit record to satisfy Strict Vault Policy (7-day no-deposit check)
     deposit = ExternalRankingDailyDepositDelta(
@@ -98,11 +87,9 @@ def test_shop_purchase_integrity(db_session):
     assert res["sku"] == "TICKET_ROULETTE_1"
     assert res["reward_amount"] == 1
     
-    # Check legacy User (SoT) + V2User mirror
-    v2_user = db_session.get(V2User, 1)
+    # Check V2User (SoT)
     db_session.refresh(user)
     assert user.vault_locked_balance == 9000
-    assert v2_user.vault_locked_balance == 9000
 
     # Check daily spend tracking (operational day 기준)
     assert int(getattr(user, "vault_spent_today", 0) or 0) == 1000
@@ -117,13 +104,13 @@ def test_shop_purchase_integrity(db_session):
     assert order is not None
     assert order.cost_type == "VAULT"
 
+
 def test_shop_purchase_idempotency(db_session):
     """
     Phase 2-7: Shop Purchase Idempotency.
     Verify that multiple requests with the same key do not result in double charging.
     """
     user = setup_user(db_session, user_id=2, locked=10000)
-    v2_user = db_session.get(V2User, 2)
     payload = V2ShopPurchaseRequest(sku="TICKET_ROULETTE_1")
     
     # First call
@@ -134,10 +121,8 @@ def test_shop_purchase_idempotency(db_session):
         x_idempotency_key=None,
         idempotency_key="IDEM_KEY_1"
     )
-    db_session.refresh(v2_user)
     db_session.refresh(user)
     assert user.vault_locked_balance == 9000
-    assert v2_user.vault_locked_balance == 9000
     
     # Second call (same key)
     res2 = purchase_shop_product(
@@ -149,10 +134,8 @@ def test_shop_purchase_idempotency(db_session):
     )
     assert res1 == res2
     
-    db_session.refresh(v2_user)
     db_session.refresh(user)
-    assert user.vault_locked_balance == 9000
-    assert v2_user.vault_locked_balance == 9000 # Still 9000
+    assert user.vault_locked_balance == 9000 # Still 9000
 
 def test_shop_cache_invalidation_simulation(db_session):
     """

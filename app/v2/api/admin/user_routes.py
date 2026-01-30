@@ -262,7 +262,7 @@ def create_admin_user(
         "USER",
         str(user.id),
         before={},
-        after={"cc_id": user.external_id, "nickname": user.nickname},
+        after={"cc_id": user.cc_id, "nickname": user.nickname},
     )
 
     return AdminUserListDto(
