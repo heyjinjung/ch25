@@ -7,6 +7,13 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import OperationalError, ProgrammingError, SQLAlchemyError
 from starlette.status import HTTP_422_UNPROCESSABLE_ENTITY
 
+# Sentry import (optional)
+try:
+    import sentry_sdk
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+
 from app.core.exceptions import (
     DailyLimitReachedError,
     FeatureNotActiveError,
@@ -87,6 +94,11 @@ def register_exception_handlers(app: FastAPI) -> None:
             request.url.path,
             exc_info=(type(exc), exc, exc.__traceback__),
         )
+        
+        # Report to Sentry
+        if SENTRY_AVAILABLE:
+            sentry_sdk.capture_exception(exc)
+        
         message = "DATABASE_ERROR"
         code = "DB_ERROR"
 
@@ -110,3 +122,23 @@ def register_exception_handlers(app: FastAPI) -> None:
                 message = "DATABASE_SCHEMA_MISMATCH"
 
         return JSONResponse(status_code=500, content={"error": {"code": code, "message": message}})
+
+    @app.exception_handler(Exception)
+    async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """Catch-all handler for unhandled exceptions."""
+        logger.error(
+            "Unhandled Exception on %s %s: %s",
+            request.method,
+            request.url.path,
+            str(exc),
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
+        
+        # Report to Sentry
+        if SENTRY_AVAILABLE:
+            sentry_sdk.capture_exception(exc)
+        
+        return JSONResponse(
+            status_code=500,
+            content={"error": {"code": "INTERNAL_ERROR", "message": "Internal server error"}},
+        )
