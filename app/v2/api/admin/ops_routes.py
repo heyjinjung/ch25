@@ -807,18 +807,18 @@ def get_audit_logs(
     - ROLLBACK_EXECUTE: 롤백 실행 기록
     - 기타 골든 개입 기록
     """
-    from app.v2.models.v2_admin_audit_log import V2AdminAuditLog
+    from app.models.admin_audit_log import AdminAuditLog
 
-    query = db.query(V2AdminAuditLog)
+    query = db.query(AdminAuditLog)
 
     if action_filter:
-        query = query.filter(V2AdminAuditLog.action == action_filter)
+        query = query.filter(AdminAuditLog.action == action_filter)
     if category_filter:
-        query = query.filter(V2AdminAuditLog.category == category_filter)
+        query = query.filter(AdminAuditLog.target_type == category_filter)
 
     total = query.count()
 
-    logs = query.order_by(V2AdminAuditLog.created_at.desc()).offset(offset).limit(limit).all()
+    logs = query.order_by(AdminAuditLog.created_at.desc()).offset(offset).limit(limit).all()
 
     return AuditLogResponse(
         total=total,
@@ -827,10 +827,10 @@ def get_audit_logs(
                 id=log.id,
                 admin_id=log.admin_id,
                 action=log.action,
-                category=log.category,
+                category=log.target_type or "UNKNOWN",
                 target_id=log.target_id,
-                before_data=log.before_data,
-                after_data=log.after_data,
+                before_data=log.before_json,
+                after_data=log.after_json,
                 created_at=log.created_at,
             )
             for log in logs

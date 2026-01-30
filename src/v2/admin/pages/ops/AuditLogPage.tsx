@@ -44,8 +44,10 @@ const ACTION_COLORS: Record<string, string> = {
 };
 
 // Category options
+const ALL_FILTER_VALUE = "__ALL__";
+
 const CATEGORY_OPTIONS = [
-  { value: "", label: "전체 카테고리" },
+  { value: ALL_FILTER_VALUE, label: "전체 카테고리" },
   { value: "GOLDEN", label: "골든" },
   { value: "USER", label: "유저" },
   { value: "MISSION", label: "미션" },
@@ -57,7 +59,7 @@ const CATEGORY_OPTIONS = [
 
 // Action options
 const ACTION_OPTIONS = [
-  { value: "", label: "전체 액션" },
+  { value: ALL_FILTER_VALUE, label: "전체 액션" },
   { value: "NUDGE_SEND", label: "넛지 발송" },
   { value: "ROI_CALCULATE", label: "ROI 계산" },
   { value: "ROLLBACK_EXECUTE", label: "롤백 실행" },
@@ -74,8 +76,8 @@ const ACTION_OPTIONS = [
 export default function AuditLogPage() {
   const formatKst = (value: string | Date) =>
     new Date(value).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  const [actionFilter, setActionFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [actionFilter, setActionFilter] = useState(ALL_FILTER_VALUE);
+  const [categoryFilter, setCategoryFilter] = useState(ALL_FILTER_VALUE);
   const [limit, setLimit] = useState(50);
   const [offset, setOffset] = useState(0);
   const [expandedLogs, setExpandedLogs] = useState<Set<number>>(new Set());
@@ -83,10 +85,13 @@ export default function AuditLogPage() {
   const {
     data: auditData,
     isLoading,
+    isError,
+    error,
     refetch,
   } = useAdminAuditLogs({
-    action_filter: actionFilter || undefined,
-    category_filter: categoryFilter || undefined,
+    action_filter: actionFilter === ALL_FILTER_VALUE ? undefined : actionFilter,
+    category_filter:
+      categoryFilter === ALL_FILTER_VALUE ? undefined : categoryFilter,
     limit,
     offset,
   });
@@ -217,6 +222,13 @@ export default function AuditLogPage() {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-20 text-zinc-500">로딩중...</div>
+          ) : isError ? (
+            <div className="text-center py-20 text-rose-400">
+              로그 조회에 실패했습니다. 권한/네트워크를 확인해주세요.
+              <div className="text-xs text-zinc-500 mt-2">
+                {(error as Error)?.message || "UNKNOWN_ERROR"}
+              </div>
+            </div>
           ) : !auditData?.logs?.length ? (
             <div className="text-center py-20 text-zinc-500">
               로그가 없습니다.
