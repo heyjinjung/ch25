@@ -10,9 +10,10 @@ Problem:
 - V2 system uses v2_user exclusively
 - FK constraint fails when user exists in v2_user but not in legacy user table
 
-Solution:
+Solution (Updated 2026-01-30 10:35 - Option A):
 - Drop old FK constraints referencing `user.id` (if exists)
-- Add new FK constraints referencing `v2_user.id`
+- DELETE orphan data (user_id not in v2_user)
+- Create new FK to v2_user
 """
 from alembic import op
 from alembic import context
@@ -29,7 +30,6 @@ depends_on = None
 
 def _safe_drop_fk(conn, table_name: str, constraint_name: str) -> None:
     """Drop FK constraint if it exists (MySQL safe)."""
-    # Check if constraint exists
     result = conn.execute(text(f"""
         SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
         WHERE TABLE_SCHEMA = DATABASE()
@@ -42,9 +42,17 @@ def _safe_drop_fk(conn, table_name: str, constraint_name: str) -> None:
         conn.execute(text(f"ALTER TABLE {table_name} DROP FOREIGN KEY {constraint_name}"))
 
 
+def _delete_orphans(conn, table_name: str) -> int:
+    """Delete rows where user_id doesn't exist in v2_user."""
+    result = conn.execute(text(f"""
+        DELETE FROM {table_name}
+        WHERE user_id NOT IN (SELECT id FROM v2_user)
+    """))
+    return result.rowcount
+
+
 def _safe_create_fk(conn, table_name: str, constraint_name: str, ref_table: str) -> None:
     """Create FK constraint if it doesn't exist."""
-    # Check if constraint already exists
     result = conn.execute(text(f"""
         SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
         WHERE TABLE_SCHEMA = DATABASE()
@@ -61,36 +69,43 @@ def _safe_create_fk(conn, table_name: str, constraint_name: str, ref_table: str)
 
 
 def upgrade() -> None:
+    """Drop old FK, delete orphan data, create new FK to v2_user."""
     conn = op.get_bind()
     
-    # List of tables and their old/new FK constraint names
+    # Tables in order: ledgers first (child), then main tables
     tables = [
-        ("user_game_wallet", "user_game_wallet_ibfk_1", "fk_user_game_wallet_v2_user"),
         ("user_game_wallet_ledger", "user_game_wallet_ledger_ibfk_1", "fk_user_game_wallet_ledger_v2_user"),
-        ("user_inventory_item", "user_inventory_item_ibfk_1", "fk_user_inventory_item_v2_user"),
         ("user_inventory_ledger", "user_inventory_ledger_ibfk_1", "fk_user_inventory_ledger_v2_user"),
+        ("user_game_wallet", "user_game_wallet_ibfk_1", "fk_user_game_wallet_v2_user"),
+        ("user_inventory_item", "user_inventory_item_ibfk_1", "fk_user_inventory_item_v2_user"),
     ]
     
     for table_name, old_fk, new_fk in tables:
-        # Drop old FK (if exists)
+        # 1. Drop old FK (if exists)
         _safe_drop_fk(conn, table_name, old_fk)
-        # Also try to drop new FK in case of partial migration
-        _safe_drop_fk(conn, table_name, new_fk)
-        # Create new FK to v2_user
+        _safe_drop_fk(conn, table_name, new_fk)  # in case of partial migration
+        
+        # 2. Delete orphan data (user_id not in v2_user)
+        deleted = _delete_orphans(conn, table_name)
+        print(f"[MIGRATION] {table_name}: deleted {deleted} orphan rows")
+        
+        # 3. Create new FK to v2_user
         _safe_create_fk(conn, table_name, new_fk, "v2_user")
 
 
 def downgrade() -> None:
-    """Revert to legacy user FK (for rollback)."""
+    """Revert to no FK (rollback). Cannot restore deleted orphan data."""
     conn = op.get_bind()
     
     tables = [
-        ("user_game_wallet", "fk_user_game_wallet_v2_user", "user_game_wallet_ibfk_1"),
-        ("user_game_wallet_ledger", "fk_user_game_wallet_ledger_v2_user", "user_game_wallet_ledger_ibfk_1"),
-        ("user_inventory_item", "fk_user_inventory_item_v2_user", "user_inventory_item_ibfk_1"),
-        ("user_inventory_ledger", "fk_user_inventory_ledger_v2_user", "user_inventory_ledger_ibfk_1"),
+        ("user_game_wallet", "fk_user_game_wallet_v2_user"),
+        ("user_game_wallet_ledger", "fk_user_game_wallet_ledger_v2_user"),
+        ("user_inventory_item", "fk_user_inventory_item_v2_user"),
+        ("user_inventory_ledger", "fk_user_inventory_ledger_v2_user"),
     ]
     
-    for table_name, v2_fk, legacy_fk in tables:
+    for table_name, v2_fk in tables:
         _safe_drop_fk(conn, table_name, v2_fk)
-        _safe_create_fk(conn, table_name, legacy_fk, "user")
+    
+    # NOTE: Deleted orphan data cannot be restored
+    # Legacy FK is NOT recreated (user table may not have matching IDs)
