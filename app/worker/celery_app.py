@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -24,33 +25,21 @@ celery_app.conf.update(
     beat_schedule={
         "daily-nudge-noon": {
             "task": "app.v2.tasks.daily_nudge_tasks.execute_daily_nudge_task",
-            "schedule": {
-                "hour": 12,
-                "minute": 0,
-            },  # 매일 12:00 KST
+            "schedule": crontab(hour=12, minute=0),  # 매일 12:00 KST
             "args": (3, 1, False),  # (lookback_days, ticket_amount, dry_run)
         },
         "daily-nudge-evening": {
             "task": "app.v2.tasks.daily_nudge_tasks.execute_daily_nudge_task",
-            "schedule": {
-                "hour": 18,
-                "minute": 0,
-            },  # 매일 18:00 KST
+            "schedule": crontab(hour=18, minute=0),  # 매일 18:00 KST
             "args": (3, 1, False),
         },
         "daily-roi-midnight": {
             "task": "app.v2.tasks.roi_tasks.execute_roi_calculation_task",
-            "schedule": {
-                "hour": 0,
-                "minute": 0,
-            },  # 매일 00:00 KST
+            "schedule": crontab(hour=0, minute=0),  # 매일 00:00 KST
         },
         "segment-batch-early-morning": {
             "task": "app.v2.tasks.segment_tasks.execute_segment_batch_task",
-            "schedule": {
-                "hour": 1,
-                "minute": 0,
-            },  # 매일 01:00 KST
+            "schedule": crontab(hour=1, minute=0),  # 매일 01:00 KST
         },
     },
 )

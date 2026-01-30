@@ -567,18 +567,31 @@ distribute_milestone_reward
 마케팅 효율성 분석
 일간 수익/지출 계산
 
----------------------------------------
+✅ http://localhost:3000/admin/ops/analytics - 이것 아직도 목업데이터 
+http://localhost:3000/admin/ops/audit-logs - 아예 백지상태
+http://localhost:3000/admin/inventory/stock - 역시 하드코딩or 목업데이터
+실제 데이터베이스로  실제 API/WS 상태 기반으로 전환, 라우팅 연동 할 것 
+데이터가 없는 상태는 없는 상태로 나오게 할것 
 
+
+그리고 앞선 테스트 기록 로그 남아있는
+http://localhost:3000/admin/inventory/tickets
+http://localhost:3000/admin/inventory/tickets
+티켓 로그 목록 (Ticket Logs)
+Inventory Log List
+이것도 초기화 해줘 
+
+---------------------------------------
 
 연속스트릭모달
 골든아워 모달
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
-
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
  docker compose build --no-cache; docker compose up -d
 -----------------------------------
+
 
 
 
@@ -592,16 +605,6 @@ docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_production_deployment_checkli
 
 트러블슈팅문서 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\1차_2026_v2_deployment_troubleshooting_guide_ko.md
-
-
-제시된 부분만 확인하여
-체크박스 업데이트
-
-근거를 먼저 grep/read로 확인 후
-확인된 항목만 체크박스를 x 로 업데이트
-불확실한 항목은 그래도 []로 남겨놔
-
-
 
 기능 생성 후 문서 업로드해줘 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
