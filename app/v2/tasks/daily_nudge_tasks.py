@@ -12,12 +12,14 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session
 
+from app.worker.celery_app import celery_app
 from app.db.session import SessionLocal
 from app.v2.services.daily_nudge_service import DailyNudgeService
 
 logger = logging.getLogger(__name__)
 
 
+@celery_app.task(name="app.v2.tasks.daily_nudge_tasks.execute_daily_nudge_task")
 def execute_daily_nudge_task(
     lookback_days: int = 3,
     ticket_amount: int = 1,
