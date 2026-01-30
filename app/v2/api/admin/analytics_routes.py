@@ -407,6 +407,7 @@ def get_revenue_breakdown(
 
         # 출금 (지출)
         withdrawal_stats = db.query(
+            func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0).label("total"),
             func.count(VaultWithdrawalRequest.id).label("count"),
         ).filter(
             func.date(VaultWithdrawalRequest.created_at) == current_date,
