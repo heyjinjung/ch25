@@ -215,3 +215,11 @@ def root() -> dict[str, str]:
     """Simple root endpoint placeholder."""
 
     return {"message": "XMAS 1Week backend running"}
+
+
+@app.get("/debug-sentry", summary="Sentry test endpoint")
+def debug_sentry():
+    """Trigger a test error to verify Sentry integration."""
+    import sentry_sdk
+    sentry_sdk.capture_message("Sentry test message from /debug-sentry endpoint")
+    raise ValueError("This is a test error for Sentry verification")
