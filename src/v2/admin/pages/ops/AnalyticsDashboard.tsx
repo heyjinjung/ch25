@@ -8,21 +8,21 @@ import {
   Percent,
 } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
-import { InfoTooltip } from "../../../components/ui/info-tooltip";
+import { Badge } from "../../components/ui/badge";
+import { InfoTooltip } from "../../components/ui/info-tooltip";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../../components/ui/card";
+} from "../../components/ui/card";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../../components/ui/tabs";
+} from "../../components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -519,12 +519,8 @@ export default function AnalyticsDashboard() {
                       description={
                         "신규 유저 1명을 데려오는데 평균 얼마가 들었는지입니다.\n(비용 효율을 보는 지표)"
                       }
-                      formula={
-                        "계산식\n= 총 마케팅 비용 ÷ 총 신규 유저"
-                      }
-                      note={
-                        "예: 비용 2,000원 / 신규 3명 → CAC 약 666.67원"
-                      }
+                      formula={"계산식\n= 총 마케팅 비용 ÷ 총 신규 유저"}
+                      note={"예: 비용 2,000원 / 신규 3명 → CAC 약 666.67원"}
                     />
                   </CardTitle>
                 </CardHeader>
@@ -543,9 +539,7 @@ export default function AnalyticsDashboard() {
                       description={
                         "마케팅 비용을 쓴 만큼 '남았는지/손해인지'를 비율로 보여줍니다.\n\n0%: 본전\n양수(+): 이익\n음수(-): 손해"
                       }
-                      formula={
-                        "계산식\n= (LTV - CAC) ÷ CAC"
-                      }
+                      formula={"계산식\n= (LTV - CAC) ÷ CAC"}
                       note={
                         "입금이 0원인데 비용만 있으면 ROI는 -100%가 될 수 있습니다."
                       }
@@ -632,9 +626,7 @@ export default function AnalyticsDashboard() {
                               description={
                                 "신규 유저 중 '입금'까지 이어진 비율입니다.\n(마케팅이 실제 매출 행동으로 이어졌는지 보는 지표)"
                               }
-                              formula={
-                                "계산식\n= 입금 유저 수 ÷ 신규 유저 수"
-                              }
+                              formula={"계산식\n= 입금 유저 수 ÷ 신규 유저 수"}
                             />
                           </span>
                         </th>
@@ -668,9 +660,7 @@ export default function AnalyticsDashboard() {
                               description={
                                 "채널별로 '번 돈(LTV)'이 '쓴 돈(CAC)'보다 큰지 비율로 보여줍니다.\n양수면 이익, 음수면 손해입니다."
                               }
-                              formula={
-                                "계산식\n= (LTV - CAC) ÷ CAC"
-                              }
+                              formula={"계산식\n= (LTV - CAC) ÷ CAC"}
                             />
                           </span>
                         </th>

@@ -6,7 +6,27 @@
 |---|------|----------|--------|------|
 | 8 | INVALID_REWARD_TYPE (VAULT) | 어드민 | 🟡 중 | ✅ 코드완료 |
 | 9 | FK 500 에러 (티켓/인벤토리 지급) | 유저 | 🔴 높음 | ✅ 코드완료 |
+| 10 | FK 마이그레이션 실패 (1091) | 배포 | 🔴 높음 | ✅ 수정완료 |
+| 11 | npm build 실패 (TS2307) | 배포 | 🔴 높음 | ✅ 수정완료 |
 | ? | 주사위/복권 설정 로드 실패 | 어드민 | 🟡 중 | ❓ 미조사 |
+
+---
+
+## Issue 10: FK 마이그레이션 실패 (OperationalError 1091)
+
+### 에러
+```
+OperationalError: (1091, "Can't DROP 'user_game_wallet_ibfk_1'; check that column/key exists")
+```
+
+### 원인
+- 운영 DB에 FK가 이미 없거나 다른 이름으로 존재
+- 하드코딩된 FK 이름으로 DROP 시도 → 실패
+
+### 해결
+- 마이그레이션을 `IF EXISTS` 방식으로 수정
+- `_safe_drop_fk()`, `_safe_create_fk()` 헬퍼 함수 추가
+- 파일: `alembic/versions/20260130_1900_migrate_fk_to_v2_user.py`
 
 ---
 
