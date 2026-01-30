@@ -70,9 +70,9 @@ class V2RewardService:
         meta: dict[str, Any] | None = None,
         commit: bool = True,
     ) -> None:
-        # NOTE: Storage SoT
-        # - Wallet/Inventory는 legacy `user.id`를 FK로 사용한다.
-        # - v2_user.id와 legacy user.id가 1:1 동일하므로, V2User.id 직접 사용
+        # NOTE: Storage SoT (2026-01-30 FK Migration)
+        # - Wallet/Inventory FK가 v2_user.id를 참조하도록 마이그레이션됨
+        # - V2User.id를 직접 사용
         storage_user_id = user_id
 
         if reward_amount == 0 or reward_type in {"NONE", "", None}:

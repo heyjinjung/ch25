@@ -48,9 +48,9 @@ class UserGameWallet(Base):
     __table_args__ = (UniqueConstraint("user_id", "token_type", name="uq_user_token_type"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     token_type = Column(SAEnum(GameTokenType), nullable=False, index=True)
     balance = Column(Integer, nullable=False, default=0)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship("User", back_populates="game_wallets")
+    user = relationship("V2User", back_populates="game_wallets")

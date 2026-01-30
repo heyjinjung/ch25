@@ -26,6 +26,7 @@ Golden V2의 실시간 개입(Intervention) 및 대량 로그 처리를 위해 �
 - **SSL**: HTTPS 반드시 활성화 (nginx 프록시 통해 SSL 종료)
 - **CORS**: https://cc-jm.com, https://www.cc-jm.com, http://149.28.135.147 (프리플라이트 요청 허용)
 
+✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 ---
 
 ## 🛠️ 2. 서버 환경 구축 (Standard Setup)

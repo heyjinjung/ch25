@@ -4,6 +4,7 @@ from enum import Enum as PyEnum
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, Integer, String
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -57,3 +58,6 @@ class V2User(Base):
     password_hash = Column(String(128), nullable=True)
     created_at = Column(DateTime, nullable=False, default=_kst_now)
     updated_at = Column(DateTime, nullable=False, default=_kst_now, onupdate=_kst_now)
+
+    # Relationships for wallet/inventory (FK migrated from legacy user)
+    game_wallets = relationship("UserGameWallet", back_populates="user", lazy="dynamic")

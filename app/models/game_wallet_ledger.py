@@ -12,7 +12,7 @@ class UserGameWalletLedger(Base):
     __tablename__ = "user_game_wallet_ledger"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     token_type = Column(SAEnum(GameTokenType), nullable=False, index=True)
     delta = Column(Integer, nullable=False)
     balance_after = Column(Integer, nullable=False)
@@ -21,4 +21,4 @@ class UserGameWalletLedger(Base):
     meta_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
 
-    user = relationship("User")
+    user = relationship("V2User")

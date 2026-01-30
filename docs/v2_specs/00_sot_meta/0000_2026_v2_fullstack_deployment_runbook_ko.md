@@ -96,6 +96,7 @@ tests/test_enum_matches_sot.py  (Enum 정합성)
 tests/v2_tests/phase4_admin/test_api_coverage.py (API 커버리지)
 tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오)
 
+✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 
 ### 2.2 프론트엔드 연동 (E2E)
 - [x] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.

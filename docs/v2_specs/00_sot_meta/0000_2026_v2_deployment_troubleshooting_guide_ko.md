@@ -160,6 +160,7 @@ completed_count = db.query(func.count(UserMissionProgress.id)).filter(
 - **RBAC/권한 태그/ADMINUserProfile 기반 권한 체크**
 - **SUPERADMIN/OPERATOR 등급 하드코딩/필터링 로직 완전 제거**
 - **403 Forbidden/Permission Denied 발생 시 get_current_admin_info, tags, 권한 체크 로직 우선 검토**
+✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 
 ### 2.5 DB/마이그레이션/스키마/데이터 동기화
 - **alembic legacy 문제(더미 파일, revision 누락, down_revision 오류, 컨테이너 미반영 등) 발생 시 즉시 파일 삭제/수정/재복사**
@@ -212,6 +213,24 @@ completed_count = db.query(func.count(UserMissionProgress.id)).filter(
 - **Redis Latency**: `redis-cli --latency` 확인 (1ms 이하 권장).
 - **Backend Response**: `/metrics` 엔드포인트를 통해 Prometheus 메트릭 수집 확인.
 - **Log Integrity**: 에러 로그 내에 `V1 Legacy` 관련 경로가 보이지 않는지 최종 확인.
+
+1. level_routes.py - INVALID_REWARD_TYPE 오류
+ALLOWED_REWARD_TYPES에 VAULT 추가 (금고 포인트 보상 지원)
+2. economy_routes.py - 500 Internal Server Error
+User 참조 오류 수정 (4곳):
+
+295행: join(User, ...) → join(V2User, ...)
+922행: join(User) → join(V2User, UserGameWallet.user_id == V2User.id)
+1039행: join(User) → join(V2User, UserInventoryItem.user_id == V2User.id)
+1139행, 1152행: outerjoin(User, ...) → outerjoin(V2User, ...)
+FK 제약조건 문제 수정 (인벤토리/티켓 테이블이 legacy user 테이블 참조):
+
+Legacy User 모델 import 추가
+create_inventory_item: V2User 대신 legacy User 검증
+create_ticket: legacy User 존재 여부 검증 추가
+운영 서버에 배포하려면 Docker 빌드 후 재시작이 필요합니다:
+
+해결책으로 FK를 v2_user로 마이그레이션하겠습니다. 먼저 현재 테이블 구조를 확인하고 Alembic 마이그레이션을 생성하겠습니다.
 
 ---
 > [!IMPORTANT]

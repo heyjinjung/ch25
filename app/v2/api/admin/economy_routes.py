@@ -291,7 +291,7 @@ def list_deposit_logs(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     query = db.query(ExternalRankingDailyDepositDelta, V2User).join(
-        User, ExternalRankingDailyDepositDelta.user_id == V2User.id
+        V2User, ExternalRankingDailyDepositDelta.user_id == V2User.id
     )
 
     if search:
@@ -917,7 +917,7 @@ def get_ticket_stats(db: Session = Depends(get_db)):
 
 @router.get("/inventory/tickets/users", response_model=List[UserTicketDto])
 def get_user_tickets(search: str | None = None, db: Session = Depends(get_db)):
-    query = db.query(UserGameWallet).join(User)
+    query = db.query(UserGameWallet).join(V2User, UserGameWallet.user_id == V2User.id)
     
     if search:
         if search.isdigit():
@@ -959,6 +959,11 @@ def create_ticket(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info)
 ):
+    # FK now references v2_user (migrated from legacy user)
+    user = db.query(V2User).filter(V2User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    
     admin_id, _ = admin_info
     V2AdminInventoryService.grant_tokens(
         db, 
@@ -1034,7 +1039,7 @@ def get_inventory_stats(db: Session = Depends(get_db)):
 
 @router.get("/inventory/items/users", response_model=List[UserInventoryItemDto])
 def get_user_inventory_list(search: str | None = None, db: Session = Depends(get_db)):
-    query = db.query(UserInventoryItem).join(User)
+    query = db.query(UserInventoryItem).join(V2User, UserInventoryItem.user_id == V2User.id)
     
     if search:
         if search.isdigit():
@@ -1075,6 +1080,7 @@ def create_inventory_item(
     db: Session = Depends(get_db), 
     admin_info: tuple[int, str] = Depends(get_current_admin_info)
 ):
+    # FK now references v2_user (migrated from legacy user)
     user = db.query(V2User).filter(V2User.id == payload.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
@@ -1134,7 +1140,7 @@ def get_ticket_logs(
 ):
     # Fetch Wallet Logs
     w_query = db.query(UserGameWalletLedger, V2User).outerjoin(
-        User, UserGameWalletLedger.user_id == V2User.id
+        V2User, UserGameWalletLedger.user_id == V2User.id
     )
     if user_id:
         w_query = w_query.filter(UserGameWalletLedger.user_id == user_id)
@@ -1147,7 +1153,7 @@ def get_ticket_logs(
     
     # Fetch Inventory Logs
     i_query = db.query(UserInventoryLedger, V2User).outerjoin(
-        User, UserInventoryLedger.user_id == V2User.id
+        V2User, UserInventoryLedger.user_id == V2User.id
     )
     if user_id:
         i_query = i_query.filter(UserInventoryLedger.user_id == user_id)

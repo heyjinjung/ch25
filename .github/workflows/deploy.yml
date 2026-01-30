@@ -73,12 +73,13 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           TELEGRAM_BOT_USERNAME: ${{ secrets.TELEGRAM_BOT_USERNAME }}
           TELEGRAM_CHANNEL_USERNAME: ${{ secrets.TELEGRAM_CHANNEL_USERNAME }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: "30m"
-          envs: GITHUB_ACTOR,GITHUB_SHA,GH_TOKEN,JWT_SECRET,TELEGRAM_BOT_TOKEN,SECRET_KEY,TELEGRAM_BOT_USERNAME,TELEGRAM_CHANNEL_USERNAME
+          envs: GITHUB_ACTOR,GITHUB_SHA,GH_TOKEN,JWT_SECRET,TELEGRAM_BOT_TOKEN,SECRET_KEY,TELEGRAM_BOT_USERNAME,TELEGRAM_CHANNEL_USERNAME,SENTRY_DSN
           script: |
             set -e
             # 깃허브 레지스트리 로그인
@@ -117,6 +118,7 @@ jobs:
             echo "SECRET_KEY=${SECRET_KEY}" >> .env
             echo "TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}" >> .env
             echo "TELEGRAM_CHANNEL_USERNAME=${TELEGRAM_CHANNEL_USERNAME}" >> .env
+            echo "SENTRY_DSN=${SENTRY_DSN}" >> .env
             echo "TELEGRAM_MINI_APP_URL=https://cc-jm.com" >> .env
             echo "TELEGRAM_WEBHOOK_URL=https://cc-jm.com" >> .env
             echo "ENVIRONMENT=production" >> .env

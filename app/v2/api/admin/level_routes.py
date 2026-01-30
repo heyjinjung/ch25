@@ -17,6 +17,7 @@ ALLOWED_REWARD_TYPES = {
     "BUNDLE",
     "TICKET_BUNDLE",
     "NONE",
+    "VAULT",  # 금고 포인트 보상 (2026-01-30 추가)
     "ROULETTE_TICKET",
     "DICE_TICKET",
     "LOTTERY_TICKET",

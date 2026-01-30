@@ -179,6 +179,11 @@ def create_ticket_log(
     admin_id, admin_role = admin_info
     check_admin_permission(admin_role)
 
+    # FK now references v2_user (migrated from legacy user)
+    user = db.query(V2User).filter(V2User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
     try:
         # 1. Ticket grants must be wallet tokens (V2 SoT)
         try:
@@ -350,6 +355,11 @@ def create_inventory_item_log(
 ):
     admin_id, admin_role = admin_info
     check_admin_permission(admin_role)
+
+    # FK now references v2_user (migrated from legacy user)
+    user = db.query(V2User).filter(V2User.id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     try:
         # Sync UserInventoryItem

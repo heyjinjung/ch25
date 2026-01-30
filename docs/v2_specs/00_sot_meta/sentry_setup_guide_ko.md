@@ -20,11 +20,21 @@
 4. **Alert Frequency**: `On every new issue` 선택
 5. **Create Project** 클릭
 
+.github/workflows/deploy.yml 파일에서 다음 3곳을 수정했습니다:
+
+Line 76: env 섹션에 SENTRY_DSN 추가
+Line 81: envs 리스트에 SENTRY_DSN 추가
+Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
+
 ### 1.3 DSN 확인
 생성 후 표시되는 DSN을 복사합니다:
+
+**✅ 발급된 실제 DSN** (2026-01-30):
 ```
-https://examplePublicKey@o0.ingest.sentry.io/0
+https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928
 ```
+
+⚠️ **보안 주의**: DSN은 클라이언트에서도 사용 가능한 공개 키이지만, GitHub Public Repository에 직접 커밋하지 마세요. GitHub Secrets로 관리합니다.
 
 ---
 
@@ -60,51 +70,104 @@ sentry_sdk.init(
 
 ## 🚀 3. 환경 변수 설정
 
-### 3.1 `.env` 파일 업데이트
-운영 서버의 `.env` 또는 `.env.production` 파일에 추가:
+### 3.1 GitHub Secrets 등록 (CI/CD 자동 배포용)
+
+1. **GitHub Repository 이동**:
+   - https://github.com/YOUR_ORG/ch25 (실제 Repository URL로 변경)
+
+2. **Settings → Secrets and variables → Actions**로 이동
+
+3. **New repository secret** 클릭
+
+4. **Secret 추가**:
+   ```
+   Name: SENTRY_DSN
+   Value: https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928
+   ```
+
+5. **Add secret** 클릭
+
+✅ 이제 `.github/workflows/deploy.yml`이 자동으로 이 Secret을 사용하여 운영 서버에 배포합니다.
+
+### 3.2 수동 배포 시 `.env` 파일 업데이트
+
+CI/CD 파이프라인을 사용하지 않고 수동으로 배포하는 경우:
 
 ```bash
-# Sentry Error Tracking
-SENTRY_DSN=https://YOUR_PUBLIC_KEY@o0.ingest.sentry.io/YOUR_PROJECT_ID
+# SSH 접속
+ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147
+
+# 프로젝트 디렉토리로 이동
+cd /opt/ch25
+
+# .env 파일에 추가
+echo "SENTRY_DSN=https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928" >> .env
 ```
 
-### 3.2 Docker Compose 환경 변수 전달
+### 3.3 Docker Compose 환경 변수 전달
 [docker-compose.yml](../../../docker-compose.yml) 에서 이미 `env_file: .env`로 설정되어 있으므로 추가 작업 불필요.
 
 ---
 
 ## 📦 4. 배포
 
-### 4.1 로컬에서 변경 사항 커밋
-```bash
-git add requirements.txt app/main.py
-git commit -m "feat: add Sentry integration for production error tracking"
-git push origin deploy
-```
+### 4.1 자동 배포 (GitHub Actions) ✅ 권장
 
-### 4.2 운영 서버 배포
+1. **GitHub Secrets 등록 완료 확인** (Step 3.1)
+
+2. **deploy 브랜치에 Push**:
+   ```bash
+   # 로컬에서 변경사항 커밋 (이미 완료됨)
+   git add .
+   git commit -m "feat: add Sentry integration for production error tracking"
+
+   # deploy 브랜치에 push
+   git push origin deploy
+   ```
+
+3. **GitHub Actions 자동 실행 확인**:
+   - GitHub Repository → Actions 탭
+   - "XMAS Event V2 Deployment" 워크플로우 실행 확인
+   - 자동으로:
+     - Docker 이미지 빌드/푸시
+     - 운영 서버 배포
+     - `.env`에 `SENTRY_DSN` 자동 추가
+     - 컨테이너 재시작
+
+4. **배포 로그 확인**:
+   ```bash
+   # SSH 접속
+   ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147
+
+   # 백엔드 로그에서 Sentry 초기화 확인
+   docker logs xmas-backend --tail 50 | grep Sentry
+   # 예상 출력: ✅ Sentry initialized (env=production)
+   ```
+
+### 4.2 수동 배포 (선택사항)
+
+자동 배포 파이프라인 없이 수동으로 배포하는 경우:
+
 ```bash
 # SSH 접속
 ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147
 
-# 프로젝트 디렉토리로 이동 (경로 확인 필요)
-cd /path/to/project
+# 프로젝트 디렉토리로 이동
+cd /opt/ch25
 
 # 최신 코드 가져오기
 git pull origin deploy
 
-# .env에 SENTRY_DSN 추가
-nano .env
-# 아래 라인 추가:
-# SENTRY_DSN=https://YOUR_DSN
+# .env에 SENTRY_DSN 추가 (아직 추가하지 않은 경우)
+echo "SENTRY_DSN=https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928" >> .env
 
 # 컨테이너 재시작
 docker-compose down
 docker-compose up -d --build
 
 # 로그 확인
-docker logs xmas-backend --tail 50
-# "✅ Sentry initialized (env=production)" 메시지 확인
+docker logs xmas-backend --tail 50 | grep Sentry
+# 예상 출력: ✅ Sentry initialized (env=production)
 ```
 
 ---
@@ -121,7 +184,27 @@ docker logs xmas-backend | grep Sentry
 ```
 
 ### 5.2 테스트 에러 전송
-백엔드 컨테이너에서 테스트 에러 발생:
+
+**방법 1: /sentry-debug 엔드포인트 추가 (권장)**
+
+[app/main.py](../../../app/main.py)에 테스트 엔드포인트 추가:
+```python
+@app.get("/sentry-debug")
+async def trigger_error():
+    """Sentry 테스트용 에러 발생 엔드포인트 (프로덕션에서는 제거)"""
+    division_by_zero = 1 / 0
+    return {"status": "should not reach here"}
+```
+
+그 후 브라우저나 curl로 호출:
+```bash
+curl https://cc-jm.com/sentry-debug
+# 500 Internal Server Error 발생 → Sentry에 자동 전송
+```
+
+⚠️ **배포 후 이 엔드포인트는 보안상 제거해야 합니다.**
+
+**방법 2: Docker 컨테이너에서 직접 실행**
 ```bash
 docker exec xmas-backend python -c "
 import sentry_sdk
@@ -131,14 +214,20 @@ try:
     1/0
 except Exception as e:
     sentry_sdk.capture_exception(e)
-print('Test error sent to Sentry')
+print('✅ Test error sent to Sentry')
 "
 ```
 
 ### 5.3 Sentry 대시보드 확인
 1. https://sentry.io 접속
-2. 프로젝트 선택: `xmas-backend-production`
+2. Organization 선택 후 프로젝트 선택
 3. **Issues** 탭에서 `ZeroDivisionError` 확인
+4. 에러 상세 정보 확인:
+   - Stack trace
+   - Request 정보 (URL, method, headers)
+   - Environment: `production`
+   - Server name
+   - Timestamp
 
 ---
 
