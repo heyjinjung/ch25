@@ -3,6 +3,17 @@
 ## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
 
 ---
+### [2026-01-30 배포 트러블슈팅 및 저장소 이관]
+- **저장소 이관 완료**: `heyjinjung/ch25` → `jm956-cc/202601_app` (전체 브랜치/태그/히스토리 이관)
+- **배포 이슈 해결** (deploy.yml, docker-compose.yml, migration 수정):
+  - Dockerfile SCP 복사 누락 → `Dockerfile.backend`, `Dockerfile.frontend` 추가
+  - celery-worker/beat 빌드 실패 → `image: ghcr.io/.../xmas-backend:latest` 추가
+  - 프로덕션 볼륨 마운트 오류 → 개발용 볼륨을 `docker-compose.override.yml`로 분리
+  - MySQL `ADD COLUMN IF NOT EXISTS` 미지원 → `column_exists()` 함수로 수정
+  - Mission Stats 500 에러 → 잘못된 `type_descriptor` 코드 제거
+- **목업 데이터 정리**: 수익/지출, 재고 데이터 로컬 DB에서 삭제
+- **트러블슈팅 문서**: [0000_2026_v2_deployment_troubleshooting_guide_ko.md](docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md)
+
 ### [2026-01-28 금고 정책 SoT 승격 내역]
 - learned_/vault/20260128_vault_balance_sync_update.md: V1/V2 금고 잔액 동기화 정책, 서비스/테스트 케이스 개선, pytest 통과
 - learned_/vault/20260127_vault_today_spent_shop_purchase_update.md, learned_/vault/20260127_vault_daily_spent_tracks_v2_shop_purchase.md: 상점 구매 시 vault_spent_today/total 누적/리셋, 원장 기록, V2User 동기화, 테스트 케이스 보강
@@ -99,6 +110,7 @@
 - (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
 - (Ticket/Inventory Search) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260121_ticket_inventory_search_ko.md
 - (CSV Import) docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md
+- **(배포 트러블슈팅 가이드)** docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md
 
 ## 5.1 V2 Admin 라우터 모듈(코드 맵)
 - 라우터 엔트리: app/v2/api/routes.py (admin_router include)
@@ -146,3 +158,4 @@
 - v2.3 (2026-01-20, GitHub Copilot): Troubleshooting 섹션 및 V2 Admin 라우터 모듈(코드 맵) 링크 추가
 - v2.4 (2026-01-22, GitHub Copilot): CSV 임포트 가이드 및 신규 어드민 라우터(CSV, CC Deposit, Ops Plan) 링크 추가
 - v2.5 (2026-01-27, GitHub Copilot): V2 핵심 일관성 체크아웃(Learned SoT) 최신화 및 인덱스 구조 재편성
+- v2.6 (2026-01-30, GitHub Copilot): 배포 트러블슈팅 이슈(이슈 5~8) 추가, 저장소 이관(jm956-cc/202601_app) 기록
