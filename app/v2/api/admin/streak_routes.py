@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_info
 from app.models.feature import UserEventLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_segment import UserSegment
 from app.schemas.admin_streak_rewards import (
     StreakRewardDailyCountsResponse,
@@ -63,11 +63,11 @@ def get_streak_user_events(
 ):
     user = None
     if external_id:
-        user = db.query(User).filter(User.external_id == external_id).first()
+        user = db.query(V2User).filter(V2User.cc_id == external_id).first()
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     elif user_id:
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     else:
@@ -124,7 +124,7 @@ def get_user_streak_admin(
     Returns:
         UserStreakAdminDto: 스트릭 상세 정보
     """
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -162,7 +162,7 @@ def reset_user_streak_admin(
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -207,7 +207,7 @@ def set_user_streak_count(
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -250,7 +250,7 @@ def get_user_milestone_progress(
     Returns:
         UserMilestoneProgressResponse: 각 마일스톤별 달성/클레임 여부
     """
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -293,7 +293,7 @@ def force_grant_milestone(
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -369,8 +369,8 @@ def distribute_milestone_reward(
         target_user_ids = [s.user_id for s in segments]
     else:
         # 조건에 맞는 전체 유저 (streak_days >= milestone_day인 유저)
-        users = db.query(User).filter(
-            User.play_streak >= payload.milestone_day
+        users = db.query(V2User).filter(
+            V2User.play_streak >= payload.milestone_day
         ).all()
         target_user_ids = [u.id for u in users]
 

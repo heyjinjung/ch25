@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.models.mission import Mission, MissionRewardType, UserMissionProgress
-from app.models.user import User
+from app.v2.models.user import V2User
 
 from app.v2.services.v2_admin_mission_service import V2AdminMissionService
 from app.v2.services import V2AdminAuditService
@@ -280,8 +280,8 @@ def verify_login_missions(
         raise HTTPException(status_code=404, detail="LOGIN_MISSION_NOT_FOUND")
 
     # 오늘 완료한 유저 조회
-    completed_query = db.query(UserMissionProgress, User).join(
-        User, UserMissionProgress.user_id == User.id
+    completed_query = db.query(UserMissionProgress, V2User).join(
+        V2User, UserMissionProgress.user_id == V2User.id
     ).filter(
         UserMissionProgress.mission_id == login_mission.id,
         UserMissionProgress.is_completed == True,
@@ -296,10 +296,10 @@ def verify_login_missions(
 
     if not completed_only:
         # 최근 로그인한 유저 중 미완료자
-        recent_users = db.query(User).filter(
-            User.last_login_at >= datetime.utcnow() - timedelta(days=7),
-            ~User.id.in_(completed_user_ids) if completed_user_ids else True,
-        ).order_by(User.last_login_at.desc()).limit(limit // 2).all()
+        recent_users = db.query(V2User).filter(
+            V2User.last_login_at >= datetime.utcnow() - timedelta(days=7),
+            ~V2User.id.in_(completed_user_ids) if completed_user_ids else True,
+        ).order_by(V2User.last_login_at.desc()).limit(limit // 2).all()
 
         for user in recent_users:
             users_list.append(LoginMissionStatusDto(
@@ -333,8 +333,8 @@ def verify_login_missions(
 
     # 오늘 로그인한 유저 수 (근사치)
     today_start = datetime.combine(operational_date, datetime.min.time())
-    total_today_logins = db.query(func.count(User.id)).filter(
-        User.last_login_at >= today_start,
+    total_today_logins = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= today_start,
     ).scalar() or 0
 
     completion_rate = total_completed / total_today_logins if total_today_logins > 0 else 0.0
@@ -386,7 +386,7 @@ def reset_user_missions(
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
     # 유저 존재 확인
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

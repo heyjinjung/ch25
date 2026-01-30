@@ -181,14 +181,14 @@ class V2TeamBattleService:
         return db.execute(stmt).all()
 
     def list_joinable_teams(self, db: Session) -> Sequence[Team]:
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
-        member_count = func.count(func.distinct(User.id))
+        member_count = func.count(func.distinct(V2User.id))
         stmt = (
             select(Team)
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
-            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(V2User, and_(V2User.id == TeamMember.user_id, V2User.status == "ACTIVE"))
             .group_by(Team.id)
             .having(member_count < self.TEAM_MAX_MEMBERS)
             .order_by(Team.id.asc())
@@ -199,9 +199,9 @@ class V2TeamBattleService:
         season = self.get_active_season(db, now)
         season_id = int(season.id) if season else None
 
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
-        member_count = func.count(func.distinct(User.id)).label("member_count")
+        member_count = func.count(func.distinct(V2User.id)).label("member_count")
         total_score = func.coalesce(TeamScore.points, 0).label("total_score")
 
         stmt = (
@@ -213,7 +213,7 @@ class V2TeamBattleService:
             )
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
-            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(V2User, and_(V2User.id == TeamMember.user_id, V2User.status == "ACTIVE"))
             .outerjoin(
                 TeamScore,
                 and_(
@@ -247,9 +247,9 @@ class V2TeamBattleService:
         season = self.get_active_season(db, now)
         season_id = int(season.id) if season else None
 
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
-        member_count = func.count(func.distinct(User.id)).label("member_count")
+        member_count = func.count(func.distinct(V2User.id)).label("member_count")
         total_score = func.coalesce(TeamScore.points, 0).label("total_score")
 
         stmt = (
@@ -261,7 +261,7 @@ class V2TeamBattleService:
             )
             .where(Team.id == member.team_id)
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
-            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(V2User, and_(V2User.id == TeamMember.user_id, V2User.status == "ACTIVE"))
             .outerjoin(
                 TeamScore,
                 and_(
@@ -337,14 +337,14 @@ class V2TeamBattleService:
         season = self._get_active_or_current(db, now)
         self._assert_selection_window_open(season, now)
 
-        from app.models.user import User
+        from app.v2.models.user import V2User
 
-        member_count = func.count(func.distinct(User.id)).label("member_count")
+        member_count = func.count(func.distinct(V2User.id)).label("member_count")
         stmt = (
             select(Team.id)
             .where(Team.is_active == True)  # noqa: E712
             .outerjoin(TeamMember, TeamMember.team_id == Team.id)
-            .outerjoin(User, and_(User.id == TeamMember.user_id, User.status == "ACTIVE"))
+            .outerjoin(V2User, and_(V2User.id == TeamMember.user_id, V2User.status == "ACTIVE"))
             .group_by(Team.id)
             .having(member_count < self.TEAM_MAX_MEMBERS)
             .order_by(member_count.asc(), Team.id.asc())

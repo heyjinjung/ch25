@@ -16,8 +16,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.user import User
 from app.v2.services.team_battle_admin_service import TeamBattleAdminService
+from app.v2.models.user import V2User
 from app.utils.timezone import utc_to_kst_iso
 
 router = APIRouter()
@@ -571,14 +571,14 @@ def update_member_joined_at(
             admin_id=admin_id,
             reason=req.reason,
         )
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         return TeamMemberDto(
             user_id=member.user_id,
             team_id=member.team_id,
             role=member.role,
             joined_at=utc_to_kst_iso(member.joined_at),
             nickname=user.nickname if user else None,
-            cc_id=user.external_id if user else None,
+            cc_id=user.cc_id if user else None,
             contribution_points=0,
             latest_event_at=None,
         )

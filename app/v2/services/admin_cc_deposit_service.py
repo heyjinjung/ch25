@@ -15,7 +15,7 @@ from app.models.external_ranking import ExternalRankingData
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.user_activity import UserActivity
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositUpdate
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.level_xp_service import V2LevelXPService
 from app.core.config import get_settings
@@ -54,7 +54,7 @@ class V2AdminCCDepositService:
         *,
         ambiguous_detail: str,
     ) -> int | None:
-        ids = db.execute(select(User.id).where(where_clause).limit(2)).scalars().all()
+        ids = db.execute(select(V2User.id).where(where_clause).limit(2)).scalars().all()
         if not ids:
             return None
         if len(ids) > 1:
@@ -85,7 +85,7 @@ class V2AdminCCDepositService:
             # 1) External ID (case-insensitive exact)
             user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                 db,
-                func.lower(User.external_id) == key.lower(),
+                func.lower(V2User.external_id) == key.lower(),
                 ambiguous_detail="USER_AMBIGUOUS (External ID)",
             )
             if user_id is not None:
@@ -96,7 +96,7 @@ class V2AdminCCDepositService:
             if clean_tg:
                 user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                     db,
-                    func.lower(User.telegram_username) == clean_tg.lower(),
+                    func.lower(V2User.telegram_username) == clean_tg.lower(),
                     ambiguous_detail="USER_AMBIGUOUS (Telegram Username)",
                 )
                 if user_id is not None:
@@ -105,7 +105,7 @@ class V2AdminCCDepositService:
             # 3) Internal nickname (case-insensitive exact)
             user_id = V2AdminCCDepositService._try_resolve_unique_user_id(
                 db,
-                func.lower(User.nickname) == key.lower(),
+                func.lower(V2User.nickname) == key.lower(),
                 ambiguous_detail="USER_AMBIGUOUS (Nickname)",
             )
             if user_id is not None:
@@ -129,7 +129,7 @@ class V2AdminCCDepositService:
         clean = telegram_username.strip().lstrip("@").strip()
         if not clean:
             return
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return
         if user.telegram_username != clean:
@@ -272,7 +272,7 @@ class V2AdminCCDepositService:
                 )
 
                 # Whale Check (First 500k + 7D 3M累计)
-                user = db.query(User).filter(User.id == row.user_id).first()
+                user = db.query(V2User).filter(V2User.id == row.user_id).first()
                 if user:
                     V2AdminCCDepositService._check_whale_qualification(
                         db, user=user, current_external_total=new_amount, now=now
@@ -381,7 +381,7 @@ class V2AdminCCDepositService:
         db.commit()
 
     @staticmethod
-    def _check_whale_qualification(db: Session, *, user: User, current_external_total: int, now: datetime):
+    def _check_whale_qualification(db: Session, *, user: V2User, current_external_total: int, now: datetime):
         from app.core.notifications import send_ops_notification
         from app.models.admin_user_profile import AdminUserProfile
 

@@ -8,7 +8,6 @@ from sqlalchemy import func, select, String
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import hash_password
-from app.models.user import User
 from app.models.admin_user_profile import AdminUserProfile
 from app.schemas.admin_user import AdminUserCreate
 from app.v2.models.user import V2User
@@ -47,19 +46,19 @@ class V2AdminUserService:
         return hashlib.sha256(s.encode("utf-8")).hexdigest()[:10]
 
     @staticmethod
-    def create_user(db: Session, payload: AdminUserCreate) -> User:
+    def create_user(db: Session, payload: AdminUserCreate) -> V2User:
         """Create a user with V2 standard logic."""
         # Simple existence check
-        if payload.user_id is not None and db.get(User, payload.user_id):
+        if payload.user_id is not None and db.get(V2User, payload.user_id):
             raise HTTPException(status_code=409, detail="USER_ID_EXISTS")
             
-        if db.query(User).filter(User.external_id == payload.cc_id).first():
+        if db.query(V2User).filter(V2User.cc_id == payload.cc_id).first():
             raise HTTPException(status_code=409, detail="EXTERNAL_ID_EXISTS")
 
         nickname = payload.nickname or payload.telegram_username or payload.cc_id
         telegram_username = V2AdminUserService._clean_telegram_username(payload.telegram_username)
 
-        user = User(
+        user = V2User(
             id=payload.user_id,
             external_id=payload.cc_id,
             nickname=nickname,
@@ -78,7 +77,7 @@ class V2AdminUserService:
         return user
 
     @staticmethod
-    def derive_tg_id(user: User) -> Optional[int]:
+    def derive_tg_id(user: V2User) -> Optional[int]:
         if getattr(user, "telegram_id", None):
             try:
                 return int(user.telegram_id)
@@ -104,7 +103,7 @@ class V2AdminUserService:
         return None
 
     @staticmethod
-    def build_summary(user: User) -> AdminUserSummary:
+    def build_summary(user: V2User) -> AdminUserSummary:
         admin_profile = getattr(user, "admin_profile", None)
         return AdminUserSummary(
             id=int(user.id),
@@ -126,12 +125,12 @@ class V2AdminUserService:
 
         if raw.isdigit():
             val = int(raw)
-            user_id = db.execute(select(User.id).where(User.id == val)).scalar_one_or_none()
-            if user_id is not None:
-                return int(user_id)
-            user_id = db.execute(select(User.id).where(User.telegram_id == val)).scalar_one_or_none()
-            if user_id is not None:
-                return int(user_id)
+            V2User_id = db.execute(select(V2User.id).where(V2User.id == val)).scalar_one_or_none()
+            if V2User_id is not None:
+                return int(V2User_id)
+            V2User_id = db.execute(select(V2User.id).where(V2User.telegram_id == val)).scalar_one_or_none()
+            if V2User_id is not None:
+                return int(V2User_id)
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
         # Text search (Username, Nickname, RealName, CCID)
@@ -139,20 +138,20 @@ class V2AdminUserService:
 
         # Try exact matches
         # 1. Nickname
-        match = db.execute(select(User.id).where(func.lower(User.nickname) == func.lower(clean))).scalar_one_or_none()
+        match = db.execute(select(V2User.id).where(func.lower(V2User.nickname) == func.lower(clean))).scalar_one_or_none()
         if match: return int(match)
 
         # 2. Telegram Username
-        match = db.execute(select(User.id).where(func.lower(User.telegram_username) == func.lower(clean))).scalar_one_or_none()
+        match = db.execute(select(V2User.id).where(func.lower(V2User.telegram_username) == func.lower(clean))).scalar_one_or_none()
         if match: return int(match)
 
         # 3. External ID
-        match = db.execute(select(User.id).where(func.lower(User.external_id) == func.lower(clean))).scalar_one_or_none()
+        match = db.execute(select(V2User.id).where(func.lower(V2User.external_id) == func.lower(clean))).scalar_one_or_none()
         if match: return int(match)
 
         # 4. Real Name
         record = db.execute(
-            select(User.id).join(AdminUserProfile).where(func.lower(AdminUserProfile.real_name) == func.lower(clean))
+            select(V2User.id).join(AdminUserProfile).where(func.lower(AdminUserProfile.real_name) == func.lower(clean))
         ).scalar_one_or_none()
         if record: return int(record)
 
@@ -162,7 +161,7 @@ class V2AdminUserService:
     def resolve_summary(db: Session, identifier: str) -> AdminUserSummary:
         user_id = V2AdminUserService.resolve_user_id(db, identifier)
         user = db.execute(
-            select(User).options(joinedload(User.admin_profile)).where(User.id == user_id)
+            select(V2User).options(joinedload(V2User.admin_profile)).where(V2User.id == user_id)
         ).scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
@@ -177,14 +176,13 @@ class V2AdminUserService:
         """일반 유저 삭제 (CASCADE 의존, TeamMember만 명시 정리)"""
         from app.models.team_battle import TeamMember
 
-        user = db.get(User, user_id)
         v2_user = db.get(V2User, user_id)
-        if not user and not v2_user:
+        if not v2_user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
         # SoT 기반 삭제 정보 추출
-        target_ext_id = str(user.external_id if user else v2_user.cc_id)
-        target_nickname = (user.nickname if user else v2_user.nickname)
+        target_ext_id = str(v2_user.cc_id)
+        target_nickname = v2_user.nickname
 
         before = {
             "user_id": int(user_id),
@@ -199,11 +197,8 @@ class V2AdminUserService:
         from app.v2.models.v2_user_segment import V2UserSegment
         db.query(V2UserSegment).filter(V2UserSegment.user_id == user_id).delete(synchronize_session=False)
 
-        # Legacy & V2 유저 테이블 삭제
-        if user:
-            db.delete(user)
-        if v2_user:
-            db.delete(v2_user)
+        # V2 유저 테이블 삭제
+        db.delete(v2_user)
 
         V2AdminAuditService.log(
             db,
@@ -222,13 +217,13 @@ class V2AdminUserService:
 
         NOTE: API 레이어에서 권한 게이팅 필수
         """
-        user = db.get(User, user_id)
         v2_user = db.get(V2User, user_id)
-        if not user and not v2_user:
+        if not v2_user:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
-        target_ext_id = str(user.external_id if user else v2_user.cc_id)
-        target_nickname = (user.nickname if user else v2_user.nickname)
+        target_ext_id = str(v2_user.cc_id)
+        target_nickname = v2_user.nickname
+        target_telegram_id = v2_user.telegram_id
 
         before = {
             "user_id": int(user_id),
@@ -355,19 +350,16 @@ class V2AdminUserService:
                     | (TelegramUnlinkRequest.requester_user_id == user_id)
                     | (TelegramUnlinkRequest.processed_by == user_id)
                 ).delete(synchronize_session=False)
-                if user.telegram_id is not None:
+                if target_telegram_id is not None:
                     db.query(TelegramUnlinkRequest).filter(
-                        TelegramUnlinkRequest.telegram_id == str(int(user.telegram_id))
+                        TelegramUnlinkRequest.telegram_id == str(int(target_telegram_id))
                     ).delete(synchronize_session=False)
 
         # Admin Profile
         db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).delete(synchronize_session=False)
 
-        # Finally, delete the users from both tables
-        if user:
-            db.delete(user)
-        if v2_user:
-            db.delete(v2_user)
+        # Finally, delete the V2User
+        db.delete(v2_user)
 
         # Safety net: sqlite FK quirks
         db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)

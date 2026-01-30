@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_retention_state import UserRetentionState
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
@@ -77,12 +77,12 @@ def get_ops_dashboard_status(
     system_status = OpsSystemStatusDto(db=db_status, redis=redis_status, worker=worker_status)
 
     # High rollers: total charge >= 1,000,000
-    high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
+    high_rollers_count = db.query(V2User).filter(V2User.total_charge_amount >= 1000000).count()
 
     # Risk users by churn score
     risk_users_query = (
-        db.query(User, UserRetentionState)
-        .join(UserRetentionState, User.id == UserRetentionState.user_id)
+        db.query(V2User, UserRetentionState)
+        .join(UserRetentionState, V2User.id == UserRetentionState.user_id)
         .filter(UserRetentionState.churn_probability_score >= 0.7)
         .order_by(UserRetentionState.churn_probability_score.desc())
         .limit(10)
@@ -112,7 +112,7 @@ def get_ops_dashboard_status(
     # Online now: last login within 5 minutes (UTC naive)
     utc_now = datetime.utcnow()
     online_since = utc_now - timedelta(minutes=5)
-    online_now = db.query(User).filter(User.last_login_at >= online_since).count()
+    online_now = db.query(V2User).filter(V2User.last_login_at >= online_since).count()
 
     # Business day 기준 개입 건수
     from app.utils.timezone import business_day_start, KST
@@ -149,7 +149,7 @@ def get_ops_dashboard_status(
         ExternalRankingDailyDepositDelta.deposit_delta > 0,
     ).scalar() or 0
 
-    active_users_24h = db.query(User).filter(User.last_login_at >= (utc_now - timedelta(hours=24))).count()
+    active_users_24h = db.query(V2User).filter(V2User.last_login_at >= (utc_now - timedelta(hours=24))).count()
 
     metrics = OpsMetricsDto(today_revenue=int(today_revenue), active_users_24h=active_users_24h)
 
@@ -197,10 +197,10 @@ def get_dashboard_metrics(
             return None
         return (current - previous) / previous
 
-    active_users = db.query(func.count(User.id)).filter(User.last_login_at >= start).scalar() or 0
-    prev_active_users = db.query(func.count(User.id)).filter(
-        User.last_login_at >= prev_start,
-        User.last_login_at < prev_end,
+    active_users = db.query(func.count(V2User.id)).filter(V2User.last_login_at >= start).scalar() or 0
+    prev_active_users = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= prev_start,
+        V2User.last_login_at < prev_end,
     ).scalar() or 0
 
     game_participation = db.query(func.count(UserGameWalletLedger.id)).filter(
@@ -552,30 +552,30 @@ def get_active_user_stats(
     prev_week_start = datetime.combine(today - timedelta(days=14), datetime.min.time())
 
     # DAU
-    dau = db.query(func.count(User.id)).filter(
-        User.last_login_at >= today_start,
+    dau = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= today_start,
     ).scalar() or 0
 
     # WAU
-    wau = db.query(func.count(User.id)).filter(
-        User.last_login_at >= week_start,
+    wau = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= week_start,
     ).scalar() or 0
 
     # MAU
-    mau = db.query(func.count(User.id)).filter(
-        User.last_login_at >= month_start,
+    mau = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= month_start,
     ).scalar() or 0
 
     # 전일 DAU
-    yesterday_dau = db.query(func.count(User.id)).filter(
-        User.last_login_at >= yesterday_start,
-        User.last_login_at < today_start,
+    yesterday_dau = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= yesterday_start,
+        V2User.last_login_at < today_start,
     ).scalar() or 0
 
     # 전주 WAU
-    prev_wau = db.query(func.count(User.id)).filter(
-        User.last_login_at >= prev_week_start,
-        User.last_login_at < week_start,
+    prev_wau = db.query(func.count(V2User.id)).filter(
+        V2User.last_login_at >= prev_week_start,
+        V2User.last_login_at < week_start,
     ).scalar() or 0
 
     # 변화율 계산
@@ -583,12 +583,12 @@ def get_active_user_stats(
     wau_change = ((wau - prev_wau) / prev_wau) if prev_wau > 0 else 0.0
 
     # 신규 유저
-    new_users_today = db.query(func.count(User.id)).filter(
-        User.created_at >= today_start,
+    new_users_today = db.query(func.count(V2User.id)).filter(
+        V2User.created_at >= today_start,
     ).scalar() or 0
 
-    new_users_this_week = db.query(func.count(User.id)).filter(
-        User.created_at >= week_start,
+    new_users_this_week = db.query(func.count(V2User.id)).filter(
+        V2User.created_at >= week_start,
     ).scalar() or 0
 
     # 추이 데이터
@@ -598,14 +598,14 @@ def get_active_user_stats(
         target_start = datetime.combine(target_date, datetime.min.time())
         target_end = datetime.combine(target_date + timedelta(days=1), datetime.min.time())
 
-        day_dau = db.query(func.count(User.id)).filter(
-            User.last_login_at >= target_start,
-            User.last_login_at < target_end,
+        day_dau = db.query(func.count(V2User.id)).filter(
+            V2User.last_login_at >= target_start,
+            V2User.last_login_at < target_end,
         ).scalar() or 0
 
-        day_new = db.query(func.count(User.id)).filter(
-            User.created_at >= target_start,
-            User.created_at < target_end,
+        day_new = db.query(func.count(V2User.id)).filter(
+            V2User.created_at >= target_start,
+            V2User.created_at < target_end,
         ).scalar() or 0
 
         trend.append(ActiveUserTrendDto(

@@ -12,7 +12,7 @@ from app.models.game_wallet import GameTokenType
 from app.models.game_wallet import UserGameWallet
 from app.models.inventory import UserInventoryItem
 from app.models.mission import ApprovalStatus, Mission, UserMissionProgress
-from app.models.user import User
+from app.v2.models.user import V2User, V2UserStatus, V2UserRole
 from app.models.user_retention_state import UserRetentionState
 from app.models.user_segment import UserSegment
 from app.models.level_xp import UserLevelProgress, UserXpEventLog
@@ -100,39 +100,38 @@ def get_admin_users_list(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    """V2User 기준 유저 목록 조회 (V1 User 테이블 참조 완전 제거)"""
     admin_id, admin_role = admin_info
 
-    query = db.query(User)
+    query = db.query(V2User)
 
     if search:
         search_pattern = f"%{search}%"
         filters = (
-            (User.nickname.ilike(search_pattern))
-            | (User.telegram_username.ilike(search_pattern))
-            | (User.external_id.ilike(search_pattern))
+            (V2User.nickname.ilike(search_pattern))
+            | (V2User.telegram_username.ilike(search_pattern))
+            | (V2User.cc_id.ilike(search_pattern))
         )
         if search.isdigit():
             numeric = int(search)
-            filters = filters | (User.id == numeric) | (User.telegram_id == numeric)
+            filters = filters | (V2User.id == numeric) | (V2User.telegram_id == numeric)
         query = query.filter(filters)
 
     if status:
-        query = query.filter(User.status == status)
+        query = query.filter(V2User.status == status)
 
-    if minLevel is not None:
-        query = query.filter(User.level >= minLevel)
-    if maxLevel is not None:
-        query = query.filter(User.level <= maxLevel)
+    # Level 필터는 user_level_progress 조인 필요 - 추후 구현
+    # if minLevel is not None:
+    #     query = query.filter(V2User.level >= minLevel)
+    # if maxLevel is not None:
+    #     query = query.filter(V2User.level <= maxLevel)
 
-    if sortBy == "level":
-        order_col = User.level
-    elif sortBy == "vault_balance":
-        # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
-        order_col = func.coalesce(User.vault_locked_balance, 0)
+    if sortBy == "vault_balance":
+        order_col = func.coalesce(V2User.vault_locked_balance, 0)
     elif sortBy == "created_at":
-        order_col = User.created_at
+        order_col = V2User.created_at
     else:
-        order_col = User.updated_at
+        order_col = V2User.updated_at
 
     if sortOrder == "asc":
         query = query.order_by(order_col.asc())
@@ -154,28 +153,26 @@ def get_admin_users_list(
 
     user_list = []
     for user in users:
-        # SoT: vault_balance = vault_locked_balance only (available은 레거시/미사용)
         vault_balance = int(user.vault_locked_balance or 0)
 
-        tier = "COMMON"
-        if user.total_charge_amount:
-            if user.total_charge_amount >= 10000000:
-                tier = "VVIP"
-            elif user.total_charge_amount >= 5000000:
-                tier = "VIP"
+        # Level은 user_level_progress에서 조회
+        level_progress = db.get(UserLevelProgress, user.id)
+        level = level_progress.level if level_progress else 1
 
-        status_str = "Active" if user.status == "ACTIVE" else "Inactive" if user.status == "INACTIVE" else "Suspended"
+        tier = "COMMON"  # V2에서는 tier 개념 간소화
+
+        status_str = user.status.value if hasattr(user.status, 'value') else str(user.status)
         last_active = user.updated_at.strftime("%Y-%m-%d %H:%M") if user.updated_at else "-"
 
         user_list.append(
             AdminUserListDto(
                 id=user.id,
-                cc_id=user.id,
+                cc_id=user.cc_id,
                 nickname=user.nickname or "(미설정)",
                 telegram_id=user.telegram_id,
                 telegram_username=user.telegram_username,
                 tier=tier,
-                level=user.level or 1,
+                level=level,
                 vaultBalance=vault_balance,
                 last_active=last_active,
                 status=status_str,
@@ -199,6 +196,7 @@ def resolve_admin_user(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
+    """V2User 기준 유저 식별자 조회 (V1 User 테이블 참조 완전 제거)"""
     _admin_id, _admin_role = admin_info
 
     if not identifier or not identifier.strip():
@@ -209,19 +207,19 @@ def resolve_admin_user(
 
     if identifier.isdigit():
         numeric = int(identifier)
-        user = db.query(User).filter(User.id == numeric).first()
+        user = db.query(V2User).filter(V2User.id == numeric).first()
         if not user:
-            user = db.query(User).filter(User.telegram_id == numeric).first()
+            user = db.query(V2User).filter(V2User.telegram_id == numeric).first()
         if not user:
-            user = db.query(User).filter(User.external_id == identifier).first()
+            user = db.query(V2User).filter(V2User.cc_id == identifier).first()
 
     if not user:
-        user = db.query(User).filter(User.nickname == identifier).first()
+        user = db.query(V2User).filter(V2User.nickname == identifier).first()
 
     if not user:
         user = (
-            db.query(User)
-            .filter(func.lower(User.nickname) == identifier.lower())
+            db.query(V2User)
+            .filter(func.lower(V2User.nickname) == identifier.lower())
             .first()
         )
 
@@ -231,7 +229,7 @@ def resolve_admin_user(
     return AdminUserResolveResponse(
         userId=user.id,
         nickname=user.nickname or "(미설정)",
-        externalId=str(user.external_id),
+        externalId=str(user.cc_id),
     )
 
 
@@ -269,7 +267,7 @@ def create_admin_user(
 
     return AdminUserListDto(
         id=user.id,
-        cc_id=user.id,
+        cc_id=user.cc_id,
         nickname=user.nickname or "(미설정)",
         telegram_id=user.telegram_id,
         telegram_username=user.telegram_username,
@@ -288,7 +286,7 @@ def get_admin_user_level_by_cc_id(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     _admin_id, _admin_role = admin_info
-    user = db.query(User).filter(User.external_id == cc_id).first()
+    user = db.query(V2User).filter(V2User.cc_id == cc_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -298,7 +296,7 @@ def get_admin_user_level_by_cc_id(
 
     return AdminUserLevelSnapshotDto(
         userId=user.id,
-        ccId=str(user.external_id),
+        ccId=str(user.cc_id),
         level=int(progress.level or 1),
         xp=int(progress.xp or 0),
         nextLevel=next_level,
@@ -314,7 +312,7 @@ def adjust_admin_user_level_xp(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _admin_role = admin_info
-    user = db.query(User).filter(User.external_id == payload.ccId).first()
+    user = db.query(V2User).filter(V2User.cc_id == payload.ccId).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     if payload.deltaXp == 0:
@@ -354,7 +352,7 @@ def adjust_admin_user_level_xp(
     next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
     return AdminUserLevelSnapshotDto(
         userId=user.id,
-        ccId=str(user.external_id),
+        ccId=str(user.cc_id),
         level=int(progress.level or 1),
         xp=int(progress.xp or 0),
         nextLevel=next_level,
@@ -370,7 +368,7 @@ def set_admin_user_level(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _admin_role = admin_info
-    user = db.query(User).filter(User.external_id == payload.ccId).first()
+    user = db.query(V2User).filter(V2User.cc_id == payload.ccId).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     if payload.level is None and payload.xp is None:
@@ -407,7 +405,7 @@ def set_admin_user_level(
     next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
     return AdminUserLevelSnapshotDto(
         userId=user.id,
-        ccId=str(user.external_id),
+        ccId=str(user.cc_id),
         level=int(progress.level or 1),
         xp=int(progress.xp or 0),
         nextLevel=next_level,
@@ -423,7 +421,7 @@ def get_admin_user_detail(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -511,7 +509,7 @@ def execute_intervention_action(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, admin_role = admin_info
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -553,7 +551,7 @@ def adjust_user_wallet(
     if payload.amount == 0:
         raise HTTPException(status_code=400, detail="INVALID_AMOUNT")
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(V2User).filter(V2User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -1060,7 +1058,7 @@ def get_user_missions_admin(
     Returns:
         UserMissionsAdminResponse: 모든 미션의 진행 현황
     """
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -1131,7 +1129,7 @@ def reset_all_user_missions(
     if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
 
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

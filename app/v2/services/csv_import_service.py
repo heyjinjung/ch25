@@ -11,13 +11,13 @@ from typing import Generator, Optional
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app.models.user import User
 from app.v2.schemas.v2_csv_import import (
     CSVImportRequest,
     CSVImportResult,
     ExternalCasinoGameLogCSV,
 )
 from app.v2.services.csv_to_redis_service import CSVToRedisService
+from app.v2.models.user import V2User
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ class CSVImportService:
         if user_id in self._user_cache:
             return self._user_cache[user_id]
 
-        exists = self.db.query(User).filter_by(id=user_id).first() is not None
+        exists = self.db.query(V2User).filter_by(id=user_id).first() is not None
         self._user_cache[user_id] = exists
         return exists
 

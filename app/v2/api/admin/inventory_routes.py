@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 import logging
 from typing import List, Optional
 
@@ -11,7 +11,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.schemas.v2_admin_user import TicketLogDto
 from app.v2.schemas.v2_admin_economy import (
     TicketCreateRequest,
@@ -91,8 +91,8 @@ def get_inventory_logs(
 
     clamped_limit = max(1, min(limit, 1000))
 
-    wallet_query = db.query(UserGameWalletLedger, User).outerjoin(
-        User, UserGameWalletLedger.user_id == User.id
+    wallet_query = db.query(UserGameWalletLedger, V2User).outerjoin(
+        V2User, UserGameWalletLedger.user_id == V2User.id
     )
     if user_id is not None:
         wallet_query = wallet_query.filter(UserGameWalletLedger.user_id == user_id)
@@ -107,8 +107,8 @@ def get_inventory_logs(
         .all()
     )
 
-    inventory_query = db.query(UserInventoryLedger, User).outerjoin(
-        User, UserInventoryLedger.user_id == User.id
+    inventory_query = db.query(UserInventoryLedger, V2User).outerjoin(
+        V2User, UserInventoryLedger.user_id == V2User.id
     )
     if user_id is not None:
         inventory_query = inventory_query.filter(UserInventoryLedger.user_id == user_id)
@@ -138,7 +138,7 @@ def get_inventory_logs(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
-                nickname=user.nickname if user else "",
+                nickname=V2User.nickname if user else "",
                 type="GRANT" if log.delta > 0 else "USE",
                 itemType=log.token_type.value if hasattr(log.token_type, "value") else str(log.token_type),
                 amount=abs(log.delta),
@@ -154,7 +154,7 @@ def get_inventory_logs(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
-                nickname=user.nickname if user else "",
+                nickname=V2User.nickname if user else "",
                 type="GRANT" if log.change_amount > 0 else "USE",
                 itemType=log.item_type,
                 amount=abs(log.change_amount),
@@ -224,11 +224,11 @@ def create_ticket_log(
 
         db.commit()
         db.refresh(log)
-        user = db.query(User).filter(User.id == log.user_id).first()
+        user = db.query(V2User).filter(V2User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(user.nickname if user else ""),
+            nickname=(V2User.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -285,11 +285,11 @@ def update_ticket_log(
 
         db.commit()
         db.refresh(log)
-        user = db.query(User).filter(User.id == log.user_id).first()
+        user = db.query(V2User).filter(V2User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(user.nickname if user else ""),
+            nickname=(V2User.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -383,11 +383,11 @@ def create_inventory_item_log(
 
         db.commit()
         db.refresh(log)
-        user = db.query(User).filter(User.id == log.user_id).first()
+        user = db.query(V2User).filter(V2User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(user.nickname if user else ""),
+            nickname=(V2User.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -441,11 +441,11 @@ def update_inventory_item_log(
 
         db.commit()
         db.refresh(log)
-        user = db.query(User).filter(User.id == log.user_id).first()
+        user = db.query(V2User).filter(V2User.id == log.user_id).first()
         return TicketLogDto(
             id=log.id,
             userId=log.user_id,
-            nickname=(user.nickname if user else ""),
+            nickname=(V2User.nickname if user else ""),
             type="GRANT" if log.change_amount > 0 else "USE",
             itemType=log.item_type,
             amount=abs(log.change_amount),
@@ -543,11 +543,11 @@ def get_user_tickets(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    query = db.query(UserGameWallet, User).join(User, UserGameWallet.user_id == User.id)
+    query = db.query(UserGameWallet, V2User).join(V2User, UserGameWallet.user_id == V2User.id)
 
     if search:
         query = query.filter(
-            (User.nickname.ilike(f"%{search}%")) | (User.telegram_username.ilike(f"%{search}%"))
+            (V2User.nickname.ilike(f"%{search}%")) | (V2User.telegram_username.ilike(f"%{search}%"))
         )
 
     if ticket_type:
@@ -561,7 +561,7 @@ def get_user_tickets(
         total_used = (
             db.query(func.sum(func.least(UserInventoryLedger.change_amount, 0)))
             .filter(
-                UserInventoryLedger.user_id == user.id,
+                UserInventoryLedger.user_id == V2User.id,
                 UserInventoryLedger.item_type == wallet.token_type,
             )
             .scalar()
@@ -573,7 +573,7 @@ def get_user_tickets(
         last_used_log = (
             db.query(UserInventoryLedger)
             .filter(
-                UserInventoryLedger.user_id == user.id,
+                UserInventoryLedger.user_id == V2User.id,
                 UserInventoryLedger.item_type == wallet.token_type,
                 UserInventoryLedger.change_amount < 0,
             )
@@ -583,8 +583,8 @@ def get_user_tickets(
 
         result.append(
             UserTicketDto(
-                userId=user.id,
-                nickname=user.nickname or "(미설정)",
+                userId=V2User.id,
+                nickname=V2User.nickname or "(미설정)",
                 telegramUsername=user.telegram_username,
                 ticketType=wallet.token_type,
                 currentBalance=int(wallet.balance or 0),
@@ -647,11 +647,11 @@ def get_user_inventory(
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    query = db.query(UserInventoryItem, User).join(User, UserInventoryItem.user_id == User.id)
+    query = db.query(UserInventoryItem, V2User).join(V2User, UserInventoryItem.user_id == V2User.id)
 
     if search:
         query = query.filter(
-            (User.nickname.ilike(f"%{search}%")) | (User.telegram_username.ilike(f"%{search}%"))
+            (V2User.nickname.ilike(f"%{search}%")) | (V2User.telegram_username.ilike(f"%{search}%"))
         )
 
     if item_type:
@@ -665,7 +665,7 @@ def get_user_inventory(
         total_used = (
             db.query(func.sum(func.least(UserInventoryLedger.change_amount, 0)))
             .filter(
-                UserInventoryLedger.user_id == user.id,
+                UserInventoryLedger.user_id == V2User.id,
                 UserInventoryLedger.item_type == item.item_type,
             )
             .scalar()
@@ -675,7 +675,7 @@ def get_user_inventory(
         last_used_log = (
             db.query(UserInventoryLedger)
             .filter(
-                UserInventoryLedger.user_id == user.id,
+                UserInventoryLedger.user_id == V2User.id,
                 UserInventoryLedger.item_type == item.item_type,
                 UserInventoryLedger.change_amount < 0,
             )
@@ -685,8 +685,8 @@ def get_user_inventory(
 
         result.append(
             UserInventoryDto(
-                userId=user.id,
-                nickname=user.nickname or "(미설정)",
+                userId=V2User.id,
+                nickname=V2User.nickname or "(미설정)",
                 telegramUsername=user.telegram_username,
                 itemType=item.item_type,
                 itemName=item.item_type,
@@ -782,7 +782,7 @@ def adjust_stock(
         raise HTTPException(status_code=400, detail="DELTA_CANNOT_BE_ZERO")
 
     # 유저 확인
-    user = db.get(User, payload.user_id)
+    user = db.get(V2User, payload.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -862,8 +862,8 @@ def list_gifticon_deliveries(
     # Gifticon 관련 아이템 타입 (예: GIFTICON_ prefix)
     gifticon_types = ["GIFTICON", "GIFTICON_STARBUCKS", "GIFTICON_CU", "GIFTICON_GS25"]
 
-    query = db.query(UserInventoryLedger, User).outerjoin(
-        User, UserInventoryLedger.user_id == User.id
+    query = db.query(UserInventoryLedger, V2User).outerjoin(
+        V2User, UserInventoryLedger.user_id == V2User.id
     ).filter(
         UserInventoryLedger.item_type.in_(gifticon_types)
     )
@@ -907,7 +907,7 @@ def list_gifticon_deliveries(
         items.append(GifticonDeliveryDto(
             id=log.id,
             user_id=log.user_id,
-            nickname=user.nickname if user else "(알 수 없음)",
+            nickname=V2User.nickname if user else "(알 수 없음)",
             item_type=log.item_type,
             item_name=log.item_type,
             status=item_status,

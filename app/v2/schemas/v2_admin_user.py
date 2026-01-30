@@ -135,7 +135,7 @@ class InterventionExecutionResponse(BaseModel):
 class AdminUserListDto(BaseModel):
     """User list item for admin table."""
     id: int
-    cc_id: Optional[int] = None
+    cc_id: Optional[str] = None
     nickname: str
     telegram_id: Optional[int] = None
     telegram_username: Optional[str] = None

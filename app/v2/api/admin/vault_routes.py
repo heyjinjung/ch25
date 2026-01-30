@@ -1,4 +1,4 @@
-from datetime import datetime, date
+﻿from datetime import datetime, date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.admin_economy_service import V2AdminEconomyService
 from app.v2.schemas.v2_admin_economy import (
@@ -163,11 +163,11 @@ def get_vault_aggregate(
     """
     # 전체 유저 통계
     total_stats = db.query(
-        func.count(User.id).label("total_users"),
-        func.coalesce(func.sum(User.vault_locked_balance), 0).label("total_locked"),
-        func.coalesce(func.sum(User.vault_available_balance), 0).label("total_available"),
-        func.coalesce(func.avg(User.vault_locked_balance), 0).label("avg_balance"),
-        func.coalesce(func.max(User.vault_locked_balance), 0).label("max_balance"),
+        func.count(V2User.id).label("total_users"),
+        func.coalesce(func.sum(V2User.vault_locked_balance), 0).label("total_locked"),
+        func.coalesce(func.sum(V2User.vault_available_balance), 0).label("total_available"),
+        func.coalesce(func.avg(V2User.vault_locked_balance), 0).label("avg_balance"),
+        func.coalesce(func.max(V2User.vault_locked_balance), 0).label("max_balance"),
     ).first()
 
     total_users = int(total_stats.total_users or 0)
@@ -177,9 +177,9 @@ def get_vault_aggregate(
     max_balance = int(total_stats.max_balance or 0)
 
     # 중간값 계산 (근사치)
-    median_query = db.query(User.vault_locked_balance).filter(
-        User.vault_locked_balance > 0
-    ).order_by(User.vault_locked_balance).all()
+    median_query = db.query(V2User.vault_locked_balance).filter(
+        V2User.vault_locked_balance > 0
+    ).order_by(V2User.vault_locked_balance).all()
 
     if median_query:
         mid = len(median_query) // 2
@@ -191,10 +191,10 @@ def get_vault_aggregate(
     # 실제로는 is_benefits_suspended 호출이 필요하지만, 성능상 근사치 사용
     # vault_locked_balance가 30000 이상이고 최근 활동이 없는 유저를 추정
     suspended_estimate = db.query(
-        func.count(User.id).label("count"),
-        func.coalesce(func.sum(User.vault_locked_balance), 0).label("balance"),
+        func.count(V2User.id).label("count"),
+        func.coalesce(func.sum(V2User.vault_locked_balance), 0).label("balance"),
     ).filter(
-        User.vault_locked_balance >= 30000,
+        V2User.vault_locked_balance >= 30000,
     ).first()
 
     suspended_count = int(suspended_estimate.count or 0)
@@ -234,10 +234,10 @@ def get_vault_spend_limits(
     today = date.today().isoformat()
 
     # vault_spent_today > 0 인 유저 조회
-    query = db.query(User).filter(
-        User.vault_spent_today > 0,
-        User.vault_spent_reset_date == today,
-    ).order_by(User.vault_spent_today.desc())
+    query = db.query(V2User).filter(
+        V2User.vault_spent_today > 0,
+        V2User.vault_spent_reset_date == today,
+    ).order_by(V2User.vault_spent_today.desc())
 
     users = query.limit(limit * 2).all()  # 필터링 여유분
 
@@ -287,12 +287,12 @@ def get_vault_spend_limits_summary(
 
     # 오늘 지출한 유저 통계
     stats = db.query(
-        func.count(User.id).label("total_users"),
-        func.coalesce(func.sum(User.vault_spent_today), 0).label("total_spent"),
-        func.coalesce(func.avg(User.vault_spent_today), 0).label("avg_spent"),
+        func.count(V2User.id).label("total_users"),
+        func.coalesce(func.sum(V2User.vault_spent_today), 0).label("total_spent"),
+        func.coalesce(func.avg(V2User.vault_spent_today), 0).label("avg_spent"),
     ).filter(
-        User.vault_spent_today > 0,
-        User.vault_spent_reset_date == today,
+        V2User.vault_spent_today > 0,
+        V2User.vault_spent_reset_date == today,
     ).first()
 
     total_users = int(stats.total_users or 0)
@@ -300,16 +300,16 @@ def get_vault_spend_limits_summary(
     avg_spent = float(stats.avg_spent or 0)
 
     # 한도 도달 유저 수
-    at_limit = db.query(func.count(User.id)).filter(
-        User.vault_spent_today >= daily_limit,
-        User.vault_spent_reset_date == today,
+    at_limit = db.query(func.count(V2User.id)).filter(
+        V2User.vault_spent_today >= daily_limit,
+        V2User.vault_spent_reset_date == today,
     ).scalar() or 0
 
     # 80% 이상 사용 유저 수
     threshold_80 = int(daily_limit * 0.8)
-    above_80 = db.query(func.count(User.id)).filter(
-        User.vault_spent_today >= threshold_80,
-        User.vault_spent_reset_date == today,
+    above_80 = db.query(func.count(V2User.id)).filter(
+        V2User.vault_spent_today >= threshold_80,
+        V2User.vault_spent_reset_date == today,
     ).scalar() or 0
 
     avg_usage_rate = avg_spent / daily_limit if daily_limit > 0 else 0.0

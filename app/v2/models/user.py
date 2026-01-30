@@ -1,14 +1,30 @@
 """V2 user model (Vault SoT: vault_locked_balance)."""
 from datetime import datetime
+from enum import Enum as PyEnum
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import BigInteger, Column, DateTime, Integer, String
+from sqlalchemy import BigInteger, Column, Date, DateTime, Enum, Integer, String
 
 from app.db.base_class import Base
 
 
 def _kst_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Seoul"))
+
+
+class V2UserStatus(str, PyEnum):
+    """V2 User status enum."""
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ADMIN = "ADMIN"
+
+
+class V2UserRole(str, PyEnum):
+    """V2 User role enum for RBAC."""
+    USER = "USER"
+    ADMIN = "ADMIN"
+    SUPER_ADMIN = "SUPER_ADMIN"
 
 
 class V2User(Base):
@@ -20,5 +36,21 @@ class V2User(Base):
     telegram_id = Column(BigInteger, unique=True, nullable=True, index=True)
     telegram_username = Column(String(100), nullable=True, index=True)
     vault_locked_balance = Column(Integer, nullable=False, default=0)
+    vault_available_balance = Column(Integer, nullable=False, default=0)
+    # Inherited from legacy User for single SoT
+    level = Column(Integer, nullable=False, default=1)
+    vault_spent_total = Column(Integer, nullable=False, default=0)
+    vault_spent_today = Column(Integer, nullable=False, default=0)
+    vault_spent_reset_date = Column(String(10), nullable=True)  # YYYY-MM-DD
+    total_charge_amount = Column(Integer, nullable=False, default=0)
+    # Streak system inherited for mission logic
+    play_streak = Column(Integer, nullable=False, default=0)
+    last_play_date = Column(Date, nullable=True)
+    # Login tracking for retention/analytics
+    last_login_at = Column(DateTime, nullable=True, index=True)
+
+    # V2-only: status and role for direct V2 auth
+    status = Column(Enum(V2UserStatus), nullable=False, default=V2UserStatus.ACTIVE)
+    role = Column(Enum(V2UserRole), nullable=False, default=V2UserRole.USER)
     created_at = Column(DateTime, nullable=False, default=_kst_now)
     updated_at = Column(DateTime, nullable=False, default=_kst_now, onupdate=_kst_now)

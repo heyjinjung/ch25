@@ -52,9 +52,9 @@ class V2AdminEconomyService:
     @staticmethod
     def list_latency_evidences(db: Session, status: str = None) -> List[Any]:
         from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
-        from app.models.user import User
+        from app.v2.models.user import V2User
         
-        query = db.query(V2UserDepositEvidence, User.nickname).outerjoin(User, V2UserDepositEvidence.user_id == User.id)
+        query = db.query(V2UserDepositEvidence, V2User.nickname).outerjoin(V2User, V2UserDepositEvidence.user_id == V2User.id)
         if status:
             query = query.filter(V2UserDepositEvidence.status == status)
         
