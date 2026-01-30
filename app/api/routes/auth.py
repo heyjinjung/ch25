@@ -61,10 +61,11 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
         client_ip = "unknown"
 
     # If password is set, require verification unless no password stored.
-    if user.password_hash:
-        if not payload.password or not verify_password(payload.password, user.password_hash):
+    password_hash = getattr(user, "password_hash", None)
+    if password_hash:
+        if not payload.password or not verify_password(payload.password, password_hash):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="INVALID_CREDENTIALS")
-    elif payload.password:
+    elif payload.password and hasattr(user, "password_hash"):
         # If no password stored yet and client provided one, set it as initial secret.
         from app.core.security import hash_password  # local import to avoid cycle
 
