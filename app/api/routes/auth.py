@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
-from app.models.feature import UserEventLog
+from app.v2.models.auth_event import V2UserAuthEvent, AuthEventType
 from app.v2.models.user import V2User, V2UserRole
 from app.v2.models.v2_user_segment import V2UserSegment
 
@@ -132,13 +132,14 @@ def issue_token(payload: TokenRequest, request: Request, db: Session = Depends(g
 
         user.last_login_at = datetime.utcnow()
 
-        # Insert login event log
+        # Insert login event log (V2UserAuthEvent - v2_user FK)
         db.add(
-            UserEventLog(
+            V2UserAuthEvent(
                 user_id=user.id,
-                feature_type="AUTH",
-                event_name="AUTH_LOGIN",
-                meta_json={"cc_id": user.external_id, "ip": client_ip},
+                event_type=AuthEventType.LOGIN_SUCCESS,
+                ip_address=client_ip,
+                telegram_id=user.telegram_id,
+                success=True,
             )
         )
 
