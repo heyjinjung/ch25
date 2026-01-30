@@ -14,6 +14,7 @@
 | 15 | external_ranking FK (1452) | 어드민 | 🔴 높음 | ✅ 마이그레이션 작성 |
 | 16 | V2User.login_streak AttributeError | 어드민 | 🔴 높음 | ✅ 코드수정 |
 | 17 | Sentry 에러 캡처 안됨 | 모니터링 | 🟡 중 | ✅ 코드수정 |
+| **18** | **telegram/auth FK (1452)** | **유저** | **🔴 높음** | **✅ 마이그레이션 적용** |
 
 **상세 문서**: [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
 
@@ -58,6 +59,34 @@ OperationalError: (1091, "Can't DROP 'user_game_wallet_ibfk_1'; check that colum
 - 마이그레이션을 `IF EXISTS` 방식으로 수정
 - `_safe_drop_fk()`, `_safe_create_fk()` 헬퍼 함수 추가
 - 파일: `alembic/versions/20260130_1900_migrate_fk_to_v2_user.py`
+
+---
+
+## Issue 18: telegram/auth FK 에러 (IntegrityError 1452) ✅
+
+### 에러
+```
+POST /api/v2/telegram/auth HTTP/1.1" 500 Internal Server Error
+IntegrityError: (1452, 'Cannot add or update a child row: 
+a foreign key constraint fails (`xmas_event`.`user_activity`, 
+CONSTRAINT `user_activity_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)...')
+
+IntegrityError: (1452, '...`user_mission_progress`, 
+CONSTRAINT `user_mission_progress_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)...')
+```
+
+### 원인
+- `user_activity`, `user_mission_progress` 테이블의 FK가 레거시 `user` 테이블 참조
+- V2 시스템은 `v2_user` 테이블 사용 → FK 충돌
+- 텔레그램 인앱 로그인 시 v2_user.id로 INSERT 시도 → FK 위반
+
+### 해결
+- 마이그레이션: `20260130_2500_fix_user_activity_fk.py`
+- 대상 테이블: `user_activity`, `user_activity_event`, `user_mission_progress`
+- FK를 `user.id` → `v2_user.id`로 변경
+
+### 적용 시각
+- 2026-01-30 21:XX KST (운영 서버 직접 적용)
 
 ---
 

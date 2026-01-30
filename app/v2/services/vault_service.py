@@ -171,6 +171,7 @@ class V2VaultService:
         
         정책: v2_strict_vault_policy_sot_ko.md
         - 7일간 입금 합계가 0이면 benefits_suspended = True
+        - **예외**: 가입 7일 이내 신규 유저는 제재 대상에서 제외
         
         Args:
             db: SQLAlchemy 세션
@@ -182,7 +183,17 @@ class V2VaultService:
             - is_suspended: 제재 여부
             - deposit_7d: 최근 7일 입금 합계
         """
+        from app.v2.models.v2_user import V2User
+        
         now_dt = now_dt or datetime.utcnow()
+        
+        # === 신규 유저 예외 처리 (가입 7일 이내) ===
+        user = db.query(V2User).filter(V2User.id == user_id).first()
+        if user and user.created_at:
+            days_since_signup = (now_dt - user.created_at).days
+            if days_since_signup < 7:
+                # 신규 유저는 제재 대상에서 제외
+                return False, 0
         
         # 최근 7일 입금 합계 확인 (6일 전 ~ 오늘)
         seven_days_ago_date = (now_dt - timedelta(days=6)).date()

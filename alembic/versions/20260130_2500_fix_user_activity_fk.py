@@ -79,28 +79,48 @@ def _safe_create_fk(conn, table: str, fk_name: str, column: str, ref_table: str,
 def upgrade() -> None:
     conn = op.get_bind()
     
-    # 1. user_activity
-    table = "user_activity"
-    fk_name = _get_fk_name(conn, table, "user_id")
-    _safe_drop_fk(conn, table, fk_name)
-    _safe_create_fk(conn, table, f"{table}_fk_v2_user", "user_id", "v2_user", "id")
+    # Tables that need FK migration from user.id to v2_user.id
+    tables_to_migrate = [
+        "user_activity",
+        "user_activity_event",
+        "user_mission_progress",  # Added: causes telegram/auth 500 error
+    ]
     
-    # 2. user_activity_event
-    table = "user_activity_event"
-    fk_name = _get_fk_name(conn, table, "user_id")
-    _safe_drop_fk(conn, table, fk_name)
-    _safe_create_fk(conn, table, f"{table}_fk_v2_user", "user_id", "v2_user", "id")
+    for table in tables_to_migrate:
+        # Check if table exists
+        exists = conn.execute(sa.text("""
+            SELECT 1 FROM information_schema.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table
+        """), {"table": table}).fetchone()
+        
+        if not exists:
+            print(f"[FK] Table {table} does not exist, skipping")
+            continue
+        
+        fk_name = _get_fk_name(conn, table, "user_id")
+        _safe_drop_fk(conn, table, fk_name)
+        _safe_create_fk(conn, table, f"{table}_fk_v2_user", "user_id", "v2_user", "id")
     
-    print("[MIGRATION] user_activity FK migration complete")
+    print("[MIGRATION] user_activity + user_mission_progress FK migration complete")
 
 
 def downgrade() -> None:
     conn = op.get_bind()
     
     # Revert to user table FK
-    tables = ["user_activity", "user_activity_event"]
+    tables = ["user_activity", "user_activity_event", "user_mission_progress"]
     
     for table in tables:
+        # Check if table exists
+        exists = conn.execute(sa.text("""
+            SELECT 1 FROM information_schema.TABLES 
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table
+        """), {"table": table}).fetchone()
+        
+        if not exists:
+            print(f"[FK] Table {table} does not exist, skipping")
+            continue
+            
         fk_name = _get_fk_name(conn, table, "user_id")
         _safe_drop_fk(conn, table, fk_name)
         _safe_create_fk(conn, table, f"{table}_ibfk_1", "user_id", "user", "id")
