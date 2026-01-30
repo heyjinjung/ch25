@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_admin_id, get_db
 from app.core.config import get_settings
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.admin_user import AdminUserCreate, AdminUserResponse, AdminUserUpdate
 from app.schemas.admin_user_summary import AdminUserResolveResponse
 from app.schemas.user_history import UserIdentityHistoryResponse
@@ -46,9 +46,9 @@ def create_user(payload: AdminUserCreate, db: Session = Depends(get_db)) -> Admi
     # Accept both trailing and non-trailing slash
     user = AdminUserService.create_user(db, payload)
     user_full = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id == user.id)
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id == user.id)
         .first()
     )
     user_full = user_full or user
@@ -59,9 +59,9 @@ def create_user(payload: AdminUserCreate, db: Session = Depends(get_db)) -> Admi
 def update_user(user_id: int, payload: AdminUserUpdate, db: Session = Depends(get_db)) -> AdminUserResponse:
     user = AdminUserService.update_user(db, user_id, payload)
     user_full = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id == user.id)
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id == user.id)
         .first()
     )
     user_full = user_full or user

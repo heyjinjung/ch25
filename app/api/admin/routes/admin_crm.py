@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_current_admin_id
 from app.services.user_segment_service import UserSegmentService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.admin_message import AdminMessage, AdminMessageInbox
 from app.models.admin_user_profile import AdminUserProfile
 from app.db.session import SessionLocal
@@ -142,7 +142,7 @@ def get_segment_detail(segment_type: str, limit: int = 100, db: Session = Depend
             segments = UserSegmentService.get_computed_segments(db, uid)
             
             # Fallback for user basic info if not fully in u_data
-            u = db.query(User).filter(User.id == uid).first()
+            u = db.query(V2User).filter(V2User.id == uid).first()
             
             telegram_id_value = None
             if profile and profile.telegram_id:
@@ -177,7 +177,7 @@ def get_segment_detail(segment_type: str, limit: int = 100, db: Session = Depend
         segments = UserSegmentService.get_computed_segments(db, uid)
         
         # User object for external_id fallback
-        u = db.query(User).filter(User.id == uid).first()
+        u = db.query(V2User).filter(V2User.id == uid).first()
         
         telegram_id_value = None
         if profile and profile.telegram_id:
@@ -415,7 +415,7 @@ def fan_out_message(
         target_user_ids: List[int] = []
 
         if target_type == "ALL":
-            target_user_ids = db.execute(select(User.id)).scalars().all()
+            target_user_ids = db.execute(select(V2User.id)).scalars().all()
 
         elif target_type == "USER":
             if resolved_user_ids is not None:
@@ -465,7 +465,7 @@ def fan_out_message(
             
             notifier = NotificationService()
             user_tg_ids = db.execute(
-                select(User.telegram_id).where(User.id.in_(target_user_ids), User.telegram_id.isnot(None))
+                select(V2User.telegram_id).where(V2User.id.in_(target_user_ids), V2User.telegram_id.isnot(None))
             ).scalars().all()
             
             # 텔레그램 메시지 전송 (동기 방식으로 안전하게 처리)

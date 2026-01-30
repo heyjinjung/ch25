@@ -10,7 +10,7 @@ from app.models.roulette import RouletteLog, RouletteSegment
 from app.models.game_wallet import GameTokenType
 from app.models.game_wallet import UserGameWallet
 from app.models.game_wallet_ledger import UserGameWalletLedger
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.game_tokens import (
     GrantGameTokensRequest,
     GrantGameTokensResponse,
@@ -52,7 +52,7 @@ def _resolve_user_id(db: Session, payload) -> int:
 @router.post("/grant", response_model=GrantGameTokensResponse)
 def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db)):
     user_id = _resolve_user_id(db, payload)
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     reason = payload.reason or "ADMIN_GRANT"
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
@@ -84,7 +84,7 @@ def grant_tokens(payload: GrantGameTokensRequest, db: Session = Depends(get_db))
 @router.post("/revoke", response_model=GrantGameTokensResponse)
 def revoke_tokens(payload: RevokeGameTokensRequest, db: Session = Depends(get_db)):
     user_id = _resolve_user_id(db, payload)
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     reason = payload.reason or "ADMIN_REVOKE"
 
     # Phase 2 rule: DIAMOND is Inventory SoT (not wallet).
@@ -127,14 +127,14 @@ def list_wallets(
     offset = max(offset, 0)
 
     query = (
-        db.query(UserGameWallet, User)
-        .join(User, User.id == UserGameWallet.user_id)
-        .options(joinedload(User.admin_profile))
+        db.query(UserGameWallet, V2User)
+        .join(V2User, V2User.id == UserGameWallet.user_id)
+        .options(joinedload(V2User.admin_profile))
     )
     if user_id:
         query = query.filter(UserGameWallet.user_id == user_id)
     if external_id:
-        query = query.filter(User.external_id == external_id)
+        query = query.filter(V2User.external_id == external_id)
     if has_balance is True:
         query = query.filter(UserGameWallet.balance > 0)
     elif has_balance is False:
@@ -178,7 +178,7 @@ def list_recent_play_logs(
     user_filter_lottery = True
 
     if external_id:
-        user = db.query(User).filter(User.external_id == external_id).first()
+        user = db.query(V2User).filter(V2User.external_id == external_id).first()
         if user:
             user_filter_roulette = RouletteLog.user_id == user.id
             user_filter_dice = DiceLog.user_id == user.id
@@ -191,16 +191,16 @@ def list_recent_play_logs(
         db.query(
             RouletteLog.id.label("id"),
             RouletteLog.user_id,
-            User.external_id,
-            User.telegram_username,
-            User.nickname,
+            V2User.external_id,
+            V2User.telegram_username,
+            V2User.nickname,
             RouletteLog.reward_type,
             RouletteLog.reward_amount,
             RouletteSegment.label.label("detail"),
             RouletteLog.created_at.label("created_at"),
             literal("ROULETTE").label("game_type"),
         )
-        .join(User, User.id == RouletteLog.user_id)
+        .join(V2User, V2User.id == RouletteLog.user_id)
         .join(RouletteSegment, RouletteSegment.id == RouletteLog.segment_id)
         .filter(user_filter_roulette)
     )
@@ -210,16 +210,16 @@ def list_recent_play_logs(
         db.query(
             DiceLog.id.label("id"),
             DiceLog.user_id,
-            User.external_id,
-            User.telegram_username,
-            User.nickname,
+            V2User.external_id,
+            V2User.telegram_username,
+            V2User.nickname,
             DiceLog.reward_type,
             DiceLog.reward_amount,
             DiceLog.result.label("detail"),
             DiceLog.created_at.label("created_at"),
             literal("DICE").label("game_type"),
         )
-        .join(User, User.id == DiceLog.user_id)
+        .join(V2User, V2User.id == DiceLog.user_id)
         .filter(user_filter_dice)
     )
 
@@ -228,16 +228,16 @@ def list_recent_play_logs(
         db.query(
             LotteryLog.id.label("id"),
             LotteryLog.user_id,
-            User.external_id,
-            User.telegram_username,
-            User.nickname,
+            V2User.external_id,
+            V2User.telegram_username,
+            V2User.nickname,
             LotteryLog.reward_type,
             LotteryLog.reward_amount,
             LotteryPrize.label.label("detail"),
             LotteryLog.created_at.label("created_at"),
             literal("LOTTERY").label("game_type"),
         )
-        .join(User, User.id == LotteryLog.user_id)
+        .join(V2User, V2User.id == LotteryLog.user_id)
         .join(LotteryPrize, LotteryPrize.id == LotteryLog.prize_id)
         .filter(user_filter_lottery)
     )
@@ -249,9 +249,9 @@ def list_recent_play_logs(
 
     user_ids = sorted({int(r.user_id) for r in rows if getattr(r, "user_id", None) is not None})
     users = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id.in_(user_ids))
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id.in_(user_ids))
         .all()
         if user_ids
         else []
@@ -289,14 +289,14 @@ def list_wallet_ledger(
     limit = min(max(limit, 1), 500)
     offset = max(offset, 0)
     query = (
-        db.query(UserGameWalletLedger, User)
-        .join(User, User.id == UserGameWalletLedger.user_id)
-        .options(joinedload(User.admin_profile))
+        db.query(UserGameWalletLedger, V2User)
+        .join(V2User, V2User.id == UserGameWalletLedger.user_id)
+        .options(joinedload(V2User.admin_profile))
     )
     if user_id:
         query = query.filter(UserGameWalletLedger.user_id == user_id)
     if external_id:
-        query = query.filter(User.external_id == external_id)
+        query = query.filter(V2User.external_id == external_id)
     if token_type:
         query = query.filter(UserGameWalletLedger.token_type == token_type)
 
@@ -332,16 +332,16 @@ def get_user_wallet_summary(db: Session = Depends(get_db)):
     # We join User and UserGameWallet, filter for balance > 0
     rows = (
         db.query(
-            User.id, 
-            User.external_id, 
-            User.telegram_username,
-            User.nickname,
+           V2User.id, 
+            V2User.external_id, 
+            V2User.telegram_username,
+            V2User.nickname,
             UserGameWallet.token_type, 
             UserGameWallet.balance
         )
-        .join(UserGameWallet, User.id == UserGameWallet.user_id)
+        .join(UserGameWallet, V2User.id == UserGameWallet.user_id)
         .filter(UserGameWallet.balance > 0)
-        .order_by(User.id)
+        .order_by(V2User.id)
         .all()
     )
 
@@ -361,9 +361,9 @@ def get_user_wallet_summary(db: Session = Depends(get_db)):
 
     user_ids = list(summary_map.keys())
     users = (
-        db.query(User)
-        .options(joinedload(User.admin_profile))
-        .filter(User.id.in_(user_ids))
+        db.query(V2User)
+        .options(joinedload(V2User.admin_profile))
+        .filter(V2User.id.in_(user_ids))
         .all()
         if user_ids
         else []

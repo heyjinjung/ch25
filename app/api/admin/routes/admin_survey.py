@@ -17,7 +17,7 @@ from app.schemas.survey import (
     SurveyTriggerUpsertRequest,
     SurveyUpsertRequest,
 )
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.survey import SurveyResponse, SurveyResponseAnswer, SurveyResponseStatus
 
 router = APIRouter(prefix="/admin/api/surveys", tags=["admin-surveys"])
@@ -258,8 +258,8 @@ def list_survey_responses(
 ):
     # Fetch responses with user info
     stmt = (
-        select(SurveyResponse, User.nickname, User.telegram_id)
-        .join(User, SurveyResponse.user_id == User.id)
+        select(SurveyResponse, V2User.nickname, V2User.telegram_id)
+        .join(V2User, SurveyResponse.user_id == V2User.id)
         .where(
             SurveyResponse.survey_id == survey_id,
             SurveyResponse.status == SurveyResponseStatus.COMPLETED

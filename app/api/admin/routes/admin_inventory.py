@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin_id
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.services.inventory_service import InventoryService
 from app.services.audit_service import AuditService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/admin/api/inventory", tags=["admin-inventory"])
 @router.get("/users/{user_id}")
 def get_user_inventory(user_id: int, limit: int = 50, db: Session = Depends(get_db)):
     limit = min(max(limit, 1), 200)
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -77,7 +77,7 @@ def get_user_inventory_by_identifier(identifier: str, limit: int = 50, db: Sessi
 @router.get("/users/{user_id}/ledger")
 def list_user_inventory_ledger(user_id: int, limit: int = 50, db: Session = Depends(get_db)):
     limit = min(max(limit, 1), 200)
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -112,7 +112,7 @@ def adjust_user_inventory(
     db: Session = Depends(get_db),
     admin_id: int = Depends(get_current_admin_id),
 ):
-    user = db.get(User, user_id)
+    user = db.get(V2User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -213,7 +213,7 @@ def get_inventory_ledger(
 ):
     """List system-wide inventory ledger entries."""
     limit = min(max(limit, 1), 200)
-    q = select(UserInventoryLedger, User.nickname).join(User, UserInventoryLedger.user_id == User.id)
+    q = select(UserInventoryLedger, V2User.nickname).join(V2User, UserInventoryLedger.user_id == V2User.id)
 
     if user_id:
         q = q.where(UserInventoryLedger.user_id == user_id)
@@ -254,7 +254,7 @@ def get_inventory_items(
 ):
     """List system-wide inventory items (snapshot)."""
     limit = min(max(limit, 1), 200)
-    q = select(UserInventoryItem, User.nickname).join(User, UserInventoryItem.user_id == User.id)
+    q = select(UserInventoryItem, V2User.nickname).join(V2User, UserInventoryItem.user_id == V2User.id)
 
     if user_id:
         q = q.where(UserInventoryItem.user_id == user_id)

@@ -148,20 +148,20 @@ class AdminMissionApprovalDetail(BaseModel):
 @router.get("/approvals/queue", response_model=List[AdminMissionApprovalDetail])
 def get_mission_approval_queue(db: Session = Depends(get_db)):
     """Fetch all mission progress records that are waiting for approval."""
-    from app.models.user import User
+    from app.v2.models.user import V2User
     
     rows = db.query(
         UserMissionProgress.id,
         UserMissionProgress.user_id,
-        User.nickname,
-        User.telegram_id,
+        V2User.nickname,
+        V2User.telegram_id,
         UserMissionProgress.mission_id,
         Mission.title,
         UserMissionProgress.current_value,
         Mission.target_value,
         UserMissionProgress.completed_at,
         UserMissionProgress.approval_status
-    ).join(User, User.id == UserMissionProgress.user_id) \
+    ).join(V2User, V2User.id == UserMissionProgress.user_id) \
      .join(Mission, Mission.id == UserMissionProgress.mission_id) \
      .filter(UserMissionProgress.approval_status == "PENDING") \
      .order_by(UserMissionProgress.completed_at.asc()) \

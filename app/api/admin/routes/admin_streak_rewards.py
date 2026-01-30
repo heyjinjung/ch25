@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models.feature import UserEventLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.admin_streak_rewards import (
     StreakRewardDailyCountsResponse,
     StreakRewardUserEventsResponse,
@@ -64,13 +64,13 @@ def get_user_events(
     Supports searching by user_id or external_id.
     """
 
-    user: User | None = None
+    user: V2User | None = None
     if external_id:
-        user = db.query(User).filter(User.external_id == external_id).one_or_none()
+        user = db.query(V2User).filter(V2User.external_id == external_id).one_or_none()
         if user is None:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     elif user_id is not None:
-        user = db.query(User).filter(User.id == int(user_id)).one_or_none()
+        user = db.query(V2User).filter(V2User.id == int(user_id)).one_or_none()
         if user is None:
             raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     else:

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models.feature import UserEventLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.roulette import RouletteLog
 from app.models.dice import DiceLog
 from app.models.lottery import LotteryLog
@@ -65,8 +65,8 @@ def _pct(curr: float | int | None, prev: float | int | None) -> float | None:
 def _active_users(db: Session, start: datetime, end: datetime) -> int:
     return int(
         db.query(func.count())
-        .select_from(User)
-        .filter(User.last_login_at >= start, User.last_login_at < end)
+        .select_from(V2User)
+        .filter(V2User.last_login_at >= start, V2User.last_login_at < end)
         .scalar()
         or 0
     )
