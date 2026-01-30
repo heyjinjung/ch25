@@ -14,12 +14,13 @@
 | Telegram Bot | ✅ OK | Webhook 설정 완료, Application started |
 | Redis | ✅ OK | PONG 응답 |
 | DEV Login | ✅ 차단됨 | 404 Not Found (엔드포인트 없음) |
-| Celery Worker/Beat | ⚠️ Unhealthy | 헬스체크 재설정 필요 |
-| V1 Auth | ❌ 오류 | `V2User`에 `password_hash` 속성 없음 |
+| Celery Worker/Beat | ⚠️ 완화됨 | 헬스체크/pidfile 수정 (운영 배포 필요) |
+| V1 Auth | ⚠️ 완화됨 | `auth.py` password_hash 가드 추가 (운영 배포 필요) |
 | Circuit Breaker | ⏳ 대기 | 아직 사용 전 (키 없음) |
 
 **미해결 이슈**:
-- `auth.py:64`: V1 Auth 라우터가 V2User 받았을 때 AttributeError 발생 → V1→V2 마이그레이션 완료 후 해결 예정
+- `auth.py:64`: V1 Auth 라우터 password_hash 가드 적용 완료(로컬), 운영 배포 필요
+- Celery healthcheck: pidfile 기준 헬스체크로 수정 완료(로컬), 운영 배포 필요
 
 ### [2026-01-30 배포 트러블슈팅 및 저장소 이관]
 - **저장소 이관 완료**: `heyjinjung/ch25` → `jm956-cc/202601_app` (전체 브랜치/태그/히스토리 이관)
@@ -160,6 +161,7 @@
 
 
 ## 7. 변경 이력
+- v2.8 (2026-01-30, GitHub Copilot): V1 Auth 가드/ Celery 헬스체크 개선 및 로컬 마이그레이션 기록
 - v2.2 (2026-01-19, GitHub Copilot): V1→V2 상점 상품 변환 가이드 링크 추가
 - v2.1 (2026-01-19, GitHub Copilot): 상점 상품 UI Config SoT 링크 추가
 - v2.0 (2026-01-19, GitHub Copilot): Auth/User·Mission·Inventory·TeamBattle·Admin/Ops API 계약 문서 추가

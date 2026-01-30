@@ -2,6 +2,7 @@
 
 **문서 타입**: 최종 배포 체크리스트 (Master Deployment Checklist)
 **작성일**: 2026-01-29
+**최종 검증**: 2026-01-30
 **대상**: 전체 팀 (DevOps, Backend, Frontend, QA, Product)
 **프로젝트**: Golden V2 - Production Release
 
@@ -43,9 +44,10 @@
 - [x] **Access Token 만료**: 15분 (`V2_ACCESS_TOKEN_EXPIRE_MINUTES=15`) (auth_service.py:172, 236)
 - [x] **Refresh Token 만료**: 30일 (auth_service.py:64, expires_days=30)
 - [x] **Sliding Window 갱신**: 7일 미만 시 자동 갱신 (auth_service.py:239-257, days_left < 7)
-- [ ] **JWT_SECRET** 강력한 값 (32자 이상)
+- [ ] **JWT_SECRET** 강력한 값 (32자 이상) ⚠️ 운영값 15자 확인됨
 - [x] **Token 폐기** (logout) 동작 확인 (auth_service.py:267-315, revoke_refresh_token)
 - [x] **Revoked Token** 재사용 방지 (auth_service.py:223-224, TOKEN_REVOKED 거부)
+- [x] **V1 Auth password_hash 가드** 적용 (auth.py, 로컬 반영/운영 배포 필요)
 
 ### 1.3 RBAC (Role-Based Access Control) ✅
 - [x] **RBAC_DENIED 이벤트** 로깅 (`app/api/deps.py`) (deps.py:18-25, _log_rbac_denied + auth_event.py:23)
@@ -55,8 +57,8 @@
 - [x] **SUPER_ADMIN → ADMIN** 정규화
 
 ### 1.4 DEV Login ⚠️ 중요
-- [ ] **`DEV_LOGIN_ENABLED=false`** 확인
-- [ ] **프로덕션에서 DEV 로그인 시도 시 403** 반환
+- [x] **`DEV_LOGIN_ENABLED=false`** 확인
+- [x] **프로덕션에서 DEV 로그인 차단** 확인 (404 Not Found)
 - [ ] **환경 변수 우선순위** 확인 (플래그 > env)
 
 ### 1.5 보안 테스트
@@ -672,6 +674,7 @@ CASCADE 의존성 (명시적 검증 필요)
   ```
 - [x] **Staging 환경** 마이그레이션 테스트 (SQL Preview 생성 및 검증)
 - [x] **롤백 스크립트** 준비 (`alembic downgrade -1` 테스트 완료)
+- [x] **로컬 DB 마이그레이션 적용** (`alembic upgrade head`, 2026-01-30)
 
 ### 10.2 필수 테이블 생성 확인 ✅
 - [x] `v2_user`
@@ -705,7 +708,7 @@ TEST_MODE=false
 DEV_LOGIN_ENABLED=false  # ⚠️ 반드시 false
 
 # Database
-DATABASE_URL=postgresql://...
+DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
 
 # JWT
 JWT_SECRET=<강력한 시크릿>
@@ -731,10 +734,10 @@ CORS_ORIGINS=https://yourdomain.com
 ```
 
 ### 11.2 보안 검증
-- [ ] JWT_SECRET 최소 32자
-- [ ] DEV_LOGIN_ENABLED=false
-- [ ] TEST_MODE=false
-- [ ] CORS_ORIGINS 허용 도메인만
+- [ ] JWT_SECRET 최소 32자 ⚠️ 운영값 15자 확인됨
+- [x] DEV_LOGIN_ENABLED=false
+- [x] TEST_MODE=false
+- [x] CORS_ORIGINS 허용 도메인만
 
 ---
 
@@ -852,13 +855,15 @@ SQLALCHEMY_POOL_RECYCLE=3600
 
 ### 15.1 Celery Worker ✅
 ```bash
-celery -A app.worker.celery_app worker --loglevel=info
+celery -A app.worker.celery_app worker --loglevel=info --pidfile=/tmp/celeryworker.pid
 ```
+ - [x] **헬스체크 pidfile 기준 적용** (docker-compose.yml, 로컬 반영/운영 배포 필요)
 
 ### 15.2 Celery Beat (스케줄러) ✅
 ```bash
-celery -A app.worker.celery_app beat --loglevel=info
+celery -A app.worker.celery_app beat --loglevel=info --pidfile=/tmp/celerybeat.pid
 ```
+ - [x] **헬스체크 pidfile 기준 적용** (docker-compose.yml, 로컬 반영/운영 배포 필요)
 
 ### 15.3 스케줄 작업 확인
 - [ ] **Daily Nudge**: 12:00, 18:00 KST

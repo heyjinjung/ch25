@@ -9,7 +9,9 @@
       "Bash(docker exec:*)",
       "Bash(alembic upgrade:*)",
       "Bash(pytest:*)",
-      "Bash(docker-compose up:*)"
+      "Bash(docker-compose up:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)"
     ]
   }
 }

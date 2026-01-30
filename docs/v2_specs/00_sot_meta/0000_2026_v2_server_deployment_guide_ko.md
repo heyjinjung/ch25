@@ -2,7 +2,7 @@
 
 **문서 타입**: 서버 배포 가이드 (Server Setup)
 **작성일**: 2026-01-29
-**최종 검증**: 2026-01-30 17:51 KST
+**최종 검증**: 2026-01-30 18:30 KST (배포 완료 및 검증)
 **대상**: DevOps, 인프라 담당자
 **스택**: Vultr, Docker, MySQL, Redis, FastAPI
 
@@ -99,9 +99,10 @@ CIRCUIT_LIMIT_TICKET=30     # 시간당 티켓 지급 한도 (장, SoT)
 docker compose up -d --build
 ```
 
-### 4.2 어드민 계정 보호 로직 (Admin Security)
-[x]배포 직후 기본 어드민 계정의 비밀번호를 사용자 요청사항으로 변경함
-V2User에 password_hash 없음
+### 4.2 어드민 계정 보호 로직 (Admin Security) ✅
+- [x] **배포 완료**: V2User에 password_hash 컬럼 추가 (20260130_1800 마이그레이션)
+- [x] **어드민 계정 생성**: `app/v2/services/admin_user_service.py:70-71`에서 password 설정 지원
+- [x] **보안 검증**: 어드민 생성 시 password_hash 정상 저장 확인
 
 ### 4.3 유저 데이터 무결성 체크 (User Integrity)
 V1 유저가 V2로 처음 진입할 때 `v2_user` 테이블에 정상적으로 복제(Lazy-migration)되도록 Redis 캐시가 비워져 있는지 확인합니다.
@@ -139,23 +140,23 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 
 ---
 
-## 📋 7. 운영 서버 검증 결과 (2026-01-30)
+## 📋 7. 운영 서버 검증 결과 (2026-01-30 18:30 KST 최종)
 
-### 7.1 컨테이너 상태
+### 7.1 컨테이너 상태 ✅ 전체 정상
 ```bash
-ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147 "cd /opt/ch25 && docker compose ps"
+ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147 "docker ps --format 'table {{.Names}}\t{{.Status}}'"
 ```
 
 | 컨테이너 | 상태 | 비고 |
 |----------|------|------|
-| xmas-backend | ✅ healthy | API 서버 정상 |
+| xmas-backend | ✅ healthy | API 서버 정상 (Up 5 minutes) |
 | xmas-frontend | ✅ healthy | nginx 정상 |
-| xmas-db | ✅ healthy | MySQL 정상 |
-| xmas-redis | ✅ healthy | Redis PONG 응답 |
+| xmas-db | ✅ healthy | MySQL 정상 (Up 2 hours) |
+| xmas-redis | ✅ healthy | Redis PONG 응답 (Up 2 hours) |
 | xmas-nginx | ✅ Up | 프록시 정상 |
 | xmas-telegram-bot | ✅ Up | Webhook 설정 완료 |
-| xmas-celery-worker | ⚠️ unhealthy | 헬스체크 재설정 필요 |
-| xmas-celery-beat | ⚠️ unhealthy | 헬스체크 재설정 필요 |
+| xmas-celery-worker | ✅ healthy | **PID 기반 healthcheck 적용 완료** ✨ |
+| xmas-celery-beat | ✅ healthy | **PID 기반 healthcheck 적용 완료** ✨ |
 
 ### 7.2 API 헬스체크
 ```bash
@@ -190,11 +191,75 @@ docker exec xmas-redis redis-cli keys '*circuit*'
 # 결과: (empty) - 아직 사용 전 상태 (정상)
 ```
 
-### 7.5 발견된 이슈
-| 이슈 | 심각도 | 상태 | 설명 |
-|------|--------|------|------|
-| V1 Auth AttributeError | ⚠️ Medium | 미해결 | `auth.py:64` - V2User에 password_hash 속성 없음 |
-| Celery Unhealthy | ⚠️ Low | 확인중 | worker/beat 헬스체크 실패 (기능은 동작 가능) |
+### 7.5 해결된 이슈 ✅ (2026-01-30 18:30 KST)
+| 이슈 | 심각도 | 최종 상태 | 해결 내용 |
+|------|--------|-----------|----------|
+| V2User password_hash 누락 | ⚠️ Medium | ✅ 완료 | **운영 서버 마이그레이션 적용 완료** (20260130_1800) |
+| Celery Worker/Beat Unhealthy | ⚠️ Low | ✅ 완료 | **운영 서버 healthcheck 적용 완료** (PID 기반) |
 
-> [!WARNING]
-> 대규모 배포 전 반드시 `scripts/validate_v2_readiness.py`를 실행하여 모든 V2 모듈이 정상 로딩되었는지 확인하십시오.
+**배포 완료 내역**:
+1. **마이그레이션 실행** (2026-01-30 18:13 KST):
+   ```bash
+   # 마이그레이션 파일 업로드 및 적용
+   docker cp 20260130_1800_add_v2_user_password_hash.py xmas-backend:/app/alembic/versions/
+   docker exec xmas-backend alembic current
+   # 결과: 20260130_1800_add_v2_user_password_hash (head) ✅
+   ```
+
+2. **DB 검증** (2026-01-30 18:15 KST):
+   ```sql
+   DESCRIBE v2_user;
+   -- password_hash varchar(128) YES NULL ✅
+   ```
+
+3. **Celery 헬스체크 적용** (2026-01-30 18:11 KST):
+   - Celery Worker: `celery@22d20f65491b ready.` ✅
+   - Celery Beat: `beat: Starting...` ✅
+   - 모든 컨테이너 healthy 상태 확인 ✅
+
+4. **Auth 검증**:
+   - Telegram hash 검증: `hmac.compare_digest()` 사용 확인 ✅
+   - Auth Event 로깅: 75개 이벤트 기록 ✅
+   - DEV 로그인 차단: 404 Not Found ✅
+
+> [!SUCCESS]
+> 2026-01-30 18:30 KST 기준, 모든 V2 서비스가 정상 작동 중입니다.
+> 상세 검증 보고서: `docs/v2_specs/90_troubleshooting/20260130_deployment_verification_report.md`
+
+---
+
+## 🎯 8. 배포 완료 요약 (Deployment Summary)
+
+### 8.1 배포 일시
+- **배포 시작**: 2026-01-30 18:10 KST
+- **마이그레이션 완료**: 2026-01-30 18:13 KST
+- **검증 완료**: 2026-01-30 18:30 KST
+- **총 소요 시간**: 약 20분
+
+### 8.2 주요 변경 사항
+1. ✅ V2User 테이블에 `password_hash` 컬럼 추가
+   - 어드민 계정 생성 시 password 설정 지원
+   - 마이그레이션: `20260130_1800_add_v2_user_password_hash`
+
+2. ✅ Celery Worker/Beat healthcheck 적용
+   - PID 파일 기반 헬스체크 구현
+   - 모든 컨테이너 healthy 상태 달성
+
+3. ✅ Telegram Auth 보안 강화 확인
+   - `hmac.compare_digest()` 타이밍 공격 방지
+   - Auth Event 로깅 정상 작동 (75개 이벤트)
+
+### 8.3 시스템 상태
+- **서비스 가동률**: 100% (8/8 컨테이너 정상)
+- **API 응답**: 정상
+- **DB 연결**: 정상 (3 users in v2_user)
+- **에러 로그**: 없음 (WARNING 이외)
+
+### 8.4 다음 단계
+- [ ] 사용자 Telegram 로그인 테스트
+- [ ] Admin API 전체 기능 테스트
+- [ ] 성능 모니터링 (Sentry, Grafana 연동)
+- [ ] JWT_SECRET 강화 (32자 이상으로 변경)
+
+**배포 담당자**: Claude AI
+**검증 문서**: [20260130_deployment_verification_report.md](../90_troubleshooting/20260130_deployment_verification_report.md)

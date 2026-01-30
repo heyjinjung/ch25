@@ -1,4 +1,5 @@
 # /workspace/ch25/app/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -15,6 +16,35 @@ from app.v2.workers.golden_event_worker import run_golden_event_worker
 from app.v2.workers.golden_intervention_worker import run_golden_intervention_worker
 
 settings = get_settings()
+
+# Sentry 초기화 (프로덕션 에러 추적)
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            environment=settings.env,
+            traces_sample_rate=0.1,  # 10% 트랜잭션 샘플링
+            profiles_sample_rate=0.1,  # 10% 프로파일링
+            integrations=[
+                FastApiIntegration(),
+                SqlalchemyIntegration(),
+            ],
+            # 민감 정보 필터링
+            send_default_pii=False,
+            before_send=lambda event, hint: event if settings.env == "production" else None,
+        )
+        print(f"✅ Sentry initialized (env={settings.env})", flush=True)
+    except ImportError:
+        print("⚠️ Sentry SDK not installed. Run: pip install sentry-sdk", flush=True)
+    except Exception as e:
+        print(f"⚠️ Sentry initialization failed: {e}", flush=True)
+else:
+    print("ℹ️ Sentry DSN not configured. Skipping Sentry initialization.", flush=True)
 
 app = FastAPI(title="XMAS 1Week Event System", default_response_class=KstJSONResponse)
 
