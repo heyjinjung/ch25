@@ -253,6 +253,12 @@ def _get_operational_date_kst(now: datetime | None = None, reset_hour: int = 9) 
     return now_kst.date()
 
 
+def _get_user_login_streak(db: Session, user_id: int) -> int:
+    """user_streak 테이블에서 로그인 스트릭 조회 (없으면 0)"""
+    streak = db.query(UserStreak).filter(UserStreak.user_id == user_id).first()
+    return streak.current_streak if streak else 0
+
+
 @router.get("/game/missions/login-verify", response_model=LoginMissionVerifyResponse)
 def verify_login_missions(
     limit: int = Query(50, ge=1, le=200),
@@ -307,7 +313,7 @@ def verify_login_missions(
                 nickname=user.nickname or "(미설정)",
                 today_login_completed=False,
                 last_login_at=user.last_login_at,
-                login_streak=int(user.login_streak or 0),
+                login_streak=_get_user_login_streak(db, user.id),
                 reset_hour_kst=reset_hour,
                 current_operational_date=operational_date_str,
             ))
@@ -319,7 +325,7 @@ def verify_login_missions(
             nickname=user.nickname or "(미설정)",
             today_login_completed=True,
             last_login_at=user.last_login_at,
-            login_streak=int(user.login_streak or 0),
+            login_streak=_get_user_login_streak(db, user.id),
             reset_hour_kst=reset_hour,
             current_operational_date=operational_date_str,
         ))
