@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
 from app.models.segment_rule import SegmentRule
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_activity import UserActivity
 from app.models.user_segment import UserSegment
 from app.services.admin_segment_rule_service import AdminSegmentRuleService
@@ -111,17 +111,17 @@ class AdminSegmentService:
         now = datetime.utcnow()
         enabled_rules = AdminSegmentRuleService.list_enabled_rules(db)
         q = (
-            db.query(User, UserSegment, UserActivity, ExternalRankingData)
-            .outerjoin(UserSegment, UserSegment.user_id == User.id)
-            .outerjoin(UserActivity, UserActivity.user_id == User.id)
-            .outerjoin(ExternalRankingData, ExternalRankingData.user_id == User.id)
+            db.query(V2User, UserSegment, UserActivity, ExternalRankingData)
+            .outerjoin(UserSegment, UserSegment.user_id == V2User.id)
+            .outerjoin(UserActivity, UserActivity.user_id == V2User.id)
+            .outerjoin(ExternalRankingData, ExternalRankingData.user_id == V2User.id)
         )
         if user_id is not None:
-            q = q.filter(User.id == user_id)
+            q = q.filter(V2User.id == user_id)
         elif cleaned_external:
-            q = q.filter(User.external_id == cleaned_external)
+            q = q.filter(V2User.external_id == cleaned_external)
 
-        rows = q.order_by(User.id.desc()).limit(limit).all()
+        rows = q.order_by(V2User.id.desc()).limit(limit).all()
         result: list[AdminSegmentRow] = []
         for user, seg, act, ext in rows:
             segment_value = seg.segment if seg else "NEW"
@@ -187,11 +187,11 @@ class AdminSegmentService:
     ) -> AdminSegmentRow:
         cleaned_external = external_id.strip() if external_id else None
 
-        user: User | None = None
+        user: V2User | None = None
         if cleaned_external:
-            user = db.query(User).filter(User.external_id == cleaned_external).first()
+            user = db.query(V2User).filter(V2User.external_id == cleaned_external).first()
         if user is None and user_id is not None:
-            user = db.get(User, user_id)
+            user = db.get(V2User, user_id)
         if user is None:
             raise ValueError("USER_NOT_FOUND")
 

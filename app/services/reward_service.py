@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError
 from app.models.game_wallet import GameTokenType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_cash_ledger import UserCashLedger
 from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
@@ -36,7 +36,7 @@ class RewardService:
         if amount < 0:
             raise InvalidConfigError("INVALID_POINT_AMOUNT")
 
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         # Avoid races in MySQL/Postgres; SQLite used in tests doesn't support FOR UPDATE.
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()

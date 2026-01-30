@@ -8,7 +8,7 @@ from sqlalchemy import desc
 
 from app.api.deps import get_db, get_current_admin_id
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_cash_ledger import UserCashLedger
 from app.services.vault_service import VaultService
 
@@ -98,7 +98,7 @@ def process_request(
         raise HTTPException(status_code=400, detail="REQUEST_NOT_PENDING")
 
     # Lock User properties
-    user = db.query(User).filter(User.id == req.user_id).with_for_update().first()
+    user = db.query(V2User).filter(V2User.id == req.user_id).with_for_update().first()
     if not user:
          raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

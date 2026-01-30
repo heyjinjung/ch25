@@ -7,7 +7,7 @@ from app.services.game_wallet_service import GameWalletService
 from app.services.inventory_service import InventoryService
 from app.services.idempotency_service import IdempotencyService
 from app.services.ui_config_service import UiConfigService
-from app.models.user import User
+from app.v2.models.user import V2User
 
 
 class ShopProduct:
@@ -278,7 +278,7 @@ class ShopService:
         if not product.is_active:
             raise HTTPException(status_code=400, detail="PRODUCT_INACTIVE")
 
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

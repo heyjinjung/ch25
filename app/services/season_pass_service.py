@@ -16,7 +16,7 @@ from app.models.season_pass import (
     SeasonPassRewardLog,
     SeasonPassStampLog,
 )
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.season_pass import SeasonPassStatusResponse
 from app.services.reward_service import RewardService
 
@@ -302,7 +302,7 @@ class SeasonPassService:
         db.refresh(progress)
 
         # [Level Unification] Sync season level and XP to user table
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if user:
             if user.level != progress.current_level or user.xp != progress.current_xp:
                 user.level = progress.current_level
@@ -722,7 +722,7 @@ class SeasonPassService:
             progress.current_level = max(progress.current_level, max(level.level for level in achieved_levels))
 
         # [Level Unification] Sync season level and XP to user table
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if user:
             if user.level != progress.current_level or user.xp != progress.current_xp:
                 user.level = progress.current_level

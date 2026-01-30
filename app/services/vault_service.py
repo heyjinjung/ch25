@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.game_wallet import GameTokenType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.feature import UserEventLog
 from app.models.vault_ledger import VaultLedger
@@ -77,7 +77,7 @@ class VaultService:
         return None
 
     @classmethod
-    def get_user_vault_policy(cls, db: Session, user: User, now: datetime) -> dict:
+    def get_user_vault_policy(cls, db: Session, user: V2User, now: datetime) -> dict:
         """Determine strict vault policy status based on deposit recency.
         
         Rules:
@@ -168,7 +168,7 @@ class VaultService:
             return now_kst.date() - timedelta(days=1)
         return now_kst.date()
 
-    def _ensure_daily_vault_spent_reset(self, user: User, now: datetime) -> None:
+    def _ensure_daily_vault_spent_reset(self, user: V2User, now: datetime) -> None:
         """Reset vault_spent_today if operational date has changed."""
         op_date = self._operational_date_kst(now)
         op_date_str = op_date.strftime("%Y-%m-%d")
@@ -196,7 +196,7 @@ class VaultService:
     def _streak_vault_bonus_multiplier(
         self,
         *,
-        user: User,
+        user: V2User,
         now: datetime,
         eligible: bool,
     ) -> float:
@@ -342,7 +342,7 @@ class VaultService:
         }
 
     @staticmethod
-    def sync_legacy_mirror(user: User) -> None:
+    def sync_legacy_mirror(user: V2User) -> None:
         # `vault_balance` is a legacy mirror for UI compatibility.
         user.vault_balance = int(user.vault_locked_balance or 0)
 
@@ -351,7 +351,7 @@ class VaultService:
         return now + timedelta(hours=cls.VAULT_LOCKED_DURATION_HOURS)
 
     @classmethod
-    def _ensure_locked_expiry(cls, user: User, now: datetime) -> bool:
+    def _ensure_locked_expiry(cls, user: V2User, now: datetime) -> bool:
         """[DEPRECATED] Ensure `vault_locked_expires_at` is set when threshold is reached.
         
         Phase 3 Override: 
@@ -382,7 +382,7 @@ class VaultService:
         return user.vault_locked_expires_at is not None
 
     @classmethod
-    def _expire_locked_if_due(cls, user: User, now: datetime) -> bool:
+    def _expire_locked_if_due(cls, user: V2User, now: datetime) -> bool:
         """[DEPRECATED] Expire locked balance when `vault_locked_expires_at` is due.
         
         Phase 3 Override:
@@ -395,9 +395,9 @@ class VaultService:
 
     # Admin-only helpers for timer control
     @classmethod
-    def admin_timer_action(cls, db: Session, *, user_id: int, action: str, now: datetime | None = None) -> User:
+    def admin_timer_action(cls, db: Session, *, user_id: int, action: str, now: datetime | None = None) -> V2User:
         now_dt = now or datetime.utcnow()
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
@@ -423,10 +423,10 @@ class VaultService:
 
 
 
-    def _get_or_create_user(self, db: Session, user_id: int) -> User:
-        user = db.query(User).filter(User.id == user_id).one_or_none()
+    def _get_or_create_user(self, db: Session, user_id: int) -> V2User:
+        user = db.query(V2User).filter(V2User.id == user_id).one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -454,10 +454,10 @@ class VaultService:
             return False
         return True
 
-    def get_status(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, bool]:
+    def get_status(self, db: Session, V2user_id: int, now: datetime | None = None) -> tuple[bool, V2User, bool]:
         now_dt = now or datetime.utcnow()
-        eligible = self._eligible(db, user_id, now_dt)
-        user = self._get_or_create_user(db, user_id)
+        eligible = self._eligible(db, V2user_id, now_dt)
+        user = self._get_or_create_user(db, V2user_id)
 
         # Expire due locked balance (Phase 1) without auto-seeding.
         mutated = self._expire_locked_if_due(user, now_dt)
@@ -495,18 +495,18 @@ class VaultService:
         available = max(total - reserved, 0)
         return total, reserved, available
 
-    def fill_free_once(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, User, int, datetime]:
+    def fill_free_once(self, db: Session, user_id: int, now: datetime | None = None) -> tuple[bool, V2User, int, datetime]:
         now_dt = now or datetime.utcnow()
         eligible = self._eligible(db, user_id, now_dt)
         if not eligible:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="VAULT_NOT_ELIGIBLE")
 
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -590,12 +590,12 @@ class VaultService:
             return 0
 
         # 1. Fetch User (needed for Total Charge update)
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -689,12 +689,12 @@ class VaultService:
         mode_upper = str(payout.get("mode") or "").upper()
 
         # Lock user row for update when supported (needed for LOSE bonus decision + accrual).
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -1157,12 +1157,12 @@ class VaultService:
         # Only mutate vault when amount > 0; still record a 0-amount SKIP event.
         user = None
         if amount > 0:
-            q = db.query(User).filter(User.id == user_id)
+            q = db.query(V2User).filter(V2User.id == user_id)
             if db.bind and db.bind.dialect.name != "sqlite":
                 q = q.with_for_update()
             user = q.one_or_none()
             if user is None and db.bind and db.bind.dialect.name == "sqlite":
-                user = User(id=user_id, external_id=f"test-user-{user_id}")
+                user = V2User(id=user_id, external_id=f"test-user-{user_id}")
                 db.add(user)
                 db.commit()
                 db.refresh(user)
@@ -1222,7 +1222,7 @@ class VaultService:
         if amount <= 0:
             raise ValueError("Amount must be positive")
             
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
@@ -1293,7 +1293,7 @@ class VaultService:
             return 0
 
         # Lock User
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
@@ -1467,7 +1467,7 @@ class VaultService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_PLAY_COUNT_30_REQUIRED")
 
         # 4. Vault Consumption Condition: 10,000+ KRW consumed TODAY (SoT: user.vault_spent_today)
-        q = db.query(User).filter(User.id == user_id)
+        q = db.query(V2User).filter(V2User.id == user_id)
         if db.bind and db.bind.dialect.name != "sqlite":
             q = q.with_for_update()
         user = q.one_or_none()
@@ -1580,7 +1580,7 @@ class VaultService:
         if action == "APPROVE":
             req.status = "APPROVED"
             # Deduct from single SoT at approval time.
-            q = db.query(User).filter(User.id == req.user_id)
+            q = db.query(V2User).filter(V2User.id == req.user_id)
             if db.bind and db.bind.dialect.name != "sqlite":
                 q = q.with_for_update()
             user = q.one_or_none()
@@ -1725,7 +1725,7 @@ class VaultService:
 
         # On increase: validate against available funds excluding this request.
         if new_amount_i > old_amount:
-            q = db.query(User).filter(User.id == req.user_id)
+            q = db.query(V2User).filter(V2User.id == req.user_id)
             if db.bind and db.bind.dialect.name != "sqlite":
                 q = q.with_for_update()
             user = q.one_or_none()

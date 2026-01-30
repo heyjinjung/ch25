@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.external_ranking import ExternalRankingData
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.feature import FeatureType
 from app.schemas.ranking import ExternalRankingEntry, RankingTodayResponse
 from app.services.feature_service import FeatureService
@@ -22,8 +22,8 @@ class RankingService:
         self.feature_service.validate_feature_active(db, today, FeatureType.RANKING)
 
         external_rows = db.execute(
-            select(ExternalRankingData, User.nickname, User.external_id)
-            .join(User, User.id == ExternalRankingData.user_id, isouter=True)
+            select(ExternalRankingData, V2User.nickname, V2User.external_id)
+            .join(V2User, V2User.id == ExternalRankingData.user_id, isouter=True)
             .order_by(
                 ExternalRankingData.deposit_amount.desc(),
                 ExternalRankingData.play_count.desc(),

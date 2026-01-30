@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
 from app.models.game_wallet import GameTokenType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.services.game_wallet_service import GameWalletService
 from app.services.idempotency_service import IdempotencyService
 

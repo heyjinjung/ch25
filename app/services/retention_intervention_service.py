@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.event import EventParticipationLog
 from app.models.retention_roi_log import RetentionRoiLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_retention_state import UserRetentionState
 from app.services.ch25_event_service import Ch25EventService
 from app.services.ops_log_service import OpsLogService
@@ -234,7 +234,7 @@ class RetentionInterventionService:
         if reward_amount <= 0:
             return 0, None
 
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(V2User).filter(V2User.id == user_id).first()
         if user and (datetime.utcnow() - user.created_at).days < 7:
             return reward_amount, None
 

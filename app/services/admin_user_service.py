@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import hash_password
 from app.services.audit_service import AuditService
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.team_battle import TeamMember
 from app.models.season_pass import SeasonPassConfig, SeasonPassLevel, SeasonPassProgress
 from app.schemas.admin_user import AdminUserCreate, AdminUserUpdate
@@ -68,7 +68,7 @@ class AdminUserService:
         return min(target, season.max_level)
 
     @staticmethod
-    def _enrich_user_with_xp(db: Session, user: User) -> User:
+    def _enrich_user_with_xp(db: Session, user: V2User) -> V2User:
         today = date.today()
         active_season = AdminUserService._get_active_season(db, today)
         
@@ -87,11 +87,11 @@ class AdminUserService:
         return user
 
     @staticmethod
-    def list_users(db: Session, q: str | None = None) -> list[User]:
+    def list_users(db: Session, q: str | None = None) -> list[V2User]:
         stmt = (
-            select(User)
-            .options(joinedload(User.admin_profile))
-            .order_by(User.id.desc())
+            select(V2User)
+            .options(joinedload(V2User.admin_profile))
+            .order_by(V2User.id.desc())
         )
 
         if q and q.strip():
@@ -101,7 +101,7 @@ class AdminUserService:
             from sqlalchemy import or_, cast, String
             from app.models.admin_user_profile import AdminUserProfile
             
-            stmt = stmt.outerjoin(User.admin_profile)
+            stmt = stmt.outerjoin(V2User.admin_profile)
             
             if ":" in raw_q:
                 prefix, val = raw_q.split(":", 1)
@@ -110,20 +110,20 @@ class AdminUserService:
                 vterm = f"%{val}%"
                 
                 if prefix == "id" and val.isdigit():
-                    stmt = stmt.where(cast(User.id, String) == val)
+                    stmt = stmt.where(cast(V2User.id, String) == val)
                 elif prefix == "nick":
-                    stmt = stmt.where(User.nickname.ilike(vterm))
+                    stmt = stmt.where(V2User.nickname.ilike(vterm))
                 elif prefix in ("tg", "tgid") and val.isdigit():
                     stmt = stmt.where(or_(
-                        cast(User.telegram_id, String) == val,
+                        cast(V2User.telegram_id, String) == val,
                         cast(AdminUserProfile.telegram_id, String) == val
                     ))
                 elif prefix == "tg" and not val.isdigit():
                     # Handle @username or raw username
                     val_clean = val.lstrip("@")
-                    stmt = stmt.where(User.telegram_username.ilike(f"%{val_clean}%"))
+                    stmt = stmt.where(V2User.telegram_username.ilike(f"%{val_clean}%"))
                 elif prefix == "code":
-                    stmt = stmt.where(User.external_id.ilike(vterm))
+                    stmt = stmt.where(V2User.external_id.ilike(vterm))
                 elif prefix == "real":
                     stmt = stmt.where(AdminUserProfile.real_name.ilike(vterm))
                 elif prefix == "phone":
@@ -136,28 +136,28 @@ class AdminUserService:
                     # Fallback to general search if prefix unknown
                     term = f"%{raw_q}%"
                     conditions = [
-                        User.telegram_username.ilike(term),
-                        User.nickname.ilike(term),
-                        User.external_id.ilike(term),
+                        V2User.telegram_username.ilike(term),
+                        V2User.nickname.ilike(term),
+                        V2User.external_id.ilike(term),
                         AdminUserProfile.real_name.ilike(term),
                         AdminUserProfile.tags.ilike(term),
                     ]
                     if raw_q.isdigit():
-                        conditions.append(cast(User.id, String) == raw_q)
+                        conditions.append(cast(V2User.id, String) == raw_q)
                     stmt = stmt.where(or_(*conditions))
             else:
                 # General search (original behavior)
                 term = f"%{raw_q}%"
                 conditions = [
-                    User.telegram_username.ilike(term),
-                    User.nickname.ilike(term),
-                    User.external_id.ilike(term),
+                    V2User.telegram_username.ilike(term),
+                    V2User.nickname.ilike(term),
+                    V2User.external_id.ilike(term),
                     AdminUserProfile.real_name.ilike(term),
                     AdminUserProfile.tags.ilike(term),
                 ]
                 if raw_q.isdigit():
-                    conditions.append(cast(User.id, String) == raw_q)
-                    conditions.append(cast(User.telegram_id, String) == raw_q)
+                    conditions.append(cast(V2User.id, String) == raw_q)
+                    conditions.append(cast(V2User.telegram_id, String) == raw_q)
                     conditions.append(cast(AdminUserProfile.telegram_id, String) == raw_q)
                     
                 stmt = stmt.where(or_(*conditions))
@@ -166,10 +166,10 @@ class AdminUserService:
         return [AdminUserService._enrich_user_with_xp(db, u) for u in users]
 
     @staticmethod
-    def create_user(db: Session, payload: AdminUserCreate) -> User:
-        if payload.user_id is not None and db.get(User, payload.user_id):
+    def create_user(db: Session, payload: AdminUserCreate) -> V2User:
+        if payload.user_id is not None and db.get(V2User, payload.user_id):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="USER_ID_EXISTS")
-        if db.query(User).filter(User.external_id == payload.external_id).first():
+        if db.query(V2User).filter(V2User.external_id == payload.external_id).first():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
 
         # Set nickname: prefer provided nickname; else fall back to telegram_username if present; else external_id
@@ -183,7 +183,7 @@ class AdminUserService:
 
         telegram_username = AdminUserService._clean_telegram_username(getattr(payload, "telegram_username", None))
 
-        user = User(
+        user = V2User(
             id=payload.user_id,
             external_id=payload.external_id,
             nickname=nickname,
@@ -217,16 +217,16 @@ class AdminUserService:
         return AdminUserService._enrich_user_with_xp(db, user)
 
     @staticmethod
-    def update_user(db: Session, user_id: int, payload: AdminUserUpdate) -> User:
-        user = db.get(User, user_id)
+    def update_user(db: Session, user_id: int, payload: AdminUserUpdate) -> V2User:
+        user = db.get(V2User, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
         update_data = payload.model_dump(exclude_unset=True)
         if "external_id" in update_data:
             if (
-                db.query(User)
-                .filter(User.external_id == update_data["external_id"], User.id != user_id)
+                db.query(V2User)
+                .filter(V2User.external_id == update_data["external_id"], V2User.id != user_id)
                 .first()
             ):
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
@@ -329,7 +329,7 @@ class AdminUserService:
 
     @staticmethod
     def delete_user(db: Session, user_id: int) -> None:
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
@@ -350,7 +350,7 @@ class AdminUserService:
 
         NOTE: This is destructive and should be gated at the API layer.
         """
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 

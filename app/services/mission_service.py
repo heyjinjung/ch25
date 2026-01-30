@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.season_pass import SeasonPassProgress
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.feature import UserEventLog
@@ -74,13 +74,13 @@ class MissionService:
             return today - timedelta(days=1)
         return today
 
-    def sync_play_streak(self, user_id: int, now_tz: datetime) -> User:
+    def sync_play_streak(self, user_id: int, now_tz: datetime) -> V2User:
         """Update user's play_streak/last_play_date with row-level lock; no commit here."""
         play_day = self._operational_play_date(now_tz)
 
         user = (
-            self.db.query(User)
-            .filter(User.id == user_id)
+            self.db.query(V2User)
+            .filter(V2User.id == user_id)
             .with_for_update()
             .one()
         )
@@ -163,7 +163,7 @@ class MissionService:
     def _maybe_grant_streak_milestone_rewards(
         self,
         *,
-        user: User,
+        user: V2User,
         play_day: date,
         prev_streak_days: int,
         new_streak_days: int,
@@ -173,7 +173,7 @@ class MissionService:
         # We rely on 'get_streak_info' to detect if they have a pending reward.
         return
 
-    def _maybe_grant_streak_day_tickets(self, *, user: User, play_day: date) -> None:
+    def _maybe_grant_streak_day_tickets(self, *, user: V2User, play_day: date) -> None:
         # [REFACTOR] Phase 2: Do NOT auto-grant.
         # Included in manual claim flow if we want consistency, OR keep auto for minor tickets?
         # User said "Receive button". Let's disable auto here too.
@@ -181,7 +181,7 @@ class MissionService:
 
     def get_pending_streak_milestone(self, user_id: int) -> int | None:
         """Check if user has an unclaimed streak milestone reward."""
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return None
             
@@ -300,7 +300,7 @@ class MissionService:
         return None
 
     def get_streak_info(self, user_id: int) -> dict:
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return {
                 "streak_days": 0,
@@ -344,7 +344,7 @@ class MissionService:
         if not target_day:
             return {"success": False, "message": "No claimable reward found."}
             
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         play_day = user.last_play_date # Should match logic in get_pending...
         
         # Calculate hit_date for consistency
@@ -435,7 +435,7 @@ class MissionService:
         self.db.commit()
         return {"success": True, "day": target_day, "grants": granted_payload}
 
-    def _active_streak_vault_bonus_multiplier(self, *, user: User) -> float:
+    def _active_streak_vault_bonus_multiplier(self, *, user: V2User) -> float:
         """Return the currently-active streak vault bonus multiplier.
 
         For time-windowed bonuses (e.g., 1h/4h), the bonus becomes active starting from
@@ -472,7 +472,7 @@ class MissionService:
             return float(multiplier)
         return 1.0
 
-    def _streak_multiplier(self, user: User) -> float:
+    def _streak_multiplier(self, user: V2User) -> float:
         if not bool(getattr(self.settings, "streak_multiplier_enabled", False)):
             return 1.0
 
@@ -697,7 +697,7 @@ class MissionService:
         if progress.is_claimed:
             return False, "Already claimed", 0
 
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return False, "User not found", 0
 
@@ -776,7 +776,7 @@ class MissionService:
         Ensures the user has the correct login mission progress.
         Typically called on login or user creation.
         """
-        user = self.db.query(User).filter(User.id == user_id).first()
+        user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return
 

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.models.v2_level_reward import V2LevelRewardTable
 from app.services.reward_service import RewardService
 
@@ -223,7 +223,7 @@ class LevelXPService:
         progress.level = current_level
 
         # User.level 동기화 (어드민 회원조회 API에서 User.level 사용)
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if user and user.level != current_level:
             user.level = current_level
             db.add(user)

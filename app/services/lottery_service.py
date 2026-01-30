@@ -1,12 +1,13 @@
 """Lottery service implementing status and play flows."""
 from datetime import date, datetime
+import logging
 import random
 import time
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
-from app.models.user import User
+from app.v2.models.user import V2User
 
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, LockAcquisitionError
@@ -109,7 +110,7 @@ class LotteryService:
         # [Strict Vault Policy] Check Benefit Suspension
         # Inactive users (no deposit > 7 days) cannot play lottery (win prizes)
         from app.services.vault_service import VaultService
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         if user:
             # Normalize 'today' to datetime for policy check
             chk_dt = today if isinstance(today, datetime) else datetime(today.year, today.month, today.day)

@@ -8,7 +8,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.models.survey import Survey, SurveyResponse, SurveyResponseStatus, SurveyTriggerRule, SurveyTriggerType
-from app.models.user import User
+from app.v2.models.user import V2User
 
 
 class SurveyTriggerService:
@@ -98,7 +98,7 @@ class SurveyTriggerService:
 
     def handle_inactive(self, db: Session, days_inactive: int) -> list[int]:
         matched: list[int] = []
-        users_stmt = select(User).where(User.last_login_at != None)  # noqa: E711
+        users_stmt = select(V2User).where(V2User.last_login_at != None)  # noqa: E711
         for user in db.execute(users_stmt).scalars().all():
             delta_days = (self.now().date() - user.last_login_at.date()).days if user.last_login_at else 0
             if delta_days < days_inactive:

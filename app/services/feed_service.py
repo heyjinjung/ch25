@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.vault2_service import Vault2Service
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class FeedService:
             if not client:
                 return
 
-            user = db.execute(select(User.nickname).where(User.id == user_id)).first()
+            user = db.execute(select(V2User.nickname).where(V2User.id == user_id)).first()
             nickname = user.nickname if user and user.nickname else f"User{user_id}"
             masked_nickname = self._mask_nickname(nickname)
             

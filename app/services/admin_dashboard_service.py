@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, time, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy import func, select, or_, case, distinct
 from sqlalchemy.orm import Session
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.mission import UserMissionProgress, Mission
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.user_cash_ledger import UserCashLedger
@@ -59,19 +59,19 @@ class AdminDashboardService:
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
 
         # 1. Retention Risk (Active Yesterday AND Not Active Today)
-        risk_count = db.query(func.count(User.id)).filter(
-            User.last_login_at >= yesterday_start,
-            User.last_login_at <= yesterday_end
+        risk_count = db.query(func.count(V2User.id)).filter(
+            V2User.last_login_at >= yesterday_start,
+            V2User.last_login_at <= yesterday_end
         ).scalar() or 0
         
         churn_risk_count = 0
         if risk_count > 0:
              # Of those who were active yesterday, how many have NOT logged in since Today 00:00 KST?
              # Logic: logged in yesterday AND (last_login < today_start OR last_login is None)
-             churn_risk_count = db.query(func.count(User.id)).filter(
-                User.last_login_at >= yesterday_start,
-                User.last_login_at <= yesterday_end,
-                or_(User.last_login_at < today_start_utc, User.last_login_at == None)
+             churn_risk_count = db.query(func.count(V2User.id)).filter(
+                V2User.last_login_at >= yesterday_start,
+                V2User.last_login_at <= yesterday_end,
+                or_(V2User.last_login_at < today_start_utc, V2User.last_login_at == None)
              ).scalar() or 0
 
         # 2. Welcome Mission Retention (D-2 Joined -> Active D-1 (Yesterday))
@@ -79,18 +79,18 @@ class AdminDashboardService:
         d2_start = datetime.combine(d2_date, time.min) - timedelta(hours=9)
         d2_end = datetime.combine(d2_date, time.max) - timedelta(hours=9)
 
-        joined_d2 = db.query(func.count(User.id)).filter(
-            User.created_at >= d2_start,
-            User.created_at <= d2_end
+        joined_d2 = db.query(func.count(V2User.id)).filter(
+            V2User.created_at >= d2_start,
+            V2User.created_at <= d2_end
         ).scalar() or 0
 
         retained_d1 = 0
         if joined_d2 > 0:
-            retained_d1 = db.query(func.count(distinct(User.id))).filter(
-                User.created_at >= d2_start,
-                User.created_at <= d2_end,
-                User.last_login_at >= yesterday_start, # Login Yesterday (D+1)
-                User.last_login_at <= yesterday_end
+            retained_d1 = db.query(func.count(distinct(V2User.id))).filter(
+                V2User.created_at >= d2_start,
+                V2User.created_at <= d2_end,
+                V2User.last_login_at >= yesterday_start, # Login Yesterday (D+1)
+                V2User.last_login_at <= yesterday_end
             ).scalar() or 0
 
         welcome_retention_rate = (retained_d1 / joined_d2 * 100) if joined_d2 > 0 else 0.0
@@ -120,7 +120,7 @@ class AdminDashboardService:
         # 4. Liabilities (Vault + Inventory)
         # SoT: total_vault_balance = vault_locked_balance only (available은 레거시/미사용)
         vault_stats = db.query(
-            func.sum(User.vault_locked_balance)
+            func.sum(V2User.vault_locked_balance)
         ).scalar() or 0
         total_vault_balance = int(vault_stats)
         
@@ -133,8 +133,8 @@ class AdminDashboardService:
 
         # 5. Activity (Today)
         # Active Users Today
-        today_active_users = db.query(func.count(User.id)).filter(
-            User.last_login_at >= today_start_utc
+        today_active_users = db.query(func.count(V2User.id)).filter(
+            V2User.last_login_at >= today_start_utc
         ).scalar() or 0
 
         # Game Plays Today (Dice + Roulette + Lottery)
@@ -162,11 +162,11 @@ class AdminDashboardService:
 
         # 6. Streak Counts
         streak_case = case(
-            (User.play_streak >= 7, "LEGEND"),
-            (User.play_streak >= 3, "HOT"),
+            (V2User.play_streak >= 7, "LEGEND"),
+            (V2User.play_streak >= 3, "HOT"),
             else_="NORMAL"
         )
-        streak_query = db.query(streak_case, func.count(User.id)).group_by(streak_case).all()
+        streak_query = db.query(streak_case, func.count(V2User.id)).group_by(streak_case).all()
         streak_counts = {"NORMAL": 0, "HOT": 0, "LEGEND": 0}
         for label, count in streak_query:
             if label in streak_counts:
@@ -209,11 +209,11 @@ class AdminDashboardService:
 
         # Active yesterday, not today
         risk_count = (
-            db.query(func.count(User.id))
+            db.query(func.count(V2User.id))
             .filter(
-                User.last_login_at >= yesterday_start,
-                User.last_login_at <= yesterday_end,
-                User.last_login_at < today_start_utc,
+                V2User.last_login_at >= yesterday_start,
+                V2User.last_login_at <= yesterday_end,
+                V2User.last_login_at < today_start_utc,
             )
             .scalar()
             or 0
@@ -221,12 +221,12 @@ class AdminDashboardService:
 
         # Streak >= 3, active yesterday, missed today
         streak_risk_count = (
-            db.query(func.count(User.id))
+            db.query(func.count(V2User.id))
             .filter(
-                User.play_streak >= 3,
-                User.last_login_at >= yesterday_start,
-                User.last_login_at <= yesterday_end,
-                User.last_login_at < today_start_utc,
+                V2User.play_streak >= 3,
+                V2User.last_login_at >= yesterday_start,
+                V2User.last_login_at <= yesterday_end,
+                V2User.last_login_at < today_start_utc,
             )
             .scalar()
             or 0
@@ -302,19 +302,19 @@ class AdminDashboardService:
         d2_start = datetime.combine(d2_date, time.min) - timedelta(hours=9)
         d2_end = datetime.combine(d2_date, time.max) - timedelta(hours=9)
 
-        joined_d2 = db.query(func.count(User.id)).filter(
-            User.created_at >= d2_start,
-            User.created_at <= d2_end
+        joined_d2 = db.query(func.count(V2User.id)).filter(
+            V2User.created_at >= d2_start,
+            V2User.created_at <= d2_end
         ).scalar() or 0
 
         retained_d1 = 0
         if joined_d2 > 0:
             # Of those users, how many logged in Yesterday?
-            retained_d1 = db.query(func.count(distinct(User.id))).filter(
-                User.created_at >= d2_start,
-                User.created_at <= d2_end,
-                User.last_login_at >= yesterday_start,
-                User.last_login_at <= yesterday_end
+            retained_d1 = db.query(func.count(distinct(V2User.id))).filter(
+                V2User.created_at >= d2_start,
+                V2User.created_at <= d2_end,
+                V2User.last_login_at >= yesterday_start,
+                V2User.last_login_at <= yesterday_end
             ).scalar() or 0
 
         retention_rate = (retained_d1 / joined_d2 * 100) if joined_d2 > 0 else 0.0
@@ -323,11 +323,11 @@ class AdminDashboardService:
         # Normal (1-2), Hot (3-6), Legend (7+)
         # We can group by case in SQL
         streak_case = case(
-            (User.play_streak >= 7, "LEGEND"),
-            (User.play_streak >= 3, "HOT"),
+            (V2User.play_streak >= 7, "LEGEND"),
+            (V2User.play_streak >= 3, "HOT"),
             else_="NORMAL"
         )
-        streak_counts = db.query(streak_case, func.count(User.id)).group_by(streak_case).all()
+        streak_counts = db.query(streak_case, func.count(V2User.id)).group_by(streak_case).all()
         start_dict = {"NORMAL": 0, "HOT": 0, "LEGEND": 0}
         for label, count in streak_counts:
             if label in start_dict:
@@ -374,9 +374,9 @@ class AdminDashboardService:
         kst_now = self._get_kst_now()
         today_start_utc = self._get_today_kst_start_in_utc(kst_now)
 
-        target_users = db.query(User).filter(
-            User.play_streak >= 3,
-            User.last_login_at < today_start_utc
+        target_users = db.query(V2User).filter(
+            V2User.play_streak >= 3,
+            V2User.last_login_at < today_start_utc
         ).all()
 
         count = len(target_users)
@@ -433,17 +433,17 @@ class AdminDashboardService:
             mission_id_by_key = {logic_key: mid for mid, logic_key in missions}
             mission_ids = [mid for mid, _logic_key in missions]
 
-            user_query = db.query(User)
+            user_query = db.query(V2User)
             if str(scope or "recent").lower() != "all":
                 # Recent N days in KST
                 start_kst_date = kst_now.date() - timedelta(days=(days - 1))
                 start_utc = datetime.combine(start_kst_date, time.min) - timedelta(hours=9)
                 now_utc = datetime.utcnow()
-                user_query = user_query.filter(User.created_at >= start_utc, User.created_at <= now_utc)
+                user_query = user_query.filter(V2User.created_at >= start_utc, V2User.created_at <= now_utc)
 
             users = (
                 user_query
-                .order_by(User.created_at.desc())
+                .order_by(V2User.created_at.desc())
                 .offset(offset)
                 .limit(limit)
                 .all()
@@ -502,10 +502,10 @@ class AdminDashboardService:
 
         if metric_key == "churn_risk":
             # Users active yesterday but not today
-            users = db.query(User).filter(
-                User.last_login_at >= yesterday_start,
-                User.last_login_at <= yesterday_end,
-                or_(User.last_login_at < today_start_utc, User.last_login_at == None)
+            users = db.query(V2User).filter(
+                V2User.last_login_at >= yesterday_start,
+                V2User.last_login_at <= yesterday_end,
+                or_(V2User.last_login_at < today_start_utc, V2User.last_login_at == None)
             ).all()
             
             for u in users:
@@ -521,12 +521,12 @@ class AdminDashboardService:
         elif metric_key == "streak_risk":
             # Users with play_streak >= 3 who have not logged in today (KST 00:00)
             users = (
-                db.query(User)
+                db.query(V2User)
                 .filter(
-                    User.play_streak >= 3,
-                    or_(User.last_login_at < today_start_utc, User.last_login_at == None),
+                    V2User.play_streak >= 3,
+                    or_(V2User.last_login_at < today_start_utc, V2User.last_login_at == None),
                 )
-                .order_by(User.play_streak.desc())
+                .order_by(V2User.play_streak.desc())
                 .limit(50)
                 .all()
             )
@@ -546,9 +546,9 @@ class AdminDashboardService:
 
         elif metric_key == "today_active":
             # Users active today (Limit 50)
-            users = db.query(User).filter(
-                User.last_login_at >= today_start_utc
-            ).order_by(User.last_login_at.desc()).limit(50).all()
+            users = db.query(V2User).filter(
+                V2User.last_login_at >= today_start_utc
+            ).order_by(V2User.last_login_at.desc()).limit(50).all()
 
             for u in users:
                 results.append({
@@ -562,7 +562,7 @@ class AdminDashboardService:
         elif metric_key == "today_deposit":
             # 입력일(created_at)이 오늘인 것만 조회
             from app.models.external_ranking import ExternalRankingData
-            ext_ranks = db.query(ExternalRankingData, User).join(User).filter(
+            ext_ranks = db.query(ExternalRankingData, V2User).join(V2User).filter(
                 ExternalRankingData.created_at >= today_start_utc,
                 ExternalRankingData.deposit_amount > 0
             ).order_by(ExternalRankingData.deposit_amount.desc()).limit(50).all()
@@ -582,9 +582,9 @@ class AdminDashboardService:
             d2_start = datetime.combine(d2_date, time.min) - timedelta(hours=9)
             d2_end = datetime.combine(d2_date, time.max) - timedelta(hours=9)
 
-            users = db.query(User).filter(
-                User.created_at >= d2_start,
-                User.created_at <= d2_end
+            users = db.query(V2User).filter(
+                V2User.created_at >= d2_start,
+                V2User.created_at <= d2_end
             ).all()
 
             for u in users:
@@ -609,12 +609,12 @@ class AdminDashboardService:
             # We will show Dice Logs (most frequent) + Roulette Logs.
             
             # Dice
-            dice_logs = db.query(DiceLog, User).join(User).filter(
+            dice_logs = db.query(DiceLog, V2User).join(V2User).filter(
                 DiceLog.created_at >= today_start_utc
             ).order_by(DiceLog.created_at.desc()).limit(30).all()
             
             # Roulette
-            roul_logs = db.query(RouletteLog, User).join(User).filter(
+            roul_logs = db.query(RouletteLog, V2User).join(V2User).filter(
                 RouletteLog.created_at >= today_start_utc
             ).order_by(RouletteLog.created_at.desc()).limit(20).all()
 
@@ -656,7 +656,7 @@ class AdminDashboardService:
 
         elif metric_key == "external_ranking_deposit":
             from app.models.external_ranking import ExternalRankingData
-            ranks = db.query(ExternalRankingData, User).join(User).order_by(
+            ranks = db.query(ExternalRankingData, V2User).join(V2User).order_by(
                 ExternalRankingData.deposit_amount.desc()
             ).limit(50).all()
 
@@ -671,7 +671,7 @@ class AdminDashboardService:
 
         elif metric_key == "external_ranking_play_count":
             from app.models.external_ranking import ExternalRankingData
-            ranks = db.query(ExternalRankingData, User).join(User).order_by(
+            ranks = db.query(ExternalRankingData, V2User).join(V2User).order_by(
                 ExternalRankingData.play_count.desc()
             ).limit(50).all()
 
@@ -686,10 +686,10 @@ class AdminDashboardService:
         
         elif metric_key == "total_vault_balance":
             # SoT: total_vault_balance = vault_locked_balance only (available은 레거시/미사용)
-            users = db.query(User).filter(
-                User.vault_locked_balance > 0
+            users = db.query(V2User).filter(
+                V2User.vault_locked_balance > 0
             ).order_by(
-                User.vault_locked_balance.desc()
+                V2User.vault_locked_balance.desc()
             ).limit(50).all()
 
             for u in users:
@@ -705,7 +705,7 @@ class AdminDashboardService:
         elif metric_key == "total_inventory_liability":
             from app.models.inventory import UserInventoryItem
             # Top holders of items
-            items = db.query(UserInventoryItem, User).join(User).order_by(
+            items = db.query(UserInventoryItem, V2User).join(V2User).order_by(
                 UserInventoryItem.quantity.desc()
             ).limit(50).all()
 
@@ -728,7 +728,7 @@ class AdminDashboardService:
             )
 
             # Top consumers today
-            usage_logs = db.query(UserGameWalletLedger, User).join(User).filter(
+            usage_logs = db.query(UserGameWalletLedger, V2User).join(V2User).filter(
                 UserGameWalletLedger.created_at >= today_start_utc,
                 UserGameWalletLedger.token_type.in_(_ALLOWED_TOKENS),
                 UserGameWalletLedger.delta < 0

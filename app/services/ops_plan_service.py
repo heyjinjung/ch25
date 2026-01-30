@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.services.inventory_service import InventoryService
 from app.services.ops_log_service import OpsLogService
 from app.services.ops_target_service import OpsTargetService
@@ -51,7 +51,7 @@ class OpsPlanService:
         if not cleaned_items:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="OPS_GRANT_ALL_ITEMS_INVALID")
 
-        user_ids = list(db.execute(select(User.id).order_by(User.id.asc())).scalars().all())
+        user_ids = list(db.execute(select(V2User.id).order_by(V2User.id.asc())).scalars().all())
 
         granted_users = 0
         related_id = f"ops_plan_task:{task.id}"

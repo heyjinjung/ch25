@@ -10,7 +10,7 @@ from sqlalchemy import func, select, String
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.admin_user_profile import AdminUserProfile
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.schemas.admin_user_summary import AdminUserSummary
 
 
@@ -44,7 +44,7 @@ def _identifier_fingerprint(raw: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()[:10]
 
 
-def derive_tg_id(user: User) -> Optional[int]:
+def derive_tg_id(user: V2User) -> Optional[int]:
     if getattr(user, "telegram_id", None):
         try:
             return int(user.telegram_id)
@@ -70,7 +70,7 @@ def derive_tg_id(user: User) -> Optional[int]:
     return None
 
 
-def build_admin_user_summary(user: User) -> AdminUserSummary:
+def build_admin_user_summary(user: V2User) -> AdminUserSummary:
     admin_profile = getattr(user, "admin_profile", None)
     return AdminUserSummary(
         id=int(user.id),
@@ -94,10 +94,10 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     # This prevents collision cases where a user's telegram_id equals another user's id.
     if raw.isdigit():
         val = int(raw)
-        user = db.execute(select(User.id).where(User.id == val)).scalar_one_or_none()
+        user = db.execute(select(V2User.id).where(V2User.id == val)).scalar_one_or_none()
         if user is not None:
             return int(user)
-        user = db.execute(select(User.id).where(User.telegram_id == val)).scalar_one_or_none()
+        user = db.execute(select(V2User.id).where(V2User.telegram_id == val)).scalar_one_or_none()
         if user is not None:
             return int(user)
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
@@ -107,7 +107,7 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     if raw.lower().startswith("uid:"):
         val = raw[4:].strip()
         if val.isdigit():
-            user = db.execute(select(User.id).where(User.id == int(val))).scalar_one_or_none()
+            user = db.execute(select(V2User.id).where(V2User.id == int(val))).scalar_one_or_none()
             if user: return int(user)
         # Fallthrough to 404 if explicit request fails
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND (uid mismatch)")
@@ -116,14 +116,14 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     if raw.lower().startswith("tgid:"):
         val = raw[5:].strip()
         if val.isdigit():
-            user = db.execute(select(User.id).where(User.telegram_id == int(val))).scalar_one_or_none()
+            user = db.execute(select(V2User.id).where(V2User.telegram_id == int(val))).scalar_one_or_none()
             if user: return int(user)
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND (tgid mismatch)")
 
     # 3. cc: (External ID)
     if raw.lower().startswith("cc:"):
         val = raw[3:].strip()
-        user = db.execute(select(User.id).where(User.external_id == val)).scalar_one_or_none()
+        user = db.execute(select(V2User.id).where(V2User.external_id == val)).scalar_one_or_none()
         if user: return int(user)
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND (cc mismatch)")
 
@@ -131,9 +131,9 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     if raw.lower().startswith("name:"):
         val = raw[5:].strip()
         user = db.execute(
-            select(User.id)
-            .select_from(User)
-            .join(AdminUserProfile, AdminUserProfile.user_id == User.id)
+            select(V2User.id)
+            .select_from(V2User)
+            .join(AdminUserProfile, AdminUserProfile.user_id == V2User.id)
             .where(func.lower(AdminUserProfile.real_name) == func.lower(val))
         ).scalar_one_or_none()
         if user: return int(user)
@@ -144,9 +144,9 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
         val = raw[6:].strip()
         # Remove dashes for flexible search if needed, but strict for now
         user = db.execute(
-            select(User.id)
-            .select_from(User)
-            .join(AdminUserProfile, AdminUserProfile.user_id == User.id)
+            select(V2User.id) 
+            .select_from(V2User)
+            .join(AdminUserProfile, AdminUserProfile.user_id == V2User.id)
             .where(func.lower(AdminUserProfile.phone_number) == func.lower(val))
         ).scalar_one_or_none()
         if user: return int(user)
@@ -161,9 +161,9 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
         # Assuming MySQL: JSON_CONTAINS(tags, '"val"')
         # But commonly just LIKE '%"val"%' works for simple arrays.
         users = db.execute(
-            select(User.id)
-            .select_from(User)
-            .join(AdminUserProfile, AdminUserProfile.user_id == User.id)
+            select(V2User.id)
+            .select_from(V2User)
+            .join(AdminUserProfile, AdminUserProfile.user_id == V2User.id)
             .where(func.cast(AdminUserProfile.tags, String).ilike(f'%"{val}"%'))
         ).scalars().all()
         if len(users) == 1: return int(users[0])
@@ -174,9 +174,9 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     if raw.lower().startswith("memo:"):
         val = raw[5:].strip()
         users = db.execute(
-            select(User.id)
-            .select_from(User)
-            .join(AdminUserProfile, AdminUserProfile.user_id == User.id)
+            select(V2User.id)
+            .select_from(V2User)
+            .join(AdminUserProfile, AdminUserProfile.user_id == V2User.id)
             .where(AdminUserProfile.memo.ilike(f"%{val}%"))
         ).scalars().all()
         if len(users) == 1: return int(users[0])
@@ -193,7 +193,7 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     m = _TG_EXTERNAL_ID_RE.match(raw)
     if m:
         tg_id = m.group(1)
-        user = db.execute(select(User.id).where(User.telegram_id == int(tg_id))).scalar_one_or_none()
+        user = db.execute(select(V2User.id).where(V2User.telegram_id == int(tg_id))).scalar_one_or_none()
         if user is not None:
             return int(user)
 
@@ -204,7 +204,7 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     # If input starts with @, strictly imply username.
     if raw.startswith("@"):
         username_matches = db.execute(
-            select(User.id).where(func.lower(User.telegram_username) == func.lower(clean))
+            select(V2User.id).where(func.lower(V2User.telegram_username) == func.lower(clean))
         ).scalars().all()
         if len(username_matches) == 1: return int(username_matches[0])
         # If ambiguous or not found for explicit @, we might still fallback or fail.
@@ -213,16 +213,16 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
     # Matchers for general text
     # 1. Nickname (Highest Ops Priority)
     nickname_matches = db.execute(
-        select(User.id).where(func.lower(User.nickname) == func.lower(clean))
+        select(V2User.id).where(func.lower(V2User.nickname) == func.lower(clean))
     ).scalars().all()
     if len(nickname_matches) == 1: 
         return int(nickname_matches[0])
     
     # 2. Real Name (Second Priority per User Request)
     realname_matches = db.execute(
-        select(User.id)
-        .select_from(User)
-        .join(AdminUserProfile, AdminUserProfile.user_id == User.id)
+        select(V2User.id)
+        .select_from(V2User)
+        .join(AdminUserProfile, AdminUserProfile.user_id == V2User.id)
         .where(func.lower(AdminUserProfile.real_name) == func.lower(clean))
     ).scalars().all()
     if len(realname_matches) == 1:
@@ -230,14 +230,14 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
 
     # 3. Telegram Username (if not already matched)
     username_matches = db.execute(
-        select(User.id).where(func.lower(User.telegram_username) == func.lower(clean))
+        select(V2User.id).where(func.lower(V2User.telegram_username) == func.lower(clean))
     ).scalars().all()
     if len(username_matches) == 1: 
         return int(username_matches[0])
 
     # 4. External ID (CC ID)
     external_matches = db.execute(
-        select(User.id).where(func.lower(User.external_id) == func.lower(clean))
+        select(V2User.id).where(func.lower(V2User.external_id) == func.lower(clean))
     ).scalars().all()
     if len(external_matches) == 1: 
         return int(external_matches[0])
@@ -271,7 +271,7 @@ def resolve_user_id_by_identifier(db: Session, identifier: str) -> int:
 def resolve_user_summary(db: Session, identifier: str) -> AdminUserSummary:
     user_id = resolve_user_id_by_identifier(db, identifier)
     user = (
-        db.execute(select(User).options(joinedload(User.admin_profile)).where(User.id == user_id))
+        db.execute(select(V2User).options(joinedload(V2User.admin_profile)).where(V2User.id == user_id))
         .scalar_one_or_none()
     )
     if not user:

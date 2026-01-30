@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.models.feature import UserEventLog
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.season_pass import SeasonPassLevel, SeasonPassProgress
 from app.models.user_activity import UserActivity
 from app.models.vault_earn_event import VaultEarnEvent
@@ -69,7 +69,7 @@ class NudgeService:
         self.db.commit()
 
     # ---------- nudge scenarios ----------
-    def nudge_streak_pre_reset(self, user: User, now_kst: datetime) -> bool:
+    def nudge_streak_pre_reset(self, user: V2User, now_kst: datetime) -> bool:
         if not user.telegram_id:
             return False
 
@@ -101,7 +101,7 @@ class NudgeService:
         self._mark_nudged(user.id, event_name, period_key, {"streak_days": streak_days, "hours_left": hours_left})
         return True
 
-    def nudge_season_final_push(self, user: User, now_kst: datetime) -> bool:
+    def nudge_season_final_push(self, user: V2User, now_kst: datetime) -> bool:
         if not user.telegram_id:
             return False
 
@@ -145,7 +145,7 @@ class NudgeService:
         self._mark_nudged(user.id, event_name, period_key, {"remaining_xp": remaining, "hours_left": hours_left})
         return True
 
-    def nudge_vault_withdraw_ready(self, user: User, now_utc: datetime) -> bool:
+    def nudge_vault_withdraw_ready(self, user: V2User, now_utc: datetime) -> bool:
         if not user.telegram_id:
             return False
 
@@ -225,7 +225,7 @@ class NudgeService:
         return True
 
     # ---------- entry point ----------
-    def run_all_for_user(self, user: User, now: Optional[datetime] = None) -> dict:
+    def run_all_for_user(self, user: V2User, now: Optional[datetime] = None) -> dict:
         now_dt = now or datetime.utcnow()
         now_kst = now_dt.astimezone(self.tz if now_dt.tzinfo else self.tz)
 
@@ -252,10 +252,10 @@ class NudgeService:
 
         return results
 
-    def run_all(self, users: Optional[list[User]] = None, now: Optional[datetime] = None) -> dict:
+    def run_all(self, users: Optional[list[V2User]] = None, now: Optional[datetime] = None) -> dict:
         now_dt = now or datetime.utcnow()
         if users is None:
-            users = self.db.query(User).filter(User.telegram_id.isnot(None)).all()
+            users = self.db.query(V2User).filter(V2User.telegram_id.isnot(None)).all()
         summary = {"streak": 0, "season": 0, "vault": 0}
         for u in users:
             res = self.run_all_for_user(u, now=now_dt)

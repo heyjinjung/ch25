@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.schemas.vault2 import VaultAdminStateResponse, VaultTimerActionRequest, VaultBalanceSetRequest
 from app.services.vault_service import VaultService
 from app.services.admin_user_identity_service import resolve_user_id_by_identifier
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.user_cash_ledger import UserCashLedger
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
@@ -125,7 +125,7 @@ def set_user_balance(
     service = VaultService()
     
     # Lock User
-    user = db.query(User).filter(User.id == user_id).with_for_update().first()
+    user = db.query(V2User).filter(V2User.id == user_id).with_for_update().first()
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

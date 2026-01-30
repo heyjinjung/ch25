@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.models.ops_plan import OpsPlan
 from app.models.ops_target import OpsTargetList, OpsTargetMember
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.external_ranking import ExternalRankingData
 from app.models.feature import UserEventLog
@@ -140,9 +140,9 @@ class OpsTargetService:
         cutoff = self.now() - timedelta(days=1)
         
         # [PATCH 2026-01-17] Use internal logs for play_count (UserActivity is unreliable for Dice/Lottery)
-        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
-        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
-        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == V2User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == V2User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == V2User.id).scalar_subquery()
 
         plays_total = (
             func.coalesce(dice_count, 0)
@@ -151,11 +151,11 @@ class OpsTargetService:
         )
         
         query = (
-            select(func.count(User.id))
-            .select_from(User)
+            select(func.count(V2User.id))
+            .select_from(V2User)
             .where(
-                User.created_at >= cutoff,
-                User.vault_locked_balance == 0,
+                V2User.created_at >= cutoff,
+                V2User.vault_locked_balance == 0,
                 plays_total >= 10,
             )
         )
@@ -169,9 +169,9 @@ class OpsTargetService:
         end = now - timedelta(days=1)
 
         # [PATCH 2026-01-17] Use internal logs
-        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
-        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
-        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == V2User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == V2User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == V2User.id).scalar_subquery()
 
         plays_total = (
             func.coalesce(dice_count, 0)
@@ -180,16 +180,16 @@ class OpsTargetService:
         )
 
         query = (
-            select(func.count(User.id))
-            .select_from(User)
+            select(func.count(V2User.id))
+            .select_from(V2User)
             .where(
-                User.created_at >= start,
-                User.created_at < end,
-                User.total_charge_amount <= 0,
+                V2User.created_at >= start,
+                V2User.created_at < end,
+                V2User.total_charge_amount <= 0,
                 # Played at least once on day0 (total plays >= 1 for new user)
                 plays_total >= 1,
                 # No login after D0
-                User.last_login_at < end,
+                V2User.last_login_at < end,
             )
         )
         return int(db.execute(query).scalar() or 0)
@@ -213,11 +213,11 @@ class OpsTargetService:
         )
         ticket_balance = func.coalesce(wallet_sub.c.ticket_balance, 0)
         query = (
-            select(func.count(User.id))
-            .select_from(User)
-            .outerjoin(wallet_sub, wallet_sub.c.user_id == User.id)
+            select(func.count(V2User.id))
+            .select_from(V2User)
+            .outerjoin(wallet_sub, wallet_sub.c.user_id == V2User.id)
             .where(
-                User.total_charge_amount <= 0,
+                V2User.total_charge_amount <= 0,
                 ticket_balance <= 0,
             )
         )
@@ -227,9 +227,9 @@ class OpsTargetService:
     def _count_scenario_04(self, db: Session) -> int:
         """Scenario 4: Sleeping Vault - 7+ days inactive, balance > 10000."""
         cutoff = self.now() - timedelta(days=7)
-        query = select(func.count(User.id)).where(
-            User.last_login_at < cutoff,
-            User.vault_locked_balance > 10000,
+        query = select(func.count(V2User.id)).where(
+            V2User.last_login_at < cutoff,
+            V2User.vault_locked_balance > 10000,
         )
         result = db.execute(query).scalar() or 0
         return result
@@ -252,13 +252,13 @@ class OpsTargetService:
             .subquery()
         )
         query = (
-            select(func.count(User.id))
-            .select_from(User)
-            .join(login_sub, login_sub.c.user_id == User.id)
+            select(func.count(V2User.id))
+            .select_from(V2User)
+            .join(login_sub, login_sub.c.user_id == V2User.id)
             .where(
                 login_sub.c.login_count >= 15,
-                User.last_login_at.isnot(None),
-                User.last_login_at < inactive_cutoff,
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < inactive_cutoff,
             )
         )
         result = db.execute(query).scalar() or 0
@@ -268,14 +268,14 @@ class OpsTargetService:
         """Scenario 6: Broken Streak - had streak, now 72h inactive."""
         cutoff = self.now() - timedelta(hours=72)
         query = (
-            select(func.count(User.id))
-            .select_from(User)
+            select(func.count(V2User.id))
+            .select_from(V2User)
             .where(
-                User.login_streak >= 3,
-                User.last_streak_updated_at.isnot(None),
-                User.last_streak_updated_at < cutoff,
-                User.last_login_at.isnot(None),
-                User.last_login_at < cutoff,
+                V2User.login_streak >= 3,
+                V2User.last_streak_updated_at.isnot(None),
+                V2User.last_streak_updated_at < cutoff,
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < cutoff,
             )
         )
         return int(db.execute(query).scalar() or 0)
@@ -284,14 +284,14 @@ class OpsTargetService:
         """Scenario 7: Stuck Climber - mid-level, no progress 48h."""
         cutoff = self.now() - timedelta(hours=48)
         query = (
-            select(func.count(User.id))
-            .select_from(User)
+            select(func.count(V2User.id))
+            .select_from(V2User)
             .where(
-                User.level.between(4, 5),
-                User.last_play_date.isnot(None),
-                User.last_play_date < cutoff.date(),
-                User.last_login_at.isnot(None),
-                User.last_login_at >= cutoff - timedelta(days=2),  # still around recently
+                V2User.level.between(4, 5),
+                V2User.last_play_date.isnot(None),
+                V2User.last_play_date < cutoff.date(),
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at >= cutoff - timedelta(days=2),  # still around recently
             )
         )
         return int(db.execute(query).scalar() or 0)
@@ -304,16 +304,16 @@ class OpsTargetService:
         deposit_sub = self._subquery_deposit_sum(cutoff_date)
 
         query = (
-            select(func.count(User.id))
-            .select_from(User)
-            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            select(func.count(V2User.id))
+            .select_from(V2User)
+            .join(deposit_sub, deposit_sub.c.user_id == V2User.id, isouter=True)
             .where(
-                User.total_charge_amount >= 1_000_000,
-                User.last_play_date.isnot(None),
-                User.last_play_date < cutoff_play.date(),
-                User.last_login_at.isnot(None),
-                User.last_login_at < cutoff_play,
-                User.first_deposit_at.isnot(None),
+                V2User.total_charge_amount >= 1_000_000,
+                V2User.last_play_date.isnot(None),
+                V2User.last_play_date < cutoff_play.date(),
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < cutoff_play,
+                V2User.first_deposit_at.isnot(None),
                 deposit_sub.c.deposit_sum <= 0,  # 최근 7일 입금 없음/감소
             )
         )
@@ -329,13 +329,13 @@ class OpsTargetService:
         cutoff_date = cutoff.date()
         deposit_sub = self._subquery_deposit_sum(cutoff_date)
         query = (
-            select(func.count(User.id))
-            .select_from(User)
-            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            select(func.count(V2User.id))
+            .select_from(V2User)
+            .join(deposit_sub, deposit_sub.c.user_id == V2User.id, isouter=True)
             .where(
                 func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
-                User.last_free_ticket_claimed_at.isnot(None),
-                User.last_free_ticket_claimed_at >= cutoff,
+                V2User.last_free_ticket_claimed_at.isnot(None),
+                V2User.last_free_ticket_claimed_at >= cutoff,
             )
         )
         return int(db.execute(query).scalar() or 0)
@@ -393,9 +393,9 @@ class OpsTargetService:
         """Get Scenario 1 users."""
         cutoff = self.now() - timedelta(days=1)
         
-        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
-        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
-        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == V2User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == V2User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == V2User.id).scalar_subquery()
 
         plays_total = (
             func.coalesce(dice_count, 0)
@@ -405,11 +405,11 @@ class OpsTargetService:
         
         min_plays = int((options or {}).get("min_plays", 10))
         query = (
-            select(User.id, User.nickname, plays_total.label("play_count"))
-            .select_from(User)
+            select(V2User.id, V2User.nickname, plays_total.label("play_count"))
+            .select_from(V2User)
             .where(
-                User.created_at >= cutoff,
-                User.vault_locked_balance == 0,
+                V2User.created_at >= cutoff,
+                V2User.vault_locked_balance == 0,
                 plays_total >= min_plays,
             )
             .limit(limit)
@@ -427,9 +427,9 @@ class OpsTargetService:
     def _get_scenario_04_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
         """Get Scenario 4 users."""
         cutoff = self.now() - timedelta(days=7)
-        query = select(User.id, User.nickname, User.vault_locked_balance).where(
-            User.last_login_at < cutoff,
-            User.vault_locked_balance > 10000,
+        query = select(V2User.id, V2User.nickname, V2User.vault_locked_balance).where(
+            V2User.last_login_at < cutoff,
+            V2User.vault_locked_balance > 10000,
         ).limit(limit)
         results = db.execute(query).fetchall()
         return [
@@ -467,12 +467,12 @@ class OpsTargetService:
         require_no_deposit = bool((options or {}).get("require_no_deposit", True))
 
         query = (
-            select(User.id, User.nickname, User.total_charge_amount, ticket_balance.label("ticket_balance"))
-            .select_from(User)
-            .outerjoin(wallet_sub, wallet_sub.c.user_id == User.id)
+            select(V2User.id, V2User.nickname, V2User.total_charge_amount, ticket_balance.label("ticket_balance"))
+            .select_from(V2User)
+            .outerjoin(wallet_sub, wallet_sub.c.user_id == V2User.id)
             .where(
                 ticket_balance <= 0,
-                User.total_charge_amount <= 0 if require_no_deposit else True,
+                V2User.total_charge_amount <= 0 if require_no_deposit else True,
             )
             .limit(limit)
         )
@@ -516,13 +516,13 @@ class OpsTargetService:
             .subquery()
         )
         query = (
-            select(User.id, User.nickname, User.last_login_at, login_sub.c.login_count)
-            .select_from(User)
-            .join(login_sub, login_sub.c.user_id == User.id)
+            select(V2User.id, V2User.nickname, V2User.last_login_at, login_sub.c.login_count)
+            .select_from(V2User)
+            .join(login_sub, login_sub.c.user_id == V2User.id)
             .where(
                 login_sub.c.login_count >= min_login_count,
-                User.last_login_at.isnot(None),
-                User.last_login_at < inactive_cutoff,
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < inactive_cutoff,
             )
             .limit(limit)
         )
@@ -543,8 +543,8 @@ class OpsTargetService:
         """Get Scenario 11 users (External VIP)."""
         cutoff = self.now() - timedelta(days=7)
         query = (
-            select(User.id, User.nickname, ExternalRankingData.deposit_amount)
-            .join(ExternalRankingData, ExternalRankingData.user_id == User.id)
+            select(V2User.id, V2User.nickname, ExternalRankingData.deposit_amount)
+            .join(ExternalRankingData, ExternalRankingData.user_id == V2User.id)
             .where(
                 ExternalRankingData.deposit_amount >= 1000000,
                 ExternalRankingData.updated_at >= cutoff,
@@ -563,9 +563,9 @@ class OpsTargetService:
         start = now - timedelta(days=2)
         end = now - timedelta(days=1)
         
-        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == User.id).scalar_subquery()
-        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == User.id).scalar_subquery()
-        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == User.id).scalar_subquery()
+        dice_count = select(func.count(DiceLog.id)).where(DiceLog.user_id == V2User.id).scalar_subquery()
+        roulette_count = select(func.count(RouletteLog.id)).where(RouletteLog.user_id == V2User.id).scalar_subquery()
+        lottery_count = select(func.count(LotteryLog.id)).where(LotteryLog.user_id == V2User.id).scalar_subquery()
 
         plays_total = (
             func.coalesce(dice_count, 0)
@@ -574,14 +574,14 @@ class OpsTargetService:
         )
 
         query = (
-            select(User.id, User.nickname, User.created_at)
-            .select_from(User)
+            select(V2User.id, V2User.nickname, V2User.created_at)
+            .select_from(V2User)
             .where(
-                User.created_at >= start,
-                User.created_at < end,
-                User.total_charge_amount <= 0,
+                V2User.created_at >= start,
+                V2User.created_at < end,
+                V2User.total_charge_amount <= 0,
                 plays_total >= 1,
-                User.last_login_at < end,
+                V2User.last_login_at < end,
             )
             .limit(limit)
         )
@@ -599,14 +599,14 @@ class OpsTargetService:
         """Get Scenario 6 users (Broken Streak)."""
         cutoff = self.now() - timedelta(hours=72)
         query = (
-            select(User.id, User.nickname, User.login_streak)
-            .select_from(User)
+            select(V2User.id, V2User.nickname, V2User.login_streak)
+            .select_from(V2User)
             .where(
-                User.login_streak >= 3,
-                User.last_streak_updated_at.isnot(None),
-                User.last_streak_updated_at < cutoff,
-                User.last_login_at.isnot(None),
-                User.last_login_at < cutoff,
+                V2User.login_streak >= 3,
+                V2User.last_streak_updated_at.isnot(None),
+                V2User.last_streak_updated_at < cutoff,
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < cutoff,
             )
             .limit(limit)
         )
@@ -624,14 +624,14 @@ class OpsTargetService:
         """Get Scenario 7 users (Stuck Climber)."""
         cutoff = self.now() - timedelta(hours=48)
         query = (
-            select(User.id, User.nickname, User.level)
-            .select_from(User)
+            select(V2User.id, V2User.nickname, V2User.level)
+            .select_from(V2User)
             .where(
-                User.level.between(4, 5),
-                User.last_play_date.isnot(None),
-                User.last_play_date < cutoff.date(),
-                User.last_login_at.isnot(None),
-                User.last_login_at >= cutoff - timedelta(days=2),
+                V2User.level.between(4, 5),
+                V2User.last_play_date.isnot(None),
+                V2User.last_play_date < cutoff.date(),
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at >= cutoff - timedelta(days=2),
             )
             .limit(limit)
         )
@@ -653,16 +653,16 @@ class OpsTargetService:
         deposit_sub = self._subquery_deposit_sum(cutoff_date)
 
         query = (
-            select(User.id, User.nickname, User.total_charge_amount)
-            .select_from(User)
-            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            select(V2User.id, V2User.nickname, V2User.total_charge_amount)
+            .select_from(V2User)
+            .join(deposit_sub, deposit_sub.c.user_id == V2User.id, isouter=True)
             .where(
-                User.total_charge_amount >= 1_000_000,
-                User.last_play_date.isnot(None),
-                User.last_play_date < cutoff_play.date(),
-                User.last_login_at.isnot(None),
-                User.last_login_at < cutoff_play,
-                User.first_deposit_at.isnot(None),
+                V2User.total_charge_amount >= 1_000_000,
+                V2User.last_play_date.isnot(None),
+                V2User.last_play_date < cutoff_play.date(),
+                V2User.last_login_at.isnot(None),
+                V2User.last_login_at < cutoff_play,
+                V2User.first_deposit_at.isnot(None),
                 func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
             )
             .limit(limit)
@@ -689,13 +689,13 @@ class OpsTargetService:
         cutoff_date = cutoff.date()
         deposit_sub = self._subquery_deposit_sum(cutoff_date)
         query = (
-            select(User.id, User.nickname, User.last_free_ticket_claimed_at)
-            .select_from(User)
-            .join(deposit_sub, deposit_sub.c.user_id == User.id, isouter=True)
+            select(V2User.id, V2User.nickname, V2User.last_free_ticket_claimed_at)
+            .select_from(V2User)
+            .join(deposit_sub, deposit_sub.c.user_id == V2User.id, isouter=True)
             .where(
                 func.coalesce(deposit_sub.c.deposit_sum, 0) <= 0,
-                User.last_free_ticket_claimed_at.isnot(None),
-                User.last_free_ticket_claimed_at >= cutoff,
+                V2User.last_free_ticket_claimed_at.isnot(None),
+                V2User.last_free_ticket_claimed_at >= cutoff,
             )
             .limit(limit)
         )
@@ -813,8 +813,8 @@ class OpsTargetService:
             max_limit = safe_limit
 
         query = (
-            select(OpsTargetMember, User.nickname)
-            .join(User, User.id == OpsTargetMember.user_id, isouter=True)
+            select(OpsTargetMember, V2User.nickname)
+            .join(V2User, V2User.id == OpsTargetMember.user_id, isouter=True)
             .where(OpsTargetMember.target_list_id == target_list_id)
             .order_by(OpsTargetMember.id.asc())
         )

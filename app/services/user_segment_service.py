@@ -9,7 +9,8 @@ from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 
-from app.models.user import User
+from app.v2.models.user import V2User
+from app.v2.models.v2_user_segment import V2UserSegment
 from app.models.admin_user_profile import AdminUserProfile
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault2 import VaultStatus
@@ -116,18 +117,18 @@ class UserSegmentService:
         # A. Try User ID
         if user_id_str and str(user_id_str).strip():
             try:
-                target_user = db.query(User).filter(User.id == int(user_id_str)).first()
+                target_user = db.query(V2User).filter(V2User.id == int(user_id_str)).first()
             except:
                 pass
         
         # B. Try External ID
         if not target_user and ext_id and str(ext_id).strip():
-            target_user = db.query(User).filter(User.external_id == str(ext_id).strip()).first()
+            target_user = db.query(V2User).filter(V2User.external_id == str(ext_id).strip()).first()
 
         # C. Try Telegram Username (Refactor: Frame Switch)
         if not target_user and telegram_raw and str(telegram_raw).strip():
             clean_tg = str(telegram_raw).strip().lstrip("@")
-            target_user = db.query(User).filter(User.telegram_username == clean_tg).first()
+            target_user = db.query(V2User).filter(V2User.telegram_username == clean_tg).first()
 
         # --- 2. CREATE USER IF MISSING ---
         if not target_user:
@@ -140,7 +141,7 @@ class UserSegmentService:
                 final_ext_id = clean_ext_id if clean_ext_id else f"tg_{clean_tg}_{datetime.utcnow().timestamp()}"
                 final_nickname = clean_tg if clean_tg else final_ext_id
                 
-                target_user = User(
+                target_user = V2User(
                     external_id=final_ext_id,
                     nickname=final_nickname,
                     telegram_username=clean_tg, 
@@ -258,7 +259,7 @@ class UserSegmentService:
         from app.models.user_activity import UserActivity
         from app.services.admin_segment_service import _days_since, _max_dt
         
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return None
 
@@ -312,35 +313,35 @@ class UserSegmentService:
         
         if segment_type in standard_segments:
             return [
-                r[0] for r in db.query(UserSegment.user_id)
-                .filter(UserSegment.segment == segment_type)
+                r[0] for r in db.query(V2UserSegment.user_id)
+                .filter(V2UserSegment.segment == segment_type)
                 .limit(limit)
                 .all()
             ]
 
         # 2. Dynamic / Operational / Special Filters
-        query = db.query(User.id)
+        query = db.query(V2User.id)
 
         if segment_type == "TOTAL_USERS":
             pass # No filter
         elif segment_type == "ACTIVE_USERS":
-            query = query.filter(User.last_login_at >= active_7d)
+            query = query.filter(V2User.last_login_at >= active_7d)
         elif segment_type == "PAYING_USERS" or segment_type == "CONVERTED":
-            query = query.join(ExternalRankingData, User.id == ExternalRankingData.user_id)\
+            query = query.join(ExternalRankingData, V2User.id == ExternalRankingData.user_id)\
                          .filter(ExternalRankingData.deposit_amount > 0)
         elif segment_type == "WHALE":
             # NOTE: WHALE is a dynamic filter. Persistent VIPs might be different.
-            query = query.join(VaultEarnEvent, User.id == VaultEarnEvent.user_id)\
-                         .group_by(User.id)\
+            query = query.join(VaultEarnEvent, V2User.id == VaultEarnEvent.user_id)\
+                         .group_by(V2User.id)\
                          .having(func.sum(VaultEarnEvent.amount) >= WHALE_ACCRUAL_THRESHOLD)
         elif segment_type == "EMPTY_TANK":
             query = query.filter(
-                User.last_login_at >= active_24h,
-                (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
+                V2User.last_login_at >= active_24h,
+                (func.coalesce(V2User.cash_balance, 0) + func.coalesce(V2User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
             )
         elif segment_type.startswith("CHARGE_"):
             risk = segment_type.split("_")[1]
-            query = query.join(AdminUserProfile, User.id == AdminUserProfile.user_id)
+            query = query.join(AdminUserProfile, V2User.id == AdminUserProfile.user_id)
             if risk == "LOW":
                 query = query.filter(AdminUserProfile.days_since_last_charge < 7)
             elif risk == "MEDIUM":
@@ -351,7 +352,7 @@ class UserSegmentService:
         elif segment_type == "DORMANT":
              # Users inactive for > 30 days (or never logged in)
              query = query.filter(
-                (User.last_login_at < inactive_30d) | (User.last_login_at == None)
+                (V2User.last_login_at < inactive_30d) | (V2User.last_login_at == None)
              )
         
         return [r[0] for r in query.limit(limit).all()]
@@ -361,12 +362,12 @@ class UserSegmentService:
         """Get aggregated CRM stats for dashboard."""
         
         # 1. Total Users
-        total_users = db.query(func.count(User.id)).scalar() or 0
+        total_users = db.query(func.count(V2User.id)).scalar() or 0
         now = datetime.utcnow()
         
         # 2. Active Users (Login < 7 days)
         active_threshold = now - timedelta(days=7)
-        active_users = db.query(func.count(User.id)).filter(User.last_login_at >= active_threshold).scalar() or 0
+        active_users = db.query(func.count(V2User.id)).filter(V2User.last_login_at >= active_threshold).scalar() or 0
         
         # 3. Paying Users (Converted = External Ranking Data with deposit > 0)
         paying_users = db.query(func.count(ExternalRankingData.id))\
@@ -389,10 +390,10 @@ class UserSegmentService:
         
         # 7. Empty Tank (Opportunity)
         active_24h = now - timedelta(hours=24)
-        empty_tank_count = db.query(func.count(User.id))\
+        empty_tank_count = db.query(func.count(V2User.id))\
             .filter(
-                User.last_login_at >= active_24h,
-                (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
+                V2User.last_login_at >= active_24h,
+                (func.coalesce(V2User.cash_balance, 0) + func.coalesce(V2User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
             ).scalar() or 0
 
         # --- Advanced KPIs ---
@@ -400,8 +401,8 @@ class UserSegmentService:
         # 8. Churn Rate (Inactive > 30 days)
         inactive_threshold = now - timedelta(days=30)
         # Users who haven't logged in for 30 days (or never)
-        churned_users = db.query(func.count(User.id)).filter(
-            (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
+        churned_users = db.query(func.count(V2User.id)).filter(
+            (V2User.last_login_at < inactive_threshold) | (V2User.last_login_at == None)
         ).scalar() or 0
         churn_rate = round((churned_users / total_users) * 100, 2) if total_users > 0 else 0
 
@@ -414,7 +415,7 @@ class UserSegmentService:
 
         # 11. New User Growth (7 days)
         week_ago = now - timedelta(days=7)
-        new_users_7d = db.query(func.count(User.id)).filter(User.created_at >= week_ago).scalar() or 0
+        new_users_7d = db.query(func.count(V2User.id)).filter(V2User.created_at >= week_ago).scalar() or 0
         new_user_growth = round((new_users_7d / total_users) * 100, 2) if total_users > 0 else 0
 
         # 12. Message Open Rate
@@ -429,11 +430,11 @@ class UserSegmentService:
         message_open_rate = round((total_reads / total_sent) * 100, 2) if total_sent > 0 else 0
 
         # 13. Segmentation (Activity Frequency)
-        daily_count = db.query(func.count(User.id)).filter(User.last_login_at >= active_24h).scalar() or 0
-        weekly_count = db.query(func.count(User.id)).filter(User.last_login_at >= active_threshold, User.last_login_at < active_24h).scalar() or 0
-        monthly_count = db.query(func.count(User.id)).filter(User.last_login_at >= inactive_threshold, User.last_login_at < active_threshold).scalar() or 0
-        dormant_count = db.query(func.count(User.id)).filter(
-            (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
+        daily_count = db.query(func.count(V2User.id)).filter(V2User.last_login_at >= active_24h).scalar() or 0
+        weekly_count = db.query(func.count(V2User.id)).filter(V2User.last_login_at >= active_threshold, V2User.last_login_at < active_24h).scalar() or 0
+        monthly_count = db.query(func.count(V2User.id)).filter(V2User.last_login_at >= inactive_threshold, V2User.last_login_at < active_threshold).scalar() or 0
+        dormant_count = db.query(func.count(V2User.id)).filter(
+            (V2User.last_login_at < inactive_threshold) | (V2User.last_login_at == None)
         ).scalar() or 0
         
         segments = {
@@ -458,7 +459,7 @@ class UserSegmentService:
             # SQLite: julian day diff? kept simple for now
             try:
                 # Attempt MySQL syntax first
-                avg_tenure = db.query(func.avg(func.datediff(func.now(), User.created_at))).scalar()
+                avg_tenure = db.query(func.avg(func.datediff(func.now(), V2User.created_at))).scalar()
                 if avg_tenure:
                     avg_active_days = round(float(avg_tenure), 1)
             except:
@@ -506,8 +507,8 @@ class UserSegmentService:
         dice_rolls = db.query(func.count(DiceLog.id)).scalar() or 0
         lottery_scratches = db.query(func.count(LotteryLog.id)).scalar() or 0
         
-        avg_vault_result = db.query(func.avg(User.vault_locked_balance)).filter(
-            User.vault_locked_balance > 0
+        avg_vault_result = db.query(func.avg(V2User.vault_locked_balance)).filter(
+            V2User.vault_locked_balance > 0
         ).scalar()
         avg_vault_balance = round(float(avg_vault_result), 0) if avg_vault_result else 0.0
 
@@ -547,12 +548,12 @@ class UserSegmentService:
 
         def get_nicks(uids):
             if not uids: return []
-            return [u.nickname for u in db.query(User.nickname).filter(User.id.in_(uids)).all() if u.nickname]
+            return [u.nickname for u in db.query(V2User.nickname).filter(V2User.id.in_(uids)).all() if u.nickname]
 
         samples = {}
 
         # S1. Total Users (Recent joined)
-        s_total = db.query(User.id).order_by(desc(User.created_at))
+        s_total = db.query(V2User.id).order_by(desc(V2User.created_at))
         samples["TOTAL_USERS"] = get_nicks(get_uuids(s_total))
 
         # S2. Paying Users (Highest deposits)
@@ -569,18 +570,18 @@ class UserSegmentService:
         samples["WHALE"] = get_nicks(get_uuids(s_whale))
 
         # S4. Empty Tank (Recent Active + Low Balance)
-        s_empty = db.query(User.id).filter(
-            User.last_login_at >= active_24h,
-            (func.coalesce(User.cash_balance, 0) + func.coalesce(User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
-        ).order_by(desc(User.last_login_at))
+        s_empty = db.query(V2User.id).filter(
+            V2User.last_login_at >= active_24h,
+            (func.coalesce(V2User.cash_balance, 0) + func.coalesce(V2User.vault_balance, 0)) < EMPTY_TANK_THRESHOLD
+        ).order_by(desc(V2User.last_login_at))
         samples["EMPTY_TANK"] = get_nicks(get_uuids(s_empty))
 
         # S5. Dormant (Just before 30 days or oldest inactivity? Usually recently became dormant)
         # Let's show users who are "deeply" dormant (oldest login) or recently? 
         # "Churn Risk" is usually recent. But DORMANT segment is > 30 days.
-        s_dormant = db.query(User.id).filter(
-             (User.last_login_at < inactive_threshold) | (User.last_login_at == None)
-        ).order_by(desc(User.last_login_at)) # Most recently dormant (closest to 30 days)
+        s_dormant = db.query(V2User.id).filter(
+             (V2User.last_login_at < inactive_threshold) | (V2User.last_login_at == None)
+        ).order_by(desc(V2User.last_login_at)) # Most recently dormant (closest to 30 days)
         samples["DORMANT"] = get_nicks(get_uuids(s_dormant))
 
         return {
