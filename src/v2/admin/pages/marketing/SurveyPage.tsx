@@ -12,16 +12,24 @@ import {
 } from "../../../components/ui/card";
 import { Switch } from "../../../components/ui/switch";
 import { Badge } from "../../../components/ui/badge";
-import { 
-  ClipboardList, 
-  BarChart3, 
-  Users, 
+import {
+  ClipboardList,
+  BarChart3,
+  Users,
   RefreshCw,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { format } from "date-fns";
 import { cn } from "../../../lib/utils";
+import styles from "./SurveyPage.module.css";
+
+const getWidthClass = (value: number) => {
+  const clamped = Math.max(0, Math.min(100, value));
+  const step = Math.round(clamped / 5) * 5;
+  const key = `w${step}` as keyof typeof styles;
+  return styles[key] ?? styles.w0;
+};
 
 export default function SurveyPage() {
   const { data: surveys = [], isLoading, refetch } = useAdminSurveys();
@@ -29,7 +37,7 @@ export default function SurveyPage() {
   const [selectedSurveyId, setSelectedSurveyId] = useState<number | null>(null);
 
   const { data: results = [], isLoading: isLoadingResults } = useSurveyResults(
-    selectedSurveyId || 0
+    selectedSurveyId || 0,
   );
 
   const handleToggle = async (surveyId: number, isActive: boolean) => {
@@ -56,8 +64,8 @@ export default function SurveyPage() {
             유저들의 피드백을 수집하고 통계를 분석합니다.
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="border-white/10 hover:bg-white/5"
           onClick={() => refetch()}
         >
@@ -73,41 +81,57 @@ export default function SurveyPage() {
             <ClipboardList className="w-5 h-5 text-indigo-400" />
             <h2 className="text-lg font-bold">설문 목록</h2>
           </div>
-          
+
           {surveys.length === 0 ? (
             <div className="bg-zinc-900/50 border border-white/5 border-dashed rounded-2xl p-8 text-center text-zinc-500 italic">
               등록된 설문이 없습니다.
             </div>
           ) : (
             surveys.map((survey) => (
-              <Card 
+              <Card
                 key={survey.id}
                 className={cn(
                   "bg-zinc-900 border-white/10 cursor-pointer transition-all hover:border-indigo-500/50",
-                  selectedSurveyId === survey.id && "ring-2 ring-indigo-500 border-transparent shadow-[0_0_20px_rgba(79,70,229,0.2)]"
+                  selectedSurveyId === survey.id &&
+                    "ring-2 ring-indigo-500 border-transparent shadow-[0_0_20px_rgba(79,70,229,0.2)]",
                 )}
                 onClick={() => setSelectedSurveyId(survey.id)}
               >
                 <CardContent className="p-5">
                   <div className="flex justify-between items-start mb-3">
-                    <Badge variant={survey.isActive ? "default" : "secondary"} className={survey.isActive ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-zinc-800 text-zinc-500"}>
+                    <Badge
+                      variant={survey.isActive ? "default" : "secondary"}
+                      className={
+                        survey.isActive
+                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                          : "bg-zinc-800 text-zinc-500"
+                      }
+                    >
                       {survey.isActive ? "진행 중" : "일시 중지"}
                     </Badge>
-                    <Switch 
+                    <Switch
                       checked={survey.isActive}
-                      onCheckedChange={(checked) => handleToggle(survey.id, checked)}
+                      onCheckedChange={(checked) =>
+                        handleToggle(survey.id, checked)
+                      }
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{survey.title}</h3>
-                  <p className="text-xs text-zinc-500 mb-4 line-clamp-2">{survey.description}</p>
-                  
+                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">
+                    {survey.title}
+                  </h3>
+                  <p className="text-xs text-zinc-500 mb-4 line-clamp-2">
+                    {survey.description}
+                  </p>
+
                   <div className="flex items-center justify-between text-[11px] font-bold text-zinc-500 uppercase tracking-wider border-t border-white/5 pt-4">
                     <div className="flex items-center gap-1.5 text-indigo-400">
                       <Users className="w-3.5 h-3.5" />
                       {survey.responseCount.toLocaleString()} 명 참여
                     </div>
-                    <div>{format(new Date(survey.createdAt), "yyyy.MM.dd")}</div>
+                    <div>
+                      {format(new Date(survey.createdAt), "yyyy.MM.dd")}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -123,8 +147,13 @@ export default function SurveyPage() {
                 <BarChart3 className="w-8 h-8 text-zinc-600" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-zinc-400 mb-2">분석할 설문을 선택하세요</h3>
-                <p className="text-sm text-zinc-500">목록에서 설문을 클릭하면 상세 결과와 통계를 확인할 수 있습니다.</p>
+                <h3 className="text-xl font-bold text-zinc-400 mb-2">
+                  분석할 설문을 선택하세요
+                </h3>
+                <p className="text-sm text-zinc-500">
+                  목록에서 설문을 클릭하면 상세 결과와 통계를 확인할 수
+                  있습니다.
+                </p>
               </div>
             </div>
           ) : (
@@ -137,19 +166,28 @@ export default function SurveyPage() {
               {isLoadingResults ? (
                 <div className="flex flex-col items-center justify-center h-64 gap-3">
                   <RefreshCw className="w-8 h-8 animate-spin text-zinc-700" />
-                  <p className="text-zinc-600 text-sm">데이터를 불러오는 중...</p>
+                  <p className="text-zinc-600 text-sm">
+                    데이터를 불러오는 중...
+                  </p>
                 </div>
               ) : (
                 <div className="grid gap-6">
                   {results.map((qResult) => (
-                    <Card key={qResult.questionId} className="bg-zinc-900 border-white/10 overflow-hidden shadow-xl">
+                    <Card
+                      key={qResult.questionId}
+                      className="bg-zinc-900 border-white/10 overflow-hidden shadow-xl"
+                    >
                       <CardHeader className="bg-white/5 border-b border-white/5 py-4">
                         <div className="flex items-start gap-4">
                           <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
-                            <span className="text-sm font-black text-indigo-400">Q</span>
+                            <span className="text-sm font-black text-indigo-400">
+                              Q
+                            </span>
                           </div>
                           <div>
-                            <CardTitle className="text-base text-zinc-200 leading-snug">{qResult.question}</CardTitle>
+                            <CardTitle className="text-base text-zinc-200 leading-snug">
+                              {qResult.question}
+                            </CardTitle>
                           </div>
                         </div>
                       </CardHeader>
@@ -157,16 +195,24 @@ export default function SurveyPage() {
                         {qResult.responses.map((resp, idx) => (
                           <div key={idx} className="space-y-2">
                             <div className="flex justify-between text-sm font-bold">
-                              <span className="text-zinc-300">{resp.option}</span>
+                              <span className="text-zinc-300">
+                                {resp.option}
+                              </span>
                               <div className="flex gap-2">
-                                <span className="text-zinc-500 font-mono">{resp.count}명</span>
-                                <span className="text-emerald-400 font-mono">{resp.percentage}%</span>
+                                <span className="text-zinc-500 font-mono">
+                                  {resp.count}명
+                                </span>
+                                <span className="text-emerald-400 font-mono">
+                                  {resp.percentage}%
+                                </span>
                               </div>
                             </div>
                             <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000"
-                                style={{ width: `${resp.percentage}%` }}
+                              <div
+                                className={cn(
+                                  "h-full bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full transition-all duration-1000",
+                                  getWidthClass(resp.percentage),
+                                )}
                               />
                             </div>
                           </div>
@@ -174,11 +220,13 @@ export default function SurveyPage() {
                       </CardContent>
                     </Card>
                   ))}
-                  
+
                   {results.length === 0 && (
                     <div className="bg-zinc-900/50 border border-white/5 border-dashed rounded-3xl p-20 text-center gap-4 flex flex-col items-center">
-                        <MessageSquare className="w-12 h-12 text-zinc-800" />
-                        <p className="text-zinc-500">아직 수집된 응답 데이터가 없습니다.</p>
+                      <MessageSquare className="w-12 h-12 text-zinc-800" />
+                      <p className="text-zinc-500">
+                        아직 수집된 응답 데이터가 없습니다.
+                      </p>
                     </div>
                   )}
                 </div>

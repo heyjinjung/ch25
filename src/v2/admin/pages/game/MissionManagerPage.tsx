@@ -22,6 +22,8 @@ import {
   // Active user stats hooks
   useAdminActiveUserStats,
 } from "../../../hooks/useAdminGame";
+import styles from "./MissionManagerPage.module.css";
+import { cn } from "../../../lib/utils";
 import {
   resolveAdminUserIdentifier,
   type AdminMissionDto,
@@ -52,7 +54,21 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
-import { Ticket, Gift, Coins, Plus, Trash2, Edit2, Users, TrendingUp, Award, RotateCcw, Flame, Target, BarChart3 } from "lucide-react";
+import {
+  Ticket,
+  Gift,
+  Coins,
+  Plus,
+  Trash2,
+  Edit2,
+  Users,
+  TrendingUp,
+  Award,
+  RotateCcw,
+  Flame,
+  Target,
+  BarChart3,
+} from "lucide-react";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
 /**
@@ -348,6 +364,14 @@ const generateTitle = (
   return `${catLabel} ${presetLabel} ${tv}회`;
 };
 
+const getTrendHeightClass = (value: number, max: number) => {
+  const base = Math.max(1, max);
+  const percent = Math.max(0, Math.min(100, (value / base) * 100));
+  const step = Math.round(percent / 5) * 5;
+  const key = `h${step}` as keyof typeof styles;
+  return styles[key] ?? styles.h0;
+};
+
 export default function MissionManagerPage() {
   const { data: missions = [], isLoading } = useAdminMissions();
   const updateMutation = useAdminUpdateMission();
@@ -375,20 +399,28 @@ export default function MissionManagerPage() {
 
   // Mission reset states
   const [missionResetReason, setMissionResetReason] = useState("");
-  const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<number | null>(null);
+  const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<
+    number | null
+  >(null);
 
   // Streak hooks
-  const { data: streakData, isLoading: isStreakLoading } = useAdminUserStreak(streakUserId ?? undefined);
-  const { data: milestoneData, isLoading: isMilestoneLoading } = useAdminUserMilestoneProgress(streakUserId ?? undefined);
+  const { data: streakData, isLoading: isStreakLoading } = useAdminUserStreak(
+    streakUserId ?? undefined,
+  );
+  const { data: milestoneData, isLoading: isMilestoneLoading } =
+    useAdminUserMilestoneProgress(streakUserId ?? undefined);
   const resetStreakMutation = useAdminResetUserStreak();
   const setStreakCountMutation = useAdminSetUserStreakCount();
   const forceGrantMilestoneMutation = useAdminForceGrantMilestone();
   const resetUserMissionsMutation = useAdminResetUserMissions();
 
   // Stats hooks
-  const { data: missionStats, isLoading: isMissionStatsLoading } = useAdminMissionStats();
-  const { data: loginVerifyData, isLoading: isLoginVerifyLoading } = useAdminLoginMissionVerify({ limit: 20 });
-  const { data: activeUserStats, isLoading: isActiveUserStatsLoading } = useAdminActiveUserStats(7);
+  const { data: missionStats, isLoading: isMissionStatsLoading } =
+    useAdminMissionStats();
+  const { data: loginVerifyData, isLoading: isLoginVerifyLoading } =
+    useAdminLoginMissionVerify({ limit: 20 });
+  const { data: activeUserStats, isLoading: isActiveUserStatsLoading } =
+    useAdminActiveUserStats(7);
 
   const [activeTab, setActiveTab] = useState("DAILY");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -1121,8 +1153,12 @@ export default function MissionManagerPage() {
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <div>
-              <h2 className="text-lg font-semibold text-zinc-100">스트릭 & 마일스톤 관리</h2>
-              <p className="text-xs text-zinc-500">유저 스트릭 조회/수정, 마일스톤 보상 강제 지급</p>
+              <h2 className="text-lg font-semibold text-zinc-100">
+                스트릭 & 마일스톤 관리
+              </h2>
+              <p className="text-xs text-zinc-500">
+                유저 스트릭 조회/수정, 마일스톤 보상 강제 지급
+              </p>
             </div>
           </div>
 
@@ -1144,35 +1180,54 @@ export default function MissionManagerPage() {
               조회
             </Button>
             {streakUserId && (
-              <Badge variant="outline" className="bg-white/5 text-zinc-300 border-white/10">
+              <Badge
+                variant="outline"
+                className="bg-white/5 text-zinc-300 border-white/10"
+              >
                 USER #{streakUserId}
               </Badge>
             )}
           </div>
 
-          {isStreakLoading && <div className="text-sm text-zinc-500">로딩 중...</div>}
+          {isStreakLoading && (
+            <div className="text-sm text-zinc-500">로딩 중...</div>
+          )}
 
           {streakData && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-black/30 border border-white/5">
               <div>
                 <div className="text-xs text-zinc-500">스트릭 일수</div>
-                <div className="text-2xl font-bold text-orange-400">{streakData.streak_days}일</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  {streakData.streak_days}일
+                </div>
               </div>
               <div>
                 <div className="text-xs text-zinc-500">상태</div>
                 <div className="flex gap-2 mt-1">
-                  {streakData.is_hot && <Badge className="bg-red-500/20 text-red-400">HOT</Badge>}
-                  {streakData.is_legend && <Badge className="bg-purple-500/20 text-purple-400">LEGEND</Badge>}
-                  {!streakData.is_hot && !streakData.is_legend && <Badge className="bg-zinc-500/20 text-zinc-400">일반</Badge>}
+                  {streakData.is_hot && (
+                    <Badge className="bg-red-500/20 text-red-400">HOT</Badge>
+                  )}
+                  {streakData.is_legend && (
+                    <Badge className="bg-purple-500/20 text-purple-400">
+                      LEGEND
+                    </Badge>
+                  )}
+                  {!streakData.is_hot && !streakData.is_legend && (
+                    <Badge className="bg-zinc-500/20 text-zinc-400">일반</Badge>
+                  )}
                 </div>
               </div>
               <div>
                 <div className="text-xs text-zinc-500">다음 마일스톤</div>
-                <div className="text-lg font-semibold text-zinc-200">{streakData.next_milestone ?? "-"}일</div>
+                <div className="text-lg font-semibold text-zinc-200">
+                  {streakData.next_milestone ?? "-"}일
+                </div>
               </div>
               <div>
                 <div className="text-xs text-zinc-500">배율</div>
-                <div className="text-lg font-semibold text-emerald-400">x{streakData.current_multiplier}</div>
+                <div className="text-lg font-semibold text-emerald-400">
+                  x{streakData.current_multiplier}
+                </div>
               </div>
             </div>
           )}
@@ -1192,7 +1247,10 @@ export default function MissionManagerPage() {
                 onClick={() => {
                   const val = parseInt(streakEditValue, 10);
                   if (val >= 0 && streakUserId) {
-                    setStreakCountMutation.mutate({ userId: streakUserId, payload: { streak_days: val } });
+                    setStreakCountMutation.mutate({
+                      userId: streakUserId,
+                      payload: { streak_days: val },
+                    });
                   }
                 }}
                 disabled={setStreakCountMutation.isPending}
@@ -1204,7 +1262,10 @@ export default function MissionManagerPage() {
                 variant="secondary"
                 className="text-red-400 hover:text-red-300"
                 onClick={() => {
-                  if (streakUserId && confirm("스트릭을 0으로 초기화하시겠습니까?")) {
+                  if (
+                    streakUserId &&
+                    confirm("스트릭을 0으로 초기화하시겠습니까?")
+                  ) {
                     resetStreakMutation.mutate(streakUserId);
                   }
                 }}
@@ -1217,10 +1278,14 @@ export default function MissionManagerPage() {
           )}
 
           {/* 마일스톤 진행 현황 */}
-          {isMilestoneLoading && <div className="text-sm text-zinc-500">마일스톤 로딩 중...</div>}
+          {isMilestoneLoading && (
+            <div className="text-sm text-zinc-500">마일스톤 로딩 중...</div>
+          )}
           {milestoneData && (
             <div className="space-y-2 pt-2">
-              <div className="text-sm font-semibold text-zinc-300">마일스톤 진행 현황</div>
+              <div className="text-sm font-semibold text-zinc-300">
+                마일스톤 진행 현황
+              </div>
               <div className="flex flex-wrap gap-2">
                 {milestoneData.milestones.map((m) => (
                   <div
@@ -1243,13 +1308,18 @@ export default function MissionManagerPage() {
 
               {/* 마일스톤 강제 지급 */}
               <div className="flex flex-wrap items-center gap-2 pt-2">
-                <Select value={String(milestoneDay)} onValueChange={(v) => setMilestoneDay(Number(v))}>
+                <Select
+                  value={String(milestoneDay)}
+                  onValueChange={(v) => setMilestoneDay(Number(v))}
+                >
                   <SelectTrigger className="w-24 bg-black/50 border-white/10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[#18181B] border-white/10 text-white">
                     {[3, 7, 14, 30].map((d) => (
-                      <SelectItem key={d} value={String(d)}>{d}일</SelectItem>
+                      <SelectItem key={d} value={String(d)}>
+                        {d}일
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -1266,7 +1336,10 @@ export default function MissionManagerPage() {
                     if (streakUserId && milestoneReason) {
                       forceGrantMilestoneMutation.mutate({
                         userId: streakUserId,
-                        payload: { milestone_day: milestoneDay, reason: milestoneReason },
+                        payload: {
+                          milestone_day: milestoneDay,
+                          reason: milestoneReason,
+                        },
                       });
                     }
                   }}
@@ -1291,8 +1364,12 @@ export default function MissionManagerPage() {
             <div className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-indigo-500" />
               <div>
-                <h2 className="text-lg font-semibold text-zinc-100">미션 통계</h2>
-                <p className="text-xs text-zinc-500">미션별 완료율 및 클레임 현황</p>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  미션 통계
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  미션별 완료율 및 클레임 현황
+                </p>
               </div>
             </div>
 
@@ -1303,32 +1380,49 @@ export default function MissionManagerPage() {
                 <div className="flex gap-4 text-sm">
                   <div>
                     <span className="text-zinc-500">전체 미션: </span>
-                    <span className="font-bold text-zinc-200">{missionStats.total_missions}</span>
+                    <span className="font-bold text-zinc-200">
+                      {missionStats.total_missions}
+                    </span>
                   </div>
                   <div>
                     <span className="text-zinc-500">활성 미션: </span>
-                    <span className="font-bold text-emerald-400">{missionStats.active_missions}</span>
+                    <span className="font-bold text-emerald-400">
+                      {missionStats.active_missions}
+                    </span>
                   </div>
                 </div>
                 <div className="max-h-60 overflow-y-auto space-y-2">
                   {missionStats.stats.slice(0, 10).map((stat) => (
-                    <div key={stat.mission_id} className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5">
+                    <div
+                      key={stat.mission_id}
+                      className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5"
+                    >
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-zinc-200 truncate">{stat.title}</div>
-                        <div className="text-xs text-zinc-500">{stat.category}</div>
+                        <div className="text-sm font-medium text-zinc-200 truncate">
+                          {stat.title}
+                        </div>
+                        <div className="text-xs text-zinc-500">
+                          {stat.category}
+                        </div>
                       </div>
                       <div className="flex items-center gap-3 text-xs">
                         <div className="text-center">
                           <div className="text-zinc-500">완료</div>
-                          <div className="font-bold text-emerald-400">{stat.completed_count}</div>
+                          <div className="font-bold text-emerald-400">
+                            {stat.completed_count}
+                          </div>
                         </div>
                         <div className="text-center">
                           <div className="text-zinc-500">클레임</div>
-                          <div className="font-bold text-indigo-400">{stat.claimed_count}</div>
+                          <div className="font-bold text-indigo-400">
+                            {stat.claimed_count}
+                          </div>
                         </div>
                         <div className="text-center">
                           <div className="text-zinc-500">완료율</div>
-                          <div className="font-bold text-yellow-400">{(stat.completion_rate * 100).toFixed(1)}%</div>
+                          <div className="font-bold text-yellow-400">
+                            {(stat.completion_rate * 100).toFixed(1)}%
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1345,8 +1439,12 @@ export default function MissionManagerPage() {
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-cyan-500" />
               <div>
-                <h2 className="text-lg font-semibold text-zinc-100">로그인 미션 검증</h2>
-                <p className="text-xs text-zinc-500">오늘 로그인 미션 완료 현황 (09:00 KST 리셋)</p>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  로그인 미션 검증
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  오늘 로그인 미션 완료 현황 (09:00 KST 리셋)
+                </p>
               </div>
             </div>
 
@@ -1357,29 +1455,46 @@ export default function MissionManagerPage() {
                 <div className="grid grid-cols-4 gap-2 text-center">
                   <div className="p-2 rounded bg-black/30 border border-white/5">
                     <div className="text-xs text-zinc-500">전체 로그인</div>
-                    <div className="text-lg font-bold text-zinc-200">{loginVerifyData.total_users}</div>
+                    <div className="text-lg font-bold text-zinc-200">
+                      {loginVerifyData.total_users}
+                    </div>
                   </div>
                   <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
                     <div className="text-xs text-zinc-500">완료</div>
-                    <div className="text-lg font-bold text-emerald-400">{loginVerifyData.completed_today}</div>
+                    <div className="text-lg font-bold text-emerald-400">
+                      {loginVerifyData.completed_today}
+                    </div>
                   </div>
                   <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
                     <div className="text-xs text-zinc-500">미완료</div>
-                    <div className="text-lg font-bold text-red-400">{loginVerifyData.not_completed_today}</div>
+                    <div className="text-lg font-bold text-red-400">
+                      {loginVerifyData.not_completed_today}
+                    </div>
                   </div>
                   <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
                     <div className="text-xs text-zinc-500">완료율</div>
-                    <div className="text-lg font-bold text-yellow-400">{(loginVerifyData.completion_rate * 100).toFixed(1)}%</div>
+                    <div className="text-lg font-bold text-yellow-400">
+                      {(loginVerifyData.completion_rate * 100).toFixed(1)}%
+                    </div>
                   </div>
                 </div>
                 <div className="max-h-40 overflow-y-auto space-y-1">
                   {loginVerifyData.users.slice(0, 10).map((user) => (
-                    <div key={user.user_id} className="flex items-center justify-between p-2 rounded bg-black/30 text-xs">
+                    <div
+                      key={user.user_id}
+                      className="flex items-center justify-between p-2 rounded bg-black/30 text-xs"
+                    >
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-400">#{user.user_id}</span>
                         <span className="text-zinc-200">{user.nickname}</span>
                       </div>
-                      <Badge className={user.today_login_completed ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-500/20 text-zinc-400"}>
+                      <Badge
+                        className={
+                          user.today_login_completed
+                            ? "bg-emerald-500/20 text-emerald-400"
+                            : "bg-zinc-500/20 text-zinc-400"
+                        }
+                      >
                         {user.today_login_completed ? "완료" : "미완료"}
                       </Badge>
                     </div>
@@ -1399,8 +1514,12 @@ export default function MissionManagerPage() {
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-emerald-500" />
             <div>
-              <h2 className="text-lg font-semibold text-zinc-100">활성 유저 통계</h2>
-              <p className="text-xs text-zinc-500">DAU / WAU / MAU 및 신규 가입자 현황</p>
+              <h2 className="text-lg font-semibold text-zinc-100">
+                활성 유저 통계
+              </h2>
+              <p className="text-xs text-zinc-500">
+                DAU / WAU / MAU 및 신규 가입자 현황
+              </p>
             </div>
           </div>
 
@@ -1411,47 +1530,74 @@ export default function MissionManagerPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-lg bg-black/30 border border-white/5">
                   <div className="text-xs text-zinc-500">DAU (오늘)</div>
-                  <div className="text-2xl font-bold text-emerald-400">{activeUserStats.stats.dau.toLocaleString()}</div>
-                  <div className={`text-xs ${activeUserStats.stats.dau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  <div className="text-2xl font-bold text-emerald-400">
+                    {activeUserStats.stats.dau.toLocaleString()}
+                  </div>
+                  <div
+                    className={`text-xs ${activeUserStats.stats.dau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
                     <TrendingUp className="w-3 h-3 inline mr-1" />
-                    {activeUserStats.stats.dau_change >= 0 ? "+" : ""}{(activeUserStats.stats.dau_change * 100).toFixed(1)}%
+                    {activeUserStats.stats.dau_change >= 0 ? "+" : ""}
+                    {(activeUserStats.stats.dau_change * 100).toFixed(1)}%
                   </div>
                 </div>
                 <div className="p-4 rounded-lg bg-black/30 border border-white/5">
                   <div className="text-xs text-zinc-500">WAU (7일)</div>
-                  <div className="text-2xl font-bold text-indigo-400">{activeUserStats.stats.wau.toLocaleString()}</div>
-                  <div className={`text-xs ${activeUserStats.stats.wau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                  <div className="text-2xl font-bold text-indigo-400">
+                    {activeUserStats.stats.wau.toLocaleString()}
+                  </div>
+                  <div
+                    className={`text-xs ${activeUserStats.stats.wau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
                     <TrendingUp className="w-3 h-3 inline mr-1" />
-                    {activeUserStats.stats.wau_change >= 0 ? "+" : ""}{(activeUserStats.stats.wau_change * 100).toFixed(1)}%
+                    {activeUserStats.stats.wau_change >= 0 ? "+" : ""}
+                    {(activeUserStats.stats.wau_change * 100).toFixed(1)}%
                   </div>
                 </div>
                 <div className="p-4 rounded-lg bg-black/30 border border-white/5">
                   <div className="text-xs text-zinc-500">MAU (30일)</div>
-                  <div className="text-2xl font-bold text-yellow-400">{activeUserStats.stats.mau.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {activeUserStats.stats.mau.toLocaleString()}
+                  </div>
                 </div>
                 <div className="p-4 rounded-lg bg-black/30 border border-white/5">
-                  <div className="text-xs text-zinc-500">신규 (오늘/이번주)</div>
+                  <div className="text-xs text-zinc-500">
+                    신규 (오늘/이번주)
+                  </div>
                   <div className="text-xl font-bold text-cyan-400">
-                    {activeUserStats.stats.new_users_today} / {activeUserStats.stats.new_users_this_week}
+                    {activeUserStats.stats.new_users_today} /{" "}
+                    {activeUserStats.stats.new_users_this_week}
                   </div>
                 </div>
               </div>
 
               {/* 7일 추이 차트 (간단한 바 형태) */}
               <div className="space-y-2">
-                <div className="text-sm font-semibold text-zinc-300">7일 DAU 추이</div>
+                <div className="text-sm font-semibold text-zinc-300">
+                  7일 DAU 추이
+                </div>
                 <div className="flex items-end gap-1 h-20">
                   {activeUserStats.trend.map((day, idx) => {
-                    const maxDau = Math.max(...activeUserStats.trend.map((d) => d.dau), 1);
-                    const height = (day.dau / maxDau) * 100;
+                    const maxDau = Math.max(
+                      ...activeUserStats.trend.map((d) => d.dau),
+                      1,
+                    );
                     return (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                      <div
+                        key={idx}
+                        className="flex-1 flex flex-col items-center gap-1"
+                      >
                         <div
-                          className="w-full bg-emerald-500/50 rounded-t"
-                          style={{ height: `${height}%` }}
+                          className={cn(
+                            "w-full bg-emerald-500/50 rounded-t",
+                            styles.trendBar,
+                            getTrendHeightClass(day.dau, maxDau),
+                          )}
                           title={`${day.date}: ${day.dau}명`}
                         />
-                        <div className="text-[10px] text-zinc-500">{day.date.slice(5)}</div>
+                        <div className="text-[10px] text-zinc-500">
+                          {day.date.slice(5)}
+                        </div>
                       </div>
                     );
                   })}
@@ -1470,8 +1616,12 @@ export default function MissionManagerPage() {
           <div className="flex items-center gap-2">
             <RotateCcw className="w-5 h-5 text-red-500" />
             <div>
-              <h2 className="text-lg font-semibold text-zinc-100">유저 미션 일괄 리셋</h2>
-              <p className="text-xs text-zinc-500">특정 유저의 모든 미션 또는 특정 미션 진행 상태 초기화</p>
+              <h2 className="text-lg font-semibold text-zinc-100">
+                유저 미션 일괄 리셋
+              </h2>
+              <p className="text-xs text-zinc-500">
+                특정 유저의 모든 미션 또는 특정 미션 진행 상태 초기화
+              </p>
             </div>
           </div>
 
@@ -1483,8 +1633,14 @@ export default function MissionManagerPage() {
               className="w-32 bg-black/50 border-white/10"
             />
             <Select
-              value={selectedMissionIdForReset === null ? "all" : String(selectedMissionIdForReset)}
-              onValueChange={(v) => setSelectedMissionIdForReset(v === "all" ? null : Number(v))}
+              value={
+                selectedMissionIdForReset === null
+                  ? "all"
+                  : String(selectedMissionIdForReset)
+              }
+              onValueChange={(v) =>
+                setSelectedMissionIdForReset(v === "all" ? null : Number(v))
+              }
             >
               <SelectTrigger className="w-48 bg-black/50 border-white/10">
                 <SelectValue placeholder="미션 선택" />
@@ -1492,7 +1648,9 @@ export default function MissionManagerPage() {
               <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-60">
                 <SelectItem value="all">전체 미션</SelectItem>
                 {missions.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>{m.title}</SelectItem>
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.title}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -1524,11 +1682,13 @@ export default function MissionManagerPage() {
             </Button>
           </div>
 
-          {resetUserMissionsMutation.isSuccess && resetUserMissionsMutation.data && (
-            <div className="text-sm text-emerald-400">
-              리셋 완료: {resetUserMissionsMutation.data.reset_count}개 미션 (ID: {resetUserMissionsMutation.data.missions_reset.join(", ")})
-            </div>
-          )}
+          {resetUserMissionsMutation.isSuccess &&
+            resetUserMissionsMutation.data && (
+              <div className="text-sm text-emerald-400">
+                리셋 완료: {resetUserMissionsMutation.data.reset_count}개 미션
+                (ID: {resetUserMissionsMutation.data.missions_reset.join(", ")})
+              </div>
+            )}
         </div>
       </Card>
 

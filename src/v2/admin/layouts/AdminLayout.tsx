@@ -98,6 +98,16 @@ export default function AdminLayout() {
           path: "/admin/marketing/messages",
         },
         {
+          icon: LayoutDashboard,
+          label: "운영 분석",
+          path: "/admin/ops/analytics",
+        },
+        {
+          icon: Bell,
+          label: "감사 로그",
+          path: "/admin/ops/audit-logs",
+        },
+        {
           icon: FileUp,
           label: "로그 임포트 (CSV)",
           path: "/admin/ops/csv-import",
@@ -117,6 +127,11 @@ export default function AdminLayout() {
         },
         {
           icon: CreditCard,
+          label: "금고 분석",
+          path: "/admin/economy/vault-analytics",
+        },
+        {
+          icon: CreditCard,
           label: "입금 관리",
           path: "/admin/economy/deposits",
         },
@@ -124,6 +139,11 @@ export default function AdminLayout() {
           icon: CreditCard,
           label: "티켓/토큰 관리",
           path: "/admin/inventory/tickets",
+        },
+        {
+          icon: Store,
+          label: "재고 관리",
+          path: "/admin/inventory/stock",
         },
         {
           icon: Settings,
@@ -268,13 +288,13 @@ export default function AdminLayout() {
                             >
                               <item.icon size={18} />
                               <span>{item.label}</span>
-                              
+
                               {/* Minimal Underline Indicator */}
-                              {(activeItemPath === item.path ||
-                                (item.submenu &&
-                                  item.submenu.some(
-                                    (sub) => location.pathname === sub.path,
-                                  ))) ? (
+                              {activeItemPath === item.path ||
+                              (item.submenu &&
+                                item.submenu.some(
+                                  (sub) => location.pathname === sub.path,
+                                )) ? (
                                 <div className="absolute bottom-1.5 left-4 right-4 h-[2px] bg-obsidian-accent/60 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.3)] transition-all duration-300" />
                               ) : (
                                 <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-obsidian-accent/30 rounded-full transition-all duration-300 group-hover:w-[calc(100%-2rem)]" />
@@ -296,14 +316,16 @@ export default function AdminLayout() {
                                         : "text-obsidian-muted hover:text-white hover:bg-white/5",
                                     )}
                                   >
-                                    <div className={cn(
-                                      "w-1 h-1 rounded-full transition-all duration-300",
-                                      location.pathname === subItem.path 
-                                        ? "bg-obsidian-accent scale-150 rotate-45 rounded-none" 
-                                        : "bg-obsidian-muted group-hover:bg-white opacity-50"
-                                    )} />
+                                    <div
+                                      className={cn(
+                                        "w-1 h-1 rounded-full transition-all duration-300",
+                                        location.pathname === subItem.path
+                                          ? "bg-obsidian-accent scale-150 rotate-45 rounded-none"
+                                          : "bg-obsidian-muted group-hover:bg-white opacity-50",
+                                      )}
+                                    />
                                     {subItem.label}
-                                    
+
                                     {/* Submenu Underline */}
                                     {location.pathname === subItem.path && (
                                       <div className="absolute bottom-0.5 left-6 right-3 h-[1px] bg-obsidian-accent/40" />

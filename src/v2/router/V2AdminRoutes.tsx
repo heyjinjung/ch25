@@ -7,8 +7,12 @@ import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import CrisisRadarPage from "../admin/pages/dashboard/CrisisRadarPage";
 import GoldenRealTimePage from "../admin/pages/dashboard/GoldenRealTimePage";
 import CSVImportPage from "../admin/pages/ops/CSVImportPage";
+import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
+import AuditLogPage from "../admin/pages/ops/AuditLogPage";
+import StockManagementPage from "../admin/pages/ops/StockManagementPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
+import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
 import CCDepositPage from "../admin/pages/economy/CCDepositPage";
 import LatencySurvivalPage from "../admin/pages/economy/LatencySurvivalPage";
 import CircuitBreakerPage from "../admin/pages/economy/CircuitBreakerPage";
@@ -38,6 +42,8 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="dashboard/radar" element={<CrisisRadarPage />} />
           <Route path="dashboard/golden" element={<GoldenRealTimePage />} />
           <Route path="ops/csv-import" element={<CSVImportPage />} />
+          <Route path="ops/analytics" element={<AnalyticsDashboard />} />
+          <Route path="ops/audit-logs" element={<AuditLogPage />} />
           <Route path="marketing" element={<MarketingCenterPage />} />
 
           {/* Users - Tabbed */}
@@ -45,9 +51,16 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Economy */}
           <Route path="economy/vault" element={<VaultControlPage />} />
+          <Route
+            path="economy/vault-analytics"
+            element={<VaultAnalyticsPage />}
+          />
           <Route path="economy/deposits" element={<CCDepositPage />} />
           <Route path="economy/latency" element={<LatencySurvivalPage />} />
-          <Route path="economy/circuit-breaker" element={<CircuitBreakerPage />} />
+          <Route
+            path="economy/circuit-breaker"
+            element={<CircuitBreakerPage />}
+          />
 
           {/* Shop & Mission - Tabbed */}
           <Route path="economy/shop" element={<ShopMissionTabPage />} />
@@ -66,6 +79,7 @@ const V2AdminRoutes: React.FC = () => {
             path="inventory/tickets"
             element={<TicketInventoryTabPage />}
           />
+          <Route path="inventory/stock" element={<StockManagementPage />} />
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />

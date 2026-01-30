@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import {
   FileText,
   Search,
@@ -43,7 +42,8 @@ const ACTION_COLORS: Record<string, string> = {
   MISSION_RESET_ALL: "bg-amber-500/20 text-amber-400 border-amber-500/30",
   STREAK_RESET: "bg-purple-500/20 text-purple-400 border-purple-500/30",
   STREAK_SET_COUNT: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  MILESTONE_FORCE_GRANT: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+  MILESTONE_FORCE_GRANT:
+    "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
   MILESTONE_DISTRIBUTE: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
   STOCK_ADJUST: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
   TICKET_GRANT: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
@@ -79,13 +79,19 @@ const ACTION_OPTIONS = [
 ];
 
 export default function AuditLogPage() {
+  const formatKst = (value: string | Date) =>
+    new Date(value).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
   const [actionFilter, setActionFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [limit, setLimit] = useState(50);
   const [offset, setOffset] = useState(0);
   const [expandedLogs, setExpandedLogs] = useState<Set<number>>(new Set());
 
-  const { data: auditData, isLoading, refetch } = useAdminAuditLogs({
+  const {
+    data: auditData,
+    isLoading,
+    refetch,
+  } = useAdminAuditLogs({
     action_filter: actionFilter || undefined,
     category_filter: categoryFilter || undefined,
     limit,
@@ -105,7 +111,9 @@ export default function AuditLogPage() {
   };
 
   const getActionBadgeClass = (action: string) => {
-    return ACTION_COLORS[action] || "bg-zinc-500/20 text-zinc-400 border-zinc-500/30";
+    return (
+      ACTION_COLORS[action] || "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+    );
   };
 
   const handleNextPage = () => {
@@ -125,9 +133,7 @@ export default function AuditLogPage() {
             <FileText className="w-8 h-8 text-indigo-400" />
             감사 로그
           </h1>
-          <p className="text-zinc-400">
-            관리자 액션 기록을 조회합니다.
-          </p>
+          <p className="text-zinc-400">관리자 액션 기록을 조회합니다.</p>
         </div>
         <Button
           variant="outline"
@@ -150,7 +156,9 @@ export default function AuditLogPage() {
         <CardContent>
           <div className="flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs text-zinc-400 mb-1 block">카테고리</label>
+              <label className="text-xs text-zinc-400 mb-1 block">
+                카테고리
+              </label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger className="bg-black/20 border-white/10">
                   <SelectValue placeholder="전체 카테고리" />
@@ -180,8 +188,13 @@ export default function AuditLogPage() {
               </Select>
             </div>
             <div className="w-[100px]">
-              <label className="text-xs text-zinc-400 mb-1 block">표시 개수</label>
-              <Select value={String(limit)} onValueChange={(v) => setLimit(Number(v))}>
+              <label className="text-xs text-zinc-400 mb-1 block">
+                표시 개수
+              </label>
+              <Select
+                value={String(limit)}
+                onValueChange={(v) => setLimit(Number(v))}
+              >
                 <SelectTrigger className="bg-black/20 border-white/10">
                   <SelectValue />
                 </SelectTrigger>
@@ -201,7 +214,8 @@ export default function AuditLogPage() {
         <CardHeader>
           <CardTitle className="text-white">로그 목록</CardTitle>
           <CardDescription className="text-zinc-400">
-            총 {auditData?.total ?? 0}건 중 {offset + 1} ~ {Math.min(offset + limit, auditData?.total ?? 0)}건 표시
+            총 {auditData?.total ?? 0}건 중 {offset + 1} ~{" "}
+            {Math.min(offset + limit, auditData?.total ?? 0)}건 표시
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -251,7 +265,7 @@ export default function AuditLogPage() {
                             Admin #{log.admin_id}
                           </span>
                           <span className="text-xs text-zinc-500">
-                            {format(new Date(log.created_at), "yyyy-MM-dd HH:mm:ss")}
+                            {formatKst(log.created_at)} KST
                           </span>
                         </div>
                       </div>
@@ -261,7 +275,9 @@ export default function AuditLogPage() {
                         <div className="grid md:grid-cols-2 gap-4 mt-4">
                           {log.before_data && (
                             <div>
-                              <h4 className="text-xs text-zinc-400 mb-2">변경 전</h4>
+                              <h4 className="text-xs text-zinc-400 mb-2">
+                                변경 전
+                              </h4>
                               <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
                                 {JSON.stringify(log.before_data, null, 2)}
                               </pre>
@@ -269,7 +285,9 @@ export default function AuditLogPage() {
                           )}
                           {log.after_data && (
                             <div>
-                              <h4 className="text-xs text-zinc-400 mb-2">변경 후</h4>
+                              <h4 className="text-xs text-zinc-400 mb-2">
+                                변경 후
+                              </h4>
                               <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
                                 {JSON.stringify(log.after_data, null, 2)}
                               </pre>

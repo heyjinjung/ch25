@@ -29,6 +29,7 @@ import {
 } from "../../../hooks/useAdminCSVImport";
 import { cn } from "../../../lib/utils";
 import { Progress } from "../../../components/ui/progress";
+import styles from "./CSVImportPage.module.css";
 
 type Step = "SELECT" | "VALIDATE" | "IMPORTING" | "RESULT";
 
@@ -586,6 +587,12 @@ function AnalyticsCard({
 
 function DistributionBar({ label, count, total, color }: any) {
   const percent = total > 0 ? (count / total) * 100 : 0;
+  const getWidthClass = (value: number) => {
+    const clamped = Math.max(0, Math.min(100, value));
+    const step = Math.round(clamped / 5) * 5;
+    const key = `w${step}` as keyof typeof styles;
+    return styles[key] ?? styles.w0;
+  };
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-[11px] font-bold">
@@ -598,10 +605,13 @@ function DistributionBar({ label, count, total, color }: any) {
         </span>
       </div>
       <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-        {/* Dynamic width using inline style - required for progress bar */}
         <div
-          className={cn("h-full transition-all duration-1000", color)}
-          style={{ width: `${percent}%` }}
+          className={cn(
+            "h-full transition-all duration-1000",
+            styles.barFill,
+            getWidthClass(percent),
+            color,
+          )}
         />
       </div>
     </div>

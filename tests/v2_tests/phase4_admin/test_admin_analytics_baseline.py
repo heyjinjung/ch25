@@ -80,6 +80,7 @@ def test_vault2_stats_aggregation(db_session: Session) -> None:
     
     event = VaultEarnEvent(
         user_id=1,
+        earn_event_id="test_dice_event_1",
         amount=500,
         earn_type="DICE",
         source="GAME",

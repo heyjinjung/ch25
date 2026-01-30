@@ -7,7 +7,16 @@ import {
 } from "../../../components/ui/tabs";
 import MessageSenderPage from "./MessageSenderPage";
 import SurveyPage from "./SurveyPage";
-import { MessageSquare, ClipboardList } from "lucide-react";
+import RetentionAnalyticsPanel from "@/admin/pages/marketing/RetentionAnalyticsPanel";
+import RevenueAnalyticsPanel from "@/admin/pages/marketing/RevenueAnalyticsPanel";
+import MarketingPerformancePanel from "@/admin/pages/marketing/MarketingPerformancePanel";
+import {
+  MessageSquare,
+  ClipboardList,
+  TrendingUp,
+  DollarSign,
+  Megaphone,
+} from "lucide-react";
 
 export default function MarketingTabPage() {
   const [activeTab, setActiveTab] = useState<string>("messages");
@@ -31,6 +40,27 @@ export default function MarketingTabPage() {
               <ClipboardList className="w-4 h-4" />
               설문 조사
             </TabsTrigger>
+            <TabsTrigger
+              value="retention"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
+            >
+              <TrendingUp className="w-4 h-4" />
+              리텐션
+            </TabsTrigger>
+            <TabsTrigger
+              value="revenue"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
+            >
+              <DollarSign className="w-4 h-4" />
+              매출
+            </TabsTrigger>
+            <TabsTrigger
+              value="marketing-performance"
+              className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
+            >
+              <Megaphone className="w-4 h-4" />
+              마케팅 성과
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -40,6 +70,18 @@ export default function MarketingTabPage() {
 
         <TabsContent value="surveys" className="mt-0">
           <SurveyPage />
+        </TabsContent>
+
+        <TabsContent value="retention" className="mt-0">
+          <RetentionAnalyticsPanel />
+        </TabsContent>
+
+        <TabsContent value="revenue" className="mt-0">
+          <RevenueAnalyticsPanel />
+        </TabsContent>
+
+        <TabsContent value="marketing-performance" className="mt-0">
+          <MarketingPerformancePanel />
         </TabsContent>
       </Tabs>
     </div>

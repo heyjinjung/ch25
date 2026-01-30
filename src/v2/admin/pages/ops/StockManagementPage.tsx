@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { format } from "date-fns";
 import {
   Package,
   AlertTriangle,
@@ -50,9 +49,13 @@ import {
 } from "../../../hooks/useAdminGame";
 
 export default function StockManagementPage() {
+  const formatKst = (value: string | Date) =>
+    new Date(value).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
   const [activeTab, setActiveTab] = useState("alerts");
   const [alertThreshold, setAlertThreshold] = useState(10);
-  const [deliveryStatus, setDeliveryStatus] = useState<"PENDING" | "DELIVERED" | "FAILED" | undefined>(undefined);
+  const [deliveryStatus, setDeliveryStatus] = useState<
+    "PENDING" | "DELIVERED" | "FAILED" | undefined
+  >(undefined);
 
   // Stock Adjust Dialog
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
@@ -62,8 +65,16 @@ export default function StockManagementPage() {
   const [adjustReason, setAdjustReason] = useState("");
 
   // Data Hooks
-  const { data: stockAlerts, isLoading: isLoadingAlerts, refetch: refetchAlerts } = useAdminStockAlerts(alertThreshold);
-  const { data: gifticonDeliveries, isLoading: isLoadingDeliveries, refetch: refetchDeliveries } = useAdminGifticonDeliveries({
+  const {
+    data: stockAlerts,
+    isLoading: isLoadingAlerts,
+    refetch: refetchAlerts,
+  } = useAdminStockAlerts(alertThreshold);
+  const {
+    data: gifticonDeliveries,
+    isLoading: isLoadingDeliveries,
+    refetch: refetchDeliveries,
+  } = useAdminGifticonDeliveries({
     status: deliveryStatus,
     limit: 50,
   });
@@ -123,7 +134,9 @@ export default function StockManagementPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="bg-zinc-900 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">총 알림</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              총 알림
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
@@ -138,22 +151,24 @@ export default function StockManagementPage() {
 
         <Card className="bg-zinc-900 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">긴급 알림</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              긴급 알림
+            </CardTitle>
             <AlertTriangle className="h-4 w-4 text-rose-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-rose-400">
               {stockAlerts?.critical_count ?? 0}건
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
-              임계값 50% 이하
-            </p>
+            <p className="text-xs text-zinc-500 mt-1">임계값 50% 이하</p>
           </CardContent>
         </Card>
 
         <Card className="bg-zinc-900 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">배송 대기</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              배송 대기
+            </CardTitle>
             <Gift className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -165,7 +180,9 @@ export default function StockManagementPage() {
 
         <Card className="bg-zinc-900 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">배송 완료</CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">
+              배송 완료
+            </CardTitle>
             <Gift className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
@@ -247,19 +264,26 @@ export default function StockManagementPage() {
                       <div className="flex items-center gap-4">
                         <div
                           className={`p-2 rounded-lg ${
-                            alert.is_critical ? "bg-rose-500/20" : "bg-amber-500/20"
+                            alert.is_critical
+                              ? "bg-rose-500/20"
+                              : "bg-amber-500/20"
                           }`}
                         >
                           <AlertTriangle
                             className={`w-5 h-5 ${
-                              alert.is_critical ? "text-rose-400" : "text-amber-400"
+                              alert.is_critical
+                                ? "text-rose-400"
+                                : "text-amber-400"
                             }`}
                           />
                         </div>
                         <div>
-                          <p className="font-bold text-white">{alert.item_type}</p>
+                          <p className="font-bold text-white">
+                            {alert.item_type}
+                          </p>
                           <p className="text-sm text-zinc-400">
-                            현재: {alert.current_stock}개 / 임계: {alert.threshold}개
+                            현재: {alert.current_stock}개 / 임계:{" "}
+                            {alert.threshold}개
                           </p>
                         </div>
                       </div>
@@ -276,7 +300,7 @@ export default function StockManagementPage() {
                         </Badge>
                         {alert.last_updated && (
                           <span className="text-xs text-zinc-500">
-                            {format(new Date(alert.last_updated), "MM-dd HH:mm")}
+                            {formatKst(alert.last_updated)} KST
                           </span>
                         )}
                       </div>
@@ -296,7 +320,9 @@ export default function StockManagementPage() {
               <Select
                 value={deliveryStatus ?? "ALL"}
                 onValueChange={(v) =>
-                  setDeliveryStatus(v === "ALL" ? undefined : (v as typeof deliveryStatus))
+                  setDeliveryStatus(
+                    v === "ALL" ? undefined : (v as typeof deliveryStatus),
+                  )
                 }
               >
                 <SelectTrigger className="w-32 bg-zinc-900 border-white/10">
@@ -324,7 +350,10 @@ export default function StockManagementPage() {
             <CardHeader>
               <CardTitle className="text-white">배송 목록</CardTitle>
               <CardDescription className="text-zinc-400">
-                총 {gifticonDeliveries?.total ?? 0}건 (대기: {gifticonDeliveries?.pending ?? 0} / 완료: {gifticonDeliveries?.delivered ?? 0} / 실패: {gifticonDeliveries?.failed ?? 0})
+                총 {gifticonDeliveries?.total ?? 0}건 (대기:{" "}
+                {gifticonDeliveries?.pending ?? 0} / 완료:{" "}
+                {gifticonDeliveries?.delivered ?? 0} / 실패:{" "}
+                {gifticonDeliveries?.failed ?? 0})
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -342,20 +371,32 @@ export default function StockManagementPage() {
                         <th className="text-left py-2 text-zinc-400">유저</th>
                         <th className="text-left py-2 text-zinc-400">아이템</th>
                         <th className="text-center py-2 text-zinc-400">상태</th>
-                        <th className="text-right py-2 text-zinc-400">생성일</th>
+                        <th className="text-right py-2 text-zinc-400">
+                          생성일
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {gifticonDeliveries.items.map((item) => (
-                        <tr key={item.id} className="border-b border-white/5 hover:bg-white/5">
+                        <tr
+                          key={item.id}
+                          className="border-b border-white/5 hover:bg-white/5"
+                        >
                           <td className="py-3">
                             <div>
-                              <p className="text-white font-medium">{item.nickname}</p>
-                              <p className="text-xs text-zinc-500">UID: {item.user_id}</p>
+                              <p className="text-white font-medium">
+                                {item.nickname}
+                              </p>
+                              <p className="text-xs text-zinc-500">
+                                UID: {item.user_id}
+                              </p>
                             </div>
                           </td>
                           <td className="py-3">
-                            <Badge variant="outline" className="border-indigo-500/50 text-indigo-400">
+                            <Badge
+                              variant="outline"
+                              className="border-indigo-500/50 text-indigo-400"
+                            >
                               {item.item_type}
                             </Badge>
                           </td>
@@ -378,7 +419,7 @@ export default function StockManagementPage() {
                             </Badge>
                           </td>
                           <td className="py-3 text-right text-zinc-400">
-                            {format(new Date(item.created_at), "yyyy-MM-dd HH:mm")}
+                            {formatKst(item.created_at)} KST
                           </td>
                         </tr>
                       ))}
@@ -421,7 +462,9 @@ export default function StockManagementPage() {
               />
             </div>
             <div>
-              <label className="text-sm text-zinc-400">조정 수량 (양수: 증가, 음수: 감소)</label>
+              <label className="text-sm text-zinc-400">
+                조정 수량 (양수: 증가, 음수: 감소)
+              </label>
               <Input
                 type="number"
                 placeholder="예: 10 또는 -5"
