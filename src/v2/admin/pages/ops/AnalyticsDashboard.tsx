@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
+import { InfoTooltip } from "../../../components/ui/info-tooltip";
 import {
   Card,
   CardContent,
@@ -460,15 +461,29 @@ export default function AnalyticsDashboard() {
 
         {/* Marketing Tab */}
         <TabsContent value="marketing" className="mt-6 space-y-6">
-          <h3 className="text-lg font-bold">채널별 마케팅 효율성</h3>
+          <h3 className="text-lg font-bold flex items-center gap-2">
+            채널별 마케팅 효율성
+            <InfoTooltip
+              title="채널별 마케팅 효율성"
+              description={
+                "마케팅 채널(예: telegram, organic)별로\n신규 유저, 비용, 입금(매출), ROI를 비교하는 표입니다.\n\n어디에 예산/시간을 더 써야 하는지 판단할 때 씁니다."
+              }
+            />
+          </h3>
 
           {/* Overall Summary */}
           {marketingData && (
             <div className="grid gap-4 md:grid-cols-4">
               <Card className="bg-zinc-900 border-white/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-zinc-400">
+                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-1">
                     총 신규 유저
+                    <InfoTooltip
+                      title="총 신규 유저"
+                      description={
+                        "선택한 기간에 '처음' 들어온 유저 수입니다.\n(신규 유입 규모를 보는 지표)"
+                      }
+                    />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -479,8 +494,14 @@ export default function AnalyticsDashboard() {
               </Card>
               <Card className="bg-zinc-900 border-white/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-zinc-400">
+                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-1">
                     총 마케팅 비용
+                    <InfoTooltip
+                      title="총 마케팅 비용"
+                      description={
+                        "유저를 데려오기 위해 쓴 비용의 합입니다.\n(광고비, 제휴비 등)\n\n현재 값은 '추정치'일 수 있습니다."
+                      }
+                    />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -491,8 +512,20 @@ export default function AnalyticsDashboard() {
               </Card>
               <Card className="bg-zinc-900 border-white/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-zinc-400">
+                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-1">
                     평균 CAC
+                    <InfoTooltip
+                      title="CAC (고객 획득 비용)"
+                      description={
+                        "신규 유저 1명을 데려오는데 평균 얼마가 들었는지입니다.\n(비용 효율을 보는 지표)"
+                      }
+                      formula={
+                        "계산식\n= 총 마케팅 비용 ÷ 총 신규 유저"
+                      }
+                      note={
+                        "예: 비용 2,000원 / 신규 3명 → CAC 약 666.67원"
+                      }
+                    />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -503,8 +536,20 @@ export default function AnalyticsDashboard() {
               </Card>
               <Card className="bg-zinc-900 border-white/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-zinc-400">
+                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-1">
                     전체 ROI
+                    <InfoTooltip
+                      title="ROI (투자 대비 수익률)"
+                      description={
+                        "마케팅 비용을 쓴 만큼 '남았는지/손해인지'를 비율로 보여줍니다.\n\n0%: 본전\n양수(+): 이익\n음수(-): 손해"
+                      }
+                      formula={
+                        "계산식\n= (LTV - CAC) ÷ CAC"
+                      }
+                      note={
+                        "입금이 0원인데 비용만 있으면 ROI는 -100%가 될 수 있습니다."
+                      }
+                    />
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -535,22 +580,100 @@ export default function AnalyticsDashboard() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-white/10">
-                        <th className="text-left py-2 text-zinc-400">채널</th>
-                        <th className="text-right py-2 text-zinc-400">
-                          신규 유저
+                        <th className="text-left py-2 text-zinc-400">
+                          <span className="inline-flex items-center gap-1">
+                            채널
+                            <InfoTooltip
+                              title="채널"
+                              description={
+                                "유저가 유입된 경로(출처)입니다.\n예: telegram(텔레그램), organic(검색/입소문 등)"
+                              }
+                            />
+                          </span>
                         </th>
                         <th className="text-right py-2 text-zinc-400">
-                          활성 유저
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            신규 유저
+                            <InfoTooltip
+                              title="신규 유저"
+                              description={
+                                "해당 채널로 '처음' 들어온 유저 수입니다."
+                              }
+                            />
+                          </span>
                         </th>
                         <th className="text-right py-2 text-zinc-400">
-                          총 입금
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            활성 유저
+                            <InfoTooltip
+                              title="활성 유저"
+                              description={
+                                "기간 동안 실제로 활동한 유저 수입니다.\n(예: 로그인/게임/입금 등)"
+                              }
+                            />
+                          </span>
                         </th>
                         <th className="text-right py-2 text-zinc-400">
-                          전환율
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            총 입금
+                            <InfoTooltip
+                              title="총 입금"
+                              description={
+                                "해당 채널 유저들이 기간 동안 입금한 금액의 합입니다."
+                              }
+                            />
+                          </span>
                         </th>
-                        <th className="text-right py-2 text-zinc-400">CAC</th>
-                        <th className="text-right py-2 text-zinc-400">LTV</th>
-                        <th className="text-right py-2 text-zinc-400">ROI</th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            전환율
+                            <InfoTooltip
+                              title="전환율"
+                              description={
+                                "신규 유저 중 '입금'까지 이어진 비율입니다.\n(마케팅이 실제 매출 행동으로 이어졌는지 보는 지표)"
+                              }
+                              formula={
+                                "계산식\n= 입금 유저 수 ÷ 신규 유저 수"
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            CAC
+                            <InfoTooltip
+                              title="CAC (채널별)"
+                              description={
+                                "해당 채널에서 신규 유저 1명을 데려오는데 든 비용(추정치)입니다.\n작을수록 비용 효율이 좋습니다."
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            LTV
+                            <InfoTooltip
+                              title="LTV (유저 생애 가치)"
+                              description={
+                                "유저 1명이 '장기적으로' 남기는 가치(추정치)입니다.\n여기서는 주로 입금 데이터 기반으로 계산됩니다."
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            ROI
+                            <InfoTooltip
+                              title="ROI (채널별)"
+                              description={
+                                "채널별로 '번 돈(LTV)'이 '쓴 돈(CAC)'보다 큰지 비율로 보여줍니다.\n양수면 이익, 음수면 손해입니다."
+                              }
+                              formula={
+                                "계산식\n= (LTV - CAC) ÷ CAC"
+                              }
+                            />
+                          </span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>

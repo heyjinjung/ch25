@@ -214,23 +214,46 @@ completed_count = db.query(func.count(UserMissionProgress.id)).filter(
 - **Backend Response**: `/metrics` 엔드포인트를 통해 Prometheus 메트릭 수집 확인.
 - **Log Integrity**: 에러 로그 내에 `V1 Legacy` 관련 경로가 보이지 않는지 최종 확인.
 
-1. level_routes.py - INVALID_REWARD_TYPE 오류
-ALLOWED_REWARD_TYPES에 VAULT 추가 (금고 포인트 보상 지원)
-2. economy_routes.py - 500 Internal Server Error
-User 참조 오류 수정 (4곳):
+---
 
-295행: join(User, ...) → join(V2User, ...)
-922행: join(User) → join(V2User, UserGameWallet.user_id == V2User.id)
-1039행: join(User) → join(V2User, UserInventoryItem.user_id == V2User.id)
-1139행, 1152행: outerjoin(User, ...) → outerjoin(V2User, ...)
-FK 제약조건 문제 수정 (인벤토리/티켓 테이블이 legacy user 테이블 참조):
+## 🔧 5. 2026-01-30 긴급 패치 내역
 
-Legacy User 모델 import 추가
-create_inventory_item: V2User 대신 legacy User 검증
-create_ticket: legacy User 존재 여부 검증 추가
-운영 서버에 배포하려면 Docker 빌드 후 재시작이 필요합니다:
+### Issue 8: INVALID_REWARD_TYPE (VAULT 보상 설정 불가)
+- **증상**: 어드민에서 레벨 6 보상을 "VAULT"로 설정 시 `INVALID_REWARD_TYPE` 오류
+- **원인**: `level_routes.py`의 `ALLOWED_REWARD_TYPES`에 "VAULT"가 누락
+- **해결**: `ALLOWED_REWARD_TYPES` set에 "VAULT" 추가
+- **파일**: `app/v2/api/admin/level_routes.py`
 
-해결책으로 FK를 v2_user로 마이그레이션하겠습니다. 먼저 현재 테이블 구조를 확인하고 Alembic 마이그레이션을 생성하겠습니다.
+### Issue 9: Admin Economy/Inventory API 500 에러 (FK 불일치)
+- **증상**: 
+  - `/api/v2/admin/economy/deposits` 500 에러
+  - `/api/v2/admin/economy/tickets` 생성 시 500 에러
+  - `/api/v2/admin/economy/inventory-items` 생성 시 500 에러
+- **원인**: 
+  1. API 코드에서 `User` 대신 `V2User`를 사용해야 하는데 레거시 `User` 참조
+  2. `user_game_wallet`, `user_inventory_item` 등 테이블이 `user.id` FK 참조 → V2User만 있는 유저에게 지급 불가
+- **해결 (코드 수정)**:
+  - `economy_routes.py`: User→V2User 참조 수정 (4곳 join 쿼리)
+  - `inventory_routes.py`: User→V2User 참조 수정
+- **해결 (FK 마이그레이션)** - **미적용, 배포 필요**:
+  - 마이그레이션: `20260130_1900_migrate_fk_to_v2_user.py`
+  - 모델 변경: `game_wallet.py`, `game_wallet_ledger.py`, `inventory.py` FK를 `v2_user.id`로 변경
+  - V2User 모델에 `game_wallets` relationship 추가
+
+| 테이블 | 변경 전 FK | 변경 후 FK |
+|--------|-----------|-----------|
+| user_game_wallet | user.id | v2_user.id |
+| user_game_wallet_ledger | user.id | v2_user.id |
+| user_inventory_item | user.id | v2_user.id |
+| user_inventory_ledger | user.id | v2_user.id |
+
+### 배포 체크리스트 (Issue 9 완료용)
+```bash
+# 1. Git push 후 CI/CD 자동 배포 또는
+# 2. 수동 배포 시
+docker compose exec backend alembic upgrade head
+docker compose restart backend
+```
 
 ---
 > [!IMPORTANT]
