@@ -471,15 +471,6 @@ def get_mission_stats(
         if mission.is_active:
             active_count += 1
 
-        # 진행도 통계
-        progress_stats = db.query(
-            func.count(UserMissionProgress.id).label("total"),
-            func.sum(func.cast(UserMissionProgress.is_completed, db.bind.dialect.type_descriptor(db.bind.dialect.type_descriptor.__class__))).label("completed"),
-            func.sum(func.cast(UserMissionProgress.is_claimed, db.bind.dialect.type_descriptor(db.bind.dialect.type_descriptor.__class__))).label("claimed"),
-        ).filter(
-            UserMissionProgress.mission_id == mission.id,
-        ).first()
-
         # SQLite/MySQL 호환을 위한 안전한 처리
         total_attempts = db.query(func.count(UserMissionProgress.id)).filter(
             UserMissionProgress.mission_id == mission.id

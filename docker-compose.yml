@@ -75,10 +75,6 @@ services:
       - xmas-network
     volumes:
       - ./logs:/app/logs
-      - ./app:/app/app
-      - ./alembic:/app/alembic
-      - ./alembic.ini:/app/alembic.ini
-      - ./docs:/app/docs
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8000/" ]
 
@@ -104,8 +100,6 @@ services:
         condition: service_healthy
     networks:
       - xmas-network
-    volumes:
-      - ./app:/app/app
 
   # Celery Beat (Scheduler)
   celery-beat:
@@ -129,8 +123,6 @@ services:
         condition: service_healthy
     networks:
       - xmas-network
-    volumes:
-      - ./app:/app/app
 
   # Frontend
   frontend:

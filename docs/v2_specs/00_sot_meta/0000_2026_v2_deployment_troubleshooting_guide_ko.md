@@ -33,6 +33,16 @@ Golden V2 배포 중 발생할 수 있는 주요 시나리오와 해결책입니
 - **원인**: CSV의 `user_id`가 V2 시스템의 내부 고유 ID가 아닌 외부 플랫폼 ID일 경우.
 - **해결책**: CSV 생성 시 반드시 V2의 `cc_id` 또는 `user_id`를 매핑하여 포함하도록 데이터 수집 공정 수정.
 
+### ❌ 이슈 4: `failed to read dockerfile: open Dockerfile.backend: no such file or directory`
+- **현상**: 배포/빌드 중 Dockerfile.backend를 찾지 못해 빌드 실패.
+- **원인**:
+  1. 작업 디렉터리가 리포지토리 루트가 아님.
+  2. `docker compose` 실행 위치가 서버 홈(예: `/root`) 등으로 이동된 상태.
+- **해결책**:
+  1. **리포지토리 루트에서 실행**: `/opt/ch25` 등 실제 프로젝트 루트에서 `docker compose build` 실행.
+  2. 배포 스크립트 내 `cd /opt/ch25` 등 **작업 디렉터리 고정**.
+  3. `docker compose config`로 `dockerfile: Dockerfile.backend` 경로 확인.
+
 ### 🛡️ 어드민 전용 이슈 (Admin Specific)
 #### 1. RBAC 권한 충돌 (Permission Denied)
 - **증상**: 신규 운영자가 Dashboard 메뉴는 보이나 '수정' 버튼 클릭 시 403 에러 발생.
