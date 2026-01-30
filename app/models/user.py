@@ -83,5 +83,6 @@ class User(Base):
 
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
-    game_wallets = relationship("UserGameWallet", back_populates="user", cascade="all, delete-orphan")
+    # NOTE: game_wallets relationship removed (2026-01-30)
+    # FK migrated to v2_user table. Use V2User.game_wallets instead.
 
