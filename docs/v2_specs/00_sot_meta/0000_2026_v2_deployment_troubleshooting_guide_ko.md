@@ -2,6 +2,7 @@
 
 **문서 타입**: 장애 대응 및 검증 리포트 (Troubleshooting & Verification)
 **작성일**: 2026-01-29
+**최종 수정**: 2026-01-30
 **프로젝트**: Golden V2
 
 ---
@@ -38,10 +39,81 @@ Golden V2 배포 중 발생할 수 있는 주요 시나리오와 해결책입니
 - **원인**:
   1. 작업 디렉터리가 리포지토리 루트가 아님.
   2. `docker compose` 실행 위치가 서버 홈(예: `/root`) 등으로 이동된 상태.
+  3. **SCP 복사 대상에 Dockerfile이 누락됨** (2026-01-30 추가)
 - **해결책**:
   1. **리포지토리 루트에서 실행**: `/opt/ch25` 등 실제 프로젝트 루트에서 `docker compose build` 실행.
   2. 배포 스크립트 내 `cd /opt/ch25` 등 **작업 디렉터리 고정**.
   3. `docker compose config`로 `dockerfile: Dockerfile.backend` 경로 확인.
+  4. **deploy.yml SCP source에 `Dockerfile.backend,Dockerfile.frontend` 추가** (2026-01-30 수정)
+
+### ❌ 이슈 5: Celery Worker/Beat 빌드 실패 (`requirements.txt not found`) — 2026-01-30 추가
+- **현상**: `celery-worker`, `celery-beat` 컨테이너 빌드 시 `/requirements.txt`, `/app`, `/alembic` 등 파일을 찾지 못함.
+- **원인**: 
+  1. `docker-compose.yml`에서 `celery-worker`, `celery-beat`에 `image:` 설정이 없어 매번 로컬 빌드 시도.
+  2. 서버에는 소스 코드가 없어서 빌드 실패.
+- **해결책**:
+  1. `celery-worker`, `celery-beat`에 `image: ghcr.io/heyjinjung/xmas-backend:latest` 추가.
+  2. pre-built 이미지를 pull하여 사용하도록 설정.
+
+```yaml
+# docker-compose.yml 수정 예시
+celery-worker:
+  image: ghcr.io/heyjinjung/xmas-backend:latest  # 추가
+  build:
+    context: .
+    dockerfile: Dockerfile.backend
+```
+
+### ❌ 이슈 6: 볼륨 마운트 실패 (`alembic.ini` mount error) — 2026-01-30 추가
+- **현상**: `error mounting "/opt/ch25/alembic.ini" to rootfs: not a directory`
+- **원인**: 
+  1. 서버에 `alembic.ini` 파일이 존재하지 않음.
+  2. 프로덕션 환경에서 불필요한 볼륨 마운트(`./app`, `./alembic`, `./docs`)가 설정됨.
+- **해결책**:
+  1. **프로덕션 docker-compose.yml에서 개발용 볼륨 마운트 제거**:
+     - `./app:/app/app` 제거
+     - `./alembic:/app/alembic` 제거
+     - `./alembic.ini:/app/alembic.ini` 제거
+     - `./docs:/app/docs` 제거
+  2. **로컬 개발용 볼륨은 `docker-compose.override.yml`에 유지**.
+  3. 필요시 SCP source에 `alembic.ini,alembic/*` 추가.
+
+```yaml
+# docker-compose.yml (프로덕션) - 최소 볼륨만 유지
+backend:
+  volumes:
+    - ./logs:/app/logs  # 로그만 마운트
+
+# docker-compose.override.yml (로컬 개발) - 개발용 볼륨 추가
+backend:
+  volumes:
+    - ./logs:/app/logs
+    - ./app:/app/app
+    - ./alembic:/app/alembic
+    - ./alembic.ini:/app/alembic.ini
+    - ./docs:/app/docs
+```
+
+### ❌ 이슈 7: Mission Stats API 500 에러 — 2026-01-30 추가
+- **현상**: `GET /api/v2/admin/game/missions/stats` 호출 시 500 Internal Server Error.
+- **원인**: `mission_routes.py`에서 잘못된 `db.bind.dialect.type_descriptor` 사용.
+- **해결책**: 
+  1. 문제가 되는 dead code 제거 (불필요한 `func.cast` + `type_descriptor` 쿼리).
+  2. 이미 아래에 올바른 개별 쿼리(`func.count`)가 있으므로 중복 코드 삭제.
+
+```python
+# 삭제된 코드 (잘못된 방식)
+progress_stats = db.query(
+    func.sum(func.cast(UserMissionProgress.is_completed, 
+             db.bind.dialect.type_descriptor(...))).label("completed"),
+).first()
+
+# 유지된 코드 (올바른 방식)
+completed_count = db.query(func.count(UserMissionProgress.id)).filter(
+    UserMissionProgress.mission_id == mission.id,
+    UserMissionProgress.is_completed == True,
+).scalar() or 0
+```
 
 ### 🛡️ 어드민 전용 이슈 (Admin Specific)
 #### 1. RBAC 권한 충돌 (Permission Denied)
