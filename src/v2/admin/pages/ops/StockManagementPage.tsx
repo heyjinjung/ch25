@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  Package,
-  AlertTriangle,
-  Gift,
-  Search,
-  Plus,
-  Minus,
-  RefreshCw,
-} from "lucide-react";
+import { Package, AlertTriangle, Gift, Plus, RefreshCw } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";

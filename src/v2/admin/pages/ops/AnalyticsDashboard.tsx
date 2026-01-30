@@ -3,16 +3,11 @@ import {
   BarChart3,
   TrendingUp,
   TrendingDown,
-  Users,
   Wallet,
-  Calendar,
-  Target,
   DollarSign,
   Percent,
 } from "lucide-react";
-import { format, subDays } from "date-fns";
 
-import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
 import {
   Card,
@@ -52,14 +47,12 @@ export default function AnalyticsDashboard() {
   >("daily");
 
   // Data Hooks
-  const { data: retentionData, isLoading: isLoadingRetention } =
-    useAdminRetentionAnalysis();
+  const { data: retentionData } = useAdminRetentionAnalysis();
   const { data: retentionTrend, isLoading: isLoadingTrend } =
     useAdminRetentionTrend(retentionDays);
   const { data: revenueBreakdown, isLoading: isLoadingRevenue } =
     useAdminRevenueBreakdown({ period: revenuePeriod });
-  const { data: revenueSummary, isLoading: isLoadingSummary } =
-    useAdminRevenueSummary();
+  const { data: revenueSummary } = useAdminRevenueSummary();
   const { data: marketingData, isLoading: isLoadingMarketing } =
     useAdminMarketingChannelPerformance();
   const { data: dailyFinance } = useAdminDailyFinance();

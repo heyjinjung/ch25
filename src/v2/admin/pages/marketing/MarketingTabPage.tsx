@@ -7,9 +7,9 @@ import {
 } from "../../../components/ui/tabs";
 import MessageSenderPage from "./MessageSenderPage";
 import SurveyPage from "./SurveyPage";
-import RetentionAnalyticsPanel from "@/admin/pages/marketing/RetentionAnalyticsPanel";
-import RevenueAnalyticsPanel from "@/admin/pages/marketing/RevenueAnalyticsPanel";
-import MarketingPerformancePanel from "@/admin/pages/marketing/MarketingPerformancePanel";
+import RetentionAnalyticsPanel from "./RetentionAnalyticsPanel";
+import RevenueAnalyticsPanel from "./RevenueAnalyticsPanel";
+import MarketingPerformancePanel from "./MarketingPerformancePanel";
 import {
   MessageSquare,
   ClipboardList,

@@ -12,10 +12,12 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
 from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.models.v2_dice import V2DiceConfig, V2DiceLog
 from app.models.game_wallet import UserGameWallet, GameTokenType
 from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType
 from app.models.user_segment import UserSegment
+from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.v2.services.v2_dice_game_service import V2DiceGameService
 from app.v2.services.game_config_service import V2GameConfigService
 
@@ -48,6 +50,24 @@ def test_user(db_session: Session):
         vault_locked_balance=5000,
     )
     db_session.add(user)
+    
+    # Add V2User for V2 services
+    v2_user = V2User(
+        id=100,
+        cc_id="test-dice-user",
+        nickname="DicePlayer",
+        vault_locked_balance=5000
+    )
+    db_session.add(v2_user)
+    
+    # Add recent deposit to bypass BENEFITS_SUSPENDED
+    deposit = ExternalRankingDailyDepositDelta(
+        user_id=100,
+        kst_date=date.today(),
+        deposit_delta=100000
+    )
+    db_session.add(deposit)
+
     wallet = UserGameWallet(
         user_id=100,
         token_type=GameTokenType.DICE_TICKET,
@@ -126,7 +146,7 @@ def test_golden_hour_multiplier_applied(db_session, test_user, dice_config, monk
         streak_day_reset_hour_kst = 9
 
     monkeypatch.setattr("app.v2.services.v2_dice_game_service.get_settings", lambda: MockSettings())
-    monkeypatch.setattr("app.v2.services.game_common.get_settings", lambda: MockSettings())
+    monkeypatch.setattr("app.services.game_common.get_settings", lambda: MockSettings())
     
     # Ensure V2EventService also sees golden hour as active
     monkeypatch.setattr("app.v2.services.event_service.V2EventService.is_golden_hour", lambda self, db, now: True)
@@ -140,6 +160,14 @@ def test_golden_hour_multiplier_applied(db_session, test_user, dice_config, monk
 def test_win_rate_statistical(db_session, test_user, dice_config):
     """승률이 설정값(40%)에 근접하는지 통계적 검증 (±15%)"""
     service = V2DiceGameService()
+    # Ensure enough balance for this test
+    wallet = db_session.query(UserGameWallet).filter(
+        UserGameWallet.user_id == 100,
+        UserGameWallet.token_type == GameTokenType.DICE_TICKET
+    ).first()
+    wallet.balance = 200
+    db_session.commit()
+
     n_trials = 100
     win = 0
     for _ in range(n_trials):

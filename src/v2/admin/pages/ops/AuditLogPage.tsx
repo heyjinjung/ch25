@@ -1,7 +1,6 @@
 import { useState } from "react";
 import {
   FileText,
-  Search,
   Filter,
   RefreshCw,
   ChevronDown,
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
 import { Badge } from "../../../components/ui/badge";
 import {
   Card,
@@ -25,11 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../../../components/ui/collapsible";
 
 import { useAdminAuditLogs } from "../../../hooks/useAdminGame";
 
@@ -228,76 +221,77 @@ export default function AuditLogPage() {
           ) : (
             <div className="space-y-2">
               {auditData.logs.map((log) => (
-                <Collapsible
+                <div
                   key={log.id}
-                  open={expandedLogs.has(log.id)}
-                  onOpenChange={() => toggleExpand(log.id)}
+                  className="border border-white/5 rounded-lg overflow-hidden"
                 >
-                  <div className="border border-white/5 rounded-lg overflow-hidden">
-                    <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer">
-                        <div className="flex items-center gap-4">
-                          {expandedLogs.has(log.id) ? (
-                            <ChevronDown className="w-4 h-4 text-zinc-500" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-zinc-500" />
-                          )}
-                          <Badge
-                            variant="outline"
-                            className={getActionBadgeClass(log.action)}
-                          >
-                            {log.action}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className="border-zinc-500/30 text-zinc-400"
-                          >
-                            {log.category}
-                          </Badge>
-                          {log.target_id && (
-                            <span className="text-sm text-zinc-400">
-                              대상: {log.target_id}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className="text-xs text-zinc-500">
-                            Admin #{log.admin_id}
+                  <button
+                    type="button"
+                    className="w-full"
+                    onClick={() => toggleExpand(log.id)}
+                  >
+                    <div className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer">
+                      <div className="flex items-center gap-4">
+                        {expandedLogs.has(log.id) ? (
+                          <ChevronDown className="w-4 h-4 text-zinc-500" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 text-zinc-500" />
+                        )}
+                        <Badge
+                          variant="outline"
+                          className={getActionBadgeClass(log.action)}
+                        >
+                          {log.action}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="border-zinc-500/30 text-zinc-400"
+                        >
+                          {log.category}
+                        </Badge>
+                        {log.target_id && (
+                          <span className="text-sm text-zinc-400">
+                            대상: {log.target_id}
                           </span>
-                          <span className="text-xs text-zinc-500">
-                            {formatKst(log.created_at)} KST
-                          </span>
-                        </div>
+                        )}
                       </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="px-4 pb-4 pt-0 border-t border-white/5">
-                        <div className="grid md:grid-cols-2 gap-4 mt-4">
-                          {log.before_data && (
-                            <div>
-                              <h4 className="text-xs text-zinc-400 mb-2">
-                                변경 전
-                              </h4>
-                              <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
-                                {JSON.stringify(log.before_data, null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                          {log.after_data && (
-                            <div>
-                              <h4 className="text-xs text-zinc-400 mb-2">
-                                변경 후
-                              </h4>
-                              <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
-                                {JSON.stringify(log.after_data, null, 2)}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-zinc-500">
+                          Admin #{log.admin_id}
+                        </span>
+                        <span className="text-xs text-zinc-500">
+                          {formatKst(log.created_at)} KST
+                        </span>
                       </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
+                    </div>
+                  </button>
+                  {expandedLogs.has(log.id) && (
+                    <div className="px-4 pb-4 pt-0 border-t border-white/5">
+                      <div className="grid md:grid-cols-2 gap-4 mt-4">
+                        {log.before_data && (
+                          <div>
+                            <h4 className="text-xs text-zinc-400 mb-2">
+                              변경 전
+                            </h4>
+                            <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
+                              {JSON.stringify(log.before_data, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                        {log.after_data && (
+                          <div>
+                            <h4 className="text-xs text-zinc-400 mb-2">
+                              변경 후
+                            </h4>
+                            <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
+                              {JSON.stringify(log.after_data, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}

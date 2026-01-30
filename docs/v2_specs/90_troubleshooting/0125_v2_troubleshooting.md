@@ -606,3 +606,14 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 �
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
+
+
+
+----
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py::test_v2_public_routes_smoke_extended
+FAILED tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_verify_full_scenario_v2
+FAILED tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_full_scenario_v2
+ERROR tests/v2_tests/phase5_public/test_golden_v2_integrated.py::test_golden_v2_full_lifecycle_integrated
