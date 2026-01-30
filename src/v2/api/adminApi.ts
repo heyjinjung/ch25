@@ -155,6 +155,10 @@ export interface OpsDashboardResponse {
     highRollers: number;
     churnRisks: number;
     onlineNow: number;
+    avgChurnScore?: number | null;
+    radarAccuracy?: number | null;
+    interventionsToday?: number | null;
+    interventionSuccessRate?: number | null;
     riskUsers: OpsRiskUserDto[];
   };
   metrics: {
@@ -2340,10 +2344,7 @@ export const updateCircuitBreakerLimit = async (params: {
   global_limit?: number;
   user_limit?: number;
 }): Promise<void> => {
-  await v2Client.put(
-    "/api/v2/admin/economy/circuit-breaker/limits",
-    params,
-  );
+  await v2Client.put("/api/v2/admin/economy/circuit-breaker/limits", params);
 };
 // ============================================================================
 // CSV Import API
@@ -2496,7 +2497,12 @@ export interface DistributeMilestoneResponse {
   total_users: number;
   success_count: number;
   failed_count: number;
-  details: { user_id: number; status: string; grants?: { type: string; amount: number }[]; message?: string }[];
+  details: {
+    user_id: number;
+    status: string;
+    grants?: { type: string; amount: number }[];
+    message?: string;
+  }[];
 }
 
 export const getAdminUserStreak = async (
@@ -2510,21 +2516,36 @@ export const getAdminUserStreak = async (
 
 export const resetAdminUserStreak = async (
   userId: number,
-): Promise<{ success: boolean; user_id: number; old_streak: number; new_streak: number }> => {
-  const response = await v2Client.post<{ success: boolean; user_id: number; old_streak: number; new_streak: number }>(
-    `/api/v2/admin/streak-rewards/users/${userId}/reset`,
-  );
+): Promise<{
+  success: boolean;
+  user_id: number;
+  old_streak: number;
+  new_streak: number;
+}> => {
+  const response = await v2Client.post<{
+    success: boolean;
+    user_id: number;
+    old_streak: number;
+    new_streak: number;
+  }>(`/api/v2/admin/streak-rewards/users/${userId}/reset`);
   return response.data;
 };
 
 export const setAdminUserStreakCount = async (
   userId: number,
   payload: SetStreakCountRequest,
-): Promise<{ success: boolean; user_id: number; old_streak: number; new_streak: number }> => {
-  const response = await v2Client.post<{ success: boolean; user_id: number; old_streak: number; new_streak: number }>(
-    `/api/v2/admin/streak-rewards/users/${userId}/set-count`,
-    payload,
-  );
+): Promise<{
+  success: boolean;
+  user_id: number;
+  old_streak: number;
+  new_streak: number;
+}> => {
+  const response = await v2Client.post<{
+    success: boolean;
+    user_id: number;
+    old_streak: number;
+    new_streak: number;
+  }>(`/api/v2/admin/streak-rewards/users/${userId}/set-count`, payload);
   return response.data;
 };
 
@@ -2831,12 +2852,13 @@ export const getAdminVaultSpendLimits = async (params?: {
   return response.data;
 };
 
-export const getAdminVaultSpendLimitSummary = async (): Promise<VaultSpendLimitSummaryDto> => {
-  const response = await v2Client.get<VaultSpendLimitSummaryDto>(
-    "/api/v2/admin/vault/spend-limits/summary",
-  );
-  return response.data;
-};
+export const getAdminVaultSpendLimitSummary =
+  async (): Promise<VaultSpendLimitSummaryDto> => {
+    const response = await v2Client.get<VaultSpendLimitSummaryDto>(
+      "/api/v2/admin/vault/spend-limits/summary",
+    );
+    return response.data;
+  };
 
 // ============================================================================
 // Admin Analytics API (보유율/수익/마케팅)

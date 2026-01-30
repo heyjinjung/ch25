@@ -34,10 +34,16 @@ export default function CrisisRadarPage() {
 
   const riskyUsers = status?.goldenRadar.riskUsers || [];
   const avgChurnScore = useMemo(() => {
+    if (typeof status?.goldenRadar.avgChurnScore === "number") {
+      return status.goldenRadar.avgChurnScore;
+    }
     if (!riskyUsers.length) return null;
     const sum = riskyUsers.reduce((acc, cur) => acc + cur.churnScore, 0);
     return sum / riskyUsers.length;
-  }, [riskyUsers]);
+  }, [riskyUsers, status]);
+  const radarAccuracy = status?.goldenRadar.radarAccuracy;
+  const interventionsToday = status?.goldenRadar.interventionsToday;
+  const interventionSuccessRate = status?.goldenRadar.interventionSuccessRate;
 
   return (
     <div className="p-6 space-y-8 bg-obsidian-bg min-h-screen text-white">
@@ -116,7 +122,10 @@ export default function CrisisRadarPage() {
                 : `${Math.round(avgChurnScore * 100)}%`}
             </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              레이더 탐지 정확도: 데이터 없음
+              레이더 탐지 정확도:{" "}
+              {typeof radarAccuracy === "number"
+                ? `${Math.round(radarAccuracy * 100)}%`
+                : "데이터 없음"}
             </p>
           </CardContent>
         </Card>
@@ -127,8 +136,17 @@ export default function CrisisRadarPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-indigo-400">-</div>
-            <p className="text-[10px] text-indigo-400/60 mt-1">데이터 없음</p>
+            <div className="text-3xl font-bold text-indigo-400">
+              {typeof interventionsToday === "number"
+                ? interventionsToday
+                : "-"}
+            </div>
+            <p className="text-[10px] text-indigo-400/60 mt-1">
+              성공률:{" "}
+              {typeof interventionSuccessRate === "number"
+                ? `${Math.round(interventionSuccessRate * 100)}%`
+                : "데이터 없음"}
+            </p>
           </CardContent>
         </Card>
       </div>

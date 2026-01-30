@@ -30,9 +30,14 @@ export const GoldenEventStream = ({
   const rateIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const connectWebSocket = () => {
-    // Get WebSocket URL from environment
-    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:8000";
-    const wsEndpoint = `${wsUrl}/api/admin/ws/golden/events`;
+    // Get WebSocket URL from environment (fallback: same-origin)
+    const rawEnvUrl = (import.meta.env.VITE_WS_URL || "").trim();
+    const wsBase = rawEnvUrl
+      ? rawEnvUrl.replace(/\/+$/, "")
+      : typeof window !== "undefined"
+        ? `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}`
+        : "ws://localhost:8000";
+    const wsEndpoint = `${wsBase}/api/v2/admin/ws/golden/events`;
 
     try {
       const ws = new WebSocket(wsEndpoint);

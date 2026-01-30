@@ -31,6 +31,10 @@ class OpsGoldenRadarDto(BaseModel):
     high_rollers: int = Field(default=0, alias="highRollers", serialization_alias="highRollers")
     churn_risks: int = Field(default=0, alias="churnRisks", serialization_alias="churnRisks")
     online_now: int = Field(default=0, alias="onlineNow", serialization_alias="onlineNow")
+    avg_churn_score: float | None = Field(default=None, alias="avgChurnScore", serialization_alias="avgChurnScore")
+    radar_accuracy: float | None = Field(default=None, alias="radarAccuracy", serialization_alias="radarAccuracy")
+    interventions_today: int | None = Field(default=None, alias="interventionsToday", serialization_alias="interventionsToday")
+    intervention_success_rate: float | None = Field(default=None, alias="interventionSuccessRate", serialization_alias="interventionSuccessRate")
     risk_users: list[OpsRiskUserDto] = Field(default=[], alias="riskUsers", serialization_alias="riskUsers")
 
     model_config = ConfigDict(populate_by_name=True)

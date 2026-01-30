@@ -13,6 +13,7 @@ from app.models.user import User
 from app.models.user_retention_state import UserRetentionState
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.v2.services import V2AdminAuditService
 from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 from app.v2.schemas.v2_admin_dashboard import DashboardMetricsResponse, MetricValue
@@ -50,56 +51,107 @@ def get_ops_dashboard_status(
     admin_id, admin_role = admin_info
     check_admin_permission(admin_role)
 
-    system_status = OpsSystemStatusDto(db="OK", redis="OK", worker="OK")
+    # System status checks
+    db_status = "OK"
+    try:
+        db.execute("SELECT 1")
+    except Exception:
+        db_status = "ERROR"
 
-    # high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
-    high_rollers_count = 0
+    redis_status = "DEGRADED"
+    try:
+        from app.core.config import get_settings
+        import redis
 
-    # risk_users_query = (
-    #     db.query(User, UserRetentionState)
-    #     .join(UserRetentionState, User.id == UserRetentionState.user_id)
-    #     .filter(UserRetentionState.churn_probability_score >= 0.7)
-    #     .limit(10)
-    #     .all()
-    # )
-    risk_users_query = []
+        settings = get_settings()
+        if settings.redis_url:
+            redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+            redis_client.ping()
+            redis_status = "OK"
+        else:
+            redis_status = "DEGRADED"
+    except Exception:
+        redis_status = "ERROR"
+
+    worker_status = "OK" if redis_status == "OK" else "DEGRADED"
+    system_status = OpsSystemStatusDto(db=db_status, redis=redis_status, worker=worker_status)
+
+    # High rollers: total charge >= 1,000,000
+    high_rollers_count = db.query(User).filter(User.total_charge_amount >= 1000000).count()
+
+    # Risk users by churn score
+    risk_users_query = (
+        db.query(User, UserRetentionState)
+        .join(UserRetentionState, User.id == UserRetentionState.user_id)
+        .filter(UserRetentionState.churn_probability_score >= 0.7)
+        .order_by(UserRetentionState.churn_probability_score.desc())
+        .limit(10)
+        .all()
+    )
 
     risk_users = []
+    churn_scores: list[float] = []
     for u, ret in risk_users_query:
+        churn_scores.append(float(ret.churn_probability_score))
         risk_users.append(
             OpsRiskUserDto(
                 user_id=u.id,
-                nickname=u.nickname,
+                nickname=u.nickname or "",
                 risk_level="HIGH" if ret.churn_probability_score > 0.85 else "MEDIUM",
                 risk_reason="High Churn Score",
                 churn_score=float(ret.churn_probability_score),
             )
         )
 
-    online_now = 42
+    avg_churn_score = (
+        sum(churn_scores) / len(churn_scores)
+        if churn_scores
+        else None
+    )
+
+    # Online now: last login within 5 minutes (UTC naive)
+    utc_now = datetime.utcnow()
+    online_since = utc_now - timedelta(minutes=5)
+    online_now = db.query(User).filter(User.last_login_at >= online_since).count()
+
+    # Business day 기준 개입 건수
+    from app.utils.timezone import business_day_start, KST
+
+    business_start_utc = business_day_start().replace(tzinfo=None)
+    interventions_today = db.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.created_at >= business_start_utc
+    ).scalar() or 0
+
+    success_count = db.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.created_at >= business_start_utc,
+        V2GoldenInterventionLog.status.in_(["APPROVED", "SENT"]),
+    ).scalar() or 0
+
+    intervention_success_rate = (
+        (success_count / interventions_today) if interventions_today > 0 else None
+    )
 
     golden_radar = OpsGoldenRadarDto(
         high_rollers=high_rollers_count,
         churn_risks=len(risk_users_query),
         online_now=online_now,
+        avg_churn_score=avg_churn_score,
+        radar_accuracy=None,
+        interventions_today=interventions_today,
+        intervention_success_rate=intervention_success_rate,
         risk_users=risk_users,
     )
 
-    today_revenue = 0
+    # Today revenue (business day KST date)
+    business_date_kst = business_day_start().astimezone(KST).date()
+    today_revenue = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
+        ExternalRankingDailyDepositDelta.kst_date == business_date_kst,
+        ExternalRankingDailyDepositDelta.deposit_delta > 0,
+    ).scalar() or 0
 
-    try:
-        from zoneinfo import ZoneInfo
+    active_users_24h = db.query(User).filter(User.last_login_at >= (utc_now - timedelta(hours=24))).count()
 
-        kst_now = datetime.now(ZoneInfo("Asia/Seoul"))
-        kst_today = kst_now.replace(hour=0, minute=0, second=0, microsecond=0)
-        utc_start_of_day = kst_today.astimezone(ZoneInfo("UTC")).replace(tzinfo=None)
-    except Exception:
-        utc_start_of_day = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-
-    # dau_count = db.query(User).filter(User.last_login_at >= utc_start_of_day).count()
-    dau_count = 0
-
-    metrics = OpsMetricsDto(today_revenue=today_revenue, active_users_24h=dau_count)
+    metrics = OpsMetricsDto(today_revenue=int(today_revenue), active_users_24h=active_users_24h)
 
     return OpsDashboardResponse(system=system_status, golden_radar=golden_radar, metrics=metrics)
 
@@ -136,15 +188,53 @@ def get_dashboard_metrics(
 ):
     admin_id, admin_role = admin_info
     now = datetime.utcnow()
+    start = now - timedelta(hours=range_hours)
+    prev_start = start - timedelta(hours=range_hours)
+    prev_end = start
+
+    def calc_diff(current: int | float | None, previous: int | float | None) -> float | None:
+        if current is None or previous is None or previous == 0:
+            return None
+        return (current - previous) / previous
+
+    active_users = db.query(func.count(User.id)).filter(User.last_login_at >= start).scalar() or 0
+    prev_active_users = db.query(func.count(User.id)).filter(
+        User.last_login_at >= prev_start,
+        User.last_login_at < prev_end,
+    ).scalar() or 0
+
+    game_participation = db.query(func.count(UserGameWalletLedger.id)).filter(
+        UserGameWalletLedger.created_at >= start
+    ).scalar() or 0
+    prev_game_participation = db.query(func.count(UserGameWalletLedger.id)).filter(
+        UserGameWalletLedger.created_at >= prev_start,
+        UserGameWalletLedger.created_at < prev_end,
+    ).scalar() or 0
+
+    unique_players = db.query(func.count(func.distinct(UserGameWalletLedger.user_id))).filter(
+        UserGameWalletLedger.created_at >= start
+    ).scalar() or 0
+    prev_unique_players = db.query(func.count(func.distinct(UserGameWalletLedger.user_id))).filter(
+        UserGameWalletLedger.created_at >= prev_start,
+        UserGameWalletLedger.created_at < prev_end,
+    ).scalar() or 0
+
+    ticket_usage = db.query(func.coalesce(func.sum(func.abs(UserGameWalletLedger.delta)), 0)).filter(
+        UserGameWalletLedger.created_at >= start
+    ).scalar() or 0
+    prev_ticket_usage = db.query(func.coalesce(func.sum(func.abs(UserGameWalletLedger.delta)), 0)).filter(
+        UserGameWalletLedger.created_at >= prev_start,
+        UserGameWalletLedger.created_at < prev_end,
+    ).scalar() or 0
 
     return DashboardMetricsResponse(
         range_hours=range_hours,
         generated_at=now,
-        active_users=MetricValue(value=150, diff_percent=5.2),
-        game_participation=MetricValue(value=1200, diff_percent=12.5),
-        unique_players=MetricValue(value=85, diff_percent=-2.1),
-        ticket_usage=MetricValue(value=5000, diff_percent=0.0),
-        avg_session_time_seconds=MetricValue(value=420, diff_percent=1.5),
+        active_users=MetricValue(value=active_users, diff_percent=calc_diff(active_users, prev_active_users)),
+        game_participation=MetricValue(value=game_participation, diff_percent=calc_diff(game_participation, prev_game_participation)),
+        unique_players=MetricValue(value=unique_players, diff_percent=calc_diff(unique_players, prev_unique_players)),
+        ticket_usage=MetricValue(value=ticket_usage, diff_percent=calc_diff(ticket_usage, prev_ticket_usage)),
+        avg_session_time_seconds=MetricValue(value=None, diff_percent=None),
     )
 
 

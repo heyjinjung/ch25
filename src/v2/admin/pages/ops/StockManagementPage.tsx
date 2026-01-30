@@ -204,7 +204,11 @@ export default function StockManagementPage() {
             value="alerts"
             className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
-            재고 알림 ({typeof stockAlerts?.total_alerts === "number" ? stockAlerts.total_alerts : 0})
+            재고 알림 (
+            {typeof stockAlerts?.total_alerts === "number"
+              ? stockAlerts.total_alerts
+              : 0}
+            )
           </TabsTrigger>
           <TabsTrigger
             value="gifticon"
