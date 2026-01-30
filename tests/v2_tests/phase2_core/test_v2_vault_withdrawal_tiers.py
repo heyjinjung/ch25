@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from unittest.mock import patch
 
 from app.db.base_class import Base
-from app.models.user import User
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.dice import DiceConfig, DiceLog

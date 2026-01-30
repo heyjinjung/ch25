@@ -2,8 +2,9 @@
 
 **문서 타입**: 서버 배포 가이드 (Server Setup)
 **작성일**: 2026-01-29
+**최종 검증**: 2026-01-30 17:51 KST
 **대상**: DevOps, 인프라 담당자
-**스택**: Vultr, Docker, PostgreSQL, Redis, FastAPI
+**스택**: Vultr, Docker, MySQL, Redis, FastAPI
 
 ---
 
@@ -99,7 +100,8 @@ docker compose up -d --build
 ```
 
 ### 4.2 어드민 계정 보호 로직 (Admin Security)
-배포 직후 기본 어드민 계정의 비밀번호를 환경 변수로 강제 변경하거나, `scripts/reset_admin_password.py`를 통해 즉시 갱신해야 합니다.
+[x]배포 직후 기본 어드민 계정의 비밀번호를 사용자 요청사항으로 변경함
+V2User에 password_hash 없음
 
 ### 4.3 유저 데이터 무결성 체크 (User Integrity)
 V1 유저가 V2로 처음 진입할 때 `v2_user` 테이블에 정상적으로 복제(Lazy-migration)되도록 Redis 캐시가 비워져 있는지 확인합니다.
@@ -128,10 +130,71 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 
 | 컴포넌트 | 경로 | 확인 방법 |
 | :--- | :--- | :--- |
-| **Backend API** | `https://cc-jm.com/health` | `{"status": "ok"}` 확인 |
+| **Backend API** | `https://cc-jm.com/health` | `healthy` 확인 |
+| **V2 API** | `https://cc-jm.com/api/v2/health` | `{"status": "ok"}` 확인 |
 | **Frontend** | `https://cc-jm.com/` | 메인 페이지 로딩 및 텔레그램 로그인 확인 |
 | **DB Health** | `docker ps` | `xmas-db` 컨테이너 상태 Healthy 확인 |
 | **Redis** | `redis-cli ping` | `PONG` 응답 확인 |
+| **Telegram Bot** | `docker compose logs telegram_bot` | `Application started` 확인 |
+
+---
+
+## 📋 7. 운영 서버 검증 결과 (2026-01-30)
+
+### 7.1 컨테이너 상태
+```bash
+ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147 "cd /opt/ch25 && docker compose ps"
+```
+
+| 컨테이너 | 상태 | 비고 |
+|----------|------|------|
+| xmas-backend | ✅ healthy | API 서버 정상 |
+| xmas-frontend | ✅ healthy | nginx 정상 |
+| xmas-db | ✅ healthy | MySQL 정상 |
+| xmas-redis | ✅ healthy | Redis PONG 응답 |
+| xmas-nginx | ✅ Up | 프록시 정상 |
+| xmas-telegram-bot | ✅ Up | Webhook 설정 완료 |
+| xmas-celery-worker | ⚠️ unhealthy | 헬스체크 재설정 필요 |
+| xmas-celery-beat | ⚠️ unhealthy | 헬스체크 재설정 필요 |
+
+### 7.2 API 헬스체크
+```bash
+# API Health
+curl https://cc-jm.com/health
+# 결과: healthy ✅
+
+# V2 API Health
+curl https://cc-jm.com/api/v2/health
+# 결과: {"status":"ok"} ✅
+
+# DEV Login 차단 확인
+curl -X POST https://cc-jm.com/api/v2/dev/login
+# 결과: 404 Not Found ✅ (엔드포인트 비활성화)
+```
+
+### 7.3 Telegram Bot 검증
+```bash
+docker compose logs telegram_bot --tail=10
+# ✅ Webhook URL: https://cc-jm.com/telegram/webhook
+# ✅ getMe: HTTP/1.1 200 OK
+# ✅ setWebhook: HTTP/1.1 200 OK
+# ✅ Application started
+```
+
+### 7.4 Redis / Circuit Breaker
+```bash
+docker exec xmas-redis redis-cli ping
+# 결과: PONG ✅
+
+docker exec xmas-redis redis-cli keys '*circuit*'
+# 결과: (empty) - 아직 사용 전 상태 (정상)
+```
+
+### 7.5 발견된 이슈
+| 이슈 | 심각도 | 상태 | 설명 |
+|------|--------|------|------|
+| V1 Auth AttributeError | ⚠️ Medium | 미해결 | `auth.py:64` - V2User에 password_hash 속성 없음 |
+| Celery Unhealthy | ⚠️ Low | 확인중 | worker/beat 헬스체크 실패 (기능은 동작 가능) |
 
 > [!WARNING]
 > 대규모 배포 전 반드시 `scripts/validate_v2_readiness.py`를 실행하여 모든 V2 모듈이 정상 로딩되었는지 확인하십시오.

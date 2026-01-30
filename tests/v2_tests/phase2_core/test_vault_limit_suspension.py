@@ -7,10 +7,10 @@ from fastapi import HTTPException
 
 # Models
 from app.db.base_class import Base
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.user_activity import UserActivity
-from app.services.vault_service import VaultService
+from app.v2.services.vault_service import V2VaultService as VaultService
 
 from unittest.mock import patch, MagicMock
 
@@ -28,14 +28,13 @@ def db_session():
 def setup_user(db, user_id=1, total_charge=0, created_at=None):
     if created_at is None:
         created_at = datetime.utcnow()
-    user = User(
+    user = V2User(
         id=user_id,
-        external_id=f"ext_{user_id}",
+        cc_id=f"ext_{user_id}",
         nickname=f"user_{user_id}",
         total_charge_amount=total_charge,
         created_at=created_at,
         vault_locked_balance=0,
-        vault_available_balance=5000 # Set a legacy field to confirm it's ignored
     )
     db.add(user)
     db.commit()
@@ -145,6 +144,7 @@ def test_legacy_field_lock_verification(db_session):
         # 3. Daily spent (10k)
         user.vault_spent_today = 10_000
         user.vault_spent_reset_date = now_kst.strftime("%Y-%m-%d")
+        db_session.add(user)
         db_session.commit()
 
         # Act: Try to withdraw 12,000.

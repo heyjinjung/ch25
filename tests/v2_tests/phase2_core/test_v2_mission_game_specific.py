@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
 from app.models.mission import Mission, MissionCategory, MissionRewardType, UserMissionProgress
-from app.models.user import User
+from app.v2.models.user import V2User
 from app.v2.services.mission_service import V2MissionService
 
 
@@ -35,7 +35,7 @@ def db_session():
 
 def _seed_user(db, user_id=1):
     # V2 Native: ID는 통합되었으며 cc_id가 외부 식별자의 기준입니다.
-    user = User(id=user_id, external_id=f"cc_{user_id}", nickname=f"user_{user_id}")
+    user = V2User(id=user_id, cc_id=f"cc_{user_id}", nickname=f"user_{user_id}")
     db.add(user)
     db.commit()
     return user

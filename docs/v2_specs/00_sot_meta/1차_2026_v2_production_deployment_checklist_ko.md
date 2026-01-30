@@ -2,6 +2,7 @@
 
 **문서 타입**: 배포 가이드 (Deployment Guide)
 **작성일**: 2026-01-29
+**최종 검증**: 2026-01-30 17:51 KST
 **대상**: DevOps, Backend 팀
 **프로젝트**: Golden V2
 
@@ -83,12 +84,34 @@ SENTRY_DSN=<Sentry DSN>
 TIMEZONE=Asia/Seoul
 ```
 
-### 2.2 보안 체크
-- [x] JWT_SECRET이 강력한가? (최소 32자 이상) ✅ 32자 확인됨
+### 2.2 보안 체크 (2026-01-30 운영서버 검증)
+- [x] JWT_SECRET이 강력한가? (최소 32자 이상) ⚠️ **현재 15자 (2026_secret_key) - 강화 필요**
 - [x] DEV_LOGIN_ENABLED=false 확인 ✅
 - [x] TEST_MODE=false 확인 ✅
 - [x] DATABASE_URL에 실제 프로덕션 DB 연결 정보 ✅ MySQL xmasuser@db:3306/xmas_event
 - [x] CORS_ORIGINS에 허용된 도메인만 포함 ✅ (cc-jm.com, www.cc-jm.com, 149.28.135.147)
+
+### 2.3 환경변수 검증 결과 (2026-01-30)
+| 환경변수 | 문서 가이드 | 운영 서버 | 상태 |
+|----------|-------------|-----------|------|
+| `ENV` | production | production | ✅ |
+| `DEV_LOGIN_ENABLED` | false | false | ✅ |
+| `TEST_MODE` | false | false | ✅ |
+| `DOMAIN` | cc-jm.com | cc-jm.com | ✅ |
+| `DATABASE_URL` | mysql+pymysql://... | ✅ 일치 | ✅ |
+| `TIMEZONE` | Asia/Seoul | Asia/Seoul | ✅ |
+| `REDIS_URL` | redis://redis:6379/0 | ✅ 일치 | ✅ |
+| `CIRCUIT_LIMIT_VAULT` | 100000 | 100000 | ✅ |
+| `CIRCUIT_LIMIT_TICKET` | 30 | 30 | ✅ |
+| `CORS_ORIGINS` | [...] | ✅ 일치 | ✅ |
+| `TELEGRAM_BOT_USERNAME` | ccjm | ccjm | ✅ |
+| `JWT_SECRET` | 32자+ | 15자 | ⚠️ 강화필요 |
+| `JWT_ALGORITHM` | HS256 | 미설정 | ⚠️ 기본값사용 |
+| `V2_ACCESS_TOKEN_EXPIRE_MINUTES` | 15 | 미설정 | ⚠️ 기본값사용 |
+| `LOG_LEVEL` | INFO | 미설정 | ⚠️ |
+| `SENTRY_DSN` | 설정필요 | 미설정 | ⚠️ |
+
+> **⚠️ 조치 필요**: JWT_SECRET 강화 (32자 이상), V2 토큰 만료 시간 명시적 설정 권장
 
 ---
 
@@ -259,27 +282,81 @@ SQLALCHEMY_POOL_RECYCLE=3600
 
 ## 9. 배포 후 확인 (Post-Deployment Verification)
 
-### 9.1 Health Check
+### 9.1 Health Check ✅ (2026-01-30 17:51 KST 검증)
 ```bash
 # API Health Check
 curl https://cc-jm.com/health
+# 결과: healthy ✅
+
+# V2 API Health Check
+curl https://cc-jm.com/api/v2/health
+# 결과: {"status":"ok"} ✅
 
 # DB 연결 확인
 curl https://cc-jm.com/api/v2/health/db
 ```
 
-### 9.2 핵심 API 테스트
-- [x] `POST /api/v2/telegram/auth` - Telegram 로그인
-- [x] `POST /api/v2/auth/refresh` - Token 갱신
-- [x] `GET /api/v2/user/me` - 유저 정보 조회
-- [x] `POST /api/v2/dev/login` - DEV 로그인 (비활성화 확인 - 403)
+### 9.2 컨테이너 상태 (2026-01-30 17:45 KST 검증)
+| 컨테이너 | 상태 | 비고 |
+|----------|------|------|
+| xmas-backend | ✅ healthy | API 서버 정상 |
+| xmas-frontend | ✅ healthy | nginx 정상 |
+| xmas-db | ✅ healthy | MySQL 정상 |
+| xmas-redis | ✅ healthy | Redis PONG 응답 |
+| xmas-nginx | ✅ Up | 프록시 정상 |
+| xmas-telegram-bot | ✅ Up | Webhook 설정 완료 |
+| xmas-celery-worker | ⚠️ unhealthy | 헬스체크 재설정 필요 |
+| xmas-celery-beat | ⚠️ unhealthy | 헬스체크 재설정 필요 |
 
-### 9.3 Admin API 테스트
-- [x] `GET /api/v2/admin/users` - 유저 목록 (ADMIN 권한)
-- [x] `GET /api/v2/admin/daily-nudge/targets` - 넛지 대상자 조회
-- [x] `GET /api/v2/admin/roi/top-campaigns` - ROI 상위 캠페인
+### 9.3 핵심 API 테스트 (2026-01-30 검증)
+- [x] `GET /health` - API Health ✅ "healthy"
+- [x] `GET /api/v2/health` - V2 Health ✅ `{"status":"ok"}`
+- [x] `POST /api/v2/dev/login` - DEV 로그인 ✅ **404 Not Found** (엔드포인트 비활성화 확인)
+- [ ] `POST /api/v2/telegram/auth` - Telegram 로그인 (사용자 테스트 필요)
+- [ ] `POST /api/v2/auth/refresh` - Token 갱신 (사용자 테스트 필요)
+- [ ] `GET /api/v2/user/me` - 유저 정보 조회 (사용자 테스트 필요)
 
-### 9.4 모니터링 확인
+### 9.4 Telegram Bot 검증 ✅ (2026-01-30 검증)
+```
+✅ Webhook URL: https://cc-jm.com/telegram/webhook
+✅ getMe: HTTP/1.1 200 OK
+✅ deleteWebhook: HTTP/1.1 200 OK
+✅ setWebhook: HTTP/1.1 200 OK
+✅ Application started
+```
+
+### 9.5 Redis / Circuit Breaker 검증 ✅ (2026-01-30 검증)
+```bash
+# Redis 연결 확인
+docker exec xmas-redis redis-cli ping
+# 결과: PONG ✅
+
+# Circuit Breaker 키 (사용 전 상태)
+docker exec xmas-redis redis-cli keys '*circuit*'
+# 결과: (empty) - 아직 사용 이력 없음 (정상)
+```
+
+### 9.6 발견된 이슈 🚨 (2026-01-30)
+| 이슈 | 심각도 | 상태 | 설명 |
+|------|--------|------|------|
+| V1 Auth AttributeError | ⚠️ Medium | 미해결 | `auth.py:64` - V2User에 password_hash 속성 없음 |
+| Celery Unhealthy | ⚠️ Low | 확인중 | worker/beat 헬스체크 실패 (기능은 동작 가능) |
+
+**V1 Auth 오류 상세**:
+```
+File "/app/app/api/routes/auth.py", line 64, in issue_token
+    if user.password_hash:
+       ^^^^^^^^^^^^^^^^^^
+AttributeError: 'V2User' object has no attribute 'password_hash'
+```
+→ V1 Auth 라우터가 V2User를 받았을 때 발생. V1→V2 마이그레이션 완료 후 해결 예정.
+
+### 9.7 Admin API 테스트
+- [ ] `GET /api/v2/admin/users` - 유저 목록 (ADMIN 권한)
+- [ ] `GET /api/v2/admin/daily-nudge/targets` - 넛지 대상자 조회
+- [ ] `GET /api/v2/admin/roi/top-campaigns` - ROI 상위 캠페인
+
+### 9.8 모니터링 확인
 - [ ] Sentry에 에러 없는지 확인
 - [ ] Grafana 대시보드에서 메트릭 확인
   - API 응답 시간 < 200ms (p95)

@@ -54,5 +54,6 @@ class V2User(Base):
     # V2-only: status and role for direct V2 auth
     status = Column(Enum(V2UserStatus), nullable=False, default=V2UserStatus.ACTIVE)
     role = Column(Enum(V2UserRole), nullable=False, default=V2UserRole.USER)
+    password_hash = Column(String(128), nullable=True)
     created_at = Column(DateTime, nullable=False, default=_kst_now)
     updated_at = Column(DateTime, nullable=False, default=_kst_now, onupdate=_kst_now)

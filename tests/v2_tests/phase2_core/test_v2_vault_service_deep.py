@@ -6,7 +6,6 @@ from sqlalchemy.pool import StaticPool
 from fastapi import HTTPException
 
 from app.db.base_class import Base
-from app.models.user import User
 from app.v2.models.user import V2User
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence, EvidenceStatus

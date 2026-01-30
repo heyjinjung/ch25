@@ -3,6 +3,24 @@
 ## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
 
 ---
+### [2026-01-30 운영 서버 검증 결과]
+- **검증 시간**: 2026-01-30 17:45~17:51 KST
+- **검증 방법**: SSH `root@149.28.135.147` 접속 후 docker/curl 명령 실행
+
+| 항목 | 상태 | 검증 결과 |
+|------|------|-----------|
+| API Health (`/health`) | ✅ OK | "healthy" |
+| V2 API Health (`/api/v2/health`) | ✅ OK | `{"status":"ok"}` |
+| Telegram Bot | ✅ OK | Webhook 설정 완료, Application started |
+| Redis | ✅ OK | PONG 응답 |
+| DEV Login | ✅ 차단됨 | 404 Not Found (엔드포인트 없음) |
+| Celery Worker/Beat | ⚠️ Unhealthy | 헬스체크 재설정 필요 |
+| V1 Auth | ❌ 오류 | `V2User`에 `password_hash` 속성 없음 |
+| Circuit Breaker | ⏳ 대기 | 아직 사용 전 (키 없음) |
+
+**미해결 이슈**:
+- `auth.py:64`: V1 Auth 라우터가 V2User 받았을 때 AttributeError 발생 → V1→V2 마이그레이션 완료 후 해결 예정
+
 ### [2026-01-30 배포 트러블슈팅 및 저장소 이관]
 - **저장소 이관 완료**: `heyjinjung/ch25` → `jm956-cc/202601_app` (전체 브랜치/태그/히스토리 이관)
 - **배포 이슈 해결** (deploy.yml, docker-compose.yml, migration 수정):
@@ -158,4 +176,5 @@
 - v2.3 (2026-01-20, GitHub Copilot): Troubleshooting 섹션 및 V2 Admin 라우터 모듈(코드 맵) 링크 추가
 - v2.4 (2026-01-22, GitHub Copilot): CSV 임포트 가이드 및 신규 어드민 라우터(CSV, CC Deposit, Ops Plan) 링크 추가
 - v2.5 (2026-01-27, GitHub Copilot): V2 핵심 일관성 체크아웃(Learned SoT) 최신화 및 인덱스 구조 재편성
+- v2.7 (2026-01-30, GitHub Copilot): 운영 서버 검증 결과 추가 (텔레그램/인증/Redis/Circuit Breaker)
 - v2.6 (2026-01-30, GitHub Copilot): 배포 트러블슈팅 이슈(이슈 5~8) 추가, 저장소 이관(jm956-cc/202601_app) 기록
