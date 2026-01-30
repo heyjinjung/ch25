@@ -183,3 +183,37 @@ docker exec xmas-backend alembic upgrade head
 검증 완료일: 2026-01-30
 
 다음 리뷰: Phase 1 배포 후
+
+hase 1, 2는 성공. Phase 3에서 feature_schedule 테이블의 created_at 필수 컬럼 문제. 수정합니다.
+
+읽기 20260130_2300_seed_system_config.py, 40 줄에서 60 줄까지
+
+Edited
+20260130_2300_seed_system_config.py+2-2
+scp -i C:\Users\JAVIS\.ssh\id_ed25519_vultr c:\Users\JAVIS\ch\ch25\alembic\versions\20260130_2300_seed_system_config.py root@149.28.135.147:/opt/ch25/alembic/versions/ ; ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker cp /opt/ch25/alembic/versions/20260130_2300_seed_system_config.py xmas-backend:/app/alembic/versions/ && docker exec xmas-backend alembic upgrade head"
+app_ui_config도 created_at 필요. 전체 수정:
+
+읽기 20260130_2300_seed_system_config.py, 58 줄에서 90 줄까지
+
+Edited
+20260130_2300_seed_system_config.py+4-4
+scp -i C:\Users\JAVIS\.ssh\id_ed25519_vultr c:\Users\JAVIS\ch\ch25\alembic\versions\20260130_2300_seed_system_config.py root@149.28.135.147:/opt/ch25/alembic/versions/
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker cp /opt/ch25/alembic/versions/20260130_2300_seed_system_config.py xmas-backend:/app/alembic/versions/ && docker exec xmas-backend alembic upgrade head"
+모든 마이그레이션 완료! 백엔드 재시작하고 검증합니다.
+
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "cd /opt/ch25 && docker compose restart backend && sleep 5 && docker exec xmas-backend alembic current"
+프로덕션에서 시드 데이터가 제대로 들어갔는지 확인합니다.
+
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker exec xmas-db mysql -u root -p2026 xmas_event -e 'SELECT COUNT(*) as cnt, \"v2_dice_config\" as tbl FROM v2_dice_config UNION ALL SELECT COUNT(*), \"v2_lottery_config\" FROM v2_lottery_config UNION ALL SELECT COUNT(*), \"v2_lottery_prize\" FROM v2_lottery_prize UNION ALL SELECT COUNT(*), \"mission\" FROM mission UNION ALL SELECT COUNT(*), \"admin_user_profile\" FROM admin_user_profile UNION ALL SELECT COUNT(*), \"v2_roulette_config\" FROM v2_roulette_config UNION ALL SELECT COUNT(*), \"v2_roulette_segment\" FROM v2_roulette_segment UNION ALL SELECT COUNT(*), \"v2_segment_rule\" FROM v2_segment_rule UNION ALL SELECT COUNT(*), \"segment_rule\" FROM segment_rule UNION ALL SELECT COUNT(*), \"feature_config\" FROM feature_config;'"
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker exec xmas-db mysql -u root -p2026 xmas_event -e 'SELECT COUNT(*) FROM v2_dice_config; SELECT COUNT(*) FROM v2_lottery_config; SELECT COUNT(*) FROM v2_lottery_prize; SELECT COUNT(*) FROM mission; SELECT COUNT(*) FROM admin_user_profile; SELECT COUNT(*) FROM v2_roulette_config; SELECT COUNT(*) FROM v2_segment_rule; SELECT COUNT(*) FROM feature_config;'"
+마이그레이션 완료! 프로덕션 시드 데이터 현황:
+
+테이블	개수	상태
+v2_dice_config	1	✅
+v2_lottery_config	1	✅
+v2_lottery_prize	7	✅
+mission	9	✅
+admin_user_profile	3	✅
+v2_roulette_config	7	✅ (4기존+3추가)
+v2_segment_rule	5	✅
+feature_config	5	✅ (3기존+2추가)

@@ -142,8 +142,12 @@ def upgrade() -> None:
     print("[SEED] mission: missions inserted")
 
     # ─────────────────────────────────────────────────────────────────
-    # 5. admin_user_profile (3 rows)
+    # 5. admin_user_profile (3 rows) - FK 체크 비활성화 필요
+    # admin_user_profile.user_id -> user.id FK 제약조건이 있으나,
+    # 프로덕션에서 user 테이블과 v2_user 테이블 불일치 문제로 FK 체크 비활성화
     # ─────────────────────────────────────────────────────────────────
+    conn.execute(sa.text("SET FOREIGN_KEY_CHECKS = 0"))
+    
     admin_profiles = [
         # (user_id, external_id, tags)
         (2, "admin", '["ROLE_ADMIN"]'),
@@ -157,7 +161,9 @@ def upgrade() -> None:
                 INSERT INTO admin_user_profile (user_id, external_id, tags, created_at, updated_at)
                 VALUES (:user_id, :external_id, :tags, :now, :now)
             """), {"user_id": user_id, "external_id": external_id, "tags": tags, "now": now})
-    print("[SEED] admin_user_profile: profiles inserted")
+    
+    conn.execute(sa.text("SET FOREIGN_KEY_CHECKS = 1"))
+    print("[SEED] admin_user_profile: profiles inserted (FK check disabled)")
 
     print("[SEED] Phase 1 Complete: v2_dice_config, v2_lottery_config, v2_lottery_prize, mission, admin_user_profile")
 
