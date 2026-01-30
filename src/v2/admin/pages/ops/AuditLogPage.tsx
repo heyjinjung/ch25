@@ -91,6 +91,10 @@ export default function AuditLogPage() {
     offset,
   });
 
+  const totalLogs = auditData?.total ?? 0;
+  const rangeStart = totalLogs === 0 ? 0 : offset + 1;
+  const rangeEnd = totalLogs === 0 ? 0 : Math.min(offset + limit, totalLogs);
+
   const toggleExpand = (logId: number) => {
     setExpandedLogs((prev) => {
       const next = new Set(prev);
@@ -207,8 +211,7 @@ export default function AuditLogPage() {
         <CardHeader>
           <CardTitle className="text-white">로그 목록</CardTitle>
           <CardDescription className="text-zinc-400">
-            총 {auditData?.total ?? 0}건 중 {offset + 1} ~{" "}
-            {Math.min(offset + limit, auditData?.total ?? 0)}건 표시
+            총 {totalLogs}건 중 {rangeStart} ~ {rangeEnd}건 표시
           </CardDescription>
         </CardHeader>
         <CardContent>

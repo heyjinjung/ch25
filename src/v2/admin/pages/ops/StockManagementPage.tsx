@@ -73,6 +73,19 @@ export default function StockManagementPage() {
 
   const adjustStockMutation = useAdminAdjustStock();
 
+  const formatCount = (value?: number) =>
+    typeof value === "number" ? `${value}건` : "-";
+  const alertTotalText =
+    typeof stockAlerts?.total_alerts === "number"
+      ? `${stockAlerts.total_alerts}건`
+      : "-";
+  const alertCriticalText =
+    typeof stockAlerts?.critical_count === "number"
+      ? `${stockAlerts.critical_count}건`
+      : "-";
+  const pendingText = formatCount(gifticonDeliveries?.pending);
+  const deliveredText = formatCount(gifticonDeliveries?.delivered);
+
   const handleAdjustStock = async () => {
     const userId = Number(adjustUserId);
     const delta = Number(adjustDelta);
@@ -133,7 +146,7 @@ export default function StockManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-400">
-              {stockAlerts?.total_alerts ?? 0}건
+              {alertTotalText}
             </div>
             <p className="text-xs text-zinc-500 mt-1">
               임계값 {alertThreshold} 이하
@@ -150,7 +163,7 @@ export default function StockManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-rose-400">
-              {stockAlerts?.critical_count ?? 0}건
+              {alertCriticalText}
             </div>
             <p className="text-xs text-zinc-500 mt-1">임계값 50% 이하</p>
           </CardContent>
@@ -165,7 +178,7 @@ export default function StockManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-400">
-              {gifticonDeliveries?.pending ?? 0}건
+              {pendingText}
             </div>
           </CardContent>
         </Card>
@@ -179,7 +192,7 @@ export default function StockManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-400">
-              {gifticonDeliveries?.delivered ?? 0}건
+              {deliveredText}
             </div>
           </CardContent>
         </Card>
@@ -191,7 +204,7 @@ export default function StockManagementPage() {
             value="alerts"
             className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
-            재고 알림 ({stockAlerts?.total_alerts ?? 0})
+            재고 알림 ({typeof stockAlerts?.total_alerts === "number" ? stockAlerts.total_alerts : 0})
           </TabsTrigger>
           <TabsTrigger
             value="gifticon"

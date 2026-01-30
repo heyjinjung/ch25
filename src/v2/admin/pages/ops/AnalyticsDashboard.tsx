@@ -136,7 +136,7 @@ export default function AnalyticsDashboard() {
             <CardTitle className="text-sm font-medium text-zinc-400">
               순수익
             </CardTitle>
-            (netIncome ?? 0) >= 0 ? (
+            {(netIncome ?? 0) >= 0 ? (
               <TrendingUp className="h-4 w-4 text-emerald-500" />
             ) : (
               <TrendingDown className="h-4 w-4 text-rose-500" />
