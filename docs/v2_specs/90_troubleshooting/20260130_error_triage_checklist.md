@@ -9,7 +9,32 @@
 | 10 | FK 마이그레이션 실패 (1091) | 배포 | 🔴 높음 | ✅ 수정완료 |
 | 11 | npm build 실패 (TS2307) | 배포 | 🔴 높음 | ✅ 수정완료 |
 | 12 | FK IntegrityError (1452) | 배포 | 🔴 높음 | ✅ 옵션A 적용 |
-| ? | 주사위/복권 설정 로드 실패 | 어드민 | 🟡 중 | ❓ 미조사 |
+| 13 | v2_dice_config 컬럼 누락 (1054) | 전체 | 🔴 높음 | ✅ 마이그레이션 작성 |
+| 14 | v2_lottery_config 컬럼 누락 | 전체 | 🔴 높음 | ✅ 마이그레이션 작성 |
+
+---
+
+## Issue 13 & 14: v2_dice_config / v2_lottery_config 컬럼 누락 (OperationalError 1054)
+
+### 에러
+```
+OperationalError: (1054, "Unknown column 'v2_dice_config.win_probability' in 'field list'")
+```
+
+### 원인
+- `20260119_1500_add_v2_game_tables` 마이그레이션에서 `v2_dice_config` 생성 시 확률/골든아워 컬럼 누락
+- `v2_lottery_config`의 `puzzle_piece_probability` 컬럼도 누락
+- 모델(코드)과 DB 스키마 불일치
+
+### 누락 컬럼 목록
+| 테이블 | 누락 컬럼 |
+|--------|-----------|
+| v2_dice_config | `win_probability`, `draw_probability`, `lose_probability`, `daily_gain_cap`, `enable_golden_hour`, `golden_hour_multiplier` |
+| v2_lottery_config | `puzzle_piece_probability` |
+
+### 해결
+- 마이그레이션 파일 생성: `alembic/versions/20260130_2000_add_missing_v2_game_columns.py`
+- `_safe_add_column()` 헬퍼로 IF NOT EXISTS 방식 적용
 
 ---
 

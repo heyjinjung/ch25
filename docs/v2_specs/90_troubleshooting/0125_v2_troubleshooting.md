@@ -580,6 +580,7 @@ http://localhost:3000/admin/inventory/tickets
 Inventory Log List
 이것도 초기화 해줘 
 
+✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 ---------------------------------------
 
 연속스트릭모달
@@ -589,39 +590,186 @@ Inventory Log List
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
  docker compose build --no-cache; docker compose up -d
+
+
 -----------------------------------
 
+## 에러대응
+1. C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_error_triage_checklist.md
+위의 에러 트리아지 체크리스트에 따라서 작업을 진행한다.
 
+배포 트래블슈팅문서 
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\0000_2026_v2_deployment_troubleshooting_guide_ko.md
 
-
-
-기술기준문서 :
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned  모든문서
+기술 기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned 내 도메인별 폴더/문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
-docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_final_deployment_master_checklist_ko.md
-docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/v2_production_deployment_checklist_ko.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_INDEX.md
 
-트러블슈팅문서 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\1차_2026_v2_deployment_troubleshooting_guide_ko.md
-
-기능 생성 후 문서 업로드해줘 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 폴더 중 
-관련있는 영역의 폴더에 
-오늘날짜_핵심변경내용_업데이트.md  로 이런식으로 문서 생성해줘 
-
-예시 > 미션 오류 발견 
-폴더 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\mission 폴더에
-문서이름 : 20260126_mission_error_update.md
-
----------
-http://localhost:8501/ - 엑셀 누적 데이터! 
-
-
-----
+배포문서 
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_automation_script_ko.md
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_docker_compose_guide_ko.md
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_rollback_script_ko.md
 
+ssh 접속 실제 운영서버 확인 
+C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
-C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149
+ ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+---------
+http://localhost:8501/ - 엑셀 누적 데이터! 
+
+
+
+
+
+ 학습 완료 - 현재 상황 분석
+🔴 핵심 문제점
+1. User ↔ V2User 이중 테이블 구조
+
+user 테이블 (V1): 금고 SoT (vault_locked_balance), 레거시 데이터
+v2_user 테이블 (V2): cc_id 기반 인증, V2 전용 기능
+정책: "V2 Native 단일 SoT" 원칙이나, 금고는 user.vault_locked_balance가 SoT
+이제 전체 비교표를 정리합니다:
+
+🔴 V2 전체 테이블 로컬 vs 프로덕션 비교표 (완성)
+📋 설정/시드 테이블 (Config/Seed) - 필수 복구
+테이블	로컬	프로덕션	상태	도메인
+mission	9	0	🔴 누락	미션
+v2_dice_config	1	0	🔴 누락	게임/다이스
+v2_lottery_config	1	0	🔴 누락	게임/복권
+v2_lottery_prize	7	0	🔴 누락	게임/복권
+v2_roulette_config	8	4	🟡 부분	게임/룰렛
+v2_roulette_segment	64	32	🟡 부분	게임/룰렛
+v2_segment_rule	5	0	🔴 누락	세그먼트
+segment_rule	11	0	🔴 누락	세그먼트(공유)
+feature_config	5	3	🟡 부분	기능플래그
+feature_schedule	1	0	🔴 누락	기능스케줄
+app_ui_config	2	1	🟡 부분	UI설정
+v2_server_config	0	0	⚪ 없음	서버설정
+v2_ticket_conversion_policy	0	0	⚪ 없음	티켓변환
+v2_level_reward_table	20	20	✅ OK	레벨보상
+vault_program	1	1	✅ OK	금고
+👤 어드민/운영 테이블 (Admin/Ops)
+테이블	로컬	프로덕션	상태	도메인
+admin_user_profile	3	0	🔴 누락	어드민계정
+admin_audit_log	766	90	✅ 정상	감사로그
+admin_message	0	0	⚪ 없음	V1메시지
+v2_admin_message	13	0	🔴 누락	V2메시지
+v2_admin_message_inbox	106	0	🔴 누락	V2메시지함
+ops_plan	0	0	⚪ 없음	운영계획
+ops_campaign	0	0	⚪ 없음	캠페인
+v2_ops_execution_result	0	0	⚪ 없음	실행결과
+🎮 골든/리텐션 테이블 (Golden/Retention)
+테이블	로컬	프로덕션	상태	도메인
+v2_golden_intervention_log	0	0	⚪ 없음	골든개입
+v2_retention_roi_log	0	0	⚪ 없음	ROI분석
+v2_user_retention_state	0	0	⚪ 없음	리텐션상태
+👥 유저 테이블 (User)
+테이블	로컬	프로덕션	상태	도메인
+user (V1)	1	2	✅ 정상	유저마스터
+v2_user	0	4	✅ 프로덕션정상	V2유저
+v2_user_auth_event	2	78	✅ 정상	인증이벤트
+v2_user_refresh_token	2	8	✅ 정상	리프레시토큰
+v2_user_segment	0	0	⚪ 없음	유저세그먼트
+user_game_wallet	172	10	🟡 유저데이터	지갑
+📊 로그 테이블 (Logs) - 유저 활동 데이터
+테이블	로컬	프로덕션	상태	도메인
+v2_dice_log	329	0	🟡 로그없음	다이스로그
+v2_roulette_log	78	0	🟡 로그없음	룰렛로그
+v2_lottery_log	682	0	🟡 로그없음	복권로그
+v2_shop_order	52	0	🟡 로그없음	상점주문
+user_event_log	1161	8	✅ 정상	유저이벤트
+
+
+🎯 수정된 복구 계획
+Phase 1: 필수 시드 데이터 (즉시)
+게임 설정 - 없으면 게임 실행 불가
+- v2_dice_config (1)
+- v2_lottery_config (1) + v2_lottery_prize (7)
+- v2_roulette_config (+4) + v2_roulette_segment (+32)
+미션/세그먼트 - 없으면 미션/분류 불가
+- mission (9)
+- v2_segment_rule (5)
+- segment_rule (11)
+기능플래그 - 없으면 기능 토글 불가
+- feature_config (+2)
+- feature_schedule (1)
+- app_ui_config (+1)
+Phase 2: 어드민 설정
+어드민 계정 - 없으면 어드민 로그인 후 권한 문제
+- admin_user_profile (3) ⚠️ V1 테이블이지만 필요
+어드민 메시지 - 없으면 메시지 기능 불가
+- v2_admin_message (13)
+- v2_admin_message_inbox (106) - 이건 유저 데이터라 선택적
+
+
+📋 전체 SoT 문서 학습 완료 - 종합 정리
+1. 금고 (Vault) 핵심 정책
+항목	정책/SoT 기준
+SoT 테이블	user.vault_locked_balance (V1 테이블이 SoT!)
+동기화	모든 게임/상점/입금 후 User와 V2User 동시 갱신 필수
+합산 금지	locked + available 합산 금지 (locked 단일 SoT)
+LOSE 차감	게임 LOSE 시 vault_locked_balance 차감 (limit 체크 후에도)
+출금 조건	최근 3일 내 30회 게임 + 오늘 사용 + 오늘 입금
+🔴 발견된 충돌: Admin 대시보드에서 locked + available 합산 사용 중
+
+2. 상점 (Shop) 핵심 정책
+항목	정책/SoT 기준
+CostType	VAULT/DIAMOND만 허용, POINT→VAULT로 정규화
+차감 대상	user.vault_locked_balance (V1 SoT)
+상품 Config	v2_shop_products 빈 배열 시 상점 공백 위험
+Strict Policy	🔴 미구현: 7일 무입금 시 이용 차단 로직 없음
+🔴 긴급 필요: ShopService.purchase에 benefits_suspended 체크 추가
+
+3. 인벤토리 (Inventory) 핵심 정책
+항목	정책/SoT 기준
+자산 분류	Cash(Vault) / Token(Wallet) / Item(Inventory) 3단계
+기프티콘 명명	{BRAND}_GIFTICON_{AMOUNT} 포맷 필수
+교환 정책	비가역성 (분해 불가), 수수료 없음
+모델 위치	V1 공용 모델 사용 중 (app.models.inventory)
+4. 미션 (Mission) 핵심 정책
+항목	정책/SoT 기준
+타임존	KST 09:00 리셋 (Asia/Seoul)
+API 경로	/api/v2/mission/* (레거시 /api/mission 병존)
+logic_key	전역 UNIQUE (카테고리 내부가 아님)
+action_type	실제 트리거 (condition은 표시용)
+어드민	강제 리셋/마일스톤 배포/검증 기능 구현됨
+5. 게임 (Game) 핵심 정책
+항목	정책/SoT 기준
+티켓 타입	DICE_TICKET, ROULETTE_TICKET, LOTTERY_TICKET 등
+레거시 매핑	ROULETTE_COIN → ROULETTE_TICKET fallback
+룰렛 세그먼트	8개 (slot_index 0~7)
+Grade 컬럼	🟡 Deprecated (ticket_type으로 대체, DB 잔존)
+Golden V2	🔴 미구현: Circuit Breaker 안전장치 없음
+레저 기록	티켓 차감 시 1건만 기록 (중복 방지)
+🔴 긴급 필요: Golden V2 Circuit Breaker 구현
+
+6. 레벨 (Level) 핵심 정책
+항목	정책/SoT 기준
+XP 저장	user_level_progress.xp (v2_user에는 XP 없음)
+적립 재화	GAME_XP 단일 (금고포인트와 무관)
+CC 입금 적립	10만원당 20XP
+일일 한도	🟢 폐기됨 (무제한 적립)
+Season Pass	🟢 폐기됨 (null 반환)
+📊 Production DB 시드 데이터 필요 목록 (확정)
+테이블	Local	Prod	필요 액션
+v2_dice_config	1	0	🔴 시드 필요
+v2_lottery_config	1	0	🔴 시드 필요
+v2_lottery_prize	7	0	🔴 시드 필요
+v2_roulette_config	8	4	🟡 GOLD_KEY_TICKET 등 추가
+v2_roulette_segment	64	32	🟡 추가 티켓 타입용 세그먼트
+mission	9	0	🔴 시드 필요
+v2_segment_rule	5	0	🔴 시드 필요
+segment_rule	11	0	🔴 시드 필요
+feature_config	5	3	🟡 추가 필요
+admin_user_profile	3	0	🔴 시드 필요
+v2_admin_message	13	0	🟡 운영 메시지
+🔥 다음 단계 제안
+Migration 적용: 20260130_2000_add_missing_v2_game_columns.py 배포
+시드 데이터 Migration 생성: 위 테이블들의 시드 데이터를 Alembic migration으로 생성
+Production 배포 순서:
+Column migration 적용
+Seed data migration 적용
+Backend 재시작
+지금 시드 데이터 migration을 생성할까요, 아니면 추가로 확인하실 항목이 있나요?
