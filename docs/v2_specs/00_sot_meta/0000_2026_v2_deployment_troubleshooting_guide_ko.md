@@ -113,6 +113,7 @@ Golden V2 배포 중 발생할 수 있는 주요 시나리오와 해결책입니
 | **인증 서버** | `curl -X POST http://localhost:8000/api/v2/auth/refresh` | `401` (토큰 없음) 또는 유효한 갱신 응답 |
 | **Redis 통신** | `redis-cli monitor` | `PUBLISH golden:v2:events:...` 로그 실시간 포착 |
 | **DB 마이그레이션** | `alembic current` | 최신 V2 revision 반영 상태 |
+| **핵심 인덱스 검증** | `scripts/user_consistency_check.py --check index` | `v2_user.telegram_id`, `v2_user_auth_event.user_id`, `jti`, `user_activity` 인덱스 활성화 확인 |
 
 ### 🌏 B. 운영자/관리자 환경 (Admin Dashboard)
 

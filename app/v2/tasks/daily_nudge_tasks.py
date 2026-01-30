@@ -67,24 +67,3 @@ def execute_daily_nudge_task(
         db.close()
 
 
-# Celery Beat Schedule Configuration (celerybeat-schedule.py에서 사용)
-DAILY_NUDGE_SCHEDULE = {
-    "daily-nudge-noon": {
-        "task": "app.v2.tasks.daily_nudge_tasks.execute_daily_nudge_task",
-        "schedule": {
-            "hour": 12,
-            "minute": 0,
-            "day_of_week": "*",
-        },  # 매일 12:00 KST
-        "args": (3, 1, False),  # (lookback_days, ticket_amount, dry_run)
-    },
-    "daily-nudge-evening": {
-        "task": "app.v2.tasks.daily_nudge_tasks.execute_daily_nudge_task",
-        "schedule": {
-            "hour": 18,
-            "minute": 0,
-            "day_of_week": "*",
-        },  # 매일 18:00 KST
-        "args": (3, 1, False),
-    },
-}

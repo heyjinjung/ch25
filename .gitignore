@@ -417,3 +417,5 @@ NUL
 .env.production
 .env.server
 .env.*.vite
+.agent/skills
+.agent/skills

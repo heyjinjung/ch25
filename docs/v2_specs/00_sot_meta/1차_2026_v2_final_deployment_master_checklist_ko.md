@@ -617,8 +617,8 @@ CASCADE 의존성 (명시적 검증 필요)
 
 ### 9.2 Daily Nudge Scheduler ✅
 - [x] **Celery Beat 스케줄** 설정
-  - 매일 12:00, 18:00 KST
-  - 파일: app/v2/tasks/daily_nudge_tasks.py:67-88, DAILY_NUDGE_SCHEDULE 정의 (hour=12/18)
+  - [x] **Celery Beat 스케줄** 설정 ✅ 구현완료
+  - 파일: [celery_app.py](file:///c:/Users/JAVIS/ch/ch25/app/worker/celery_app.py) → `DAILY_NUDGE_SCHEDULE` 및 기타 스케줄 정의 (hour=12/18, 00, 01)
 - [x] **대상자 선정** (최근 3일 내 접속, 오늘 미접속)
   - 파일: app/v2/services/daily_nudge_service.py:29-88, get_nudge_target_users()
   - lookback_days=3 기본값, 오늘(운영일) 제외 로직
@@ -683,11 +683,11 @@ CASCADE 의존성 (명시적 검증 필요)
 - [x] `user_level_progress`
 - [x] `v2_level_reward_table`
 
-### 10.3 인덱스 확인
-- [ ] `v2_user.telegram_id` (UNIQUE)
-- [ ] `v2_user_auth_event (user_id, created_at)`
-- [ ] `v2_user_refresh_token.jti` (UNIQUE)
-- [ ] `user_activity (user_id, updated_at)`
+### 10.3 인덱스 확인 ✅
+- [x] `v2_user.telegram_id` (UNIQUE)
+- [x] `v2_user_auth_event (user_id, created_at)`
+- [x] `v2_user_refresh_token.jti` (UNIQUE)
+- [x] `user_activity (user_id, updated_at)`
 
 ### 10.4 DB 백업
 - [ ] **프로덕션 DB 백업** 완료

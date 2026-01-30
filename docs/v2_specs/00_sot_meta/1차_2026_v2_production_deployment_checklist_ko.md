@@ -28,10 +28,11 @@
 - [x] V2 Golden Intervention 관련 테이블 (`20260124_1200`, `20260129_1713`)
 - [x] V2 ROI 로그 테이블 (`20260119_1700`)
 
-### 1.3 인덱스 추가 확인
-- [x] `v2_user.telegram_id` 인덱스
+### 1.3 인덱스 추가 확인 ✅
+- [x] `v2_user.telegram_id` (UNIQUE)
 - [x] `v2_user_auth_event.user_id, created_at` 복합 인덱스
-- [x] `v2_user_refresh_token.jti` 유니크 인덱스
+- [x] `v2_user_refresh_token.jti` (UNIQUE)
+- [x] `user_activity.user_id, updated_at` 복합 인덱스
 - [x] `v2_retention_roi_log.event_type, created_at` 복합 인덱스
 
 ---
@@ -212,9 +213,9 @@ redis-cli ping
 
 ## 7. 성능 최적화 (Performance Optimization)
 
-### 7.1 DB 쿼리 최적화
+### 7.1 DB 쿼리 최적화 ✅
 - [ ] **N+1 쿼리 제거** (selectinload, joinedload 사용)
-- [ ] **인덱스 최적화** (자주 조회하는 컬럼)
+- [x] **인덱스 최적화** (핵심 테이블 인덱스 적용 완료)
 - [ ] **Pagination 적용** (대량 데이터 조회)
 
 ### 7.2 캐싱
