@@ -173,10 +173,9 @@ class V2LotteryGameService:
         unlimited = 0
         remaining = 0
 
-        # Collection progress (kept compatible with v1 schema)
-        c_total = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_C)
-        c1_count = 1 if int(c_total or 0) >= 1 else 0
-        c2_count = 1 if int(c_total or 0) >= 2 else 0
+        # Collection progress (C1, C2, J, M - each counted separately)
+        c1_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_C1)
+        c2_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_C2)
         j_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_J)
         m_count = V2InventoryService.get_wallet_balance(db, user_id, GameTokenType.PUZZLE_M)
 
@@ -339,7 +338,7 @@ class V2LotteryGameService:
                 prob = prob / 100.0
             prob = max(0.0, min(prob, 1.0))
             if prob > 0 and random.random() < prob:
-                token = random.choice([GameTokenType.PUZZLE_C, GameTokenType.PUZZLE_J, GameTokenType.PUZZLE_M])
+                token = random.choice([GameTokenType.PUZZLE_C1, GameTokenType.PUZZLE_C2, GameTokenType.PUZZLE_J, GameTokenType.PUZZLE_M])
                 V2InventoryService.grant_wallet_tokens(
                     db,
                     user_id,

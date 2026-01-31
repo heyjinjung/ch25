@@ -32,12 +32,14 @@ class GameTokenType(str, Enum):
     DIAMOND_KEY_FRAGMENT = "DIAMOND_KEY_FRAGMENT"
     TRIAL_TOKEN = "TRIAL_TOKEN"
     
-    # ==== Puzzle Pieces (Lottery) ====
-    PUZZLE_C = "PUZZLE_C" 
-    PUZZLE_C1 = "PUZZLE_C1"
-    PUZZLE_C2 = "PUZZLE_C2"
-    PUZZLE_J = "PUZZLE_J"
-    PUZZLE_M = "PUZZLE_M"
+    # ==== Puzzle Pieces (Lottery Collection) ====
+    # NOTE: PUZZLE_C is DEPRECATED. Use PUZZLE_C1/C2 instead.
+    # PUZZLE_C kept for backward compatibility with existing DB entries only.
+    PUZZLE_C = "PUZZLE_C"  # DEPRECATED - Do not use in new code
+    PUZZLE_C1 = "PUZZLE_C1"  # Active: First C piece
+    PUZZLE_C2 = "PUZZLE_C2"  # Active: Second C piece
+    PUZZLE_J = "PUZZLE_J"    # Active: J piece
+    PUZZLE_M = "PUZZLE_M"    # Active: M piece
     
     # ==== Special ====
     VAULT = "VAULT"

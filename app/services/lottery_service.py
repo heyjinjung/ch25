@@ -65,15 +65,9 @@ class LotteryService:
         token_balance = self.wallet_service.get_balance(db, user_id, token_type)
         prizes = self._eligible_prizes(db, config.id)
 
-        # Check collection progress (PUZZLE_C1, C2, J, M)
-        # [FIX] Use PUZZLE_C token count for both C1 and C2 slots.
-        # The seed script issues PUZZLE_C, but the UI expects C1/C2 slots filled.
-        c_total = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C)
-        c1_count = 1 if c_total >= 1 else 0
-        c2_count = 1 if c_total >= 2 else 0
-
-        # c1_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C1)
-        # c2_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C2)
+        # Check collection progress (PUZZLE_C1, C2, J, M - each counted separately)
+        c1_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C1)
+        c2_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_C2)
         j_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_J)
         m_count = self.wallet_service.get_balance(db, user_id, GameTokenType.PUZZLE_M)
 
