@@ -895,9 +895,9 @@ export default function VaultControlPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Card Detail Modal */}
+      {/* Card Detail Modal - 유저 목록 포함 */}
       <Dialog open={isCardDetailOpen} onOpenChange={setIsCardDetailOpen}>
-        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-lg">
+        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Info className="h-5 w-5 text-indigo-400" />
@@ -907,19 +907,53 @@ export default function VaultControlPage() {
               {cardDetailType && cardDetailInfo[cardDetailType]?.description}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="py-4 space-y-4 flex-1 overflow-hidden flex flex-col">
+            {/* 총 유저 수 - 유저 목록 */}
             {cardDetailType === "total_users" && (
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
                   <span className="text-zinc-400">전체 금고 유저</span>
                   <span className="text-2xl font-bold text-white">
                     {vaultAggregate?.total_users?.toLocaleString() ?? 0}명
                   </span>
                 </div>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          금고 잔액
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers?.slice(0, 50).map((u) => (
+                        <TableRow
+                          key={u.user_id}
+                          className="border-white/5 hover:bg-white/5"
+                        >
+                          <TableCell>
+                            <span className="text-white">{u.nickname}</span>
+                            <span className="text-zinc-500 text-xs ml-2">
+                              #{u.user_id}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-emerald-400">
+                            ₩{u.vault_balance.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-zinc-500">* 상위 50명 표시</p>
               </div>
             )}
+
+            {/* 총 잠금 잔액 - 잠금 잔액 높은 유저 */}
             {cardDetailType === "locked_balance" && (
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
                   <span className="text-zinc-400">총 잠금 잔액</span>
                   <span className="text-2xl font-bold text-emerald-400">
@@ -928,14 +962,49 @@ export default function VaultControlPage() {
                       0}
                   </span>
                 </div>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          잠금 잔액
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers
+                        ?.filter((u) => u.vault_balance > 0)
+                        .sort((a, b) => b.vault_balance - a.vault_balance)
+                        .slice(0, 30)
+                        .map((u) => (
+                          <TableRow
+                            key={u.user_id}
+                            className="border-white/5 hover:bg-white/5"
+                          >
+                            <TableCell>
+                              <span className="text-white">{u.nickname}</span>
+                              <span className="text-zinc-500 text-xs ml-2">
+                                #{u.user_id}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-emerald-400">
+                              ₩{u.vault_balance.toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
                 <p className="text-xs text-zinc-500">
-                  * 해금 조건(일일 플레이 30회, 입금 확인 등)을 충족하지 않아
-                  출금 불가능한 금액입니다.
+                  * 잔액 높은 순 30명 표시 (해금 조건 미충족 금액)
                 </p>
               </div>
             )}
+
+            {/* 총 가용 잔액 */}
             {cardDetailType === "available_balance" && (
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
                 <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
                   <span className="text-zinc-400">총 가용 잔액</span>
                   <span className="text-2xl font-bold text-blue-400">
@@ -944,73 +1013,345 @@ export default function VaultControlPage() {
                       0}
                   </span>
                 </div>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          가용 잔액
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers
+                        ?.filter((u) => u.vault_balance > 0)
+                        .sort((a, b) => b.vault_balance - a.vault_balance)
+                        .slice(0, 30)
+                        .map((u) => (
+                          <TableRow
+                            key={u.user_id}
+                            className="border-white/5 hover:bg-white/5"
+                          >
+                            <TableCell>
+                              <span className="text-white">{u.nickname}</span>
+                              <span className="text-zinc-500 text-xs ml-2">
+                                #{u.user_id}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-blue-400">
+                              ₩{u.vault_balance.toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
                 <p className="text-xs text-zinc-500">
-                  * 해금 조건을 충족하여 출금 신청이 가능한 금액의 합계입니다.
+                  * 출금 가능 잔액 높은 순 30명 표시
                 </p>
               </div>
             )}
+
+            {/* 제재 유저 - 제재 유저 목록 */}
             {cardDetailType === "suspended_users" && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
-                  <span className="text-zinc-400">제재 유저 수</span>
-                  <span className="text-2xl font-bold text-amber-400">
-                    {vaultAggregate?.suspended_users_count?.toLocaleString() ??
-                      0}
-                    명
-                  </span>
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">제재 유저 수</span>
+                    <p className="text-xl font-bold text-amber-400">
+                      {vaultAggregate?.suspended_users_count?.toLocaleString() ??
+                        0}
+                      명
+                    </p>
+                  </div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">동결 잔액</span>
+                    <p className="text-xl font-bold text-amber-400">
+                      ₩
+                      {vaultAggregate?.suspended_users_balance?.toLocaleString() ??
+                        0}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
-                  <span className="text-zinc-400">제재 유저 금고 잔액</span>
-                  <span className="text-xl font-bold text-amber-400">
-                    ₩
-                    {vaultAggregate?.suspended_users_balance?.toLocaleString() ??
-                      0}
-                  </span>
+                <div className="flex-1 overflow-auto rounded-lg border border-amber-500/20">
+                  <Table>
+                    <TableHeader className="bg-amber-500/10 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-amber-400">
+                          제재 유저
+                        </TableHead>
+                        <TableHead className="text-amber-400 text-right">
+                          동결 잔액
+                        </TableHead>
+                        <TableHead className="text-amber-400 text-center">
+                          상태
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers?.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center py-8 text-zinc-500"
+                          >
+                            제재 유저 정보를 불러오려면 별도 API가 필요합니다
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={3}
+                            className="text-center py-8 text-zinc-500"
+                          >
+                            제재 유저 상세 목록은 회원관리에서 확인하세요
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
                 <p className="text-xs text-zinc-500">
-                  * 부정행위 등으로 제재된 유저들의 금고 잔액입니다. 출금이
-                  차단됩니다.
+                  * 부정행위로 제재된 유저 (출금 차단됨)
                 </p>
               </div>
             )}
+
+            {/* 평균 잔액 - 분포 표시 */}
             {cardDetailType === "average_balance" && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
-                  <span className="text-zinc-400">평균 잔액</span>
-                  <span className="text-2xl font-bold text-white">
-                    ₩{vaultAggregate?.average_balance?.toLocaleString() ?? 0}
-                  </span>
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">평균 잔액</span>
+                    <p className="text-xl font-bold text-white">
+                      ₩{vaultAggregate?.average_balance?.toLocaleString() ?? 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">총 유저</span>
+                    <p className="text-xl font-bold text-white">
+                      {vaultAggregate?.total_users?.toLocaleString() ?? 0}명
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          잔액
+                        </TableHead>
+                        <TableHead className="text-zinc-400 text-center">
+                          평균 대비
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers
+                        ?.sort((a, b) => b.vault_balance - a.vault_balance)
+                        .slice(0, 30)
+                        .map((u) => {
+                          const avg = vaultAggregate?.average_balance ?? 1;
+                          const ratio =
+                            avg > 0 ? (u.vault_balance / avg) * 100 : 0;
+                          return (
+                            <TableRow
+                              key={u.user_id}
+                              className="border-white/5 hover:bg-white/5"
+                            >
+                              <TableCell>
+                                <span className="text-white">{u.nickname}</span>
+                                <span className="text-zinc-500 text-xs ml-2">
+                                  #{u.user_id}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right font-mono text-emerald-400">
+                                ₩{u.vault_balance.toLocaleString()}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge
+                                  variant="outline"
+                                  className={
+                                    ratio > 200
+                                      ? "border-rose-500/50 text-rose-400"
+                                      : ratio > 100
+                                        ? "border-amber-500/50 text-amber-400"
+                                        : "border-zinc-500/50 text-zinc-400"
+                                  }
+                                >
+                                  {ratio.toFixed(0)}%
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
                 </div>
                 <p className="text-xs text-zinc-500">
-                  * 전체 유저의 금고 잔액을 유저 수로 나눈 산술평균입니다.
+                  * 잔액 높은 순 30명, 평균 대비 비율 표시
                 </p>
               </div>
             )}
+
+            {/* 중간값 잔액 */}
             {cardDetailType === "median_balance" && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
-                  <span className="text-zinc-400">중간값 잔액</span>
-                  <span className="text-2xl font-bold text-white">
-                    ₩{vaultAggregate?.median_balance?.toLocaleString() ?? 0}
-                  </span>
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">중간값</span>
+                    <p className="text-xl font-bold text-white">
+                      ₩{vaultAggregate?.median_balance?.toLocaleString() ?? 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">평균</span>
+                    <p className="text-xl font-bold text-zinc-400">
+                      ₩{vaultAggregate?.average_balance?.toLocaleString() ?? 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-black/20 rounded-lg border border-white/5">
+                    <span className="text-zinc-400 text-sm">최대</span>
+                    <p className="text-xl font-bold text-emerald-400">
+                      ₩{vaultAggregate?.max_balance?.toLocaleString() ?? 0}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-zinc-500">
-                  * 유저들의 금고 잔액을 정렬했을 때 중간에 위치하는 값입니다.
-                  극단값의 영향을 받지 않습니다.
-                </p>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">순위</TableHead>
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          잔액
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers
+                        ?.sort((a, b) => b.vault_balance - a.vault_balance)
+                        .slice(0, 30)
+                        .map((u, idx) => (
+                          <TableRow
+                            key={u.user_id}
+                            className="border-white/5 hover:bg-white/5"
+                          >
+                            <TableCell className="text-zinc-500">
+                              {idx + 1}
+                            </TableCell>
+                            <TableCell>
+                              <span className="text-white">{u.nickname}</span>
+                              <span className="text-zinc-500 text-xs ml-2">
+                                #{u.user_id}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-emerald-400">
+                              ₩{u.vault_balance.toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-zinc-500">* 잔액 순위별 30명 표시</p>
               </div>
             )}
+
+            {/* 최대 잔액 - 상위 유저 */}
             {cardDetailType === "max_balance" && (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
-                  <span className="text-zinc-400">최대 잔액</span>
-                  <span className="text-2xl font-bold text-emerald-400">
-                    ₩{vaultAggregate?.max_balance?.toLocaleString() ?? 0}
-                  </span>
+              <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                <div className="p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-emerald-400 text-sm">
+                        🏆 최고 잔액 보유자
+                      </span>
+                      {vaultUsers && vaultUsers.length > 0 && (
+                        <p className="text-white font-bold mt-1">
+                          {
+                            vaultUsers.sort(
+                              (a, b) => b.vault_balance - a.vault_balance,
+                            )[0]?.nickname
+                          }
+                          <span className="text-zinc-500 text-sm ml-2">
+                            #
+                            {
+                              vaultUsers.sort(
+                                (a, b) => b.vault_balance - a.vault_balance,
+                              )[0]?.user_id
+                            }
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-3xl font-bold text-emerald-400">
+                      ₩{vaultAggregate?.max_balance?.toLocaleString() ?? 0}
+                    </span>
+                  </div>
                 </div>
-                <p className="text-xs text-zinc-500">
-                  * 가장 높은 금고 잔액을 보유한 단일 유저의 금액입니다.
-                </p>
+                <div className="flex-1 overflow-auto rounded-lg border border-white/5">
+                  <Table>
+                    <TableHeader className="bg-white/5 sticky top-0">
+                      <TableRow className="border-white/5">
+                        <TableHead className="text-zinc-400">순위</TableHead>
+                        <TableHead className="text-zinc-400">유저</TableHead>
+                        <TableHead className="text-zinc-400 text-right">
+                          금고 잔액
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {vaultUsers
+                        ?.sort((a, b) => b.vault_balance - a.vault_balance)
+                        .slice(0, 20)
+                        .map((u, idx) => (
+                          <TableRow
+                            key={u.user_id}
+                            className={`border-white/5 hover:bg-white/5 ${idx === 0 ? "bg-emerald-500/10" : ""}`}
+                          >
+                            <TableCell
+                              className={
+                                idx < 3
+                                  ? "text-amber-400 font-bold"
+                                  : "text-zinc-500"
+                              }
+                            >
+                              {idx === 0
+                                ? "🥇"
+                                : idx === 1
+                                  ? "🥈"
+                                  : idx === 2
+                                    ? "🥉"
+                                    : idx + 1}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={
+                                  idx === 0
+                                    ? "text-emerald-400 font-bold"
+                                    : "text-white"
+                                }
+                              >
+                                {u.nickname}
+                              </span>
+                              <span className="text-zinc-500 text-xs ml-2">
+                                #{u.user_id}
+                              </span>
+                            </TableCell>
+                            <TableCell
+                              className={`text-right font-mono ${idx === 0 ? "text-emerald-400 font-bold" : "text-emerald-400"}`}
+                            >
+                              ₩{u.vault_balance.toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <p className="text-xs text-zinc-500">* 금고 잔액 TOP 20</p>
               </div>
             )}
           </div>

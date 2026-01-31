@@ -187,9 +187,13 @@ const mapBackendStreakInfo = (
   };
 };
 
-export const getV2Missions = async (category?: string): Promise<MissionListResponse> => {
+export const getV2Missions = async (
+  category?: string,
+): Promise<MissionListResponse> => {
   try {
-    const url = category ? `/api/v2/mission/?category=${category}` : "/api/v2/mission/";
+    const url = category
+      ? `/api/v2/mission/?category=${category}`
+      : "/api/v2/mission/";
     const response = await v2Client.get<BackendMissionListResponse>(url);
     const missions = response.data.missions.map(mapBackendMission);
     const streak_info = mapBackendStreakInfo(
@@ -274,17 +278,21 @@ export const claimV2StreakReward = async (): Promise<ClaimStreakResponse> => {
 // Season Pass API
 // ============================================================================
 
-export const getV2SeasonPassStatus = async (): Promise<SeasonPassStatusResponse> => {
-  try {
-    const response = await v2Client.get<SeasonPassStatusResponse>(
-      "/api/season-pass/status",
-    );
-    return response.data;
-  } catch (error) {
-    console.error("[missionApi] Failed to fetch V2 season pass status", error);
-    throw error;
-  }
-};
+export const getV2SeasonPassStatus =
+  async (): Promise<SeasonPassStatusResponse> => {
+    try {
+      const response = await v2Client.get<SeasonPassStatusResponse>(
+        "/api/season-pass/status",
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "[missionApi] Failed to fetch V2 season pass status",
+        error,
+      );
+      throw error;
+    }
+  };
 
 export const claimV2SeasonPassReward = async (
   level: number,
