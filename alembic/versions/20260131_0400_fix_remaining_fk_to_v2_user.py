@@ -79,8 +79,16 @@ def upgrade():
         if new_fk_result:
             print(f"[SKIP] {table_name}.{new_fk} already exists")
             continue
+        
+        # 4. Orphan 데이터 삭제 (v2_user에 없는 user_id)
+        orphan_delete = conn.execute(text(f"""
+            DELETE FROM {table_name} 
+            WHERE user_id NOT IN (SELECT id FROM v2_user)
+        """))
+        if orphan_delete.rowcount > 0:
+            print(f"[CLEANUP] {table_name}: deleted {orphan_delete.rowcount} orphan rows")
             
-        # 4. 새 FK 생성 (v2_user 참조)
+        # 5. 새 FK 생성 (v2_user 참조)
         op.create_foreign_key(
             new_fk,
             table_name,
