@@ -5,6 +5,7 @@ import {
   ShieldAlert,
   Users,
   AlertTriangle,
+  DollarSign,
 } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -139,6 +140,50 @@ export default function OpsDashboard() {
 
       {/* Main Grid */}
       <BentoGrid className="grid-cols-1 md:grid-cols-3 auto-rows-[24rem]">
+        {/* HQ Margin Status (Span 1) */}
+        <div className="md:col-span-1 rounded-xl bg-obsidian-surface border border-obsidian-border p-6 flex flex-col relative overflow-hidden">
+          <div className="flex justify-between items-start mb-6 z-10">
+            <div>
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-500" />
+                본사 마진 현황
+              </h3>
+              <p className="text-obsidian-muted text-xs">
+                {status?.hqStats?.lastSyncAt 
+                  ? `Last Sync: ${new Date(status.hqStats.lastSyncAt).toLocaleString()}`
+                  : "Not synced yet"}
+              </p>
+            </div>
+            <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
+              HQ Data
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 z-10">
+            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">VIP (1M+)</p>
+              <p className="text-xl font-bold text-purple-400">{status?.hqStats?.vipCount ?? 0}</p>
+            </div>
+            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">Whales (5M+)</p>
+              <p className="text-xl font-bold text-blue-400">{status?.hqStats?.whaleCount ?? 0}</p>
+            </div>
+            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">At Risk</p>
+              <p className="text-xl font-bold text-orange-400">{status?.hqStats?.atRiskCount ?? 0}</p>
+            </div>
+            <div className="bg-black/20 p-3 rounded-lg border border-white/5">
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">Prospective</p>
+              <p className="text-xl font-bold text-zinc-400">{status?.hqStats?.prospectiveVipCount ?? 0}</p>
+            </div>
+          </div>
+          
+          {/* Background Decor */}
+          <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
+            <DollarSign size={150} />
+          </div>
+        </div>
+
         {/* Golden Radar (Span 2) */}
         <div className="md:col-span-2 rounded-xl bg-obsidian-surface border border-obsidian-border p-6 flex flex-col">
           <div className="flex justify-between items-start mb-6">

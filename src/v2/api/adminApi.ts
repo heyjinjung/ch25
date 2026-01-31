@@ -165,6 +165,15 @@ export interface OpsDashboardResponse {
     todayRevenue: number;
     activeUsers24h: number;
   };
+  hqStats?:OpsHQMarginStatsDto | null;
+}
+
+export interface OpsHQMarginStatsDto {
+  vipCount: number;
+  whaleCount: number;
+  atRiskCount: number;
+  prospectiveVipCount: number;
+  lastSyncAt: string | null;
 }
 
 export interface OpsRiskUserDto {
