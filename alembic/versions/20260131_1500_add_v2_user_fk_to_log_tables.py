@@ -19,53 +19,48 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # === v2_dice_log: user_id FK (SET NULL on DELETE) ===
+    # === STEP 1: 먼저 모든 컬럼을 nullable로 변경 (FK SET NULL 지원을 위해) ===
+    op.alter_column('v2_dice_log', 'user_id',
+        existing_type=sa.Integer(),
+        nullable=True
+    )
+    op.alter_column('v2_roulette_log', 'user_id',
+        existing_type=sa.Integer(),
+        nullable=True
+    )
+    op.alter_column('v2_lottery_log', 'user_id',
+        existing_type=sa.Integer(),
+        nullable=True
+    )
+    op.alter_column('v2_shop_order', 'user_id',
+        existing_type=sa.Integer(),
+        nullable=True
+    )
+
+    # === STEP 2: FK 추가 (SET NULL on DELETE) ===
     op.create_foreign_key(
         'fk_v2_dice_log_user_id',
         'v2_dice_log', 'v2_user',
         ['user_id'], ['id'],
         ondelete='SET NULL'
     )
-    # user_id를 nullable로 변경 (SET NULL 지원)
-    op.alter_column('v2_dice_log', 'user_id',
-        existing_type=sa.Integer(),
-        nullable=True
-    )
-
-    # === v2_roulette_log: user_id FK (SET NULL on DELETE) ===
     op.create_foreign_key(
         'fk_v2_roulette_log_user_id',
         'v2_roulette_log', 'v2_user',
         ['user_id'], ['id'],
         ondelete='SET NULL'
     )
-    op.alter_column('v2_roulette_log', 'user_id',
-        existing_type=sa.Integer(),
-        nullable=True
-    )
-
-    # === v2_lottery_log: user_id FK (SET NULL on DELETE) ===
     op.create_foreign_key(
         'fk_v2_lottery_log_user_id',
         'v2_lottery_log', 'v2_user',
         ['user_id'], ['id'],
         ondelete='SET NULL'
     )
-    op.alter_column('v2_lottery_log', 'user_id',
-        existing_type=sa.Integer(),
-        nullable=True
-    )
-
-    # === v2_shop_order: user_id FK (SET NULL on DELETE) ===
     op.create_foreign_key(
         'fk_v2_shop_order_user_id',
         'v2_shop_order', 'v2_user',
         ['user_id'], ['id'],
         ondelete='SET NULL'
-    )
-    op.alter_column('v2_shop_order', 'user_id',
-        existing_type=sa.Integer(),
-        nullable=True
     )
 
     # Note: v2_user_auth_event는 FK 미설정 유지 (성능/유연성 고려)
