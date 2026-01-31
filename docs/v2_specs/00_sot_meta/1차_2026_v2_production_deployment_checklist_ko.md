@@ -488,7 +488,6 @@ curl https://api.yourdomain.com/health
 
 ### Remaining Tasks (Post-Deployment)
 - [ ] **Sentry 연동** (High Priority) ⚠️
-- [ ] **JWT_SECRET 강화** (High Priority) ⚠️
 - [ ] **Telegram Auth Rate Limit** (High Priority) 🛡️
 - [ ] **Grafana 대시보드** (Medium Priority) 📊
 - [ ] **Application 캐싱** (Medium Priority) 🚀

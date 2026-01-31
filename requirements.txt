@@ -45,7 +45,7 @@ httpx==0.27.0  # for TestClient
 prometheus-client==0.23.1
 
 # Logging & Monitoring
-sentry-sdk==1.39.2
+sentry-sdk>=2.44.0
 
 # Telegram Integration
 python-telegram-bot[webhooks]==21.10

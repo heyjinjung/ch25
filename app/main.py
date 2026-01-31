@@ -1,5 +1,6 @@
 # /workspace/ch25/app/main.py
 import os
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -24,6 +25,12 @@ if sentry_dsn:
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
         from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.logging import LoggingIntegration
+
+        logging_integration = LoggingIntegration(
+            level=logging.INFO,
+            event_level=logging.ERROR,
+        )
 
         sentry_sdk.init(
             dsn=sentry_dsn,
@@ -33,7 +40,9 @@ if sentry_dsn:
             integrations=[
                 FastApiIntegration(),
                 SqlalchemyIntegration(),
+                logging_integration,
             ],
+            enable_logs=True,
             # 민감 정보 필터링
             send_default_pii=False,
             before_send=lambda event, hint: event if settings.env == "production" else None,
@@ -221,5 +230,10 @@ def root() -> dict[str, str]:
 def debug_sentry():
     """Trigger a test error to verify Sentry integration."""
     import sentry_sdk
+    from sentry_sdk import metrics
+
+    logger = logging.getLogger("app.sentry")
+    logger.info("Sentry log test from /debug-sentry endpoint")
+    metrics.incr("debug.sentry_metric", 1, tags={"source": "debug-sentry"})
     sentry_sdk.capture_message("Sentry test message from /debug-sentry endpoint")
     raise ValueError("This is a test error for Sentry verification")

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Store,
   FileUp,
+  type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -26,7 +27,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  type NavSectionKey = "OPS" | "CORE" | "GAME" | "SYSTEM";
+  type NavSectionKey = "OPS" | "CORE" | "GAME" | "SYSTEM" | "USER";
 
   const [activeSectionFilter, setActiveSectionFilter] = useState<
     NavSectionKey | "ALL"
@@ -44,9 +45,10 @@ export default function AdminLayout() {
         CORE: Boolean(parsed?.CORE),
         GAME: Boolean(parsed?.GAME),
         SYSTEM: Boolean(parsed?.SYSTEM),
+        USER: Boolean(parsed?.USER),
       };
     } catch {
-      return { OPS: false, CORE: false, GAME: false, SYSTEM: false };
+      return { OPS: false, CORE: false, GAME: false, SYSTEM: false, USER: false };
     }
   });
 
@@ -72,7 +74,7 @@ export default function AdminLayout() {
     key: NavSectionKey;
     label: string;
     items: Array<{
-      icon: any;
+      icon: LucideIcon;
       label: string;
       path: string;
       submenu?: Array<{ label: string; path: string }>;
@@ -80,27 +82,38 @@ export default function AdminLayout() {
   }> = [
     {
       key: "OPS",
-      label: "운영",
+      label: "모니터링",
       items: [
         {
           icon: LayoutDashboard,
           label: "대시보드",
           path: "/admin/dashboard",
           submenu: [
-            { label: "Ops 대시보드", path: "/admin/dashboard" },
-            { label: "Golden 레이더", path: "/admin/dashboard/golden" },
+            { label: "운영 대시보드", path: "/admin/dashboard" },
+            { label: "골든 레이더", path: "/admin/dashboard/golden" },
             { label: "이상 탐지", path: "/admin/dashboard/radar" },
           ],
-        },
-        {
-          icon: MessageSquare,
-          label: "메시지 관리",
-          path: "/admin/marketing/messages",
         },
         {
           icon: LayoutDashboard,
           label: "운영 분석",
           path: "/admin/ops/analytics",
+        },
+      ],
+    },
+    {
+      key: "SYSTEM",
+      label: "시스템 & 보안",
+      items: [
+        {
+          icon: Settings,
+          label: "서킷 브레이커",
+          path: "/admin/economy/circuit-breaker",
+        },
+        {
+          icon: Settings,
+          label: "지연 극복 관리",
+          path: "/admin/economy/latency",
         },
         {
           icon: Bell,
@@ -109,26 +122,23 @@ export default function AdminLayout() {
         },
         {
           icon: FileUp,
-          label: "로그 임포트 (CSV)",
+          label: "로그 데이터 업로드",
           path: "/admin/ops/csv-import",
         },
       ],
     },
     {
       key: "CORE",
-      label: "코어",
+      label: "경제 & 상점",
       items: [
-        { icon: Users, label: "사용자 통합", path: "/admin/users" },
-        { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
         {
           icon: CreditCard,
-          label: "금고 현황",
+          label: "금고 관리",
           path: "/admin/economy/vault",
-        },
-        {
-          icon: CreditCard,
-          label: "금고 분석",
-          path: "/admin/economy/vault-analytics",
+          submenu: [
+            { label: "금고 현황", path: "/admin/economy/vault" },
+            { label: "금고 분석", path: "/admin/economy/vault-analytics" },
+          ],
         },
         {
           icon: CreditCard,
@@ -136,31 +146,20 @@ export default function AdminLayout() {
           path: "/admin/economy/deposits",
         },
         {
-          icon: CreditCard,
-          label: "티켓/토큰 관리",
-          path: "/admin/inventory/tickets",
-        },
-        {
           icon: Store,
-          label: "재고 관리",
-          path: "/admin/inventory/stock",
+          label: "재고/인벤토리",
+          path: "/admin/inventory/tickets",
+          submenu: [
+            { label: "티켓/토큰 관리", path: "/admin/inventory/tickets" },
+            { label: "재고 관리", path: "/admin/inventory/stock" },
+          ],
         },
-        {
-          icon: Settings,
-          label: "지연 극복 (Latency)",
-          path: "/admin/economy/latency",
-        },
-        {
-          icon: Settings,
-          label: "서킷 브레이커 (Safety)",
-          path: "/admin/economy/circuit-breaker",
-        },
-        { icon: Store, label: "상점/미션", path: "/admin/economy/shop" },
+        { icon: Store, label: "상점 & 미션", path: "/admin/economy/shop" },
       ],
     },
     {
       key: "GAME",
-      label: "게임 관리",
+      label: "게임 & 콘텐츠",
       items: [
         { icon: Settings, label: "룰렛", path: "/admin/game/roulette" },
         { icon: Settings, label: "주사위", path: "/admin/game/dice" },
@@ -168,12 +167,25 @@ export default function AdminLayout() {
         { icon: Settings, label: "팀 배틀", path: "/admin/game/team-battle" },
         {
           icon: Settings,
-          label: "이벤트/캠페인(골든아워)",
+          label: "이벤트 & 캠페인",
           path: "/admin/game/golden-hour",
           submenu: [
             { label: "골든아워 관리", path: "/admin/game/golden-hour" },
             { label: "모달 제어", path: "/admin/game/modals" },
           ],
+        },
+      ],
+    },
+    {
+      key: "USER",
+      label: "유저 & 마케팅",
+      items: [
+        { icon: Users, label: "사용자 통합", path: "/admin/users" },
+        { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
+        {
+          icon: MessageSquare,
+          label: "메시지 및 고객 상세 관리",
+          path: "/admin/marketing/messages",
         },
       ],
     },
@@ -217,7 +229,7 @@ export default function AdminLayout() {
               <div className="h-4 w-4 rounded-sm bg-obsidian-accent" />
             </div>
             <span className="text-xl font-bold tracking-tight text-white">
-              Admin V2
+              V2 관리자
             </span>
           </div>
 
@@ -234,10 +246,11 @@ export default function AdminLayout() {
               }}
             >
               <option value="ALL">전체</option>
-              <option value="OPS">운영</option>
-              <option value="CORE">코어</option>
-              <option value="GAME">게임 관리</option>
-              <option value="SYSTEM">시스템</option>
+              <option value="OPS">모니터링</option>
+              <option value="SYSTEM">시스템 & 보안</option>
+              <option value="CORE">경제 & 상점</option>
+              <option value="GAME">게임 & 콘텐츠</option>
+              <option value="USER">유저 & 마케팅</option>
             </select>
           </div>
 
@@ -366,14 +379,14 @@ export default function AdminLayout() {
         <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-obsidian-border bg-obsidian-bg/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
             {isMobile && (
-              <span className="text-lg font-bold text-white">Admin V2</span>
+              <span className="text-lg font-bold text-white">V2 관리자</span>
             )}
             {!isMobile && (
               <div className="flex items-center gap-2 rounded-lg bg-obsidian-surface px-2 py-1.5 border border-obsidian-border">
                 <Search size={14} className="text-obsidian-muted" />
                 <input
                   type="text"
-                  placeholder="빠른 검색(Enter)"
+                  placeholder="빠른 검색 (엔터)"
                   className="bg-transparent text-sm text-white placeholder-obsidian-muted focus:outline-none w-64"
                 />
               </div>

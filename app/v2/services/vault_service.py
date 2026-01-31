@@ -183,7 +183,7 @@ class V2VaultService:
             - is_suspended: 제재 여부
             - deposit_7d: 최근 7일 입금 합계
         """
-        from app.v2.models.v2_user import V2User
+        from app.v2.models.user import V2User
         
         now_dt = now_dt or datetime.utcnow()
         

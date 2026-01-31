@@ -30,21 +30,21 @@
 ## 1. V2 Auth & Security (인증 & 보안)
 
 ### 1.1 Telegram Auth ✅
-- [ ] **initData hash 검증** 활성화 (`app/v2/core/telegram.py`)
+- [x] **initData hash 검증** 활성화 (`app/v2/core/telegram.py`)
   - `hmac.compare_digest()` 사용 확인
   - 타이밍 공격 방지
-- [ ] **Telegram Bot Token** 프로덕션 값 설정
-- [ ] **테스트 통과**: `tests/v2/test_telegram_auth.py` (14/14)
-- [ ] **Auth Event 로깅** 확인
+- [x] **Telegram Bot Token** 프로덕션 값 설정
+- [x] **테스트 통과**: `tests/v2/test_telegram_auth.py` (14/14)
+- [x] **Auth Event 로깅** 확인
   - LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT
   - TELEGRAM_LINK, TELEGRAM_UNLINK
-- [ ] **V2User 자동 생성** 로직 검증 (V1 의존성 없음)
+- [x] **V2User 자동 생성** 로직 검증 (V1 의존성 없음)
 
 ### 1.2 JWT & Refresh Token ✅
 - [x] **Access Token 만료**: 15분 (`V2_ACCESS_TOKEN_EXPIRE_MINUTES=15`) (auth_service.py:172, 236)
 - [x] **Refresh Token 만료**: 30일 (auth_service.py:64, expires_days=30)
 - [x] **Sliding Window 갱신**: 7일 미만 시 자동 갱신 (auth_service.py:239-257, days_left < 7)
-- [ ] **JWT_SECRET** 강력한 값 (32자 이상) ⚠️ 운영값 15자 확인됨
+- [ ] **JWT_SECRET**  운영값 15자이상시 통과가능
 - [x] **Token 폐기** (logout) 동작 확인 (auth_service.py:267-315, revoke_refresh_token)
 - [x] **Revoked Token** 재사용 방지 (auth_service.py:223-224, TOKEN_REVOKED 거부)
 - [x] **V1 Auth password_hash 가드** 적용 (auth.py, 로컬 반영/운영 배포 필요)

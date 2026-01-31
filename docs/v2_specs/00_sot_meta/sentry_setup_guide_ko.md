@@ -33,7 +33,6 @@ Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
 ```
 https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928
 ```
-
 ⚠️ **보안 주의**: DSN은 클라이언트에서도 사용 가능한 공개 키이지만, GitHub Public Repository에 직접 커밋하지 마세요. GitHub Secrets로 관리합니다.
 
 ---
