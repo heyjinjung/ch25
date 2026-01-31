@@ -26,7 +26,6 @@ interface GameCardProps {
 }
 
 export function GameCard({
-  id: _id,
   title,
   icon,
   gradientClass,

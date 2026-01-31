@@ -7,7 +7,7 @@ export const tryHaptic = (duration = 20): void => {
       // @ts-ignore
       navigator.vibrate(duration);
     }
-  } catch (_e) {
+  } catch {
     // ignore runtime issues on some environments
   }
 };
