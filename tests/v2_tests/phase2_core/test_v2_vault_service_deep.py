@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi import HTTPException
+from unittest.mock import patch
 
 from app.db.base_class import Base
 from app.v2.models.user import V2User
@@ -57,7 +58,8 @@ def test_vault_deposit_with_suspension_cap(db_session: Session) -> None:
     assert is_suspended is True
     
     # Deposit more than 30k
-    service.deposit(db_session, user_id, 40000)
+    with patch("app.v2.services.circuit_breaker_service.CircuitBreakerService.check_and_incr"):
+        service.deposit(db_session, user_id, 40000)
     db_session.refresh(db_session.get(V2User, user_id))
     # Should be capped at 30k
     assert service.get_locked_balance(db_session, user_id) == 30000
