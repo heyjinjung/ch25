@@ -6,6 +6,7 @@ Create Date: 2026-01-31 04:00:00
 
 """
 from alembic import op
+from sqlalchemy import text
 
 # revision identifiers
 revision = '20260131_0400_fix_remaining_fk_to_v2_user'
