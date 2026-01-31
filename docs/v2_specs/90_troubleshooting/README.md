@@ -1,10 +1,51 @@
-# V2 트러블슈팅 가이드 모음
+# V2 트러블슈팅 운영 가이드
 
-V2 시스템 운영 중 발생할 수 있는 주요 문제와 해결 방법을 정리한 문서 모음입니다.
+V2 시스템 운영 중 발생하는 문제를 **도메인별 주간 문서**로 관리합니다.
 
 ---
 
-## 📋 빠른 링크
+## 📌 운영 정책 (v1.0, 2026-01-31)
+
+### 도메인 분류
+| 코드 | 도메인명 | 범위 |
+|---|---|---|
+| `AUTH` | 인증/보안 | 로그인, JWT, Telegram Auth, RBAC |
+| `GAME` | 게임 | Dice, Roulette, Lottery, Golden Hour |
+| `MISSION` | 미션/스트릭 | 일일/주간/이벤트 미션, 연속 출석 |
+| `VAULT` | 금고/경제 | Vault, 포인트, 재화, 출금 |
+| `INVENTORY` | 인벤토리/상점 | 아이템, 티켓, 상점 주문 |
+| `DB` | DB/마이그레이션 | Alembic, FK, 스키마, 데이터 정합성 |
+| `INFRA` | 인프라/배포 | Docker, CI/CD, Sentry, 서버 |
+| `FRONTEND` | 프론트엔드 | React, API 연동, UI 버그 |
+
+### 주간 운영 사이클
+1. **월~토**: 이슈 발생 시 해당 도메인 주간 문서에 추가
+2. **일요일**: 주간 정리
+   - 반복/핵심 이슈 → **SoT/Core 격상**
+   - 단발성 이슈 → **archive/ 이동**
+   - 새 주차 문서 생성
+
+### 파일 명명 규칙
+```
+W{주차}_{도메인코드}_troubleshooting.md
+예: W05_AUTH_troubleshooting.md
+```
+
+---
+
+## 📅 현재 주차 문서 (W05: 01-27 ~ 02-02)
+
+| 도메인 | 문서 | 이슈 수 |
+|---|---|---|
+| AUTH | [W05_AUTH_troubleshooting.md](./W05_AUTH_troubleshooting.md) | 2 |
+| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 3 |
+| MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 2 |
+| DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 3 |
+| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 2 |
+
+---
+
+## 📚 SoT/Core 격상 문서 (영구 보존)
 
 ### 🚨 긴급 대응 (P0)
 - [게임 토큰 관련 이슈](./v2_troubleshooting_game_token_issues_ko.md) - 티켓 차감 안 됨, 룰렛 입장 불가 등
@@ -18,9 +59,16 @@ V2 시스템 운영 중 발생할 수 있는 주요 문제와 해결 방법을 �
 ### 📚 운영 가이드
 - [CSV Import Pipeline](./v2_csv_import_pipeline_guide_ko.md) - 외부 카지노 로그 통합
 - [Golden 실시간 모니터링](./v2_golden_realtime_monitoring_guide_ko.md) - WebSocket 스트리밍, 인터벤션 로그
+- [에러 대응 체크리스트](./20260130_error_triage_checklist.md) - 이슈 분류 및 대응 절차
 
 ### 🔧 개발 환경
 - [Alembic Legacy Migration](./v2_troubleshooting_20260120_alembic_legacy_ko.md) - DB 마이그레이션 오류
+
+---
+
+## 🗄️ 아카이브
+
+과거 주차 문서는 [archive/](./archive/) 폴더에서 확인하세요.
 
 ---
 
