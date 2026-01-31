@@ -144,6 +144,8 @@ class DiceConfigDto(BaseModel):
     # Golden Hour Multiplier Settings
     enable_golden_hour: bool = Field(default=True, alias="enableGoldenHour", serialization_alias="enableGoldenHour")
     golden_hour_multiplier: float = Field(default=2.0, alias="goldenHourMultiplier", serialization_alias="goldenHourMultiplier")
+    golden_hour_start_time: str = Field(default="21:30:00", alias="goldenHourStartTime", serialization_alias="goldenHourStartTime")
+    golden_hour_end_time: str = Field(default="22:30:00", alias="goldenHourEndTime", serialization_alias="goldenHourEndTime")
 
     created_at: datetime | None = Field(default=None, alias="createdAt", serialization_alias="createdAt")
     updated_at: datetime | None = Field(default=None, alias="updatedAt", serialization_alias="updatedAt")
@@ -176,6 +178,8 @@ class DiceConfigUpdateRequest(BaseModel):
     # Golden Hour Multiplier Settings
     enable_golden_hour: bool | None = None
     golden_hour_multiplier: float | None = None
+    golden_hour_start_time: str | None = None
+    golden_hour_end_time: str | None = None
 
 
 # Lottery Configuration Schemas

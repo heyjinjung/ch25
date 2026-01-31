@@ -1751,6 +1751,8 @@ export interface AdminDiceConfigDto {
   // Golden Hour Multiplier Settings
   enableGoldenHour: boolean;
   goldenHourMultiplier: number;
+  goldenHourStartTime: string; // HH:MM:SS format (KST)
+  goldenHourEndTime: string; // HH:MM:SS format (KST)
 }
 
 export interface AdminLotteryPrizeDto {

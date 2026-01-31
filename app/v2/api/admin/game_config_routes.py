@@ -459,6 +459,8 @@ def get_dice_config(
         daily_gain_cap=config.daily_gain_cap,
         enable_golden_hour=config.enable_golden_hour,
         golden_hour_multiplier=config.golden_hour_multiplier,
+        golden_hour_start_time=getattr(config, "golden_hour_start_time", "21:30:00") or "21:30:00",
+        golden_hour_end_time=getattr(config, "golden_hour_end_time", "22:30:00") or "22:30:00",
         created_at=config.created_at,
         updated_at=config.updated_at,
     )
@@ -523,6 +525,10 @@ def update_dice_config(
         config.enable_golden_hour = payload.enable_golden_hour
     if payload.golden_hour_multiplier is not None:
         config.golden_hour_multiplier = payload.golden_hour_multiplier
+    if payload.golden_hour_start_time is not None:
+        config.golden_hour_start_time = payload.golden_hour_start_time
+    if payload.golden_hour_end_time is not None:
+        config.golden_hour_end_time = payload.golden_hour_end_time
 
     config.updated_at = datetime.utcnow()
 
@@ -570,6 +576,8 @@ def update_dice_config(
         daily_gain_cap=config.daily_gain_cap,
         enable_golden_hour=config.enable_golden_hour,
         golden_hour_multiplier=config.golden_hour_multiplier,
+        golden_hour_start_time=getattr(config, "golden_hour_start_time", "21:30:00") or "21:30:00",
+        golden_hour_end_time=getattr(config, "golden_hour_end_time", "22:30:00") or "22:30:00",
         created_at=config.created_at,
         updated_at=config.updated_at,
     )

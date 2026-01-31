@@ -27,16 +27,19 @@ def db_session():
     finally:
         db.close()
 
+from app.v2.models.user import V2User as User
+
 def setup_valid_user(db, user_id=1, locked=1_000_000, spent_today=10_000):
-    # Create User
+    # Create User (V2 Native SoT)
     user = User(
         id=user_id, 
         nickname=f"u{user_id}", 
-        external_id=f"ext_{user_id}",
+        cc_id=f"ext_{user_id}",
         vault_locked_balance=locked,
         vault_spent_today=spent_today,
         # Set reset date to Today KST to avoid auto-reset during test unless intended
-        vault_spent_reset_date=datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d") 
+        vault_spent_reset_date=datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d"),
+        created_at=datetime.now(timezone.utc) - timedelta(days=10) # Ensure NOT a new user for suspension tests
     )
     db.add(user)
     

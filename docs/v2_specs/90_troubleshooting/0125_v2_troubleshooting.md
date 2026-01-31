@@ -581,15 +581,86 @@ Inventory Log List
 이것도 초기화 해줘 
 
 ✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
+
+
+✅  학습 완료 - 현재 상황 분석
+🔴 핵심 문제점
+1. User ↔ V2User 이중 테이블 구조
+
+user 테이블 (V1): 금고 SoT (vault_locked_balance), 레거시 데이터
+v2_user 테이블 (V2): cc_id 기반 인증, V2 전용 기능
+정책: "V2 Native 단일 SoT" 원칙이나, 금고는 user.vault_locked_balance가 SoT
+이제 전체 비교표를 정리합니다:
+
+시드누락 문제해결 
+
+✅ 어드민 프론트에서 사이드바 메뉴가 성격과 카테고리가 다 제각각이야
+스타일은 유지하되 체계적으로 개편해줘
+
+✅ 사이드바에서 영어 표현 다 빼
+
+✅ 모든게임 플레이 버튼은 가능하나
+그 후 게임이 직접 진행되거나
+결과가 표시되거나
+티켓이 차감되어야 하는 모든 과정이 다 정지상태야 
+ㄴ 에러트리아지 20260130 019번 에러
+추가 마이그레이션 파일 생성 / 적용 
+
+✅ Get Started with Sentry Issues
+Your code sleuth eagerly awaits its first mission.
+Set up the Sentry SDK for 
+
+Your Source for Log-ical Data
+It's about time we offered something a bit more robust than breadcrumbs. With logs, you'll be able to have a lot more control and context over all your data.
+
+✅유저 닉네임 수정할수 있게 해야해! 
+
+✅ 입금내역이 금고출금조건 모달에는 잡히나
+레벨 xp 반영이 안되고 있음 
+1-1) 주간 CC 입금 3회
+이벤트 미션을 달성하고 보상받기 \
+ㄴ 주간입금 체크되는거 확인
+ㄴ 레벨 변경 된거 확인
+ㄴ 그런데 레벨페이지에서 닉네임 조회 안되고
+ㄴ 입금페이이지에서 작업로그 시간 갱신 안됨 / 추가수정 
+
+
+✅ 복권모음 달성시 골드키 1개 지급 기능 풀스택 구현해야함 
+
+[] 센트리 The transactions dataset is being deprecated. Please use Explore / Traces with the is_transaction:true filter instead. Please read these FAQs for more information.
+
+
+✅ 2) 신규 다음날 로그인 1일
+이벤트 미션을 달성하고 보상받기만 로그인 카운트가 안돼
+주간 미션 / 일일미션 로그인 영역은 성공함 
+
+✅ 신규유저 텔레그램 채널2개 입장 미션 프론트앤드 개선
+
+✅ 주사위 게임 골든하워 적용이 안되고 있음
+
+5) 마케팅..효율성
+입금 / 환전... 잡을수 있나?? 
+
+
 ---------------------------------------
 
 연속스트릭모달
 골든아워 모달
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
+
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
+
  docker compose build --no-cache; docker compose up -d
+
+
+#1. 개선사항
+ > 회원관리 유저 디테일드로우 > 금고관리에서 내역로그 볼수 있게 해줘
+ > 금고현황 페이지를 기준으로 금고 분석을 통합시켜줘 >> 이 떄 FE 구현된 카드컴포넌트 클릭시 모달로 상세내역 볼수 있게 해줘 
+
+
+##2.에러사항 
 
 
 -----------------------------------
@@ -597,9 +668,11 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 ## 에러대응
 1. C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_error_triage_checklist.md
 위의 에러 트리아지 체크리스트에 따라서 작업을 진행한다.
+완료 후 트러블슈팅 문서 업데이트 한다 
+관리자가 직접 깃 커밋/ 푸쉬하니까 넌 깃은 손대지 말것 
 
-배포 트래블슈팅문서 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\0000_2026_v2_deployment_troubleshooting_guide_ko.md
+트래블슈팅문서 업데이트 및 작성법
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\README.md
 
 기술 기준문서 :
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned 내 도메인별 폴더/문서
@@ -619,157 +692,3 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
-
-
-
-
- 학습 완료 - 현재 상황 분석
-🔴 핵심 문제점
-1. User ↔ V2User 이중 테이블 구조
-
-user 테이블 (V1): 금고 SoT (vault_locked_balance), 레거시 데이터
-v2_user 테이블 (V2): cc_id 기반 인증, V2 전용 기능
-정책: "V2 Native 단일 SoT" 원칙이나, 금고는 user.vault_locked_balance가 SoT
-이제 전체 비교표를 정리합니다:
-
-🔴 V2 전체 테이블 로컬 vs 프로덕션 비교표 (완성)
-📋 설정/시드 테이블 (Config/Seed) - 필수 복구
-테이블	로컬	프로덕션	상태	도메인
-mission	9	0	🔴 누락	미션
-v2_dice_config	1	0	🔴 누락	게임/다이스
-v2_lottery_config	1	0	🔴 누락	게임/복권
-v2_lottery_prize	7	0	🔴 누락	게임/복권
-v2_roulette_config	8	4	🟡 부분	게임/룰렛
-v2_roulette_segment	64	32	🟡 부분	게임/룰렛
-v2_segment_rule	5	0	🔴 누락	세그먼트
-segment_rule	11	0	🔴 누락	세그먼트(공유)
-feature_config	5	3	🟡 부분	기능플래그
-feature_schedule	1	0	🔴 누락	기능스케줄
-app_ui_config	2	1	🟡 부분	UI설정
-v2_server_config	0	0	⚪ 없음	서버설정
-v2_ticket_conversion_policy	0	0	⚪ 없음	티켓변환
-v2_level_reward_table	20	20	✅ OK	레벨보상
-vault_program	1	1	✅ OK	금고
-👤 어드민/운영 테이블 (Admin/Ops)
-테이블	로컬	프로덕션	상태	도메인
-admin_user_profile	3	0	🔴 누락	어드민계정
-admin_audit_log	766	90	✅ 정상	감사로그
-admin_message	0	0	⚪ 없음	V1메시지
-v2_admin_message	13	0	🔴 누락	V2메시지
-v2_admin_message_inbox	106	0	🔴 누락	V2메시지함
-ops_plan	0	0	⚪ 없음	운영계획
-ops_campaign	0	0	⚪ 없음	캠페인
-v2_ops_execution_result	0	0	⚪ 없음	실행결과
-🎮 골든/리텐션 테이블 (Golden/Retention)
-테이블	로컬	프로덕션	상태	도메인
-v2_golden_intervention_log	0	0	⚪ 없음	골든개입
-v2_retention_roi_log	0	0	⚪ 없음	ROI분석
-v2_user_retention_state	0	0	⚪ 없음	리텐션상태
-👥 유저 테이블 (User)
-테이블	로컬	프로덕션	상태	도메인
-user (V1)	1	2	✅ 정상	유저마스터
-v2_user	0	4	✅ 프로덕션정상	V2유저
-v2_user_auth_event	2	78	✅ 정상	인증이벤트
-v2_user_refresh_token	2	8	✅ 정상	리프레시토큰
-v2_user_segment	0	0	⚪ 없음	유저세그먼트
-user_game_wallet	172	10	🟡 유저데이터	지갑
-📊 로그 테이블 (Logs) - 유저 활동 데이터
-테이블	로컬	프로덕션	상태	도메인
-v2_dice_log	329	0	🟡 로그없음	다이스로그
-v2_roulette_log	78	0	🟡 로그없음	룰렛로그
-v2_lottery_log	682	0	🟡 로그없음	복권로그
-v2_shop_order	52	0	🟡 로그없음	상점주문
-user_event_log	1161	8	✅ 정상	유저이벤트
-
-
-🎯 수정된 복구 계획
-Phase 1: 필수 시드 데이터 (즉시)
-게임 설정 - 없으면 게임 실행 불가
-- v2_dice_config (1)
-- v2_lottery_config (1) + v2_lottery_prize (7)
-- v2_roulette_config (+4) + v2_roulette_segment (+32)
-미션/세그먼트 - 없으면 미션/분류 불가
-- mission (9)
-- v2_segment_rule (5)
-- segment_rule (11)
-기능플래그 - 없으면 기능 토글 불가
-- feature_config (+2)
-- feature_schedule (1)
-- app_ui_config (+1)
-Phase 2: 어드민 설정
-어드민 계정 - 없으면 어드민 로그인 후 권한 문제
-- admin_user_profile (3) ⚠️ V1 테이블이지만 필요
-어드민 메시지 - 없으면 메시지 기능 불가
-- v2_admin_message (13)
-- v2_admin_message_inbox (106) - 이건 유저 데이터라 선택적
-
-
-📋 전체 SoT 문서 학습 완료 - 종합 정리
-1. 금고 (Vault) 핵심 정책
-항목	정책/SoT 기준
-SoT 테이블	user.vault_locked_balance (V1 테이블이 SoT!)
-동기화	모든 게임/상점/입금 후 User와 V2User 동시 갱신 필수
-합산 금지	locked + available 합산 금지 (locked 단일 SoT)
-LOSE 차감	게임 LOSE 시 vault_locked_balance 차감 (limit 체크 후에도)
-출금 조건	최근 3일 내 30회 게임 + 오늘 사용 + 오늘 입금
-🔴 발견된 충돌: Admin 대시보드에서 locked + available 합산 사용 중
-
-2. 상점 (Shop) 핵심 정책
-항목	정책/SoT 기준
-CostType	VAULT/DIAMOND만 허용, POINT→VAULT로 정규화
-차감 대상	user.vault_locked_balance (V1 SoT)
-상품 Config	v2_shop_products 빈 배열 시 상점 공백 위험
-Strict Policy	🔴 미구현: 7일 무입금 시 이용 차단 로직 없음
-🔴 긴급 필요: ShopService.purchase에 benefits_suspended 체크 추가
-
-3. 인벤토리 (Inventory) 핵심 정책
-항목	정책/SoT 기준
-자산 분류	Cash(Vault) / Token(Wallet) / Item(Inventory) 3단계
-기프티콘 명명	{BRAND}_GIFTICON_{AMOUNT} 포맷 필수
-교환 정책	비가역성 (분해 불가), 수수료 없음
-모델 위치	V1 공용 모델 사용 중 (app.models.inventory)
-4. 미션 (Mission) 핵심 정책
-항목	정책/SoT 기준
-타임존	KST 09:00 리셋 (Asia/Seoul)
-API 경로	/api/v2/mission/* (레거시 /api/mission 병존)
-logic_key	전역 UNIQUE (카테고리 내부가 아님)
-action_type	실제 트리거 (condition은 표시용)
-어드민	강제 리셋/마일스톤 배포/검증 기능 구현됨
-5. 게임 (Game) 핵심 정책
-항목	정책/SoT 기준
-티켓 타입	DICE_TICKET, ROULETTE_TICKET, LOTTERY_TICKET 등
-레거시 매핑	ROULETTE_COIN → ROULETTE_TICKET fallback
-룰렛 세그먼트	8개 (slot_index 0~7)
-Grade 컬럼	🟡 Deprecated (ticket_type으로 대체, DB 잔존)
-Golden V2	🔴 미구현: Circuit Breaker 안전장치 없음
-레저 기록	티켓 차감 시 1건만 기록 (중복 방지)
-🔴 긴급 필요: Golden V2 Circuit Breaker 구현
-
-6. 레벨 (Level) 핵심 정책
-항목	정책/SoT 기준
-XP 저장	user_level_progress.xp (v2_user에는 XP 없음)
-적립 재화	GAME_XP 단일 (금고포인트와 무관)
-CC 입금 적립	10만원당 20XP
-일일 한도	🟢 폐기됨 (무제한 적립)
-Season Pass	🟢 폐기됨 (null 반환)
-📊 Production DB 시드 데이터 필요 목록 (확정)
-테이블	Local	Prod	필요 액션
-v2_dice_config	1	0	🔴 시드 필요
-v2_lottery_config	1	0	🔴 시드 필요
-v2_lottery_prize	7	0	🔴 시드 필요
-v2_roulette_config	8	4	🟡 GOLD_KEY_TICKET 등 추가
-v2_roulette_segment	64	32	🟡 추가 티켓 타입용 세그먼트
-mission	9	0	🔴 시드 필요
-v2_segment_rule	5	0	🔴 시드 필요
-segment_rule	11	0	🔴 시드 필요
-feature_config	5	3	🟡 추가 필요
-admin_user_profile	3	0	🔴 시드 필요
-v2_admin_message	13	0	🟡 운영 메시지
-🔥 다음 단계 제안
-Migration 적용: 20260130_2000_add_missing_v2_game_columns.py 배포
-시드 데이터 Migration 생성: 위 테이블들의 시드 데이터를 Alembic migration으로 생성
-Production 배포 순서:
-Column migration 적용
-Seed data migration 적용
-Backend 재시작
-지금 시드 데이터 migration을 생성할까요, 아니면 추가로 확인하실 항목이 있나요?

@@ -156,6 +156,10 @@ class CSVImportRequest(BaseModel):
         False,
         description="Skip duplicate session_id checks (faster but may cause duplicates)",
     )
+    import_type: str = Field(
+        "GAME_LOG",
+        description="Type of CSV import: GAME_LOG (default) or HQ_MARGIN",
+    )
 
 
 class CSVImportResult(BaseModel):

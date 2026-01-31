@@ -27,7 +27,8 @@ def db_session():
 
 def setup_user(db, user_id=1, total_charge=0, created_at=None):
     if created_at is None:
-        created_at = datetime.utcnow()
+        # Default to 10 days ago to bypass New User grace period (7 days) for suspension tests
+        created_at = datetime.now(timezone.utc) - timedelta(days=10)
     user = V2User(
         id=user_id,
         cc_id=f"ext_{user_id}",

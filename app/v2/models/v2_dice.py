@@ -36,6 +36,8 @@ class V2DiceConfig(Base):
     # Golden Hour Multiplier Settings
     enable_golden_hour = Column(Boolean, nullable=False, default=True)
     golden_hour_multiplier = Column(Float, nullable=False, default=2.0)
+    golden_hour_start_time = Column(String(8), nullable=False, default="21:30:00")  # HH:MM:SS KST
+    golden_hour_end_time = Column(String(8), nullable=False, default="22:30:00")    # HH:MM:SS KST
     
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

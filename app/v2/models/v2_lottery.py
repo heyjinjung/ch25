@@ -38,7 +38,7 @@ class V2LotteryPrize(Base):
     config_id = Column(Integer, ForeignKey("v2_lottery_config.id", ondelete="CASCADE"), nullable=False)
     label = Column(String(100), nullable=False)
     reward_type = Column(String(50), nullable=False)
-    reward_amount = Column(Integer, nullable=False, default=0)
+    reward_amount = Column(Integer, nullable=False, default=1)
     weight = Column(Integer, nullable=False, default=0)
     stock = Column(Integer, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)

@@ -12,7 +12,8 @@
       "Bash(docker-compose up:*)",
       "Bash(ssh:*)",
       "Bash(scp:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

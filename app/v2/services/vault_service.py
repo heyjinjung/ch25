@@ -29,6 +29,64 @@ logger = logging.getLogger(__name__)
 
 class V2VaultService:
     @staticmethod
+    def _to_utc(now: datetime) -> datetime:
+        if now.tzinfo is None:
+            return now.replace(tzinfo=timezone.utc)
+        return now.astimezone(timezone.utc)
+
+    @staticmethod
+    def _get_last_deposit_date(db: Session, user_id: int) -> datetime | None:
+        rank_data = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
+        if rank_data and rank_data.deposit_amount > 0:
+            return rank_data.updated_at
+        return None
+
+    @staticmethod
+    def get_user_vault_policy(db: Session, user: V2User, now: datetime) -> dict:
+        """Determine strict vault policy status (Shim for legacy tests)."""
+        now_dt = V2VaultService._to_utc(now)
+        last_deposit = V2VaultService._get_last_deposit_date(db, user.id)
+        
+        status = "ACTIVE"
+        multiplier = 1.0
+        suspended = False
+        
+        total_charged = int(getattr(user, "total_charge_amount", 0) or 0)
+        vault_limit = 0
+        
+        # New User Grace Period (from is_benefits_suspended logic)
+        created_at = user.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        days_since_signup = (now_dt - created_at).days
+        
+        if days_since_signup < 7:
+            # New users are always active
+            pass
+        else:
+            anchor_date = V2VaultService._to_utc(last_deposit) if last_deposit else created_at
+            days_since = (now_dt - anchor_date).days
+            
+            if days_since >= 7:
+                status = "INACTIVE"
+                multiplier = 0.1
+                suspended = True
+                vault_limit = 30000
+            elif days_since >= 3:
+                status = "WARNING"
+                multiplier = 0.5
+
+        if total_charged == 0:
+            vault_limit = 30000
+
+        return {
+            "status": status,
+            "recency_multiplier": multiplier,
+            "benefits_suspended": suspended,
+            "vault_max_limit": vault_limit
+        }
+
+    @staticmethod
     def get_locked_balance(db: Session, user_id: int) -> int:
         v2_balance = db.execute(select(V2User.vault_locked_balance).where(V2User.id == user_id)).scalar_one_or_none()
         if v2_balance is None:
@@ -185,12 +243,18 @@ class V2VaultService:
         """
         from app.v2.models.user import V2User
         
-        now_dt = now_dt or datetime.utcnow()
+        if now_dt is None:
+            now_dt = datetime.now(timezone.utc)
+        elif now_dt.tzinfo is None:
+            now_dt = now_dt.replace(tzinfo=timezone.utc)
         
         # === 신규 유저 예외 처리 (가입 7일 이내) ===
         user = db.query(V2User).filter(V2User.id == user_id).first()
         if user and user.created_at:
-            days_since_signup = (now_dt - user.created_at).days
+            created_at = user.created_at
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            days_since_signup = (now_dt - created_at).days
             if days_since_signup < 7:
                 # 신규 유저는 제재 대상에서 제외
                 return False, 0

@@ -40,6 +40,7 @@ export default function CSVImportPage() {
   const [batchSize, setBatchSize] = useState(250);
   const [isHistorical, setIsHistorical] = useState(false);
   const [emitToRedis] = useState(true);
+  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN">("GAME_LOG");
 
   const validateMutation = useValidateCSV();
   const uploadMutation = useUploadCSV();
@@ -75,6 +76,7 @@ export default function CSVImportPage() {
         batch_size: batchSize,
         historical_mode: isHistorical,
         emit_to_redis: emitToRedis,
+        import_type: importType,
       });
       setStep("RESULT");
     } catch (err) {
@@ -151,10 +153,55 @@ export default function CSVImportPage() {
               <div className="space-y-2">
                 <h3 className="text-xl font-bold">CSV 파일을 업로드하세요</h3>
                 <p className="text-zinc-500 text-sm max-w-md mx-auto">
-                  시스템에서 정의한 표준 CSV 형식을 준수해야 합니다. (timestamp,
-                  user_id, game_type, result, bet, payout...)
+                  시스템에서 정의한 표준 CSV 형식을 준수해야 합니다.
                 </p>
               </div>
+
+              {/* Import Type Selection */}
+              <div className="w-full max-w-sm space-y-3 bg-zinc-900/50 border border-white/5 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
+                  <Info className="w-4 h-4" />
+                  데이터 타입 선택
+                </div>
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-black/20 hover:bg-black/40 transition-colors border border-white/5">
+                    <input
+                      type="radio"
+                      name="importType"
+                      value="GAME_LOG"
+                      checked={importType === "GAME_LOG"}
+                      onChange={() => setImportType("GAME_LOG")}
+                      className="w-4 h-4 text-indigo-600"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-white">외부 게임 로그 (기본)</div>
+                      <div className="text-xs text-zinc-500">
+                        timestamp, user_id, game_type, result, bet, payout...
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-black/20 hover:bg-black/40 transition-colors border border-white/5">
+                    <input
+                      type="radio"
+                      name="importType"
+                      value="HQ_MARGIN"
+                      checked={importType === "HQ_MARGIN"}
+                      onChange={() => setImportType("HQ_MARGIN")}
+                      className="w-4 h-4 text-amber-600"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-white flex items-center gap-2">
+                        💰 본사 마진 데이터
+                        <Badge variant="outline" className="text-xs">NEW</Badge>
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        이름, 닉네임, 충전/환전 금액, 마진, 경과일, 세그먼트
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-4 w-full max-w-sm">
                 <Input
                   type="file"

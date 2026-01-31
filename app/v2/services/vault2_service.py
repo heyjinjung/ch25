@@ -610,12 +610,13 @@ class Vault2Service:
         )
         skip_summary = {row[0]: row[1] for row in skip_stats}
 
-        # 3. Expirations in next 24h (Critical for retention ops)
+        # 3. Expirations in next 24_h (Critical for retention ops)
+        # V2-only: Retrieve from VaultStatus instead of V2User which lacks this column
         expiring_soon_count = (
-            db.query(func.count(V2User.id))
-            .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+            db.query(func.count(VaultStatus.id))
+            .filter(VaultStatus.state == "LOCKED", VaultStatus.expires_at.between(now_dt, now_dt + timedelta(hours=24)))
             .scalar()
-        )
+        ) or 0
 
         # 4. Total Unlocked Cash (Today)
         unlocked_cash_today = (
@@ -670,20 +671,21 @@ class Vault2Service:
 
         if type == "expiring_soon_24h":
             rows = (
-                db.query(V2User)
-                .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
-                .order_by(V2User.vault_locked_expires_at.asc())
+                db.query(VaultStatus, V2User)
+                .join(V2User, V2User.id == VaultStatus.user_id)
+                .filter(VaultStatus.state == "LOCKED", VaultStatus.expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+                .order_by(VaultStatus.expires_at.asc())
                 .limit(limit)
                 .all()
             )
-            for u in rows:
+            for s, u in rows:
                 results.append({
                     "user_id": u.id,
                     "external_id": u.cc_id,
                     "nickname": u.nickname,
                     "telegram_username": u.telegram_username,
-                    "amount": u.vault_locked_balance,
-                    "timestamp": u.vault_locked_expires_at,
+                    "amount": s.locked_amount,
+                    "timestamp": s.expires_at,
                     "meta": {"type": "locked_balance"}
                 })
 
@@ -744,18 +746,17 @@ class Vault2Service:
             rows = (
                 db.query(
                     V2User.id,
-                    V2User.external_id,
+                    V2User.cc_id.label("external_id"),
                     V2User.nickname,
                     V2User.telegram_username,
                     V2User.vault_locked_balance,
                     V2User.vault_available_balance,
-                    V2User.vault_locked_expires_at,
                 )
                 .order_by((V2User.vault_locked_balance + V2User.vault_available_balance).desc(), V2User.id.asc())
                 .limit(limit)
                 .all()
             )
-            for (uid, external_id, nickname, telegram_username, locked, available, locked_expires_at) in rows:
+            for (uid, external_id, nickname, telegram_username, locked, available) in rows:
                 locked_amt = int(locked or 0)
                 available_amt = int(available or 0)
                 total_amt = locked_amt + available_amt
@@ -766,7 +767,7 @@ class Vault2Service:
                     "telegram_username": telegram_username,
                     "amount": total_amt,
                     "count": 1,
-                    "timestamp": locked_expires_at,
+                    "timestamp": None,  # V2User lacks single expiry column
                     "meta": {"locked": locked_amt, "available": available_amt, "type": "liabilities"},
                 })
 
@@ -861,8 +862,7 @@ class Vault2Service:
             user.vault_locked_balance = new_locked
             user.vault_available_balance = new_avail
             # Legacy mirror: keep consistent with Phase 1 SoT (locked only).
-            user.vault_balance = int(new_locked)
-            user.vault_locked_expires_at = status.expires_at
+            # user.vault_locked_expires_at = status.expires_at # Removed: column not in V2User schema
             db.add(user)
 
         db.commit()
@@ -954,8 +954,7 @@ class Vault2Service:
             user.vault_locked_balance = int(next_locked)
             user.vault_available_balance = int(next_available)
             # Legacy mirror: keep consistent with Phase 1 SoT (locked only).
-            user.vault_balance = int(next_locked)
-            user.vault_locked_expires_at = status.expires_at
+            # user.vault_locked_expires_at = status.expires_at # Removed: column not in V2User schema
             db.add(user)
 
         db.commit()

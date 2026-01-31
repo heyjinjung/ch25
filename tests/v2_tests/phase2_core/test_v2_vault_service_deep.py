@@ -30,8 +30,13 @@ def db_session() -> Session:
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     db = SessionLocal()
     try:
-        # Create a test user
-        v2_user = V2User(id=1, cc_id="v2_master_01", nickname="Master")
+        # Create a test user (10 days old to bypass grace period)
+        v2_user = V2User(
+            id=1, 
+            cc_id="v2_master_01", 
+            nickname="Master",
+            created_at=datetime.now(timezone.utc) - timedelta(days=10)
+        )
         db.add(v2_user)
         db.commit()
         yield db

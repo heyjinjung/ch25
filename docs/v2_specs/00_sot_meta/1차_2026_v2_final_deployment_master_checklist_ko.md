@@ -22,7 +22,6 @@
 6. ✅ V2 Level & XP
 7. ✅ V2 Team Battle
 8. ✅ V2 Admin Dashboard
-
 9. ✅ V2 Golden Intervention (Circuit Breaker, Daily Nudge, ROI, Rollback)
 
 ---
@@ -38,13 +37,14 @@
 - [x] **Auth Event 로깅** 확인
   - LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT
   - TELEGRAM_LINK, TELEGRAM_UNLINK
-- [x] **V2User 자동 생성** 로직 검증 (V1 의존성 없음)
+- [ ] **V2User 자동 생성** 로직 검증 (V1 의존성 없음)
+근거문서 C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_deployment_verification_report.md
 
 ### 1.2 JWT & Refresh Token ✅
 - [x] **Access Token 만료**: 15분 (`V2_ACCESS_TOKEN_EXPIRE_MINUTES=15`) (auth_service.py:172, 236)
 - [x] **Refresh Token 만료**: 30일 (auth_service.py:64, expires_days=30)
 - [x] **Sliding Window 갱신**: 7일 미만 시 자동 갱신 (auth_service.py:239-257, days_left < 7)
-- [ ] **JWT_SECRET**  운영값 15자이상시 통과가능
+- [ ] **JWT_SECRET** 강력한 값 (32자 이상) ⚠️ 운영값 15자 확인됨
 - [x] **Token 폐기** (logout) 동작 확인 (auth_service.py:267-315, revoke_refresh_token)
 - [x] **Revoked Token** 재사용 방지 (auth_service.py:223-224, TOKEN_REVOKED 거부)
 - [x] **V1 Auth password_hash 가드** 적용 (auth.py, 로컬 반영/운영 배포 필요)

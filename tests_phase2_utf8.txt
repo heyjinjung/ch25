@@ -1,0 +1,616 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-8.3.2, pluggy-1.6.0 -- C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\JAVIS\ch\ch25
+configfile: pytest.ini
+plugins: anyio-4.12.0, asyncio-0.23.3, cov-4.1.0
+asyncio: mode=Mode.STRICT
+collecting ... collected 102 items
+
+tests/v2_tests/phase2_core/test_admin_economy_edge.py::test_admin_economy_floor_logic PASSED [  0%]
+tests/v2_tests/phase2_core/test_admin_economy_edge.py::test_admin_economy_atomicity PASSED [  1%]
+tests/v2_tests/phase2_core/test_admin_economy_edge.py::test_admin_economy_race_condition_simulation PASSED [  2%]
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_auth_then_mission_success PASSED [  3%]
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_mission_with_expired_token PASSED [  4%]
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_mission_without_token PASSED [  5%]
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_dev_login_user_not_found PASSED [  6%]
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_dev_login_missing_cc_id PASSED [  7%]
+tests/v2_tests/phase2_core/test_auth_service_unit.py::test_log_auth_event_basic[LOGIN_SUCCESS-True-None] PASSED [  8%]
+tests/v2_tests/phase2_core/test_auth_service_unit.py::test_log_auth_event_basic[LOGIN_FAILED-False-\uc5d0\ub7ec] PASSED [  9%]
+tests/v2_tests/phase2_core/test_auth_service_unit.py::test_coerce_utc[dt0-expected_tz0] PASSED [ 10%]
+tests/v2_tests/phase2_core/test_auth_service_unit.py::test_coerce_utc[dt1-expected_tz1] PASSED [ 11%]
+tests/v2_tests/phase2_core/test_cc_deposit_logic.py::test_cc_deposit_idempotency PASSED [ 12%]
+tests/v2_tests/phase2_core/test_cc_deposit_logic.py::test_cc_deposit_delta_logic PASSED [ 13%]
+tests/v2_tests/phase2_core/test_cc_deposit_logic.py::test_first_deposit_trigger PASSED [ 14%]
+tests/v2_tests/phase2_core/test_ch25_event_publish.py::test_publish_internal_game_result_serializes PASSED [ 15%]
+tests/v2_tests/phase2_core/test_ch25_event_publish.py::test_normalize_stream_payload_various_types PASSED [ 16%]
+tests/v2_tests/phase2_core/test_ch25_event_publish.py::test_admin_import_normalizes PASSED [ 17%]
+tests/v2_tests/phase2_core/test_golden_intervention_service.py::test_check_lose_streak_trigger_creates_log_and_sets_cooldown PASSED [ 18%]
+tests/v2_tests/phase2_core/test_golden_intervention_service.py::test_check_lose_streak_trigger_returns_none_when_not_enough_results PASSED [ 19%]
+tests/v2_tests/phase2_core/test_golden_intervention_service.py::test_check_balance_drop_trigger_updates_session_delta_and_sets_cooldown PASSED [ 20%]
+tests/v2_tests/phase2_core/test_mission_service_unit.py::test_dummy_mission_service_basic PASSED [ 21%]
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_multiplier_logic PASSED [ 22%]
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_operational_date_calc PASSED [ 23%]
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_milestone_claim_flow PASSED [ 24%]
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_force_grant_and_reset PASSED [ 25%]
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_milestone_progress_listing PASSED [ 26%]
+tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py::test_resolve_intervention_success PASSED [ 27%]
+tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py::test_resolve_intervention_duplicate PASSED [ 28%]
+tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py::test_resolve_intervention_empty_type PASSED [ 29%]
+tests/v2_tests/phase2_core/test_shop_inventory_logic.py::test_shop_purchase_integrity PASSED [ 30%]
+tests/v2_tests/phase2_core/test_shop_inventory_logic.py::test_shop_purchase_idempotency PASSED [ 31%]
+tests/v2_tests/phase2_core/test_shop_inventory_logic.py::test_shop_cache_invalidation_simulation PASSED [ 32%]
+tests/v2_tests/phase2_core/test_survey_reward_service_unit.py::test_apply_reward_success PASSED [ 33%]
+tests/v2_tests/phase2_core/test_survey_reward_service_unit.py::test_apply_reward_fail PASSED [ 34%]
+tests/v2_tests/phase2_core/test_survey_reward_service_unit.py::test_apply_reward_invalid_input PASSED [ 35%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_list_seasons_basic PASSED [ 36%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_get_season_found PASSED [ 37%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_get_season_not_found PASSED [ 38%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_create_season_success PASSED [ 39%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_update_season_success PASSED [ 40%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_update_season_not_found PASSED [ 41%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_end_season_success PASSED [ 42%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_end_season_not_found PASSED [ 43%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_list_teams_basic PASSED [ 44%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_get_team_detail_found PASSED [ 45%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_get_team_detail_not_found PASSED [ 46%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_update_team_success PASSED [ 47%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_update_team_not_found PASSED [ 48%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_adjust_team_score_success PASSED [ 49%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_adjust_team_score_not_found PASSED [ 50%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_list_team_members_with_contributions_basic PASSED [ 50%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_create_team_success PASSED [ 51%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_create_team_duplicate PASSED [ 52%]
+tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py::test_create_team_empty_name PASSED [ 53%]
+tests/v2_tests/phase2_core/test_team_battle_edge.py::test_team_battle_subsecond_ranking PASSED [ 54%]
+tests/v2_tests/phase2_core/test_team_battle_edge.py::test_team_battle_buzzer_beater PASSED [ 55%]
+tests/v2_tests/phase2_core/test_v2_imports_smoke.py::test_import_v2_schemas_and_workers_smoke PASSED [ 56%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_strict_vault_policy_suspension_on_claim FAILED [ 57%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_streak_reset_on_skipped_day PASSED [ 58%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_new_user_mission_exclusion_for_old_users PASSED [ 59%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_mission_time_window_restriction PASSED [ 60%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_idempotent_claim_prevention PASSED [ 61%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_streak_milestone_claim_eligibility PASSED [ 62%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_mission_requires_approval_flow PASSED [ 63%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_new_user_mission_count_and_auto_claim PASSED [ 64%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_new_user_multiple_missions_overlap PASSED [ 65%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_mission_reset_date_logic PASSED [ 66%]
+tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_mission_service_missing_method_smoke_test PASSED [ 67%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestGameSpecificMissions::test_play_dice_mission_updates_only_dice PASSED [ 68%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestGameSpecificMissions::test_play_game_updates_all_game_missions PASSED [ 69%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestGameSpecificMissions::test_dice_play_alias_matches_play_dice PASSED [ 70%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestGameSpecificMissions::test_combined_game_and_specific_missions PASSED [ 71%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestNewUserMissions::test_telegram_join_mission PASSED [ 72%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestNewUserMissions::test_cc_deposit_mission PASSED [ 73%]
+tests/v2_tests/phase2_core/test_v2_mission_game_specific.py::TestWeeklyMissions::test_weekly_roulette_mission PASSED [ 74%]
+tests/v2_tests/phase2_core/test_v2_mission_service.py::test_v2_mission_update_progress PASSED [ 75%]
+tests/v2_tests/phase2_core/test_v2_mission_service.py::test_v2_mission_claim_reward_vault PASSED [ 76%]
+tests/v2_tests/phase2_core/test_v2_mission_service.py::test_v2_mission_claim_daily_gift PASSED [ 77%]
+tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_deposit_with_suspension_cap FAILED [ 78%]
+tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_is_benefits_suspended_latency_bypass FAILED [ 79%]
+tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_consume_locked_for_spend PASSED [ 80%]
+tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_admin_operations PASSED [ 81%]
+tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_info_aggregation PASSED [ 82%]
+tests/v2_tests/phase2_core/test_v2_vault_withdrawal_tiers.py::test_v2_withdrawal_tiers_min_balance PASSED [ 83%]
+tests/v2_tests/phase2_core/test_vault2_service.py::test_vault2_config_merge_and_program_creation PASSED [ 84%]
+tests/v2_tests/phase2_core/test_vault2_service.py::test_vault2_eligibility_branches PASSED [ 85%]
+tests/v2_tests/phase2_core/test_vault2_service.py::test_vault2_compute_expires_at PASSED [ 86%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_accrue_locked_logic PASSED [ 87%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_unlock_event_recording PASSED [ 88%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_state_transitions PASSED [ 89%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_program_helpers PASSED [ 90%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_balance_updates_and_details FAILED [ 91%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_extended_admin_and_stats FAILED [ 92%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_internal_helpers PASSED [ 93%]
+tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_config_management PASSED [ 94%]
+tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_vault_zero_deposit_limit FAILED [ 95%]
+tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_vault_recency_suspension FAILED [ 96%]
+tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_legacy_field_lock_verification FAILED [ 97%]
+tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py::test_withdrawal_tiers FAILED [ 98%]
+tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py::test_daily_spent_reset_check FAILED [ 99%]
+tests/v2_tests/phase2_core/test_xp_cap.py::test_xp_cap_enforcement PASSED [100%]
+
+================================== FAILURES ===================================
+______ TestMissionEdgeCases.test_strict_vault_policy_suspension_on_claim ______
+
+self = <test_v2_mission_edge_cases.TestMissionEdgeCases object at 0x000002123B999750>
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123D6C0BD0>
+
+    def test_strict_vault_policy_suspension_on_claim(self, db_session):
+        """[Strict Vault Policy] 혜택 중단 상태(7일 무입금)에서 보상 수령 차단"""
+        user = _seed_user(db_session, user_id=1)
+        # 입금 내역 없음 -> BENEFITS_SUSPENDED
+    
+        mission = Mission(
+            title="테스트 미션",
+            logic_key="TEST_MISSION",
+            action_type="TEST_ACTION",
+            target_value=1,
+            reward_type=MissionRewardType.POINT,
+            reward_amount=1000,
+            category=MissionCategory.DAILY,
+            is_active=True
+        )
+        db_session.add(mission)
+        db_session.commit()
+    
+        service = V2MissionService(db_session)
+        service.update_progress(user.id, "TEST_ACTION", delta=1)
+    
+        # 1. 제재 상태에서 수령 시도
+        ok, msg, amount = service.claim_reward(user.id, mission.id)
+>       assert ok is False
+E       assert True is False
+
+tests\v2_tests\phase2_core\test_v2_mission_edge_cases.py:85: AssertionError
+___________________ test_vault_deposit_with_suspension_cap ____________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123EA67850>
+
+    def test_vault_deposit_with_suspension_cap(db_session: Session) -> None:
+        service = V2VaultService()
+        user_id = 1
+    
+        # 1. Without suspension
+        # Mocking is_benefits_suspended to return True to test the cap
+        # We'll actually trigger it by making sure there are no deposits
+    
+        # Check initial: suspended because 0 deposits in 7 days
+        is_suspended, dep_7d = service.is_benefits_suspended(db_session, user_id)
+>       assert is_suspended is True
+E       assert False is True
+
+tests\v2_tests\phase2_core\test_v2_vault_service_deep.py:52: AssertionError
+_______________ test_vault_is_benefits_suspended_latency_bypass _______________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123EA89E10>
+
+    def test_vault_is_benefits_suspended_latency_bypass(db_session: Session) -> None:
+        service = V2VaultService()
+        user_id = 1
+    
+        # Suspended due to 0 deposits
+        is_suspended, _ = service.is_benefits_suspended(db_session, user_id)
+>       assert is_suspended is True
+E       assert False is True
+
+tests\v2_tests\phase2_core\test_v2_vault_service_deep.py:66: AssertionError
+___________________ test_vault2_balance_updates_and_details ___________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123ECF4C50>
+
+    def test_vault2_balance_updates_and_details(db_session: Session) -> None:
+        service = Vault2Service()
+        user_id = 1
+    
+        # Ensure default program exists
+        service.get_default_program(db_session, ensure=True)
+    
+        # 1. Update Balance (Absolute Set in Vault2)
+        # Using set_balance which exists in Vault2Service
+        status = service.set_balance(db_session, user_id=user_id, locked_amount=1000, available_amount=500, reason="TEST_SET", admin_id=7)
+        assert status.locked_amount == 1000
+        assert status.available_amount == 500
+    
+        # 2. Get Detail Stats branches
+        # Mock some data for different stats types
+        # "liabilities"
+>       details = service.get_vault_detail_stats(db_session, type="liabilities")
+
+tests\v2_tests\phase2_core\test_vault_extended_coverage.py:162: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.v2.services.vault2_service.Vault2Service object at 0x000002123ED99310>
+db = <sqlalchemy.orm.session.Session object at 0x000002123ECF4C50>
+
+    def get_vault_detail_stats(self, db: Session, *, type: str, limit: int = 100) -> list[dict[str, Any]]:
+        """Fetch detailed user lists for Vault Phase 1 stats."""
+        now_dt = datetime.utcnow()
+        today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+        # Backward/Frontend compatibility:
+        # - Admin UI uses short keys like accrual/liabilities/withdrawal.
+        # - Service historically used today_accrual/today_unlock_cash/expiring_soon_24h.
+        if type == "accrual":
+            type = "today_accrual"
+    
+        results = []
+    
+        if type == "expiring_soon_24h":
+            rows = (
+                db.query(V2User)
+                .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+                .order_by(V2User.vault_locked_expires_at.asc())
+                .limit(limit)
+                .all()
+            )
+            for u in rows:
+                results.append({
+                    "user_id": u.id,
+                    "external_id": u.cc_id,
+                    "nickname": u.nickname,
+                    "telegram_username": u.telegram_username,
+                    "amount": u.vault_locked_balance,
+                    "timestamp": u.vault_locked_expires_at,
+                    "meta": {"type": "locked_balance"}
+                })
+    
+        elif type == "today_unlock_cash":
+            rows = (
+                db.query(UserCashLedger, V2User)
+                .join(V2User, V2User.id == UserCashLedger.user_id)
+                .filter(UserCashLedger.reason == "VAULT_UNLOCK", UserCashLedger.created_at >= today_start)
+                .order_by(UserCashLedger.created_at.desc())
+                .limit(limit)
+                .all()
+            )
+            for ledger, u in rows:
+                results.append({
+                    "user_id": u.id,
+                    "external_id": u.cc_id,
+                    "nickname": u.nickname,
+                    "telegram_username": u.telegram_username,
+                    "amount": ledger.delta,
+                    "timestamp": ledger.created_at,
+                    "meta": {"reason": ledger.reason}
+                })
+    
+        elif type == "today_accrual":
+            # Group by user to show top earners today
+            rows = (
+                db.query(
+                    VaultEarnEvent.user_id,
+                    func.sum(VaultEarnEvent.amount).label("total"),
+                    func.count(VaultEarnEvent.id).label("cnt"),
+                    func.max(VaultEarnEvent.created_at).label("last_at")
+                )
+                .filter(VaultEarnEvent.created_at >= today_start)
+                .group_by(VaultEarnEvent.user_id)
+                .order_by(func.sum(VaultEarnEvent.amount).desc())
+                .limit(limit)
+                .all()
+            )
+            # Need to fetch user details separately or join
+            user_ids = [r[0] for r in rows]
+            users = {u.id: u for u in db.query(V2User).filter(V2User.id.in_(user_ids)).all()} if user_ids else {}
+    
+            for uid, total, cnt, last_at in rows:
+                u = users.get(uid)
+                results.append({
+                    "user_id": uid,
+                    "external_id": u.cc_id if u else None,
+                    "nickname": u.nickname if u else None,
+                    "telegram_username": u.telegram_username if u else None,
+                    "amount": int(total),
+                    "count": int(cnt),
+                    "timestamp": last_at,
+                    "meta": {"type": "accrual_sum"}
+                })
+    
+        elif type == "liabilities":
+            # Per-user liabilities = locked + available (excluding reserved withdrawal amounts).
+            rows = (
+                db.query(
+                    V2User.id,
+>                   V2User.external_id,
+                    V2User.nickname,
+                    V2User.telegram_username,
+                    V2User.vault_locked_balance,
+                    V2User.vault_available_balance,
+                    V2User.vault_locked_expires_at,
+                )
+                .order_by((V2User.vault_locked_balance + V2User.vault_available_balance).desc(), V2User.id.asc())
+                .limit(limit)
+                .all()
+            )
+E           AttributeError: type object 'V2User' has no attribute 'external_id'
+
+app\v2\services\vault2_service.py:747: AttributeError
+____________________ test_vault2_extended_admin_and_stats _____________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123ECD4990>
+
+    def test_vault2_extended_admin_and_stats(db_session: Session) -> None:
+        service = Vault2Service()
+        user_id = 1
+        program = service.get_default_program(db_session, ensure=True)
+    
+        # 1. Eligibility & Upsert
+        service.upsert_eligibility(db_session, program_key=program.key, user_id=user_id, eligible=True)
+        assert service.get_eligibility(db_session, program_key=program.key, user_id=user_id) is True
+    
+        service.upsert_eligibility(db_session, program_key=program.key, user_id=user_id, eligible=False)
+        assert service.get_eligibility(db_session, program_key=program.key, user_id=user_id) is False
+    
+        # 2. Program Active Toggle
+        service.update_program_active(db_session, program_key=program.key, is_active=False)
+        db_session.refresh(program)
+        assert program.is_active is False
+    
+        # 3. get_vault_stats deeper branches
+        # Seed data for stats
+        db_session.add(ExternalRankingData(user_id=user_id, deposit_amount=5000000))
+        db_session.add(VaultWithdrawalRequest(user_id=user_id, amount=10000, status="PENDING"))
+        db_session.commit()
+    
+>       stats = service.get_vault_stats(db_session)
+
+tests\v2_tests\phase2_core\test_vault_extended_coverage.py:205: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.v2.services.vault2_service.Vault2Service object at 0x000002123EBA87D0>
+db = <sqlalchemy.orm.session.Session object at 0x000002123ECD4990>, now = None
+
+    def get_vault_stats(self, db: Session, now: datetime | None = None) -> dict[str, Any]:
+        """Aggregate performance metrics for Vault Phase 1."""
+        now_dt = now or datetime.utcnow()
+        today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+        # 1. Today's Accrual
+        accrual_stats = (
+            db.query(VaultEarnEvent.earn_type, func.count(VaultEarnEvent.id), func.sum(VaultEarnEvent.amount))
+            .filter(VaultEarnEvent.created_at >= today_start)
+            .group_by(VaultEarnEvent.earn_type)
+            .all()
+        )
+        accrual_summary = {row[0]: {"count": row[1], "total": int(row[2] or 0)} for row in accrual_stats}
+    
+        # 2. Trial SKIP Reasons
+        skip_stats = (
+            db.query(VaultEarnEvent.source, func.count(VaultEarnEvent.id))
+            .filter(VaultEarnEvent.created_at >= today_start, VaultEarnEvent.reward_kind == "SKIP_NO_VALUATION")
+            .group_by(VaultEarnEvent.source)
+            .all()
+        )
+        skip_summary = {row[0]: row[1] for row in skip_stats}
+    
+        # 3. Expirations in next 24h (Critical for retention ops)
+        expiring_soon_count = (
+            db.query(func.count(V2User.id))
+>           .filter(V2User.vault_locked_balance > 0, V2User.vault_locked_expires_at.between(now_dt, now_dt + timedelta(hours=24)))
+            .scalar()
+        )
+E       AttributeError: type object 'V2User' has no attribute 'vault_locked_expires_at'
+
+app\v2\services\vault2_service.py:616: AttributeError
+________________________ test_vault_zero_deposit_limit ________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123EC93F50>
+
+    def test_vault_zero_deposit_limit(db_session):
+        """
+        Phase 2-3: Zero-Deposit Limit.
+        Users with 0 total charge should have a 30,000 KRW limit.
+        """
+        service = VaultService()
+        user = setup_user(db_session, user_id=1, total_charge=0)
+    
+        # 1. Check Policy
+>       policy = service.get_user_vault_policy(db_session, user, datetime.utcnow())
+E       AttributeError: 'V2VaultService' object has no attribute 'get_user_vault_policy'
+
+tests\v2_tests\phase2_core\test_vault_limit_suspension.py:52: AttributeError
+________________________ test_vault_recency_suspension ________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123ED20E90>
+
+    def test_vault_recency_suspension(db_session):
+        """
+        Phase 2-3: Recency Suspension.
+        No deposit in 7+ days -> status=INACTIVE, benefits_suspended=True.
+        """
+        service = VaultService()
+        # User joined 10 days ago, 1,000 charged but last deposit was 10 days ago.
+        old_date = datetime.utcnow() - timedelta(days=10)
+        user = setup_user(db_session, user_id=2, total_charge=1000, created_at=old_date)
+    
+        # No UserActivity record for last 10 days.
+    
+>       policy = service.get_user_vault_policy(db_session, user, datetime.utcnow())
+E       AttributeError: 'V2VaultService' object has no attribute 'get_user_vault_policy'
+
+tests\v2_tests\phase2_core\test_vault_limit_suspension.py:109: AttributeError
+_____________________ test_legacy_field_lock_verification _____________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123D4A03D0>
+
+    def test_legacy_field_lock_verification(db_session):
+        """
+        Phase 2-3: Legacy Field Lock.
+        Verify vault_available_balance is NOT included in actual withdrawal or status checks.
+        """
+        service = VaultService()
+        # User has 10,000 locked and 5,000 'available' (legacy)
+        user = setup_user(db_session, user_id=3, total_charge=100_000)
+        user.vault_locked_balance = 10_000
+        user.vault_available_balance = 5_000
+        db_session.commit()
+    
+        # Mocking pre-requisites for withdrawal
+        with patch("app.services.vault_service.get_settings") as MockSettings, \
+             patch("app.services.vault_service.VaultService._operational_date_kst") as MockOpDate:
+    
+            MockSettings.return_value.timezone = "Asia/Seoul"
+            MockSettings.return_value.streak_day_reset_hour_kst = 9
+            now_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
+            MockOpDate.return_value = now_kst
+    
+            # Setup conditions: 1. Deposit Today
+            from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+            db_session.add(ExternalRankingDailyDepositDelta(user_id=3, kst_date=now_kst, deposit_delta=10000))
+    
+            # 2. Play count (30)
+            for i in range(30):
+                db_session.add(VaultEarnEvent(user_id=3, earn_event_id=f"T3-{i}", earn_type="GAME_PLAY", amount=10, source="TEST", created_at=datetime.utcnow()))
+    
+            # 3. Daily spent (10k)
+            user.vault_spent_today = 10_000
+            user.vault_spent_reset_date = now_kst.strftime("%Y-%m-%d")
+            db_session.add(user)
+            db_session.commit()
+    
+            # Act: Try to withdraw 12,000.
+            # If available_balance was added, it would be 10k + 5k = 15k -> OK.
+            # But if locked ONLY, then it's 10k -> INSUFFICIENT.
+            with pytest.raises(HTTPException) as exc:
+                service.request_withdrawal(db_session, 3, 12_000)
+    
+>           assert "INSUFFICIENT_FUNDS" in str(exc.value.detail)
+E           AssertionError: assert 'INSUFFICIENT_FUNDS' in 'PLAY_COUNT_INSUFFICIENT_30'
+E            +  where 'PLAY_COUNT_INSUFFICIENT_30' = str('PLAY_COUNT_INSUFFICIENT_30')
+E            +    where 'PLAY_COUNT_INSUFFICIENT_30' = HTTPException(status_code=403, detail='PLAY_COUNT_INSUFFICIENT_30').detail
+E            +      where HTTPException(status_code=403, detail='PLAY_COUNT_INSUFFICIENT_30') = <ExceptionInfo HTTPException(status_code=403, detail='PLAY_COUNT_INSUFFICIENT_30') tblen=2>.value
+
+tests\v2_tests\phase2_core\test_vault_limit_suspension.py:156: AssertionError
+____________________________ test_withdrawal_tiers ____________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123EB9FDD0>
+
+    def test_withdrawal_tiers(db_session):
+        """
+        2-2. Strict Withdrawal Policy (Tier Check):
+        Verify 10k -> 10k -> 30k -> 50k thresholds based on PENDING+APPROVED count.
+        """
+        with patch("app.services.vault_service.get_settings") as MockSettings:
+            MockSettings.return_value.timezone = "Asia/Seoul"
+            MockSettings.return_value.streak_day_reset_hour_kst = 9
+    
+            service = VaultService()
+            user = setup_valid_user(db_session, user_id=1, locked=500_000, spent_today=20_000)
+    
+            # --- Tier 1 (Count 0): Min 10,000 ---
+            # Try 5,000 -> Fail
+            with pytest.raises(HTTPException) as exc:
+                service.request_withdrawal(db_session, 1, 5_000)
+            assert "MIN_WITHDRAWAL_AMOUNT_10000" in str(exc.value.detail)
+    
+    
+    
+            # Try 10,000 -> Success
+>           service.consume_locked_balance(db_session, 1, 20_000)
+
+tests\v2_tests\phase2_core\test_vault_withdrawal_logic.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.services.vault_service.VaultService object at 0x000002123EC57C10>
+db = <sqlalchemy.orm.session.Session object at 0x000002123EB9FDD0>, user_id = 1
+amount = 20000, reason = 'CONSUME'
+
+    def consume_locked_balance(
+        self,
+        db: Session,
+        user_id: int,
+        amount: int,
+        reason: str = "CONSUME"
+    ) -> bool:
+        """Consume locked balance (Buy-in)."""
+        if amount <= 0:
+            raise ValueError("Amount must be positive")
+    
+        q = db.query(V2User).filter(V2User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+    
+        if not user:
+>            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
+E            fastapi.exceptions.HTTPException: 404: USER_NOT_FOUND
+
+app\services\vault_service.py:1231: HTTPException
+________________________ test_daily_spent_reset_check _________________________
+
+db_session = <sqlalchemy.orm.session.Session object at 0x000002123D4189D0>
+
+    def test_daily_spent_reset_check(db_session):
+        """
+        2-2. Strict Withdrawal Policy (Daily Spent Reset):
+        Verify that if operational date changed, spent_today resets to 0 and blocks withdrawal.
+        """
+        with patch("app.services.vault_service.get_settings") as MockSettings:
+            MockSettings.return_value.timezone = "Asia/Seoul"
+            MockSettings.return_value.streak_day_reset_hour_kst = 9
+    
+            service = VaultService()
+    
+            # Setup user with outdated reset date (Safe Past Date)
+            safe_past_date = "2000-01-01"
+    
+            user = setup_valid_user(db_session, user_id=2, locked=100_000, spent_today=20_000)
+            user.vault_spent_reset_date = safe_past_date # FORCE outdated
+            db_session.add(user)
+            db_session.commit()
+    
+            # Act: Request Withdrawal
+            # Expectation: Logic will detect Date Change -> Reset spent_today to 0 -> Fail strict check (Min 10k spend)
+            with pytest.raises(HTTPException) as exc:
+                 service.request_withdrawal(db_session, 2, 10_000)
+    
+            # PROOF: If reset didn't happen, spent_today would be 20,000, which is > 10,000.
+            # So "MIN_DAILY_SPEND_10000_REQUIRED" would NOT be raised.
+            # The fact it was raised confirms reset took effect in logic.
+>           assert "MIN_DAILY_SPEND_10000_REQUIRED" in str(exc.value.detail)
+E           AssertionError: assert 'MIN_DAILY_SPEND_10000_REQUIRED' in 'USER_NOT_FOUND'
+E            +  where 'USER_NOT_FOUND' = str('USER_NOT_FOUND')
+E            +    where 'USER_NOT_FOUND' = HTTPException(status_code=404, detail='USER_NOT_FOUND').detail
+E            +      where HTTPException(status_code=404, detail='USER_NOT_FOUND') = <ExceptionInfo HTTPException(status_code=404, detail='USER_NOT_FOUND') tblen=2>.value
+
+tests\v2_tests\phase2_core\test_vault_withdrawal_logic.py:164: AssertionError
+============================== warnings summary ===============================
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_generate_schema.py:2249
+tests/v2_tests/phase2_core/test_auth_mission_integration.py::test_auth_then_mission_success
+  C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value AliasChoices(choices=['cc_id', 'external_id']) was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+app\main.py:166
+  C:\Users\JAVIS\ch\ch25\app\main.py:166: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\applications.py:4495
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\applications.py:4495
+  C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+app\main.py:195
+  C:\Users\JAVIS\ch\ch25\app\main.py:195: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_milestone_claim_flow
+  C:\Users\JAVIS\ch\ch25\tests\v2_tests\phase2_core\test_mission_streak_logic_deep.py:67: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user = db_session.query(V2User).get(user_id)
+
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_force_grant_and_reset
+  C:\Users\JAVIS\ch\ch25\tests\v2_tests\phase2_core\test_mission_streak_logic_deep.py:112: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user = db_session.query(V2User).get(user_id)
+
+tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_milestone_progress_listing
+  C:\Users\JAVIS\ch\ch25\tests\v2_tests\phase2_core\test_mission_streak_logic_deep.py:129: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    user = db_session.query(V2User).get(user_id)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py::TestMissionEdgeCases::test_strict_vault_policy_suspension_on_claim
+FAILED tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_deposit_with_suspension_cap
+FAILED tests/v2_tests/phase2_core/test_v2_vault_service_deep.py::test_vault_is_benefits_suspended_latency_bypass
+FAILED tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_balance_updates_and_details
+FAILED tests/v2_tests/phase2_core/test_vault_extended_coverage.py::test_vault2_extended_admin_and_stats
+FAILED tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_vault_zero_deposit_limit
+FAILED tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_vault_recency_suspension
+FAILED tests/v2_tests/phase2_core/test_vault_limit_suspension.py::test_legacy_field_lock_verification
+FAILED tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py::test_withdrawal_tiers
+FAILED tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py::test_daily_spent_reset_check
+================== 10 failed, 92 passed, 9 warnings in 9.39s ==================

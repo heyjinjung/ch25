@@ -38,10 +38,10 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
 | AUTH | [W05_AUTH_troubleshooting.md](./W05_AUTH_troubleshooting.md) | 2 |
-| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 3 |
-| MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 2 |
-| DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 3 |
-| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 2 |
+| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 4 |
+| MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
+| DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
+| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 3 |
 
 ---
 
@@ -60,6 +60,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 - [CSV Import Pipeline](./v2_csv_import_pipeline_guide_ko.md) - 외부 카지노 로그 통합
 - [Golden 실시간 모니터링](./v2_golden_realtime_monitoring_guide_ko.md) - WebSocket 스트리밍, 인터벤션 로그
 - [에러 대응 체크리스트](./20260130_error_triage_checklist.md) - 이슈 분류 및 대응 절차
+- [V2 도메인 FK 전수 감사 (01-31)](./W05_DB_troubleshooting.md#01-31---db-v2-도메인-전수-fk-정합성-감사) - 데이터 무결성 점검 결과
 
 ### 🔧 개발 환경
 - [Alembic Legacy Migration](./v2_troubleshooting_20260120_alembic_legacy_ko.md) - DB 마이그레이션 오류
@@ -80,6 +81,9 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 골드키/다이아키 티켓이 차감되지 않음 | [게임 토큰 이슈](./v2_troubleshooting_game_token_issues_ko.md#1-골드키다이아키-티켓이-차감되지-않는-문제) | P0 |
 | 룰렛 Config 조회 실패 | [게임 토큰 이슈](./v2_troubleshooting_game_token_issues_ko.md#3-룰렛-config-조회-실패) | P0 |
 | Premium 룰렛 접근 제어 오류 | [게임 토큰 이슈](./v2_troubleshooting_game_token_issues_ko.md#4-premium-룰렛-접근-제어-오류) | P1 |
+| 주사위 골든아워 미적용 | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md#01-31---game-주사위-게임-골든아워-미적용-문제) | P1 |
+| 복권 퍼즐조각 미지급 (Reward 0) | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md#01-31---game-복권-퍼즐조각-미지급-및-보상-금액-0-설정-오류) | P1 |
+| 신규 채널 가입 미션 UI 비활성 | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md#01-31---missionfrontend-신규-채널-가입-미션-ui-비활성화) | P1 |
 
 ### 백엔드 관련
 | 문제 | 문서 | 우선순위 |
@@ -88,6 +92,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 | DB 연결 오류 | [백엔드 런타임](./v2_troubleshooting_20260120_backend_runtime_ko.md) | P0 |
 | Redis 연결 실패 | [백엔드 런타임](./v2_troubleshooting_20260120_backend_runtime_ko.md) | P1 |
 | Alembic Migration 충돌 | [Alembic Legacy](./v2_troubleshooting_20260120_alembic_legacy_ko.md) | P1 |
+| Sentry Logs 탭 온보딩 화면 고정 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#01-31---infra-sentry-log-monitoring-logs-탭-활성화) | P2 |
+| 게임 API ModuleNotFoundError | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md#01-31---game-게임-api-modulenotfounderror-v2_user-경로-오류) | P0 |
 
 ### 프론트엔드 관련
 | 문제 | 문서 | 우선순위 |
@@ -232,5 +238,5 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 
 ---
 
-**최종 업데이트:** 2026-01-21
+**최종 업데이트:** 2026-01-31
 **관리자:** DevOps Team

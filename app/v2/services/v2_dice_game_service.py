@@ -98,6 +98,25 @@ class V2DiceGameService:
             return [3, 3], [3, 3]
         return [1, 1], [6, 6]
 
+    @staticmethod
+    def _is_golden_hour_active(config, now: datetime) -> bool:
+        """Check if golden hour is active based on v2_dice_config time settings."""
+        if not bool(getattr(config, "enable_golden_hour", False)):
+            return False
+        
+        start_time_str = getattr(config, "golden_hour_start_time", "21:30:00") or "21:30:00"
+        end_time_str = getattr(config, "golden_hour_end_time", "22:30:00") or "22:30:00"
+        
+        now_kst = now.astimezone(_KST) if now.tzinfo else now.replace(tzinfo=_KST)
+        current_time_str = now_kst.strftime("%H:%M:%S")
+        
+        # Handle overnight windows (e.g., 23:00 ~ 01:00)
+        if start_time_str <= end_time_str:
+            return start_time_str <= current_time_str <= end_time_str
+        else:
+            # Overnight: active if current >= start OR current <= end
+            return current_time_str >= start_time_str or current_time_str <= end_time_str
+
     def get_status(
         self,
         db: Session,
@@ -242,7 +261,7 @@ class V2DiceGameService:
         golden_active = False
         golden_multiplier = 1.0
         if bool(getattr(config, "enable_golden_hour", False)):
-            golden_active = V2EventService().is_golden_hour(db=db, now=now_dt)
+            golden_active = self._is_golden_hour_active(config, now_dt)
             if golden_active:
                 golden_multiplier = float(getattr(config, "golden_hour_multiplier", 1.0) or 1.0)
 

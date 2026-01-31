@@ -109,8 +109,8 @@ def upload_csv_file(
     }
 
 
-@router.post("/csv-import/import", response_model=CSVImportResult)
-def import_csv_file(
+@router.post("/csv-import/import", response_model=dict[str, Any] | CSVImportResult)
+async def import_csv_file(
     request: CSVImportRequest,
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
@@ -118,7 +118,11 @@ def import_csv_file(
     """
     Import CSV file into Golden V2 system.
 
-    Processes CSV records and emits events to Redis.
+    Supports two import types:
+    - GAME_LOG (default): External casino game logs
+    - HQ_MARGIN: HQ margin data for segment targeting
+
+    Processes CSV records and emits events to Redis (for GAME_LOG).
     """
     admin_id, admin_role = admin_info
 
@@ -132,12 +136,23 @@ def import_csv_file(
     if not file_path.exists():
         raise HTTPException(status_code=404, detail=f"File not found: {request.file_path}")
 
-    # Execute import
-    service = CSVImportService(db)
-
+    # Route based on import type
     try:
-        result = service.import_csv(request)
-        return result
+        if request.import_type == "HQ_MARGIN":
+            # HQ Margin import
+            from app.v2.services.hq_margin_import_service import HQMarginImportService
+
+            result = await HQMarginImportService.import_hq_margin_csv(
+                db=db,
+                file_path=str(file_path),
+                admin_id=str(admin_id),
+            )
+            return result
+        else:
+            # Default: Game log import
+            service = CSVImportService(db)
+            result = service.import_csv(request)
+            return result
 
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"Import failed: {e!s}") from e
