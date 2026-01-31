@@ -259,6 +259,41 @@ def _get_user_login_streak(db: Session, user_id: int) -> int:
     return streak.current_streak if streak else 0
 
 
+def _get_login_verify_mission(db: Session) -> Mission | None:
+    """로그인 검증용 '일일 로그인' 미션을 결정적으로 선택한다.
+
+    운영상/관리 UX상 로그인 검증은 '일일 출석/로그인 선물' 1개를 기준으로 해야 하므로,
+    login 포함 키를 무작정 first()로 고르는 비결정성을 피한다.
+    """
+    preferred_logic_keys = [
+        "daily_login_gift",
+        "daily_login",
+        "login",
+    ]
+
+    for logic_key in preferred_logic_keys:
+        mission = (
+            db.query(Mission)
+            .filter(
+                Mission.is_active == True,
+                func.lower(Mission.logic_key) == logic_key,
+            )
+            .first()
+        )
+        if mission:
+            return mission
+
+    return (
+        db.query(Mission)
+        .filter(
+            Mission.is_active == True,
+            Mission.logic_key.ilike("%login%"),
+        )
+        .order_by(Mission.id.asc())
+        .first()
+    )
+
+
 @router.get("/game/missions/login-verify", response_model=LoginMissionVerifyResponse)
 def verify_login_missions(
     limit: int = Query(50, ge=1, le=200),
@@ -276,56 +311,69 @@ def verify_login_missions(
     operational_date = _get_operational_date_kst(reset_hour=reset_hour)
     operational_date_str = operational_date.isoformat()
 
-    # 로그인 미션 찾기 (logic_key가 'login' 포함)
-    login_mission = db.query(Mission).filter(
-        Mission.logic_key.ilike("%login%"),
-        Mission.is_active == True,
-    ).first()
+    # 로그인 미션 찾기 (결정적 선택: daily_login_gift 우선)
+    login_mission = _get_login_verify_mission(db)
 
     if not login_mission:
         raise HTTPException(status_code=404, detail="LOGIN_MISSION_NOT_FOUND")
 
     # 오늘 완료한 유저 조회
-    completed_query = db.query(UserMissionProgress, V2User).join(
-        V2User, UserMissionProgress.user_id == V2User.id
-    ).filter(
-        UserMissionProgress.mission_id == login_mission.id,
-        UserMissionProgress.is_completed == True,
-        UserMissionProgress.reset_date == operational_date_str,
+    completed_query = (
+        db.query(
+            UserMissionProgress.user_id,
+            V2User.nickname,
+            V2User.last_login_at,
+        )
+        .outerjoin(V2User, UserMissionProgress.user_id == V2User.id)
+        .filter(
+            UserMissionProgress.mission_id == login_mission.id,
+            UserMissionProgress.is_completed == True,
+            UserMissionProgress.reset_date == operational_date_str,
+        )
     )
 
-    completed_progresses = completed_query.limit(limit).all()
-    completed_user_ids = {p.user_id for p, _ in completed_progresses}
+    completed_rows = completed_query.limit(limit).all()
+    completed_user_ids = {user_id for user_id, _, _ in completed_rows}
 
     # 미완료 유저 조회 (옵션)
     users_list = []
 
     if not completed_only:
         # 최근 로그인한 유저 중 미완료자
-        recent_users = db.query(V2User).filter(
-            V2User.last_login_at >= datetime.utcnow() - timedelta(days=7),
-            ~V2User.id.in_(completed_user_ids) if completed_user_ids else True,
-        ).order_by(V2User.last_login_at.desc()).limit(limit // 2).all()
+        recent_users = (
+            db.query(
+                V2User.id,
+                V2User.nickname,
+                V2User.last_login_at,
+            )
+            .filter(
+                V2User.last_login_at >= datetime.utcnow() - timedelta(days=7),
+                ~V2User.id.in_(completed_user_ids) if completed_user_ids else True,
+            )
+            .order_by(V2User.last_login_at.desc())
+            .limit(limit // 2)
+            .all()
+        )
 
-        for user in recent_users:
+        for user_id, nickname, last_login_at in recent_users:
             users_list.append(LoginMissionStatusDto(
-                user_id=user.id,
-                nickname=user.nickname or "(미설정)",
+                user_id=user_id,
+                nickname=nickname or "(미설정)",
                 today_login_completed=False,
-                last_login_at=user.last_login_at,
-                login_streak=_get_user_login_streak(db, user.id),
+                last_login_at=last_login_at,
+                login_streak=_get_user_login_streak(db, user_id),
                 reset_hour_kst=reset_hour,
                 current_operational_date=operational_date_str,
             ))
 
     # 완료 유저 추가
-    for progress, user in completed_progresses:
+    for user_id, nickname, last_login_at in completed_rows:
         users_list.append(LoginMissionStatusDto(
-            user_id=user.id,
-            nickname=user.nickname or "(미설정)",
+            user_id=user_id,
+            nickname=nickname or "(미설정)",
             today_login_completed=True,
-            last_login_at=user.last_login_at,
-            login_streak=_get_user_login_streak(db, user.id),
+            last_login_at=last_login_at,
+            login_streak=_get_user_login_streak(db, user_id),
             reset_hour_kst=reset_hour,
             current_operational_date=operational_date_str,
         ))

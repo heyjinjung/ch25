@@ -47,4 +47,14 @@ class V2UserService:
         )
         db.add(user)
         db.flush()
+
+        # [Phase 3-4] HQ Prospective Matching
+        from app.v2.services.segment_service import V2SegmentService
+        try:
+            V2SegmentService.match_prospect_on_joined(db, user)
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Failed to match prospect for {cc_id}: {e}")
+            # Do not fail registration because of matching error
+            
         return user

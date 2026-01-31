@@ -20,6 +20,7 @@ from .v2_ticket_conversion_policy import V2TicketConversionPolicy
 from .v2_ticket_zero_log import V2TicketZeroLog
 from .v2_user_retention_state import V2UserRetentionState
 from .v2_user_segment import V2UserSegment
+from .hq_prospective_user import HQProspectiveUser
 
 # V1 Compatibility Exports (Shim)
 from app.models.game_wallet import UserGameWallet, GameTokenType

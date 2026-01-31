@@ -9,6 +9,7 @@
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
 | 01-31 | 이벤트 미션 로그인 카운트 미증가 | ✅ RESOLVED |
+| 01-31 | [ADMIN/MISSION] 로그인 미션 검증 집계가 Admin만 표시 | ✅ RESOLVED |
 | 01-31 | 신규 채널 가입 미션 UI 비활성화 | ✅ RESOLVED |
 | 01-30 | CC 입금 미션 XP 미지급 | ✅ RESOLVED |
 
@@ -73,6 +74,61 @@ def ensure_login_progress(cls, db: Session, user_id: int) -> None:
 ### 관련 파일
 - `app/v2/services/mission_service.py`
 - `docs/v2_specs/90_troubleshooting/20260131_mission_login_v2_fk_patch.md`
+
+---
+
+## 01-31 - [ADMIN/MISSION] 로그인 미션 검증 집계가 Admin만 표시
+
+### 증상
+- 어드민 > Mission Ops > "로그인 미션 검증" 섹션에서,
+   - "오늘 로그인한 유저"/"오늘 미션 완료" 지표가 현실과 불일치
+   - 유저 리스트가 Admin만 보이거나 일부 유저가 누락됨
+
+### 원인 분석
+
+**증거 1: 로그인 관련 미션이 복수 존재**
+```sql
+SELECT id, logic_key, title, is_active
+FROM mission
+WHERE is_active = 1 AND logic_key LIKE '%LOGIN%'
+ORDER BY id ASC;
+```
+
+**증거 2: API가 "login 포함 첫 번째" 미션을 선택(비결정적)**
+```python
+# 기존 코드 (버그)
+login_mission = db.query(Mission).filter(
+      Mission.logic_key.ilike("%login%"),
+      Mission.is_active == True,
+).first()
+```
+- 위 방식은 DB에 어떤 login 관련 미션이 먼저 생성되었는지(id/정렬)에 따라, 의도와 다른 미션(예: 신규/주간 로그인 관련)을 집계 대상으로 잡을 수 있음.
+
+### 근본 원인
+- "로그인 미션 검증"의 집계 기준이 되어야 하는 **일일 출석/로그인 미션**을 명시적으로 선택하지 않고,
+   `logic_key LIKE '%login%'`의 **첫 번째(active) 미션을 first()로 선택**함.
+- 결과적으로 집계 대상 미션이 의도와 달라져, 완료자/미완료자 리스트와 비율이 현실과 어긋남.
+
+### 해결
+- 로그인 검증 대상 미션을 **결정적으로 선택**하도록 수정:
+   - `daily_login_gift`(대소문자 무관) 우선
+   - 없으면 `daily_login` → `login` 순서로 폴백
+   - 최후에만 `LIKE '%login%'` 폴백
+- 완료 유저 조회는 `outer join`을 사용해, `v2_user` 누락(아이디 불일치/미이관) 케이스도 드러나도록 보강.
+- 유저 엔티티 전체를 SELECT하지 않고 필요한 컬럼만 조회하여 불필요한 컬럼 의존을 제거.
+
+### 관련 파일
+- `app/v2/api/admin/mission_routes.py`
+
+### 검증 방법
+1. 어드민에서 Mission Ops 페이지 접속 후 "로그인 미션 검증" 섹션 확인
+2. "일일 출석/로그인" 미션 완료자가 Admin 외 유저도 포함되는지 확인
+3. (데이터 불일치 의심 시) 완료 집계 기준 미션이 무엇인지 확인:
+    ```sql
+    SELECT id, logic_key, title
+    FROM mission
+    WHERE LOWER(logic_key) IN ('daily_login_gift','daily_login','login');
+    ```
 
 ---
 

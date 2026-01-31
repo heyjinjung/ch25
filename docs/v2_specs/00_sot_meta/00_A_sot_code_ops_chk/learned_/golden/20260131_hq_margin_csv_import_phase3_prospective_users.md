@@ -24,6 +24,19 @@
 
 ---
 
+## 3. 잠재 유저 식별 매핑표 (Matching Matrix)
+
+본사 데이터와 V2 유저 간의 정합성 유지를 위한 매핑 기준입니다.
+
+| HQ Field (CSV) | V2 Native 필드 | 모델 | 비고 |
+| :--- | :--- | :--- | :--- |
+| **이름 (아이디)** | `cc_id` | `V2User`, `HQProspectiveUser` | 유일 식별자 (1순위) |
+| **닉네임** | `nickname` | `V2User`, `HQProspectiveUser` | 보조 매칭 (2순위, Case-Insensitive) |
+| **총 운영 마진** | `segment` | `HQProspectiveUser` | VIP 분류용 |
+| **누적 충전 금액** | `total_charge` | `HQProspectiveUser` | 가입 시 XP 소급 정산용 |
+
+---
+
 ## 3. 기술 설계 및 구현 가이드 (Technical Fail-Safe Guide)
 
 ### 3.1 `HQMarginImportService` 내 매칭 로직

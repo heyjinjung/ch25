@@ -246,8 +246,8 @@ class Vault2Service:
         # Segment-based override (if configured)
         segment_allow = cfg.get("eligibility_segment_allow")
         if segment_allow:
-            from app.models.user_segment import UserSegment
-            user_seg = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
+            from app.v2.models.v2_user_segment import V2UserSegment
+            user_seg = db.query(V2UserSegment).filter(V2UserSegment.user_id == user_id).first()
             user_segment_val = user_seg.segment if user_seg else "NEW"
             if user_segment_val != segment_allow:
                 return False

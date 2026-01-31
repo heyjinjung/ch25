@@ -29,6 +29,19 @@
 
 ---
 
+## 3. 핵심 도메인 보상 및 로그 매핑 (Retention Matrix)
+
+유저의 활동(게임/보상/인벤토리)에 대한 전수 조사가 가능한 SOT 경로입니다.
+
+| 도메인 | 확인 경로 (Admin UI) | 핵심 모델 (DB 원장) | 비고 |
+| :--- | :--- | :--- | :--- |
+| **레벨/XP 보너스** | 유저관리 > 자산관리 > XP로그 | `UserXPEventLog` | 본사 충전 실적 소급분(10만:20XP) 확인 |
+| **인벤토리 변경** | 유저관리 > 인벤토리관리 > 내역로그 | `UserInventoryLedger` | 아이템 차감/지급 사유(`reason`) 추적 |
+| **게임 참여 보상** | 게임관리 > 각 게임별 로그 | `V2DiceLog`, `V2RouletteLog` | 어떤 게임에서 어떤 보상을 얻었는지 확인 |
+| **티켓 잔액 변동** | 유저관리 > 자산관리 > 티켓로그 | `UserGameWalletLedger` | 게임 참여로 인한 소모 및 보상 연동 |
+
+---
+
 ## 3. 기술 설계 및 구현 가이드 (Technical Fail-Safe Guide)
 
 ### 3.1 `AuthService` 가입 가로채기 (Interception)

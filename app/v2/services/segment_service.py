@@ -226,6 +226,39 @@ class V2SegmentService:
         return row
 
     @staticmethod
+    def match_prospect_on_joined(db: Session, user: V2User) -> None:
+        """
+        Check if a newly joined user was in hq_prospective_user.
+        If matched, assign their segment immediately.
+        """
+        from app.v2.models import HQProspectiveUser
+        import logging
+        logger = logging.getLogger(__name__)
+
+        nickname_lower = user.nickname.lower() if user.nickname else None
+
+        # Try to match by nickname (priority) or cc_id - Case Insensitive
+        query = db.query(HQProspectiveUser).filter(
+            HQProspectiveUser.is_joined == False
+        )
+        
+        if nickname_lower:
+            prospect = query.filter(
+                (func.lower(HQProspectiveUser.nickname) == nickname_lower) | 
+                (HQProspectiveUser.cc_id == user.cc_id)
+            ).first()
+        else:
+            prospect = query.filter(HQProspectiveUser.cc_id == user.cc_id).first()
+
+        if prospect:
+            V2SegmentService.upsert_user_segment(db, user.id, prospect.segment)
+            prospect.is_joined = True
+            logger.info(
+                f"Prospective Match: cc_id={user.cc_id} nickname={user.nickname} "
+                f"-> Matched to prospect.segment={prospect.segment}"
+            )
+
+    @staticmethod
     def segment_user(db: Session, user_id: int, now: datetime | None = None) -> SegmentResult:
         user = db.get(V2User, user_id)
         if user is None:

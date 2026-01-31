@@ -8,8 +8,7 @@ from datetime import datetime
 from typing import Dict, List
 import logging
 
-from app.v2.models.user import V2User
-from app.models.user_segment import UserSegment
+from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
 from app.v2.services import V2AdminAuditService
 
 logger = logging.getLogger(__name__)
@@ -38,6 +37,7 @@ class HQMarginImportService:
                 "total_rows": int,
                 "updated_count": int,
                 "created_count": int,
+                "prospective_count": int,
                 "skipped_count": int,
                 "errors": List[str],
                 "warnings": List[str]
@@ -61,6 +61,7 @@ class HQMarginImportService:
             total_rows = len(df)
             updated_count = 0
             created_count = 0
+            prospective_count = 0
             skipped_count = 0
             errors = []
 
@@ -70,30 +71,64 @@ class HQMarginImportService:
             for idx, row in df.iterrows():
                 try:
                     user_key = str(row['이름 (아이디)']).strip()
-                    nickname = str(row.get('닉네임', '')).strip() if '닉네임' in row and pd.notna(row['닉네임']) else None
+                    nickname_raw = str(row.get('닉네임', '')).strip() if '닉네임' in row and pd.notna(row['닉네임']) else None
+                    nickname = nickname_raw.lower() if nickname_raw else None
 
-                    # V2User 매칭 (cc_id 또는 nickname)
+                    # V2User 매칭 (cc_id 또는 nickname - Case Insensitive)
                     query = db.query(V2User)
                     if nickname:
                         v2_user = query.filter(
-                            (V2User.cc_id == user_key) | (V2User.nickname == nickname)
+                            (V2User.cc_id == user_key) | (func.lower(V2User.nickname) == nickname)
                         ).first()
                     else:
                         v2_user = query.filter(V2User.cc_id == user_key).first()
 
                     if not v2_user:
-                        skipped_count += 1
-                        error_msg = f"Row {idx+2}: V2User not found ({user_key})"
-                        errors.append(error_msg)
-                        logger.warning(error_msg)
+                        # [Phase 3] 가입되지 않은 유저 -> Prospective User로 저장
+                        segment = HQMarginImportService._classify_segment(row)
+                        
+                        # 닉네임 중복 방어: V2User에 동일 닉네임이 있는지 재확인
+                        if nickname:
+                            existing_v2_users = db.query(V2User).filter(func.lower(V2User.nickname) == nickname).all()
+                            if len(existing_v2_users) > 1:
+                                skipped_count += 1
+                                error_msg = f"Row {idx+2}: Ambiguous nickname '{nickname_raw}' (Multiple V2Users found)"
+                                errors.append(error_msg)
+                                logger.warning(error_msg)
+                                continue
+
+                        prospect = db.query(HQProspectiveUser).filter(
+                            (HQProspectiveUser.cc_id == user_key) | (func.lower(HQProspectiveUser.nickname) == nickname)
+                        ).first()
+
+                        if prospect:
+                            prospect.total_margin = int(row.get('총 운영 마진', 0))
+                            prospect.total_charge = int(row.get('누적 충전 금액', 0))
+                            prospect.inactive_days = int(row.get('미접속 경과일', 0))
+                            prospect.segment = segment
+                            prospect.is_joined = False
+                        else:
+                            prospect = HQProspectiveUser(
+                                cc_id=user_key,
+                                nickname=nickname_raw or user_key, # 원본 닉네임 저장하되 매칭은 lower로
+                                total_margin=int(row.get('총 운영 마진', 0)),
+                                total_charge=int(row.get('누적 충전 금액', 0)),
+                                inactive_days=int(row.get('미접속 경과일', 0)),
+                                segment=segment,
+                                is_joined=False
+                            )
+                            db.add(prospect)
+                        
+                        prospective_count += 1
+                        logger.info(f"HQ Margin Prospect Saved: nickname={nickname or user_key} → {segment}")
                         continue
 
                     # 세그먼트 분류
                     segment = HQMarginImportService._classify_segment(row)
 
-                    # UserSegment 업데이트 또는 생성
-                    user_segment = db.query(UserSegment).filter(
-                        UserSegment.user_id == v2_user.id
+                    # [V2 Native] V2UserSegment 업데이트 또는 생성
+                    user_segment = db.query(V2UserSegment).filter(
+                        V2UserSegment.user_id == v2_user.id
                     ).first()
 
                     if user_segment:
@@ -107,7 +142,7 @@ class HQMarginImportService:
                             f"{old_segment} → {segment}"
                         )
                     else:
-                        user_segment = UserSegment(
+                        user_segment = V2UserSegment(
                             user_id=v2_user.id,
                             segment=segment,
                         )
@@ -138,6 +173,7 @@ class HQMarginImportService:
                     "total_rows": total_rows,
                     "updated": updated_count,
                     "created": created_count,
+                    "prospective": prospective_count,
                     "skipped": skipped_count,
                 },
                 reason="HQ margin CSV import",
@@ -154,6 +190,7 @@ class HQMarginImportService:
                 "total_rows": total_rows,
                 "updated_count": updated_count,
                 "created_count": created_count,
+                "prospective_count": prospective_count,
                 "skipped_count": skipped_count,
                 "errors": errors[:50],  # 최대 50개만 반환
                 "warnings": [],

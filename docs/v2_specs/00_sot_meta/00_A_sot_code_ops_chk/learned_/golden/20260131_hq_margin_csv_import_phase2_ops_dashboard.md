@@ -20,8 +20,21 @@
 - **최근 동기화 정보**: 마지막 CSV 임포트 시각 및 임포트 결과(성공/실패 건수) 표시.
 
 ### 2.2 실시간 데이터 연동
-- 페이지 로드 시 `/api/v2/admin/ops/hq-margin-stats` 엔드포인트를 통해 최신 데이터를 페칭.
+- 페이지 로드 시 `/api/v2/admin/ops/hq_margin_stats` 엔드포인트를 통해 최신 데이터를 페칭.
 - `Audit Log`와 연동하여 임포트 히스토리를 대시보드에서 바로 확인.
+
+---
+
+## 3. 운영 도메인 가시성 매핑 (Visibility Matrix)
+
+운영 대시보드에서 확인 가능한 데이터의 DB 원장 및 유효성 기준입니다.
+
+| 항목 | 대시보드 필드 | 핵심 모델 (DB) | 비고 |
+| :--- | :--- | :--- | :--- |
+| **VIP 현황** | `vip_count` | `V2UserSegment` (VIP) | 가입 완료된 본사 VIP 인원 |
+| **잠재 VIP** | `prospective_vip_count` | `HQProspectiveUser` | 미가입 상태의 본사 VIP 인원 |
+| **이탈 위험** | `at_risk_count` | `V2UserSegment` (DORMANT) | 7일+ 미접속 유저 (표준명칭 DORMANT) |
+| **동기화 시점** | `last_sync_at` | `V2AdminAuditLog` | 최신 CSV 임포트 성공 시점 |
 
 ---
 

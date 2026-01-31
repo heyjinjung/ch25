@@ -30,6 +30,7 @@ from app.v2.schemas.v2_admin_ops import (
     OpsSystemStatusDto,
     InterventionLogDto,
     GoldenGameEventDto,
+    OpsHQMarginStatsDto,
 )
 from app.v2.schemas.v2_admin_streak import StreakDailyMetric, StreakMetricsResponse
 from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotConfig
@@ -153,7 +154,35 @@ def get_ops_dashboard_status(
 
     metrics = OpsMetricsDto(today_revenue=int(today_revenue), active_users_24h=active_users_24h)
 
-    return OpsDashboardResponse(system=system_status, golden_radar=golden_radar, metrics=metrics)
+    # [Phase 2] HQ Margin Stats
+    from app.v2.models import V2UserSegment, HQProspectiveUser, V2AdminAuditLog
+    
+    vip_count = db.query(func.count(V2UserSegment.user_id)).filter(V2UserSegment.segment == "VIP").scalar() or 0
+    whale_count = db.query(func.count(V2UserSegment.user_id)).filter(V2UserSegment.segment == "WHALE").scalar() or 0
+    dormant_count = db.query(func.count(V2UserSegment.user_id)).filter(V2UserSegment.segment == "DORMANT").scalar() or 0
+    prospective_vip_count = db.query(func.count(HQProspectiveUser.id)).filter(
+        HQProspectiveUser.segment == "VIP",
+        HQProspectiveUser.is_joined == False
+    ).scalar() or 0
+    
+    last_audit = db.query(V2AdminAuditLog).filter(
+        V2AdminAuditLog.action == "HQ_MARGIN_IMPORT"
+    ).order_by(V2AdminAuditLog.created_at.desc()).first()
+    
+    hq_stats = OpsHQMarginStatsDto(
+        vip_count=vip_count,
+        whale_count=whale_count,
+        at_risk_count=dormant_count, # UI 하위 호환성을 위해 atRisk 필드에 DORMANT 값 매핑
+        prospective_vip_count=prospective_vip_count,
+        last_sync_at=last_audit.created_at if last_audit else None
+    )
+
+    return OpsDashboardResponse(
+        system=system_status, 
+        golden_radar=golden_radar, 
+        metrics=metrics,
+        hq_stats=hq_stats
+    )
 
 
 @router.get("/ops/dashboard", response_model=OpsDashboardResponse)

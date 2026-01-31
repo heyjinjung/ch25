@@ -47,10 +47,21 @@ class OpsMetricsDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class OpsHQMarginStatsDto(BaseModel):
+    vip_count: int = Field(default=0, alias="vipCount", serialization_alias="vipCount")
+    whale_count: int = Field(default=0, alias="whaleCount", serialization_alias="whaleCount")
+    at_risk_count: int = Field(default=0, alias="atRiskCount", serialization_alias="atRiskCount")
+    prospective_vip_count: int = Field(default=0, alias="prospectiveVipCount", serialization_alias="prospectiveVipCount")
+    last_sync_at: datetime | None = Field(default=None, alias="lastSyncAt", serialization_alias="lastSyncAt")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class OpsDashboardResponse(BaseModel):
     system: OpsSystemStatusDto
     golden_radar: OpsGoldenRadarDto = Field(alias="goldenRadar", serialization_alias="goldenRadar")
     metrics: OpsMetricsDto
+    hq_stats: OpsHQMarginStatsDto | None = Field(default=None, alias="hqStats", serialization_alias="hqStats")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
