@@ -93,31 +93,26 @@ class TestHQMarginIntegration:
         mock_db.query.side_effect = query_side_effect
         
         # Patch V2SegmentService.upsert_user_segment
-        with patch("app.v2.services.segment_service.V2SegmentService.upsert_user_segment") as mock_upsert:
-             mock_upsert.return_value = True
+        try:
+            with patch("app.v2.services.segment_service.V2SegmentService.upsert_user_segment") as mock_upsert:
+                mock_upsert.return_value = True
 
-             # 3. Execute
-             result = await HQMarginImportService.import_hq_margin_csv(
-                mock_db,
-                str(csv_path),
-                admin_id="admin1"
-             )
-                mock_db,
-                str(csv_path),
-                admin_id="admin1"
-            )
+                # 3. Execute
+                result = await HQMarginImportService.import_hq_margin_csv(
+                    mock_db,
+                    str(csv_path),
+                    admin_id="admin1"
+                )
 
-            # 4. Assertions
-            assert result["success"] is True
-            assert result["updated_count"] == 0 # No existing segment update
-            assert result["created_count"] == 1 # user1 segment created
-            assert result["prospective_count"] == 1 # user2 prospective created
-            
-            # Verify V2UserSegment creation for user1
-            # Verify HQProspectiveUser creation for user2
-
+                # 4. Assertions
+                assert result["success"] is True
+                # Mock returns None for existing segment, so it should create a new one
+                assert result["updated_count"] == 0 
+                assert result["created_count"] == 1 
+                assert result["prospective_count"] == 1
         finally:
-            csv_path.unlink()
+            if csv_path.exists():
+                csv_path.unlink()
 
     def test_hq_margin_stats_computation(self, mock_db):
         """Test aggregation of HQ Margin stats."""

@@ -8,6 +8,7 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
+| 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (배포대기) |
 | 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
@@ -29,6 +30,44 @@ Sentry 설정 최적화:
 ### 관련 파일
 - `app/core/sentry.py`
 - `.env` (SENTRY_DSN)
+
+---
+
+## 01-31 - [INFRA/BACKEND] /api/v2/admin/ops/status 500 (ModuleNotFoundError)
+
+**우선순위**: P0
+**관련 도메인**: INFRA, BACKEND, ADMIN
+
+### 증상
+- Admin Ops Dashboard에서 `GET /api/v2/admin/ops/status` 호출 시 500 발생
+- 프론트 콘솔: `ET https://cc-jm.com/api/v2/admin/ops/status 500 (Internal Server Error)`
+
+### 증거(로그)
+```
+ModuleNotFoundError: No module named 'app.v2.models.v2_admin_audit_log'
+File "/app/app/v2/services/hq_margin_stats_service.py", line 14, in <module>
+```
+
+### 근본 원인
+- 운영 서버 코드에서 `hq_margin_stats_service.py`가 `app.v2.models.v2_admin_audit_log`를 import.
+- 해당 모듈이 존재하지 않아 `ModuleNotFoundError` 발생 → `/api/v2/admin/ops/status` 500.
+
+### 해결 방법
+#### Immediate Fix
+- 호환용 shim 추가: `app/v2/models/v2_admin_audit_log.py`에서 `AdminAuditLog` 재노출.
+- 배포 시, 기존 import 경로/신규 경로 모두 정상 동작.
+
+#### Long-term Fix
+- 모든 V2 서비스 import 경로를 `app.models.admin_audit_log.AdminAuditLog`로 통일.
+- 배포 이미지 최신화로 서버/로컬 코드 정합성 유지.
+
+### 검증 방법
+- 운영 서버 재배포 후 `GET /api/v2/admin/ops/status` 200 확인.
+- Admin Ops Dashboard 로딩 정상 여부 확인.
+
+### 예방 가이드라인
+- 모델 경로 변경 시 호환 shim 추가 또는 릴리스 노트에 명시.
+- 배포 전 `ops/status` 헬스 체크를 CI에 포함.
 
 ---
 

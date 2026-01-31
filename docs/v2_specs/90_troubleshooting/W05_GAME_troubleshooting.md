@@ -165,3 +165,27 @@ if payload.golden_hour_start_time is not None:
 ## 변경 이력
 - 2026-01-31: W05 GAME 문서 생성, 기존 분산 문서 통합
 - 2026-01-31: 골든아워 시간설정 500 에러 이슈 추가
+- 2026-01-31: HQ Margin CSV Import 테스트 실패 (Assert 0 == 1) 추가
+
+---
+
+## 01-31 - [GAME] HQ Margin CSV Import 테스트 실패 (Assert 0 == 1)
+
+**우선순위**: P1
+**관련 도메인**: GAME, ADMIN, TEST
+
+### 증상
+- `test_import_hq_margin_csv_success` 테스트 실행 중 `assert result["updated_count"] == 1` 실패 (Actual: 0).
+- `NameError`, `SyntaxError` 테스트 코드 작성 중 발생.
+
+### 근본 원인
+- **Mocking Strategy**: `db.query().filter().first()` 체이닝에 대한 Mock `side_effect`가 불안정하여, 첫 번째 Row("user1") 처리 시 유저를 찾지 못한 것으로 판단됨 (또는 `skipped_count`로 빠짐).
+- **Test Code Quality**: `patch` 객체 미할당 및 들여쓰기 오류로 인한 실행 불가 상태 발생.
+
+### 해결 방법
+#### Immediate Fix
+- `test_hq_margin_integration.py`의 Mock Setup을 `user_filter_mock.first.side_effect = [mock_user1, None]`으로 명확히 지정.
+- `with patch(...)` 블록 들여쓰기 교정.
+
+### 검증 방법
+- `pytest tests/v2/admin/test_hq_margin_integration.py -v` (Pass 확인)
