@@ -1234,9 +1234,9 @@ def reset_all_user_missions(
 # ─────────────────────────────────────────────────────────────────
 
 from pydantic import BaseModel
-from app.v2.models.dice import V2DiceLog
-from app.v2.models.roulette import V2RouletteLog
-from app.v2.models.lottery import V2LotteryLog
+from app.v2.models.v2_dice import V2DiceLog
+from app.v2.models.v2_roulette import V2RouletteLog
+from app.v2.models.v2_lottery import V2LotteryLog
 
 
 class GameLogItemDto(BaseModel):

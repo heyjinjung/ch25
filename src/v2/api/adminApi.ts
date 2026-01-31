@@ -165,7 +165,7 @@ export interface OpsDashboardResponse {
     todayRevenue: number;
     activeUsers24h: number;
   };
-  hqStats?:OpsHQMarginStatsDto | null;
+  hqStats?: OpsHQMarginStatsDto | null;
 }
 
 export interface OpsHQMarginStatsDto {

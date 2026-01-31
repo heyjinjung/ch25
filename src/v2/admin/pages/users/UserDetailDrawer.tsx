@@ -36,6 +36,7 @@ import {
   useUserInventory,
   useUpdateUserNickname,
   useVaultUserLedger,
+  useUserGameLogs,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
@@ -114,6 +115,7 @@ export function UserDetailDrawer({
     { enabled: Boolean(userId) },
   );
   const { data: vaultLedger } = useVaultUserLedger(userId);
+  const { data: gameLogs } = useUserGameLogs(userId);
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
   const walletLogs = useMemo(
@@ -377,7 +379,7 @@ export function UserDetailDrawer({
             </SheetHeader>
 
             <Tabs defaultValue={defaultTab} className="h-full">
-              <TabsList className="w-full grid grid-cols-3 gap-2 bg-[#18181B] p-4 h-auto">
+              <TabsList className="w-full grid grid-cols-4 gap-2 bg-[#18181B] p-4 h-auto">
                 <TabsTrigger value="wallet" className="tab-trigger">
                   티켓
                 </TabsTrigger>
@@ -386,6 +388,9 @@ export function UserDetailDrawer({
                 </TabsTrigger>
                 <TabsTrigger value="vault" className="tab-trigger">
                   금고
+                </TabsTrigger>
+                <TabsTrigger value="gameLogs" className="tab-trigger">
+                  게임 로그
                 </TabsTrigger>
               </TabsList>
 
@@ -669,6 +674,82 @@ export function UserDetailDrawer({
                                   </td>
                                   <td className="py-2 px-1 text-zinc-500 truncate max-w-[80px]">
                                     {item.reason || "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  {/* 4. 게임 로그 (Game Logs) */}
+                  <TabsContent value="gameLogs" className="m-0 space-y-4">
+                    <Card className="bg-zinc-900/30 border-white/5">
+                      <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-sm font-medium text-zinc-300">
+                          게임 보상 내역
+                        </CardTitle>
+                        <p className="text-xs text-zinc-500">
+                          다이스 / 룰렛 / 복권 결과 기록
+                        </p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 pt-0">
+                        {!gameLogs?.logs?.length ? (
+                          <p className="text-zinc-500 text-xs">
+                            기록이 없습니다.
+                          </p>
+                        ) : (
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-zinc-400 border-b border-white/5">
+                                <th className="py-2 text-left px-1">타입</th>
+                                <th className="py-2 text-left px-1">결과</th>
+                                <th className="py-2 text-right px-1">보상</th>
+                                <th className="py-2 text-right px-1">일시</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {gameLogs.logs.map((item, idx) => (
+                                <tr
+                                  key={`${item.logType}-${idx}`}
+                                  className="border-b border-white/5 hover:bg-white/5"
+                                >
+                                  <td className="py-2 px-1">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                        item.logType === "DICE"
+                                          ? "bg-blue-500/20 text-blue-400"
+                                          : item.logType === "ROULETTE"
+                                            ? "bg-purple-500/20 text-purple-400"
+                                            : "bg-amber-500/20 text-amber-400"
+                                      }`}
+                                    >
+                                      {item.logType === "DICE"
+                                        ? "다이스"
+                                        : item.logType === "ROULETTE"
+                                          ? "룰렛"
+                                          : "복권"}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-1 text-zinc-300 truncate max-w-[120px]">
+                                    {item.result || "-"}
+                                  </td>
+                                  <td className="py-2 px-1 text-right text-green-400">
+                                    {item.rewardSummary || "-"}
+                                  </td>
+                                  <td className="py-2 px-1 text-right text-zinc-500">
+                                    {item.createdAt
+                                      ? new Date(
+                                          item.createdAt,
+                                        ).toLocaleDateString("ko-KR", {
+                                          month: "2-digit",
+                                          day: "2-digit",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                      : "-"}
                                   </td>
                                 </tr>
                               ))}
