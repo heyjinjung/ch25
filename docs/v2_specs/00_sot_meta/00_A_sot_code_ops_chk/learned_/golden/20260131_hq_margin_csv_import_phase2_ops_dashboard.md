@@ -25,26 +25,46 @@
 
 ---
 
-## 3. 기술 설계 (Technical Specification)
+## 3. 기술 설계 및 구현 가이드 (Technical Fail-Safe Guide)
 
-### 3.1 Backend API 개요
-- **Endpoint**: `GET /api/v2/admin/ops/status` (기존 확장) 또는 전용 엔드포인트.
-- **Data Source**: `v2_user_segment` 테이블 (마진 기반 등급), `v2_admin_audit_log` (임포트 이력).
+### 3.1 백엔드 API 규격
+- **대상 파일**: [ops_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/ops_routes.py)
+- **엔드포인트**: `GET /api/v2/admin/ops/status` (기존 응답 DTO 확장)
+- **응답 스키마 (`OpsHQMarginStatsDto`)**:
+  ```python
+  class OpsHQMarginStatsDto(BaseModel):
+      vip_count: int = Field(alias="vipCount")
+      whale_count: int = Field(alias="whaleCount")
+      at_risk_count: int = Field(alias="atRiskCount")
+      prospective_vip_count: int = Field(alias="prospectiveVipCount") # 미가입 VIP
+      last_sync_at: datetime | None = Field(alias="lastSyncAt")
+  ```
 
-### 3.2 Frontend UI 구조
-- **파일**: `src/v2/admin/pages/dashboard/OpsDashboard.tsx`
-- **구현**: `BentoGrid` 내에 `HQMarginStatsCard` 컴포넌트 추가.
-- **시각화**: 등급별 분포를 간단한 Bar Chart 또는 Badge 리스트로 표현.
+### 3.2 프론트엔드 UI 컴포넌트
+- **대상 파일**: [OpsDashboard.tsx](file:///c:/Users/JAVIS/ch/ch25/src/v2/admin/pages/dashboard/OpsDashboard.tsx)
+- **데이터 페칭**: `useOpsStatus()` 훅의 리턴 타입에 `hqStats` 추가.
+- **컴포넌트 배치**: `BentoGrid` 내부, `Golden Radar` 카드 바로 아래에 배치.
+- **사용 라이브러리**: `lucide-react` (아이콘), `framer-motion` (미세 애니메이션).
+
+### 3.3 데이터 흐름 (Data Lineage)
+1. `V2UserSegment` (joined) + `HQProspectiveUser` (unjoined) 합산 쿼리.
+2. `V2AdminAuditLog`에서 `action="HQ_MARGIN_IMPORT"`인 최신 항목 추출.
+3. `OpsDashboardResponse` DTO에 병합하여 반환.
 
 ---
 
-## 4. 예외 처리 및 보안
-- **권한 관리**: `ADMIN` 역할 이상의 사용자만 마진 데이터 요약을 볼 수 있도록 제한.
-- **데이터 레이턴시**: CSV 임포트 방식의 특성상 '실시간'이 아님을 UI에 명시 (예: "2시간 전 데이터").
+## 4. 자가 진단 체크리스트 (Self-Correction Checklist)
+
+구현 중 다음 사항 중 하나라도 어긋날 경우 설계 위반으로 간주하고 즉시 수정함.
+
+1.  **[SOT]** `v1_user` (Legacy) 테이블을 참조하고 있는가? → **No.** 반드시 `v2_user`를 참조해야 함.
+2.  **[Performance]** 대시보드 로딩 시 매번 CSV 전체를 스캔하는가? → **No.** 이미 DB화된 `hq_prospective_user` 와 `v2_user_segment`만 카운트함.
+3.  **[UI]** 잠재 VIP 수치(`prospective_vip_count`)가 누락되었는가? → **No.** 가입 유입을 위한 핵심 지표이므로 반드시 표시.
+4.  **[API]** `camelCase`와 `snake_case` 혼용 중인가? → **No.** Frontend향 DTO는 반드시 `camelCase` 별칭(`alias`) 사용.
 
 ---
 
-## 5. 단계별 검증
-- [ ] 대시보드에 HQ 마진 카드가 정상 노출되는가?
-- [ ] CSV 임포트 직후 대시보드 숫자가 갱신되는가?
-- [ ] 권한이 없는 어드민 계정에서 데이터가 은닉되는가?
+## 5. 단계별 검증 절차 (Verification)
+1.  **Mock Data Test**: DB에 임의의 `VIP` 세그먼트 유저와 `Prospective` 유저를 생성 후 대시보드 숫자가 맞는지 확인.
+2.  **Import Sync Test**: CSV 임포트 성공 직후 `lastSyncAt` 시간이 현재 시간으로 갱신되는지 확인.
+3.  **Empty State Test**: 데이터가 하나도 없을 때 `0`으로 표시되며 UI가 깨지지 않는지 확인.

@@ -29,36 +29,37 @@
 
 ---
 
-## 3. 데이터 정합성 기술 (Integrity & Safety)
+## 3. 기술 설계 및 구현 가이드 (Technical Fail-Safe Guide)
 
-### 3.1 V2 Native FK 준수
-- 모든 세그먼트 데이터는 `V2User.id` (Integer PK)를 참조하도록 강제.
-- `UserSegment` 테이블 사용 시 Legacy 시스템의 `user_id`를 혼용하지 않도록 코드 레벨에서 `V2User` 모델만 쿼리하도록 제한.
+### 3.1 `AuthService` 가입 가로채기 (Interception)
+- **대상 파일**: [auth_service.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/services/auth_service.py)
+- **추가 로직**: `V2User` 생성 직후 `SegmentService.match_prospect_on_joined(user_id)` 호출.
+- **Fail-Safe**: 매칭 로직은 `Try-Except` 블록으로 감싸서, 잠재 데이터 매칭에 실패하더라도 유저의 **가입 자체가 실패하면 안 됨.**
 
-### 3.2 닉네임 매칭 안전장치 (Conflict Resolution)
-- 닉네임 충돌 발생 시, `GoldenIntervention`을 즉시 실행하지 않고 `STATUS_PENDING`으로 분류하여 관리자 승인을 받도록 설계.
-- 휴먼 에러 방지를 위해 매칭된 데이터의 원본 레코드(CSV Row)를 추적할 수 있는 `reference_id` 필드 활용.
+### 3.2 본사 패턴 분석 (SQLite Analyzer)
+- **대상 파일**: [golden_scheduler_service.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/services/golden_scheduler_service.py)
+- **연동 방식**: `sqlite3.connect(path, uri=True)` (Read-Only 모드 필수).
+- **분석 쿼리**:
+  ```sql
+  SELECT hour, total_amount, row_number() OVER (ORDER BY total_amount DESC) as rank
+  FROM (SELECT strftime('%H', date) as hour, sum(amount) as total_amount FROM charges GROUP BY hour)
+  ```
 
----
-
-## 4. 아키텍쳐 연동 구조
-
-```mermaid
-graph TD
-    A[HQ CSV/SQLite] --> B[HQMarginImportService]
-    B --> C{User Exists?}
-    C -- Yes --> D[V2UserSegment Update]
-    C -- No --> E[hq_prospective_user Create]
-    D --> F[Vault2 Eligibility & Golden Hour]
-    E --> G[AuthService: On Join]
-    G --> D
-    F --> H[Golden Intervention Logic]
-```
+### 3.3 트랜잭션 정합성
+- **SOT 보장**: `v2_user_segment` 업데이트 시 `with db.begin_nested()`를 사용하여 부분 실패 시 `UserSegment` 생성만 롤백되도록 처리.
 
 ---
 
-## 5. 단계별 검증
-- [ ] 신규 유저 가입 시 잠재 VIP 데이터와 자동 매칭되어 혜택이 즉시 적용되는가?
-- [ ] 본사 SQLite 데이터 분석 결과가 실제 골든아워 설정에 반영되는가?
-- [ ] 닉네임 충돌 시 데이터 오염 없이 안전하게 예외 처리되는가?
-- [ ] 모든 데이터가 `V2User.id` 기반의 정확한 FK 구조를 유지하는가?
+## 4. 자가 진단 체크리스트 (Self-Correction Checklist)
+
+1.  **[Transaction]** 잠재 고객 매칭 중 에러가 나면 유저 가입이 안 되는가? → **No.** 반드시 독립 트랜잭션 또는 방어 로직 적용.
+2.  **[SOT]** 골든아워 설정 시 `v1_config`를 건드리고 있는가? → **No.** 반드시 `V2GameConfig` 모델 또는 `Vault2Service` 설정을 변경해야 함.
+3.  **[Security]** SQLite 연동 시 쓰기(Write) 권한을 요구하는가? → **No.** 쿼리 전용 Read-Only 연결 유지.
+
+---
+
+## 5. 단계별 검증 절차 (Verification)
+
+1.  **New Registration Matching Test**: `hq_prospective_user`에 `Tester1`을 등록한 후, 실제 `Tester1` 닉네임으로 가입 시 `v2_user_segment`가 즉시 생성되는지 확인.
+2.  **SQLite Error Resilience Test**: `HQ_DB_PATH`가 잘못되었을 때 골든아워 설정 페이지가 먹통이 되지 않고 에러 메시지만 출력되는지 확인.
+3.  **Golden Hour Auto-Sync Test**: 추천 스케줄 적용 시 `Vault2Service.DEFAULT_CONFIG` 또는 DB 설정값이 오차 없이 반영되는지 확인.
