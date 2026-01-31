@@ -4,6 +4,7 @@
 """
 import pandas as pd
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import datetime
 from typing import Dict, List
 import logging

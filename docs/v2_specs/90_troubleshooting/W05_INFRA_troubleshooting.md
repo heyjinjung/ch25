@@ -9,6 +9,7 @@
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
 | 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (배포대기) |
+| 02-01 | /api/v2/admin/ops/status 500 재발 | ⚠️ 재발(배포필요) |
 | 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
@@ -68,6 +69,51 @@ File "/app/app/v2/services/hq_margin_stats_service.py", line 14, in <module>
 ### 예방 가이드라인
 - 모델 경로 변경 시 호환 shim 추가 또는 릴리스 노트에 명시.
 - 배포 전 `ops/status` 헬스 체크를 CI에 포함.
+
+---
+
+## 02-01 - [INFRA/BACKEND] /api/v2/admin/ops/status 500 재발
+
+**우선순위**: P0
+**관련 도메인**: INFRA, BACKEND, ADMIN
+
+### 증상
+- Admin Ops Dashboard에서 `GET /api/v2/admin/ops/status` 호출 시 500 지속
+- 프론트 콘솔: `Request failed with status code 500` 반복
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | Ops Dashboard 상태 조회 (`/api/v2/admin/ops/status`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 어드민 대시보드 전체 |
+| **재현 빈도** | 항상 |
+
+### 증거(로그)
+- 클라이언트 콘솔: `GET https://cc-jm.com/api/v2/admin/ops/status 500`
+- 운영 서버 최근 로그 400줄 기준, `/api/v2/admin/ops/status` 라인 미검출
+	- 로그가 `ch25_event_worker_loop_error (NOGROUP)`로 과다 출력되어 필터 필요
+
+### 근본 원인 (가설)
+- 01-31에 확인된 `ModuleNotFoundError: app.v2.models.v2_admin_audit_log` 패치가 운영에 아직 반영되지 않았을 가능성.
+- 정확한 원인 확정을 위해 ops/status 요청 직후 서버 로그에서 해당 스택트레이스를 재확인 필요.
+
+### 해결 방법
+#### Immediate Fix
+- 운영 배포에 `app/v2/models/v2_admin_audit_log.py` shim 포함 여부 확인 후 재배포.
+- 배포 직후 ops/status 호출로 200 응답 확인.
+
+#### Long-term Fix
+- 배포 전 `ops/status` 헬스체크를 CI에 추가.
+- `docker logs` 노이즈 감소(워커 에러 로그 분리)로 신속한 에러 추출 가능하게 개선.
+
+### 검증 방법
+- 운영 서버에서 `/api/v2/admin/ops/status` 호출 시 200 응답 확인.
+- Admin Ops Dashboard 정상 로딩 확인.
+
+### 예방 가이드라인
+- 운영 배포 시 모델/서비스 import 경로 변경 여부 체크리스트에 포함.
+- 워커 로그 레벨 조정 또는 별도 로깅 채널 분리.
 
 ---
 
