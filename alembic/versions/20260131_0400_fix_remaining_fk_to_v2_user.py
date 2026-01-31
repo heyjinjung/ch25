@@ -80,24 +80,31 @@ def upgrade():
             print(f"[SKIP] {table_name}.{new_fk} already exists")
             continue
         
-        # 4. Orphan 데이터 삭제 (v2_user에 없는 user_id)
-        orphan_delete = conn.execute(text(f"""
-            DELETE FROM {table_name} 
-            WHERE user_id NOT IN (SELECT id FROM v2_user)
-        """))
-        if orphan_delete.rowcount > 0:
-            print(f"[CLEANUP] {table_name}: deleted {orphan_delete.rowcount} orphan rows")
-            
-        # 5. 새 FK 생성 (v2_user 참조)
-        op.create_foreign_key(
-            new_fk,
-            table_name,
-            'v2_user',
-            ['user_id'],
-            ['id'],
-            ondelete='CASCADE'
-        )
-        print(f"[CREATE] {table_name}.{new_fk} -> v2_user.id")
+        # 4. user_id 컬럼 존재 여부 확인 후 orphan 삭제 및 FK 생성
+        col_result = conn.execute(text(f"""
+            SELECT COLUMN_NAME FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME = '{table_name}'
+            AND COLUMN_NAME = 'user_id'
+        """)).fetchone()
+        if col_result:
+            orphan_delete = conn.execute(text(f"""
+                DELETE FROM {table_name} 
+                WHERE user_id NOT IN (SELECT id FROM v2_user)
+            """))
+            if orphan_delete.rowcount > 0:
+                print(f"[CLEANUP] {table_name}: deleted {orphan_delete.rowcount} orphan rows")
+            op.create_foreign_key(
+                new_fk,
+                table_name,
+                'v2_user',
+                ['user_id'],
+                ['id'],
+                ondelete='CASCADE'
+            )
+            print(f"[CREATE] {table_name}.{new_fk} -> v2_user.id")
+        else:
+            print(f"[SKIP] {table_name}: no user_id column, skip orphan/FK")
 
 
 def downgrade():
