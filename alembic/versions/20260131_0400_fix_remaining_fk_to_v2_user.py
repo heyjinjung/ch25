@@ -45,20 +45,20 @@ def upgrade():
     
     for table_name, old_fk, new_fk in tables:
         # 1. 테이블 존재 확인
-        result = conn.execute(f"SHOW TABLES LIKE '{table_name}'").fetchone()
+        result = conn.execute(text(f"SHOW TABLES LIKE '{table_name}'")).fetchone()
         if not result:
             print(f"[SKIP] Table {table_name} does not exist")
             continue
             
         # 2. 기존 FK 확인 및 삭제
-        fk_result = conn.execute(f"""
+        fk_result = conn.execute(text(f"""
             SELECT CONSTRAINT_NAME 
             FROM information_schema.TABLE_CONSTRAINTS 
             WHERE TABLE_SCHEMA = DATABASE() 
             AND TABLE_NAME = '{table_name}' 
             AND CONSTRAINT_TYPE = 'FOREIGN KEY'
             AND CONSTRAINT_NAME = '{old_fk}'
-        """).fetchone()
+        """)).fetchone()
         
         if fk_result:
             op.drop_constraint(old_fk, table_name, type_='foreignkey')
@@ -67,14 +67,14 @@ def upgrade():
             print(f"[SKIP] {table_name}.{old_fk} not found")
             
         # 3. 새 FK가 이미 존재하는지 확인
-        new_fk_result = conn.execute(f"""
+        new_fk_result = conn.execute(text(f"""
             SELECT CONSTRAINT_NAME 
             FROM information_schema.TABLE_CONSTRAINTS 
             WHERE TABLE_SCHEMA = DATABASE() 
             AND TABLE_NAME = '{table_name}' 
             AND CONSTRAINT_TYPE = 'FOREIGN KEY'
             AND CONSTRAINT_NAME = '{new_fk}'
-        """).fetchone()
+        """)).fetchone()
         
         if new_fk_result:
             print(f"[SKIP] {table_name}.{new_fk} already exists")
@@ -120,19 +120,19 @@ def downgrade():
     conn = op.get_bind()
     
     for table_name, old_fk, new_fk in tables:
-        result = conn.execute(f"SHOW TABLES LIKE '{table_name}'").fetchone()
+        result = conn.execute(text(f"SHOW TABLES LIKE '{table_name}'")).fetchone()
         if not result:
             continue
             
         # 새 FK 삭제
-        fk_result = conn.execute(f"""
+        fk_result = conn.execute(text(f"""
             SELECT CONSTRAINT_NAME 
             FROM information_schema.TABLE_CONSTRAINTS 
             WHERE TABLE_SCHEMA = DATABASE() 
             AND TABLE_NAME = '{table_name}' 
             AND CONSTRAINT_TYPE = 'FOREIGN KEY'
             AND CONSTRAINT_NAME = '{new_fk}'
-        """).fetchone()
+        """)).fetchone()
         
         if fk_result:
             op.drop_constraint(new_fk, table_name, type_='foreignkey')
