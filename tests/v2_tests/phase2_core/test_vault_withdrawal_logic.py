@@ -53,17 +53,17 @@ def setup_valid_user(db, user_id=1, locked=1_000_000, spent_today=10_000):
     db.add(deposit)
 
     # 2. Play Count Condition: 30 plays in last 3 days
-    # We add 30 dummy events
+    # Seed V2DiceLog instead of VaultEarnEvent (which is now for accrual record only)
+    from app.v2.models.v2_dice import V2DiceLog
     for i in range(30):
-        evt = VaultEarnEvent(
+        log = V2DiceLog(
             user_id=user_id,
-            earn_event_id=f"TEST:{i}",
-            earn_type="GAME_PLAY",
-            created_at=datetime.utcnow(),
-            amount=100,
-            source="TEST"
+            bet_amount=1000,
+            outcome="WIN",
+            reward_amount=200,
+            created_at=datetime.now(timezone.utc)
         )
-        db.add(evt)
+        db.add(log)
     
     db.commit()
     return user

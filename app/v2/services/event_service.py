@@ -47,22 +47,25 @@ class V2EventService:
         return False
 
     def get_golden_hour_status(self, db: Session, now: datetime | None = None) -> dict:
+        """Get golden hour status from v2_dice_config (SoT for admin settings)."""
+        from app.v2.models.v2_dice import V2DiceConfig
+        
         now_dt = now or datetime.utcnow()
         if now_dt.tzinfo is None:
             now_dt = now_dt.replace(tzinfo=timezone.utc)
-
-        v2 = Vault2Service()
-        gh_cfg = v2.get_config_value(db, "golden_hour_config", {})
-        enabled = bool(gh_cfg.get("enabled")) if gh_cfg else False
-        override = gh_cfg.get("manual_override", "AUTO") if gh_cfg else "AUTO"
-        multiplier = float(gh_cfg.get("multiplier", 1.0)) if gh_cfg else 1.0
 
         settings = get_settings()
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
         now_kst = now_dt.astimezone(tz)
 
-        start_str = gh_cfg.get("start_time_kst", "21:30:00") if gh_cfg else "21:30:00"
-        end_str = gh_cfg.get("end_time_kst", "22:30:00") if gh_cfg else "22:30:00"
+        # Get config from v2_dice_config (SoT)
+        config = db.query(V2DiceConfig).filter(V2DiceConfig.is_active == True).first()
+        
+        enabled = bool(getattr(config, "enable_golden_hour", False)) if config else False
+        multiplier = float(getattr(config, "golden_hour_multiplier", 2.0) or 2.0) if config else 2.0
+        start_str = getattr(config, "golden_hour_start_time", "21:30:00") or "21:30:00" if config else "21:30:00"
+        end_str = getattr(config, "golden_hour_end_time", "22:30:00") or "22:30:00" if config else "22:30:00"
+        
         start_parts = [int(p) for p in start_str.split(":")]
         end_parts = [int(p) for p in end_str.split(":")]
         start_time_kst = time(start_parts[0], start_parts[1], start_parts[2] if len(start_parts) > 2 else 0)
@@ -75,15 +78,14 @@ class V2EventService:
 
         active = False
         if enabled:
-            if override == "FORCE_ON":
-                active = True
-            elif override == "FORCE_OFF":
-                active = False
-            else:
-                active = _is_within_window(now_kst.time(), start_time_kst, end_time_kst)
+            active = _is_within_window(now_kst.time(), start_time_kst, end_time_kst)
 
+        # Calculate next_event_time and is_upcoming (within 10 minutes)
         next_event_time = None
-        if enabled and override == "AUTO":
+        is_upcoming = False
+        minutes_until_start = None
+        
+        if enabled:
             start_dt = now_kst.replace(
                 hour=start_time_kst.hour,
                 minute=start_time_kst.minute,
@@ -111,14 +113,22 @@ class V2EventService:
                     next_event_time = start_dt + timedelta(days=1)
                 else:
                     next_event_time = start_dt if now_kst.time() <= start_time_kst else start_dt + timedelta(days=1)
+            
+            # Check if upcoming (within 10 minutes before start)
+            if not active and next_event_time:
+                time_diff = (next_event_time - now_kst).total_seconds()
+                minutes_until_start = int(time_diff / 60)
+                if 0 < time_diff <= 600:  # 10 minutes = 600 seconds
+                    is_upcoming = True
 
         return {
             "is_active": active,
+            "is_upcoming": is_upcoming,
+            "minutes_until_start": minutes_until_start,
             "multiplier": multiplier if active else 1.0,
             "start_time_kst": start_str,
             "end_time_kst": end_str,
             "next_event_time": next_event_time,
-            "override": override,
             "enabled": enabled,
         }
 

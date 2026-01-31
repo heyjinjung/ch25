@@ -1926,6 +1926,10 @@ interface DiceConfigBackend {
   enable_golden_hour?: boolean;
   goldenHourMultiplier?: number;
   golden_hour_multiplier?: number;
+  goldenHourStartTime?: string;
+  golden_hour_start_time?: string;
+  goldenHourEndTime?: string;
+  golden_hour_end_time?: string;
 }
 
 export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
@@ -1957,6 +1961,10 @@ export const getDiceConfig = async (): Promise<AdminDiceConfigDto> => {
       config.enableGoldenHour ?? config.enable_golden_hour ?? true,
     goldenHourMultiplier:
       config.goldenHourMultiplier ?? config.golden_hour_multiplier ?? 2.0,
+    goldenHourStartTime:
+      config.goldenHourStartTime ?? config.golden_hour_start_time ?? "21:30:00",
+    goldenHourEndTime:
+      config.goldenHourEndTime ?? config.golden_hour_end_time ?? "22:30:00",
   };
 };
 
@@ -2396,6 +2404,7 @@ export interface CSVImportRequest {
   emit_to_redis?: boolean;
   historical_mode?: boolean;
   skip_duplicate_check?: boolean;
+  import_type?: string;
 }
 
 export interface CSVImportResult {

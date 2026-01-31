@@ -25,7 +25,7 @@ def db_session():
     finally:
         db.close()
 
-def setup_user(db, user_id=1, total_charge=0, created_at=None):
+def setup_user(db, user_id=1, total_charge=0, created_at=None, seed_plays=False):
     if created_at is None:
         # Default to 10 days ago to bypass New User grace period (7 days) for suspension tests
         created_at = datetime.now(timezone.utc) - timedelta(days=10)
@@ -38,6 +38,10 @@ def setup_user(db, user_id=1, total_charge=0, created_at=None):
         vault_locked_balance=0,
     )
     db.add(user)
+    if seed_plays:
+        from app.v2.models.v2_dice import V2DiceLog
+        for i in range(30):
+            db.add(V2DiceLog(user_id=user_id, bet_amount=1000, outcome="WIN", reward_amount=200, created_at=datetime.now(timezone.utc)))
     db.commit()
     return user
 
@@ -139,8 +143,9 @@ def test_legacy_field_lock_verification(db_session):
         db_session.add(ExternalRankingDailyDepositDelta(user_id=3, kst_date=now_kst, deposit_delta=10000))
         
         # 2. Play count (30)
+        from app.v2.models.v2_dice import V2DiceLog
         for i in range(30):
-            db_session.add(VaultEarnEvent(user_id=3, earn_event_id=f"T3-{i}", earn_type="GAME_PLAY", amount=10, source="TEST", created_at=datetime.utcnow()))
+            db_session.add(V2DiceLog(user_id=3, bet_amount=1000, outcome="WIN", reward_amount=200, created_at=datetime.now(timezone.utc)))
         
         # 3. Daily spent (10k)
         user.vault_spent_today = 10_000
