@@ -341,7 +341,16 @@ def get_admin_user_level_by_cc_id(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     _admin_id, _admin_role = admin_info
-    user = db.query(V2User).filter(V2User.cc_id == cc_id).first()
+    # cc_id 또는 닉네임으로 검색
+    user = (
+        db.query(V2User)
+        .filter(
+            (V2User.cc_id == cc_id) |
+            (V2User.nickname == cc_id) |
+            (V2User.telegram_username == cc_id)
+        )
+        .first()
+    )
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 

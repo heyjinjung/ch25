@@ -26,7 +26,6 @@ Golden V2의 실시간 개입(Intervention) 및 대량 로그 처리를 위해 �
 - **SSL**: HTTPS 반드시 활성화 (nginx 프록시 통해 SSL 종료)
 - **CORS**: https://cc-jm.com, https://www.cc-jm.com, http://149.28.135.147 (프리플라이트 요청 허용)
 
-✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 ---
 
 ## 🛠️ 2. 서버 환경 구축 (Standard Setup)
@@ -138,6 +137,12 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 | **DB Health** | `docker ps` | `xmas-db` 컨테이너 상태 Healthy 확인 |
 | **Redis** | `redis-cli ping` | `PONG` 응답 확인 |
 | **Telegram Bot** | `docker compose logs telegram_bot` | `Application started` 확인 |
+
+.github/workflows/deploy.yml 파일에서 다음 3곳을 수정했습니다:
+
+Line 76: env 섹션에 SENTRY_DSN 추가
+Line 81: envs 리스트에 SENTRY_DSN 추가
+Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
 
 ---
 

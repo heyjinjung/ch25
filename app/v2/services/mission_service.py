@@ -631,4 +631,19 @@ class V2MissionService:
         # 1. 'LOGIN' 액션 타입 미션 진행 (출석 등)
         service.update_progress(user_id, "LOGIN", delta=1)
         
-        # 2. (Optional) 추후 가입 보너스 등 추가 로직 확장 가능
+        # 2. CONSECUTIVE_LOGIN 미션 진행 (다음날 연속 로그인)
+        # - 어제 로그인 기록이 있으면 연속 로그인으로 처리
+        try:
+            user = db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
+            if user and user.last_play_date:
+                now_tz = service._now_tz()
+                today = service._operational_play_date(now_tz)
+                yesterday = today - timedelta(days=1)
+                
+                # 어제 플레이/로그인 기록이 있으면 연속 로그인
+                if user.last_play_date == yesterday or user.last_play_date == today:
+                    service.update_progress(user_id, "CONSECUTIVE_LOGIN", delta=1)
+        except Exception:
+            pass
+        
+        # 3. (Optional) 추후 가입 보너스 등 추가 로직 확장 가능

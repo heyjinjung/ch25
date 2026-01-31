@@ -47,7 +47,9 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     if (
       actionType === "JOIN_CHANNEL" ||
       actionType === "SUBSCRIBE_CHANNEL" ||
-      actionType === "CHANNEL_JOIN"
+      actionType === "CHANNEL_JOIN" ||
+      actionType === "JOIN_TELEGRAM_CHANNEL" ||
+      actionType === "JOIN_CC_CHANNEL"
     ) {
       if (!isJoined) {
         // Step 1: Open Channel Link
@@ -131,7 +133,12 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     const actionType = (mission as any).action_type || "";
     const isProcessing = isRecording || isVerifying;
 
-    if (actionType === "JOIN_CHANNEL" || actionType === "SUBSCRIBE_CHANNEL") {
+    if (
+      actionType === "JOIN_CHANNEL" ||
+      actionType === "SUBSCRIBE_CHANNEL" ||
+      actionType === "JOIN_TELEGRAM_CHANNEL" ||
+      actionType === "JOIN_CC_CHANNEL"
+    ) {
       return (
         <Button
           size="sm"

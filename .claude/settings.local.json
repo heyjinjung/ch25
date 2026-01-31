@@ -11,7 +11,8 @@
       "Bash(pytest:*)",
       "Bash(docker-compose up:*)",
       "Bash(ssh:*)",
-      "Bash(scp:*)"
+      "Bash(scp:*)",
+      "Bash(git log:*)"
     ]
   }
 }

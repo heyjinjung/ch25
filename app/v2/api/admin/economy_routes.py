@@ -315,7 +315,7 @@ def list_deposit_logs(
             nickname=r.V2User.nickname,
             amount=r.ExternalRankingDailyDepositDelta.deposit_delta,
             kstDate=r.ExternalRankingDailyDepositDelta.kst_date.isoformat(),
-            createdAt=r.ExternalRankingDailyDepositDelta.created_at,
+            createdAt=r.ExternalRankingDailyDepositDelta.updated_at,  # 작업 일시는 updated_at 사용
         )
         for r in rows
     ]

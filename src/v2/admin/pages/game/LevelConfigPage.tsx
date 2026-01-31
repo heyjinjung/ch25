@@ -430,16 +430,16 @@ export default function LevelConfigPage() {
             <Card className="bg-zinc-900 border-white/10 lg:col-span-1">
               <CardHeader>
                 <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
-                  유저 조회 (CC ID)
+                  유저 조회
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-zinc-400">CC ID</Label>
+                  <Label className="text-zinc-400">CC ID / 닉네임 / 텔레그램</Label>
                   <Input
                     value={ccId}
                     onChange={(e) => setCcId(e.target.value)}
-                    placeholder="예: 0126"
+                    placeholder="예: 0126, Jimin, @username"
                     className="bg-black/20 border-white/10"
                   />
                 </div>
