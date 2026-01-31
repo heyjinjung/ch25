@@ -785,7 +785,7 @@ class Vault2Service:
             for req, u in rows:
                 results.append({
                     "user_id": u.id,
-                    "external_id": u.external_id,
+                    "external_id": u.cc_id,
                     "nickname": u.nickname,
                     "telegram_username": u.telegram_username,
                     "amount": int(getattr(req, "amount", 0) or 0),

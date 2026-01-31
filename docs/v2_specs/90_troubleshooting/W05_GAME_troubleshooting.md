@@ -12,6 +12,7 @@
 | 01-31 | 복권 퍼즐조각 미지급 버그 | ✅ RESOLVED |
 | 01-31 | 주사위 게임 골든아워 미적용 | ✅ RESOLVED |
 | 01-31 | 게임 로그 테이블 FK 누락 | ✅ RESOLVED |
+| 01-31 | 주사위 골든아워 시간설정 500 에러 | ✅ RESOLVED |
 
 ---
 
@@ -107,5 +108,60 @@
 
 ---
 
+## 01-31 - [GAME/DB] 주사위 골든아워 시간설정 500 에러 (Data too long)
+
+**우선순위**: P1
+**관련 도메인**: GAME, DB, FRONTEND
+
+### 증상
+- 어드민 페이지(/admin/game/dice)에서 골든아워 시작/종료 시간 설정 후 저장 시 500 에러 발생.
+- API 요청: `PUT /api/v2/admin/game/dice/config/1`
+
+### 근본 원인
+- **Stack Trace**: `sqlalchemy.exc.DataError: (1406, "Data too long for column 'golden_hour_start_time' at row 1")`
+- **Parameter 분석**: `golden_hour_start_time: '15:30:00:00'` (11자)
+- **DB 컬럼 제약**: `golden_hour_start_time` 컬럼은 `String(8)` (HH:MM:SS 8자 형식)
+- **코드 레벨 원인**: 
+  1. 프론트엔드 `<Input type="time" step="1" />` 설정으로 `HH:MM:SS` 형식이 입력될 수 있음
+  2. `onChange` 핸들러에서 `e.target.value + ":00"` 로직 적용 시 `HH:MM:SS:00` (11자) 생성
+  3. 백엔드에서 입력값 검증 없이 DB에 직접 저장 시도
+
+### 해결 방법
+#### Frontend Fix (DiceConfigPage.tsx)
+```tsx
+// Before (버그)
+<Input type="time" step="1" ... />
+onChange={(e) => handleConfigChange("goldenHourStartTime", e.target.value + ":00")}
+
+// After (수정)
+<Input type="time" ... />  // step="1" 제거
+onChange={(e) => {
+  const timeValue = e.target.value.substring(0, 5) + ":00";  // HH:MM:SS 고정
+  handleConfigChange("goldenHourStartTime", timeValue);
+}}
+```
+
+#### Backend Fix (game_config_routes.py)
+```python
+# 방어 코딩 추가: 8자 초과 시 절삭, 5자(HH:MM)면 :00 추가
+if payload.golden_hour_start_time is not None:
+    time_str = payload.golden_hour_start_time[:8] if len(payload.golden_hour_start_time) > 8 else payload.golden_hour_start_time
+    if len(time_str) == 5:
+        time_str = time_str + ":00"
+    config.golden_hour_start_time = time_str
+```
+
+### 검증 방법
+- 어드민에서 골든아워 시간 수정 후 저장 → 200 OK 응답 확인
+- DB에서 `SELECT golden_hour_start_time FROM v2_dice_config WHERE id=1` → 8자 형식 확인
+
+### 예방 가이드라인
+1. **DB String 컬럼 정의 시** 최대 길이를 명확히 정의하고 문서화
+2. **시간 입력 UI** 구현 시 `step` 속성 사용에 주의 (초 단위 입력 시 형식 변경)
+3. **백엔드 API**에서 DB 저장 전 입력값 길이/형식 검증 필수
+
+---
+
 ## 변경 이력
 - 2026-01-31: W05 GAME 문서 생성, 기존 분산 문서 통합
+- 2026-01-31: 골든아워 시간설정 500 에러 이슈 추가

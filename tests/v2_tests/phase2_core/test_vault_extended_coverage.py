@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
-from app.models.user import User
 from app.models.vault2 import VaultProgram, VaultStatus
+from app.v2.models.user import V2User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.user_cash_ledger import UserCashLedger
@@ -32,8 +32,8 @@ def db_session() -> Session:
     SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
     db = SessionLocal()
     try:
-        # Create a test user
-        user = User(id=1, external_id="test_user", nickname="Tester")
+        # Create a test V2User
+        user = V2User(id=1, cc_id="test_user", nickname="Tester")
         db.add(user)
         db.commit()
         yield db
@@ -216,9 +216,12 @@ def test_vault2_extended_admin_and_stats(db_session: Session) -> None:
     assert isinstance(details, list)
     
     # expiring_soon_24h
-    user = db_session.get(User, user_id)
-    user.vault_locked_balance = 1000
-    user.vault_locked_expires_at = datetime.utcnow() + timedelta(hours=10)
+    user = db_session.get(V2User, user_id)
+    # Note: V2User no longer has vault_locked_expires_at; status has it.
+    status = service.get_or_create_status(db_session, user_id=user_id, program=program)
+    status.locked_amount = 1000
+    status.expires_at = datetime.utcnow() + timedelta(hours=10)
+    db_session.add(status)
     db_session.commit()
     details = service.get_vault_detail_stats(db_session, type="expiring_soon_24h")
     assert any(d["user_id"] == user_id for d in details)

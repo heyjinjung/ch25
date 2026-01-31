@@ -53,13 +53,22 @@ def setup_valid_user(db, user_id=1, locked=1_000_000, spent_today=10_000):
     db.add(deposit)
 
     # 2. Play Count Condition: 30 plays in last 3 days
-    # Seed V2DiceLog instead of VaultEarnEvent (which is now for accrual record only)
-    from app.v2.models.v2_dice import V2DiceLog
+    from app.v2.models.v2_dice import V2DiceLog, V2DiceConfig
+    config = V2DiceConfig(name="Test Config", ticket_type="DICE_TICKET")
+    db.add(config)
+    db.flush()
+
     for i in range(30):
         log = V2DiceLog(
             user_id=user_id,
-            bet_amount=1000,
-            outcome="WIN",
+            config_id=config.id,
+            user_dice_1=3,
+            user_dice_2=3,
+            user_sum=6,
+            dealer_dice_1=1,
+            dealer_dice_2=1,
+            dealer_sum=2,
+            result="WIN",
             reward_amount=200,
             created_at=datetime.now(timezone.utc)
         )
@@ -164,4 +173,4 @@ def test_daily_spent_reset_check(db_session):
         # PROOF: If reset didn't happen, spent_today would be 20,000, which is > 10,000.
         # So "MIN_DAILY_SPEND_10000_REQUIRED" would NOT be raised.
         # The fact it was raised confirms reset took effect in logic.
-        assert "VAULT_SPENT_INSUFFICIENT_10000" in str(exc.value.detail)
+        assert "MIN_DAILY_SPEND_10000_REQUIRED" in str(exc.value.detail)

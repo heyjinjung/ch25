@@ -61,7 +61,7 @@ class TestMissionEdgeCases:
 
     def test_strict_vault_policy_suspension_on_claim(self, db_session):
         """[Strict Vault Policy] 혜택 중단 상태(7일 무입금)에서 보상 수령 차단"""
-        user = _seed_user(db_session, user_id=1)
+        user = _seed_user(db_session, user_id=1, created_at=datetime.utcnow() - timedelta(days=10))
         # 입금 내역 없음 -> BENEFITS_SUSPENDED
         
         mission = Mission(

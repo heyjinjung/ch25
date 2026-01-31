@@ -143,9 +143,25 @@ def test_legacy_field_lock_verification(db_session):
         db_session.add(ExternalRankingDailyDepositDelta(user_id=3, kst_date=now_kst, deposit_delta=10000))
         
         # 2. Play count (30)
-        from app.v2.models.v2_dice import V2DiceLog
+        from app.v2.models.v2_dice import V2DiceLog, V2DiceConfig
+        config = V2DiceConfig(name="Test Config", ticket_type="DICE_TICKET")
+        db_session.add(config)
+        db_session.flush()
+
         for i in range(30):
-            db_session.add(V2DiceLog(user_id=3, bet_amount=1000, outcome="WIN", reward_amount=200, created_at=datetime.now(timezone.utc)))
+            db_session.add(V2DiceLog(
+                user_id=3,
+                config_id=config.id,
+                user_dice_1=3,
+                user_dice_2=3,
+                user_sum=6,
+                dealer_dice_1=1,
+                dealer_dice_2=1,
+                dealer_sum=2,
+                result="WIN",
+                reward_amount=200,
+                created_at=datetime.now(timezone.utc)
+            ))
         
         # 3. Daily spent (10k)
         user.vault_spent_today = 10_000

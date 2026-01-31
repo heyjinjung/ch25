@@ -1453,7 +1453,7 @@ class VaultService:
         )
         window_start_utc_naive = window_start_kst.astimezone(timezone.utc).replace(tzinfo=None)
 
-        recent_play_count = (
+        recent_play_count_legacy = (
             db.query(func.count(VaultEarnEvent.id))
             .filter(
                 VaultEarnEvent.user_id == user_id,
@@ -1463,6 +1463,28 @@ class VaultService:
             .scalar()
             or 0
         )
+        
+        # V2 Native Logs: Count Dice, Roulette, Lottery plays
+        from app.v2.models.v2_dice import V2DiceLog
+        from app.v2.models.v2_roulette import V2RouletteLog
+        from app.v2.models.v2_lottery import V2LotteryLog
+
+        recent_dice_count = db.query(func.count(V2DiceLog.id)).filter(
+            V2DiceLog.user_id == user_id,
+            V2DiceLog.created_at >= window_start_utc_naive
+        ).scalar() or 0
+
+        recent_roulette_count = db.query(func.count(V2RouletteLog.id)).filter(
+            V2RouletteLog.user_id == user_id,
+            V2RouletteLog.created_at >= window_start_utc_naive
+        ).scalar() or 0
+
+        recent_lottery_count = db.query(func.count(V2LotteryLog.id)).filter(
+            V2LotteryLog.user_id == user_id,
+            V2LotteryLog.created_at >= window_start_utc_naive
+        ).scalar() or 0
+
+        recent_play_count = int(recent_play_count_legacy) + int(recent_dice_count) + int(recent_roulette_count) + int(recent_lottery_count)
         if int(recent_play_count) < 30:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_PLAY_COUNT_30_REQUIRED")
 
