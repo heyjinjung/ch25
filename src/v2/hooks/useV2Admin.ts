@@ -723,3 +723,19 @@ export function useInterventionLogs(userId: number | null, limit: number = 50) {
     refetchInterval: 10000, // 10초마다 자동 새로고침
   });
 }
+
+// ============================================================================
+// User Vault History Hooks
+// ============================================================================
+import {
+  fetchUserVaultHistory,
+  VaultEarnEvent,
+} from "../../admin/api/adminUserApi";
+
+export function useAdminUserVaultHistory(userId: number | null) {
+  return useQuery<VaultEarnEvent[]>({
+    queryKey: ["admin", "users", userId, "vault-history"],
+    queryFn: () => fetchUserVaultHistory(userId!),
+    enabled: !!userId && userId > 0,
+  });
+}

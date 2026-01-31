@@ -526,9 +526,19 @@ def update_dice_config(
     if payload.golden_hour_multiplier is not None:
         config.golden_hour_multiplier = payload.golden_hour_multiplier
     if payload.golden_hour_start_time is not None:
-        config.golden_hour_start_time = payload.golden_hour_start_time
+        # Validate HH:MM:SS format (8 chars max)
+        time_str = payload.golden_hour_start_time[:8] if len(payload.golden_hour_start_time) > 8 else payload.golden_hour_start_time
+        # Ensure HH:MM:SS format
+        if len(time_str) == 5:  # HH:MM
+            time_str = time_str + ":00"
+        config.golden_hour_start_time = time_str
     if payload.golden_hour_end_time is not None:
-        config.golden_hour_end_time = payload.golden_hour_end_time
+        # Validate HH:MM:SS format (8 chars max)
+        time_str = payload.golden_hour_end_time[:8] if len(payload.golden_hour_end_time) > 8 else payload.golden_hour_end_time
+        # Ensure HH:MM:SS format
+        if len(time_str) == 5:  # HH:MM
+            time_str = time_str + ":00"
+        config.golden_hour_end_time = time_str
 
     config.updated_at = datetime.utcnow()
 

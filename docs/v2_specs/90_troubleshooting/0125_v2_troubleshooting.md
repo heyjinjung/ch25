@@ -636,16 +636,30 @@ It's about time we offered something a bit more robust than breadcrumbs. With lo
 
 ✅ 신규유저 텔레그램 채널2개 입장 미션 프론트앤드 개선
 
-✅ 주사위 게임 골든하워 적용이 안되고 있음
+✅ 주사위 게임 골든하워 적용이 안되고 있음 / 골든아워 모달 
+수정된 파일들
+파일	변경 내용
+v2_dice.py	golden_hour_start/end_time 컬럼 추가
+event_service.py	v2_dice_config 기반 + is_upcoming 계산
+events.py	golden_hour 상세 정보 응답 추가
+adminApi.ts	시간 필드 전송 추가
+goldenHourApi.ts	새 API 클라이언트
+useV2Golden.ts	useGoldenHourStatus 훅 추가
+V2AppLayout.tsx	골든아워 모달 연동
+GoldenHourModal.tsx	새 모달 컴포넌트
 
 5) 마케팅..효율성
 입금 / 환전... 잡을수 있나?? 
+
+✅ 설계 문서: docs/.../golden/20260131_hq_margin_csv_import_design.md
+✅ 구현 문서: docs/.../golden/20260131_hq_margin_csv_import_implementation.md
+
 
 
 ---------------------------------------
 
 연속스트릭모달
-골든아워 모달
+
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
 
@@ -658,6 +672,7 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 #1. 개선사항
  > 회원관리 유저 디테일드로우 > 금고관리에서 내역로그 볼수 있게 해줘
  > 금고현황 페이지를 기준으로 금고 분석을 통합시켜줘 >> 이 떄 FE 구현된 카드컴포넌트 클릭시 모달로 상세내역 볼수 있게 해줘 
+
 
 
 ##2.에러사항 
@@ -680,15 +695,12 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든�
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_INDEX.md
 
-배포문서 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_automation_script_ko.md
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_docker_compose_guide_ko.md
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\05_ops\deployment\v2_deployment_rollback_script_ko.md
-
 ssh 접속 실제 운영서버 확인 
 C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
  ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+
+
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 

@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   AlertTriangle,
   Users,
+  Info,
 } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
@@ -75,9 +76,66 @@ const getUsageWidthClass = (usageRate: number) => {
   return styles[key] ?? styles.w0;
 };
 
+// Card Detail Modal Types
+type CardDetailType =
+  | "total_users"
+  | "locked_balance"
+  | "available_balance"
+  | "suspended_users"
+  | "average_balance"
+  | "median_balance"
+  | "max_balance";
+
+const cardDetailInfo: Record<
+  CardDetailType,
+  { title: string; description: string }
+> = {
+  total_users: {
+    title: "총 유저 수",
+    description: "금고에 잔액이 있는 전체 유저 수입니다.",
+  },
+  locked_balance: {
+    title: "총 잠금 잔액",
+    description:
+      "모든 유저의 잠금된 금고 잔액 합계입니다. 해금 조건을 충족하지 않은 금액입니다.",
+  },
+  available_balance: {
+    title: "총 가용 잔액",
+    description: "모든 유저가 출금 가능한 금고 잔액 합계입니다.",
+  },
+  suspended_users: {
+    title: "제재 유저",
+    description: "현재 제재 상태인 유저 수와 해당 유저들의 총 금고 잔액입니다.",
+  },
+  average_balance: {
+    title: "평균 잔액",
+    description: "전체 유저의 평균 금고 잔액입니다.",
+  },
+  median_balance: {
+    title: "중간값 잔액",
+    description:
+      "전체 유저 금고 잔액의 중간값입니다. 극단값의 영향을 받지 않는 대표값입니다.",
+  },
+  max_balance: {
+    title: "최대 잔액",
+    description: "단일 유저가 보유한 가장 높은 금고 잔액입니다.",
+  },
+};
+
 export default function VaultControlPage() {
   const [activeTab, setActiveTab] = useState("withdrawals");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Card Detail Modal State
+  const [cardDetailType, setCardDetailType] = useState<CardDetailType | null>(
+    null,
+  );
+  const [isCardDetailOpen, setIsCardDetailOpen] = useState(false);
+
+  const handleCardClick = (type: CardDetailType) => {
+    setCardDetailType(type);
+    setIsCardDetailOpen(true);
+  };
 
   // Withdrawals State
   const { data: pendingWithdrawals, isLoading: isLoadingPending } =
@@ -426,7 +484,10 @@ export default function VaultControlPage() {
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-4">
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-indigo-500/50 transition-colors"
+                  onClick={() => handleCardClick("total_users")}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       총 유저 수
@@ -439,7 +500,10 @@ export default function VaultControlPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                  onClick={() => handleCardClick("locked_balance")}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       총 잠금 잔액
@@ -454,7 +518,10 @@ export default function VaultControlPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-blue-500/50 transition-colors"
+                  onClick={() => handleCardClick("available_balance")}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       총 가용 잔액
@@ -469,7 +536,10 @@ export default function VaultControlPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-amber-500/50 transition-colors"
+                  onClick={() => handleCardClick("suspended_users")}
+                >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">
                       제재 유저
@@ -492,7 +562,10 @@ export default function VaultControlPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-white/30 transition-colors"
+                  onClick={() => handleCardClick("average_balance")}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm text-zinc-400">
                       평균 잔액
@@ -504,7 +577,10 @@ export default function VaultControlPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-white/30 transition-colors"
+                  onClick={() => handleCardClick("median_balance")}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm text-zinc-400">
                       중간값 잔액
@@ -516,7 +592,10 @@ export default function VaultControlPage() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-zinc-900 border-white/10">
+                <Card
+                  className="bg-zinc-900 border-white/10 cursor-pointer hover:border-emerald-500/50 transition-colors"
+                  onClick={() => handleCardClick("max_balance")}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm text-zinc-400">
                       최대 잔액
@@ -811,6 +890,137 @@ export default function VaultControlPage() {
               }
             >
               적용
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Card Detail Modal */}
+      <Dialog open={isCardDetailOpen} onOpenChange={setIsCardDetailOpen}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-white max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-indigo-400" />
+              {cardDetailType && cardDetailInfo[cardDetailType]?.title}
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              {cardDetailType && cardDetailInfo[cardDetailType]?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            {cardDetailType === "total_users" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">전체 금고 유저</span>
+                  <span className="text-2xl font-bold text-white">
+                    {vaultAggregate?.total_users?.toLocaleString() ?? 0}명
+                  </span>
+                </div>
+              </div>
+            )}
+            {cardDetailType === "locked_balance" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">총 잠금 잔액</span>
+                  <span className="text-2xl font-bold text-emerald-400">
+                    ₩
+                    {vaultAggregate?.total_locked_balance?.toLocaleString() ??
+                      0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 해금 조건(일일 플레이 30회, 입금 확인 등)을 충족하지 않아
+                  출금 불가능한 금액입니다.
+                </p>
+              </div>
+            )}
+            {cardDetailType === "available_balance" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">총 가용 잔액</span>
+                  <span className="text-2xl font-bold text-blue-400">
+                    ₩
+                    {vaultAggregate?.total_available_balance?.toLocaleString() ??
+                      0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 해금 조건을 충족하여 출금 신청이 가능한 금액의 합계입니다.
+                </p>
+              </div>
+            )}
+            {cardDetailType === "suspended_users" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">제재 유저 수</span>
+                  <span className="text-2xl font-bold text-amber-400">
+                    {vaultAggregate?.suspended_users_count?.toLocaleString() ??
+                      0}
+                    명
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">제재 유저 금고 잔액</span>
+                  <span className="text-xl font-bold text-amber-400">
+                    ₩
+                    {vaultAggregate?.suspended_users_balance?.toLocaleString() ??
+                      0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 부정행위 등으로 제재된 유저들의 금고 잔액입니다. 출금이
+                  차단됩니다.
+                </p>
+              </div>
+            )}
+            {cardDetailType === "average_balance" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">평균 잔액</span>
+                  <span className="text-2xl font-bold text-white">
+                    ₩{vaultAggregate?.average_balance?.toLocaleString() ?? 0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 전체 유저의 금고 잔액을 유저 수로 나눈 산술평균입니다.
+                </p>
+              </div>
+            )}
+            {cardDetailType === "median_balance" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">중간값 잔액</span>
+                  <span className="text-2xl font-bold text-white">
+                    ₩{vaultAggregate?.median_balance?.toLocaleString() ?? 0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 유저들의 금고 잔액을 정렬했을 때 중간에 위치하는 값입니다.
+                  극단값의 영향을 받지 않습니다.
+                </p>
+              </div>
+            )}
+            {cardDetailType === "max_balance" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-black/20 rounded-lg border border-white/5">
+                  <span className="text-zinc-400">최대 잔액</span>
+                  <span className="text-2xl font-bold text-emerald-400">
+                    ₩{vaultAggregate?.max_balance?.toLocaleString() ?? 0}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  * 가장 높은 금고 잔액을 보유한 단일 유저의 금액입니다.
+                </p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCardDetailOpen(false)}
+              className="border-white/10 text-white hover:bg-white/10"
+            >
+              닫기
             </Button>
           </DialogFooter>
         </DialogContent>

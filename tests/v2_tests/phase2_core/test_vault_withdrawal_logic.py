@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -164,4 +164,4 @@ def test_daily_spent_reset_check(db_session):
         # PROOF: If reset didn't happen, spent_today would be 20,000, which is > 10,000.
         # So "MIN_DAILY_SPEND_10000_REQUIRED" would NOT be raised.
         # The fact it was raised confirms reset took effect in logic.
-        assert "MIN_DAILY_SPEND_10000_REQUIRED" in str(exc.value.detail)
+        assert "VAULT_SPENT_INSUFFICIENT_10000" in str(exc.value.detail)

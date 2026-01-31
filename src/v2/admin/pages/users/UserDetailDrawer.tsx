@@ -35,6 +35,7 @@ import {
   useAdminTicketLogs,
   useUserInventory,
   useUpdateUserNickname,
+  useAdminUserVaultHistory,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
@@ -112,6 +113,7 @@ export function UserDetailDrawer({
     50,
     { enabled: Boolean(userId) },
   );
+  const { data: vaultHistory = [] } = useAdminUserVaultHistory(userId);
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
   const walletLogs = useMemo(
@@ -603,6 +605,65 @@ export function UserDetailDrawer({
                         금고 지급/차감
                       </Button>
                     </div>
+
+                    {/* 금고 적립 내역 */}
+                    <Card className="bg-[#18181B] border-white/5">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-zinc-300">
+                          금고 적립 내역
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="max-h-[300px] overflow-y-auto">
+                        {vaultHistory.length === 0 ? (
+                          <div className="text-center text-zinc-500 py-4">
+                            적립 내역이 없습니다
+                          </div>
+                        ) : (
+                          <table className="w-full text-xs">
+                            <thead className="sticky top-0 bg-[#18181B]">
+                              <tr className="text-zinc-500 border-b border-white/5">
+                                <th className="text-left py-2 px-1">일시</th>
+                                <th className="text-left py-2 px-1">유형</th>
+                                <th className="text-right py-2 px-1">금액</th>
+                                <th className="text-left py-2 px-1">출처</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {vaultHistory.map((event) => (
+                                <tr
+                                  key={event.id}
+                                  className="border-b border-white/5 hover:bg-white/5"
+                                >
+                                  <td className="py-2 px-1 text-zinc-400">
+                                    {formatKst(event.created_at).slice(5, 16)}
+                                  </td>
+                                  <td className="py-2 px-1">
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        event.earn_type === "GAME_WIN"
+                                          ? "border-yellow-500/30 text-yellow-400"
+                                          : event.earn_type === "ADMIN"
+                                            ? "border-purple-500/30 text-purple-400"
+                                            : "border-zinc-500/30 text-zinc-400"
+                                      }
+                                    >
+                                      {event.earn_type}
+                                    </Badge>
+                                  </td>
+                                  <td className="py-2 px-1 text-right font-mono text-emerald-400">
+                                    +{event.amount.toLocaleString()}
+                                  </td>
+                                  <td className="py-2 px-1 text-zinc-500">
+                                    {event.game_type || event.source || "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
                 </div>
               </ScrollArea>

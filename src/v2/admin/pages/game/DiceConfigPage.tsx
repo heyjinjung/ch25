@@ -437,16 +437,14 @@ export default function DiceConfigPage() {
               <Label className="text-zinc-400">시작 시간 (KST)</Label>
               <Input
                 type="time"
-                step="1"
                 value={(
                   localConfig.goldenHourStartTime || "21:30:00"
                 ).substring(0, 5)}
-                onChange={(e) =>
-                  handleConfigChange(
-                    "goldenHourStartTime",
-                    e.target.value + ":00",
-                  )
-                }
+                onChange={(e) => {
+                  // HH:MM 형식을 HH:MM:SS로 변환 (8자 고정)
+                  const timeValue = e.target.value.substring(0, 5) + ":00";
+                  handleConfigChange("goldenHourStartTime", timeValue);
+                }}
                 className="bg-black/20 border-white/10 font-mono text-yellow-400"
               />
               <p className="text-xs text-zinc-500">
@@ -458,17 +456,15 @@ export default function DiceConfigPage() {
               <Label className="text-zinc-400">종료 시간 (KST)</Label>
               <Input
                 type="time"
-                step="1"
                 value={(localConfig.goldenHourEndTime || "22:30:00").substring(
                   0,
                   5,
                 )}
-                onChange={(e) =>
-                  handleConfigChange(
-                    "goldenHourEndTime",
-                    e.target.value + ":00",
-                  )
-                }
+                onChange={(e) => {
+                  // HH:MM 형식을 HH:MM:SS로 변환 (8자 고정)
+                  const timeValue = e.target.value.substring(0, 5) + ":00";
+                  handleConfigChange("goldenHourEndTime", timeValue);
+                }}
                 className="bg-black/20 border-white/10 font-mono text-yellow-400"
               />
               <p className="text-xs text-zinc-500">
