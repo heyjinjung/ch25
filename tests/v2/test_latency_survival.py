@@ -1,6 +1,7 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 
 from app.v2.models.user import V2User
 from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence, EvidenceStatus
@@ -11,10 +12,12 @@ from app.models.external_ranking_daily_deposit_delta import ExternalRankingDaily
 
 @pytest.fixture
 def v2_user(db: Session):
+    # Set created_at to 10 days ago to bypass the 7-day grace period in suspension logic
     user = V2User(
         cc_id="test_cc_id",
         nickname="TestUser",
-        vault_locked_balance=0
+        vault_locked_balance=0,
+        created_at=datetime.now(timezone.utc) - timedelta(days=10)
     )
     db.add(user)
     db.commit()
@@ -36,9 +39,28 @@ def test_submit_evidence_grants_provisional_reward(db: Session, v2_user):
     assert evidence.reward_json == {"ROULETTE_TICKET": 5}
     
     # Check Inventory Grant
-    # Using get_wallet_balance for Tokens
     balance = V2InventoryService.get_wallet_balance(db, v2_user.id, "ROULETTE_TICKET")
     assert balance == 5
+
+def test_submit_evidence_rate_limit(db: Session, v2_user):
+    # Submit 3 (Max)
+    for i in range(3):
+        V2LatencySurvivalService.submit_evidence(db, v2_user.id, f"TX_RATE_{i}", 10000)
+    
+    # 4th should fail with 429
+    with pytest.raises(HTTPException) as exc:
+        V2LatencySurvivalService.submit_evidence(db, v2_user.id, "TX_RATE_FAIL", 10000)
+    assert exc.value.status_code == 429
+    assert exc.value.detail == "RATE_LIMIT_EXCEEDED"
+
+def test_submit_evidence_duplicate_tx(db: Session, v2_user):
+    tx_id = "TX_DUP"
+    V2LatencySurvivalService.submit_evidence(db, v2_user.id, tx_id, 10000)
+    
+    with pytest.raises(HTTPException) as exc:
+        V2LatencySurvivalService.submit_evidence(db, v2_user.id, tx_id, 10000)
+    assert exc.value.status_code == 400
+    assert exc.value.detail == "DUPLICATE_TX_ID"
 
 def test_verify_evidence_keeps_reward(db: Session, v2_user):
     # Given
@@ -99,7 +121,8 @@ def test_benefits_suspension_bypass_expiry(db: Session, v2_user):
     evidence = V2LatencySurvivalService.submit_evidence(
         db, v2_user.id, "TX_EXPIRED", 100000
     )
-    evidence.created_at = datetime.utcnow() - timedelta(hours=25)
+    # Manual backdate (Ensure aware comparison if needed, though DB handles Naive UTC usually)
+    evidence.created_at = datetime.now(timezone.utc) - timedelta(hours=25)
     db.add(evidence)
     db.commit()
     

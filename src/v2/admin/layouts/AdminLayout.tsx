@@ -48,7 +48,13 @@ export default function AdminLayout() {
         USER: Boolean(parsed?.USER),
       };
     } catch {
-      return { OPS: false, CORE: false, GAME: false, SYSTEM: false, USER: false };
+      return {
+        OPS: false,
+        CORE: false,
+        GAME: false,
+        SYSTEM: false,
+        USER: false,
+      };
     }
   });
 
@@ -135,10 +141,6 @@ export default function AdminLayout() {
           icon: CreditCard,
           label: "금고 관리",
           path: "/admin/economy/vault",
-          submenu: [
-            { label: "금고 현황", path: "/admin/economy/vault" },
-            { label: "금고 분석", path: "/admin/economy/vault-analytics" },
-          ],
         },
         {
           icon: CreditCard,
