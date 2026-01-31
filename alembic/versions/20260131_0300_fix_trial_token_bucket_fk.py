@@ -82,6 +82,7 @@ def upgrade() -> None:
     # 테이블 목록: (table_name, old_fk_name, new_fk_name)
     # 순서 중요: child 테이블 먼저 처리
     tables = [
+        # Phase 1: 이미 처리된 테이블
         ("trial_token_bucket", "trial_token_bucket_ibfk_1", "trial_token_bucket_fk_v2_user"),
         ("user_level_progress", "user_level_progress_ibfk_1", "user_level_progress_fk_v2_user"),
         ("user_xp_event_log", "user_xp_event_log_ibfk_1", "user_xp_event_log_fk_v2_user"),
@@ -97,6 +98,27 @@ def upgrade() -> None:
         ("v2_retention_roi_log", "v2_retention_roi_log_ibfk_1", "v2_retention_roi_log_fk_v2_user"),
         ("v2_user_retention_state", "v2_user_retention_state_ibfk_1", "v2_user_retention_state_fk_v2_user"),
         ("retention_roi_log", "retention_roi_log_ibfk_1", "retention_roi_log_fk_v2_user"),
+        
+        # Phase 2: 추가 테이블 (2026-01-31 확장)
+        ("user_event_log", "user_event_log_ibfk_1", "user_event_log_fk_v2_user"),
+        ("dice_log", "dice_log_ibfk_2", "dice_log_fk_v2_user"),
+        ("roulette_log", "roulette_log_ibfk_3", "roulette_log_fk_v2_user"),
+        ("lottery_log", "lottery_log_ibfk_3", "lottery_log_fk_v2_user"),
+        ("admin_message_inbox", "admin_message_inbox_ibfk_2", "admin_message_inbox_fk_v2_user"),
+        ("admin_user_profile", "admin_user_profile_ibfk_1", "admin_user_profile_fk_v2_user"),
+        ("event_participation_log", "event_participation_log_ibfk_2", "event_participation_log_fk_v2_user"),
+        ("ops_target_member", "ops_target_member_ibfk_2", "ops_target_member_fk_v2_user"),
+        ("ranking_daily", "ranking_daily_ibfk_1", "ranking_daily_fk_v2_user"),
+        ("season_pass_progress", "season_pass_progress_ibfk_2", "season_pass_progress_fk_v2_user"),
+        ("season_pass_reward_log", "season_pass_reward_log_ibfk_3", "season_pass_reward_log_fk_v2_user"),
+        ("season_pass_stamp_log", "season_pass_stamp_log_ibfk_3", "season_pass_stamp_log_fk_v2_user"),
+        ("survey", "survey_ibfk_1", "survey_fk_v2_user"),
+        ("survey_response", "survey_response_ibfk_4", "survey_response_fk_v2_user"),
+        ("team_event_log", "team_event_log_ibfk_3", "team_event_log_fk_v2_user"),
+        ("team_member", "team_member_ibfk_2", "team_member_fk_v2_user"),
+        ("telegram_link_code", "telegram_link_code_ibfk_1", "telegram_link_code_fk_v2_user"),
+        ("user_idempotency_key", "user_idempotency_key_ibfk_1", "user_idempotency_key_fk_v2_user"),
+        ("user_identity_history", "user_identity_history_ibfk_1", "user_identity_history_fk_v2_user"),
     ]
     
     for table_name, old_fk, new_fk in tables:

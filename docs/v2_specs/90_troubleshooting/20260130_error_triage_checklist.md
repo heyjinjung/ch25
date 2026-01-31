@@ -15,11 +15,13 @@
 | 16 | V2User.login_streak AttributeError | 어드민 | 🔴 높음 | ✅ 코드수정 |
 | 17 | Sentry 에러 캡처 안됨 | 모니터링 | 🟡 중 | ✅ 코드수정 |
 | 18 | telegram/auth FK (1452) | 유저 | 🔴 높음 | ✅ 마이그레이션 적용 |
-| **19** | **ModuleNotFoundError v2_user** | **전체 게임** | **🔴 높음** | **✅ 배포중** |
+| 19 | ModuleNotFoundError v2_user | 전체 게임 | 🔴 높음 | ✅ 수정완료 |
+| **20** | **다중 테이블 FK v2_user (1452)** | **전체 게임/레벨** | **🔴 높음** | **✅ 마이그레이션 적용** |
 
 **상세 문서**: 
 - [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
 - [2026_01_31_game_module_import.md](./2026_01_31_game_module_import.md)
+- [2026_01_31_multi_table_fk_fix.md](./2026_01_31_multi_table_fk_fix.md)
 
 ---
 
@@ -191,6 +193,62 @@ from app.v2.models.user import V2User
 
 ---
 
+## Issue 20: 다중 테이블 FK v2_user 마이그레이션 (2026-01-31)
+
+### 에러
+```
+IntegrityError: (1452, 'Cannot add or update a child row: 
+a foreign key constraint fails (`xmas_event`.`trial_token_bucket`, 
+CONSTRAINT `trial_token_bucket_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)...')
+
+IntegrityError: (1452, '...`user_level_progress`, 
+CONSTRAINT `user_level_progress_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)...')
+```
+
+### 영향 범위
+- 전체 게임 (dice/roulette/lottery) 플레이 불가
+- 레벨 정보 조회 불가 ("레벨 정보를 불러올 수 없습니다")
+- 금고 관련 기능 오류
+
+### 원인
+- V2 시스템은 `v2_user` 테이블 사용
+- 다수의 테이블이 여전히 레거시 `user` 테이블을 FK로 참조
+- `v2_user.id`로 INSERT 시도 → FK 제약조건 위반
+
+### 대상 테이블 (15개)
+| 테이블 | 기존 FK | 신규 FK |
+|--------|---------|---------|
+| trial_token_bucket | trial_token_bucket_ibfk_1 → user | trial_token_bucket_fk_v2_user → v2_user |
+| user_level_progress | user_level_progress_ibfk_1 → user | user_level_progress_fk_v2_user → v2_user |
+| user_xp_event_log | user_xp_event_log_ibfk_1 → user | user_xp_event_log_fk_v2_user → v2_user |
+| user_streak | user_streak_ibfk_1 → user | user_streak_fk_v2_user → v2_user |
+| user_segment | user_segment_ibfk_1 → user | user_segment_fk_v2_user → v2_user |
+| user_retention_state | user_retention_state_ibfk_1 → user | user_retention_state_fk_v2_user → v2_user |
+| user_level_reward_log | user_level_reward_log_ibfk_1 → user | user_level_reward_log_fk_v2_user → v2_user |
+| user_cash_ledger | user_cash_ledger_ibfk_1 → user | user_cash_ledger_fk_v2_user → v2_user |
+| vault_ledger | vault_ledger_ibfk_1 → user | vault_ledger_fk_v2_user → v2_user |
+| vault_status | vault_status_ibfk_2 → user | vault_status_fk_v2_user → v2_user |
+| vault_earn_event | vault_earn_event_ibfk_1 → user | vault_earn_event_fk_v2_user → v2_user |
+| vault_withdrawal_request | vault_withdrawal_request_ibfk_1 → user | vault_withdrawal_request_fk_v2_user → v2_user |
+| v2_retention_roi_log | v2_retention_roi_log_ibfk_1 → user | v2_retention_roi_log_fk_v2_user → v2_user |
+| v2_user_retention_state | v2_user_retention_state_ibfk_1 → user | v2_user_retention_state_fk_v2_user → v2_user |
+| retention_roi_log | retention_roi_log_ibfk_1 → user | retention_roi_log_fk_v2_user → v2_user |
+
+### 해결
+- 마이그레이션: `20260131_0300_fix_trial_token_bucket_fk.py`
+- 전략: Drop old FK → Delete orphan data → Create new FK to v2_user
+
+### 커밋
+- `e2d13c95` fix: Issue 19 확장 - 다중 테이블 FK v2_user 마이그레이션
+
+### 적용 시각
+- 2026-01-31 12:XX KST (운영 서버 직접 적용)
+
+### 상세 문서
+- [2026_01_31_multi_table_fk_fix.md](./2026_01_31_multi_table_fk_fix.md)
+
+---
+
 ## 에러 발생 시 대응 플로우
 
 ```
@@ -213,3 +271,4 @@ Sentry에서 확인
 
 ## 변경 이력
 - 2026-01-30: 최초 작성 (Issue 8, 9 대응)
+- 2026-01-31: Issue 19 수정완료, Issue 20 추가 (다중 테이블 FK 마이그레이션)
