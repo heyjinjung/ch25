@@ -31,6 +31,34 @@ export const MissionCard: React.FC<MissionCardProps> = ({
   const { recordAction, verifyChannel, isRecording, isVerifying } =
     useViralAction();
 
+  const viteEnv = (import.meta as any)?.env as Record<
+    string,
+    string | undefined
+  >;
+
+  const buildChannelUrl = () => {
+    const metadataUrl = (mission as any).metadata?.channel_url as
+      | string
+      | undefined;
+    if (metadataUrl) return metadataUrl;
+
+    // 요구사항: 링크 1개만 사용
+    return (
+      viteEnv?.VITE_TELEGRAM_OFFICIAL_CHANNEL_URL ||
+      "https://t.me/+LksI3XlSjLlhZmE0"
+    );
+  };
+
+  const buildVerifyChannelUsername = () => {
+    const metadataUsername = (mission as any).metadata?.channel_username as
+      | string
+      | undefined;
+    if (metadataUsername) return metadataUsername;
+
+    // 기본은 백엔드 TELEGRAM_CHANNEL_USERNAME를 사용
+    return undefined;
+  };
+
   const percent = Math.min(100, (mission.progress / mission.target) * 100);
   const isClaimable = mission.is_completed && !mission.is_claimed;
 
@@ -48,21 +76,18 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       actionType === "JOIN_CHANNEL" ||
       actionType === "SUBSCRIBE_CHANNEL" ||
       actionType === "CHANNEL_JOIN" ||
-      actionType === "JOIN_TELEGRAM_CHANNEL" ||
-      actionType === "JOIN_CC_CHANNEL"
+      actionType === "JOIN_TELEGRAM_CHANNEL"
     ) {
       if (!isJoined) {
         // Step 1: Open Channel Link
-        const channelUrl =
-          (mission as any).metadata?.channel_url ||
-          "https://t.me/cc_jm_official";
+        const channelUrl = buildChannelUrl();
         tg.openTelegramLink(channelUrl);
         setIsJoined(true);
       } else {
         // Step 2: Verify Subscription
         await verifyChannel({
           missionId: parseInt(mission.id),
-          channelUsername: (mission as any).metadata?.channel_username,
+          channelUsername: buildVerifyChannelUsername(),
         });
       }
     } else if (actionType === "SHARE_STORY") {
@@ -137,7 +162,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
       actionType === "JOIN_CHANNEL" ||
       actionType === "SUBSCRIBE_CHANNEL" ||
       actionType === "JOIN_TELEGRAM_CHANNEL" ||
-      actionType === "JOIN_CC_CHANNEL"
+      actionType === "JOIN_TELEGRAM_CHANNEL"
     ) {
       return (
         <Button
