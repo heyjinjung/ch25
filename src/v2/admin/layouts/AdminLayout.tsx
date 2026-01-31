@@ -108,6 +108,19 @@ export default function AdminLayout() {
       ],
     },
     {
+      key: "USER",
+      label: "유저 & 마케팅",
+      items: [
+        { icon: Users, label: "사용자 통합", path: "/admin/users" },
+        { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
+        {
+          icon: MessageSquare,
+          label: "메시지 및 고객 상세 관리",
+          path: "/admin/marketing/messages",
+        },
+      ],
+    },
+    {
       key: "SYSTEM",
       label: "시스템 & 보안",
       items: [
@@ -153,7 +166,6 @@ export default function AdminLayout() {
           path: "/admin/inventory/tickets",
           submenu: [
             { label: "티켓/토큰 관리", path: "/admin/inventory/tickets" },
-            { label: "재고 관리", path: "/admin/inventory/stock" },
           ],
         },
         { icon: Store, label: "상점 & 미션", path: "/admin/economy/shop" },
@@ -167,28 +179,6 @@ export default function AdminLayout() {
         { icon: Settings, label: "주사위", path: "/admin/game/dice" },
         { icon: Settings, label: "복권", path: "/admin/game/lottery" },
         { icon: Settings, label: "팀 배틀", path: "/admin/game/team-battle" },
-        {
-          icon: Settings,
-          label: "이벤트 & 캠페인",
-          path: "/admin/game/golden-hour",
-          submenu: [
-            { label: "골든아워 관리", path: "/admin/game/golden-hour" },
-            { label: "모달 제어", path: "/admin/game/modals" },
-          ],
-        },
-      ],
-    },
-    {
-      key: "USER",
-      label: "유저 & 마케팅",
-      items: [
-        { icon: Users, label: "사용자 통합", path: "/admin/users" },
-        { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
-        {
-          icon: MessageSquare,
-          label: "메시지 및 고객 상세 관리",
-          path: "/admin/marketing/messages",
-        },
       ],
     },
   ];
@@ -249,10 +239,10 @@ export default function AdminLayout() {
             >
               <option value="ALL">전체</option>
               <option value="OPS">모니터링</option>
+              <option value="USER">유저 & 마케팅</option>
               <option value="SYSTEM">시스템 & 보안</option>
               <option value="CORE">경제 & 상점</option>
               <option value="GAME">게임 & 콘텐츠</option>
-              <option value="USER">유저 & 마케팅</option>
             </select>
           </div>
 
