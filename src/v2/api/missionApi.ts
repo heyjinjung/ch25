@@ -15,6 +15,8 @@ export interface MissionDto {
   readonly target: number;
   readonly is_completed: boolean;
   readonly is_claimed: boolean;
+  readonly action_type?: string;
+  readonly metadata?: Record<string, unknown>;
 }
 
 interface BackendMissionSchema {
@@ -167,6 +169,8 @@ const mapBackendMission = (item: BackendMissionWithProgress): MissionDto => ({
   target: item.mission.target_value,
   is_completed: item.progress.is_completed,
   is_claimed: item.progress.is_claimed,
+  action_type: item.mission.action_type ?? undefined,
+  metadata: (item.mission as any).metadata ?? undefined,
 });
 
 const mapBackendStreakInfo = (
