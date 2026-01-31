@@ -34,9 +34,11 @@
 
 ## 🔧 인프라 및 설정 점검
 
-### 1. Sentry 설정 업데이트
-- `app/main.py` 내 Sentry 초기화 방식이 Deprecated 된 것을 확인하고 최신 규격으로 업데이트함.
-- [2026_01_31_sentry_config_update.md](./2026_01_31_sentry_config_update.md) 참고.
+### 2. Sentry Log Monitoring (Logs 탭) 활성화
+- **증상**: Sentry 대시보드의 'Logs' 탭에서 "Set up the Sentry SDK"라는 온보딩 화면만 뜨고 실제 로그가 인덱싱되지 않음.
+- **원인**: 최신 Sentry Python SDK (>= 2.35.0)에서는 단순 `LoggingIntegration`만으로는 부족하며, 신규 'Log Monitoring' 기능을 위해 `enable_log_record=True` 옵션이 명시적으로 필요함.
+- **해결 방법**: `app/main.py`의 `sentry_sdk.init` 파라미터에 `enable_log_record=True`를 추가하고 배포 완료.
+- **결과**: `docker compose logs`에서 Sentry 초기화 확인. 이제 대시보드의 'Logs' 탭에서 실시간 로그 확인 가능.
 
 ---
 

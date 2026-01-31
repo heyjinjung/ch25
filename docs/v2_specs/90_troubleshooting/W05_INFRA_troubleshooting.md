@@ -8,7 +8,8 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
-| 01-31 | Sentry 설정 업데이트 | ✅ RESOLVED |
+| 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
+| 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
 
 ---
@@ -28,6 +29,34 @@ Sentry 설정 최적화:
 ### 관련 파일
 - `app/core/sentry.py`
 - `.env` (SENTRY_DSN)
+
+---
+
+## 01-31 - [INFRA] Sentry Log Monitoring (Logs 탭) 활성화
+
+**우선순위**: P2
+**관련 도메인**: INFRA, BACKEND
+
+### 증상
+- Sentry 대시보드의 'Logs' 탭에서 실제 백엔드 로그가 인덱싱되지 않고, "Set up the Sentry SDK"라는 온보딩 가이드 화면만 반복적으로 표시됨.
+
+### 근본 원인
+- **기술적 원인**: Sentry Python SDK(v2.0+)의 신규 기능인 'Log Monitoring'은 기존의 `LoggingIntegration` 설정만으로는 대시보드 인덱싱이 활성화되지 않음.
+- **코드 레벨 분석**: `sentry_sdk.init()` 시 `enable_log_record=True` 옵션이 누락되어 있었으며, 이 옵션이 없으면 로그 데이터가 Sentry 서버로 전송되더라도 'Logs' 저장소로 분류되지 않음.
+
+### 해결 방법
+#### Immediate Fix
+- `app/main.py`의 `sentry_sdk.init` 설정에 `enable_log_record=True` 파라미터를 추가함.
+- `docker compose restart backend`를 수행하여 모든 백엔드 컨테이너에 설정을 적용함.
+#### Long-term Fix
+- Sentry SDK 버전 업그레이드 시 릴리즈 노트를 정기적으로 검토하여 신규 요구되는 플래그나 인터페이스를 프로젝트 표준 설정 코드(`app/core/sentry.py` 등)에 선제적으로 반영함.
+
+### 검증 방법
+- Sentry 대시보드 접속 후 `Explore > Logs` 경로에서 `environment:production` 필터로 실시간 로그 유입 여부 확인.
+- 온보딩 화면이 사라지고 로그 리스트가 노출되는 것을 확인 완료.
+
+### 예방 가이드라인
+- Sentry 관련 모든 설정은 `app/core/sentry_config.py`(가칭)와 같이 전용 모듈에서 관리하여 `app/main.py`를 간결하게 유지하고 설정 누락을 방지할 것.
 
 ---
 
