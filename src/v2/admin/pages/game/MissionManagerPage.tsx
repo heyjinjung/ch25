@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useAdminMissions,
   useAdminUpdateMission,
@@ -22,6 +22,10 @@ import {
   // Active user stats hooks
   useAdminActiveUserStats,
 } from "../../../hooks/useAdminGame";
+import {
+  useAdminUiConfig,
+  useAdminUpdateUiConfig,
+} from "../../../hooks/useAdminUiConfig";
 import styles from "./MissionManagerPage.module.css";
 import { cn } from "../../../lib/utils";
 import {
@@ -68,6 +72,8 @@ import {
   Flame,
   Target,
   BarChart3,
+  Settings,
+  Save,
 } from "lucide-react";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
@@ -402,6 +408,33 @@ export default function MissionManagerPage() {
   const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<
     number | null
   >(null);
+
+  // Streak reward rules states
+  interface StreakGrant {
+    kind: "WALLET" | "INVENTORY";
+    token_type: string;
+    amount: number;
+  }
+  interface StreakRule {
+    day: number;
+    enabled: boolean;
+    grants: StreakGrant[];
+  }
+  const [editingRules, setEditingRules] = useState<StreakRule[]>([]);
+  const [isRulesEditing, setIsRulesEditing] = useState(false);
+
+  // Streak reward rules hooks
+  const { data: streakRulesConfig, isLoading: isRulesLoading } =
+    useAdminUiConfig("streak_reward_rules");
+  const updateRulesMutation = useAdminUpdateUiConfig();
+
+  // Sync editingRules when config loads
+  useEffect(() => {
+    if (streakRulesConfig?.value) {
+      const config = streakRulesConfig.value as { rules?: StreakRule[] };
+      setEditingRules(config.rules || []);
+    }
+  }, [streakRulesConfig]);
 
   // Streak hooks
   const { data: streakData, isLoading: isStreakLoading } = useAdminUserStreak(
@@ -1349,6 +1382,330 @@ export default function MissionManagerPage() {
                   마일스톤 보상 지급
                 </Button>
               </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* ─────────────────────────────────────────────────────────────────
+          스트릭 보상 규칙 설정
+      ───────────────────────────────────────────────────────────────── */}
+      <Card className="bg-[#18181B] border-white/5">
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-blue-500" />
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-100">
+                  스트릭 보상 규칙 설정
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  연속 출석 일수별 보상 조건 관리
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {isRulesEditing ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      if (streakRulesConfig?.value) {
+                        const config = streakRulesConfig.value as {
+                          rules?: StreakRule[];
+                        };
+                        setEditingRules(config.rules || []);
+                      }
+                      setIsRulesEditing(false);
+                    }}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={() => {
+                      updateRulesMutation.mutate({
+                        key: "streak_reward_rules",
+                        payload: { value: { rules: editingRules } },
+                      });
+                      setIsRulesEditing(false);
+                    }}
+                    disabled={updateRulesMutation.isPending}
+                  >
+                    <Save className="w-4 h-4 mr-1" />
+                    저장
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setIsRulesEditing(true)}
+                >
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  편집
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {isRulesLoading ? (
+            <div className="text-sm text-zinc-500">로딩 중...</div>
+          ) : editingRules.length === 0 ? (
+            <div className="text-sm text-zinc-500 p-4 border border-dashed border-white/10 rounded-lg text-center">
+              보상 규칙이 설정되지 않았습니다.
+              <Button
+                size="sm"
+                variant="link"
+                className="ml-2 text-blue-400"
+                onClick={() => {
+                  setEditingRules([
+                    {
+                      day: 3,
+                      enabled: true,
+                      grants: [
+                        {
+                          kind: "WALLET",
+                          token_type: "ROULETTE_TICKET",
+                          amount: 1,
+                        },
+                      ],
+                    },
+                    {
+                      day: 7,
+                      enabled: true,
+                      grants: [
+                        { kind: "WALLET", token_type: "DIAMOND", amount: 1 },
+                      ],
+                    },
+                  ]);
+                  setIsRulesEditing(true);
+                }}
+              >
+                기본 규칙 생성
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {editingRules.map((rule, ruleIdx) => (
+                <div
+                  key={rule.day}
+                  className={`p-4 rounded-lg border ${
+                    rule.enabled
+                      ? "bg-black/30 border-white/10"
+                      : "bg-zinc-900/50 border-white/5 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        className={`${
+                          rule.day === 3
+                            ? "bg-orange-500/20 text-orange-400"
+                            : rule.day === 7
+                              ? "bg-purple-500/20 text-purple-400"
+                              : "bg-blue-500/20 text-blue-400"
+                        }`}
+                      >
+                        {rule.day}일차
+                      </Badge>
+                      {isRulesEditing && (
+                        <Switch
+                          checked={rule.enabled}
+                          onCheckedChange={(checked) => {
+                            const newRules = [...editingRules];
+                            newRules[ruleIdx] = { ...rule, enabled: checked };
+                            setEditingRules(newRules);
+                          }}
+                        />
+                      )}
+                    </div>
+                    {isRulesEditing && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
+                        onClick={() => {
+                          setEditingRules(
+                            editingRules.filter((_, i) => i !== ruleIdx),
+                          );
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {rule.grants.map((grant, grantIdx) => (
+                      <div
+                        key={grantIdx}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        {isRulesEditing ? (
+                          <>
+                            <Select
+                              value={grant.kind}
+                              onValueChange={(v) => {
+                                const newRules = [...editingRules];
+                                const targetRule = newRules[ruleIdx];
+                                if (targetRule?.grants?.[grantIdx]) {
+                                  targetRule.grants[grantIdx] = {
+                                    ...grant,
+                                    kind: v as "WALLET" | "INVENTORY",
+                                  };
+                                  setEditingRules(newRules);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-28 h-8 bg-black/50 border-white/10">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                                <SelectItem value="WALLET">WALLET</SelectItem>
+                                <SelectItem value="INVENTORY">
+                                  INVENTORY
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={grant.token_type}
+                              onValueChange={(v) => {
+                                const newRules = [...editingRules];
+                                const targetRule = newRules[ruleIdx];
+                                if (targetRule?.grants?.[grantIdx]) {
+                                  targetRule.grants[grantIdx] = {
+                                    ...grant,
+                                    token_type: v,
+                                  };
+                                  setEditingRules(newRules);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-40 h-8 bg-black/50 border-white/10">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                                {REWARD_ITEMS.map((item) => (
+                                  <SelectItem
+                                    key={item.value}
+                                    value={item.value}
+                                  >
+                                    {item.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              type="number"
+                              value={grant.amount}
+                              onChange={(e) => {
+                                const newRules = [...editingRules];
+                                const targetRule = newRules[ruleIdx];
+                                if (targetRule?.grants?.[grantIdx]) {
+                                  targetRule.grants[grantIdx] = {
+                                    ...grant,
+                                    amount: parseInt(e.target.value) || 0,
+                                  };
+                                  setEditingRules(newRules);
+                                }
+                              }}
+                              className="w-20 h-8 bg-black/50 border-white/10"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
+                              onClick={() => {
+                                const newRules = [...editingRules];
+                                const targetRule = newRules[ruleIdx];
+                                if (targetRule) {
+                                  targetRule.grants = rule.grants.filter(
+                                    (_, i) => i !== grantIdx,
+                                  );
+                                  setEditingRules(newRules);
+                                }
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Badge
+                              variant="outline"
+                              className="bg-white/5 border-white/10"
+                            >
+                              {grant.kind}
+                            </Badge>
+                            <span className="text-zinc-300">
+                              {grant.token_type}
+                            </span>
+                            <span className="text-emerald-400 font-bold">
+                              x{grant.amount}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    {isRulesEditing && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-blue-400 hover:text-blue-300 h-7 text-xs"
+                        onClick={() => {
+                          const newRules = [...editingRules];
+                          const targetRule = newRules[ruleIdx];
+                          if (targetRule) {
+                            targetRule.grants.push({
+                              kind: "WALLET",
+                              token_type: "ROULETTE_TICKET",
+                              amount: 1,
+                            });
+                            setEditingRules(newRules);
+                          }
+                        }}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        보상 추가
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {isRulesEditing && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full border-dashed border-white/10 text-zinc-400 hover:text-zinc-200"
+                  onClick={() => {
+                    const maxDay = editingRules.reduce(
+                      (max, r) => Math.max(max, r.day),
+                      0,
+                    );
+                    setEditingRules([
+                      ...editingRules,
+                      {
+                        day: maxDay + 7,
+                        enabled: true,
+                        grants: [
+                          {
+                            kind: "WALLET",
+                            token_type: "ROULETTE_TICKET",
+                            amount: 1,
+                          },
+                        ],
+                      },
+                    ]);
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  마일스톤 추가
+                </Button>
+              )}
             </div>
           )}
         </div>

@@ -166,17 +166,19 @@ class HQMarginImportService:
                 db,
                 admin_id=admin_id,
                 action="HQ_MARGIN_IMPORT",
-                category="GOLDEN",
                 target_type="SEGMENT",
                 target_id=None,
-                changes={
-                    "total_rows": total_rows,
-                    "updated": updated_count,
-                    "created": created_count,
-                    "prospective": prospective_count,
-                    "skipped": skipped_count,
+                after={
+                    "category": "GOLDEN",
+                    "reason": "HQ margin CSV import",
+                    "stats": {
+                        "total_rows": total_rows,
+                        "updated": updated_count,
+                        "created": created_count,
+                        "prospective": prospective_count,
+                        "skipped": skipped_count,
+                    }
                 },
-                reason="HQ margin CSV import",
             )
 
             logger.info(

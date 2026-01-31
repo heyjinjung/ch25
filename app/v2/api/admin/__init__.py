@@ -17,6 +17,7 @@ from .daily_nudge_routes import router as daily_nudge_router
 from .roi_routes import router as roi_router
 from .rollback_routes import router as rollback_router
 from .analytics_routes import router as analytics_router
+from .ui_config_routes import router as ui_config_router
 
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
 router.include_router(marketing_router)
@@ -36,5 +37,6 @@ router.include_router(daily_nudge_router)
 router.include_router(roi_router)
 router.include_router(rollback_router)
 router.include_router(analytics_router)
+router.include_router(ui_config_router)
 
 __all__ = ["router"]

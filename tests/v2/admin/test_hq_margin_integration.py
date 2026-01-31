@@ -15,7 +15,7 @@ from app.v2.services.segment_service import V2SegmentService
 from app.v2.models.user import V2User
 from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.hq_prospective_user import HQProspectiveUser
-from app.v2.models.v2_admin_audit_log import V2AdminAuditLog
+from app.models.admin_audit_log import AdminAuditLog
 from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 
 @pytest.fixture
@@ -64,30 +64,44 @@ class TestHQMarginIntegration:
         mock_user1.cc_id = "user1"
         mock_user1.nickname = "Nick1"
 
+        # Prepare stable mocks for queries
+        user_query_mock = MagicMock()
+        user_filter_mock = MagicMock()
+        user_query_mock.filter.return_value = user_filter_mock
+        # Row 1: V2User found (mock_user1), Row 2: V2User not found (None)
+        user_filter_mock.first.side_effect = [mock_user1, None]
+
+        prospect_query_mock = MagicMock()
+        prospect_filter_mock = MagicMock()
+        prospect_query_mock.filter.return_value = prospect_filter_mock
+        # Row 2 Check: No existing prospect (None) -> Create new
+        prospect_filter_mock.filter.return_value = prospect_filter_mock # For chained filter if any
+        prospect_filter_mock.first.side_effect = [None]
+
         def query_side_effect(model):
-            query_mock = MagicMock()
             if model == V2User:
-                # filter logic is complex to mock perfectly, so we simplify
-                # Assume first call is for user1, second for user2
-                def filter_side_effect(*args, **kwargs):
-                    filter_mock = MagicMock()
-                    # Check if searching for user1 or user2 based on args text str representation
-                    # This is brittle, so let's just return a sequence
-                    filter_mock.first.side_effect = [mock_user1, None] 
-                    filter_mock.all.return_value = [] # duplicate check
-                    return filter_mock
-                query_mock.filter.side_effect = filter_side_effect
-            elif model == V2UserSegment:
-                query_mock.filter.return_value.first.return_value = None # No existing segment
+                return user_query_mock
             elif model == HQProspectiveUser:
-                query_mock.filter.return_value.first.return_value = None # No existing prospect
-            return query_mock
+                return prospect_query_mock
+            elif model == V2UserSegment:
+                 # Helper for upsert check if needed, though upsert is patched
+                 m = MagicMock()
+                 m.filter.return_value.first.return_value = None
+                 return m
+            return MagicMock()
 
         mock_db.query.side_effect = query_side_effect
+        
+        # Patch V2SegmentService.upsert_user_segment
+        with patch("app.v2.services.segment_service.V2SegmentService.upsert_user_segment") as mock_upsert:
+             mock_upsert.return_value = True
 
-        try:
-            # 3. Execute
-            result = await HQMarginImportService.import_hq_margin_csv(
+             # 3. Execute
+             result = await HQMarginImportService.import_hq_margin_csv(
+                mock_db,
+                str(csv_path),
+                admin_id="admin1"
+             )
                 mock_db,
                 str(csv_path),
                 admin_id="admin1"
@@ -119,7 +133,7 @@ class TestHQMarginIntegration:
         query_mock.filter.return_value.scalar.side_effect = [10, 5, 3, 2]
         
         # Last audit log
-        mock_audit = MagicMock(spec=V2AdminAuditLog)
+        mock_audit = MagicMock(spec=AdminAuditLog)
         mock_audit.created_at = datetime(2026, 1, 31, 12, 0, 0)
         query_mock.filter.return_value.order_by.return_value.first.return_value = mock_audit
 

@@ -691,7 +691,7 @@ export const getAdminUiConfig = async (
   key: string,
 ): Promise<AdminUiConfigResponse> => {
   const response = await v2Client.get<AdminUiConfigResponse>(
-    `/api/admin/ui-config/${encodeURIComponent(key)}`,
+    `/api/v2/admin/ui-config/${encodeURIComponent(key)}`,
   );
   return response.data;
 };
@@ -701,7 +701,7 @@ export const updateAdminUiConfig = async (
   payload: AdminUiConfigUpsertRequest,
 ): Promise<AdminUiConfigResponse> => {
   const response = await v2Client.put<AdminUiConfigResponse>(
-    `/api/admin/ui-config/${encodeURIComponent(key)}`,
+    `/api/v2/admin/ui-config/${encodeURIComponent(key)}`,
     payload,
   );
   return response.data;

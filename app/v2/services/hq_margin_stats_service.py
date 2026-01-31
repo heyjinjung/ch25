@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.hq_prospective_user import HQProspectiveUser
-from app.v2.models.v2_admin_audit_log import V2AdminAuditLog
+from app.models.admin_audit_log import AdminAuditLog
 from app.v2.schemas.v2_admin_ops import OpsHQMarginStatsDto
 
 class HQMarginStatsService:
@@ -50,9 +50,9 @@ class HQMarginStatsService:
         ).scalar() or 0
         
         # 3. Last Sync Time
-        last_audit = db.query(V2AdminAuditLog).filter(
-            V2AdminAuditLog.action == "HQ_MARGIN_IMPORT"
-        ).order_by(desc(V2AdminAuditLog.created_at)).first()
+        last_audit = db.query(AdminAuditLog).filter(
+            AdminAuditLog.action == "HQ_MARGIN_IMPORT"
+        ).order_by(desc(AdminAuditLog.created_at)).first()
         
         return OpsHQMarginStatsDto(
             vip_count=vip_count,
