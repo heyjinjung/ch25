@@ -28,7 +28,7 @@ This report documents the verification of the V2 Telegram Authentication system 
 | RBAC_DENIED | 68 |
 - **Verification Status**: ✅ Data successfully recorded in Production.
 
-### 5. � Auth Policy: JWT & Refresh Token settings
+### 5.  Auth Policy: JWT & Refresh Token settings
 - **Access Token**: 15분 (`v2_access_token_expire_minutes=15`) 확인.
 - **Refresh Token**: 30일 (`expires_days=30`) 확인.
 - **Sliding Window**: 만료 7일 미만 시 자동 갱신 (`if days_left < 7`) 확인.

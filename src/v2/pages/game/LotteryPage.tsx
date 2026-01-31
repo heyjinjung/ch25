@@ -1,7 +1,11 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import gsap from "gsap";
-import { getV2LotteryStatus, playV2Lottery } from "../../api/v2GameAdapter";
+import {
+  getV2LotteryStatus,
+  playV2Lottery,
+  craftPuzzleToGoldKey,
+} from "../../api/v2GameAdapter";
 import { useSound } from "../../../hooks/useSound";
 import LotteryCollectionModal from "../../components/lottery/LotteryCollectionModal";
 import LotteryResultModal from "../../components/game/LotteryResultModal";
@@ -251,8 +255,18 @@ const LotteryPage: React.FC = () => {
         onClose={() => setCollectionModalOpen(false)}
         collection={collection}
         onCraft={async () => {
-          await new Promise((resolve) => setTimeout(resolve, 800));
-          queryClient.invalidateQueries({ queryKey: ["v2-lottery-status"] });
+          try {
+            await craftPuzzleToGoldKey();
+            triggerNotification("success");
+            // 상태 갱신: 복권 상태 + 금고 잔액
+            queryClient.invalidateQueries({ queryKey: ["v2-lottery-status"] });
+            queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+            queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
+          } catch (error) {
+            console.error("[LotteryPage] Craft failed:", error);
+            triggerNotification("error");
+            throw error;
+          }
         }}
       />
     </div>

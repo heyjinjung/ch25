@@ -232,3 +232,44 @@ export const playV2Lottery = async (): Promise<LotteryPlayResponse> => {
   );
   return response.data;
 };
+
+// ============================================================================
+// Puzzle Collection → Gold Key Exchange
+// ============================================================================
+
+export interface CraftPuzzleResponse {
+  result: string;
+  reward_token: string;
+  reward_amount: number;
+  consumed_tokens: Record<string, number>;
+  message: string;
+}
+
+export interface CraftStatusResponse {
+  can_craft: boolean;
+  collection: Record<string, number>;
+  required: Record<string, number>;
+}
+
+/**
+ * 퍼즐 컬렉션 완성 → 골드키 교환
+ * Required: C1 + C2 + J + M 각 1개 이상
+ * Reward: GOLD_KEY_TICKET 1개
+ */
+export const craftPuzzleToGoldKey = async (): Promise<CraftPuzzleResponse> => {
+  const response = await v2Client.post<CraftPuzzleResponse>(
+    "/api/v2/exchange/craft-puzzle",
+    {},
+  );
+  return response.data;
+};
+
+/**
+ * 퍼즐 교환 가능 여부 및 현재 잔액 조회
+ */
+export const getCraftStatus = async (): Promise<CraftStatusResponse> => {
+  const response = await v2Client.get<CraftStatusResponse>(
+    "/api/v2/exchange/craft-status",
+  );
+  return response.data;
+};

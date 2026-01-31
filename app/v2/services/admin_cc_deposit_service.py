@@ -339,6 +339,27 @@ class V2AdminCCDepositService:
                     meta={"deposit_steps": int(deposit_steps), "xp_per_step": int(xp_per_step), "deposit_delta": int(deposit_delta)},
                 )
 
+                # Mission progress update: CC_DEPOSIT 미션 진행 업데이트
+                # deposit_steps 단위로 미션 카운트 (입금 횟수 기준)
+                try:
+                    from app.v2.services.mission_service import V2MissionService
+                    mission_service = V2MissionService(db)
+                    mission_service.update_progress(
+                        user_id=row.user_id,
+                        action_type="CC_DEPOSIT",
+                        delta=1  # 입금 1회로 카운트
+                    )
+                    logger.info(
+                        "cc_deposit -> mission progress updated: user_id=%s action=CC_DEPOSIT delta=1",
+                        row.user_id
+                    )
+                except Exception as e:
+                    logger.warning(
+                        "cc_deposit -> mission progress update failed: user_id=%s error=%s",
+                        row.user_id,
+                        str(e)
+                    )
+
             row.deposit_remainder = remainder
 
         # XP 적립 후 DB 커밋 (User.level 동기화 포함)

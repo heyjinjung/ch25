@@ -586,3 +586,33 @@ export const playV2Lottery = async (): Promise<LotteryPlayResponse> => {
     throw error;
   }
 };
+
+// ============================================================================
+// Puzzle Collection → Gold Key Exchange
+// ============================================================================
+
+export interface CraftPuzzleResponse {
+  result: string;
+  reward_token: string;
+  reward_amount: number;
+  consumed_tokens: Record<string, number>;
+  message: string;
+}
+
+/**
+ * 퍼즐 컬렉션 완성 → 골드키 교환
+ * Required: C1 + C2 + J + M 각 1개 이상
+ * Reward: GOLD_KEY_TICKET 1개
+ */
+export const craftPuzzleToGoldKey = async (): Promise<CraftPuzzleResponse> => {
+  try {
+    const response = await v2Client.post<CraftPuzzleResponse>(
+      "/api/v2/exchange/craft-puzzle",
+      {},
+    );
+    return response.data;
+  } catch (error) {
+    console.error("[V2Adapter] Failed to craft puzzle to gold key", error);
+    throw error;
+  }
+};

@@ -1,3 +1,25 @@
+## [2026-01-31 구현 완료 항목]
+
+### [2026-01-31] 복권 퍼즐모음 → 골드키 교환 풀스택 구현 ✅
+- **문제 해결**: PUZZLE_C2 당첨 시 reward_amount=0으로 인해 미지급 버그 수정
+- **PUZZLE_C 폐기**: PUZZLE_C → PUZZLE_C1/C2 분리 정책 확립
+- **백엔드 구현**:
+  - `app/v2/services/v2_exchange_service.py` - 퍼즐 교환 서비스
+  - `app/v2/api/exchange_routes.py` - V2 Exchange API 라우터
+  - `POST /api/v2/exchange/craft-puzzle` - 퍼즐 4종 → 골드키 1개 교환
+  - `GET /api/v2/exchange/craft-status` - 교환 가능 여부 조회
+- **프론트엔드 구현**:
+  - `src/v2/api/gameApi.ts`, `v2GameAdapter.ts` - craftPuzzleToGoldKey 함수
+  - `src/v2/pages/game/LotteryPage.tsx` - onCraft 실제 API 연동
+- **마이그레이션**: `20260131_0500_puzzle_c_deprecation_cleanup.py`
+  - v2_lottery_prize PUZZLE_C2 reward_amount 0→1 수정
+  - user_game_wallet PUZZLE_C 잔액 → PUZZLE_C1 이전
+- **문서**: 
+  - `docs/v2_specs/90_troubleshooting/20260131_복권_퍼즐조각_미지급_버그.md`
+  - `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260131_puzzle_collection_gold_key_craft.md`
+
+---
+
 ## [2026-01-29 구현 완료 항목]
 
 ### [2026-01-29] V2 ROI Calculator & Rollback Policy 구현 완료 ✅

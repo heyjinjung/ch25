@@ -73,6 +73,7 @@ _team_battle_service = V2TeamBattleService()
 from app.v2.api.admin import router as admin_router
 from app.v2.api.activity_routes import router as activity_router
 from app.v2.api.auth_routes import router as auth_router
+from app.v2.api.exchange_routes import router as exchange_router
 from app.v2.api.telegram_routes import router as telegram_router
 from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
@@ -82,6 +83,7 @@ router.include_router(admin_router)
 router.include_router(telegram_router)
 router.include_router(activity_router)
 router.include_router(auth_router)
+router.include_router(exchange_router)
 router.include_router(user_router)
 router.include_router(vault_router)
 

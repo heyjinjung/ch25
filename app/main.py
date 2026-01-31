@@ -28,24 +28,54 @@ if sentry_dsn:
         from sentry_sdk.integrations.logging import LoggingIntegration
 
         logging_integration = LoggingIntegration(
-            level=logging.INFO,
-            event_level=logging.ERROR,
+            level=logging.INFO,  # INFO 레벨 이상 로그 캡처
+            event_level=logging.WARNING,  # WARNING 이상은 이벤트로 전송
         )
+
+        def traces_sampler(sampling_context):
+            """최신 SDK 권장: 트랜잭션별 샘플링 결정"""
+            # ASGI scope에서 경로 추출
+            asgi_scope = sampling_context.get("asgi_scope")
+            if asgi_scope:
+                path = asgi_scope.get("path", "")
+
+                # 헬스체크/정적 파일은 샘플링 제외
+                if path in ["/", "/health", "/ping"] or path.startswith("/static"):
+                    return 0.0
+
+                # 에러가 발생한 트랜잭션은 100% 샘플링
+                if sampling_context.get("parent_sampled") is False:
+                    return 1.0
+
+                # API 엔드포인트는 100% 샘플링 (전체 로그 추적)
+                if path.startswith("/api") or path.startswith("/admin"):
+                    return 1.0
+
+            # 기본: 100% 샘플링 (전체 추적)
+            return 1.0
 
         sentry_sdk.init(
             dsn=sentry_dsn,
             environment=settings.env,
-            traces_sample_rate=0.1,  # 10% 트랜잭션 샘플링
+            # 최신 SDK 권장: traces_sample_rate 대신 traces_sampler 사용
+            traces_sampler=traces_sampler,
             profiles_sample_rate=0.1,  # 10% 프로파일링
             integrations=[
                 FastApiIntegration(),
                 SqlalchemyIntegration(),
                 logging_integration,
             ],
-            enable_logs=True,
+            # 전체 로그 추적 강화
+            enable_tracing=True,  # 트레이싱 활성화
+            _experiments={
+                "continuous_profiling_auto_start": True,  # 자동 프로파일링
+            },
             # 민감 정보 필터링
             send_default_pii=False,
             before_send=lambda event, hint: event if settings.env == "production" else None,
+            # 브레드크럼 설정 (사용자 액션 추적)
+            max_breadcrumbs=100,  # 기본 100개
+            attach_stacktrace=True,  # 모든 메시지에 스택트레이스 첨부
         )
         print(f"✅ Sentry initialized (env={settings.env})", flush=True)
     except ImportError:
