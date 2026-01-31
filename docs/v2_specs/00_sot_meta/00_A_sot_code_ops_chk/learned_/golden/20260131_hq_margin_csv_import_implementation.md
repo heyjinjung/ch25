@@ -348,5 +348,33 @@ def test_segment_update():
 
 ---
 
-**상태**: ✅ 구현 완료, 테스트 대기
+## 13. 빌드 및 배포 체크
+
+### 13.1 백엔드 검증
+```bash
+# Python 문법 체크
+python -m py_compile app/v2/services/hq_margin_import_service.py
+python -m py_compile app/v2/api/admin/csv_import_routes.py
+python -m py_compile app/v2/schemas/v2_csv_import.py
+```
+- ✅ 모든 Python 파일 문법 검증 완료
+
+### 13.2 프론트엔드 빌드
+```bash
+npm run build
+```
+- ✅ Vite 빌드 성공 (2026-01-31 14:xx)
+- ✅ TypeScript 컴파일 완료
+- ✅ 프로덕션 번들 생성 완료
+
+### 13.3 배포 확인사항
+- [ ] `dist/` 폴더를 프로덕션 서버에 배포
+- [ ] 백엔드 서버 재시작 (FastAPI reload)
+- [ ] 어드민 페이지 접속하여 CSV Import 타입 선택 UI 확인
+- [ ] 샘플 HQ Margin CSV로 임포트 테스트
+
+---
+
+**상태**: ✅ 구현 및 빌드 완료, 배포 대기
 **다음 단계**: Phase 2 - Ops Dashboard 통합
+**검증 완료**: 2026-01-31 백엔드 Python 문법, 프론트엔드 빌드

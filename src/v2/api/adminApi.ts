@@ -2001,6 +2001,10 @@ export const updateDiceConfig = async (
     payload.enable_golden_hour = data.enableGoldenHour;
   if (data.goldenHourMultiplier !== undefined)
     payload.golden_hour_multiplier = data.goldenHourMultiplier;
+  if (data.goldenHourStartTime !== undefined)
+    payload.golden_hour_start_time = data.goldenHourStartTime;
+  if (data.goldenHourEndTime !== undefined)
+    payload.golden_hour_end_time = data.goldenHourEndTime;
 
   await v2Client.put(`/api/v2/admin/game/dice/config/${data.id}`, payload);
 };

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
 from app.models.user_segment import UserSegment
-from app.schemas.event import ActiveEventOut, EventStatusResponse
+from app.schemas.event import ActiveEventOut, EventStatusResponse, GoldenHourStatus
 from app.v2.services.event_service import V2EventService
 
 router = APIRouter(prefix="/api/events", tags=["events"])
@@ -38,7 +38,7 @@ def get_event_status(
                 multiplier=gh_status.get("multiplier"),
                 start_time=gh_status.get("start_time_kst"),
                 end_time=gh_status.get("end_time_kst"),
-                meta={"override": gh_status.get("override")},
+                meta={},
             )
         )
 
@@ -67,9 +67,21 @@ def get_event_status(
             )
         )
 
+    # 골든아워 상세 정보 (모달용)
+    golden_hour_detail = GoldenHourStatus(
+        is_golden_hour=bool(gh_status.get("is_active")),
+        is_upcoming=bool(gh_status.get("is_upcoming")),
+        minutes_until_start=gh_status.get("minutes_until_start"),
+        multiplier=float(gh_status.get("multiplier") or 1.0),
+        start_time_kst=gh_status.get("start_time_kst", "21:30:00"),
+        end_time_kst=gh_status.get("end_time_kst", "22:30:00"),
+        enabled=bool(gh_status.get("enabled")),
+    )
+
     return EventStatusResponse(
         is_golden_hour=bool(gh_status.get("is_active")),
         multiplier=float(gh_status.get("multiplier") or 1.0),
         next_event_time=gh_status.get("next_event_time"),
         active_events=active_events,
+        golden_hour=golden_hour_detail,
     )

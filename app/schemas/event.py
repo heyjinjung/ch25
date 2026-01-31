@@ -79,6 +79,9 @@ class GoldenHourConfig(BaseModel):
 
 class GoldenHourStatus(BaseModel):
     is_golden_hour: bool
+    is_upcoming: bool = False
+    minutes_until_start: Optional[int] = None
     multiplier: float
     start_time_kst: str
     end_time_kst: str
+    enabled: bool = True

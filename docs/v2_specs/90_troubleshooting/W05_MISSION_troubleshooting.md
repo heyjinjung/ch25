@@ -86,22 +86,53 @@ def ensure_login_progress(cls, db: Session, user_id: int) -> None:
 - 채널 가입 페이지로의 링크 이동이 작동하지 않으며, 가입 후 '인증 확인' 버튼이 나타나지 않아 보상 수령이 불가능함.
 
 ### 근본 원인
-- **기술적 원인**: 프론트엔드 `MissionCard.tsx`에서 채널 가입형 미션을 식별하는 로직이 레거시/공통 타입(`JOIN_CHANNEL`, `SUBSCRIBE_CHANNEL`)에 국한되어 있었음.
+- **코드 수정 완료, 빌드 미배포**: 프론트엔드 `MissionCard.tsx`에서 채널 가입형 미션을 식별하는 로직이 레거시/공통 타입(`JOIN_CHANNEL`, `SUBSCRIBE_CHANNEL`)에 국한되어 있었음.
 - **분석**: 신규로 추가된 `JOIN_TELEGRAM_CHANNEL` 및 `JOIN_CC_CHANNEL` 액션 타입이 프론트엔드 판단 조건에서 누락되어, 시스템이 해당 미션을 일반적인(또는 알 수 없는) 미션으로 간주하고 기본 비활성 상태로 렌더링함.
+- **배포 문제**: 코드 수정은 완료되었으나 프론트엔드 빌드가 수행되지 않아 변경사항이 배포되지 않음.
+  - MissionCard.tsx 수정 시간: 2026-01-31 13:56:35
+  - 기존 빌드 시간: 2026-01-31 13:20:49 (36분 이전)
 
 ### 해결 방법
-#### Immediate Fix
-- `src/v2/components/mission/MissionCard.tsx` 내 `handleAction` 및 `renderActionButton` 함수에서 신규 액션 타입 2종을 추가하여 "채널 가입형"으로 분류되도록 수정 완료.
+#### Immediate Fix (완료)
+1. `src/v2/components/mission/MissionCard.tsx` 내 `handleAction` (line 47-52) 및 `renderActionButton` (line 136-141) 함수에서 신규 액션 타입 2종 추가:
+   ```typescript
+   if (
+     actionType === "JOIN_CHANNEL" ||
+     actionType === "SUBSCRIBE_CHANNEL" ||
+     actionType === "JOIN_TELEGRAM_CHANNEL" ||  // ✅ 추가
+     actionType === "JOIN_CC_CHANNEL"           // ✅ 추가
+   ) {
+   ```
+2. 프론트엔드 빌드 및 배포:
+   ```bash
+   npm run build
+   ```
+   - 빌드 완료 시간: 2026-01-31 14:xx:xx
+
 #### Long-term Fix
 - `MissionService`의 `ACTION_TYPE_ALIASES` 정보를 프론트엔드와 싱크하거나, 미션 메타데이터에 `action_category: 'CHANNEL_JOIN'` 필드를 명시적으로 추가하여 타입 확장에 유연하게 대응하도록 아키텍처 개선 검토.
 
 ### 검증 방법
-- 로컬 환경 및 서버 배포 후 신규 유저 계정으로 접속하여 미션 카드 확인.
-- 버튼이 "채널 가입" (또는 "가입 확인")으로 정상 노출되고 클릭 시 텔레그램 앱이 열리는지 확인.
+1. 로컬 개발 서버에서 확인:
+   ```bash
+   npm run dev
+   ```
+   - 미션 카드 버튼이 "채널 가입" → "가입 확인"으로 정상 전환되는지 확인
+
+2. 프로덕션 배포 후 확인:
+   - `dist/` 빌드 파일을 서버에 배포
+   - 신규 유저 계정으로 미션 페이지 접속
+   - 버튼 클릭 시 텔레그램 앱이 정상적으로 열리는지 확인
 
 ### 예방 가이드라인
-- 새로운 미션 액션 타입 정의 시 반드시 Frontend UI 대응 여부를 체크리스트에 포함할 것.
-- 가급적 전역 상수(`types/mission.ts` 등)를 통해 액션 타입을 관리하고 공통 분류 로직을 사용할 것.
+1. **빌드/배포 체크리스트**:
+   - 프론트엔드 코드 수정 후 반드시 `npm run build` 실행
+   - 빌드 타임스탬프 확인: `stat -c "%y" dist/index.html`
+   - 소스 수정 시간과 빌드 시간 비교하여 최신 빌드 여부 검증
+
+2. **타입 관리**:
+   - 새로운 미션 액션 타입 정의 시 반드시 Frontend UI 대응 여부를 체크리스트에 포함
+   - 가급적 전역 상수(`types/mission.ts` 등)를 통해 액션 타입을 관리하고 공통 분류 로직 사용
 
 ---
 
