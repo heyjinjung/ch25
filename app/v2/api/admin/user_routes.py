@@ -25,6 +25,8 @@ from app.v2.schemas.v2_admin_user import (
     AdminUserListDto,
     AdminUserResolveResponse,
     AdminWalletAdjustmentRequest,
+    AdminNicknameUpdateRequest,
+    AdminNicknameUpdateResponse,
     CreateUserNoteRequest,
     InterventionActionDto,
     InterventionExecutionResponse,
@@ -276,6 +278,59 @@ def create_admin_user(
         vaultBalance=vault_balance,
         last_active=last_active,
         status=status_str,
+    )
+
+
+@router.patch("/users/{user_id}/nickname", response_model=AdminNicknameUpdateResponse)
+def update_user_nickname(
+    user_id: int,
+    payload: AdminNicknameUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """유저 닉네임 수정 API."""
+    admin_id, admin_role = admin_info
+
+    user = db.query(V2User).filter(V2User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    new_nickname = payload.nickname.strip()
+    if not new_nickname:
+        raise HTTPException(status_code=400, detail="NICKNAME_EMPTY")
+
+    # 닉네임 중복 체크 (자기 자신 제외)
+    existing = (
+        db.query(V2User)
+        .filter(V2User.nickname == new_nickname, V2User.id != user_id)
+        .first()
+    )
+    if existing:
+        raise HTTPException(status_code=409, detail="NICKNAME_DUPLICATE")
+
+    old_nickname = user.nickname
+    user.nickname = new_nickname
+    db.commit()
+    db.refresh(user)
+
+    # 감사 로그 기록
+    V2AdminAuditService.log_action(
+        db,
+        admin_id,
+        "UPDATE_NICKNAME",
+        str(user_id),
+        before={"nickname": old_nickname},
+        after={"nickname": new_nickname},
+    )
+
+    logger.info(f"[ADMIN] Nickname updated: user_id={user_id}, '{old_nickname}' -> '{new_nickname}' by admin={admin_id}")
+
+    return AdminNicknameUpdateResponse(
+        success=True,
+        userId=user_id,
+        oldNickname=old_nickname,
+        newNickname=new_nickname,
+        message="닉네임이 성공적으로 수정되었습니다.",
     )
 
 

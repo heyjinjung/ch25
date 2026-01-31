@@ -34,6 +34,7 @@ import {
   useAdminUserDetail,
   useAdminTicketLogs,
   useUserInventory,
+  useUpdateUserNickname,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
@@ -96,6 +97,13 @@ export function UserDetailDrawer({
     null,
   );
   const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // 닉네임 수정 상태
+  const [isNicknameEditing, setIsNicknameEditing] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState("");
+  const [nicknameError, setNicknameError] = useState<string>("");
+  const updateNickname = useUpdateUserNickname();
+
   const { data: inventory } = useUserInventory(userId);
   const { data: ticketLogs = [] } = useAdminTicketLogs(
     userId ?? undefined,
@@ -137,6 +145,49 @@ export function UserDetailDrawer({
     setInventoryAdjustNote("");
   };
 
+  const handleNicknameEdit = () => {
+    setNicknameInput(user?.nickname || "");
+    setNicknameError("");
+    setIsNicknameEditing(true);
+  };
+
+  const handleNicknameCancel = () => {
+    setIsNicknameEditing(false);
+    setNicknameInput("");
+    setNicknameError("");
+  };
+
+  const handleNicknameSave = async () => {
+    if (!userId) return;
+    const trimmed = nicknameInput.trim();
+    if (!trimmed) {
+      setNicknameError("닉네임을 입력해주세요.");
+      return;
+    }
+    if (trimmed === user?.nickname) {
+      setIsNicknameEditing(false);
+      return;
+    }
+    try {
+      await updateNickname.mutateAsync({
+        userId,
+        request: { nickname: trimmed },
+      });
+      setIsNicknameEditing(false);
+      setNicknameInput("");
+      setNicknameError("");
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      if (detail === "NICKNAME_DUPLICATE") {
+        setNicknameError("이미 사용 중인 닉네임입니다.");
+      } else if (detail === "NICKNAME_EMPTY") {
+        setNicknameError("닉네임을 입력해주세요.");
+      } else {
+        setNicknameError(detail || "닉네임 수정에 실패했습니다.");
+      }
+    }
+  };
+
   if (!userId) return null;
 
   return (
@@ -162,14 +213,64 @@ export function UserDetailDrawer({
                     {user.nickname?.[0]?.toUpperCase() || "U"}
                   </div>
                   <div>
-                    <SheetTitle className="text-white text-lg font-bold flex items-center gap-2">
-                      {user.nickname || "(미설정)"} (#{userId})
-                      {user.vipLevel === "VIP" && (
-                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] h-5">
-                          VIP
-                        </Badge>
-                      )}
-                    </SheetTitle>
+                    {isNicknameEditing ? (
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={nicknameInput}
+                            onChange={(e) => setNicknameInput(e.target.value)}
+                            placeholder="새 닉네임 입력"
+                            className="h-8 w-40 bg-zinc-900 border-zinc-700 text-white text-sm"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleNicknameSave();
+                              if (e.key === "Escape") handleNicknameCancel();
+                            }}
+                            autoFocus
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-emerald-400 hover:bg-emerald-500/10"
+                            onClick={handleNicknameSave}
+                            disabled={updateNickname.isPending}
+                          >
+                            {updateNickname.isPending ? "저장 중..." : "저장"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 text-zinc-400 hover:bg-zinc-700"
+                            onClick={handleNicknameCancel}
+                            disabled={updateNickname.isPending}
+                          >
+                            취소
+                          </Button>
+                        </div>
+                        {nicknameError && (
+                          <span className="text-red-400 text-xs">
+                            {nicknameError}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <SheetTitle className="text-white text-lg font-bold flex items-center gap-2">
+                        {user.nickname || "(미설정)"} (#{userId})
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 w-6 p-0 text-zinc-400 hover:text-white hover:bg-zinc-700"
+                          onClick={handleNicknameEdit}
+                          title="닉네임 수정"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        {user.vipLevel === "VIP" && (
+                          <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] h-5">
+                            VIP
+                          </Badge>
+                        )}
+                      </SheetTitle>
+                    )}
                     <SheetDescription className="text-zinc-400 text-xs">
                       가입일 {new Date(user.createdAt).toLocaleDateString()} |
                       레벨 {user.level || 1}

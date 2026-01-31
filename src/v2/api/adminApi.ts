@@ -627,6 +627,29 @@ export const runInterventionAction = async (
   return response.data;
 };
 
+export interface NicknameUpdateRequest {
+  nickname: string;
+}
+
+export interface NicknameUpdateResponse {
+  success: boolean;
+  userId: number;
+  oldNickname: string | null;
+  newNickname: string;
+  message: string;
+}
+
+export const updateUserNickname = async (
+  userId: number,
+  request: NicknameUpdateRequest,
+): Promise<NicknameUpdateResponse> => {
+  const response = await v2Client.patch<NicknameUpdateResponse>(
+    `/api/v2/admin/users/${userId}/nickname`,
+    request,
+  );
+  return response.data;
+};
+
 export const adjustUserWallet = async (
   userId: number,
   request: AdminWalletAdjustmentRequest,

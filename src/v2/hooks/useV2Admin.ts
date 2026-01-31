@@ -12,12 +12,14 @@ import {
   runInterventionAction,
   adjustUserWallet,
   adjustUserInventory,
+  updateUserNickname,
   AdminUserDetailDto,
   AdminWithdrawalDto,
   OpsDashboardResponse,
   DashboardMetricsResponse,
   AdminWalletAdjustmentRequest,
   AdminInventoryAdjustmentRequest,
+  NicknameUpdateRequest,
   getAdminUserList,
   UserSearchParams,
   UserListResponse,
@@ -414,6 +416,27 @@ export function useRunIntervention() {
         queryKey: ADMIN_KEYS.userDetail(variables.userId),
       });
       queryClient.invalidateQueries({ queryKey: ADMIN_KEYS.opsStatus });
+    },
+  });
+}
+
+export function useUpdateUserNickname() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      request,
+    }: {
+      userId: number;
+      request: NicknameUpdateRequest;
+    }) => updateUserNickname(userId, request),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_KEYS.userDetail(variables.userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", "list"],
+      });
     },
   });
 }

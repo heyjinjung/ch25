@@ -28,7 +28,15 @@ This report documents the verification of the V2 Telegram Authentication system 
 | RBAC_DENIED | 68 |
 - **Verification Status**: ✅ Data successfully recorded in Production.
 
-### 5. 👥 User Management: V2User Auto-Creation
+### 5. � Auth Policy: JWT & Refresh Token settings
+- **Access Token**: 15분 (`v2_access_token_expire_minutes=15`) 확인.
+- **Refresh Token**: 30일 (`expires_days=30`) 확인.
+- **Sliding Window**: 만료 7일 미만 시 자동 갱신 (`if days_left < 7`) 확인.
+- **Revocation**: 로그아웃 시 토큰 폐기 및 `TOKEN_REVOKED` 재사용 방지 확인.
+- **V1 Guard**: `password_hash`가 설정된 경우 검증 강제 로직 확인.
+- **Verification Status**: ✅ JWT/Token 보안 정책 완벽 적용됨.
+
+### 6. �👥 User Management: V2User Auto-Creation
 - **Logic**: `authenticate_telegram` service verified to create `V2User` records independently of legacy V1 `user` table.
 - **Current User Count**: `6` V2Users registered.
 - **Verification Status**: ✅ Confirmed.

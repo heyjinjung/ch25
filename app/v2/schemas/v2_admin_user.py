@@ -173,6 +173,20 @@ class AdminUserResolveResponse(BaseModel):
     externalId: str
 
 
+class AdminNicknameUpdateRequest(BaseModel):
+    """닉네임 수정 요청 스키마."""
+    nickname: str = Field(..., min_length=1, max_length=100, description="새 닉네임")
+
+
+class AdminNicknameUpdateResponse(BaseModel):
+    """닉네임 수정 응답 스키마."""
+    success: bool
+    userId: int
+    oldNickname: Optional[str]
+    newNickname: str
+    message: str
+
+
 class UserActivityLogDto(BaseModel):
     id: int
     userId: int
