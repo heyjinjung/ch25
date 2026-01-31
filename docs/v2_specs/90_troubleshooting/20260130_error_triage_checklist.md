@@ -1,4 +1,4 @@
-# 🚨 에러 트리아지 체크리스트 (2026-01-30)
+# 🚨 에러 트리아지 체크리스트 (2026-01-30 ~ 01-31)
 
 ## 배포 전 대기 중인 수정사항
 
@@ -14,9 +14,12 @@
 | 15 | external_ranking FK (1452) | 어드민 | 🔴 높음 | ✅ 마이그레이션 작성 |
 | 16 | V2User.login_streak AttributeError | 어드민 | 🔴 높음 | ✅ 코드수정 |
 | 17 | Sentry 에러 캡처 안됨 | 모니터링 | 🟡 중 | ✅ 코드수정 |
-| **18** | **telegram/auth FK (1452)** | **유저** | **🔴 높음** | **✅ 마이그레이션 적용** |
+| 18 | telegram/auth FK (1452) | 유저 | 🔴 높음 | ✅ 마이그레이션 적용 |
+| **19** | **ModuleNotFoundError v2_user** | **전체 게임** | **🔴 높음** | **✅ 배포중** |
 
-**상세 문서**: [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
+**상세 문서**: 
+- [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
+- [2026_01_31_game_module_import.md](./2026_01_31_game_module_import.md)
 
 ---
 
@@ -153,6 +156,38 @@ r = db.execute(text('''
 for x in r: print(x)
 "
 ```
+
+---
+
+## Issue 19: ModuleNotFoundError v2_user (2026-01-31)
+
+### 에러
+```
+ModuleNotFoundError: No module named 'app.v2.models.v2_user'
+POST /api/v2/roulette/play HTTP/1.1" 500 Internal Server Error
+POST /api/v2/dice/play HTTP/1.1" 500 Internal Server Error
+POST /api/v2/lottery/play HTTP/1.1" 500 Internal Server Error
+```
+
+### 원인
+- `vault_service.py:186`에서 잘못된 import 경로 사용
+- `from app.v2.models.v2_user import V2User` → 파일 없음
+- 실제 파일: `app/v2/models/user.py`
+
+### 해결
+```python
+# Before
+from app.v2.models.v2_user import V2User
+
+# After
+from app.v2.models.user import V2User
+```
+
+### 커밋
+- `62158bd2` fix: ModuleNotFoundError v2_user import path (vault_service.py)
+
+### 상세 문서
+- [2026_01_31_game_module_import.md](./2026_01_31_game_module_import.md)
 
 ---
 
