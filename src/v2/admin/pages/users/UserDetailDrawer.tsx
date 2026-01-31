@@ -593,6 +593,91 @@ export function UserDetailDrawer({
                         보유 중인 아이템이 없습니다.
                       </div>
                     )}
+
+                    {/* 인벤토리 로그 (지급/사용/차감) */}
+                    <Card className="bg-zinc-900/30 border-white/5 mt-4">
+                      <CardHeader className="px-4 py-3">
+                        <CardTitle className="text-sm font-medium text-zinc-300">
+                          인벤토리 변동 이력
+                        </CardTitle>
+                        <p className="text-xs text-zinc-500">
+                          지급(GRANT) / 사용(USE) / 회수(REVOKE)
+                        </p>
+                      </CardHeader>
+                      <CardContent className="px-4 pb-4 pt-0">
+                        {inventoryLogs.length === 0 ? (
+                          <p className="text-zinc-500 text-xs">
+                            변동 이력이 없습니다.
+                          </p>
+                        ) : (
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-zinc-400 border-b border-white/5">
+                                <th className="py-2 text-left px-1">타입</th>
+                                <th className="py-2 text-left px-1">아이템</th>
+                                <th className="py-2 text-right px-1">수량</th>
+                                <th className="py-2 text-left px-1">사유</th>
+                                <th className="py-2 text-right px-1">일시</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {inventoryLogs.map((log) => (
+                                <tr
+                                  key={log.id}
+                                  className="border-b border-white/5 hover:bg-white/5"
+                                >
+                                  <td className="py-2 px-1">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                                        log.type === "GRANT"
+                                          ? "bg-green-500/20 text-green-400"
+                                          : log.type === "USE"
+                                            ? "bg-red-500/20 text-red-400"
+                                            : "bg-amber-500/20 text-amber-400"
+                                      }`}
+                                    >
+                                      {log.type === "GRANT"
+                                        ? "지급"
+                                        : log.type === "USE"
+                                          ? "사용"
+                                          : "회수"}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-1 text-zinc-300">
+                                    {getRewardItemLabel(log.itemType)}
+                                  </td>
+                                  <td
+                                    className={`py-2 px-1 text-right font-mono ${
+                                      log.type === "GRANT"
+                                        ? "text-green-400"
+                                        : "text-red-400"
+                                    }`}
+                                  >
+                                    {log.type === "GRANT" ? "+" : "-"}
+                                    {log.amount}
+                                  </td>
+                                  <td className="py-2 px-1 text-zinc-500 truncate max-w-[80px]">
+                                    {log.reason || "-"}
+                                  </td>
+                                  <td className="py-2 px-1 text-right text-zinc-500">
+                                    {log.timestamp
+                                      ? new Date(
+                                          log.timestamp,
+                                        ).toLocaleDateString("ko-KR", {
+                                          month: "2-digit",
+                                          day: "2-digit",
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                      : "-"}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </CardContent>
+                    </Card>
                   </TabsContent>
 
                   {/* 3. 금고 (Vault) */}
