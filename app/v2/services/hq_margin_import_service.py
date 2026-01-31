@@ -102,18 +102,18 @@ class HQMarginImportService:
                         ).first()
 
                         if prospect:
-                            prospect.total_margin = int(row.get('총 운영 마진', 0))
-                            prospect.total_charge = int(row.get('누적 충전 금액', 0))
-                            prospect.inactive_days = int(row.get('미접속 경과일', 0))
+                            prospect.total_margin = HQMarginImportService._parse_int(row.get('총 운영 마진', 0))
+                            prospect.total_charge = HQMarginImportService._parse_int(row.get('누적 충전 금액', 0))
+                            prospect.inactive_days = HQMarginImportService._parse_int(row.get('미접속 경과일', 0))
                             prospect.segment = segment
                             prospect.is_joined = False
                         else:
                             prospect = HQProspectiveUser(
                                 cc_id=user_key,
                                 nickname=nickname_raw or user_key, # 원본 닉네임 저장하되 매칭은 lower로
-                                total_margin=int(row.get('총 운영 마진', 0)),
-                                total_charge=int(row.get('누적 충전 금액', 0)),
-                                inactive_days=int(row.get('미접속 경과일', 0)),
+                                total_margin=HQMarginImportService._parse_int(row.get('총 운영 마진', 0)),
+                                total_charge=HQMarginImportService._parse_int(row.get('누적 충전 금액', 0)),
+                                inactive_days=HQMarginImportService._parse_int(row.get('미접속 경과일', 0)),
                                 segment=segment,
                                 is_joined=False
                             )
@@ -202,6 +202,17 @@ class HQMarginImportService:
             raise
 
     @staticmethod
+    def _parse_int(value) -> int:
+        """Parse string with commas to int."""
+        if isinstance(value, str):
+            value = value.replace(',', '').strip()
+            if not value or value == '-': return 0
+        try:
+            return int(float(value))
+        except (ValueError, TypeError):
+            return 0
+
+    @staticmethod
     def _classify_segment(row: pd.Series) -> str:
         """
         본사 마진 데이터 기반 세그먼트 분류
@@ -226,15 +237,9 @@ class HQMarginImportService:
                 return explicit_segment
 
         # 자동 분류
-        try:
-            margin = float(row.get('총 운영 마진', 0))
-            inactive_days = int(row.get('미접속 경과일', 0))
-            charge_amount = float(row.get('누적 충전 금액', 0))
-        except (ValueError, TypeError):
-            # 데이터 파싱 실패 시 기본값
-            margin = 0
-            inactive_days = 0
-            charge_amount = 0
+        margin = HQMarginImportService._parse_int(row.get('총 운영 마진', 0))
+        inactive_days = HQMarginImportService._parse_int(row.get('접속 경과일', row.get('미접속 경과일', 0))) # Column name variation support
+        charge_amount = HQMarginImportService._parse_int(row.get('누적 충전 금액', 0))
 
         # 분류 로직
         if margin > 1_000_000:

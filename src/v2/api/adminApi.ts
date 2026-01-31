@@ -3142,3 +3142,35 @@ export const getAdminStockAlerts = async (
   );
   return response.data;
 };
+
+// ─────────────────────────────────────────────────────────────────
+// 게임 로그 조회 API (다이스/룰렛/복권)
+// ─────────────────────────────────────────────────────────────────
+
+export interface GameLogItemDto {
+  id: number;
+  game_type: "DICE" | "ROULETTE" | "LOTTERY";
+  result: string | null;
+  reward_type: string | null;
+  reward_amount: number | null;
+  vault_earn: number | null;
+  created_at: string;
+}
+
+export interface UserGameLogsResponse {
+  user_id: number;
+  total_count: number;
+  logs: GameLogItemDto[];
+}
+
+export const getUserGameLogs = async (
+  userId: number,
+  gameType?: "DICE" | "ROULETTE" | "LOTTERY",
+  limit: number = 50,
+): Promise<UserGameLogsResponse> => {
+  const response = await v2Client.get<UserGameLogsResponse>(
+    `/api/v2/admin/users/${userId}/game-logs`,
+    { params: { game_type: gameType, limit } },
+  );
+  return response.data;
+};

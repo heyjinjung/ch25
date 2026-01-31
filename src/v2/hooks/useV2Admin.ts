@@ -86,6 +86,8 @@ import {
   updateAdminDepositLog,
   deleteAdminDepositLog,
   getInventoryLogs,
+  getUserGameLogs,
+  UserGameLogsResponse,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -736,6 +738,18 @@ export function useAdminUserVaultHistory(userId: number | null) {
   return useQuery<VaultEarnEvent[]>({
     queryKey: ["admin", "users", userId, "vault-history"],
     queryFn: () => fetchUserVaultHistory(userId!),
+    enabled: !!userId && userId > 0,
+  });
+}
+
+export function useUserGameLogs(
+  userId: number | null,
+  gameType?: "DICE" | "ROULETTE" | "LOTTERY",
+  limit: number = 50,
+) {
+  return useQuery<UserGameLogsResponse>({
+    queryKey: ["admin", "users", userId, "game-logs", gameType, limit],
+    queryFn: () => getUserGameLogs(userId!, gameType, limit),
     enabled: !!userId && userId > 0,
   });
 }

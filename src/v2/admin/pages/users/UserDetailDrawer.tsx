@@ -35,7 +35,7 @@ import {
   useAdminTicketLogs,
   useUserInventory,
   useUpdateUserNickname,
-  useAdminUserVaultHistory,
+  useVaultUserLedger,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
@@ -113,7 +113,7 @@ export function UserDetailDrawer({
     50,
     { enabled: Boolean(userId) },
   );
-  const { data: vaultHistory = [] } = useAdminUserVaultHistory(userId);
+  const { data: vaultLedger } = useVaultUserLedger(userId);
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
   const walletLogs = useMemo(
@@ -606,17 +606,17 @@ export function UserDetailDrawer({
                       </Button>
                     </div>
 
-                    {/* 금고 적립 내역 */}
+                    {/* 금고 내역 (적립+차감) */}
                     <Card className="bg-[#18181B] border-white/5">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm text-zinc-300">
-                          금고 적립 내역
+                          금고 내역 (입출금)
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="max-h-[300px] overflow-y-auto">
-                        {vaultHistory.length === 0 ? (
+                        {!vaultLedger?.items?.length ? (
                           <div className="text-center text-zinc-500 py-4">
-                            적립 내역이 없습니다
+                            내역이 없습니다
                           </div>
                         ) : (
                           <table className="w-full text-xs">
@@ -625,37 +625,50 @@ export function UserDetailDrawer({
                                 <th className="text-left py-2 px-1">일시</th>
                                 <th className="text-left py-2 px-1">유형</th>
                                 <th className="text-right py-2 px-1">금액</th>
-                                <th className="text-left py-2 px-1">출처</th>
+                                <th className="text-right py-2 px-1">잔액</th>
+                                <th className="text-left py-2 px-1">사유</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {vaultHistory.map((event) => (
+                              {vaultLedger.items.map((item) => (
                                 <tr
-                                  key={event.id}
+                                  key={item.id}
                                   className="border-b border-white/5 hover:bg-white/5"
                                 >
                                   <td className="py-2 px-1 text-zinc-400">
-                                    {formatKst(event.created_at).slice(5, 16)}
+                                    {formatKst(item.created_at).slice(5, 16)}
                                   </td>
                                   <td className="py-2 px-1">
                                     <Badge
                                       variant="outline"
                                       className={
-                                        event.earn_type === "GAME_WIN"
-                                          ? "border-yellow-500/30 text-yellow-400"
-                                          : event.earn_type === "ADMIN"
-                                            ? "border-purple-500/30 text-purple-400"
-                                            : "border-zinc-500/30 text-zinc-400"
+                                        item.ref_type === "SHOP"
+                                          ? "border-orange-500/30 text-orange-400"
+                                          : item.ref_type === "GAME"
+                                            ? "border-yellow-500/30 text-yellow-400"
+                                            : item.ref_type === "ADMIN"
+                                              ? "border-purple-500/30 text-purple-400"
+                                              : "border-zinc-500/30 text-zinc-400"
                                       }
                                     >
-                                      {event.earn_type}
+                                      {item.ref_type || "기타"}
                                     </Badge>
                                   </td>
-                                  <td className="py-2 px-1 text-right font-mono text-emerald-400">
-                                    +{event.amount.toLocaleString()}
+                                  <td
+                                    className={`py-2 px-1 text-right font-mono ${
+                                      item.amount >= 0
+                                        ? "text-emerald-400"
+                                        : "text-red-400"
+                                    }`}
+                                  >
+                                    {item.amount >= 0 ? "+" : ""}
+                                    {item.amount.toLocaleString()}
                                   </td>
-                                  <td className="py-2 px-1 text-zinc-500">
-                                    {event.game_type || event.source || "-"}
+                                  <td className="py-2 px-1 text-right font-mono text-zinc-400">
+                                    {item.balance_after.toLocaleString()}
+                                  </td>
+                                  <td className="py-2 px-1 text-zinc-500 truncate max-w-[80px]">
+                                    {item.reason || "-"}
                                   </td>
                                 </tr>
                               ))}

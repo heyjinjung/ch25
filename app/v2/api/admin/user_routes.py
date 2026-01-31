@@ -1227,3 +1227,125 @@ def reset_all_user_missions(
         reset_count=reset_count,
         message=f"{reset_count}개 미션 진행도가 리셋되었습니다.",
     )
+
+
+# ─────────────────────────────────────────────────────────────────
+# 게임 로그 조회 API (다이스/룰렛/복권)
+# ─────────────────────────────────────────────────────────────────
+
+from pydantic import BaseModel
+from app.v2.models.dice import V2DiceLog
+from app.v2.models.roulette import V2RouletteLog
+from app.v2.models.lottery import V2LotteryLog
+
+
+class GameLogItemDto(BaseModel):
+    id: int
+    game_type: str  # DICE, ROULETTE, LOTTERY
+    result: str | None = None
+    reward_type: str | None = None
+    reward_amount: int | None = None
+    vault_earn: int | None = None
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class UserGameLogsResponse(BaseModel):
+    user_id: int
+    total_count: int
+    logs: list[GameLogItemDto]
+
+
+@router.get("/users/{user_id}/game-logs", response_model=UserGameLogsResponse)
+def get_user_game_logs(
+    user_id: int,
+    game_type: str | None = None,  # DICE, ROULETTE, LOTTERY, or None for all
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    유저의 게임 로그 조회 (다이스/룰렛/복권)
+
+    - game_type: DICE, ROULETTE, LOTTERY (없으면 전체)
+    - limit: 최대 조회 건수 (기본 50)
+    """
+    user = db.get(V2User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    logs = []
+    game_type_upper = (game_type or "").upper()
+
+    # 다이스 로그
+    if not game_type_upper or game_type_upper == "DICE":
+        dice_logs = (
+            db.query(V2DiceLog)
+            .filter(V2DiceLog.user_id == user_id)
+            .order_by(V2DiceLog.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        for log in dice_logs:
+            logs.append(GameLogItemDto(
+                id=log.id,
+                game_type="DICE",
+                result=str(log.dice_sum) if log.dice_sum else None,
+                reward_type=log.reward_type,
+                reward_amount=log.reward_amount,
+                vault_earn=log.vault_earn,
+                created_at=log.created_at.isoformat() if log.created_at else "",
+            ))
+
+    # 룰렛 로그
+    if not game_type_upper or game_type_upper == "ROULETTE":
+        roulette_logs = (
+            db.query(V2RouletteLog)
+            .filter(V2RouletteLog.user_id == user_id)
+            .order_by(V2RouletteLog.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        for log in roulette_logs:
+            logs.append(GameLogItemDto(
+                id=log.id,
+                game_type="ROULETTE",
+                result=str(log.segment_index) if log.segment_index is not None else None,
+                reward_type=log.reward_type,
+                reward_amount=log.reward_amount,
+                vault_earn=getattr(log, "vault_earn", None),
+                created_at=log.created_at.isoformat() if log.created_at else "",
+            ))
+
+    # 복권 로그
+    if not game_type_upper or game_type_upper == "LOTTERY":
+        lottery_logs = (
+            db.query(V2LotteryLog)
+            .filter(V2LotteryLog.user_id == user_id)
+            .order_by(V2LotteryLog.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+        for log in lottery_logs:
+            logs.append(GameLogItemDto(
+                id=log.id,
+                game_type="LOTTERY",
+                result=log.result if hasattr(log, "result") else None,
+                reward_type=getattr(log, "reward_type", None),
+                reward_amount=getattr(log, "reward_amount", None),
+                vault_earn=getattr(log, "vault_earn", None),
+                created_at=log.created_at.isoformat() if log.created_at else "",
+            ))
+
+    # 시간순 정렬 (최신순)
+    logs.sort(key=lambda x: x.created_at, reverse=True)
+    logs = logs[:limit]
+
+    return UserGameLogsResponse(
+        user_id=user_id,
+        total_count=len(logs),
+        logs=logs,
+    )
+
