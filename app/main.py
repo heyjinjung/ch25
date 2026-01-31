@@ -67,6 +67,7 @@ if sentry_dsn:
             ],
             # 전체 로그 추적 강화
             enable_tracing=True,  # 트레이싱 활성화
+            enable_log_record=True,  # Sentry Log Monitoring (Logs 탭) 활성화
             _experiments={
                 "continuous_profiling_auto_start": True,  # 자동 프로파일링
             },

@@ -96,7 +96,6 @@ tests/test_enum_matches_sot.py  (Enum 정합성)
 tests/v2_tests/phase4_admin/test_api_coverage.py (API 커버리지)
 tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오)
 
-✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
 
 ### 2.2 프론트엔드 연동 (E2E)
 - [x] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.
@@ -113,6 +112,11 @@ tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오
    redis-cli monitor | grep "golden:v2:events"
    ```
 4. **Circuit Breaker 한도(SoT)**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 적용되어 있는지 확인.
+
+.github/workflows/deploy.yml 파일에서 다음 3곳을 수정했습니다:
+Line 76: env 섹션에 SENTRY_DSN 추가
+Line 81: envs 리스트에 SENTRY_DSN 추가
+Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
 
 ---
 
