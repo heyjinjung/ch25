@@ -37,6 +37,7 @@ import {
   useUpdateUserNickname,
   useVaultUserLedger,
   useUserGameLogs,
+  useAdminInventoryLogs,
 } from "../../../hooks/useV2Admin";
 import {
   getInventoryRewardItems,
@@ -116,6 +117,13 @@ export function UserDetailDrawer({
   );
   const { data: vaultLedger } = useVaultUserLedger(userId);
   const { data: gameLogs } = useUserGameLogs(userId);
+  const { data: inventoryLogs = [] } = useAdminInventoryLogs(
+    userId ?? undefined,
+    undefined,
+    undefined,
+    50,
+    { enabled: Boolean(userId) },
+  );
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
   const walletLogs = useMemo(
@@ -713,22 +721,22 @@ export function UserDetailDrawer({
                             <tbody>
                               {gameLogs.logs.map((item, idx) => (
                                 <tr
-                                  key={`${item.logType}-${idx}`}
+                                  key={`${item.game_type}-${idx}`}
                                   className="border-b border-white/5 hover:bg-white/5"
                                 >
                                   <td className="py-2 px-1">
                                     <span
                                       className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                                        item.logType === "DICE"
+                                        item.game_type === "DICE"
                                           ? "bg-blue-500/20 text-blue-400"
-                                          : item.logType === "ROULETTE"
+                                          : item.game_type === "ROULETTE"
                                             ? "bg-purple-500/20 text-purple-400"
                                             : "bg-amber-500/20 text-amber-400"
                                       }`}
                                     >
-                                      {item.logType === "DICE"
+                                      {item.game_type === "DICE"
                                         ? "다이스"
-                                        : item.logType === "ROULETTE"
+                                        : item.game_type === "ROULETTE"
                                           ? "룰렛"
                                           : "복권"}
                                     </span>
@@ -737,12 +745,14 @@ export function UserDetailDrawer({
                                     {item.result || "-"}
                                   </td>
                                   <td className="py-2 px-1 text-right text-green-400">
-                                    {item.rewardSummary || "-"}
+                                    {item.reward_type
+                                      ? `${item.reward_type} ${item.reward_amount ?? 0}`
+                                      : "-"}
                                   </td>
                                   <td className="py-2 px-1 text-right text-zinc-500">
-                                    {item.createdAt
+                                    {item.created_at
                                       ? new Date(
-                                          item.createdAt,
+                                          item.created_at,
                                         ).toLocaleDateString("ko-KR", {
                                           month: "2-digit",
                                           day: "2-digit",
