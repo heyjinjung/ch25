@@ -1,7 +1,7 @@
 """Add v2_user FK to log/order tables for data integrity.
 
 Revision ID: 20260131_1500_add_v2_user_fk_to_log_tables
-Revises: 20260130_2100_seed_core_game_mission_admin
+Revises: 20260131_0500_puzzle_c_deprecation_cleanup
 Create Date: 2026-01-31 15:00:00.000000
 
 Note: SET_NULL on DELETE to preserve logs for audit purposes.
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20260131_1500_add_v2_user_fk_to_log_tables'
-down_revision = '20260130_2100_seed_core_game_mission_admin'
+down_revision = '20260131_0500_puzzle_c_deprecation_cleanup'
 branch_labels = None
 depends_on = None
 
