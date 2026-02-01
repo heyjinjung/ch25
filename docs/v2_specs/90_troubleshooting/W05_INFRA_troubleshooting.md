@@ -8,6 +8,7 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
+| 02-01 | /api/v2/admin/users/{id}/purge 500 (RankingDaily 외 3개 모델 re-export 누락) | ✅ FIXED |
 | 02-01 | 502 Bad Gateway (Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치) | ✅ FIXED |
 | 02-01 | SOT Import 리팩터링 후 누락된 re-export (SurveyQuestionType 외 10개) | ✅ FIXED |
 | 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (shim 적용) |
@@ -18,6 +19,67 @@
 | 02-01 | /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) | ✅ RESOLVED |
 | 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 | 02-01 | CSV Import 한글 깨짐 (Mojibake) 및 인코딩 자동 감지 기능 도입 | ✅ FIXED |
+
+---
+
+## 02-01 - [INFRA/BACKEND] /api/v2/admin/users/{id}/purge 500 (RankingDaily 외 3개 모델 re-export 누락)
+
+**우선순위**: P1
+**관련 도메인**: INFRA, BACKEND, ADMIN
+
+### 증상
+- Admin 유저 상세 페이지에서 Purge 버튼 클릭 시 500 에러 발생
+- 프론트엔드 콘솔:
+  ```
+  POST https://cc-jm.com/api/v2/admin/users/8/purge 500 (Internal Server Error)
+  ```
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | Admin 유저 Purge (`/api/v2/admin/users/{id}/purge`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 어드민 유저 관리 기능 |
+| **재현 빈도** | 항상 |
+
+### 증거(로그)
+```
+ImportError: cannot import name 'RankingDaily' from 'app.v2.models' (/app/app/v2/models/__init__.py)
+File "/app/app/v2/services/admin_user_service.py", line 235, in purge_user
+    from app.v2.models import (
+```
+
+### 근본 원인
+- `admin_user_service.py`의 `purge_user` 메서드에서 V1 모델들을 `app.v2.models`에서 import
+- `app/v2/models/__init__.py`에 다음 모델들의 re-export가 누락됨:
+  - `RankingDaily` (from `app.models.ranking`)
+  - `UserActivityEvent` (from `app.models.user_activity_event`)
+  - `SeasonPassProgress`, `SeasonPassRewardLog`, `SeasonPassStampLog` (from `app.models.season_pass`)
+
+### 해결 방법
+`app/v2/models/__init__.py`에 누락된 re-export 추가:
+```python
+from app.models.ranking import RankingDaily
+from app.models.user_activity_event import UserActivityEvent
+from app.models.season_pass import SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
+```
+
+### 수정 파일
+- `app/v2/models/__init__.py`
+
+### 검증 방법
+```bash
+python -c "from app.v2.models import RankingDaily, UserActivityEvent, SeasonPassProgress; print('OK')"
+python -c "from app.v2.services.admin_user_service import V2AdminUserService; print('OK')"
+```
+
+### 예방 가이드라인
+1. **`purge_user` 등 복합 서비스 수정 시** 사용하는 모든 모델의 re-export 확인
+2. **대량 import 리팩터링 시** `list_sot_violations.py` 스크립트 실행
+3. **새 V1 모델을 V2 서비스에서 사용 시** `app.v2.models/__init__.py`에 re-export 추가
+
+### 수정 시각
+- 2026-02-01 12:XX KST
 
 ---
 

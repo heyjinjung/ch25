@@ -67,7 +67,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 7 |
 | MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
-| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 5 |
+| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 6 |
 | FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 4 |
 
 ---
