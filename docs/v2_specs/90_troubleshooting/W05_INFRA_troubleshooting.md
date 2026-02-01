@@ -8,11 +8,103 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
+| 02-01 | SOT Import 리팩터링 후 누락된 re-export (SurveyQuestionType 외 10개) | ✅ FIXED |
 | 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (shim 적용) |
 | 02-01 | /api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락) | ⏳ 마이그레이션 생성, 배포필요 |
 | 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
+
+---
+
+## 02-01 - [INFRA/BACKEND] SOT Import 리팩터링 후 누락된 re-export
+
+**우선순위**: P0
+**관련 도메인**: INFRA, BACKEND
+**커밋**: `3b6419098c9330cea6b0ed9bc841cb7496d86dad`
+
+### 증상
+- 커밋 `3b64190` 배포 후 앱 로딩 실패
+- FastAPI 서버 시작 시 `ImportError` 발생
+
+### 증거(로그)
+```python
+ImportError: cannot import name 'SurveyQuestionType' from 'app.v2.models' 
+(C:\Users\JAVIS\ch\ch25\app\v2\models\__init__.py)
+```
+
+### 배경
+- 커밋 `3b64190`에서 63개 파일에 대해 `from app.models` → `from app.v2.models`로 대량 리팩터링 수행
+- 목적: "Pure V2 Native" SOT 규정 준수를 위해 모든 V2 코드가 `app.v2.models`에서 import하도록 통일
+- V1 모델들은 `app/v2/models/__init__.py`에서 re-export하여 호환성 유지
+
+### 근본 원인
+`app/v2/models/__init__.py`에서 V1 모델 re-export 시 **Enum 클래스 10개 누락**:
+
+| 누락된 항목 | 출처 파일 | 사용처 |
+|------------|----------|--------|
+| `SurveyQuestionType` | `app.models.survey` | marketing_routes.py |
+| `SurveyResponseStatus` | `app.models.survey` | marketing_routes.py |
+| `SurveyStatus` | `app.models.survey` | marketing_routes.py |
+| `SurveyChannel` | `app.models.survey` | marketing_routes.py |
+| `SurveyTriggerType` | `app.models.survey` | - |
+| `SurveyRewardStatus` | `app.models.survey` | - |
+| `MissionCategory` | `app.models.mission` | routes.py |
+| `ApprovalStatus` | `app.models.mission` | user_routes.py |
+| `MissionRewardType` | `app.models.mission` | mission_routes.py |
+| `UserStreak` | `app.models.mission` | mission_routes.py |
+
+### 해결 방법
+#### Immediate Fix
+`app/v2/models/__init__.py`에 누락된 항목 추가:
+
+```python
+# mission.py - 추가된 항목
+from app.models.mission import (
+    Mission, UserMissionProgress, MissionCategory, 
+    ApprovalStatus, MissionRewardType, UserStreak
+)
+
+# survey.py - 추가된 항목
+from app.models.survey import (
+    Survey, SurveyQuestion, SurveyOption, SurveyTriggerRule,
+    SurveyResponse, SurveyResponseAnswer,
+    SurveyStatus, SurveyChannel, SurveyQuestionType,
+    SurveyTriggerType, SurveyResponseStatus, SurveyRewardStatus,
+)
+```
+
+#### Long-term Fix
+- 대량 import 리팩터링 시 **자동 검증 스크립트** 필수 실행
+- `list_sot_violations.py` 스크립트를 CI에 통합
+- 새 Enum 추가 시 `__init__.py` 동시 업데이트 체크리스트 추가
+
+### 검증 방법
+```bash
+# 로컬 검증
+python -c "from app.main import app; print('OK: FastAPI app loads')"
+
+# 또는 전체 import 체크
+python -c "
+from app.v2.api.admin import ops_routes
+from app.v2.api.admin import user_routes
+from app.v2.api.admin import marketing_routes
+from app.v2.api.admin import mission_routes
+print('OK: all admin routes import')
+"
+```
+
+### 예방 가이드라인
+1. **대량 import 변경 시 검증 필수**:
+   - `python -c "from app.main import app"` 로컬 테스트
+   - `list_sot_violations.py` 실행하여 누락 확인
+2. **새 Enum/Model 추가 시**:
+   - `app.models`에 추가하면 `app.v2.models/__init__.py`에도 re-export 추가
+3. **CI 파이프라인에 import 검증 추가 권장**
+
+### 관련 파일
+- 수정: `app/v2/models/__init__.py`
+- 스크립트: `fix_sot_imports.py`, `list_sot_violations.py`
 
 ---
 
@@ -208,3 +300,4 @@ xmas-celery-*     Up (healthy)
 ## 변경 이력
 - 2026-01-31: W05 INFRA 문서 생성, 기존 분산 문서 통합
 - 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락
+- 2026-02-01: SOT Import 리팩터링 후 re-export 누락 이슈 추가 (커밋 3b64190)

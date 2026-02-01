@@ -91,6 +91,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 |------|------|---------|
 | FastAPI 서버 시작 실패 | [백엔드 런타임](./v2_troubleshooting_20260120_backend_runtime_ko.md) | P0 |
 | DB 연결 오류 | [백엔드 런타임](./v2_troubleshooting_20260120_backend_runtime_ko.md) | P0 |
+| SOT Import 리팩터링 후 ImportError | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#02-01---infrabackend-sot-import-리팩터링-후-누락된-re-export) | P0 |
 | Redis 연결 실패 | [백엔드 런타임](./v2_troubleshooting_20260120_backend_runtime_ko.md) | P1 |
 | Alembic Migration 충돌 | [Alembic Legacy](./v2_troubleshooting_20260120_alembic_legacy_ko.md) | P1 |
 | Sentry Logs 탭 온보딩 화면 고정 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#01-31---infra-sentry-log-monitoring-logs-탭-활성화) | P2 |
@@ -114,6 +115,12 @@ W{주차}_{도메인코드}_troubleshooting.md
 ## 🔍 에러 메시지로 찾기
 
 ### 자주 보이는 에러 메시지
+
+```
+ImportError: cannot import name 'SurveyQuestionType' from 'app.v2.models'
+→ 해결: W05_INFRA - SOT Import 리팩터링 후 re-export 누락
+→ 조치: app/v2/models/__init__.py에 누락된 Enum 추가
+```
 
 ```
 ValueError: 'GOLD_KEY' is not a valid GameTokenType
@@ -239,5 +246,5 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 
 ---
 
-**최종 업데이트:** 2026-01-31
+**최종 업데이트:** 2026-02-01
 **관리자:** DevOps Team
