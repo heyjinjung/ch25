@@ -50,10 +50,10 @@ const CircuitBreakerPage: React.FC = () => {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">
-            Circuit Breaker 관제
+            비상 정지 장치 (Emergency Stop)
           </h1>
           <p className="text-sm text-zinc-400">
-            시스템 자산 지급 임계치를 모니터링하고 차단 상태를 해제합니다.
+            자산 지급 한도를 감시하고, 한도 초과로 차단된 상태를 해제합니다.
           </p>
         </div>
         <Badge className="bg-red-500/10 text-red-500 border-none px-3 py-1 animate-pulse">
@@ -89,7 +89,7 @@ const CircuitBreakerPage: React.FC = () => {
                       !isCritical ? "text-zinc-500 border-zinc-800" : ""
                     }
                   >
-                    {isCritical ? "차단됨 (BREACHED)" : "정상 (NOMINAL)"}
+                    {isCritical ? "지급 차단됨 (STOPPED)" : "정상 작동 중 (NORMAL)"}
                   </Badge>
                 </div>
                 <CardDescription className="text-zinc-500 text-xs">
@@ -141,7 +141,7 @@ const CircuitBreakerPage: React.FC = () => {
                 <div className="pt-2">
                   {isCritical ? (
                     <SlideToApprove
-                      text="글로벌 한도 초기화를 위해 슬라이드 (RESET)"
+                      text="슬라이드하여 지급 차단 해제 (RESET)"
                       onApprove={() => handleGlobalReset(status.assetType)}
                       className="bg-red-500/20 text-red-500 border-red-500/20"
                     />
@@ -180,7 +180,7 @@ const CircuitBreakerPage: React.FC = () => {
             운영 팁 (Operation Tip):
           </span>
           <span className="text-zinc-500 ml-2">
-            Circuit Breaker 리셋은 모든 지급 카운트를 0으로 초기화합니다. 임계치
+            지급 차단 해제(Reset)는 모든 지급 카운트를 0으로 초기화합니다. 한도
             근접 알람 발생 시 이상 유무를 반드시 먼저 확인하십시오.
           </span>
         </div>

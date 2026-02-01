@@ -178,7 +178,7 @@ export const GoldenEventStream = ({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-bold text-gray-100">
-            실시간 게임 이벤트
+            실시간 게임 기록
           </h2>
           <div className="flex items-center gap-2">
             <div
@@ -191,7 +191,7 @@ export const GoldenEventStream = ({
             </span>
           </div>
         </div>
-        <div className="text-sm text-gray-400">이벤트: {events.length}</div>
+        <div className="text-sm text-gray-400">전체 기록: {events.length}</div>
       </div>
 
       {/* Event Stream */}
@@ -233,7 +233,7 @@ export const GoldenEventStream = ({
                     colSpan={8}
                     className="px-3 py-8 text-center text-gray-500"
                   >
-                    {isConnected ? "이벤트를 기다리는 중..." : "연결 중..."}
+                    {isConnected ? "기록을 기다리는 중..." : "연결 중..."}
                   </td>
                 </tr>
               ) : (
@@ -291,7 +291,7 @@ export const GoldenEventStream = ({
 
       {/* Footer Note */}
       <div className="mt-3 text-xs text-gray-500 text-center">
-        최근 100개의 이벤트만 표시됩니다.
+        최근 100개의 기록만 표시됩니다.
       </div>
     </div>
   );

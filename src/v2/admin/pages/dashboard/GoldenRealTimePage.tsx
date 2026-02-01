@@ -68,14 +68,14 @@ export default function GoldenRealTimePage() {
           <div className="flex items-center gap-2 text-amber-500 mb-2">
             <Radio className="w-4 h-4 animate-pulse" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              실시간 모니터링 (Real-time Monitoring)
+              실시간 중계방
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            골든 라이브(Golden Real-time)
+            골든 실시간 중계
           </h1>
           <p className="text-sm text-obsidian-muted mt-1">
-            실시간 게임 이벤트 및 인터벤션 로그를 모니터링합니다.
+            지금 막 터진 게임 기록과 운영자 조치 내역을 생중계로 확인합니다.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -109,14 +109,14 @@ export default function GoldenRealTimePage() {
                   className="data-[state=active]:bg-amber-500/20 data-[state=active]:text-amber-500"
                 >
                   <Activity className="w-4 h-4 mr-2" />
-                  게임 스트림
+                  게임 중계
                 </TabsTrigger>
                 <TabsTrigger
                   value="interventions"
                   className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-500"
                 >
                   <Clock className="w-4 h-4 mr-2" />
-                  인터벤션 로그
+                  특별 관리 기록
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -164,27 +164,27 @@ export default function GoldenRealTimePage() {
         {/* Right Column: Status & Control */}
         <div className="space-y-6">
           <div className="bg-obsidian-surface border border-obsidian-border rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">모니터링 상태</h3>
+            <h3 className="text-lg font-bold text-white mb-4">중계 연결 상태</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-obsidian-muted">WebSocket 연결</span>
+                <span className="text-obsidian-muted">서버 연결</span>
                 <span className={`${wsStatusTone} font-medium`}>
                   {wsStatusLabel}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-obsidian-muted">지연 시간(Latency)</span>
+                <span className="text-obsidian-muted">지연 시간</span>
                 <span className="text-white font-medium">-</span>
               </div>
               <div className="flex justify-between items-center text-sm">
-                <span className="text-obsidian-muted">이벤트 처리율</span>
+                <span className="text-obsidian-muted">데이터 속도</span>
                 <span className="text-white font-medium">{eventRateLabel}</span>
               </div>
             </div>
           </div>
 
           <div className="bg-obsidian-surface border border-obsidian-border rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">빠른 필터</h3>
+            <h3 className="text-lg font-bold text-white mb-4">모아보기</h3>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
@@ -205,7 +205,7 @@ export default function GoldenRealTimePage() {
                 size="sm"
                 className="text-xs border-obsidian-border text-obsidian-muted hover:text-white"
               >
-                인터벤션 발동만
+                특별 조치만
               </Button>
             </div>
           </div>

@@ -61,16 +61,6 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "../../components/ui/dropdown-menu";
-import {
-  Ticket,
-  Gift,
-  Coins,
   Plus,
   Trash2,
   Edit2,
@@ -83,10 +73,6 @@ import {
   BarChart3,
   Settings,
   Save,
-  ChevronDown,
-  ChevronRight,
-  MoreHorizontal,
-  Copy,
   Search,
   ListChecks,
   UserCog,
@@ -96,312 +82,33 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
-import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
-// ─────────────────────────────────────────────────────────────────
-// Constants & Types
-// ─────────────────────────────────────────────────────────────────
+// 분리된 컴포넌트들 import
+import {
+  CollapsibleSection,
+  QuickStat,
+  MissionCard,
+} from "./mission/components";
 
-const REWARD_TYPE_MAPPING: Record<string, string> = {
-  ROULETTE_TICKET: "TICKET_ROULETTE",
-  DICE_TICKET: "TICKET_DICE",
-  LOTTERY_TICKET: "TICKET_LOTTERY",
-  GOLD_KEY_TICKET: "GOLD_KEY",
-  DIAMOND_TICKET: "DIAMOND_KEY",
-};
+// 상수 및 헬퍼 함수 import
+import {
+  MISSION_REWARD_OPTIONS,
+  CATEGORIES,
+  ACTION_TYPE_OPTIONS,
+  LOGIC_KEY_PRESETS,
+  PRESET_RECOMMENDED_ACTION_TYPE,
+  CATEGORY_COLORS,
+} from "./mission/constants/missionConstants";
 
-const MISSION_REWARD_OPTIONS = REWARD_ITEMS.map((item) => ({
-  ...item,
-  value: REWARD_TYPE_MAPPING[item.value] || item.value,
-}));
-
-const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL"] as const;
-
-const ACTION_TYPE_OPTIONS = [
-  { value: "PLAY_GAME", label: "게임 플레이" },
-  { value: "PLAY_DICE", label: "주사위 게임" },
-  { value: "PLAY_ROULETTE", label: "룰렛 게임" },
-  { value: "PLAY_LOTTERY", label: "복권 게임" },
-  { value: "LOGIN", label: "로그인/출석" },
-  { value: "GOLDEN_HOUR_PLAY", label: "골든아워 참가" },
-  { value: "BUY_SHOP_ITEM", label: "상점 구매" },
-  { value: "CC_DEPOSIT", label: "CC 입금" },
-  { value: "JOIN_TELEGRAM_CHANNEL", label: "텔레그램 채널 입장" },
-  { value: "JOIN_CC_CHANNEL", label: "CC 공식채널 입장" },
-  { value: "CONSECUTIVE_LOGIN", label: "다음날 로그인" },
-  { value: "JOIN_CHANNEL", label: "채널 입장" },
-  { value: "SHARE_STORY", label: "스토리 공유" },
-  { value: "INVITE_FRIEND", label: "친구 초대" },
-];
-
-const LOGIC_KEY_PRESETS = [
-  {
-    value: "daily_play_generic",
-    label: "📅 일일 | 게임 플레이",
-    category: "DAILY",
-  },
-  { value: "daily_play_dice", label: "📅 일일 | 주사위", category: "DAILY" },
-  { value: "daily_play_roulette", label: "📅 일일 | 룰렛", category: "DAILY" },
-  { value: "daily_play_lottery", label: "📅 일일 | 복권", category: "DAILY" },
-  {
-    value: "daily_golden_hour",
-    label: "📅 일일 | 골든아워",
-    category: "DAILY",
-  },
-  {
-    value: "daily_shop_purchase",
-    label: "📅 일일 | 상점 구매",
-    category: "DAILY",
-  },
-  {
-    value: "daily_login_gift",
-    label: "📅 일일 | 출석 체크",
-    category: "DAILY",
-  },
-  { value: "daily_cc_deposit", label: "📅 일일 | CC 입금", category: "DAILY" },
-  {
-    value: "weekly_play_generic",
-    label: "📆 주간 | 게임 플레이",
-    category: "WEEKLY",
-  },
-  { value: "weekly_play_dice", label: "📆 주간 | 주사위", category: "WEEKLY" },
-  {
-    value: "weekly_play_roulette",
-    label: "📆 주간 | 룰렛",
-    category: "WEEKLY",
-  },
-  { value: "weekly_play_lottery", label: "📆 주간 | 복권", category: "WEEKLY" },
-  {
-    value: "weekly_golden_hour",
-    label: "📆 주간 | 골든아워",
-    category: "WEEKLY",
-  },
-  {
-    value: "weekly_shop_purchase",
-    label: "📆 주간 | 상점 구매",
-    category: "WEEKLY",
-  },
-  {
-    value: "weekly_login_streak",
-    label: "📆 주간 | 로그인",
-    category: "WEEKLY",
-  },
-  {
-    value: "weekly_cc_deposit",
-    label: "📆 주간 | CC 입금",
-    category: "WEEKLY",
-  },
-  {
-    value: "new_user_first_login",
-    label: "🆕 신규 | 첫 로그인",
-    category: "NEW_USER",
-  },
-  {
-    value: "new_user_first_game",
-    label: "🆕 신규 | 첫 게임",
-    category: "NEW_USER",
-  },
-  {
-    value: "new_user_telegram_join",
-    label: "🆕 신규 | 텔레그램 입장",
-    category: "NEW_USER",
-  },
-  {
-    value: "new_user_cc_channel_join",
-    label: "🆕 신규 | CC 채널 입장",
-    category: "NEW_USER",
-  },
-  {
-    value: "new_user_next_day_login",
-    label: "🆕 신규 | 다음날 로그인",
-    category: "NEW_USER",
-  },
-  {
-    value: "streak_challenge_3",
-    label: "⭐ 스페셜 | 3일 연속",
-    category: "SPECIAL",
-  },
-  { value: "golden_hour", label: "⭐ 스페셜 | 골든아워", category: "SPECIAL" },
-];
-
-const PRESET_RECOMMENDED_ACTION_TYPE: Record<string, string | undefined> = {
-  daily_play_generic: "PLAY_GAME",
-  daily_play_dice: "PLAY_DICE",
-  daily_play_roulette: "PLAY_ROULETTE",
-  daily_play_lottery: "PLAY_LOTTERY",
-  daily_golden_hour: "GOLDEN_HOUR_PLAY",
-  daily_shop_purchase: "BUY_SHOP_ITEM",
-  daily_login_gift: "LOGIN",
-  daily_cc_deposit: "CC_DEPOSIT",
-  weekly_play_generic: "PLAY_GAME",
-  weekly_play_dice: "PLAY_DICE",
-  weekly_play_roulette: "PLAY_ROULETTE",
-  weekly_play_lottery: "PLAY_LOTTERY",
-  weekly_golden_hour: "GOLDEN_HOUR_PLAY",
-  weekly_shop_purchase: "BUY_SHOP_ITEM",
-  weekly_login_streak: "LOGIN",
-  weekly_cc_deposit: "CC_DEPOSIT",
-  new_user_first_login: "LOGIN",
-  new_user_first_game: "PLAY_GAME",
-  new_user_telegram_join: "JOIN_TELEGRAM_CHANNEL",
-  new_user_cc_channel_join: "JOIN_CC_CHANNEL",
-  new_user_next_day_login: "CONSECUTIVE_LOGIN",
-  streak_challenge_3: "LOGIN",
-  golden_hour: "PLAY_GAME",
-};
-
-const PRESET_TITLE_LABELS: Record<string, string> = {
-  daily_play_generic: "게임 플레이",
-  daily_play_dice: "주사위",
-  daily_play_roulette: "룰렛",
-  daily_play_lottery: "복권",
-  daily_golden_hour: "골든아워",
-  daily_shop_purchase: "상점 구매",
-  daily_login_gift: "출석 체크",
-  daily_cc_deposit: "CC 입금",
-  weekly_play_generic: "게임 플레이",
-  weekly_play_dice: "주사위",
-  weekly_play_roulette: "룰렛",
-  weekly_play_lottery: "복권",
-  weekly_golden_hour: "골든아워",
-  weekly_shop_purchase: "상점 구매",
-  weekly_login_streak: "로그인",
-  weekly_cc_deposit: "CC 입금",
-  new_user_first_login: "첫 로그인",
-  new_user_first_game: "첫 게임",
-  new_user_telegram_join: "텔레그램 입장",
-  new_user_cc_channel_join: "CC 채널 입장",
-  new_user_next_day_login: "다음날 로그인",
-  streak_challenge_3: "연속 출석",
-  golden_hour: "골든아워 게임",
-};
-
-const CATEGORY_PREFIX: Record<string, string> = {
-  DAILY: "일일",
-  WEEKLY: "주간",
-  NEW_USER: "신규",
-  SPECIAL: "스페셜",
-};
-
-const CATEGORY_COLORS: Record<
-  string,
-  { bg: string; text: string; border: string }
-> = {
-  DAILY: {
-    bg: "bg-emerald-500/10",
-    text: "text-emerald-400",
-    border: "border-emerald-500/20",
-  },
-  WEEKLY: {
-    bg: "bg-indigo-500/10",
-    text: "text-indigo-400",
-    border: "border-indigo-500/20",
-  },
-  NEW_USER: {
-    bg: "bg-cyan-500/10",
-    text: "text-cyan-400",
-    border: "border-cyan-500/20",
-  },
-  SPECIAL: {
-    bg: "bg-amber-500/10",
-    text: "text-amber-400",
-    border: "border-amber-500/20",
-  },
-  SPECIAL_EVENT: {
-    bg: "bg-amber-500/10",
-    text: "text-amber-400",
-    border: "border-amber-500/20",
-  },
-};
-
-// ─────────────────────────────────────────────────────────────────
-// Helper Functions
-// ─────────────────────────────────────────────────────────────────
-
-const isGoldenHourLogicKey = (logicKey: string) =>
-  String(logicKey || "")
-    .toLowerCase()
-    .includes("golden_hour");
-
-const getCategoryMeaning = (category: string) => {
-  const cat = String(category || "").toUpperCase();
-  if (cat === "DAILY") return "일일(09:00 KST 리셋)";
-  if (cat === "WEEKLY") return "주간(ISO Week 리셋)";
-  if (cat === "NEW_USER") return "신규 유저(가입 7일 이내)";
-  if (cat === "SPECIAL") return "스페셜(리셋 없음)";
-  return cat;
-};
-
-const getPresetCategory = (preset: string): string => {
-  const p = LOGIC_KEY_PRESETS.find((item) => item.value === preset);
-  return p?.category || "DAILY";
-};
-
-const generateLogicKey = (
-  preset: string,
-  category: string,
-  targetValue: number,
-) => {
-  const base = String(preset || "custom").toUpperCase();
-  const cat = String(category || "DAILY").toUpperCase();
-  const tv = Math.max(1, Math.floor(Number(targetValue) || 1));
-  return `${cat}_${base}_${tv}`;
-};
-
-const generateTitle = (
-  preset: string,
-  category: string,
-  targetValue: number,
-) => {
-  const catLabel = CATEGORY_PREFIX[category] || category;
-  const presetLabel = PRESET_TITLE_LABELS[preset] || "미션";
-  const tv = Math.max(1, Math.floor(Number(targetValue) || 1));
-  return `${catLabel} ${presetLabel} ${tv}회`;
-};
-
-const normalizeLogicKey = (value: string) =>
-  String(value || "")
-    .trim()
-    .toUpperCase();
-
-const getTrendHeightClass = (value: number, max: number) => {
-  const base = Math.max(1, max);
-  const percent = Math.max(0, Math.min(100, (value / base) * 100));
-  const step = Math.round(percent / 5) * 5;
-  const key = `h${step}` as keyof typeof styles;
-  return styles[key] ?? styles.h0;
-};
-
-const getRewardIcon = (type: string) => {
-  switch (type) {
-    case "TICKET_ROULETTE":
-    case "TICKET_DICE":
-    case "TICKET_LOTTERY":
-    case "ROULETTE_TICKET":
-    case "DICE_TICKET":
-    case "LOTTERY_TICKET":
-      return <Ticket className="w-4 h-4 text-emerald-400" />;
-    case "VAULT":
-      return <Coins className="w-4 h-4 text-yellow-400" />;
-    case "DIAMOND":
-      return <Coins className="w-4 h-4 text-sky-400" />;
-    case "GOLD_KEY":
-    case "DIAMOND_KEY":
-    case "GOLD_KEY_TICKET":
-    case "DIAMOND_TICKET":
-      return <Gift className="w-4 h-4 text-purple-400" />;
-    case "GOLD_KEY_FRAGMENT":
-    case "DIAMOND_FRAGMENT":
-      return <Gift className="w-4 h-4 text-amber-400" />;
-    case "PUZZLE_C1":
-    case "PUZZLE_C2":
-    case "PUZZLE_J":
-    case "PUZZLE_M":
-      return <Gift className="w-4 h-4 text-indigo-400" />;
-    default:
-      return <Coins className="w-4 h-4 text-zinc-400" />;
-  }
-};
+import {
+  isGoldenHourLogicKey,
+  getCategoryMeaning,
+  getPresetCategory,
+  generateLogicKey,
+  generateTitle,
+  normalizeLogicKey,
+  getTrendHeightClass,
+} from "./mission/utils/missionHelpers";
 
 // ─────────────────────────────────────────────────────────────────
 // Types
@@ -417,247 +124,6 @@ interface StreakRule {
   day: number;
   enabled: boolean;
   grants: StreakGrant[];
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Collapsible Section Component
-// ─────────────────────────────────────────────────────────────────
-
-interface CollapsibleSectionProps {
-  title: string;
-  subtitle?: string;
-  icon: React.ReactNode;
-  iconColor?: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-  badge?: React.ReactNode;
-}
-
-function CollapsibleSection({
-  title,
-  subtitle,
-  icon,
-  iconColor = "text-zinc-400",
-  defaultOpen = false,
-  children,
-  badge,
-}: CollapsibleSectionProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <Card className="bg-[#18181B] border-white/5 overflow-hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-lg bg-white/5", iconColor)}>
-            {icon}
-          </div>
-          <div className="text-left">
-            <h3 className="text-base font-semibold text-zinc-100">{title}</h3>
-            {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
-          </div>
-          {badge}
-        </div>
-        <div className="flex items-center gap-2">
-          {isOpen ? (
-            <ChevronDown className="w-5 h-5 text-zinc-500" />
-          ) : (
-            <ChevronRight className="w-5 h-5 text-zinc-500" />
-          )}
-        </div>
-      </button>
-      {isOpen && (
-        <div className="px-4 pb-4 pt-0 border-t border-white/5">
-          <div className="pt-4">{children}</div>
-        </div>
-      )}
-    </Card>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Quick Stats Card Component
-// ─────────────────────────────────────────────────────────────────
-
-interface QuickStatProps {
-  label: string;
-  value: string | number;
-  change?: number;
-  icon: React.ReactNode;
-  color: string;
-}
-
-function QuickStat({ label, value, change, icon, color }: QuickStatProps) {
-  return (
-    <div className={cn("p-4 rounded-xl border", color)}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-zinc-400 font-medium">{label}</span>
-        {icon}
-      </div>
-      <div className="text-2xl font-bold text-white">{value}</div>
-      {change !== undefined && (
-        <div
-          className={cn(
-            "text-xs mt-1",
-            change >= 0 ? "text-emerald-400" : "text-red-400",
-          )}
-        >
-          <TrendingUp className="w-3 h-3 inline mr-1" />
-          {change >= 0 ? "+" : ""}
-          {(change * 100).toFixed(1)}%
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Mission Card Component
-// ─────────────────────────────────────────────────────────────────
-
-interface MissionCardProps {
-  mission: AdminMissionDto;
-  onEdit: () => void;
-  onDelete: () => void;
-  onToggleActive: (active: boolean) => void;
-  onDuplicate: () => void;
-}
-
-function MissionCard({
-  mission,
-  onEdit,
-  onDelete,
-  onToggleActive,
-  onDuplicate,
-}: MissionCardProps) {
-  const categoryStyle =
-    CATEGORY_COLORS[mission.category] ?? CATEGORY_COLORS.DAILY;
-  const rewardLabel =
-    MISSION_REWARD_OPTIONS.find((r) => r.value === mission.rewardType)?.label ||
-    mission.rewardType;
-
-  return (
-    <div className="group relative bg-[#0D0D0F] rounded-xl border border-white/5 hover:border-white/10 transition-all overflow-hidden">
-      {/* Status indicator */}
-      <div
-        className={cn(
-          "absolute top-0 left-0 w-1 h-full",
-          mission.isActive ? "bg-emerald-500" : "bg-zinc-600",
-        )}
-      />
-
-      <div className="p-4 pl-5">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Mission Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <h4 className="font-semibold text-zinc-100 truncate">
-                {mission.title}
-              </h4>
-              {!mission.isActive && (
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] h-5 bg-zinc-800 text-zinc-400"
-                >
-                  비활성
-                </Badge>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <Badge
-                className={cn(
-                  "text-[10px]",
-                  categoryStyle.bg,
-                  categoryStyle.text,
-                  categoryStyle.border,
-                )}
-              >
-                {mission.category}
-              </Badge>
-              <span className="text-zinc-500">•</span>
-              <span className="text-zinc-400 font-mono">
-                {mission.actionType || "N/A"}
-              </span>
-              <span className="text-zinc-500">•</span>
-              <span className="text-zinc-400">
-                목표: {mission.targetValue}회
-              </span>
-            </div>
-
-            {mission.condition && (
-              <p className="text-xs text-zinc-500 mt-2 truncate">
-                {mission.condition}
-              </p>
-            )}
-          </div>
-
-          {/* Right: Reward & Actions */}
-          <div className="flex items-center gap-3">
-            {/* Reward Display */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5">
-              {getRewardIcon(mission.rewardType)}
-              <span className="text-sm font-medium text-zinc-200">
-                {mission.rewardAmount}
-              </span>
-              <span className="text-[10px] text-zinc-500 max-w-20 truncate">
-                {rewardLabel}
-              </span>
-            </div>
-
-            {/* Toggle */}
-            <Switch
-              checked={mission.isActive}
-              onCheckedChange={onToggleActive}
-              className="data-[state=checked]:bg-emerald-500"
-            />
-
-            {/* Actions Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-zinc-500 hover:text-white"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="bg-[#18181B] border-white/10 text-white"
-              >
-                <DropdownMenuItem
-                  onClick={onEdit}
-                  className="cursor-pointer hover:bg-white/5"
-                >
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  편집
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={onDuplicate}
-                  className="cursor-pointer hover:bg-white/5"
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  복제
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem
-                  onClick={onDelete}
-                  className="cursor-pointer hover:bg-red-500/10 text-red-400 focus:text-red-400"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  삭제
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1209,7 +675,12 @@ export default function MissionManagerPage() {
             <TabsList className="grid w-full grid-cols-4 bg-[#18181B] border border-white/5">
               {CATEGORIES.map((cat) => {
                 const count = missions.filter((m) => m.category === cat).length;
-                const style = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.DAILY;
+                const style: { bg: string; text: string; border: string } =
+                  CATEGORY_COLORS[cat] ?? {
+                    bg: "bg-emerald-500/10",
+                    text: "text-emerald-400",
+                    border: "border-emerald-500/20",
+                  };
                 return (
                   <TabsTrigger
                     key={cat}
@@ -1261,68 +732,123 @@ export default function MissionManagerPage() {
             </TabsContent>
           </Tabs>
 
-          {/* Streak Rules Section */}
+          {/* Streak Rules Section - Full CRUD */}
           <CollapsibleSection
-            title="스트릭 보상 규칙"
-            subtitle="연속 출석 일수별 보상 조건"
+            title="스트릭 보상 규칙 설정"
+            subtitle="연속 출석 일수별 보상 조건 관리 (CRUD)"
             icon={<Settings className="w-4 h-4" />}
             iconColor="text-blue-400"
+            badge={
+              <Badge
+                variant="outline"
+                className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[10px]"
+              >
+                {editingRules.length}개 규칙
+              </Badge>
+            }
           >
             <div className="space-y-4">
-              <div className="flex justify-end gap-2">
-                {isRulesEditing ? (
-                  <>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap justify-between items-center gap-2">
+                <div className="flex items-center gap-2">
+                  {isRulesEditing && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                      onClick={() => {
+                        const existingDays = editingRules.map((r) => r.day);
+                        let newDay = 1;
+                        while (existingDays.includes(newDay)) newDay++;
+                        const newRule: StreakRule = {
+                          day: newDay,
+                          enabled: true,
+                          grants: [
+                            {
+                              kind: "WALLET" as const,
+                              token_type: "ROULETTE_TICKET",
+                              amount: 1,
+                            },
+                          ],
+                        };
+                        setEditingRules(
+                          [...editingRules, newRule].sort(
+                            (a, b) => a.day - b.day,
+                          ),
+                        );
+                      }}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      규칙 추가
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {isRulesEditing ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (streakRulesConfig?.value) {
+                            const config = streakRulesConfig.value as {
+                              rules?: StreakRule[];
+                            };
+                            setEditingRules(config.rules || []);
+                          }
+                          setIsRulesEditing(false);
+                        }}
+                      >
+                        취소
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-blue-500 hover:bg-blue-600"
+                        disabled={updateRulesMutation.isPending}
+                        onClick={() => {
+                          updateRulesMutation.mutate({
+                            key: "streak_reward_rules",
+                            payload: { value: { rules: editingRules } },
+                          });
+                          setIsRulesEditing(false);
+                        }}
+                      >
+                        {updateRulesMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-1" />
+                        )}
+                        저장
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       size="sm"
                       variant="secondary"
-                      onClick={() => {
-                        if (streakRulesConfig?.value) {
-                          const config = streakRulesConfig.value as {
-                            rules?: StreakRule[];
-                          };
-                          setEditingRules(config.rules || []);
-                        }
-                        setIsRulesEditing(false);
-                      }}
+                      onClick={() => setIsRulesEditing(true)}
                     >
-                      취소
+                      <Edit2 className="w-4 h-4 mr-1" />
+                      편집 모드
                     </Button>
-                    <Button
-                      size="sm"
-                      className="bg-blue-500 hover:bg-blue-600"
-                      onClick={() => {
-                        updateRulesMutation.mutate({
-                          key: "streak_reward_rules",
-                          payload: { value: { rules: editingRules } },
-                        });
-                        setIsRulesEditing(false);
-                      }}
-                    >
-                      <Save className="w-4 h-4 mr-1" />
-                      저장
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setIsRulesEditing(true)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    편집
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
 
+              {/* Rules Grid */}
               {isRulesLoading ? (
-                <div className="text-sm text-zinc-500">로딩 중...</div>
+                <div className="flex items-center justify-center py-8 text-zinc-500">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  로딩 중...
+                </div>
               ) : editingRules.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500 border border-dashed border-white/10 rounded-lg">
-                  보상 규칙이 없습니다.
+                <div className="text-center py-12 border border-dashed border-white/10 rounded-xl">
+                  <Flame className="w-8 h-8 mx-auto mb-3 text-zinc-600" />
+                  <p className="text-zinc-500 mb-4">
+                    등록된 보상 규칙이 없습니다.
+                  </p>
                   <Button
                     size="sm"
-                    variant="link"
-                    className="ml-2 text-blue-400"
+                    className="bg-blue-500 hover:bg-blue-600"
                     onClick={() => {
                       setEditingRules([
                         {
@@ -1332,6 +858,16 @@ export default function MissionManagerPage() {
                             {
                               kind: "WALLET",
                               token_type: "ROULETTE_TICKET",
+                              amount: 1,
+                            },
+                            {
+                              kind: "WALLET",
+                              token_type: "DICE_TICKET",
+                              amount: 1,
+                            },
+                            {
+                              kind: "WALLET",
+                              token_type: "LOTTERY_TICKET",
                               amount: 1,
                             },
                           ],
@@ -1347,41 +883,99 @@ export default function MissionManagerPage() {
                             },
                           ],
                         },
+                        {
+                          day: 14,
+                          enabled: true,
+                          grants: [
+                            {
+                              kind: "WALLET",
+                              token_type: "DIAMOND",
+                              amount: 2,
+                            },
+                          ],
+                        },
+                        {
+                          day: 30,
+                          enabled: true,
+                          grants: [
+                            {
+                              kind: "WALLET",
+                              token_type: "DIAMOND",
+                              amount: 5,
+                            },
+                          ],
+                        },
                       ]);
                       setIsRulesEditing(true);
                     }}
                   >
+                    <Plus className="w-4 h-4 mr-1" />
                     기본 규칙 생성
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="space-y-3">
                   {editingRules.map((rule, ruleIdx) => (
                     <div
-                      key={rule.day}
+                      key={`rule-${rule.day}-${ruleIdx}`}
                       className={cn(
-                        "p-4 rounded-lg border",
+                        "p-4 rounded-xl border transition-all",
                         rule.enabled
-                          ? "bg-black/30 border-white/10"
-                          : "bg-zinc-900/50 border-white/5 opacity-60",
+                          ? "bg-gradient-to-r from-black/40 to-black/20 border-white/10"
+                          : "bg-zinc-900/30 border-white/5 opacity-50",
                       )}
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge
-                          className={
-                            rule.day <= 3
-                              ? "bg-orange-500/20 text-orange-400"
-                              : rule.day <= 7
-                                ? "bg-purple-500/20 text-purple-400"
-                                : "bg-blue-500/20 text-blue-400"
-                          }
-                        >
-                          {rule.day}일차
-                        </Badge>
-                        {isRulesEditing && (
+                      {/* Rule Header */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-3">
+                          {isRulesEditing ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min={1}
+                                max={365}
+                                value={rule.day}
+                                onChange={(e) => {
+                                  const newDay = parseInt(e.target.value) || 1;
+                                  const newRules = [...editingRules];
+                                  newRules[ruleIdx] = { ...rule, day: newDay };
+                                  setEditingRules(
+                                    newRules.sort((a, b) => a.day - b.day),
+                                  );
+                                }}
+                                className="w-20 h-8 bg-black/50 border-white/10 text-center font-bold"
+                              />
+                              <span className="text-zinc-400 text-sm">
+                                일차
+                              </span>
+                            </div>
+                          ) : (
+                            <Badge
+                              className={cn(
+                                "text-base px-3 py-1",
+                                rule.day <= 3
+                                  ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                                  : rule.day <= 7
+                                    ? "bg-purple-500/20 text-purple-400 border-purple-500/30"
+                                    : rule.day <= 14
+                                      ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                                      : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+                              )}
+                            >
+                              <Flame className="w-4 h-4 mr-1" />
+                              {rule.day}일차
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-3">
                           <div className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-500">
+                              활성화
+                            </span>
                             <Switch
                               checked={rule.enabled}
+                              disabled={!isRulesEditing}
                               onCheckedChange={(checked) => {
                                 const newRules = [...editingRules];
                                 newRules[ruleIdx] = {
@@ -1391,46 +985,228 @@ export default function MissionManagerPage() {
                                 setEditingRules(newRules);
                               }}
                             />
+                          </div>
+                          {isRulesEditing && (
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 w-6 p-0 text-red-400"
+                              className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10"
                               onClick={() =>
                                 setEditingRules(
                                   editingRules.filter((_, i) => i !== ruleIdx),
                                 )
                               }
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
+
+                      {/* Grants List */}
                       <div className="space-y-2">
-                        {rule.grants.map((grant, grantIdx) => (
-                          <div
-                            key={grantIdx}
-                            className="flex items-center gap-2 text-sm"
-                          >
-                            <Badge
-                              variant="outline"
-                              className="bg-white/5 border-white/10 text-[10px]"
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-zinc-500 uppercase">
+                            보상 목록
+                          </Label>
+                          {isRulesEditing && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-xs text-emerald-400 hover:bg-emerald-500/10"
+                              onClick={() => {
+                                const newRules = [...editingRules];
+                                newRules[ruleIdx] = {
+                                  ...rule,
+                                  grants: [
+                                    ...rule.grants,
+                                    {
+                                      kind: "WALLET",
+                                      token_type: "ROULETTE_TICKET",
+                                      amount: 1,
+                                    },
+                                  ],
+                                };
+                                setEditingRules(newRules);
+                              }}
                             >
-                              {grant.kind}
-                            </Badge>
-                            <span className="text-zinc-300 text-xs truncate">
-                              {grant.token_type}
-                            </span>
-                            <span className="text-emerald-400 font-bold text-xs">
-                              x{grant.amount}
-                            </span>
-                          </div>
-                        ))}
+                              <Plus className="w-3 h-3 mr-1" />
+                              보상 추가
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="grid gap-2">
+                          {rule.grants.map((grant, grantIdx) => (
+                            <div
+                              key={`grant-${ruleIdx}-${grantIdx}`}
+                              className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-black/30 border border-white/5"
+                            >
+                              {isRulesEditing ? (
+                                <>
+                                  <Select
+                                    value={grant.kind}
+                                    onValueChange={(
+                                      value: "WALLET" | "INVENTORY",
+                                    ) => {
+                                      const newRules = [...editingRules];
+                                      const targetRule = newRules[ruleIdx];
+                                      if (targetRule) {
+                                        targetRule.grants[grantIdx] = {
+                                          ...grant,
+                                          kind: value,
+                                        };
+                                      }
+                                      setEditingRules(newRules);
+                                    }}
+                                  >
+                                    <SelectTrigger className="w-28 h-8 bg-black/50 border-white/10 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                                      <SelectItem value="WALLET">
+                                        WALLET
+                                      </SelectItem>
+                                      <SelectItem value="INVENTORY">
+                                        INVENTORY
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Select
+                                    value={grant.token_type}
+                                    onValueChange={(value) => {
+                                      const newRules = [...editingRules];
+                                      const targetRule = newRules[ruleIdx];
+                                      if (targetRule) {
+                                        targetRule.grants[grantIdx] = {
+                                          ...grant,
+                                          token_type: value,
+                                        };
+                                      }
+                                      setEditingRules(newRules);
+                                    }}
+                                  >
+                                    <SelectTrigger className="flex-1 min-w-32 h-8 bg-black/50 border-white/10 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-48">
+                                      <SelectItem value="ROULETTE_TICKET">
+                                        룰렛 티켓
+                                      </SelectItem>
+                                      <SelectItem value="DICE_TICKET">
+                                        주사위 티켓
+                                      </SelectItem>
+                                      <SelectItem value="LOTTERY_TICKET">
+                                        복권 티켓
+                                      </SelectItem>
+                                      <SelectItem value="GOLD_KEY">
+                                        골드 키
+                                      </SelectItem>
+                                      <SelectItem value="DIAMOND">
+                                        다이아몬드
+                                      </SelectItem>
+                                      <SelectItem value="VAULT">
+                                        금고 적립금
+                                      </SelectItem>
+                                      <SelectItem value="XP">경험치</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+
+                                  <Input
+                                    type="number"
+                                    min={1}
+                                    value={grant.amount}
+                                    onChange={(e) => {
+                                      const newRules = [...editingRules];
+                                      const targetRule = newRules[ruleIdx];
+                                      if (targetRule) {
+                                        targetRule.grants[grantIdx] = {
+                                          ...grant,
+                                          amount: parseInt(e.target.value) || 1,
+                                        };
+                                      }
+                                      setEditingRules(newRules);
+                                    }}
+                                    className="w-20 h-8 bg-black/50 border-white/10 text-center text-xs"
+                                  />
+
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 text-red-400 hover:bg-red-500/10"
+                                    onClick={() => {
+                                      const newRules = [...editingRules];
+                                      const targetRule = newRules[ruleIdx];
+                                      if (targetRule) {
+                                        targetRule.grants = rule.grants.filter(
+                                          (_, i) => i !== grantIdx,
+                                        );
+                                      }
+                                      setEditingRules(newRules);
+                                    }}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-white/5 border-white/10 text-[10px]"
+                                  >
+                                    {grant.kind}
+                                  </Badge>
+                                  <span className="text-zinc-300 text-sm">
+                                    {grant.token_type === "ROULETTE_TICKET"
+                                      ? "룰렛 티켓"
+                                      : grant.token_type === "DICE_TICKET"
+                                        ? "주사위 티켓"
+                                        : grant.token_type === "LOTTERY_TICKET"
+                                          ? "복권 티켓"
+                                          : grant.token_type === "GOLD_KEY"
+                                            ? "골드 키"
+                                            : grant.token_type === "DIAMOND"
+                                              ? "다이아몬드"
+                                              : grant.token_type === "VAULT"
+                                                ? "금고 적립금"
+                                                : grant.token_type === "XP"
+                                                  ? "경험치"
+                                                  : grant.token_type}
+                                  </span>
+                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                                    x{grant.amount}
+                                  </Badge>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                          {rule.grants.length === 0 && (
+                            <div className="text-center py-3 text-zinc-500 text-xs border border-dashed border-white/10 rounded-lg">
+                              보상이 없습니다. 추가해주세요.
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+
+              {/* Info Box */}
+              <div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                <div className="flex items-start gap-2 text-xs text-blue-400">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold mb-1">스트릭 보상 작동 방식</p>
+                    <ul className="text-blue-400/80 space-y-0.5">
+                      <li>• 유저가 해당 일차에 도달하면 보상 클레임 가능</li>
+                      <li>• 한 번 클레임한 마일스톤은 다시 클레임 불가</li>
+                      <li>• 비활성화된 규칙은 보상 지급되지 않음</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </CollapsibleSection>
         </TabsContent>

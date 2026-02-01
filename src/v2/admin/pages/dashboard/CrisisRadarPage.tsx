@@ -48,20 +48,20 @@ export default function CrisisRadarPage() {
   return (
     <div className="p-6 space-y-8 bg-obsidian-bg min-h-screen text-white">
       {/* Header */}
+      {/* Header */}
       <div className="flex justify-between items-end">
         <div>
           <div className="flex items-center gap-2 text-red-500 mb-2">
             <ShieldAlert className="w-4 h-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
-              골든 아워 레이더 (Golden Hour Radar)
+              떠날 사람 레이더 (이탈 감지기)
             </span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
-            위기 레이더(Crisis Radar)
+            이탈 위험 감지(Crisis Radar)
           </h1>
           <p className="text-sm text-obsidian-muted mt-1">
-            AI가 실시간으로 분석한 이탈 위기 사용자 목록입니다. 즉각적인 개입이
-            필요한 시점입니다.
+            AI가 분석한 곧 떠날 것 같은 위험 유저 목록입니다. 지금 바로 선물을 줘서 붙잡아야 합니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -69,10 +69,10 @@ export default function CrisisRadarPage() {
             variant="outline"
             className="border-obsidian-border text-obsidian-muted hover:text-white hover:bg-white/5"
           >
-            일괄 개입 (Bulk Action)
+            한 번에 선물 주기
           </Button>
           <Button className="bg-red-500 text-white hover:bg-red-600">
-            레이더 감도 설정
+            이탈 감지 예민도 설정
           </Button>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default function CrisisRadarPage() {
         <Card className="bg-obsidian-surface border-red-500/20 bg-red-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-red-400 uppercase tracking-widest">
-              Urgent (심각)
+              매우 위험 (긴급)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -90,14 +90,14 @@ export default function CrisisRadarPage() {
               {riskyUsers.filter((u) => u.riskLevel === "HIGH").length}
             </div>
             <p className="text-[10px] text-red-400/60 mt-1">
-              즉각적인 개입 필요
+              지금 바로 조치 필요
             </p>
           </CardContent>
         </Card>
         <Card className="bg-obsidian-surface border-amber-500/20 bg-amber-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-amber-400 uppercase tracking-widest">
-              Warning (주의)
+              주의 (관심 필요)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -105,14 +105,14 @@ export default function CrisisRadarPage() {
               {riskyUsers.filter((u) => u.riskLevel === "MEDIUM").length}
             </div>
             <p className="text-[10px] text-amber-400/60 mt-1">
-              이탈 가능성 증가 중
+              나갈 징후 보임
             </p>
           </CardContent>
         </Card>
         <Card className="bg-obsidian-surface border-obsidian-muted/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-obsidian-muted uppercase tracking-widest">
-              평균 이탈 위험도 (Avg Churn Score)
+              평균 이탈 위험도
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -122,7 +122,7 @@ export default function CrisisRadarPage() {
                 : `${Math.round(avgChurnScore * 100)}%`}
             </div>
             <p className="text-[10px] text-zinc-500 mt-1">
-              레이더 탐지 정확도:{" "}
+              정확도:{" "}
               {typeof radarAccuracy === "number"
                 ? `${Math.round(radarAccuracy * 100)}%`
                 : "데이터 없음"}
@@ -132,7 +132,7 @@ export default function CrisisRadarPage() {
         <Card className="bg-obsidian-surface border-indigo-500/20 bg-indigo-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold text-indigo-400 uppercase tracking-widest">
-              오늘의 개입 건수
+              오늘의 조치 건수
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -142,7 +142,7 @@ export default function CrisisRadarPage() {
                 : "-"}
             </div>
             <p className="text-[10px] text-indigo-400/60 mt-1">
-              성공률:{" "}
+              성공률(다시 돌아온 비율):{" "}
               {typeof interventionSuccessRate === "number"
                 ? `${Math.round(interventionSuccessRate * 100)}%`
                 : "데이터 없음"}
@@ -154,7 +154,7 @@ export default function CrisisRadarPage() {
       {/* User Table / List */}
       <Card className="bg-obsidian-surface border-obsidian-border">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <CardTitle className="text-lg">위험 유저 리스트</CardTitle>
+          <CardTitle className="text-lg">곧 떠날 위험 유저 목록</CardTitle>
           <div className="flex gap-2">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -180,11 +180,11 @@ export default function CrisisRadarPage() {
               <thead className="text-[10px] text-zinc-500 uppercase tracking-wider border-y border-obsidian-border bg-white/5">
                 <tr>
                   <th className="px-6 py-3 font-medium">사용자명</th>
-                  <th className="px-6 py-3 font-medium">위험 점수</th>
-                  <th className="px-6 py-3 font-medium">위험 단계</th>
-                  <th className="px-6 py-3 font-medium">탐지 사유</th>
+                  <th className="px-6 py-3 font-medium">이탈 위험 점수</th>
+                  <th className="px-6 py-3 font-medium">심각도</th>
+                  <th className="px-6 py-3 font-medium">왜 떠나려 하나요?</th>
                   <th className="px-6 py-3 font-medium text-right">
-                    빠른 작업
+                    지금 바로 조치
                   </th>
                 </tr>
               </thead>
@@ -222,16 +222,16 @@ export default function CrisisRadarPage() {
                       <td className="px-6 py-4">
                         {u.riskLevel === "HIGH" ? (
                           <Badge className="bg-red-500/10 text-red-500 border-none h-5 text-[10px]">
-                            심각 (CRITICAL)
+                            매우 위험
                           </Badge>
                         ) : (
                           <Badge className="bg-amber-500/10 text-amber-500 border-none h-5 text-[10px]">
-                            주의 (WARNING)
+                            주의
                           </Badge>
                         )}
                       </td>
                       <td className="px-6 py-4 text-zinc-500 text-xs">
-                        {u.riskReason || "비정상적 연속 손실 감지됨"}
+                        {u.riskReason || "너무 많이 잃고 있음"}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1">
@@ -239,7 +239,7 @@ export default function CrisisRadarPage() {
                             size="icon"
                             variant="ghost"
                             className="h-8 w-8 text-zinc-500 hover:text-indigo-400"
-                            title="회생 선물 (Bailout)"
+                            title="회생 선물 (위로금)"
                           >
                             <Zap className="w-3.5 h-3.5" />
                           </Button>

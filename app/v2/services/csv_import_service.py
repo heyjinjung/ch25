@@ -34,6 +34,26 @@ class CSVImportService:
         self.redis_service = redis_service or CSVToRedisService()
         self._user_cache: dict[int, bool] = {}  # user_id -> exists
 
+        # Header mapping for localized CSVs (Korean -> English)
+        self._header_map = {
+            "기록 일시": "timestamp",
+            "시간": "timestamp",
+            "유저 ID": "user_id",
+            "사용자 ID": "user_id",
+            "게임 종류": "game_type",
+            "게임 타입": "game_type",
+            "결과": "result",
+            "배팅 금액": "bet_amount",
+            "배팅액": "bet_amount",
+            "지급 금액": "payout_amount",
+            "지급액": "payout_amount",
+            "게임 후 잔액": "balance_after",
+            "최종 잔액": "balance_after",
+            "외부 아이디": "external_user_id",
+            "세션 ID": "session_id",
+            "기타 정보": "game_metadata",
+        }
+
     def validate_csv_file(self, file_path: str) -> tuple[bool, str]:
         """
         Validate CSV file structure and format.
@@ -62,7 +82,7 @@ class CSVImportService:
             with path.open(encoding="utf-8") as f:
                 reader = csv.DictReader(f)
 
-                # Validate headers
+                # Validate headers with alias support
                 expected_headers = {
                     "timestamp",
                     "user_id",
@@ -72,20 +92,31 @@ class CSVImportService:
                     "payout_amount",
                     "balance_after",
                 }
-                actual_headers = set(reader.fieldnames or [])
+                
+                # Map actual headers to English keys
+                actual_headers_raw = reader.fieldnames or []
+                mapped_headers = []
+                for h in actual_headers_raw:
+                    clean_h = h.strip()
+                    mapped_headers.append(self._header_map.get(clean_h, clean_h))
+                
+                actual_headers_set = set(mapped_headers)
 
-                missing = expected_headers - actual_headers
+                missing = expected_headers - actual_headers_set
                 if missing:
-                    return False, f"Missing required columns: {', '.join(missing)}"
+                    return False, f"Missing required columns (or aliases): {', '.join(missing)}"
 
                 # Try parsing first row
                 first_row = next(reader, None)
                 if first_row is None:
                     return False, "CSV file is empty (no data rows)"
 
+                # Map first row keys
+                mapped_row = {self._header_map.get(k.strip(), k.strip()): v for k, v in first_row.items()}
+
                 # Validate first row
                 try:
-                    ExternalCasinoGameLogCSV(**first_row)
+                    ExternalCasinoGameLogCSV(**mapped_row)
                 except ValidationError as e:
                     errors = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in e.errors()])
                     return False, f"First row validation failed: {errors}"
@@ -118,7 +149,9 @@ class CSVImportService:
 
             for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
                 try:
-                    record = ExternalCasinoGameLogCSV(**row)
+                    # Map row keys using aliases
+                    mapped_row = {self._header_map.get(k.strip(), k.strip()): v for k, v in row.items()}
+                    record = ExternalCasinoGameLogCSV(**mapped_row)
                     batch.append(record)
 
                     if len(batch) >= batch_size:

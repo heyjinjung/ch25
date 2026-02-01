@@ -30,7 +30,12 @@ from app.v2.schemas.v2_admin_user import (
     ForceGrantMilestoneResponse,
     DistributeMilestoneRequest,
     DistributeMilestoneResponse,
+    DistributeMilestoneRequest,
+    DistributeMilestoneResponse,
 )
+from app.v2.services.ui_config_service import UiConfigService
+from typing import Dict, Any, List
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/streak-rewards", tags=["v2-admin-streak"])
 logger = logging.getLogger(__name__)

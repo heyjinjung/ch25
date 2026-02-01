@@ -94,14 +94,15 @@ export default function CSVImportPage() {
   return (
     <div className="p-6 space-y-6 bg-obsidian-bg min-h-screen text-white">
       {/* Header */}
+      {/* Header */}
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
             <Upload className="w-8 h-8 text-indigo-400" />
-            외부 게임 로그 임포트
+            기초 데이터 반입 (CSV)
           </h1>
           <p className="text-sm text-zinc-400">
-            외부 카지노 플랫폼의 CSV 로그를 시스템에 통합하고 분석합니다.
+            외부 플랫폼의 기록(CSV)을 시스템에 가져와서 정밀 분석합니다.
           </p>
         </div>
         <div className="flex gap-2">
@@ -120,25 +121,25 @@ export default function CSVImportPage() {
         <StepIndicator
           active={step === "SELECT"}
           done={["VALIDATE", "IMPORTING", "RESULT"].includes(step)}
-          label="파일 선택"
+          label="1. 파일 고르기"
         />
         <ArrowRight className="w-4 h-4 text-zinc-600" />
         <StepIndicator
           active={step === "VALIDATE"}
           done={["IMPORTING", "RESULT"].includes(step)}
-          label="검증 및 설정"
+          label="2. 꼼꼼히 확인하기"
         />
         <ArrowRight className="w-4 h-4 text-zinc-600" />
         <StepIndicator
           active={step === "IMPORTING"}
           done={["RESULT"].includes(step)}
-          label="처리 중"
+          label="3. 시스템에 넣는 중"
         />
         <ArrowRight className="w-4 h-4 text-zinc-600" />
         <StepIndicator
           active={step === "RESULT"}
           done={false}
-          label="분석 결과"
+          label="4. 결과 한눈에 보기"
         />
       </div>
 
@@ -153,7 +154,7 @@ export default function CSVImportPage() {
               <div className="space-y-2">
                 <h3 className="text-xl font-bold">CSV 파일을 업로드하세요</h3>
                 <p className="text-zinc-500 text-sm max-w-md mx-auto">
-                  시스템에서 정의한 표준 CSV 형식을 준수해야 합니다.
+                  양식에 맞는 CSV 파일만 인식이 가능합니다.
                 </p>
               </div>
 
@@ -161,7 +162,7 @@ export default function CSVImportPage() {
               <div className="w-full max-w-sm space-y-3 bg-zinc-900/50 border border-white/5 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-sm font-semibold text-zinc-300">
                   <Info className="w-4 h-4" />
-                  데이터 타입 선택
+                  어떤 데이터를 가져올까요?
                 </div>
                 <div className="flex flex-col gap-3">
                   <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-black/20 hover:bg-black/40 transition-colors border border-white/5">
@@ -174,9 +175,9 @@ export default function CSVImportPage() {
                       className="w-4 h-4 text-indigo-600"
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-white">외부 게임 로그 (기본)</div>
-                      <div className="text-xs text-zinc-500">
-                        timestamp, user_id, game_type, result, bet, payout...
+                      <div className="text-sm font-medium text-white text-left">게임 이용 기록 (기본)</div>
+                      <div className="text-[10px] text-zinc-500 text-left">
+                        시간, 유저ID, 게임종류, 결과, 베팅액 등
                       </div>
                     </div>
                   </label>
@@ -191,11 +192,11 @@ export default function CSVImportPage() {
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
-                        💰 본사 마진 데이터
-                        <Badge variant="outline" className="text-xs">NEW</Badge>
+                        💰 본사 입금액 대조 (Margin)
+                        <Badge variant="outline" className="text-[10px]">NEW</Badge>
                       </div>
-                      <div className="text-xs text-zinc-500">
-                        이름, 닉네임, 충전/환전 금액, 마진, 경과일, 세그먼트
+                      <div className="text-[10px] text-zinc-500 text-left">
+                        충/환전, 본사마진, 정밀 세그먼트 분석용
                       </div>
                     </div>
                   </label>
@@ -212,11 +213,11 @@ export default function CSVImportPage() {
                 <Button
                   onClick={onNextToValidate}
                   disabled={!selectedFile || uploadMutation.isPending}
-                  className="bg-indigo-600 hover:bg-indigo-700 h-12 text-lg"
+                  className="bg-indigo-600 hover:bg-indigo-700 h-12 text-lg font-bold"
                 >
                   {uploadMutation.isPending
-                    ? "업로드 중..."
-                    : "검증하기 (Next)"}
+                    ? "파일 업로드 중..."
+                    : "내용 확인하기"}
                 </Button>
               </div>
             </div>
@@ -234,29 +235,29 @@ export default function CSVImportPage() {
                     ) : (
                       <AlertCircle className="text-red-500" />
                     )}
-                    검증 결과: {validateMutation.data.filename}
+                    파일 확인 결과: {validateMutation.data.filename}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <StatItem
-                      label="총 행 수"
-                      value={`${validateMutation.data.total_rows?.toLocaleString()} rows`}
+                      label="전체 데이터 줄 수"
+                      value={`${validateMutation.data.total_rows?.toLocaleString()} 줄 (Rows)`}
                     />
                     <StatItem
                       label="파일 크기"
                       value={`${(validateMutation.data.file_size_bytes / 1024).toFixed(1)} KB`}
                     />
                     <StatItem
-                      label="예상 소요 시간"
-                      value={`${validateMutation.data.estimated_minutes} 분`}
+                      label="걸리는 시간 (예상)"
+                      value={`약 ${validateMutation.data.estimated_minutes} 분`}
                     />
                     <StatItem
-                      label="상태"
+                      label="파일 상태"
                       value={
                         validateMutation.data.is_valid
-                          ? "검증 통과"
-                          : "오류 발견"
+                          ? "정상 (사용 가능)"
+                          : "오류 (사용 불가)"
                       }
                       status={validateMutation.data.is_valid ? "OK" : "ERROR"}
                     />
@@ -264,32 +265,32 @@ export default function CSVImportPage() {
 
                   {!validateMutation.data.is_valid && (
                     <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                      <strong>Error:</strong> {validateMutation.data.error}
+                      <strong>확인 불가 원인:</strong> {validateMutation.data.error}
                     </div>
                   )}
 
                   <div className="space-y-4 pt-4 border-t border-white/5">
                     <h4 className="text-sm font-bold text-zinc-400 uppercase">
-                      임포트 설정
+                      반입 상세 설정
                     </h4>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-xs text-zinc-500 font-bold uppercase">
-                          배치 크기
+                          한 번에 처리할 양
                         </label>
                         <select
                           className="w-full bg-black/40 border border-white/10 rounded-md h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           value={batchSize}
                           onChange={(e) => setBatchSize(Number(e.target.value))}
                         >
-                          <option value={100}>100 (안전)</option>
-                          <option value={250}>250 (권장)</option>
-                          <option value={500}>500 (고속)</option>
+                          <option value={100}>100개씩 (안전)</option>
+                          <option value={250}>250개씩 (추천)</option>
+                          <option value={500}>500개씩 (빠름)</option>
                         </select>
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs text-zinc-500 font-bold uppercase">
-                          실시간 트리거
+                          특수 모드
                         </label>
                         <div className="flex items-center gap-4 h-10">
                           <label className="flex items-center gap-2 cursor-pointer">
@@ -302,7 +303,7 @@ export default function CSVImportPage() {
                               className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-600 focus:ring-indigo-500"
                             />
                             <span className="text-sm">
-                              히스토리 모드 (트리거 비활성)
+                              기록용으로만 저장 (알림 안 보냄)
                             </span>
                           </label>
                         </div>
@@ -318,14 +319,14 @@ export default function CSVImportPage() {
                   className="flex-1 h-12 border-white/10"
                   onClick={() => setStep("SELECT")}
                 >
-                  이전으로
+                  이전 단계로
                 </Button>
                 <Button
                   className="flex-[2] h-12 bg-emerald-600 hover:bg-emerald-700 text-lg font-bold"
                   onClick={onStartImport}
                   disabled={!validateMutation.data.is_valid}
                 >
-                  임포트 시작
+                  지금 바로 가져오기
                 </Button>
               </div>
             </div>
@@ -334,17 +335,17 @@ export default function CSVImportPage() {
               <Card className="bg-[#18181B] border-white/5">
                 <CardHeader>
                   <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <Info className="w-4 h-4 text-indigo-400" /> 주의사항
+                    <Info className="w-4 h-4 text-indigo-400" /> 운영자 주의사항
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-xs text-zinc-500 space-y-3 leading-relaxed">
                   <p>
-                    • 임포트된 데이터는 Golden V2 이벤트 시스템에 즉시
+                    • 가져온 데이터는 시스템의 모든 운영 지표에 즉시
                     반영됩니다.
                   </p>
-                  <p>• 누락된 유저 ID가 포함된 행은 자동으로 스킵됩니다.</p>
+                  <p>• 가입되지 않은 유저의 기록은 자동으로 제외됩니다.</p>
                   <p>
-                    • 중복된 세션 ID 체크가 활성화되어 중복 입력을 방지합니다.
+                    • 이미 가져온 적이 있는 중복 기록은 자동으로 걸러집니다.
                   </p>
                 </CardContent>
               </Card>
@@ -356,16 +357,16 @@ export default function CSVImportPage() {
           <Card className="bg-[#18181B] border-white/5 p-12 text-center space-y-8">
             <div className="flex flex-col items-center gap-4">
               <RefreshCw className="w-12 h-12 text-indigo-400 animate-spin" />
-              <h2 className="text-2xl font-bold">임포트 처리 중...</h2>
+              <h2 className="text-2xl font-bold">시스템에 넣는 중...</h2>
               <p className="text-zinc-500 italic text-sm">
-                최대 수 분이 소요될 수 있습니다. 브라우저를 닫지 마세요.
+                데이터 양에 따라 시간이 걸릴 수 있습니다. 창을 닫지 말고 잠시만 기다려 주세요.
               </p>
             </div>
             <div className="max-w-md mx-auto space-y-2">
               <Progress value={undefined} className="h-2" />
               <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
-                <span>STATUS: PROCESSING_CSV</span>
-                <span>B_SIZE: {batchSize}</span>
+                <span>상태: 데이터 처리 중</span>
+                <span>배치 크기: {batchSize}</span>
               </div>
             </div>
           </Card>
@@ -380,18 +381,18 @@ export default function CSVImportPage() {
                   <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">임포트 완료</h2>
+                  <h2 className="text-2xl font-bold text-white">데이터 반입 성공!</h2>
                   <p className="text-emerald-400/60 text-sm">
                     성공적으로{" "}
                     {importMutation.data.successful_rows.toLocaleString()}개의
-                    이벤트를 반영했습니다.
+                    기록을 시스템에 반영했습니다.
                   </p>
                 </div>
               </div>
               <div className="flex gap-8">
                 <div className="text-center">
                   <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">
-                    성공률
+                    반입 성공률
                   </p>
                   <p className="text-xl font-bold">
                     {(
@@ -404,10 +405,10 @@ export default function CSVImportPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-[10px] uppercase text-zinc-500 font-bold mb-1">
-                    실행 시간
+                    총 소요 시간
                   </p>
                   <p className="text-xl font-bold">
-                    {importMutation.data.duration_seconds.toFixed(1)}s
+                    {importMutation.data.duration_seconds.toFixed(1)}초
                   </p>
                 </div>
               </div>
@@ -415,8 +416,7 @@ export default function CSVImportPage() {
 
             {/* Analysis Grid */}
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
-              <BarChart3 className="w-5 h-5 text-indigo-400" /> 데이터 분석 결과
-              (Analysis)
+              <BarChart3 className="w-5 h-5 text-indigo-400" /> 오늘 가져온 데이터 요약
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -424,23 +424,23 @@ export default function CSVImportPage() {
                 label="총 베팅 규모"
                 value={`₩ ${importMutation.data.total_bet.toLocaleString()}`}
                 icon={DollarSign}
-                subtext="Total Amount Bet"
+                subtext="가져온 데이터의 총 베팅합"
               />
               <AnalyticsCard
                 label="총 당첨 규모"
                 value={`₩ ${importMutation.data.total_payout.toLocaleString()}`}
                 color="text-emerald-400"
                 icon={PieChart}
-                subtext="Total Amount Paid"
+                subtext="유저들에게 지급된 총 당첨금"
               />
               <AnalyticsCard
                 label="참여 유저 수"
                 value={`${importMutation.data.unique_user_count.toLocaleString()} 명`}
                 icon={Users}
-                subtext="Unique Active Users"
+                subtext="기록에 포함된 실제 유저 수"
               />
               <AnalyticsCard
-                label="수익 (GGR)"
+                label="본사 예상 수익"
                 value={`₩ ${(importMutation.data.total_bet - importMutation.data.total_payout).toLocaleString()}`}
                 icon={ArrowRight}
                 color={
@@ -450,7 +450,7 @@ export default function CSVImportPage() {
                     ? "text-indigo-400"
                     : "text-red-400"
                 }
-                subtext="Bet - Payout"
+                subtext="베팅액 - 당첨금액"
               />
             </div>
 

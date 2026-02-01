@@ -125,7 +125,7 @@ def test_v2_withdrawal_tiers_min_balance(db_session):
 
         setup_valid_user(db_session, user_id=4, locked=30_000)
         seed_approved_withdrawals(db_session, 4, 2)
-        res = service.request_withdrawal(db_session, 4, 10_000)
+        res = service.request_withdrawal(db_session, 4, 30_000)
         assert res["status"] == "PENDING"
 
         # Tier 4 (approved 3): require >= 50,000
@@ -137,5 +137,5 @@ def test_v2_withdrawal_tiers_min_balance(db_session):
 
         setup_valid_user(db_session, user_id=6, locked=50_000)
         seed_approved_withdrawals(db_session, 6, 3)
-        res = service.request_withdrawal(db_session, 6, 10_000)
+        res = service.request_withdrawal(db_session, 6, 50_000)
         assert res["status"] == "PENDING"

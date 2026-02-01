@@ -59,15 +59,15 @@ export default function OpsDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            운영 보고서(Ops Dashboard)
+            전체 운영 현황판
           </h1>
           <p className="text-sm text-obsidian-muted">
-            시스템 상태, 리스팅 상태, 심리 상태를 관리합니다.
+            시스템 상태와 유저들의 이용 현황을 관리합니다.
           </p>
         </div>
         <div className="flex gap-2">
           <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
-            긴급 유지 (Maintenance)
+            긴급 점검 모드 (Maintenance)
           </Button>
         </div>
       </div>
@@ -75,30 +75,30 @@ export default function OpsDashboard() {
       {/* Top Row: Critical Status */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <QuickActionCard
-          label="시스템 상태"
+          label="시스템 정상 작동 여부"
           description={
             <div className="flex gap-2 mt-1">
               <span
                 className={`w-2 h-2 rounded-full ${getStatusColor(status.system.db)}`}
-                title="DB"
+                title="데이터베이스"
               />
               <span
                 className={`w-2 h-2 rounded-full ${getStatusColor(status.system.redis)}`}
-                title="Redis"
+                title="고속 저장소"
               />
               <span
                 className={`w-2 h-2 rounded-full ${getStatusColor(status.system.worker)}`}
-                title="Worker"
+                title="자동 처리 엔진"
               />
             </div>
           }
           icon={Server}
         />
         <QuickActionCard
-          label="Holding"
+          label="리텐션 케어"
           description={
             <div className="flex items-baseline gap-1">
-              <span className="text-xs text-zinc-500">리텐션 현황 준비중</span>
+              <span className="text-xs text-zinc-500">준비 중입니다</span>
             </div>
           }
           icon={Activity}
@@ -106,15 +106,15 @@ export default function OpsDashboard() {
           onClick={() => {}}
         />
         <QuickActionCard
-          label="골든 레이더"
+          label="이탈 감지 (레이더)"
           description={
             <div className="flex gap-2">
               <span className="text-red-400">
-                Risk: {status?.goldenRadar?.churnRisks ?? 0}
+                위험: {status?.goldenRadar?.churnRisks ?? 0}
               </span>
               <span className="text-zinc-500">/</span>
               <span className="text-emerald-400">
-                High: {status?.goldenRadar?.highRollers ?? 0}
+                고액: {status?.goldenRadar?.highRollers ?? 0}
               </span>
             </div>
           }
@@ -123,14 +123,14 @@ export default function OpsDashboard() {
           onClick={() => navigate("/admin/dashboard/golden")}
         />
         <QuickActionCard
-          label="금일 활성화(Active)"
+          label="오늘 활동 유저"
           description={
             <div className="flex items-center gap-1">
               <NumberTicker
                 value={status?.metrics?.activeUsers24h ?? 0}
                 className="text-lg font-bold"
               />
-              <span className="text-xs text-zinc-500">명(24h)</span>
+              <span className="text-xs text-zinc-500">명(24시간 기준)</span>
             </div>
           }
           icon={Users}
@@ -146,34 +146,34 @@ export default function OpsDashboard() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-emerald-500" />
-                본사 마진 현황
+                본사 입금액 대조 (Margin)
               </h3>
               <p className="text-obsidian-muted text-xs">
                 {status?.hqStats?.lastSyncAt 
-                  ? `Last Sync: ${new Date(status.hqStats.lastSyncAt).toLocaleString()}`
-                  : "Not synced yet"}
+                  ? `마지막 업데이트: ${new Date(status.hqStats.lastSyncAt).toLocaleString()}`
+                  : "아직 데이터 없음"}
               </p>
             </div>
             <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
-              HQ Data
+              본사 데이터
             </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-3 z-10">
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">VIP (1M+)</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">VIP 유저(100만+)</p>
               <p className="text-xl font-bold text-purple-400">{status?.hqStats?.vipCount ?? 0}</p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">Whales (5M+)</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">큰손 유저(500만+)</p>
               <p className="text-xl font-bold text-blue-400">{status?.hqStats?.whaleCount ?? 0}</p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">At Risk</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">떠날 위험군</p>
               <p className="text-xl font-bold text-orange-400">{status?.hqStats?.atRiskCount ?? 0}</p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">Prospective</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">잠재 VIP 고객</p>
               <p className="text-xl font-bold text-zinc-400">{status?.hqStats?.prospectiveVipCount ?? 0}</p>
             </div>
           </div>
@@ -190,17 +190,17 @@ export default function OpsDashboard() {
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-400" />
-                Risk & Opportunity
+                위험군 및 기회 유저
               </h3>
               <p className="text-obsidian-muted text-xs">
-                AI가 판단한 리스크/기회그룹
+                AI가 분석한 즉시 관리가 필요한 유저 그룹입니다.
               </p>
             </div>
             <Badge
               variant="outline"
               className="border-amber-500/30 text-amber-500 bg-amber-500/5 animate-pulse"
             >
-              Crisis Group
+              집중 관리 리스트
             </Badge>
           </div>
 
@@ -209,7 +209,7 @@ export default function OpsDashboard() {
             <Card className="bg-black/20 border-red-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-red-400 flex items-center gap-2">
-                  <PulsatingDot color="#ef4444" /> Crisis Group (위기)
+                  <PulsatingDot color="#ef4444" /> 위기 그룹 (곧 떠날 유저)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -227,21 +227,21 @@ export default function OpsDashboard() {
                             {u.nickname}
                           </span>
                           <span className="text-[10px] text-obsidian-muted">
-                            Churn Score: {(u.churnScore * 100).toFixed(0)}%
+                            이탈 위험도: {(u.churnScore * 100).toFixed(0)}%
                           </span>
                         </div>
                         <Badge
                           variant="outline"
                           className={`text-[10px] ${u.riskLevel === "HIGH" ? "border-red-500/50 text-red-400" : "border-amber-500/50 text-amber-400"}`}
                         >
-                          {u.riskLevel}
+                          {u.riskLevel === "HIGH" ? "매우 위험" : "주의"}
                         </Badge>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-obsidian-muted text-sm">
-                    감소된 리스크
+                    현재 모니터링 중인 위험 군이 없습니다.
                   </div>
                 )}
               </CardContent>
@@ -251,14 +251,14 @@ export default function OpsDashboard() {
             <Card className="bg-black/20 border-emerald-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-emerald-400 flex items-center gap-2">
-                  <PulsatingDot color="#10b981" /> Whales (기회)
+                  <PulsatingDot color="#10b981" /> 기회 그룹 (고액 유저)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-8 text-obsidian-muted text-sm">
                   {status?.goldenRadar?.highRollers > 0
-                    ? `${status.goldenRadar.highRollers}명의 고액 유저`
-                    : "감소된 리스크"}
+                    ? `${status.goldenRadar.highRollers}명의 큰손 유저가 활동 중입니다.`
+                    : "현재 활동 중인 기회 그룹 유저가 없습니다."}
                 </div>
               </CardContent>
             </Card>

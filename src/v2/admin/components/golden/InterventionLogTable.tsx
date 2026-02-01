@@ -60,7 +60,7 @@ export const InterventionLogTable = ({
   if (!logs || logs.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
-        인터벤션 로그가 없습니다
+        특별 관리 기록이 없습니다
       </div>
     );
   }
@@ -75,13 +75,13 @@ export const InterventionLogTable = ({
                 발생 시각
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                트리거 ID
+                발동 조건 코드
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                트리거 조건
+                상세 조건
               </th>
               <th className="px-3 py-2 text-left text-xs font-medium text-gray-400">
-                실행 액션
+                관리 조치
               </th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-400">
                 이전 잔액

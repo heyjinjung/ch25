@@ -32,6 +32,7 @@ def test_alembic_version_integrity():
         has_down_revision = False
         
         for node in tree.body:
+            # Handle normal assignment: revision = "..."
             if isinstance(node, ast.Assign):
                 for target in node.targets:
                     if isinstance(target, ast.Name):
@@ -49,8 +50,26 @@ def test_alembic_version_integrity():
                             elif isinstance(node.value, ast.Str):
                                 down_revisions.add(node.value.s)
                             elif isinstance(node.value, ast.Tuple) or isinstance(node.value, ast.List):
-                                # Merge point
                                 pass
+            
+            # Handle annotated assignment: revision: str = "..."
+            elif isinstance(node, ast.AnnAssign):
+                if isinstance(node.target, ast.Name):
+                    if node.target.id == "revision":
+                        has_revision = True
+                        if isinstance(node.value, ast.Constant):
+                            revision_ids.add(node.value.value)
+                        elif isinstance(node.value, ast.Str):
+                            revision_ids.add(node.value.s)
+                    
+                    if node.target.id == "down_revision":
+                        has_down_revision = True
+                        if isinstance(node.value, ast.Constant):
+                            down_revisions.add(node.value.value)
+                        elif isinstance(node.value, ast.Str):
+                            down_revisions.add(node.value.s)
+                        elif isinstance(node.value, ast.Tuple) or isinstance(node.value, ast.List):
+                            pass
 
         assert has_revision, f"Migration file {filename} missing 'revision' variable"
         assert has_down_revision, f"Migration file {filename} missing 'down_revision' variable"

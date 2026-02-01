@@ -1,0 +1,5 @@
+기록 일시,유저 ID,게임 종류,결과,배팅 금액,지급 금액,게임 후 잔액,외부 아이디,세션 ID,기타 정보
+2026-02-01T10:00:00Z,101,DICE,LOSE,1000,0,50000,ext_user_001,sess_999,"{""dice_value"": 3}"
+2026-02-01T10:05:00Z,101,ROULETTE,WIN,5000,10000,55000,ext_user_001,sess_1000,"{""number"": 17, ""color"": ""red""}"
+2026-02-01T10:10:00Z,102,SLOT,JACKPOT,2000,500000,512000,ext_user_002,sess_1001,"{""bonus_round"": true}"
+2026-02-01T10:15:00Z,103,POKER,DRAW,10000,10000,90000,ext_user_003,sess_1002,"{""hand"": ""Full House""}"

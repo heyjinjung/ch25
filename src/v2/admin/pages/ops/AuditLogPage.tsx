@@ -48,29 +48,29 @@ const ALL_FILTER_VALUE = "__ALL__";
 
 const CATEGORY_OPTIONS = [
   { value: ALL_FILTER_VALUE, label: "전체 카테고리" },
-  { value: "GOLDEN", label: "골든" },
-  { value: "USER", label: "유저" },
-  { value: "MISSION", label: "미션" },
-  { value: "STREAK", label: "스트릭" },
-  { value: "INVENTORY", label: "인벤토리" },
-  { value: "ECONOMY", label: "경제" },
-  { value: "BATCH", label: "배치" },
+  { value: "GOLDEN", label: "실시간 운영" },
+  { value: "USER", label: "유저 관리" },
+  { value: "MISSION", label: "미션 설정" },
+  { value: "STREAK", label: "출석 스트릭" },
+  { value: "INVENTORY", label: "아이템/재고" },
+  { value: "ECONOMY", label: "재화/경제" },
+  { value: "BATCH", label: "자동 배치" },
 ];
 
 // Action options
 const ACTION_OPTIONS = [
-  { value: ALL_FILTER_VALUE, label: "전체 액션" },
-  { value: "NUDGE_SEND", label: "넛지 발송" },
-  { value: "ROI_CALCULATE", label: "ROI 계산" },
-  { value: "ROLLBACK_EXECUTE", label: "롤백 실행" },
-  { value: "MISSION_RESET", label: "미션 리셋" },
-  { value: "MISSION_RESET_ALL", label: "전체 미션 리셋" },
-  { value: "STREAK_RESET", label: "스트릭 리셋" },
-  { value: "STREAK_SET_COUNT", label: "스트릭 설정" },
-  { value: "MILESTONE_FORCE_GRANT", label: "마일스톤 강제 지급" },
-  { value: "MILESTONE_DISTRIBUTE", label: "마일스톤 배포" },
-  { value: "STOCK_ADJUST", label: "재고 조정" },
-  { value: "TICKET_GRANT", label: "티켓 지급" },
+  { value: ALL_FILTER_VALUE, label: "모든 조치" },
+  { value: "NUDGE_SEND", label: "넛지 발포" },
+  { value: "ROI_CALCULATE", label: "수익 계산" },
+  { value: "ROLLBACK_EXECUTE", label: "데이터 되돌리기 (롤백)" },
+  { value: "MISSION_RESET", label: "미션 초기화" },
+  { value: "MISSION_RESET_ALL", label: "전체 미션 초기화" },
+  { value: "STREAK_RESET", label: "스트릭 초기화" },
+  { value: "STREAK_SET_COUNT", label: "스트릭 숫자 변경" },
+  { value: "MILESTONE_FORCE_GRANT", label: "보상 강제 지급" },
+  { value: "MILESTONE_DISTRIBUTE", label: "보상 일괄 배포" },
+  { value: "STOCK_ADJUST", label: "아이템 수량 조정" },
+  { value: "TICKET_GRANT", label: "무료 티켓 지급" },
 ];
 
 export default function AuditLogPage() {
@@ -133,9 +133,9 @@ export default function AuditLogPage() {
         <div>
           <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-2">
             <FileText className="w-8 h-8 text-indigo-400" />
-            감사 로그
+            운영진 활동 기록 (Archive)
           </h1>
-          <p className="text-zinc-400">관리자 액션 기록을 조회합니다.</p>
+          <p className="text-zinc-400">누가, 언제, 어떤 설정을 바꿨는지 모든 기록을 확인합니다.</p>
         </div>
         <Button
           variant="outline"
@@ -152,7 +152,7 @@ export default function AuditLogPage() {
         <CardHeader className="pb-4">
           <CardTitle className="text-white flex items-center gap-2">
             <Filter className="w-5 h-5" />
-            필터
+            조회 조건 고르기
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -175,10 +175,10 @@ export default function AuditLogPage() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs text-zinc-400 mb-1 block">액션</label>
+              <label className="text-xs text-zinc-400 mb-1 block">수행한 활동</label>
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger className="bg-black/20 border-white/10">
-                  <SelectValue placeholder="전체 액션" />
+                  <SelectValue placeholder="전체 활동" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-white/10">
                   {ACTION_OPTIONS.map((opt) => (
@@ -201,9 +201,9 @@ export default function AuditLogPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-white/10">
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="20">20개</SelectItem>
+                  <SelectItem value="50">50개</SelectItem>
+                  <SelectItem value="100">100개</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -214,9 +214,9 @@ export default function AuditLogPage() {
       {/* Log List */}
       <Card className="bg-zinc-900 border-white/10">
         <CardHeader>
-          <CardTitle className="text-white">로그 목록</CardTitle>
+          <CardTitle className="text-white">활동 기록 목록</CardTitle>
           <CardDescription className="text-zinc-400">
-            총 {totalLogs}건 중 {rangeStart} ~ {rangeEnd}건 표시
+            총 {totalLogs}건 중 {rangeStart} ~ {rangeEnd}번째 기록 표시
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -224,14 +224,14 @@ export default function AuditLogPage() {
             <div className="text-center py-20 text-zinc-500">로딩중...</div>
           ) : isError ? (
             <div className="text-center py-20 text-rose-400">
-              로그 조회에 실패했습니다. 권한/네트워크를 확인해주세요.
+              기록 조회에 실패했습니다. 권한이나 네트워크 연결을 확인해주세요.
               <div className="text-xs text-zinc-500 mt-2">
                 {(error as Error)?.message || "UNKNOWN_ERROR"}
               </div>
             </div>
           ) : !auditData?.logs?.length ? (
             <div className="text-center py-20 text-zinc-500">
-              로그가 없습니다.
+              아직 기록이 없습니다.
             </div>
           ) : (
             <div className="space-y-2">
@@ -242,7 +242,7 @@ export default function AuditLogPage() {
                 >
                   <button
                     type="button"
-                    className="w-full"
+                    className="w-full text-left"
                     onClick={() => toggleExpand(log.id)}
                   >
                     <div className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer">
@@ -272,10 +272,10 @@ export default function AuditLogPage() {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-xs text-zinc-500">
-                          Admin #{log.admin_id}
+                          운영자 #{log.admin_id}
                         </span>
                         <span className="text-xs text-zinc-500">
-                          {formatKst(log.created_at)} KST
+                          {formatKst(log.created_at)}
                         </span>
                       </div>
                     </div>
@@ -286,7 +286,7 @@ export default function AuditLogPage() {
                         {log.before_data && (
                           <div>
                             <h4 className="text-xs text-zinc-400 mb-2">
-                              변경 전
+                              기존 설정 (Before)
                             </h4>
                             <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
                               {JSON.stringify(log.before_data, null, 2)}
@@ -296,7 +296,7 @@ export default function AuditLogPage() {
                         {log.after_data && (
                           <div>
                             <h4 className="text-xs text-zinc-400 mb-2">
-                              변경 후
+                              바뀐 설정 (After)
                             </h4>
                             <pre className="bg-black/30 rounded-lg p-3 text-xs text-zinc-300 overflow-auto max-h-[200px]">
                               {JSON.stringify(log.after_data, null, 2)}
