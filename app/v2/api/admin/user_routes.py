@@ -578,7 +578,7 @@ def execute_intervention_action(
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
     if action_id == "BAILOUT_GIFT":
-        V2VaultService.deposit(db, user_id, 1000)
+        V2VaultService.deposit(db, user_id, 1000, reason="BAILOUT_GIFT", ref_type="ADMIN")
         db.commit()
 
         V2AdminAuditService.log(
@@ -622,9 +622,9 @@ def adjust_user_wallet(
     if payload.token_type == "VAULT":
         try:
             if payload.amount > 0:
-                V2VaultService.deposit(db, user_id, payload.amount)
+                V2VaultService.deposit(db, user_id, payload.amount, reason="ADMIN_MANUAL", ref_type="ADMIN")
             else:
-                V2VaultService.withdraw(db, user_id, abs(payload.amount))
+                V2VaultService.withdraw(db, user_id, abs(payload.amount), reason="ADMIN_MANUAL", ref_type="ADMIN")
         except ValueError as e:
             msg = str(e).lower()
             if "insufficient" in msg:

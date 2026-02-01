@@ -7,9 +7,9 @@ import {
 } from "../../../components/ui/tabs";
 import MessageSenderPage from "./MessageSenderPage";
 import SurveyPage from "./SurveyPage";
-import RetentionAnalyticsPanel from "./RetentionAnalyticsPanel";
-import RevenueAnalyticsPanel from "./RevenueAnalyticsPanel";
-import MarketingPerformancePanel from "./MarketingPerformancePanel";
+// import RetentionAnalyticsPanel from "./RetentionAnalyticsPanel";
+// import RevenueAnalyticsPanel from "./RevenueAnalyticsPanel";
+// import MarketingPerformancePanel from "./MarketingPerformancePanel";
 import {
   MessageSquare,
   ClipboardList,
@@ -40,7 +40,7 @@ export default function MarketingTabPage() {
               <ClipboardList className="w-4 h-4" />
               설문 조사
             </TabsTrigger>
-            <TabsTrigger
+            {/* <TabsTrigger
               value="retention"
               className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white gap-2"
             >
@@ -60,7 +60,7 @@ export default function MarketingTabPage() {
             >
               <Megaphone className="w-4 h-4" />
               마케팅 성과
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
         </div>
 
@@ -72,7 +72,7 @@ export default function MarketingTabPage() {
           <SurveyPage />
         </TabsContent>
 
-        <TabsContent value="retention" className="mt-0">
+        {/* <TabsContent value="retention" className="mt-0">
           <RetentionAnalyticsPanel />
         </TabsContent>
 
@@ -82,7 +82,7 @@ export default function MarketingTabPage() {
 
         <TabsContent value="marketing-performance" className="mt-0">
           <MarketingPerformancePanel />
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

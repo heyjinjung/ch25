@@ -94,7 +94,25 @@ class V2VaultService:
         return int(v2_balance)
 
     @staticmethod
-    def deposit(db: Session, user_id: int, amount: int) -> int:
+    def deposit(
+        db: Session,
+        user_id: int,
+        amount: int,
+        reason: str = "DEPOSIT",
+        ref_type: str = "SYSTEM",
+    ) -> int:
+        """금고 입금 및 VaultLedger 기록.
+        
+        Args:
+            db: DB 세션
+            user_id: 유저 ID
+            amount: 입금 금액 (양수)
+            reason: 입금 사유 (예: ADMIN_MANUAL, GAME_REWARD, STREAK_REWARD 등)
+            ref_type: 참조 타입 (ADMIN, GAME, REWARD, SYSTEM 등)
+        """
+        from app.models.vault_ledger import VaultLedger
+        from datetime import datetime
+
         if amount <= 0:
             raise ValueError("amount must be > 0")
 
@@ -121,11 +139,39 @@ class V2VaultService:
         v2_user.vault_locked_balance = new_balance
         db.add(v2_user)
 
+        # === VaultLedger 기록 ===
+        db.add(VaultLedger(
+            user_id=user_id,
+            amount=int(amount),  # 입금은 양수
+            balance_after=new_balance,
+            reason=reason,
+            ref_type=ref_type,
+            created_at=datetime.utcnow(),
+        ))
+
         db.flush()
         return int(new_balance)
 
     @staticmethod
-    def withdraw(db: Session, user_id: int, amount: int) -> int:
+    def withdraw(
+        db: Session,
+        user_id: int,
+        amount: int,
+        reason: str = "WITHDRAW",
+        ref_type: str = "SYSTEM",
+    ) -> int:
+        """금고 출금 및 VaultLedger 기록.
+        
+        Args:
+            db: DB 세션
+            user_id: 유저 ID
+            amount: 출금 금액 (양수)
+            reason: 출금 사유 (예: ADMIN_WITHDRAW, GAME_BET 등)
+            ref_type: 참조 타입 (ADMIN, GAME, SYSTEM 등)
+        """
+        from app.models.vault_ledger import VaultLedger
+        from datetime import datetime
+
         if amount <= 0:
             raise ValueError("amount must be > 0")
 
@@ -141,6 +187,16 @@ class V2VaultService:
 
         v2_user.vault_locked_balance = new_balance
         db.add(v2_user)
+
+        # === VaultLedger 기록 ===
+        db.add(VaultLedger(
+            user_id=user_id,
+            amount=-int(amount),  # 출금은 음수
+            balance_after=new_balance,
+            reason=reason,
+            ref_type=ref_type,
+            created_at=datetime.utcnow(),
+        ))
 
         db.flush()
         return int(new_balance)

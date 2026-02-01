@@ -106,7 +106,7 @@ class V2ShopService:
             return
 
         if normalized_reward in {"VAULT", "POINT", "CC_POINT"}:
-            V2VaultService.deposit(db, user_id, int(reward_amount))
+            V2VaultService.deposit(db, user_id, int(reward_amount), reason="SHOP_REWARD", ref_type="SHOP")
             return
 
         try:

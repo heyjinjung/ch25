@@ -87,7 +87,7 @@ class V2RewardService:
             return
 
         if reward_type in {"POINT", "CC_POINT"}:
-            V2VaultService.deposit(db, user_id=storage_user_id, amount=int(reward_amount))
+            V2VaultService.deposit(db, user_id=storage_user_id, amount=int(reward_amount), reason="MISSION_REWARD", ref_type="REWARD")
             if commit:
                 db.commit()
             else:
@@ -108,7 +108,7 @@ class V2RewardService:
                     (GameTokenType.DICE_TOKEN, 3),
                 ]
             elif reward_amount == 7:
-                V2VaultService.deposit(db, user_id=user_id, amount=10000)
+                V2VaultService.deposit(db, user_id=user_id, amount=10000, reason="BUNDLE_REWARD", ref_type="REWARD")
                 bundle_items = [(GameTokenType.GOLD_KEY, 1)]
             elif reward_amount == 12:
                 bundle_items = [
@@ -117,7 +117,7 @@ class V2RewardService:
                     (GameTokenType.LOTTERY_TICKET, 2),
                 ]
             elif reward_amount == 15:
-                V2VaultService.deposit(db, user_id=user_id, amount=100000)
+                V2VaultService.deposit(db, user_id=user_id, amount=100000, reason="BUNDLE_REWARD", ref_type="REWARD")
                 bundle_items = [(GameTokenType.GOLD_KEY, 2)]
             elif reward_amount == 30:
                 bundle_items = [
@@ -126,7 +126,7 @@ class V2RewardService:
                     (GameTokenType.LOTTERY_TICKET, 10),
                 ]
             elif reward_amount == 20:
-                V2VaultService.deposit(db, user_id=user_id, amount=300000)
+                V2VaultService.deposit(db, user_id=user_id, amount=300000, reason="BUNDLE_REWARD", ref_type="REWARD")
                 bundle_items = [(GameTokenType.DIAMOND_KEY, 3)]
             elif reward_amount == 4:
                 bundle_items = [

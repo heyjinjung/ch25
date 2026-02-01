@@ -37,11 +37,13 @@ from app.models.vault_earn_event import VaultEarnEvent
 from app.models.vault_ledger import VaultLedger
 from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.models.mission import Mission, UserMissionProgress
+from app.models.mission import Mission, UserMissionProgress, MissionCategory, ApprovalStatus, MissionRewardType, UserStreak
 from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType, UserEventLog
 from app.models.admin_user_profile import AdminUserProfile
 from app.models.admin_message import AdminMessage, AdminMessageInbox
+from app.models.admin_audit_log import AdminAuditLog
 from app.models.ops_log import OpsDailyLog, OpsLogEntry
+
 from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
 from app.models.ops_eval_metric import OpsEvalMetric
 from app.models.ops_target import OpsTargetList, OpsTargetMember
@@ -53,6 +55,12 @@ from app.models.survey import (
     SurveyTriggerRule,
     SurveyResponse,
     SurveyResponseAnswer,
+    SurveyStatus,
+    SurveyChannel,
+    SurveyQuestionType,
+    SurveyTriggerType,
+    SurveyResponseStatus,
+    SurveyRewardStatus,
 )
 from app.models.app_ui_config import AppUiConfig
 from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
@@ -65,4 +73,6 @@ from app.models.idempotency import UserIdempotencyKey
 from app.models.trial_token_bucket import TrialTokenBucket
 from app.models.telegram_link_code import TelegramLinkCode
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+from app.models.vault2 import VaultProgram, VaultStatus
+
 
