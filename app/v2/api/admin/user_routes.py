@@ -1304,10 +1304,10 @@ def get_user_game_logs(
             logs.append(GameLogItemDto(
                 id=log.id,
                 game_type="DICE",
-                result=str(log.dice_sum) if log.dice_sum else None,
+                result=log.result if log.result else None,
                 reward_type=log.reward_type,
                 reward_amount=log.reward_amount,
-                vault_earn=log.vault_earn,
+                vault_earn=getattr(log, "vault_earn", None),
                 created_at=log.created_at.isoformat() if log.created_at else "",
             ))
 

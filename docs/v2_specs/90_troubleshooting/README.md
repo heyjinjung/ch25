@@ -64,10 +64,10 @@ W{주차}_{도메인코드}_troubleshooting.md
 |---|---|---|
 | AUTH | [W05_AUTH_troubleshooting.md](./W05_AUTH_troubleshooting.md) | 2 |
 | VAULT | [W05_VAULT_troubleshooting.md](./W05_VAULT_troubleshooting.md) | 1 |
-| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 5 |
+| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 6 |
 | MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
-| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 3 |
+| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 4 |
 | FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 3 |
 
 ---

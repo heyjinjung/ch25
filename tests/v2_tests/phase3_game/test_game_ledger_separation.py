@@ -178,12 +178,20 @@ def _seed_base_state(db: Session) -> tuple[int, int]:
         _ensure_feature_config(db, feature)
 
     v2_user = _seed_v2_user(db)
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user.id)
-
-    user = db.get(User, legacy_user_id)
+    # Manual sync for legacy user (SOT: Same ID Policy)
+    user = db.get(User, v2_user.id)
     if user is None:
-        user = _seed_user(db)
-        legacy_user_id = user.id
+        user = User(
+            id=v2_user.id,
+            external_id=v2_user.cc_id,
+            nickname=v2_user.nickname,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            vault_locked_balance=v2_user.vault_locked_balance,
+        )
+        db.add(user)
+        db.flush()
+    legacy_user_id = user.id
 
     _seed_roulette_config(db)
     _seed_dice_config(db)
@@ -249,11 +257,20 @@ def test_roulette_ticket_fallback_consumes_legacy_once(
         _ensure_feature_config(seed_session, feature)
 
     v2_user = _seed_v2_user(seed_session)
-    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, v2_user.id)
-    user = seed_session.get(User, legacy_user_id)
+    # Manual sync for legacy user (SOT: Same ID Policy)
+    user = seed_session.get(User, v2_user.id)
     if user is None:
-        user = _seed_user(seed_session)
-        legacy_user_id = user.id
+        user = User(
+            id=v2_user.id,
+            external_id=v2_user.cc_id,
+            nickname=v2_user.nickname,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            vault_locked_balance=v2_user.vault_locked_balance,
+        )
+        seed_session.add(user)
+        seed_session.flush()
+    legacy_user_id = user.id
 
     _seed_roulette_config(seed_session)
     wallet = GameWalletService()

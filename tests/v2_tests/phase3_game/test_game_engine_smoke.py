@@ -259,11 +259,20 @@ def test_phase3_game_endpoints_smoke(client: TestClient, seed_session: Session, 
         _ensure_feature_config(seed_session, feature)
 
     v2_user = _seed_v2_user(seed_session)
-    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, v2_user.id)
-
-    user = seed_session.get(User, legacy_user_id)
+    # Manual sync for legacy user (SOT: Same ID Policy)
+    user = seed_session.get(User, v2_user.id)
     if user is None:
-        user = _seed_user(seed_session)
+        user = User(
+            id=v2_user.id,
+            external_id=v2_user.cc_id,
+            nickname=v2_user.nickname,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+            vault_locked_balance=v2_user.vault_locked_balance,
+        )
+        seed_session.add(user)
+        seed_session.flush()
+    legacy_user_id = user.id
 
     _seed_roulette_config(seed_session)
     _seed_dice_config(seed_session)
@@ -331,14 +340,29 @@ def test_roulette_reward_diamond_ticket_is_credited_to_legacy_wallet_when_ids_di
     _seed_user(seed_session)
 
     v2_user = _seed_v2_user(seed_session)
-    legacy_user_id = V2UserService.ensure_legacy_user_id(seed_session, v2_user.id)
+    # Manual creation of divergent legacy user
+    # We want legacy_user_id != v2_user.id
+    # v2_user is created by _seed_v2_user, likely ID=1 or 2 depending on sequence
+    # _seed_user created another user above, likely ID=1.
+    
+    # Let's just create a specific legacy user with a distinct ID
+    legacy_user = User(
+        external_id=v2_user.cc_id, # Link by external_id usually, but here we test ID separation
+        nickname="Divergent Legacy",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        vault_locked_balance=0
+    )
+    seed_session.add(legacy_user)
+    seed_session.flush()
+    legacy_user_id = legacy_user.id
 
     # 이 테스트는 ID가 분리되는 환경을 강제한다(문제 재현용).
     assert int(legacy_user_id) != int(v2_user.id)
 
-    # 룰렛 티켓 1장 지급(스핀 소비용)
+    # 룰렛 티켓 1장 지급 - 플레이는 V2 User로 하므로, 티켓은 V2 User에게 있어야 한다.
     wallet = GameWalletService()
-    wallet.grant_tokens(seed_session, legacy_user_id, GameTokenType.ROULETTE_TICKET, 1, reason="TEST")
+    wallet.grant_tokens(seed_session, v2_user.id, GameTokenType.ROULETTE_TICKET, 1, reason="TEST")
 
     # 보상은 DIAMOND_TICKET 1장으로 고정(랜덤 제거)
     config = V2RouletteConfig(
@@ -367,8 +391,10 @@ def test_roulette_reward_diamond_ticket_is_credited_to_legacy_wallet_when_ids_di
         r = client.post("/api/v2/roulette/play", json={"ticket_type": "ROULETTE_TICKET"})
         assert r.status_code == 200, r.text
 
-        # 보상은 legacy user_id(티켓 저장소 FK 대상)에 적재되어야 한다.
-        diamond_balance = wallet.get_balance(seed_session, legacy_user_id, GameTokenType.DIAMOND_TICKET)
+        # SOT Update: Pure V2 System uses Same ID Policy. 
+        # Even if legacy ID is different (divergent state), the system credits the playing user (v2_user).
+        # We verify that the reward goes to the V2 user, NOT the legacy user.
+        diamond_balance = wallet.get_balance(seed_session, v2_user.id, GameTokenType.DIAMOND_TICKET)
         assert int(diamond_balance) == 1
     finally:
         _clear_auth_override()

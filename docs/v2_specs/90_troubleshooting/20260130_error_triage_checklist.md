@@ -20,6 +20,8 @@
 | **21** | **/api/v2/admin/ops/status 500 (ModuleNotFoundError)** | **어드민** | **🔴 높음** | **✅ shim 적용완료** |
 | **22** | **/api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락)** | **어드민** | **🔴 높음** | **✅ 마이그레이션 적용완료** |
 | **23** | **ops/status DB 상태 ERROR (text() 누락)** | **어드민** | **🟡 중** | **✅ 코드수정완료 (배포필요)** |
+| **24** | **/api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제)** | **어드민** | **🟡 중** | **✅ 코드수정완료 (배포필요)** |
+| **25** | **/api/v2/admin/users/{id}/game-logs 500 (V2DiceLog dice_sum 속성 누락)** | **어드민** | **🟡 중** | **✅ 코드수정완료 (배포필요)** |
 
 **상세 문서**: 
 - [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
@@ -350,3 +352,68 @@ curl -s https://cc-jm.com/api/v2/admin/ops/status -H "Authorization: Bearer $TOK
 - 모델: `app/v2/models/hq_prospective_user.py`
 - 서비스: `app/v2/services/hq_margin_stats_service.py`
 - 마이그레이션: `alembic/versions/20260201_0900_add_hq_prospective_user.py`
+
+---
+
+## Issue 24: /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) ✅
+
+### 에러
+```
+POST /api/v2/admin/users/{id}/purge HTTP/1.1" 500 Internal Server Error
+```
+
+### 원인
+- `admin_user_service.py`의 `purge_user()` 함수가 레거시 게임 로그(DiceLog, RouletteLog, LotteryLog)만 삭제
+- **V2 게임 로그(V2DiceLog, V2RouletteLog, V2LotteryLog)를 삭제하지 않음**
+- V2 게임 로그에 해당 user_id 레코드가 남아있어 v2_user 삭제 시 FK 에러 가능
+
+### 해결
+- 파일: `app/v2/services/admin_user_service.py`
+- V2 게임 로그 import 추가 및 삭제 로직 추가
+
+```python
+# 추가된 import
+from app.v2.models.v2_dice import V2DiceLog
+from app.v2.models.v2_roulette import V2RouletteLog
+from app.v2.models.v2_lottery import V2LotteryLog
+
+# 추가된 삭제 로직 (Game Logs 섹션)
+db.query(V2DiceLog).filter(V2DiceLog.user_id == user_id).delete(synchronize_session=False)
+db.query(V2RouletteLog).filter(V2RouletteLog.user_id == user_id).delete(synchronize_session=False)
+db.query(V2LotteryLog).filter(V2LotteryLog.user_id == user_id).delete(synchronize_session=False)
+```
+
+### 수정 시각
+- 2026-02-01 14:XX KST
+
+---
+
+## Issue 25: /api/v2/admin/users/{id}/game-logs 500 (dice_sum 속성 누락) ✅
+
+### 에러
+```
+GET /api/v2/admin/users/{id}/game-logs HTTP/1.1" 500 Internal Server Error
+AttributeError: 'V2DiceLog' object has no attribute 'dice_sum'
+```
+
+### 원인
+- `user_routes.py:1307`에서 `log.dice_sum` 속성 접근 시도
+- **V2DiceLog 모델에 `dice_sum` 컬럼 없음**
+- 실제 컬럼: `user_sum`, `dealer_sum`, `result` (WIN/LOSE/DRAW)
+
+### 해결
+- 파일: `app/v2/api/admin/user_routes.py`
+- `dice_sum` → `result` 변경 + `vault_earn` 방어적 접근 추가
+
+```python
+# Before
+result=str(log.dice_sum) if log.dice_sum else None,
+vault_earn=log.vault_earn,
+
+# After
+result=log.result if log.result else None,
+vault_earn=getattr(log, "vault_earn", None),
+```
+
+### 수정 시각
+- 2026-02-01 14:XX KST

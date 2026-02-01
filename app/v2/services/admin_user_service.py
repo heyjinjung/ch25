@@ -263,6 +263,9 @@ class V2AdminUserService:
         from app.v2.models import DiceLog
         from app.v2.models import RouletteLog
         from app.v2.models import LotteryLog
+        from app.v2.models.v2_dice import V2DiceLog
+        from app.v2.models.v2_roulette import V2RouletteLog
+        from app.v2.models.v2_lottery import V2LotteryLog
         from app.v2.models import AdminUserProfile
         from app.v2.models import TelegramLinkCode
         try:
@@ -298,10 +301,15 @@ class V2AdminUserService:
         db.query(UserSegment).filter(UserSegment.user_id == user_id).delete(synchronize_session=False)
         db.query(V2UserSegmentRecord).filter(V2UserSegmentRecord.user_id == user_id).delete(synchronize_session=False)
 
-        # Game Logs
+        # Game Logs (Legacy)
         db.query(DiceLog).filter(DiceLog.user_id == user_id).delete(synchronize_session=False)
         db.query(RouletteLog).filter(RouletteLog.user_id == user_id).delete(synchronize_session=False)
         db.query(LotteryLog).filter(LotteryLog.user_id == user_id).delete(synchronize_session=False)
+
+        # Game Logs (V2)
+        db.query(V2DiceLog).filter(V2DiceLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2RouletteLog).filter(V2RouletteLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(V2LotteryLog).filter(V2LotteryLog.user_id == user_id).delete(synchronize_session=False)
 
         # Vault
         db.query(VaultEarnEvent).filter(VaultEarnEvent.user_id == user_id).delete(synchronize_session=False)

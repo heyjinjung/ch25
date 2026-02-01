@@ -13,6 +13,7 @@
 | 01-31 | 주사위 게임 골든아워 미적용 | ✅ RESOLVED |
 | 01-31 | 게임 로그 테이블 FK 누락 | ✅ RESOLVED |
 | 01-31 | 주사위 골든아워 시간설정 500 에러 | ✅ RESOLVED |
+| 02-01 | 어드민 유저 게임 로그 조회 500 (dice_sum 속성) | ✅ RESOLVED |
 
 ---
 
@@ -202,3 +203,55 @@ if payload.golden_hour_start_time is not None:
 
 ### 📅 적용 일자
 - 2026-02-01 (Feature)
+
+---
+
+## 02-01 - [GAME/ADMIN] 어드민 유저 게임 로그 조회 500 (dice_sum 속성)
+
+**우선순위**: P1
+**관련 도메인**: GAME, ADMIN, BACKEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 어드민 유저 게임 로그 조회 (`GET /api/v2/admin/users/{user_id}/game-logs`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 어드민 유저 상세(게임 로그 탭) |
+| **재현 빈도** | 간헐적 (로그 기준 확인) |
+
+### 증거(로그)
+```
+AttributeError: 'V2DiceLog' object has no attribute 'dice_sum'
+File "/app/app/v2/api/admin/user_routes.py", line 1307, in get_user_game_logs
+  result=str(log.dice_sum) if log.dice_sum else None,
+```
+
+### 근본 원인 (증거 기반)
+- `get_user_game_logs`에서 `V2DiceLog.dice_sum` 접근 시 `AttributeError` 발생.
+- **증거**: 운영 서버 로그 스택 트레이스에서 `V2DiceLog` 객체에 `dice_sum` 속성이 없다고 명시.
+
+### 즉시 조치(가이드)
+- ✅ `V2DiceLog` 모델 확인 완료: `dice_sum` 컬럼 없음
+- ✅ 실제 컬럼: `user_sum`, `dealer_sum`, `result` (WIN/LOSE/DRAW)
+- ✅ `user_routes.py`의 `get_user_game_logs`에서 `dice_sum` → `result`로 수정
+
+### 해결 코드
+```python
+# Before (버그)
+result=str(log.dice_sum) if log.dice_sum else None,
+vault_earn=log.vault_earn,
+
+# After (수정)
+result=log.result if log.result else None,
+vault_earn=getattr(log, "vault_earn", None),
+```
+
+### 수정 파일
+- `app/v2/api/admin/user_routes.py` (Line ~1307)
+
+### 검증 방법
+- 어드민에서 유저 상세 → 게임 로그 탭 진입 시 200 OK 및 리스트 표시 확인.
+- 백엔드 로그에서 `AttributeError` 재발 여부 모니터링.
+
+### 수정 시각
+- 2026-02-01 14:XX KST
