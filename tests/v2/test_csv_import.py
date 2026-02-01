@@ -163,6 +163,45 @@ class TestCSVImportService:
         finally:
             csv_path.unlink()
 
+    def test_korean_header_localization(self, db_session):
+        """Test validation of CSV file with Korean (localized) headers."""
+        from app.v2.services.csv_import_service import CSVImportService
+
+        # Row with Korean headers
+        rows = [
+            {
+                "기록 일시": "2025-01-20T10:00:00Z",
+                "유저 ID": "1",
+                "게임 종류": "ROULETTE",
+                "결과": "WIN",
+                "배팅 금액": "500",
+                "지급 금액": "1000",
+                "최종 잔액": "10500",
+            }
+        ]
+
+        # Use DictWriter but with Korean fieldnames
+        tmp = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv", encoding="utf-8", newline="")
+        writer = csv.DictWriter(
+            tmp,
+            fieldnames=["기록 일시", "유저 ID", "게임 종류", "결과", "배팅 금액", "지급 금액", "최종 잔액"],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+        tmp.flush()
+        tmp.close()
+        csv_path = Path(tmp.name)
+
+        try:
+            service = CSVImportService(db_session)
+            is_valid, error_msg = service.validate_csv_file(str(csv_path))
+
+            assert is_valid, f"Validation failed for Korean headers: {error_msg}"
+            assert error_msg == "CSV file is valid"
+
+        finally:
+            csv_path.unlink()
+
     def test_estimate_import_time(self, db_session):
         """Test import time estimation."""
         from app.v2.services.csv_import_service import CSVImportService

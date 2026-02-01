@@ -5,7 +5,6 @@
 export { CollapsibleSection } from "./CollapsibleSection";
 export { QuickStat } from "./QuickStat";
 export { MissionCard } from "./MissionCard";
-export { StreakRulesEditor } from "./StreakRulesEditor";
 export { MissionPreview } from "./MissionPreview";
 export { StreakRulesSection } from "./StreakRulesSection";
 export { UsersTabContent } from "./UsersTabContent";

@@ -15,6 +15,7 @@
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
 | 02-01 | /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) | ✅ RESOLVED |
+| 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 
 ---
 
@@ -322,7 +323,30 @@ db.query(V2LotteryLog).filter(V2LotteryLog.user_id == user_id).delete(synchroniz
 - 백엔드 로그에서 `User {user_id} purged by admin` 메시지 확인.
 
 ### 수정 시각
-- 2026-02-01 14:XX KST
+| 02-01 | 어드민 유저 퍼지 500 에러 | Copilot |
+| 02-01 | CSV 한글 헤더 지원 및 임포트 오타 수정 | Copilot |
+
+---
+
+## 02-01 - [INFRA/BACKEND] CSV Import 한글 헤더 지원 및 Import 오류 수정
+
+**우선순위**: P1
+**관련 도메인**: BACKEND, ADMIN, DATA_OPS
+
+### 증상
+- 운영진이 엑셀에서 추출한 한글 헤더 CSV 업로드 시 `KeyError` 발생 및 임포트 중단
+- `CSVToRedisService` 호출 시 `ImportError` 또는 `AttributeError` (오타 때문)
+
+### 근본 원인
+1. **Localization 부재**: `CSV_FIELD_MAP`이 영문 필드명만 지원함.
+2. **서비스 호출 오타**: `csv_import_service.py`에서 `CSVToRedisService`를 `csv_to_redis_service`로 잘못 참조함.
+
+### 해결 조치
+1. **한글 에일리어스 추가**: `v2_csv_import.py` 모델의 `CSV_FIELD_MAP`에 한글 별칭(예: `유저 ID`, `배팅 금액`) 대량 추가.
+2. **오타 수정**: `csv_import_service.py` 내 대소문자 및 네이밍 미스매치 수정.
+
+### 검증 방법
+- 한글 헤더가 포함된 [sample_game_log.csv](../CSV_Samples/sample_game_log.csv) 업로드 시 정상 매핑 확인.
 
 ---
 
@@ -353,3 +377,4 @@ xmas-celery-*     Up (healthy)
 - 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락
 - 2026-02-01: SOT Import 리팩터링 후 re-export 누락 이슈 추가 (커밋 3b64190)
 - 2026-02-01: Issue #24 purge 500 에러 - V2 게임로그 미삭제 원인 확정 및 수정완료
+- 2026-02-01: CSV Import 한글 헤더 지원(Localization) 및 서비스 호출 오타 수정

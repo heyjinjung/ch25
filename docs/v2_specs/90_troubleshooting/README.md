@@ -68,7 +68,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
 | INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 4 |
-| FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 3 |
+| FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 4 |
 
 ---
 
@@ -122,6 +122,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | Alembic Migration 충돌 | [Alembic Legacy](./v2_troubleshooting_20260120_alembic_legacy_ko.md) | P1 |
 | Sentry Logs 탭 온보딩 화면 고정 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#01-31---infra-sentry-log-monitoring-logs-탭-활성화) | P2 |
 | 게임 API ModuleNotFoundError | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md#01-31---game-게임-api-modulenotfounderror-v2_user-경로-오류) | P0 |
+| CSV Import 한글 헤더 오류 및 오타 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#02-01---infrabackend-csv-import-한글-헤더-지원-및-import-오류-수정) | P1 |
 
 ### 프론트엔드 관련
 | 문제 | 문서 | 우선순위 |
@@ -129,6 +130,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | npm start/dev 실행 오류 | [프론트엔드 시작](./v2_troubleshooting_20260120_frontend_startup_ko.md) | P0 |
 | Cannot read property of undefined | [Undefined 오류](./v2_troubleshooting_20260120_undefined_error_ko.md) | P1 |
 | 빌드 실패 (Vite/Webpack) | [프론트엔드 시작](./v2_troubleshooting_20260120_frontend_startup_ko.md) | P1 |
+| MissionManagerPage 파일 비대화 (2944줄) | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md#02-01---frontendrefactor-missionmanagerpage-대규모-리팩토링-2944284줄-90-감소) | P2 |
 
 ### 권한/보안 관련
 | 문제 | 문서 | 우선순위 |
