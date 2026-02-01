@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   useAdminMissions,
   useAdminUpdateMission,
@@ -9,17 +9,14 @@ import {
   useAdminUpdateUserMissionProgress,
   useAdminResetUserMissionProgress,
   useAdminClaimUserMissionReward,
-  // Streak & Milestone hooks
   useAdminUserStreak,
   useAdminResetUserStreak,
   useAdminSetUserStreakCount,
   useAdminUserMilestoneProgress,
   useAdminForceGrantMilestone,
-  // Mission stats & validation hooks
   useAdminResetUserMissions,
   useAdminLoginMissionVerify,
   useAdminMissionStats,
-  // Active user stats hooks
   useAdminActiveUserStats,
 } from "../../../hooks/useAdminGame";
 import {
@@ -38,7 +35,12 @@ import {
   TabsList,
   TabsTrigger,
 } from "../../../components/ui/tabs";
-import { Card } from "../../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../components/ui/card";
 import { Badge } from "../../../components/ui/badge";
 import { Switch } from "../../../components/ui/switch";
 import { Input } from "../../../components/ui/input";
@@ -59,6 +61,13 @@ import {
 import { Button } from "../../../components/ui/button";
 import { Label } from "../../../components/ui/label";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "../../components/ui/dropdown-menu";
+import {
   Ticket,
   Gift,
   Coins,
@@ -74,14 +83,25 @@ import {
   BarChart3,
   Settings,
   Save,
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Copy,
+  Search,
+  ListChecks,
+  UserCog,
+  PieChart,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
 
-/**
- * V2 SoT-compliant mission reward options
- * 근거: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
- */
-// Mapped for Backend MissionRewardType Enum match
+// ─────────────────────────────────────────────────────────────────
+// Constants & Types
+// ─────────────────────────────────────────────────────────────────
+
 const REWARD_TYPE_MAPPING: Record<string, string> = {
   ROULETTE_TICKET: "TICKET_ROULETTE",
   DICE_TICKET: "TICKET_DICE",
@@ -95,62 +115,37 @@ const MISSION_REWARD_OPTIONS = REWARD_ITEMS.map((item) => ({
   value: REWARD_TYPE_MAPPING[item.value] || item.value,
 }));
 
-// Mock Categories for Tabs
-// BE MissionCategory enum: DAILY/WEEKLY/NEW_USER/SPECIAL
-const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL"];
+const CATEGORIES = ["DAILY", "WEEKLY", "NEW_USER", "SPECIAL"] as const;
 
 const ACTION_TYPE_OPTIONS = [
-  { value: "PLAY_GAME", label: "게임 플레이 (PLAY_GAME)" },
-  { value: "PLAY_DICE", label: "주사위 게임 (PLAY_DICE)" },
-  { value: "PLAY_ROULETTE", label: "룰렛 게임 (PLAY_ROULETTE)" },
-  { value: "PLAY_LOTTERY", label: "복권 게임 (PLAY_LOTTERY)" },
-  { value: "LOGIN", label: "로그인/출석 (LOGIN)" },
-  { value: "GOLDEN_HOUR_PLAY", label: "골든아워 참가 (GOLDEN_HOUR_PLAY)" },
-  { value: "BUY_SHOP_ITEM", label: "상점 구매 (BUY_SHOP_ITEM)" },
-  { value: "CC_DEPOSIT", label: "CC 입금 (CC_DEPOSIT)" },
-  {
-    value: "JOIN_TELEGRAM_CHANNEL",
-    label: "텔레그램 채널 입장 (JOIN_TELEGRAM_CHANNEL)",
-  },
-  { value: "JOIN_CC_CHANNEL", label: "CC 공식채널 입장 (JOIN_CC_CHANNEL)" },
-  { value: "CONSECUTIVE_LOGIN", label: "다음날 로그인 (CONSECUTIVE_LOGIN)" },
-  { value: "JOIN_CHANNEL", label: "채널 입장 (JOIN_CHANNEL)" },
-  { value: "SHARE_STORY", label: "스토리 공유 (SHARE_STORY)" },
-  { value: "INVITE_FRIEND", label: "친구 초대 (INVITE_FRIEND)" },
+  { value: "PLAY_GAME", label: "게임 플레이" },
+  { value: "PLAY_DICE", label: "주사위 게임" },
+  { value: "PLAY_ROULETTE", label: "룰렛 게임" },
+  { value: "PLAY_LOTTERY", label: "복권 게임" },
+  { value: "LOGIN", label: "로그인/출석" },
+  { value: "GOLDEN_HOUR_PLAY", label: "골든아워 참가" },
+  { value: "BUY_SHOP_ITEM", label: "상점 구매" },
+  { value: "CC_DEPOSIT", label: "CC 입금" },
+  { value: "JOIN_TELEGRAM_CHANNEL", label: "텔레그램 채널 입장" },
+  { value: "JOIN_CC_CHANNEL", label: "CC 공식채널 입장" },
+  { value: "CONSECUTIVE_LOGIN", label: "다음날 로그인" },
+  { value: "JOIN_CHANNEL", label: "채널 입장" },
+  { value: "SHARE_STORY", label: "스토리 공유" },
+  { value: "INVITE_FRIEND", label: "친구 초대" },
 ];
 
-/**
- * 프리셋 목록 - 카테고리별로 분류
- * DAILY: 일일 미션
- * WEEKLY: 주간 미션
- * NEW_USER: 신규 유저 전용
- * SPECIAL: 특수 미션
- */
 const LOGIC_KEY_PRESETS = [
-  // ── DAILY 프리셋 ──
   {
     value: "daily_play_generic",
-    label: "📅 일일 | 게임 플레이 (전체)",
+    label: "📅 일일 | 게임 플레이",
     category: "DAILY",
   },
-  {
-    value: "daily_play_dice",
-    label: "📅 일일 | 주사위 게임",
-    category: "DAILY",
-  },
-  {
-    value: "daily_play_roulette",
-    label: "📅 일일 | 룰렛 게임",
-    category: "DAILY",
-  },
-  {
-    value: "daily_play_lottery",
-    label: "📅 일일 | 복권 게임",
-    category: "DAILY",
-  },
+  { value: "daily_play_dice", label: "📅 일일 | 주사위", category: "DAILY" },
+  { value: "daily_play_roulette", label: "📅 일일 | 룰렛", category: "DAILY" },
+  { value: "daily_play_lottery", label: "📅 일일 | 복권", category: "DAILY" },
   {
     value: "daily_golden_hour",
-    label: "📅 일일 | 골든아워 참가",
+    label: "📅 일일 | 골든아워",
     category: "DAILY",
   },
   {
@@ -164,30 +159,21 @@ const LOGIC_KEY_PRESETS = [
     category: "DAILY",
   },
   { value: "daily_cc_deposit", label: "📅 일일 | CC 입금", category: "DAILY" },
-  // ── WEEKLY 프리셋 ──
   {
     value: "weekly_play_generic",
-    label: "📆 주간 | 게임 플레이 (전체)",
+    label: "📆 주간 | 게임 플레이",
     category: "WEEKLY",
   },
-  {
-    value: "weekly_play_dice",
-    label: "📆 주간 | 주사위 게임",
-    category: "WEEKLY",
-  },
+  { value: "weekly_play_dice", label: "📆 주간 | 주사위", category: "WEEKLY" },
   {
     value: "weekly_play_roulette",
-    label: "📆 주간 | 룰렛 게임",
+    label: "📆 주간 | 룰렛",
     category: "WEEKLY",
   },
-  {
-    value: "weekly_play_lottery",
-    label: "📆 주간 | 복권 게임",
-    category: "WEEKLY",
-  },
+  { value: "weekly_play_lottery", label: "📆 주간 | 복권", category: "WEEKLY" },
   {
     value: "weekly_golden_hour",
-    label: "📆 주간 | 골든아워 참가",
+    label: "📆 주간 | 골든아워",
     category: "WEEKLY",
   },
   {
@@ -205,7 +191,6 @@ const LOGIC_KEY_PRESETS = [
     label: "📆 주간 | CC 입금",
     category: "WEEKLY",
   },
-  // ── NEW_USER 프리셋 ──
   {
     value: "new_user_first_login",
     label: "🆕 신규 | 첫 로그인",
@@ -213,17 +198,17 @@ const LOGIC_KEY_PRESETS = [
   },
   {
     value: "new_user_first_game",
-    label: "🆕 신규 | 첫 게임 플레이",
+    label: "🆕 신규 | 첫 게임",
     category: "NEW_USER",
   },
   {
     value: "new_user_telegram_join",
-    label: "🆕 신규 | 텔레그램 채널 입장",
+    label: "🆕 신규 | 텔레그램 입장",
     category: "NEW_USER",
   },
   {
     value: "new_user_cc_channel_join",
-    label: "🆕 신규 | CC 공식채널 입장",
+    label: "🆕 신규 | CC 채널 입장",
     category: "NEW_USER",
   },
   {
@@ -231,18 +216,107 @@ const LOGIC_KEY_PRESETS = [
     label: "🆕 신규 | 다음날 로그인",
     category: "NEW_USER",
   },
-  // ── SPECIAL 프리셋 ──
   {
     value: "streak_challenge_3",
-    label: "⭐ 스페셜 | 3일 연속 출석",
+    label: "⭐ 스페셜 | 3일 연속",
     category: "SPECIAL",
   },
-  {
-    value: "golden_hour",
-    label: "⭐ 스페셜 | 골든아워 (레거시)",
-    category: "SPECIAL",
-  },
+  { value: "golden_hour", label: "⭐ 스페셜 | 골든아워", category: "SPECIAL" },
 ];
+
+const PRESET_RECOMMENDED_ACTION_TYPE: Record<string, string | undefined> = {
+  daily_play_generic: "PLAY_GAME",
+  daily_play_dice: "PLAY_DICE",
+  daily_play_roulette: "PLAY_ROULETTE",
+  daily_play_lottery: "PLAY_LOTTERY",
+  daily_golden_hour: "GOLDEN_HOUR_PLAY",
+  daily_shop_purchase: "BUY_SHOP_ITEM",
+  daily_login_gift: "LOGIN",
+  daily_cc_deposit: "CC_DEPOSIT",
+  weekly_play_generic: "PLAY_GAME",
+  weekly_play_dice: "PLAY_DICE",
+  weekly_play_roulette: "PLAY_ROULETTE",
+  weekly_play_lottery: "PLAY_LOTTERY",
+  weekly_golden_hour: "GOLDEN_HOUR_PLAY",
+  weekly_shop_purchase: "BUY_SHOP_ITEM",
+  weekly_login_streak: "LOGIN",
+  weekly_cc_deposit: "CC_DEPOSIT",
+  new_user_first_login: "LOGIN",
+  new_user_first_game: "PLAY_GAME",
+  new_user_telegram_join: "JOIN_TELEGRAM_CHANNEL",
+  new_user_cc_channel_join: "JOIN_CC_CHANNEL",
+  new_user_next_day_login: "CONSECUTIVE_LOGIN",
+  streak_challenge_3: "LOGIN",
+  golden_hour: "PLAY_GAME",
+};
+
+const PRESET_TITLE_LABELS: Record<string, string> = {
+  daily_play_generic: "게임 플레이",
+  daily_play_dice: "주사위",
+  daily_play_roulette: "룰렛",
+  daily_play_lottery: "복권",
+  daily_golden_hour: "골든아워",
+  daily_shop_purchase: "상점 구매",
+  daily_login_gift: "출석 체크",
+  daily_cc_deposit: "CC 입금",
+  weekly_play_generic: "게임 플레이",
+  weekly_play_dice: "주사위",
+  weekly_play_roulette: "룰렛",
+  weekly_play_lottery: "복권",
+  weekly_golden_hour: "골든아워",
+  weekly_shop_purchase: "상점 구매",
+  weekly_login_streak: "로그인",
+  weekly_cc_deposit: "CC 입금",
+  new_user_first_login: "첫 로그인",
+  new_user_first_game: "첫 게임",
+  new_user_telegram_join: "텔레그램 입장",
+  new_user_cc_channel_join: "CC 채널 입장",
+  new_user_next_day_login: "다음날 로그인",
+  streak_challenge_3: "연속 출석",
+  golden_hour: "골든아워 게임",
+};
+
+const CATEGORY_PREFIX: Record<string, string> = {
+  DAILY: "일일",
+  WEEKLY: "주간",
+  NEW_USER: "신규",
+  SPECIAL: "스페셜",
+};
+
+const CATEGORY_COLORS: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  DAILY: {
+    bg: "bg-emerald-500/10",
+    text: "text-emerald-400",
+    border: "border-emerald-500/20",
+  },
+  WEEKLY: {
+    bg: "bg-indigo-500/10",
+    text: "text-indigo-400",
+    border: "border-indigo-500/20",
+  },
+  NEW_USER: {
+    bg: "bg-cyan-500/10",
+    text: "text-cyan-400",
+    border: "border-cyan-500/20",
+  },
+  SPECIAL: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-400",
+    border: "border-amber-500/20",
+  },
+  SPECIAL_EVENT: {
+    bg: "bg-amber-500/10",
+    text: "text-amber-400",
+    border: "border-amber-500/20",
+  },
+};
+
+// ─────────────────────────────────────────────────────────────────
+// Helper Functions
+// ─────────────────────────────────────────────────────────────────
 
 const isGoldenHourLogicKey = (logicKey: string) =>
   String(logicKey || "")
@@ -253,97 +327,16 @@ const getCategoryMeaning = (category: string) => {
   const cat = String(category || "").toUpperCase();
   if (cat === "DAILY") return "일일(09:00 KST 리셋)";
   if (cat === "WEEKLY") return "주간(ISO Week 리셋)";
-  if (cat === "NEW_USER") return "신규 유저(가입 7일 이내)만 진행";
-  if (cat === "SPECIAL") return "스페셜(리셋 없음 / NON_RESET)";
+  if (cat === "NEW_USER") return "신규 유저(가입 7일 이내)";
+  if (cat === "SPECIAL") return "스페셜(리셋 없음)";
   return cat;
 };
 
-/**
- * 프리셋 → 추천 액션타입 매핑
- */
-const PRESET_RECOMMENDED_ACTION_TYPE: Record<string, string | undefined> = {
-  // DAILY
-  daily_play_generic: "PLAY_GAME",
-  daily_play_dice: "PLAY_DICE",
-  daily_play_roulette: "PLAY_ROULETTE",
-  daily_play_lottery: "PLAY_LOTTERY",
-  daily_golden_hour: "GOLDEN_HOUR_PLAY",
-  daily_shop_purchase: "BUY_SHOP_ITEM",
-  daily_login_gift: "LOGIN",
-  daily_cc_deposit: "CC_DEPOSIT",
-  // WEEKLY
-  weekly_play_generic: "PLAY_GAME",
-  weekly_play_dice: "PLAY_DICE",
-  weekly_play_roulette: "PLAY_ROULETTE",
-  weekly_play_lottery: "PLAY_LOTTERY",
-  weekly_golden_hour: "GOLDEN_HOUR_PLAY",
-  weekly_shop_purchase: "BUY_SHOP_ITEM",
-  weekly_login_streak: "LOGIN",
-  weekly_cc_deposit: "CC_DEPOSIT",
-  // NEW_USER
-  new_user_first_login: "LOGIN",
-  new_user_first_game: "PLAY_GAME",
-  new_user_telegram_join: "JOIN_TELEGRAM_CHANNEL",
-  new_user_cc_channel_join: "JOIN_CC_CHANNEL",
-  new_user_next_day_login: "CONSECUTIVE_LOGIN",
-  // SPECIAL
-  streak_challenge_3: "LOGIN",
-  golden_hour: "PLAY_GAME",
-};
-
-/**
- * 프리셋 한글 라벨 (자동 제목 생성용)
- */
-const PRESET_TITLE_LABELS: Record<string, string> = {
-  // DAILY
-  daily_play_generic: "게임 플레이",
-  daily_play_dice: "주사위",
-  daily_play_roulette: "룰렛",
-  daily_play_lottery: "복권",
-  daily_golden_hour: "골든아워",
-  daily_shop_purchase: "상점 구매",
-  daily_login_gift: "출석 체크",
-  daily_cc_deposit: "CC 입금",
-  // WEEKLY
-  weekly_play_generic: "게임 플레이",
-  weekly_play_dice: "주사위",
-  weekly_play_roulette: "룰렛",
-  weekly_play_lottery: "복권",
-  weekly_golden_hour: "골든아워",
-  weekly_shop_purchase: "상점 구매",
-  weekly_login_streak: "로그인",
-  weekly_cc_deposit: "CC 입금",
-  // NEW_USER
-  new_user_first_login: "첫 로그인",
-  new_user_first_game: "첫 게임",
-  new_user_telegram_join: "텔레그램 입장",
-  new_user_cc_channel_join: "CC 채널 입장",
-  new_user_next_day_login: "다음날 로그인",
-  // SPECIAL
-  streak_challenge_3: "연속 출석",
-  golden_hour: "골든아워 게임",
-};
-
-// 카테고리 한글 접두어
-const CATEGORY_PREFIX: Record<string, string> = {
-  DAILY: "일일",
-  WEEKLY: "주간",
-  NEW_USER: "신규",
-  SPECIAL: "스페셜",
-};
-
-/**
- * 프리셋 → 추천 카테고리 매핑
- */
 const getPresetCategory = (preset: string): string => {
   const p = LOGIC_KEY_PRESETS.find((item) => item.value === preset);
   return p?.category || "DAILY";
 };
 
-/**
- * 프리셋 + 카테고리 + 목표값으로 고유 logicKey 자동 생성
- * 예: daily_play_generic + DAILY + 5 → DAILY_PLAY_GENERIC_5
- */
 const generateLogicKey = (
   preset: string,
   category: string,
@@ -355,10 +348,6 @@ const generateLogicKey = (
   return `${cat}_${base}_${tv}`;
 };
 
-/**
- * 프리셋 + 카테고리 + 목표값으로 제목 자동 생성
- * 예: daily_play_generic + DAILY + 5 → "일일 게임 플레이 5회"
- */
 const generateTitle = (
   preset: string,
   category: string,
@@ -370,6 +359,11 @@ const generateTitle = (
   return `${catLabel} ${presetLabel} ${tv}회`;
 };
 
+const normalizeLogicKey = (value: string) =>
+  String(value || "")
+    .trim()
+    .toUpperCase();
+
 const getTrendHeightClass = (value: number, max: number) => {
   const base = Math.max(1, max);
   const percent = Math.max(0, Math.min(100, (value / base) * 100));
@@ -378,11 +372,306 @@ const getTrendHeightClass = (value: number, max: number) => {
   return styles[key] ?? styles.h0;
 };
 
+const getRewardIcon = (type: string) => {
+  switch (type) {
+    case "TICKET_ROULETTE":
+    case "TICKET_DICE":
+    case "TICKET_LOTTERY":
+    case "ROULETTE_TICKET":
+    case "DICE_TICKET":
+    case "LOTTERY_TICKET":
+      return <Ticket className="w-4 h-4 text-emerald-400" />;
+    case "VAULT":
+      return <Coins className="w-4 h-4 text-yellow-400" />;
+    case "DIAMOND":
+      return <Coins className="w-4 h-4 text-sky-400" />;
+    case "GOLD_KEY":
+    case "DIAMOND_KEY":
+    case "GOLD_KEY_TICKET":
+    case "DIAMOND_TICKET":
+      return <Gift className="w-4 h-4 text-purple-400" />;
+    case "GOLD_KEY_FRAGMENT":
+    case "DIAMOND_FRAGMENT":
+      return <Gift className="w-4 h-4 text-amber-400" />;
+    case "PUZZLE_C1":
+    case "PUZZLE_C2":
+    case "PUZZLE_J":
+    case "PUZZLE_M":
+      return <Gift className="w-4 h-4 text-indigo-400" />;
+    default:
+      return <Coins className="w-4 h-4 text-zinc-400" />;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────
+
+interface StreakGrant {
+  kind: "WALLET" | "INVENTORY";
+  token_type: string;
+  amount: number;
+}
+
+interface StreakRule {
+  day: number;
+  enabled: boolean;
+  grants: StreakGrant[];
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Collapsible Section Component
+// ─────────────────────────────────────────────────────────────────
+
+interface CollapsibleSectionProps {
+  title: string;
+  subtitle?: string;
+  icon: React.ReactNode;
+  iconColor?: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+  badge?: React.ReactNode;
+}
+
+function CollapsibleSection({
+  title,
+  subtitle,
+  icon,
+  iconColor = "text-zinc-400",
+  defaultOpen = false,
+  children,
+  badge,
+}: CollapsibleSectionProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <Card className="bg-[#18181B] border-white/5 overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className={cn("p-2 rounded-lg bg-white/5", iconColor)}>
+            {icon}
+          </div>
+          <div className="text-left">
+            <h3 className="text-base font-semibold text-zinc-100">{title}</h3>
+            {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
+          </div>
+          {badge}
+        </div>
+        <div className="flex items-center gap-2">
+          {isOpen ? (
+            <ChevronDown className="w-5 h-5 text-zinc-500" />
+          ) : (
+            <ChevronRight className="w-5 h-5 text-zinc-500" />
+          )}
+        </div>
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 pt-0 border-t border-white/5">
+          <div className="pt-4">{children}</div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Quick Stats Card Component
+// ─────────────────────────────────────────────────────────────────
+
+interface QuickStatProps {
+  label: string;
+  value: string | number;
+  change?: number;
+  icon: React.ReactNode;
+  color: string;
+}
+
+function QuickStat({ label, value, change, icon, color }: QuickStatProps) {
+  return (
+    <div className={cn("p-4 rounded-xl border", color)}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-zinc-400 font-medium">{label}</span>
+        {icon}
+      </div>
+      <div className="text-2xl font-bold text-white">{value}</div>
+      {change !== undefined && (
+        <div
+          className={cn(
+            "text-xs mt-1",
+            change >= 0 ? "text-emerald-400" : "text-red-400",
+          )}
+        >
+          <TrendingUp className="w-3 h-3 inline mr-1" />
+          {change >= 0 ? "+" : ""}
+          {(change * 100).toFixed(1)}%
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Mission Card Component
+// ─────────────────────────────────────────────────────────────────
+
+interface MissionCardProps {
+  mission: AdminMissionDto;
+  onEdit: () => void;
+  onDelete: () => void;
+  onToggleActive: (active: boolean) => void;
+  onDuplicate: () => void;
+}
+
+function MissionCard({
+  mission,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  onDuplicate,
+}: MissionCardProps) {
+  const categoryStyle =
+    CATEGORY_COLORS[mission.category] ?? CATEGORY_COLORS.DAILY;
+  const rewardLabel =
+    MISSION_REWARD_OPTIONS.find((r) => r.value === mission.rewardType)?.label ||
+    mission.rewardType;
+
+  return (
+    <div className="group relative bg-[#0D0D0F] rounded-xl border border-white/5 hover:border-white/10 transition-all overflow-hidden">
+      {/* Status indicator */}
+      <div
+        className={cn(
+          "absolute top-0 left-0 w-1 h-full",
+          mission.isActive ? "bg-emerald-500" : "bg-zinc-600",
+        )}
+      />
+
+      <div className="p-4 pl-5">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left: Mission Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <h4 className="font-semibold text-zinc-100 truncate">
+                {mission.title}
+              </h4>
+              {!mission.isActive && (
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] h-5 bg-zinc-800 text-zinc-400"
+                >
+                  비활성
+                </Badge>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Badge
+                className={cn(
+                  "text-[10px]",
+                  categoryStyle.bg,
+                  categoryStyle.text,
+                  categoryStyle.border,
+                )}
+              >
+                {mission.category}
+              </Badge>
+              <span className="text-zinc-500">•</span>
+              <span className="text-zinc-400 font-mono">
+                {mission.actionType || "N/A"}
+              </span>
+              <span className="text-zinc-500">•</span>
+              <span className="text-zinc-400">
+                목표: {mission.targetValue}회
+              </span>
+            </div>
+
+            {mission.condition && (
+              <p className="text-xs text-zinc-500 mt-2 truncate">
+                {mission.condition}
+              </p>
+            )}
+          </div>
+
+          {/* Right: Reward & Actions */}
+          <div className="flex items-center gap-3">
+            {/* Reward Display */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5">
+              {getRewardIcon(mission.rewardType)}
+              <span className="text-sm font-medium text-zinc-200">
+                {mission.rewardAmount}
+              </span>
+              <span className="text-[10px] text-zinc-500 max-w-20 truncate">
+                {rewardLabel}
+              </span>
+            </div>
+
+            {/* Toggle */}
+            <Switch
+              checked={mission.isActive}
+              onCheckedChange={onToggleActive}
+              className="data-[state=checked]:bg-emerald-500"
+            />
+
+            {/* Actions Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-zinc-500 hover:text-white"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-[#18181B] border-white/10 text-white"
+              >
+                <DropdownMenuItem
+                  onClick={onEdit}
+                  className="cursor-pointer hover:bg-white/5"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  편집
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={onDuplicate}
+                  className="cursor-pointer hover:bg-white/5"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  복제
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/10" />
+                <DropdownMenuItem
+                  onClick={onDelete}
+                  className="cursor-pointer hover:bg-red-500/10 text-red-400 focus:text-red-400"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  삭제
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────────
+
 export default function MissionManagerPage() {
+  // ─── API Hooks ───
   const { data: missions = [], isLoading } = useAdminMissions();
   const updateMutation = useAdminUpdateMission();
   const createMutation = useAdminCreateMission();
   const deleteMutation = useAdminDeleteMission();
+
+  // User Mission Management
   const [userMissionUserIdInput, setUserMissionUserIdInput] = useState("");
   const [userMissionUserId, setUserMissionUserId] = useState<number | null>(
     null,
@@ -396,47 +685,20 @@ export default function MissionManagerPage() {
     {},
   );
 
-  // Streak & Milestone states
+  const { data: userMissions = [], isLoading: isUserMissionsLoading } =
+    useAdminUserMissionHistory(userMissionUserId ?? undefined);
+  const forceCompleteMutation = useAdminForceCompleteMission();
+  const updateProgressMutation = useAdminUpdateUserMissionProgress();
+  const resetProgressMutation = useAdminResetUserMissionProgress();
+  const claimRewardMutation = useAdminClaimUserMissionReward();
+
+  // Streak & Milestone
   const [streakUserIdInput, setStreakUserIdInput] = useState("");
   const [streakUserId, setStreakUserId] = useState<number | null>(null);
   const [streakEditValue, setStreakEditValue] = useState("");
   const [milestoneDay, setMilestoneDay] = useState(3);
   const [milestoneReason, setMilestoneReason] = useState("");
 
-  // Mission reset states
-  const [missionResetReason, setMissionResetReason] = useState("");
-  const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<
-    number | null
-  >(null);
-
-  // Streak reward rules states
-  interface StreakGrant {
-    kind: "WALLET" | "INVENTORY";
-    token_type: string;
-    amount: number;
-  }
-  interface StreakRule {
-    day: number;
-    enabled: boolean;
-    grants: StreakGrant[];
-  }
-  const [editingRules, setEditingRules] = useState<StreakRule[]>([]);
-  const [isRulesEditing, setIsRulesEditing] = useState(false);
-
-  // Streak reward rules hooks
-  const { data: streakRulesConfig, isLoading: isRulesLoading } =
-    useAdminUiConfig("streak_reward_rules");
-  const updateRulesMutation = useAdminUpdateUiConfig();
-
-  // Sync editingRules when config loads
-  useEffect(() => {
-    if (streakRulesConfig?.value) {
-      const config = streakRulesConfig.value as { rules?: StreakRule[] };
-      setEditingRules(config.rules || []);
-    }
-  }, [streakRulesConfig]);
-
-  // Streak hooks
   const { data: streakData, isLoading: isStreakLoading } = useAdminUserStreak(
     streakUserId ?? undefined,
   );
@@ -445,9 +707,29 @@ export default function MissionManagerPage() {
   const resetStreakMutation = useAdminResetUserStreak();
   const setStreakCountMutation = useAdminSetUserStreakCount();
   const forceGrantMilestoneMutation = useAdminForceGrantMilestone();
+
+  // Mission Reset
+  const [missionResetReason, setMissionResetReason] = useState("");
+  const [selectedMissionIdForReset, setSelectedMissionIdForReset] = useState<
+    number | null
+  >(null);
   const resetUserMissionsMutation = useAdminResetUserMissions();
 
-  // Stats hooks
+  // Streak Rules
+  const [editingRules, setEditingRules] = useState<StreakRule[]>([]);
+  const [isRulesEditing, setIsRulesEditing] = useState(false);
+  const { data: streakRulesConfig, isLoading: isRulesLoading } =
+    useAdminUiConfig("streak_reward_rules");
+  const updateRulesMutation = useAdminUpdateUiConfig();
+
+  useEffect(() => {
+    if (streakRulesConfig?.value) {
+      const config = streakRulesConfig.value as { rules?: StreakRule[] };
+      setEditingRules(config.rules || []);
+    }
+  }, [streakRulesConfig]);
+
+  // Stats
   const { data: missionStats, isLoading: isMissionStatsLoading } =
     useAdminMissionStats();
   const { data: loginVerifyData, isLoading: isLoginVerifyLoading } =
@@ -455,7 +737,11 @@ export default function MissionManagerPage() {
   const { data: activeUserStats, isLoading: isActiveUserStatsLoading } =
     useAdminActiveUserStats(7);
 
-  const [activeTab, setActiveTab] = useState("DAILY");
+  // UI State
+  const [mainTab, setMainTab] = useState<"missions" | "users" | "stats">(
+    "missions",
+  );
+  const [categoryTab, setCategoryTab] = useState("DAILY");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<AdminMissionDto | null>(null);
@@ -474,13 +760,25 @@ export default function MissionManagerPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [editError, setEditError] = useState<string | null>(null);
 
-  const { data: userMissions = [], isLoading: isUserMissionsLoading } =
-    useAdminUserMissionHistory(userMissionUserId ?? undefined);
-  const forceCompleteMutation = useAdminForceCompleteMission();
-  const updateProgressMutation = useAdminUpdateUserMissionProgress();
-  const resetProgressMutation = useAdminResetUserMissionProgress();
-  const claimRewardMutation = useAdminClaimUserMissionReward();
+  // ─── Computed Values ───
+  const filteredMissions = useMemo(
+    () => missions.filter((m) => m.category === categoryTab),
+    [missions, categoryTab],
+  );
 
+  const missionCounts = useMemo(
+    () => ({
+      total: missions.length,
+      active: missions.filter((m) => m.isActive).length,
+      daily: missions.filter((m) => m.category === "DAILY").length,
+      weekly: missions.filter((m) => m.category === "WEEKLY").length,
+      newUser: missions.filter((m) => m.category === "NEW_USER").length,
+      special: missions.filter((m) => m.category === "SPECIAL_EVENT").length,
+    }),
+    [missions],
+  );
+
+  // ─── Handlers ───
   const findLogicKeyConflict = (logicKey: string, excludeId?: number) => {
     const normalized = normalizeLogicKey(logicKey);
     if (!normalized) return null;
@@ -493,10 +791,6 @@ export default function MissionManagerPage() {
     );
   };
 
-  /**
-   * 논리적 중복 검사: 같은 카테고리 + 같은 액션타입 + 같은 목표값이면 중복
-   * logicKey가 달라도 실제로는 같은 미션이므로 경고
-   */
   const findLogicalDuplicate = (
     category: string,
     actionType: string,
@@ -514,11 +808,6 @@ export default function MissionManagerPage() {
     );
   };
 
-  const normalizeLogicKey = (value: string) =>
-    String(value || "")
-      .trim()
-      .toUpperCase();
-
   const handleCreate = () => {
     setCreateError(null);
     const nextLogicKey = normalizeLogicKey(createForm.logicKey);
@@ -531,7 +820,6 @@ export default function MissionManagerPage() {
       return;
     }
 
-    // 1. logicKey 중복 검사
     const keyConflict = findLogicKeyConflict(nextLogicKey);
     if (keyConflict) {
       setCreateError(
@@ -540,7 +828,6 @@ export default function MissionManagerPage() {
       return;
     }
 
-    // 2. 논리적 중복 검사 (같은 카테고리+액션+목표값)
     const logicalDup = findLogicalDuplicate(
       createForm.category,
       createForm.actionType,
@@ -548,7 +835,7 @@ export default function MissionManagerPage() {
     );
     if (logicalDup) {
       setCreateError(
-        `동일한 조건의 미션이 이미 존재합니다: "${logicalDup.title}" (${logicalDup.category}, 목표 ${logicalDup.targetValue})`,
+        `동일한 조건의 미션이 이미 존재합니다: "${logicalDup.title}"`,
       );
       return;
     }
@@ -592,6 +879,7 @@ export default function MissionManagerPage() {
     setEditError(null);
     const nextLogicKey = normalizeLogicKey(editForm.logicKey);
     const conflict = findLogicKeyConflict(nextLogicKey, editForm.id);
+
     if (!editForm.title.trim()) {
       setEditError("제목을 입력하세요.");
       return;
@@ -606,6 +894,7 @@ export default function MissionManagerPage() {
       );
       return;
     }
+
     updateMutation.mutate(
       {
         id: editForm.id,
@@ -630,114 +919,6 @@ export default function MissionManagerPage() {
     );
   };
 
-  // Filter missions by active tab
-  const filteredMissions = missions.filter((m) => m.category === activeTab);
-
-  const renderMissionAssemblyPreview = (vars: {
-    category: string;
-    logicKey: string;
-    actionType?: string | null;
-    targetValue: number;
-    condition?: string | null;
-  }) => {
-    const golden = isGoldenHourLogicKey(vars.logicKey);
-    const action = String(vars.actionType || "").trim() || "(없음)";
-    const catMeaning = getCategoryMeaning(vars.category);
-    const warnings: string[] = [];
-
-    if (golden && action !== "PLAY_GAME") {
-      warnings.push(
-        "골든아워 미션은 logicKey에 golden_hour 포함으로 판정됩니다. 게임플레이 기반이면 Action Type=PLAY_GAME를 권장합니다.",
-      );
-    }
-    if (vars.category === "DAILY" && !action) {
-      warnings.push(
-        "DAILY는 리셋 정책(09:00 KST)이며, 트리거는 Action Type로 결정됩니다.",
-      );
-    }
-
-    return (
-      <div className="col-span-full mt-4 overflow-hidden rounded-xl border border-white/10 bg-[#09090B] shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-2">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-              Mission System Blueprint
-            </span>
-          </div>
-          <span className="font-mono text-[10px] text-zinc-600">
-            v2.ops.engine
-          </span>
-        </div>
-        <div className="p-4">
-          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-            <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
-                Category Scope
-              </Label>
-              <div className="text-sm font-medium text-zinc-200">
-                {catMeaning}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
-                Trigger Event
-              </Label>
-              <div className="font-mono text-sm text-emerald-400">{action}</div>
-            </div>
-            <div className="col-span-full space-y-1 py-2 border-y border-white/5">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
-                Global Identifier (Logic Key)
-              </Label>
-              <div className="font-mono text-sm tracking-tight text-indigo-400 break-all bg-indigo-500/5 p-2 rounded border border-indigo-500/10">
-                {normalizeLogicKey(vars.logicKey) || "UNDEFINED_KEY"}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
-                Target Threshold
-              </Label>
-              <div className="text-xl font-bold text-zinc-100 italic">
-                {Number(vars.targetValue || 0).toLocaleString()}
-                <span className="ml-1 text-xs font-normal text-zinc-500 not-italic">
-                  counts
-                </span>
-              </div>
-            </div>
-            <div className="space-y-1 text-right">
-              <Label className="text-[10px] uppercase text-zinc-500 font-bold">
-                Golden Hour Check
-              </Label>
-              <div
-                className={`text-sm font-bold ${golden ? "text-amber-400" : "text-zinc-600"}`}
-              >
-                {golden ? "MATCHED" : "OFF"}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex gap-3 text-[11px] text-zinc-500 leading-relaxed border-t border-white/5 pt-3">
-            <div className="h-4 w-1 bg-zinc-800 rounded-full shrink-0" />
-            <p>
-              Logic Key acts as a unique global ID. The mission engine evaluates
-              progress based on the Action Type trigger and Category reset
-              policy.
-            </p>
-          </div>
-
-          {warnings.length > 0 && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
-              <span className="text-amber-400 shrink-0">⚠️</span>
-              <p className="text-[11px] text-amber-200/80 leading-snug">
-                {warnings[0]}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   const handleUpdate = (
     id: number,
     field: keyof AdminMissionDto,
@@ -746,61 +927,21 @@ export default function MissionManagerPage() {
     updateMutation.mutate({ id, data: { [field]: value } });
   };
 
-  const getRewardIcon = (type: string) => {
-    switch (type) {
-      // V2 SoT: Game Tickets (MissionRewardType)
-      case "TICKET_ROULETTE":
-      case "TICKET_DICE":
-      case "TICKET_LOTTERY":
-      case "ROULETTE_TICKET": // Fallback
-      case "DICE_TICKET":
-      case "LOTTERY_TICKET":
-        return <Ticket className="w-4 h-4 text-emerald-400" />;
-      // V2 SoT: Vault
-      case "VAULT":
-        return <Coins className="w-4 h-4 text-yellow-400" />;
-      // V2 SoT: Currency
-      case "DIAMOND":
-        return <Coins className="w-4 h-4 text-sky-400" />;
-      // V2 SoT: Premium Tickets (MissionRewardType)
-      case "GOLD_KEY":
-      case "DIAMOND_KEY":
-      case "GOLD_KEY_TICKET": // Fallback
-      case "DIAMOND_TICKET":
-        return <Gift className="w-4 h-4 text-purple-400" />;
-      // V2 SoT: Fragments
-      case "GOLD_KEY_FRAGMENT":
-      case "DIAMOND_FRAGMENT":
-        return <Gift className="w-4 h-4 text-amber-400" />;
-      // V2 SoT: Puzzle Pieces
-      case "PUZZLE_C1":
-      case "PUZZLE_C2":
-      case "PUZZLE_J":
-      case "PUZZLE_M":
-        return <Gift className="w-4 h-4 text-indigo-400" />;
-      // V2 SoT: Gifticons
-      case "CHICKEN_GIFTICON_5000":
-      case "CHICKEN_GIFTICON_10000":
-      case "STARBUCKS_GIFTICON_2000":
-      case "STARBUCKS_GIFTICON_10000":
-      case "PIZZA_GIFTICON_5000":
-      case "PIZZA_GIFTICON_10000":
-      case "GOOGLE_GIFTICON_5000":
-      case "GOOGLE_GIFTICON_10000":
-      case "GIFTICON_BAEMIN":
-      case "GIFTICON_COMPOSE":
-        return <Gift className="w-4 h-4 text-pink-400" />;
-      // V2 SoT: Special
-      case "NONE":
-        return null;
-      case "POINT":
-      case "CC_POINT":
-        return <Coins className="w-4 h-4 text-yellow-400 opacity-80" />;
-      default:
-        return null;
-    }
+  const handleDuplicate = (mission: AdminMissionDto) => {
+    const newLogicKey = `${mission.logicKey}_COPY`;
+    createMutation.mutate({
+      category: mission.category,
+      title: `${mission.title} (복사본)`,
+      condition: mission.condition || "",
+      rewardType: mission.rewardType,
+      rewardAmount: mission.rewardAmount,
+      targetValue: mission.targetValue,
+      logicKey: newLogicKey,
+      actionType: mission.actionType || "PLAY_GAME",
+    });
   };
 
+  // User Mission Handlers
   const handleLoadUserMissions = async () => {
     const raw = userMissionUserIdInput.trim();
     if (!raw) {
@@ -813,7 +954,6 @@ export default function MissionManagerPage() {
       const parsed = parseInt(raw, 10);
       if (!parsed || parsed <= 0) {
         setUserMissionError("유저 ID 또는 닉네임을 입력하세요.");
-        setUserMissionNotice(null);
         return;
       }
       setUserMissionError(null);
@@ -825,7 +965,6 @@ export default function MissionManagerPage() {
 
     try {
       setUserMissionError(null);
-      setUserMissionNotice(null);
       const resolved = await resolveAdminUserIdentifier(raw);
       setUserMissionUserId(resolved.userId);
       setUserMissionUserLabel(
@@ -849,7 +988,6 @@ export default function MissionManagerPage() {
       raw === undefined || raw.trim() === "" ? fallback : Number(raw);
     if (Number.isNaN(parsed) || parsed < 0) {
       setUserMissionError("진행값은 0 이상의 숫자여야 합니다.");
-      setUserMissionNotice(null);
       return;
     }
     setUserMissionError(null);
@@ -862,15 +1000,11 @@ export default function MissionManagerPage() {
 
   const handleResetProgress = (missionId: number) => {
     if (!userMissionUserId) return;
-    setUserMissionError(null);
-    setUserMissionNotice(null);
     resetProgressMutation.mutate({ userId: userMissionUserId, missionId });
   };
 
   const handleForceComplete = (missionId: number) => {
     if (!userMissionUserId) return;
-    setUserMissionError(null);
-    setUserMissionNotice(null);
     forceCompleteMutation.mutate({ userId: userMissionUserId, missionId });
   };
 
@@ -888,1269 +1022,1442 @@ export default function MissionManagerPage() {
         return;
       }
       const rewardLabel = res.rewardType ? `${res.rewardType}` : "보상";
-      const rewardAmount = res.rewardAmount ?? 0;
-      setUserMissionNotice(`${rewardLabel} ${rewardAmount} 지급 완료`);
+      setUserMissionNotice(`${rewardLabel} ${res.rewardAmount ?? 0} 지급 완료`);
     } catch {
       setUserMissionError("보상 지급 실패");
     }
   };
 
+  // ─── Render Preview ───
+  const renderMissionPreview = (vars: {
+    category: string;
+    logicKey: string;
+    actionType?: string | null;
+    targetValue: number;
+  }) => {
+    const golden = isGoldenHourLogicKey(vars.logicKey);
+    const action = String(vars.actionType || "").trim() || "(없음)";
+    const catMeaning = getCategoryMeaning(vars.category);
+
+    return (
+      <div className="rounded-xl border border-white/10 bg-[#0D0D0F] overflow-hidden">
+        <div className="px-4 py-3 bg-white/5 border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+              미션 프리뷰
+            </span>
+          </div>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-[10px] uppercase text-zinc-500">
+                카테고리
+              </Label>
+              <div className="text-sm font-medium text-zinc-200 mt-1">
+                {catMeaning}
+              </div>
+            </div>
+            <div>
+              <Label className="text-[10px] uppercase text-zinc-500">
+                트리거
+              </Label>
+              <div className="font-mono text-sm text-emerald-400 mt-1">
+                {action}
+              </div>
+            </div>
+          </div>
+          <div>
+            <Label className="text-[10px] uppercase text-zinc-500">
+              로직 키
+            </Label>
+            <div className="font-mono text-xs text-indigo-400 mt-1 p-2 rounded bg-indigo-500/5 border border-indigo-500/10 break-all">
+              {normalizeLogicKey(vars.logicKey) || "UNDEFINED"}
+            </div>
+          </div>
+          <div className="flex items-center justify-between pt-2 border-t border-white/5">
+            <div>
+              <Label className="text-[10px] uppercase text-zinc-500">
+                목표값
+              </Label>
+              <div className="text-lg font-bold text-zinc-100">
+                {vars.targetValue}회
+              </div>
+            </div>
+            {golden && (
+              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
+                <Zap className="w-3 h-3 mr-1" />
+                골든아워
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ─── Loading State ───
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-zinc-400" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 text-white p-6 h-full overflow-y-auto">
-      <div className="flex justify-between items-start">
+      {/* ─── Header ─── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight mb-1">
-            미션 관리 (Mission Ops)
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight">
+            미션 관리
           </h1>
-          <p className="text-sm text-zinc-400">
-            데일리 미션 리스트 및 보상을 설정합니다.
+          <p className="text-sm text-zinc-400 mt-1">
+            미션 설정, 유저 진행 관리, 통계 분석
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
-            className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+            className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
           >
-            Active Season 25
+            시즌 25 활성
           </Badge>
           <Button
             size="sm"
             className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2"
             onClick={() => setIsCreateOpen(true)}
           >
-            <Plus className="w-4 h-4" />
-            미션 생성
+            <Plus className="w-4 h-4" />새 미션
           </Button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <Tabs
-          defaultValue="DAILY"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="grid w-full grid-cols-4 bg-[#18181B] border border-white/5">
-            {CATEGORIES.map((cat) => (
-              <TabsTrigger
-                key={cat}
-                value={cat}
-                className="data-[state=active]:bg-zinc-800"
-              >
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <TabsContent value={activeTab} className="space-y-4 mt-4">
-            {isLoading ? (
-              <div className="text-center py-20 text-zinc-500">
-                Loading missions...
-              </div>
-            ) : filteredMissions.length === 0 ? (
-              <div className="text-center py-20 text-zinc-500 border border-dashed border-white/10 rounded-xl">
-                등록된 미션이 없습니다.
-              </div>
-            ) : (
-              filteredMissions.map((mission) => (
-                <Card
-                  key={mission.id}
-                  className="bg-[#18181B] border-white/5 transition-all hover:border-white/10"
-                >
-                  <div className="flex items-center p-4 gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-bold text-base text-zinc-200">
-                          {mission.title}
-                        </h4>
-                        {!mission.isActive && (
-                          <Badge
-                            variant="secondary"
-                            className="text-[10px] h-5"
-                          >
-                            Inactive
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-500">
-                        {mission.condition}
-                      </p>
-                    </div>
-
-                    {/* Reward Config */}
-                    <div className="flex items-center gap-3 bg-black/30 px-4 py-3 rounded-xl border border-white/5">
-                      <div className="flex items-center gap-2 min-w-[160px]">
-                        {getRewardIcon(mission.rewardType)}
-                        <Select
-                          defaultValue={mission.rewardType}
-                          onValueChange={(val) =>
-                            handleUpdate(mission.id, "rewardType", val)
-                          }
-                        >
-                          <SelectTrigger className="h-9 text-sm bg-transparent border-none font-medium text-zinc-200 hover:text-white focus:ring-0 focus:ring-offset-0">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[300px]">
-                            {MISSION_REWARD_OPTIONS.map((item) => (
-                              <SelectItem
-                                key={item.value}
-                                value={item.value}
-                                className="text-sm py-2.5 cursor-pointer hover:bg-white/5 focus:bg-white/10"
-                              >
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          className="h-9 w-24 text-right bg-black/50 border-white/10 text-sm font-mono text-white focus:border-emerald-500/50 focus-visible:ring-1 focus-visible:ring-emerald-500/20"
-                          defaultValue={mission.rewardAmount}
-                          onBlur={(e) =>
-                            handleUpdate(
-                              mission.id,
-                              "rewardAmount",
-                              parseInt(e.target.value),
-                            )
-                          }
-                        />
-                        <span className="text-xs text-zinc-500 font-medium">
-                          개
-                        </span>
-                      </div>
-                    </div>
-
-                    <Switch
-                      checked={mission.isActive}
-                      onCheckedChange={(checked) =>
-                        handleUpdate(mission.id, "isActive", checked)
-                      }
-                    />
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-zinc-500 hover:text-indigo-400 hover:bg-indigo-500/10"
-                      onClick={() => openEdit(mission)}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
-                      onClick={() => handleDelete(mission.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
+      {/* ─── Quick Stats ─── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <QuickStat
+          label="전체 미션"
+          value={missionCounts.total}
+          icon={<ListChecks className="w-4 h-4 text-zinc-400" />}
+          color="bg-zinc-900/50 border-white/5"
+        />
+        <QuickStat
+          label="활성 미션"
+          value={missionCounts.active}
+          icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+          color="bg-emerald-500/5 border-emerald-500/20"
+        />
+        <QuickStat
+          label="오늘 DAU"
+          value={activeUserStats?.stats?.dau?.toLocaleString() ?? "-"}
+          change={activeUserStats?.stats?.dau_change}
+          icon={<Users className="w-4 h-4 text-indigo-400" />}
+          color="bg-indigo-500/5 border-indigo-500/20"
+        />
+        <QuickStat
+          label="오늘 완료율"
+          value={
+            loginVerifyData
+              ? `${(loginVerifyData.completion_rate * 100).toFixed(0)}%`
+              : "-"
+          }
+          icon={<Target className="w-4 h-4 text-amber-400" />}
+          color="bg-amber-500/5 border-amber-500/20"
+        />
       </div>
 
-      <Card className="bg-[#18181B] border-white/5">
-        <div className="p-4 space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-zinc-100">
-              유저 미션 관리
-            </h2>
-            <p className="text-xs text-zinc-500">
-              진행값 수정/리셋, 강제 완료, 보상 지급을 지원합니다.
-            </p>
-          </div>
+      {/* ─── Main Tabs ─── */}
+      <Tabs
+        value={mainTab}
+        onValueChange={(v) => setMainTab(v as any)}
+        className="w-full"
+      >
+        <TabsList className="grid w-full md:w-auto md:inline-grid grid-cols-3 bg-[#18181B] border border-white/5">
+          <TabsTrigger
+            value="missions"
+            className="gap-2 data-[state=active]:bg-zinc-800"
+          >
+            <ListChecks className="w-4 h-4" />
+            <span className="hidden sm:inline">미션 설정</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="users"
+            className="gap-2 data-[state=active]:bg-zinc-800"
+          >
+            <UserCog className="w-4 h-4" />
+            <span className="hidden sm:inline">유저 관리</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="stats"
+            className="gap-2 data-[state=active]:bg-zinc-800"
+          >
+            <PieChart className="w-4 h-4" />
+            <span className="hidden sm:inline">통계 분석</span>
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={userMissionUserIdInput}
-              onChange={(e) => setUserMissionUserIdInput(e.target.value)}
-              placeholder="유저 ID 또는 닉네임"
-              className="w-40 bg-black/50 border-white/10"
-            />
-            <Button
-              size="sm"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
-              onClick={handleLoadUserMissions}
-            >
-              조회
-            </Button>
-            {userMissionUserId && (
-              <Badge
-                variant="outline"
-                className="bg-white/5 text-zinc-300 border-white/10"
-              >
-                {userMissionUserLabel || `USER #${userMissionUserId}`}
-              </Badge>
-            )}
-          </div>
-
-          {userMissionError && (
-            <p className="text-xs text-red-400">{userMissionError}</p>
-          )}
-          {userMissionNotice && (
-            <p className="text-xs text-emerald-400">{userMissionNotice}</p>
-          )}
-
-          {isUserMissionsLoading ? (
-            <div className="text-sm text-zinc-500">미션 로딩 중...</div>
-          ) : userMissionUserId && userMissions.length === 0 ? (
-            <div className="text-sm text-zinc-500">
-              유저 미션 기록이 없습니다.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {userMissions.map((mission) => (
-                <div
-                  key={mission.id}
-                  className="flex flex-col gap-3 rounded-lg border border-white/5 bg-black/30 p-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-zinc-200">
-                        {mission.missionTitle}
-                      </div>
-                      <div className="text-xs text-zinc-500">
-                        {mission.category} · {mission.progress}/
-                        {mission.maxProgress}
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="bg-white/5 text-zinc-300 border-white/10"
-                    >
-                      {mission.status}
-                    </Badge>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Input
-                      value={
-                        progressEdits[mission.missionId] ??
-                        String(mission.progress)
-                      }
-                      onChange={(e) =>
-                        handleProgressChange(mission.missionId, e.target.value)
-                      }
-                      className="w-28 bg-black/50 border-white/10 text-right"
-                      type="number"
-                    />
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        handleSaveProgress(mission.missionId, mission.progress)
-                      }
-                    >
-                      진행값 저장
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleResetProgress(mission.missionId)}
-                    >
-                      리셋
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => handleForceComplete(mission.missionId)}
-                    >
-                      강제 완료
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-indigo-500/90 hover:bg-indigo-500 text-white"
-                      onClick={() => handleClaimReward(mission.missionId)}
-                    >
-                      보상 지급
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* ─────────────────────────────────────────────────────────────────
-          스트릭 & 마일스톤 관리
-      ───────────────────────────────────────────────────────────────── */}
-      <Card className="bg-[#18181B] border-white/5">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-orange-500" />
-            <div>
-              <h2 className="text-lg font-semibold text-zinc-100">
-                스트릭 & 마일스톤 관리
-              </h2>
-              <p className="text-xs text-zinc-500">
-                유저 스트릭 조회/수정, 마일스톤 보상 강제 지급
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={streakUserIdInput}
-              onChange={(e) => setStreakUserIdInput(e.target.value)}
-              placeholder="유저 ID"
-              className="w-32 bg-black/50 border-white/10"
-            />
-            <Button
-              size="sm"
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              onClick={() => {
-                const parsed = parseInt(streakUserIdInput, 10);
-                if (parsed > 0) setStreakUserId(parsed);
-              }}
-            >
-              조회
-            </Button>
-            {streakUserId && (
-              <Badge
-                variant="outline"
-                className="bg-white/5 text-zinc-300 border-white/10"
-              >
-                USER #{streakUserId}
-              </Badge>
-            )}
-          </div>
-
-          {isStreakLoading && (
-            <div className="text-sm text-zinc-500">로딩 중...</div>
-          )}
-
-          {streakData && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-black/30 border border-white/5">
-              <div>
-                <div className="text-xs text-zinc-500">스트릭 일수</div>
-                <div className="text-2xl font-bold text-orange-400">
-                  {streakData.streak_days}일
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-zinc-500">상태</div>
-                <div className="flex gap-2 mt-1">
-                  {streakData.is_hot && (
-                    <Badge className="bg-red-500/20 text-red-400">HOT</Badge>
-                  )}
-                  {streakData.is_legend && (
-                    <Badge className="bg-purple-500/20 text-purple-400">
-                      LEGEND
-                    </Badge>
-                  )}
-                  {!streakData.is_hot && !streakData.is_legend && (
-                    <Badge className="bg-zinc-500/20 text-zinc-400">일반</Badge>
-                  )}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-zinc-500">다음 마일스톤</div>
-                <div className="text-lg font-semibold text-zinc-200">
-                  {streakData.next_milestone ?? "-"}일
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-zinc-500">배율</div>
-                <div className="text-lg font-semibold text-emerald-400">
-                  x{streakData.current_multiplier}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {streakUserId && (
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Input
-                value={streakEditValue}
-                onChange={(e) => setStreakEditValue(e.target.value)}
-                placeholder="스트릭 일수"
-                className="w-28 bg-black/50 border-white/10"
-                type="number"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  const val = parseInt(streakEditValue, 10);
-                  if (val >= 0 && streakUserId) {
-                    setStreakCountMutation.mutate({
-                      userId: streakUserId,
-                      payload: { streak_days: val },
-                    });
-                  }
-                }}
-                disabled={setStreakCountMutation.isPending}
-              >
-                스트릭 설정
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="text-red-400 hover:text-red-300"
-                onClick={() => {
-                  if (
-                    streakUserId &&
-                    confirm("스트릭을 0으로 초기화하시겠습니까?")
-                  ) {
-                    resetStreakMutation.mutate(streakUserId);
-                  }
-                }}
-                disabled={resetStreakMutation.isPending}
-              >
-                <RotateCcw className="w-4 h-4 mr-1" />
-                스트릭 리셋
-              </Button>
-            </div>
-          )}
-
-          {/* 마일스톤 진행 현황 */}
-          {isMilestoneLoading && (
-            <div className="text-sm text-zinc-500">마일스톤 로딩 중...</div>
-          )}
-          {milestoneData && (
-            <div className="space-y-2 pt-2">
-              <div className="text-sm font-semibold text-zinc-300">
-                마일스톤 진행 현황
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {milestoneData.milestones.map((m) => (
-                  <div
-                    key={m.day}
-                    className={`px-3 py-2 rounded-lg border ${
-                      m.claimed
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : m.achieved
-                          ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
-                          : "bg-zinc-800/50 border-white/5 text-zinc-500"
-                    }`}
+        {/* ─── Missions Tab ─── */}
+        <TabsContent value="missions" className="space-y-6 mt-6">
+          {/* Category Tabs */}
+          <Tabs
+            value={categoryTab}
+            onValueChange={setCategoryTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-4 bg-[#18181B] border border-white/5">
+              {CATEGORIES.map((cat) => {
+                const count = missions.filter((m) => m.category === cat).length;
+                const style = CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.DAILY;
+                return (
+                  <TabsTrigger
+                    key={cat}
+                    value={cat}
+                    className={cn(
+                      "gap-2 data-[state=active]:bg-zinc-800",
+                      `data-[state=active]:${style.text}`,
+                    )}
                   >
-                    <div className="text-xs font-bold">{m.day}일</div>
-                    <div className="text-[10px]">
-                      {m.claimed ? "수령완료" : m.achieved ? "달성" : "미달성"}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    {cat}
+                    <Badge
+                      variant="secondary"
+                      className="text-[10px] h-4 px-1.5 bg-white/5"
+                    >
+                      {count}
+                    </Badge>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
 
-              {/* 마일스톤 강제 지급 */}
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <Select
-                  value={String(milestoneDay)}
-                  onValueChange={(v) => setMilestoneDay(Number(v))}
-                >
-                  <SelectTrigger className="w-24 bg-black/50 border-white/10">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                    {[3, 7, 14, 30].map((d) => (
-                      <SelectItem key={d} value={String(d)}>
-                        {d}일
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  value={milestoneReason}
-                  onChange={(e) => setMilestoneReason(e.target.value)}
-                  placeholder="지급 사유"
-                  className="w-40 bg-black/50 border-white/10"
-                />
-                <Button
-                  size="sm"
-                  className="bg-purple-500 hover:bg-purple-600 text-white"
-                  onClick={() => {
-                    if (streakUserId && milestoneReason) {
-                      forceGrantMilestoneMutation.mutate({
-                        userId: streakUserId,
-                        payload: {
-                          milestone_day: milestoneDay,
-                          reason: milestoneReason,
-                        },
-                      });
+            <TabsContent value={categoryTab} className="mt-4 space-y-3">
+              {filteredMissions.length === 0 ? (
+                <div className="text-center py-16 text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                  <ListChecks className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                  <p>등록된 미션이 없습니다.</p>
+                  <Button
+                    variant="link"
+                    className="text-emerald-400 mt-2"
+                    onClick={() => setIsCreateOpen(true)}
+                  >
+                    새 미션 만들기
+                  </Button>
+                </div>
+              ) : (
+                filteredMissions.map((mission) => (
+                  <MissionCard
+                    key={mission.id}
+                    mission={mission}
+                    onEdit={() => openEdit(mission)}
+                    onDelete={() => handleDelete(mission.id)}
+                    onToggleActive={(active) =>
+                      handleUpdate(mission.id, "isActive", active)
                     }
-                  }}
-                  disabled={forceGrantMilestoneMutation.isPending}
-                >
-                  <Award className="w-4 h-4 mr-1" />
-                  마일스톤 보상 지급
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
+                    onDuplicate={() => handleDuplicate(mission)}
+                  />
+                ))
+              )}
+            </TabsContent>
+          </Tabs>
 
-      {/* ─────────────────────────────────────────────────────────────────
-          스트릭 보상 규칙 설정
-      ───────────────────────────────────────────────────────────────── */}
-      <Card className="bg-[#18181B] border-white/5">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Settings className="w-5 h-5 text-blue-500" />
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-100">
-                  스트릭 보상 규칙 설정
-                </h2>
-                <p className="text-xs text-zinc-500">
-                  연속 출석 일수별 보상 조건 관리
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {isRulesEditing ? (
-                <>
+          {/* Streak Rules Section */}
+          <CollapsibleSection
+            title="스트릭 보상 규칙"
+            subtitle="연속 출석 일수별 보상 조건"
+            icon={<Settings className="w-4 h-4" />}
+            iconColor="text-blue-400"
+          >
+            <div className="space-y-4">
+              <div className="flex justify-end gap-2">
+                {isRulesEditing ? (
+                  <>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        if (streakRulesConfig?.value) {
+                          const config = streakRulesConfig.value as {
+                            rules?: StreakRule[];
+                          };
+                          setEditingRules(config.rules || []);
+                        }
+                        setIsRulesEditing(false);
+                      }}
+                    >
+                      취소
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-blue-500 hover:bg-blue-600"
+                      onClick={() => {
+                        updateRulesMutation.mutate({
+                          key: "streak_reward_rules",
+                          payload: { value: { rules: editingRules } },
+                        });
+                        setIsRulesEditing(false);
+                      }}
+                    >
+                      <Save className="w-4 h-4 mr-1" />
+                      저장
+                    </Button>
+                  </>
+                ) : (
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={() => {
-                      if (streakRulesConfig?.value) {
-                        const config = streakRulesConfig.value as {
-                          rules?: StreakRule[];
-                        };
-                        setEditingRules(config.rules || []);
-                      }
-                      setIsRulesEditing(false);
-                    }}
+                    onClick={() => setIsRulesEditing(true)}
                   >
-                    취소
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    편집
                   </Button>
+                )}
+              </div>
+
+              {isRulesLoading ? (
+                <div className="text-sm text-zinc-500">로딩 중...</div>
+              ) : editingRules.length === 0 ? (
+                <div className="text-center py-8 text-zinc-500 border border-dashed border-white/10 rounded-lg">
+                  보상 규칙이 없습니다.
                   <Button
                     size="sm"
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                    variant="link"
+                    className="ml-2 text-blue-400"
                     onClick={() => {
-                      updateRulesMutation.mutate({
-                        key: "streak_reward_rules",
-                        payload: { value: { rules: editingRules } },
-                      });
-                      setIsRulesEditing(false);
-                    }}
-                    disabled={updateRulesMutation.isPending}
-                  >
-                    <Save className="w-4 h-4 mr-1" />
-                    저장
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setIsRulesEditing(true)}
-                >
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  편집
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {isRulesLoading ? (
-            <div className="text-sm text-zinc-500">로딩 중...</div>
-          ) : editingRules.length === 0 ? (
-            <div className="text-sm text-zinc-500 p-4 border border-dashed border-white/10 rounded-lg text-center">
-              보상 규칙이 설정되지 않았습니다.
-              <Button
-                size="sm"
-                variant="link"
-                className="ml-2 text-blue-400"
-                onClick={() => {
-                  setEditingRules([
-                    {
-                      day: 3,
-                      enabled: true,
-                      grants: [
+                      setEditingRules([
                         {
-                          kind: "WALLET",
-                          token_type: "ROULETTE_TICKET",
-                          amount: 1,
+                          day: 3,
+                          enabled: true,
+                          grants: [
+                            {
+                              kind: "WALLET",
+                              token_type: "ROULETTE_TICKET",
+                              amount: 1,
+                            },
+                          ],
                         },
-                      ],
-                    },
-                    {
-                      day: 7,
-                      enabled: true,
-                      grants: [
-                        { kind: "WALLET", token_type: "DIAMOND", amount: 1 },
-                      ],
-                    },
-                  ]);
-                  setIsRulesEditing(true);
-                }}
-              >
-                기본 규칙 생성
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {editingRules.map((rule, ruleIdx) => (
-                <div
-                  key={rule.day}
-                  className={`p-4 rounded-lg border ${
-                    rule.enabled
-                      ? "bg-black/30 border-white/10"
-                      : "bg-zinc-900/50 border-white/5 opacity-60"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <Badge
-                        className={`${
-                          rule.day === 3
-                            ? "bg-orange-500/20 text-orange-400"
-                            : rule.day === 7
-                              ? "bg-purple-500/20 text-purple-400"
-                              : "bg-blue-500/20 text-blue-400"
-                        }`}
-                      >
-                        {rule.day}일차
-                      </Badge>
-                      {isRulesEditing && (
-                        <Switch
-                          checked={rule.enabled}
-                          onCheckedChange={(checked) => {
-                            const newRules = [...editingRules];
-                            newRules[ruleIdx] = { ...rule, enabled: checked };
-                            setEditingRules(newRules);
-                          }}
-                        />
+                        {
+                          day: 7,
+                          enabled: true,
+                          grants: [
+                            {
+                              kind: "WALLET",
+                              token_type: "DIAMOND",
+                              amount: 1,
+                            },
+                          ],
+                        },
+                      ]);
+                      setIsRulesEditing(true);
+                    }}
+                  >
+                    기본 규칙 생성
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {editingRules.map((rule, ruleIdx) => (
+                    <div
+                      key={rule.day}
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        rule.enabled
+                          ? "bg-black/30 border-white/10"
+                          : "bg-zinc-900/50 border-white/5 opacity-60",
                       )}
-                    </div>
-                    {isRulesEditing && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
-                        onClick={() => {
-                          setEditingRules(
-                            editingRules.filter((_, i) => i !== ruleIdx),
-                          );
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    {rule.grants.map((grant, grantIdx) => (
-                      <div
-                        key={grantIdx}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        {isRulesEditing ? (
-                          <>
-                            <Select
-                              value={grant.kind}
-                              onValueChange={(v) => {
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge
+                          className={
+                            rule.day <= 3
+                              ? "bg-orange-500/20 text-orange-400"
+                              : rule.day <= 7
+                                ? "bg-purple-500/20 text-purple-400"
+                                : "bg-blue-500/20 text-blue-400"
+                          }
+                        >
+                          {rule.day}일차
+                        </Badge>
+                        {isRulesEditing && (
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={rule.enabled}
+                              onCheckedChange={(checked) => {
                                 const newRules = [...editingRules];
-                                const targetRule = newRules[ruleIdx];
-                                if (targetRule?.grants?.[grantIdx]) {
-                                  targetRule.grants[grantIdx] = {
-                                    ...grant,
-                                    kind: v as "WALLET" | "INVENTORY",
-                                  };
-                                  setEditingRules(newRules);
-                                }
+                                newRules[ruleIdx] = {
+                                  ...rule,
+                                  enabled: checked,
+                                };
+                                setEditingRules(newRules);
                               }}
-                            >
-                              <SelectTrigger className="w-28 h-8 bg-black/50 border-white/10">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                                <SelectItem value="WALLET">WALLET</SelectItem>
-                                <SelectItem value="INVENTORY">
-                                  INVENTORY
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Select
-                              value={grant.token_type}
-                              onValueChange={(v) => {
-                                const newRules = [...editingRules];
-                                const targetRule = newRules[ruleIdx];
-                                if (targetRule?.grants?.[grantIdx]) {
-                                  targetRule.grants[grantIdx] = {
-                                    ...grant,
-                                    token_type: v,
-                                  };
-                                  setEditingRules(newRules);
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="w-40 h-8 bg-black/50 border-white/10">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                                {REWARD_ITEMS.map((item) => (
-                                  <SelectItem
-                                    key={item.value}
-                                    value={item.value}
-                                  >
-                                    {item.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              type="number"
-                              value={grant.amount}
-                              onChange={(e) => {
-                                const newRules = [...editingRules];
-                                const targetRule = newRules[ruleIdx];
-                                if (targetRule?.grants?.[grantIdx]) {
-                                  targetRule.grants[grantIdx] = {
-                                    ...grant,
-                                    amount: parseInt(e.target.value) || 0,
-                                  };
-                                  setEditingRules(newRules);
-                                }
-                              }}
-                              className="w-20 h-8 bg-black/50 border-white/10"
                             />
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-red-400 hover:text-red-300 h-8 w-8 p-0"
-                              onClick={() => {
-                                const newRules = [...editingRules];
-                                const targetRule = newRules[ruleIdx];
-                                if (targetRule) {
-                                  targetRule.grants = rule.grants.filter(
-                                    (_, i) => i !== grantIdx,
-                                  );
-                                  setEditingRules(newRules);
-                                }
-                              }}
+                              className="h-6 w-6 p-0 text-red-400"
+                              onClick={() =>
+                                setEditingRules(
+                                  editingRules.filter((_, i) => i !== ruleIdx),
+                                )
+                              }
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
-                          </>
-                        ) : (
-                          <>
+                          </div>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        {rule.grants.map((grant, grantIdx) => (
+                          <div
+                            key={grantIdx}
+                            className="flex items-center gap-2 text-sm"
+                          >
                             <Badge
                               variant="outline"
-                              className="bg-white/5 border-white/10"
+                              className="bg-white/5 border-white/10 text-[10px]"
                             >
                               {grant.kind}
                             </Badge>
-                            <span className="text-zinc-300">
+                            <span className="text-zinc-300 text-xs truncate">
                               {grant.token_type}
                             </span>
-                            <span className="text-emerald-400 font-bold">
+                            <span className="text-emerald-400 font-bold text-xs">
                               x{grant.amount}
                             </span>
-                          </>
-                        )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                    {isRulesEditing && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-blue-400 hover:text-blue-300 h-7 text-xs"
-                        onClick={() => {
-                          const newRules = [...editingRules];
-                          const targetRule = newRules[ruleIdx];
-                          if (targetRule) {
-                            targetRule.grants.push({
-                              kind: "WALLET",
-                              token_type: "ROULETTE_TICKET",
-                              amount: 1,
-                            });
-                            setEditingRules(newRules);
-                          }
-                        }}
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        보상 추가
-                      </Button>
-                    )}
-                  </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-
-              {isRulesEditing && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="w-full border-dashed border-white/10 text-zinc-400 hover:text-zinc-200"
-                  onClick={() => {
-                    const maxDay = editingRules.reduce(
-                      (max, r) => Math.max(max, r.day),
-                      0,
-                    );
-                    setEditingRules([
-                      ...editingRules,
-                      {
-                        day: maxDay + 7,
-                        enabled: true,
-                        grants: [
-                          {
-                            kind: "WALLET",
-                            token_type: "ROULETTE_TICKET",
-                            amount: 1,
-                          },
-                        ],
-                      },
-                    ]);
-                  }}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  마일스톤 추가
-                </Button>
               )}
             </div>
-          )}
-        </div>
-      </Card>
+          </CollapsibleSection>
+        </TabsContent>
 
-      {/* ─────────────────────────────────────────────────────────────────
-          미션 통계 & 로그인 미션 검증
-      ───────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 미션 통계 */}
-        <Card className="bg-[#18181B] border-white/5">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-indigo-500" />
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-100">
+        {/* ─── Users Tab ─── */}
+        <TabsContent value="users" className="space-y-6 mt-6">
+          {/* User Mission Management */}
+          <Card className="bg-[#18181B] border-white/5">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <UserCog className="w-5 h-5 text-emerald-400" />
+                유저 미션 관리
+              </CardTitle>
+              <p className="text-xs text-zinc-500">
+                진행값 수정, 강제 완료, 보상 지급
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-1 min-w-48">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <Input
+                    value={userMissionUserIdInput}
+                    onChange={(e) => setUserMissionUserIdInput(e.target.value)}
+                    placeholder="유저 ID 또는 닉네임"
+                    className="pl-10 bg-black/50 border-white/10"
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && handleLoadUserMissions()
+                    }
+                  />
+                </div>
+                <Button
+                  className="bg-emerald-500 hover:bg-emerald-600"
+                  onClick={handleLoadUserMissions}
+                >
+                  조회
+                </Button>
+                {userMissionUserId && (
+                  <Badge
+                    variant="outline"
+                    className="bg-white/5 text-zinc-300 border-white/10"
+                  >
+                    {userMissionUserLabel}
+                  </Badge>
+                )}
+              </div>
+
+              {userMissionError && (
+                <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  {userMissionError}
+                </div>
+              )}
+              {userMissionNotice && (
+                <div className="flex items-center gap-2 text-sm text-emerald-400 bg-emerald-500/10 px-3 py-2 rounded-lg">
+                  <CheckCircle2 className="w-4 h-4" />
+                  {userMissionNotice}
+                </div>
+              )}
+
+              {isUserMissionsLoading ? (
+                <div className="flex items-center justify-center py-8 text-zinc-500">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  로딩 중...
+                </div>
+              ) : userMissionUserId && userMissions.length === 0 ? (
+                <div className="text-center py-8 text-zinc-500">
+                  유저 미션 기록이 없습니다.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {userMissions.map((mission) => (
+                    <div
+                      key={mission.id}
+                      className="p-4 rounded-lg border border-white/5 bg-black/30 hover:bg-black/50 transition-colors"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                        <div>
+                          <div className="font-semibold text-zinc-200">
+                            {mission.missionTitle}
+                          </div>
+                          <div className="text-xs text-zinc-500">
+                            {mission.category} · 진행: {mission.progress}/
+                            {mission.maxProgress}
+                          </div>
+                        </div>
+                        <Badge
+                          className={cn(
+                            mission.status === "COMPLETED"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : mission.status === "FAILED"
+                                ? "bg-red-500/20 text-red-400"
+                                : "bg-zinc-500/20 text-zinc-400",
+                          )}
+                        >
+                          {mission.status === "COMPLETED"
+                            ? "완료"
+                            : mission.status === "FAILED"
+                              ? "실패"
+                              : mission.status === "IN_PROGRESS"
+                                ? "진행중"
+                                : mission.status}
+                        </Badge>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Input
+                          value={
+                            progressEdits[mission.missionId] ??
+                            String(mission.progress)
+                          }
+                          onChange={(e) =>
+                            handleProgressChange(
+                              mission.missionId,
+                              e.target.value,
+                            )
+                          }
+                          className="w-24 bg-black/50 border-white/10 text-right"
+                          type="number"
+                        />
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            handleSaveProgress(
+                              mission.missionId,
+                              mission.progress,
+                            )
+                          }
+                        >
+                          저장
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleResetProgress(mission.missionId)}
+                        >
+                          리셋
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleForceComplete(mission.missionId)}
+                        >
+                          강제완료
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-indigo-500/90 hover:bg-indigo-500"
+                          onClick={() => handleClaimReward(mission.missionId)}
+                        >
+                          보상지급
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Streak & Milestone Section */}
+          <CollapsibleSection
+            title="스트릭 & 마일스톤"
+            subtitle="유저 스트릭 조회/수정, 마일스톤 보상"
+            icon={<Flame className="w-4 h-4" />}
+            iconColor="text-orange-400"
+            defaultOpen
+          >
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  value={streakUserIdInput}
+                  onChange={(e) => setStreakUserIdInput(e.target.value)}
+                  placeholder="유저 ID"
+                  className="w-32 bg-black/50 border-white/10"
+                />
+                <Button
+                  className="bg-orange-500 hover:bg-orange-600"
+                  onClick={() => {
+                    const parsed = parseInt(streakUserIdInput, 10);
+                    if (parsed > 0) setStreakUserId(parsed);
+                  }}
+                >
+                  조회
+                </Button>
+                {streakUserId && (
+                  <Badge
+                    variant="outline"
+                    className="bg-white/5 text-zinc-300 border-white/10"
+                  >
+                    USER #{streakUserId}
+                  </Badge>
+                )}
+              </div>
+
+              {isStreakLoading && (
+                <div className="text-sm text-zinc-500">로딩 중...</div>
+              )}
+
+              {streakData && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-lg bg-black/30 border border-white/5">
+                  <div>
+                    <div className="text-xs text-zinc-500">스트릭 일수</div>
+                    <div className="text-2xl font-bold text-orange-400">
+                      {streakData.streak_days}일
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500">상태</div>
+                    <div className="flex gap-2 mt-1">
+                      {streakData.is_hot && (
+                        <Badge className="bg-red-500/20 text-red-400">
+                          HOT
+                        </Badge>
+                      )}
+                      {streakData.is_legend && (
+                        <Badge className="bg-purple-500/20 text-purple-400">
+                          LEGEND
+                        </Badge>
+                      )}
+                      {!streakData.is_hot && !streakData.is_legend && (
+                        <Badge className="bg-zinc-500/20 text-zinc-400">
+                          일반
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500">다음 마일스톤</div>
+                    <div className="text-lg font-semibold text-zinc-200">
+                      {streakData.next_milestone ?? "-"}일
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-500">배율</div>
+                    <div className="text-lg font-semibold text-emerald-400">
+                      x{streakData.current_multiplier}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {streakUserId && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    value={streakEditValue}
+                    onChange={(e) => setStreakEditValue(e.target.value)}
+                    placeholder="스트릭 일수"
+                    className="w-28 bg-black/50 border-white/10"
+                    type="number"
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      const val = parseInt(streakEditValue, 10);
+                      if (val >= 0 && streakUserId) {
+                        setStreakCountMutation.mutate({
+                          userId: streakUserId,
+                          payload: { streak_days: val },
+                        });
+                      }
+                    }}
+                    disabled={setStreakCountMutation.isPending}
+                  >
+                    스트릭 설정
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="text-red-400"
+                    onClick={() => {
+                      if (
+                        streakUserId &&
+                        confirm("스트릭을 0으로 초기화하시겠습니까?")
+                      ) {
+                        resetStreakMutation.mutate(streakUserId);
+                      }
+                    }}
+                    disabled={resetStreakMutation.isPending}
+                  >
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                    리셋
+                  </Button>
+                </div>
+              )}
+
+              {/* Milestone Progress */}
+              {isMilestoneLoading && (
+                <div className="text-sm text-zinc-500">마일스톤 로딩 중...</div>
+              )}
+              {milestoneData && (
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold text-zinc-300">
+                    마일스톤 진행 현황
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {milestoneData.milestones.map((m) => (
+                      <div
+                        key={m.day}
+                        className={cn(
+                          "px-3 py-2 rounded-lg border",
+                          m.claimed
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                            : m.achieved
+                              ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400"
+                              : "bg-zinc-800/50 border-white/5 text-zinc-500",
+                        )}
+                      >
+                        <div className="text-xs font-bold">{m.day}일</div>
+                        <div className="text-[10px]">
+                          {m.claimed
+                            ? "수령완료"
+                            : m.achieved
+                              ? "달성"
+                              : "미달성"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Force Grant Milestone */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2">
+                    <Select
+                      value={String(milestoneDay)}
+                      onValueChange={(v) => setMilestoneDay(Number(v))}
+                    >
+                      <SelectTrigger className="w-24 bg-black/50 border-white/10">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                        {[3, 7, 14, 30].map((d) => (
+                          <SelectItem key={d} value={String(d)}>
+                            {d}일
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      value={milestoneReason}
+                      onChange={(e) => setMilestoneReason(e.target.value)}
+                      placeholder="지급 사유"
+                      className="w-40 bg-black/50 border-white/10"
+                    />
+                    <Button
+                      size="sm"
+                      className="bg-purple-500 hover:bg-purple-600"
+                      onClick={() => {
+                        if (streakUserId && milestoneReason) {
+                          forceGrantMilestoneMutation.mutate({
+                            userId: streakUserId,
+                            payload: {
+                              milestone_day: milestoneDay,
+                              reason: milestoneReason,
+                            },
+                          });
+                        }
+                      }}
+                      disabled={forceGrantMilestoneMutation.isPending}
+                    >
+                      <Award className="w-4 h-4 mr-1" />
+                      마일스톤 지급
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CollapsibleSection>
+
+          {/* Mission Reset Section */}
+          <CollapsibleSection
+            title="미션 일괄 리셋"
+            subtitle="특정 유저의 미션 진행 상태 초기화"
+            icon={<RotateCcw className="w-4 h-4" />}
+            iconColor="text-red-400"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                value={userMissionUserIdInput}
+                onChange={(e) => setUserMissionUserIdInput(e.target.value)}
+                placeholder="유저 ID"
+                className="w-32 bg-black/50 border-white/10"
+              />
+              <Select
+                value={
+                  selectedMissionIdForReset === null
+                    ? "all"
+                    : String(selectedMissionIdForReset)
+                }
+                onValueChange={(v) =>
+                  setSelectedMissionIdForReset(v === "all" ? null : Number(v))
+                }
+              >
+                <SelectTrigger className="w-48 bg-black/50 border-white/10">
+                  <SelectValue placeholder="미션 선택" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-60">
+                  <SelectItem value="all">전체 미션</SelectItem>
+                  {missions.map((m) => (
+                    <SelectItem key={m.id} value={String(m.id)}>
+                      {m.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                value={missionResetReason}
+                onChange={(e) => setMissionResetReason(e.target.value)}
+                placeholder="리셋 사유"
+                className="w-40 bg-black/50 border-white/10"
+              />
+              <Button
+                className="bg-red-500 hover:bg-red-600"
+                onClick={() => {
+                  const userId = parseInt(userMissionUserIdInput, 10);
+                  if (userId > 0 && missionResetReason) {
+                    resetUserMissionsMutation.mutate({
+                      userId,
+                      payload: {
+                        mission_id: selectedMissionIdForReset,
+                        reason: missionResetReason,
+                      },
+                    });
+                  }
+                }}
+                disabled={resetUserMissionsMutation.isPending}
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                리셋
+              </Button>
+            </div>
+            {resetUserMissionsMutation.isSuccess &&
+              resetUserMissionsMutation.data && (
+                <div className="mt-3 text-sm text-emerald-400">
+                  리셋 완료: {resetUserMissionsMutation.data.reset_count}개 미션
+                </div>
+              )}
+          </CollapsibleSection>
+        </TabsContent>
+
+        {/* ─── Stats Tab ─── */}
+        <TabsContent value="stats" className="space-y-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Mission Stats */}
+            <Card className="bg-[#18181B] border-white/5">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <BarChart3 className="w-5 h-5 text-indigo-400" />
                   미션 통계
-                </h2>
+                </CardTitle>
                 <p className="text-xs text-zinc-500">
                   미션별 완료율 및 클레임 현황
                 </p>
-              </div>
-            </div>
-
-            {isMissionStatsLoading ? (
-              <div className="text-sm text-zinc-500">로딩 중...</div>
-            ) : missionStats ? (
-              <div className="space-y-3">
-                <div className="flex gap-4 text-sm">
-                  <div>
-                    <span className="text-zinc-500">전체 미션: </span>
-                    <span className="font-bold text-zinc-200">
-                      {missionStats.total_missions}
-                    </span>
+              </CardHeader>
+              <CardContent>
+                {isMissionStatsLoading ? (
+                  <div className="flex items-center justify-center py-8 text-zinc-500">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    로딩 중...
                   </div>
-                  <div>
-                    <span className="text-zinc-500">활성 미션: </span>
-                    <span className="font-bold text-emerald-400">
-                      {missionStats.active_missions}
-                    </span>
-                  </div>
-                </div>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {missionStats.stats.slice(0, 10).map((stat) => (
-                    <div
-                      key={stat.mission_id}
-                      className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-zinc-200 truncate">
-                          {stat.title}
-                        </div>
-                        <div className="text-xs text-zinc-500">
-                          {stat.category}
-                        </div>
+                ) : missionStats ? (
+                  <div className="space-y-4">
+                    <div className="flex gap-4 text-sm">
+                      <div>
+                        <span className="text-zinc-500">전체: </span>
+                        <span className="font-bold text-zinc-200">
+                          {missionStats.total_missions}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className="text-center">
-                          <div className="text-zinc-500">완료</div>
-                          <div className="font-bold text-emerald-400">
-                            {stat.completed_count}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-zinc-500">클레임</div>
-                          <div className="font-bold text-indigo-400">
-                            {stat.claimed_count}
-                          </div>
-                        </div>
-                        <div className="text-center">
-                          <div className="text-zinc-500">완료율</div>
-                          <div className="font-bold text-yellow-400">
-                            {(stat.completion_rate * 100).toFixed(1)}%
-                          </div>
-                        </div>
+                      <div>
+                        <span className="text-zinc-500">활성: </span>
+                        <span className="font-bold text-emerald-400">
+                          {missionStats.active_missions}
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </Card>
+                    <div className="max-h-64 overflow-y-auto space-y-2">
+                      {missionStats.stats.slice(0, 10).map((stat) => (
+                        <div
+                          key={stat.mission_id}
+                          className="flex items-center justify-between p-3 rounded-lg bg-black/30 border border-white/5"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-zinc-200 truncate">
+                              {stat.title}
+                            </div>
+                            <div className="text-xs text-zinc-500">
+                              {stat.category}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs">
+                            <div className="text-center">
+                              <div className="text-zinc-500">완료</div>
+                              <div className="font-bold text-emerald-400">
+                                {stat.completed_count}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-zinc-500">클레임</div>
+                              <div className="font-bold text-indigo-400">
+                                {stat.claimed_count}
+                              </div>
+                            </div>
+                            <div className="text-center">
+                              <div className="text-zinc-500">완료율</div>
+                              <div className="font-bold text-yellow-400">
+                                {(stat.completion_rate * 100).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
 
-        {/* 로그인 미션 검증 */}
-        <Card className="bg-[#18181B] border-white/5">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-cyan-500" />
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-100">
+            {/* Login Mission Verify */}
+            <Card className="bg-[#18181B] border-white/5">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Target className="w-5 h-5 text-cyan-400" />
                   로그인 미션 검증
-                </h2>
+                </CardTitle>
                 <p className="text-xs text-zinc-500">
-                  오늘 로그인 미션 완료 현황 (09:00 KST 리셋)
+                  오늘 로그인 미션 완료 현황
                 </p>
-              </div>
-            </div>
-
-            {isLoginVerifyLoading ? (
-              <div className="text-sm text-zinc-500">로딩 중...</div>
-            ) : loginVerifyData ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-4 gap-2 text-center">
-                  <div className="p-2 rounded bg-black/30 border border-white/5">
-                    <div className="text-xs text-zinc-500">전체 로그인</div>
-                    <div className="text-lg font-bold text-zinc-200">
-                      {loginVerifyData.total_users}
-                    </div>
+              </CardHeader>
+              <CardContent>
+                {isLoginVerifyLoading ? (
+                  <div className="flex items-center justify-center py-8 text-zinc-500">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    로딩 중...
                   </div>
-                  <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="text-xs text-zinc-500">완료</div>
-                    <div className="text-lg font-bold text-emerald-400">
-                      {loginVerifyData.completed_today}
-                    </div>
-                  </div>
-                  <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
-                    <div className="text-xs text-zinc-500">미완료</div>
-                    <div className="text-lg font-bold text-red-400">
-                      {loginVerifyData.not_completed_today}
-                    </div>
-                  </div>
-                  <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
-                    <div className="text-xs text-zinc-500">완료율</div>
-                    <div className="text-lg font-bold text-yellow-400">
-                      {(loginVerifyData.completion_rate * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
-                <div className="max-h-40 overflow-y-auto space-y-1">
-                  {loginVerifyData.users.slice(0, 10).map((user) => (
-                    <div
-                      key={user.user_id}
-                      className="flex items-center justify-between p-2 rounded bg-black/30 text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-zinc-400">#{user.user_id}</span>
-                        <span className="text-zinc-200">{user.nickname}</span>
+                ) : loginVerifyData ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div className="p-2 rounded bg-black/30 border border-white/5">
+                        <div className="text-xs text-zinc-500">전체</div>
+                        <div className="text-lg font-bold text-zinc-200">
+                          {loginVerifyData.total_users}
+                        </div>
                       </div>
-                      <Badge
-                        className={
-                          user.today_login_completed
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-zinc-500/20 text-zinc-400"
-                        }
-                      >
-                        {user.today_login_completed ? "완료" : "미완료"}
-                      </Badge>
+                      <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20">
+                        <div className="text-xs text-zinc-500">완료</div>
+                        <div className="text-lg font-bold text-emerald-400">
+                          {loginVerifyData.completed_today}
+                        </div>
+                      </div>
+                      <div className="p-2 rounded bg-red-500/10 border border-red-500/20">
+                        <div className="text-xs text-zinc-500">미완료</div>
+                        <div className="text-lg font-bold text-red-400">
+                          {loginVerifyData.not_completed_today}
+                        </div>
+                      </div>
+                      <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                        <div className="text-xs text-zinc-500">완료율</div>
+                        <div className="text-lg font-bold text-yellow-400">
+                          {(loginVerifyData.completion_rate * 100).toFixed(1)}%
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+                    <div className="max-h-40 overflow-y-auto space-y-1">
+                      {loginVerifyData.users.slice(0, 10).map((user) => (
+                        <div
+                          key={user.user_id}
+                          className="flex items-center justify-between p-2 rounded bg-black/30 text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-400">
+                              #{user.user_id}
+                            </span>
+                            <span className="text-zinc-200">
+                              {user.nickname}
+                            </span>
+                          </div>
+                          <Badge
+                            className={
+                              user.today_login_completed
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-zinc-500/20 text-zinc-400"
+                            }
+                          >
+                            {user.today_login_completed ? "완료" : "미완료"}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
           </div>
-        </Card>
-      </div>
 
-      {/* ─────────────────────────────────────────────────────────────────
-          활성 유저 통계 (DAU/WAU/MAU)
-      ───────────────────────────────────────────────────────────────── */}
-      <Card className="bg-[#18181B] border-white/5">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-emerald-500" />
-            <div>
-              <h2 className="text-lg font-semibold text-zinc-100">
+          {/* Active User Stats */}
+          <Card className="bg-[#18181B] border-white/5">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Users className="w-5 h-5 text-emerald-400" />
                 활성 유저 통계
-              </h2>
+              </CardTitle>
               <p className="text-xs text-zinc-500">
                 DAU / WAU / MAU 및 신규 가입자 현황
               </p>
-            </div>
-          </div>
-
-          {isActiveUserStatsLoading ? (
-            <div className="text-sm text-zinc-500">로딩 중...</div>
-          ) : activeUserStats ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
-                  <div className="text-xs text-zinc-500">DAU (오늘)</div>
-                  <div className="text-2xl font-bold text-emerald-400">
-                    {activeUserStats.stats.dau.toLocaleString()}
-                  </div>
-                  <div
-                    className={`text-xs ${activeUserStats.stats.dau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
-                    <TrendingUp className="w-3 h-3 inline mr-1" />
-                    {activeUserStats.stats.dau_change >= 0 ? "+" : ""}
-                    {(activeUserStats.stats.dau_change * 100).toFixed(1)}%
-                  </div>
+            </CardHeader>
+            <CardContent>
+              {isActiveUserStatsLoading ? (
+                <div className="flex items-center justify-center py-8 text-zinc-500">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  로딩 중...
                 </div>
-                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
-                  <div className="text-xs text-zinc-500">WAU (7일)</div>
-                  <div className="text-2xl font-bold text-indigo-400">
-                    {activeUserStats.stats.wau.toLocaleString()}
-                  </div>
-                  <div
-                    className={`text-xs ${activeUserStats.stats.wau_change >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
-                    <TrendingUp className="w-3 h-3 inline mr-1" />
-                    {activeUserStats.stats.wau_change >= 0 ? "+" : ""}
-                    {(activeUserStats.stats.wau_change * 100).toFixed(1)}%
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
-                  <div className="text-xs text-zinc-500">MAU (30일)</div>
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {activeUserStats.stats.mau.toLocaleString()}
-                  </div>
-                </div>
-                <div className="p-4 rounded-lg bg-black/30 border border-white/5">
-                  <div className="text-xs text-zinc-500">
-                    신규 (오늘/이번주)
-                  </div>
-                  <div className="text-xl font-bold text-cyan-400">
-                    {activeUserStats.stats.new_users_today} /{" "}
-                    {activeUserStats.stats.new_users_this_week}
-                  </div>
-                </div>
-              </div>
-
-              {/* 7일 추이 차트 (간단한 바 형태) */}
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-zinc-300">
-                  7일 DAU 추이
-                </div>
-                <div className="flex items-end gap-1 h-20">
-                  {activeUserStats.trend.map((day, idx) => {
-                    const maxDau = Math.max(
-                      ...activeUserStats.trend.map((d) => d.dau),
-                      1,
-                    );
-                    return (
-                      <div
-                        key={idx}
-                        className="flex-1 flex flex-col items-center gap-1"
-                      >
-                        <div
-                          className={cn(
-                            "w-full bg-emerald-500/50 rounded-t",
-                            styles.trendBar,
-                            getTrendHeightClass(day.dau, maxDau),
-                          )}
-                          title={`${day.date}: ${day.dau}명`}
-                        />
-                        <div className="text-[10px] text-zinc-500">
-                          {day.date.slice(5)}
-                        </div>
+              ) : activeUserStats ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                      <div className="text-xs text-zinc-500">DAU (오늘)</div>
+                      <div className="text-2xl font-bold text-emerald-400">
+                        {activeUserStats.stats.dau.toLocaleString()}
                       </div>
-                    );
-                  })}
+                      <div
+                        className={cn(
+                          "text-xs",
+                          activeUserStats.stats.dau_change >= 0
+                            ? "text-emerald-400"
+                            : "text-red-400",
+                        )}
+                      >
+                        <TrendingUp className="w-3 h-3 inline mr-1" />
+                        {activeUserStats.stats.dau_change >= 0 ? "+" : ""}
+                        {(activeUserStats.stats.dau_change * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                      <div className="text-xs text-zinc-500">WAU (7일)</div>
+                      <div className="text-2xl font-bold text-indigo-400">
+                        {activeUserStats.stats.wau.toLocaleString()}
+                      </div>
+                      <div
+                        className={cn(
+                          "text-xs",
+                          activeUserStats.stats.wau_change >= 0
+                            ? "text-emerald-400"
+                            : "text-red-400",
+                        )}
+                      >
+                        <TrendingUp className="w-3 h-3 inline mr-1" />
+                        {activeUserStats.stats.wau_change >= 0 ? "+" : ""}
+                        {(activeUserStats.stats.wau_change * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                      <div className="text-xs text-zinc-500">MAU (30일)</div>
+                      <div className="text-2xl font-bold text-yellow-400">
+                        {activeUserStats.stats.mau.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/5">
+                      <div className="text-xs text-zinc-500">
+                        신규 (오늘/이번주)
+                      </div>
+                      <div className="text-xl font-bold text-cyan-400">
+                        {activeUserStats.stats.new_users_today} /{" "}
+                        {activeUserStats.stats.new_users_this_week}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 7-day DAU Trend */}
+                  <div className="space-y-2">
+                    <div className="text-sm font-semibold text-zinc-300">
+                      7일 DAU 추이
+                    </div>
+                    <div className="flex items-end gap-1 h-24 p-4 rounded-lg bg-black/30 border border-white/5">
+                      {activeUserStats.trend.map((day, idx) => {
+                        const maxDau = Math.max(
+                          ...activeUserStats.trend.map((d) => d.dau),
+                          1,
+                        );
+                        return (
+                          <div
+                            key={idx}
+                            className="flex-1 flex flex-col items-center gap-1"
+                          >
+                            <div
+                              className={cn(
+                                "w-full bg-emerald-500/50 rounded-t",
+                                styles.trendBar,
+                                getTrendHeightClass(day.dau, maxDau),
+                              )}
+                              title={`${day.date}: ${day.dau}명`}
+                            />
+                            <div className="text-[10px] text-zinc-500">
+                              {day.date.slice(5)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </Card>
+              ) : null}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-      {/* ─────────────────────────────────────────────────────────────────
-          유저 미션 일괄 리셋
-      ───────────────────────────────────────────────────────────────── */}
-      <Card className="bg-[#18181B] border-white/5">
-        <div className="p-4 space-y-4">
-          <div className="flex items-center gap-2">
-            <RotateCcw className="w-5 h-5 text-red-500" />
-            <div>
-              <h2 className="text-lg font-semibold text-zinc-100">
-                유저 미션 일괄 리셋
-              </h2>
-              <p className="text-xs text-zinc-500">
-                특정 유저의 모든 미션 또는 특정 미션 진행 상태 초기화
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={userMissionUserIdInput}
-              onChange={(e) => setUserMissionUserIdInput(e.target.value)}
-              placeholder="유저 ID"
-              className="w-32 bg-black/50 border-white/10"
-            />
-            <Select
-              value={
-                selectedMissionIdForReset === null
-                  ? "all"
-                  : String(selectedMissionIdForReset)
-              }
-              onValueChange={(v) =>
-                setSelectedMissionIdForReset(v === "all" ? null : Number(v))
-              }
-            >
-              <SelectTrigger className="w-48 bg-black/50 border-white/10">
-                <SelectValue placeholder="미션 선택" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-60">
-                <SelectItem value="all">전체 미션</SelectItem>
-                {missions.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>
-                    {m.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input
-              value={missionResetReason}
-              onChange={(e) => setMissionResetReason(e.target.value)}
-              placeholder="리셋 사유"
-              className="w-40 bg-black/50 border-white/10"
-            />
-            <Button
-              size="sm"
-              className="bg-red-500 hover:bg-red-600 text-white"
-              onClick={() => {
-                const userId = parseInt(userMissionUserIdInput, 10);
-                if (userId > 0 && missionResetReason) {
-                  resetUserMissionsMutation.mutate({
-                    userId,
-                    payload: {
-                      mission_id: selectedMissionIdForReset,
-                      reason: missionResetReason,
-                    },
-                  });
-                }
-              }}
-              disabled={resetUserMissionsMutation.isPending}
-            >
-              <RotateCcw className="w-4 h-4 mr-1" />
-              미션 리셋
-            </Button>
-          </div>
-
-          {resetUserMissionsMutation.isSuccess &&
-            resetUserMissionsMutation.data && (
-              <div className="text-sm text-emerald-400">
-                리셋 완료: {resetUserMissionsMutation.data.reset_count}개 미션
-                (ID: {resetUserMissionsMutation.data.missions_reset.join(", ")})
-              </div>
-            )}
-        </div>
-      </Card>
-
+      {/* ─── Create Mission Dialog ─── */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-emerald-500/0 via-emerald-500/50 to-emerald-500/0" />
-
-          <DialogHeader className="p-6 pb-0">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <Plus className="w-5 h-5 text-emerald-500" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-bold tracking-tight">
-                  Mission Creator
-                </DialogTitle>
-                <DialogDescription className="text-zinc-500 text-xs">
-                  Create a new operational mission for Season 25.
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className="max-w-2xl bg-[#09090B] border-white/10 text-white overflow-hidden max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-emerald-400" />새 미션 생성
+            </DialogTitle>
+            <DialogDescription>새로운 미션을 생성합니다.</DialogDescription>
           </DialogHeader>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column: Basic Info & Logic */}
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                    01. Identity & Config
-                  </span>
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-zinc-400">프리셋</Label>
+                <Select
+                  value={selectedPreset}
+                  onValueChange={(val) => {
+                    setSelectedPreset(val);
+                    const recommendedActionType =
+                      PRESET_RECOMMENDED_ACTION_TYPE[val];
+                    const presetCategory = getPresetCategory(val);
+                    const newTarget = createForm.targetValue;
+                    const newLogicKey = generateLogicKey(
+                      val,
+                      presetCategory,
+                      newTarget,
+                    );
+                    const newTitle = generateTitle(
+                      val,
+                      presetCategory,
+                      newTarget,
+                    );
+                    setCreateForm({
+                      ...createForm,
+                      category: presetCategory,
+                      logicKey: newLogicKey,
+                      title: newTitle,
+                      actionType:
+                        recommendedActionType || createForm.actionType,
+                    });
+                  }}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10">
+                    <SelectValue placeholder="프리셋 선택..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-60">
+                    {LOGIC_KEY_PRESETS.map((p) => (
+                      <SelectItem key={p.value} value={p.value}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-zinc-400">
-                    Mission Preset
-                  </Label>
+                  <Label className="text-xs text-zinc-400">카테고리</Label>
                   <Select
-                    value={selectedPreset}
+                    value={createForm.category}
                     onValueChange={(val) => {
-                      setSelectedPreset(val);
-                      const recommendedActionType =
-                        PRESET_RECOMMENDED_ACTION_TYPE[val];
-                      const presetCategory = getPresetCategory(val);
-                      const newTarget = createForm.targetValue;
                       const newLogicKey = generateLogicKey(
+                        selectedPreset,
                         val,
-                        presetCategory,
-                        newTarget,
+                        createForm.targetValue,
                       );
                       const newTitle = generateTitle(
+                        selectedPreset,
                         val,
-                        presetCategory,
-                        newTarget,
+                        createForm.targetValue,
                       );
                       setCreateForm({
                         ...createForm,
-                        category: presetCategory,
+                        category: val,
                         logicKey: newLogicKey,
                         title: newTitle,
-                        actionType:
-                          recommendedActionType || createForm.actionType,
                       });
                     }}
                   >
-                    <SelectTrigger className="bg-white/5 border-white/10 hover:border-emerald-500/30 transition-colors">
-                      <SelectValue placeholder="Select a preset..." />
+                    <SelectTrigger className="bg-white/5 border-white/10">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                      {LOGIC_KEY_PRESETS.map((p) => (
-                        <SelectItem
-                          key={p.value}
-                          value={p.value}
-                          className="focus:bg-emerald-500/10 focus:text-emerald-400"
-                        >
-                          {p.label}
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">액션 타입</Label>
+                  <Select
+                    value={createForm.actionType || "PLAY_GAME"}
+                    onValueChange={(val) =>
+                      setCreateForm({ ...createForm, actionType: val })
+                    }
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#18181B] border-white/10 text-white">
+                      {ACTION_TYPE_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-zinc-400">미션 제목</Label>
+                <Input
+                  value={createForm.title}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, title: e.target.value })
+                  }
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-emerald-400 font-bold">
+                    목표 횟수
+                  </Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={createForm.targetValue}
+                    onChange={(e) => {
+                      const newTarget = Math.max(
+                        1,
+                        parseInt(e.target.value) || 1,
+                      );
+                      const newLogicKey = generateLogicKey(
+                        selectedPreset,
+                        createForm.category,
+                        newTarget,
+                      );
+                      const newTitle = generateTitle(
+                        selectedPreset,
+                        createForm.category,
+                        newTarget,
+                      );
+                      setCreateForm({
+                        ...createForm,
+                        targetValue: newTarget,
+                        logicKey: newLogicKey,
+                        title: newTitle,
+                      });
+                    }}
+                    className="bg-emerald-500/5 border-emerald-500/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">
+                    조건 설명 (선택)
+                  </Label>
+                  <Input
+                    value={createForm.condition}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        condition: e.target.value,
+                      })
+                    }
+                    className="bg-white/5 border-white/10"
+                    placeholder="(선택사항)"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-1 space-y-2">
+                  <Label className="text-xs text-zinc-400">보상 타입</Label>
+                  <Select
+                    value={createForm.rewardType}
+                    onValueChange={(val) =>
+                      setCreateForm({ ...createForm, rewardType: val })
+                    }
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-48">
+                      {MISSION_REWARD_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-28 space-y-2">
+                  <Label className="text-xs text-zinc-400">보상량</Label>
+                  <Input
+                    type="number"
+                    value={createForm.rewardAmount}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        rewardAmount: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="bg-white/5 border-white/10 text-right"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Preview */}
+            <div className="space-y-4">
+              {renderMissionPreview({
+                category: createForm.category,
+                logicKey: createForm.logicKey,
+                actionType: createForm.actionType,
+                targetValue: createForm.targetValue,
+              })}
+
+              {createError && (
+                <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10">
+                  <div className="flex items-center gap-2 text-red-400 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    {createError}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={createMutation.isPending}
+              className="bg-emerald-600 hover:bg-emerald-500"
+            >
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  생성 중...
+                </>
+              ) : (
+                "미션 생성"
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── Edit Mission Dialog ─── */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="max-w-2xl bg-[#09090B] border-white/10 text-white overflow-hidden max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="flex items-center gap-2">
+                  <Edit2 className="w-5 h-5 text-indigo-400" />
+                  미션 편집
+                </DialogTitle>
+                <DialogDescription>
+                  MISSION_ID: #{editForm?.id}
+                </DialogDescription>
+              </div>
+              {editForm && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/5">
+                  <span className="text-[10px] text-zinc-500 uppercase">
+                    상태
+                  </span>
+                  <Switch
+                    checked={editForm.isActive}
+                    onCheckedChange={(checked) =>
+                      setEditForm({ ...editForm, isActive: checked })
+                    }
+                    className="data-[state=checked]:bg-indigo-500"
+                  />
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold",
+                      editForm.isActive ? "text-indigo-400" : "text-zinc-600",
+                    )}
+                  >
+                    {editForm.isActive ? "활성" : "비활성"}
+                  </span>
+                </div>
+              )}
+            </div>
+          </DialogHeader>
+
+          {editForm && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+              {/* Left Column */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-zinc-400">미션 제목</Label>
+                  <Input
+                    value={editForm.title}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, title: e.target.value })
+                    }
+                    className="bg-white/5 border-white/10"
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">Category</Label>
+                    <Label className="text-xs text-zinc-400">카테고리</Label>
                     <Select
-                      value={createForm.category}
-                      onValueChange={(val) => {
-                        const newLogicKey = generateLogicKey(
-                          selectedPreset,
-                          val,
-                          createForm.targetValue,
-                        );
-                        const newTitle = generateTitle(
-                          selectedPreset,
-                          val,
-                          createForm.targetValue,
-                        );
-                        setCreateForm({
-                          ...createForm,
-                          category: val,
-                          logicKey: newLogicKey,
-                          title: newTitle,
-                        });
-                      }}
+                      value={editForm.category}
+                      onValueChange={(val) =>
+                        setEditForm({ ...editForm, category: val as any })
+                      }
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
                         <SelectValue />
@@ -2165,11 +2472,11 @@ export default function MissionManagerPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">Action Type</Label>
+                    <Label className="text-xs text-zinc-400">액션 타입</Label>
                     <Select
-                      value={createForm.actionType || "PLAY_GAME"}
+                      value={editForm.actionType || "PLAY_GAME"}
                       onValueChange={(val) =>
-                        setCreateForm({ ...createForm, actionType: val })
+                        setEditForm({ ...editForm, actionType: val })
                       }
                     >
                       <SelectTrigger className="bg-white/5 border-white/10">
@@ -2187,88 +2494,60 @@ export default function MissionManagerPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs text-zinc-400">Display Title</Label>
+                  <Label className="text-xs text-zinc-400">로직 키</Label>
                   <Input
-                    value={createForm.title}
+                    value={editForm.logicKey}
                     onChange={(e) =>
-                      setCreateForm({ ...createForm, title: e.target.value })
+                      setEditForm({ ...editForm, logicKey: e.target.value })
                     }
-                    className="bg-white/5 border-white/10 focus:border-emerald-500/50"
+                    className="font-mono text-sm bg-white/5 border-white/10"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400 font-bold text-emerald-500/80">
-                      Target Count
+                    <Label className="text-xs text-indigo-400 font-bold">
+                      목표값
                     </Label>
                     <Input
                       type="number"
-                      min={1}
-                      value={createForm.targetValue}
-                      onChange={(e) => {
-                        const newTarget = Math.max(
-                          1,
-                          parseInt(e.target.value) || 1,
-                        );
-                        const newLogicKey = generateLogicKey(
-                          selectedPreset,
-                          createForm.category,
-                          newTarget,
-                        );
-                        const newTitle = generateTitle(
-                          selectedPreset,
-                          createForm.category,
-                          newTarget,
-                        );
-                        setCreateForm({
-                          ...createForm,
-                          targetValue: newTarget,
-                          logicKey: newLogicKey,
-                          title: newTitle,
-                        });
-                      }}
-                      className="bg-emerald-500/5 border-emerald-500/20 text-emerald-400 font-bold"
+                      value={editForm.targetValue}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          targetValue: parseInt(e.target.value) || 1,
+                        })
+                      }
+                      className="bg-indigo-500/5 border-indigo-500/20"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">
-                      Display Condition
-                    </Label>
+                    <Label className="text-xs text-zinc-400">조건 설명</Label>
                     <Input
-                      value={createForm.condition}
+                      value={editForm.condition || ""}
                       onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          condition: e.target.value,
-                        })
+                        setEditForm({ ...editForm, condition: e.target.value })
                       }
-                      placeholder="(Optional)"
                       className="bg-white/5 border-white/10"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                    02. Reward Package
-                  </span>
-                </div>
-                <div className="flex gap-4">
+                <div className="flex gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
                   <div className="flex-1 space-y-2">
-                    <Label className="text-xs text-zinc-400">Asset Type</Label>
+                    <Label className="text-xs text-zinc-500 uppercase">
+                      보상 타입
+                    </Label>
                     <Select
-                      value={createForm.rewardType}
+                      value={editForm.rewardType}
                       onValueChange={(val) =>
-                        setCreateForm({ ...createForm, rewardType: val })
+                        setEditForm({ ...editForm, rewardType: val })
                       }
                     >
-                      <SelectTrigger className="bg-white/5 border-white/10">
+                      <SelectTrigger className="bg-transparent border-white/10">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
+                      <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-48">
                         {MISSION_REWARD_OPTIONS.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}
@@ -2277,367 +2556,65 @@ export default function MissionManagerPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="w-32 space-y-2">
-                    <Label className="text-xs text-zinc-400">Amount</Label>
+                  <div className="w-28 space-y-2">
+                    <Label className="text-xs text-zinc-500 uppercase">
+                      보상량
+                    </Label>
                     <Input
                       type="number"
-                      value={createForm.rewardAmount}
+                      value={editForm.rewardAmount}
                       onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
+                        setEditForm({
+                          ...editForm,
                           rewardAmount: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="bg-white/5 border-white/10 font-mono text-right"
+                      className="bg-transparent border-white/10 text-right font-bold"
                     />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Right Column: Preview & Errors */}
-            <div className="flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                    03. Logic Preview
-                  </span>
-                </div>
-
-                {renderMissionAssemblyPreview({
-                  category: createForm.category,
-                  logicKey: createForm.logicKey,
-                  actionType: createForm.actionType,
-                  targetValue: createForm.targetValue,
-                  condition: createForm.condition,
+              {/* Right Column: Preview */}
+              <div className="space-y-4">
+                {renderMissionPreview({
+                  category: editForm.category,
+                  logicKey: editForm.logicKey,
+                  actionType: editForm.actionType,
+                  targetValue: editForm.targetValue,
                 })}
 
-                {createError && (
-                  <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex items-center gap-2 text-red-400 mb-1">
-                      <span className="text-sm font-bold">
-                        CONFIGURATION ERROR
-                      </span>
+                {editError && (
+                  <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10">
+                    <div className="flex items-center gap-2 text-red-400 text-sm">
+                      <AlertCircle className="w-4 h-4" />
+                      {editError}
                     </div>
-                    <p className="text-xs text-red-300 opacity-90 leading-snug">
-                      {createError}
-                    </p>
                   </div>
                 )}
               </div>
-
-              <div className="pt-8 flex justify-end gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="text-zinc-500 hover:text-white hover:bg-white/5 px-8"
-                >
-                  DISCARD
-                </Button>
-                <Button
-                  onClick={handleCreate}
-                  disabled={createMutation.isPending}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-10 shadow-lg shadow-emerald-900/20"
-                >
-                  {createMutation.isPending
-                    ? "INITIALIZING..."
-                    : "EXECUTE DEPLOY"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-3xl bg-[#09090B] border-white/10 text-white p-0 overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0" />
-
-          <DialogHeader className="p-6 pb-0">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                  <Edit2 className="w-5 h-5 text-indigo-500" />
-                </div>
-                <div>
-                  <DialogTitle className="text-xl font-bold tracking-tight">
-                    Modify Parameters
-                  </DialogTitle>
-                  <DialogDescription className="text-zinc-500 text-xs font-mono">
-                    MISSION_ID: #{editForm?.id}
-                  </DialogDescription>
-                </div>
-              </div>
-
-              {editForm && (
-                <div className="flex items-center gap-3 bg-black/40 px-3 py-2 rounded-lg border border-white/5">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase">
-                    Status
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Switch
-                      checked={editForm.isActive}
-                      onCheckedChange={(checked) =>
-                        setEditForm({ ...editForm, isActive: checked })
-                      }
-                      className="data-[state=checked]:bg-indigo-500"
-                    />
-                    <span
-                      className={`text-[10px] font-bold uppercase ${editForm.isActive ? "text-indigo-400" : "text-zinc-600"}`}
-                    >
-                      {editForm.isActive ? "Active" : "Disabled"}
-                    </span>
-                  </span>
-                </div>
-              )}
-            </div>
-          </DialogHeader>
-
-          {editForm && (
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Left Column */}
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                      01. Identity & Condition
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">
-                      Display Title
-                    </Label>
-                    <Input
-                      value={editForm.title}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, title: e.target.value })
-                      }
-                      className="bg-white/5 border-white/10 focus:border-indigo-500/50"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">
-                        Category Scope
-                      </Label>
-                      <Select
-                        value={editForm.category}
-                        onValueChange={(val) =>
-                          setEditForm({ ...editForm, category: val as any })
-                        }
-                      >
-                        <SelectTrigger className="bg-white/5 border-white/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                          {CATEGORIES.map((cat) => (
-                            <SelectItem key={cat} value={cat}>
-                              {cat}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">
-                        Action Type
-                      </Label>
-                      <Select
-                        value={editForm.actionType || "PLAY_GAME"}
-                        onValueChange={(val) =>
-                          setEditForm({ ...editForm, actionType: val })
-                        }
-                      >
-                        <SelectTrigger className="bg-white/5 border-white/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                          {ACTION_TYPE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-zinc-400">
-                      Identifier (Logic Key)
-                    </Label>
-                    <div className="space-y-2">
-                      <Input
-                        value={editForm.logicKey}
-                        onChange={(e) =>
-                          setEditForm({ ...editForm, logicKey: e.target.value })
-                        }
-                        className="font-mono text-sm bg-white/5 border-white/10 focus:border-indigo-500/50"
-                      />
-                      <Select
-                        onValueChange={(val) => {
-                          const recommendedActionType =
-                            PRESET_RECOMMENDED_ACTION_TYPE[val];
-                          setEditForm({
-                            ...editForm,
-                            logicKey: val,
-                            actionType:
-                              recommendedActionType || editForm.actionType,
-                          });
-                        }}
-                      >
-                        <SelectTrigger className="h-8 text-xs bg-indigo-500/5 border-indigo-500/20 text-indigo-400">
-                          <SelectValue placeholder="Override with Preset..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#18181B] border-white/10 text-white">
-                          {LOGIC_KEY_PRESETS.map((p) => (
-                            <SelectItem key={p.value} value={p.value}>
-                              {p.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2 pt-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                      02. Threshold & Reward
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold text-indigo-400">
-                        Target Value
-                      </Label>
-                      <Input
-                        type="number"
-                        value={editForm.targetValue}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            targetValue: parseInt(e.target.value) || 1,
-                          })
-                        }
-                        className="bg-indigo-500/5 border-indigo-500/20 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs text-zinc-400">
-                        Display Desc
-                      </Label>
-                      <Input
-                        value={editForm.condition || ""}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            condition: e.target.value,
-                          })
-                        }
-                        className="bg-white/5 border-white/10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 p-4 rounded-xl bg-black/40 border border-white/5">
-                    <div className="flex-1 space-y-2">
-                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">
-                        Award Asset
-                      </Label>
-                      <Select
-                        value={editForm.rewardType}
-                        onValueChange={(val) =>
-                          setEditForm({ ...editForm, rewardType: val })
-                        }
-                      >
-                        <SelectTrigger className="bg-transparent border-white/10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-[#18181B] border-white/10 text-white max-h-[200px]">
-                          {MISSION_REWARD_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="w-28 space-y-2">
-                      <Label className="text-xs text-zinc-500 uppercase font-bold tracking-tighter">
-                        Amount
-                      </Label>
-                      <Input
-                        type="number"
-                        value={editForm.rewardAmount}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            rewardAmount: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        className="bg-transparent border-white/10 font-mono text-xl font-bold"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column */}
-              <div className="flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-2 border-b border-white/5 pb-2 mb-4">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                      03. Deployment Preview
-                    </span>
-                  </div>
-
-                  {renderMissionAssemblyPreview({
-                    category: editForm.category,
-                    logicKey: editForm.logicKey,
-                    actionType: editForm.actionType,
-                    targetValue: editForm.targetValue,
-                    condition: editForm.condition,
-                  })}
-
-                  {editError && (
-                    <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4 animate-in fade-in">
-                      <div className="flex items-center gap-2 text-red-400 mb-1">
-                        <span className="text-sm font-bold uppercase">
-                          Update Blocked
-                        </span>
-                      </div>
-                      <p className="text-xs text-red-300 leading-snug">
-                        {editError}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-8 flex justify-end gap-3">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsEditOpen(false)}
-                    className="text-zinc-500 hover:text-white hover:bg-white/5 px-8"
-                  >
-                    ABORT
-                  </Button>
-                  <Button
-                    onClick={handleSaveEdit}
-                    disabled={updateMutation.isPending}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-10 shadow-lg shadow-indigo-900/20"
-                  >
-                    {updateMutation.isPending
-                      ? "PATCHING..."
-                      : "COMMIT CHANGES"}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+            <Button variant="ghost" onClick={() => setIsEditOpen(false)}>
+              취소
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={updateMutation.isPending}
+              className="bg-indigo-600 hover:bg-indigo-500"
+            >
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  저장 중...
+                </>
+              ) : (
+                "변경사항 저장"
+              )}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -66,12 +66,16 @@ def setup_valid_user(db, user_id: int, locked: int):
             )
         )
 
-    now_kst = datetime.now(ZoneInfo("Asia/Seoul")).date()
-    for kst_date in (now_kst, now_kst - timedelta(days=1)):
+    # Deposit SOT: kst_date must be DATE object
+    now_kst_dt = datetime.now(ZoneInfo("Asia/Seoul"))
+    now_kst_date = now_kst_dt.date()
+    
+    for delta_days in range(2): # Today and Yesterday
+        target_date = now_kst_date - timedelta(days=delta_days)
         db.add(
             ExternalRankingDailyDepositDelta(
                 user_id=user_id,
-                kst_date=kst_date,
+                kst_date=target_date,
                 deposit_delta=10_000,
             )
         )

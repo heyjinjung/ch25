@@ -14,6 +14,7 @@
 | 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
+| 02-01 | /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) | ✅ RESOLVED |
 
 ---
 
@@ -275,6 +276,56 @@ curl -s https://cc-jm.com/api/v2/admin/ops/status -H "Authorization: Bearer $TOK
 
 ---
 
+## 02-01 - [INFRA/ADMIN] 어드민 유저 퍼지 500 (로그 미확인)
+
+**우선순위**: P1
+**관련 도메인**: INFRA, ADMIN, BACKEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 유저 강제 퍼지 (`POST /api/v2/admin/users/{user_id}/purge`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 어드민 유저 관리(퍼지 기능) |
+| **재현 빈도** | 미확인 (사용자 보고 기준) |
+
+### 증거(클라이언트)
+- 브라우저 콘솔: `POST https://cc-jm.com/api/v2/admin/users/8/purge 500 (Internal Server Error)`
+
+### 증거(서버 로그)
+- 운영 서버 `docker logs xmas-backend --tail=1000` 및 시간대 필터 로그에서 `/purge` 요청 라인 **미검출**.
+- 동일 시간대에 **다른 500 로그(게임 로그 조회)** 가 다수 존재하여 노이즈 가능성 있음.
+
+### 근본 원인 (증거 기반)
+- ✅ **코드 분석으로 원인 확정**: `admin_user_service.py`의 `purge_user()` 함수가 V2 게임 로그를 삭제하지 않음.
+- 레거시 게임 로그(DiceLog, RouletteLog, LotteryLog)만 삭제하고 **V2 게임 로그(V2DiceLog, V2RouletteLog, V2LotteryLog)는 누락**.
+- V2 게임 로그에 해당 user_id 레코드가 남아있으면 v2_user 삭제 시 FK 에러 가능.
+
+### 해결 조치
+- 파일: `app/v2/services/admin_user_service.py`
+- V2 게임 로그 import 추가:
+```python
+from app.v2.models.v2_dice import V2DiceLog
+from app.v2.models.v2_roulette import V2RouletteLog
+from app.v2.models.v2_lottery import V2LotteryLog
+```
+- V2 게임 로그 삭제 로직 추가:
+```python
+# Game Logs (V2)
+db.query(V2DiceLog).filter(V2DiceLog.user_id == user_id).delete(synchronize_session=False)
+db.query(V2RouletteLog).filter(V2RouletteLog.user_id == user_id).delete(synchronize_session=False)
+db.query(V2LotteryLog).filter(V2LotteryLog.user_id == user_id).delete(synchronize_session=False)
+```
+
+### 검증 방법
+- 퍼지 요청 재현 시 204 No Content 확인.
+- 백엔드 로그에서 `User {user_id} purged by admin` 메시지 확인.
+
+### 수정 시각
+- 2026-02-01 14:XX KST
+
+---
+
 ## 01-30 - 배포 검증 리포트
 
 ### 점검 항목
@@ -301,3 +352,4 @@ xmas-celery-*     Up (healthy)
 - 2026-01-31: W05 INFRA 문서 생성, 기존 분산 문서 통합
 - 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락
 - 2026-02-01: SOT Import 리팩터링 후 re-export 누락 이슈 추가 (커밋 3b64190)
+- 2026-02-01: Issue #24 purge 500 에러 - V2 게임로그 미삭제 원인 확정 및 수정완료

@@ -150,6 +150,7 @@ def test_golden_hour_multiplier_applied(db_session, test_user, dice_config, monk
     
     # Ensure V2EventService also sees golden hour as active
     monkeypatch.setattr("app.v2.services.event_service.V2EventService.is_golden_hour", lambda self, db, now: True)
+    monkeypatch.setattr("app.v2.services.v2_dice_game_service.V2DiceGameService._is_golden_hour_active", staticmethod(lambda config, now: True))
     
     result = service.play(db_session, user_id=100, now=datetime.utcnow())
     # 골든아워면 보상 배율이 곱해진 값이어야 함(예: 1000*2=2000)
@@ -238,8 +239,12 @@ def test_golden_hour_multiplier(db_session, test_user, dice_config, monkeypatch)
     """
     service = V2DiceGameService()
     
-    # Mock V2EventService to force Golden Hour
+    # Mock V2EventService to force Golden Hour (Global)
     monkeypatch.setattr("app.v2.services.event_service.V2EventService.is_golden_hour", lambda self, db, now: True)
+    monkeypatch.setattr("app.v2.services.v2_dice_game_service.V2DiceGameService._is_golden_hour_active", staticmethod(lambda config, now: True))
+    
+    # CRITICAL: Mock internal _is_golden_hour_active because play() uses this directly, not V2EventService
+    monkeypatch.setattr("app.v2.services.v2_dice_game_service.V2DiceGameService._is_golden_hour_active", staticmethod(lambda config, now: True))
     
     # Set high multiplier
     dice_config.enable_golden_hour = True
