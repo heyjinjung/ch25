@@ -63,12 +63,8 @@ const LatencySurvivalPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 p-4 md:p-8 bg-[#121214] min-h-screen text-zinc-200">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">지연 극복 (Latency Survival) 관제</h1>
-          <p className="text-sm text-zinc-400">유저가 제출한 TX 증거와 실제 입금 내역을 매칭합니다.</p>
-        </div>
+    <div className="space-y-6 text-zinc-200">
+      <div className="flex justify-end items-center">
         <div className="flex gap-2">
           <Badge variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-400">
             대기중: {evidences?.filter(e => e.status === 'PENDING').length || 0}

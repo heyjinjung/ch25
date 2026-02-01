@@ -1,7 +1,6 @@
 /* webhint-disable no-inline-styles */
 import React, { useState } from "react";
 import {
-  Upload,
   FileText,
   CheckCircle2,
   AlertCircle,
@@ -40,7 +39,9 @@ export default function CSVImportPage() {
   const [batchSize, setBatchSize] = useState(250);
   const [isHistorical, setIsHistorical] = useState(false);
   const [emitToRedis] = useState(true);
-  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN">("GAME_LOG");
+  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN">(
+    "GAME_LOG",
+  );
 
   const validateMutation = useValidateCSV();
   const uploadMutation = useUploadCSV();
@@ -92,28 +93,16 @@ export default function CSVImportPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 bg-obsidian-bg min-h-screen text-white">
-      {/* Header */}
-      {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
-            <Upload className="w-8 h-8 text-indigo-400" />
-            기초 데이터 반입 (CSV)
-          </h1>
-          <p className="text-sm text-zinc-400">
-            외부 플랫폼의 기록(CSV)을 시스템에 가져와서 정밀 분석합니다.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="border-white/10 hover:bg-white/5 gap-2"
-            onClick={reset}
-          >
-            <RefreshCw className="w-4 h-4" /> 초기화
-          </Button>
-        </div>
+    <div className="space-y-6 text-white">
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          className="border-white/10 hover:bg-white/5 gap-2"
+          onClick={reset}
+        >
+          <RefreshCw className="w-4 h-4" /> 초기화
+        </Button>
       </div>
 
       {/* Stepper */}
@@ -175,7 +164,9 @@ export default function CSVImportPage() {
                       className="w-4 h-4 text-indigo-600"
                     />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-white text-left">게임 이용 기록 (기본)</div>
+                      <div className="text-sm font-medium text-white text-left">
+                        게임 이용 기록 (기본)
+                      </div>
                       <div className="text-[10px] text-zinc-500 text-left">
                         시간, 유저ID, 게임종류, 결과, 베팅액 등
                       </div>
@@ -193,7 +184,9 @@ export default function CSVImportPage() {
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
                         💰 본사 입금액 대조 (Margin)
-                        <Badge variant="outline" className="text-[10px]">NEW</Badge>
+                        <Badge variant="outline" className="text-[10px]">
+                          NEW
+                        </Badge>
                       </div>
                       <div className="text-[10px] text-zinc-500 text-left">
                         충/환전, 본사마진, 정밀 세그먼트 분석용
@@ -265,7 +258,8 @@ export default function CSVImportPage() {
 
                   {!validateMutation.data.is_valid && (
                     <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                      <strong>확인 불가 원인:</strong> {validateMutation.data.error}
+                      <strong>확인 불가 원인:</strong>{" "}
+                      {validateMutation.data.error}
                     </div>
                   )}
 
@@ -340,8 +334,7 @@ export default function CSVImportPage() {
                 </CardHeader>
                 <CardContent className="text-xs text-zinc-500 space-y-3 leading-relaxed">
                   <p>
-                    • 가져온 데이터는 시스템의 모든 운영 지표에 즉시
-                    반영됩니다.
+                    • 가져온 데이터는 시스템의 모든 운영 지표에 즉시 반영됩니다.
                   </p>
                   <p>• 가입되지 않은 유저의 기록은 자동으로 제외됩니다.</p>
                   <p>
@@ -359,7 +352,8 @@ export default function CSVImportPage() {
               <RefreshCw className="w-12 h-12 text-indigo-400 animate-spin" />
               <h2 className="text-2xl font-bold">시스템에 넣는 중...</h2>
               <p className="text-zinc-500 italic text-sm">
-                데이터 양에 따라 시간이 걸릴 수 있습니다. 창을 닫지 말고 잠시만 기다려 주세요.
+                데이터 양에 따라 시간이 걸릴 수 있습니다. 창을 닫지 말고 잠시만
+                기다려 주세요.
               </p>
             </div>
             <div className="max-w-md mx-auto space-y-2">
@@ -381,7 +375,9 @@ export default function CSVImportPage() {
                   <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white">데이터 반입 성공!</h2>
+                  <h2 className="text-2xl font-bold text-white">
+                    데이터 반입 성공!
+                  </h2>
                   <p className="text-emerald-400/60 text-sm">
                     성공적으로{" "}
                     {importMutation.data.successful_rows.toLocaleString()}개의
@@ -416,7 +412,8 @@ export default function CSVImportPage() {
 
             {/* Analysis Grid */}
             <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
-              <BarChart3 className="w-5 h-5 text-indigo-400" /> 오늘 가져온 데이터 요약
+              <BarChart3 className="w-5 h-5 text-indigo-400" /> 오늘 가져온
+              데이터 요약
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

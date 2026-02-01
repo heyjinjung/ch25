@@ -54,22 +54,12 @@ export default function OpsDashboard() {
         : "bg-red-500";
 
   return (
-    <div className="p-6 space-y-8 h-full bg-obsidian-bg min-h-screen text-obsidian-text font-sans">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
-            전체 운영 현황판
-          </h1>
-          <p className="text-sm text-obsidian-muted">
-            시스템 상태와 유저들의 이용 현황을 관리합니다.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
-            긴급 점검 모드 (Maintenance)
-          </Button>
-        </div>
+    <div className="space-y-8">
+      {/* Quick Actions Row */}
+      <div className="flex justify-end gap-2">
+        <Button className="bg-[#D2FD9C] text-black hover:bg-[#bbf07c]">
+          긴급 점검 모드 (Maintenance)
+        </Button>
       </div>
 
       {/* Top Row: Critical Status */}

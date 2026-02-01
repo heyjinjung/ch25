@@ -4,9 +4,32 @@
 
 ---
 
-## 1. 운영 대시보드 (OpsDashboard)
-> **PATH**: `/admin/dashboard` (메인 홈)
+### 1. 통합 관제 센터 (Control Center)
+> **PATH**: `/admin/control`
+*   **용도**: 전체 시스템 현황, 실시간 게임 중계, 이탈 위험 유입을 한곳에서 모니터링합니다.
+*   **하위 탭**:
+    *   **현황판**: 전체 자산 및 시스템 상태 (`OpsDashboard`)
+    *   **실시간 중계**: 실시간 게임 이벤트 및 개입 로그 (`GoldenRealTimePage`)
+    *   **이탈 위험**: AI 기반 이탈 예측 및 위험 유저 추적 (`CrisisRadarPage`)
 
+### 2. 시스템 보안 및 데이터 (System & Security)
+> **PATH**: `/admin/system`
+*   **용도**: 비상 대응, 증거 승인, 데이터 반입 및 로그 확인을 수행합니다.
+*   **하위 탭**:
+    *   **비상 정지**: 자산 지급 한도 관리 및 차단 해제 (`CircuitBreakerPage`)
+    *   **지연 승인**: 유저 제출 입금 증거 검토 및 승인 (`LatencySurvivalPage`)
+    *   **데이터 반입**: 외부 플랫폼 데이터 CSV 임포트 (`CSVImportPage`)
+    *   **운영 기록**: 운영진 활동 감사 로그 (`AuditLogPage`)
+
+### 3. 지표 및 인사이트 (Insights)
+> **PATH**: `/admin/analytics`
+*   **용도**: 리텐션, 수익/지출, 마케팅 효율 등 정밀 지표를 분석합니다.
+
+---
+
+## 2. 세부 기능 설명
+
+### 1) 통합 관제 센터 (Control Center)
 *   **Who (누가)**: Ops Manager (운영 총괄), Super Admin
 *   **When (언제)**: 매일 업무 시작 시, 시스템 상태 전반을 빠르게 파악할 때 사용합니다.
 *   **Where (어디서)**: Admin 패널 로그인 직후 보이는 **메인 화면**입니다.

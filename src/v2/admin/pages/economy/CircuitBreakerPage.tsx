@@ -46,16 +46,9 @@ const CircuitBreakerPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-8 bg-[#121214] min-h-screen text-zinc-200">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">
-            비상 정지 장치 (Emergency Stop)
-          </h1>
-          <p className="text-sm text-zinc-400">
-            자산 지급 한도를 감시하고, 한도 초과로 차단된 상태를 해제합니다.
-          </p>
-        </div>
+    <div className="space-y-8 text-zinc-200">
+      {/* Status Indicator Row */}
+      <div className="flex justify-end items-end">
         <Badge className="bg-red-500/10 text-red-500 border-none px-3 py-1 animate-pulse">
           <ShieldAlert className="w-4 h-4 mr-2" /> 실시간 모니터링 (Live)
         </Badge>

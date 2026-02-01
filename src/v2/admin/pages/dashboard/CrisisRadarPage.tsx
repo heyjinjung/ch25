@@ -10,7 +10,6 @@ import {
   Search,
   Filter,
   ChevronRight,
-  ShieldAlert,
   Zap,
   MessageSquare,
   PhoneCall,
@@ -46,35 +45,18 @@ export default function CrisisRadarPage() {
   const interventionSuccessRate = status?.goldenRadar.interventionSuccessRate;
 
   return (
-    <div className="p-6 space-y-8 bg-obsidian-bg min-h-screen text-white">
-      {/* Header */}
-      {/* Header */}
-      <div className="flex justify-between items-end">
-        <div>
-          <div className="flex items-center gap-2 text-red-500 mb-2">
-            <ShieldAlert className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">
-              떠날 사람 레이더 (이탈 감지기)
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            이탈 위험 감지(Crisis Radar)
-          </h1>
-          <p className="text-sm text-obsidian-muted mt-1">
-            AI가 분석한 곧 떠날 것 같은 위험 유저 목록입니다. 지금 바로 선물을 줘서 붙잡아야 합니다.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="border-obsidian-border text-obsidian-muted hover:text-white hover:bg-white/5"
-          >
-            한 번에 선물 주기
-          </Button>
-          <Button className="bg-red-500 text-white hover:bg-red-600">
-            이탈 감지 예민도 설정
-          </Button>
-        </div>
+    <div className="space-y-8 text-white">
+      {/* Actions */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          className="border-obsidian-border text-obsidian-muted hover:text-white hover:bg-white/5"
+        >
+          한 번에 선물 주기
+        </Button>
+        <Button className="bg-red-500 text-white hover:bg-red-600">
+          이탈 감지 예민도 설정
+        </Button>
       </div>
 
       {/* Main Analysis Cards */}
@@ -104,9 +86,7 @@ export default function CrisisRadarPage() {
             <div className="text-3xl font-bold text-amber-500">
               {riskyUsers.filter((u) => u.riskLevel === "MEDIUM").length}
             </div>
-            <p className="text-[10px] text-amber-400/60 mt-1">
-              나갈 징후 보임
-            </p>
+            <p className="text-[10px] text-amber-400/60 mt-1">나갈 징후 보임</p>
           </CardContent>
         </Card>
         <Card className="bg-obsidian-surface border-obsidian-muted/20">

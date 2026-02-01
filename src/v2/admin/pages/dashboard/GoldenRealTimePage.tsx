@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, Clock, Radio } from "lucide-react";
+import { Activity, Clock } from "lucide-react";
 import { GoldenEventStream } from "../../components/golden/GoldenEventStream";
 import { InterventionLogTable } from "../../components/golden/InterventionLogTable";
 import { Button } from "../../../components/ui/button";
@@ -61,36 +61,20 @@ export default function GoldenRealTimePage() {
     eventsPerSecond === null ? "-" : `${eventsPerSecond}/초`;
 
   return (
-    <div className="p-6 space-y-6 bg-obsidian-bg min-h-screen text-obsidian-text">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <div className="flex items-center gap-2 text-amber-500 mb-2">
-            <Radio className="w-4 h-4 animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-wider">
-              실시간 중계방
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            골든 실시간 중계
-          </h1>
-          <p className="text-sm text-obsidian-muted mt-1">
-            지금 막 터진 게임 기록과 운영자 조치 내역을 생중계로 확인합니다.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6 text-obsidian-text">
+      {/* System Status Indicators (Optional, moved to a compact row) */}
+      <div className="flex justify-end items-center gap-4">
+        <div
+          className={`flex items-center gap-2 px-3 py-1 rounded-full border ${systemStatus.tone === "ok" ? "bg-emerald-500/10 border-emerald-500/20" : systemStatus.tone === "warn" ? "bg-amber-500/10 border-amber-500/20" : systemStatus.tone === "error" ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-obsidian-border"}`}
+        >
           <div
-            className={`flex items-center gap-2 px-3 py-1 rounded-full border ${systemStatus.tone === "ok" ? "bg-emerald-500/10 border-emerald-500/20" : systemStatus.tone === "warn" ? "bg-amber-500/10 border-amber-500/20" : systemStatus.tone === "error" ? "bg-red-500/10 border-red-500/20" : "bg-white/5 border-obsidian-border"}`}
+            className={`w-2 h-2 rounded-full ${systemStatus.tone === "ok" ? "bg-emerald-500 animate-pulse" : systemStatus.tone === "warn" ? "bg-amber-500" : systemStatus.tone === "error" ? "bg-red-500" : "bg-obsidian-muted"}`}
+          />
+          <span
+            className={`text-xs font-medium ${systemStatus.tone === "ok" ? "text-emerald-500" : systemStatus.tone === "warn" ? "text-amber-500" : systemStatus.tone === "error" ? "text-red-500" : "text-obsidian-muted"}`}
           >
-            <div
-              className={`w-2 h-2 rounded-full ${systemStatus.tone === "ok" ? "bg-emerald-500 animate-pulse" : systemStatus.tone === "warn" ? "bg-amber-500" : systemStatus.tone === "error" ? "bg-red-500" : "bg-obsidian-muted"}`}
-            />
-            <span
-              className={`text-xs font-medium ${systemStatus.tone === "ok" ? "text-emerald-500" : systemStatus.tone === "warn" ? "text-amber-500" : systemStatus.tone === "error" ? "text-red-500" : "text-obsidian-muted"}`}
-            >
-              {systemStatus.label}
-            </span>
-          </div>
+            {systemStatus.label}
+          </span>
         </div>
       </div>
 
@@ -164,7 +148,9 @@ export default function GoldenRealTimePage() {
         {/* Right Column: Status & Control */}
         <div className="space-y-6">
           <div className="bg-obsidian-surface border border-obsidian-border rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">중계 연결 상태</h3>
+            <h3 className="text-lg font-bold text-white mb-4">
+              중계 연결 상태
+            </h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-obsidian-muted">서버 연결</span>

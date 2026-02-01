@@ -1,11 +1,5 @@
 import { useState } from "react";
-import {
-  FileText,
-  Filter,
-  RefreshCw,
-  ChevronDown,
-  ChevronRight,
-} from "lucide-react";
+import { Filter, RefreshCw, ChevronDown, ChevronRight } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
@@ -127,16 +121,9 @@ export default function AuditLogPage() {
   };
 
   return (
-    <div className="space-y-6 min-h-screen p-6 text-white pb-20">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-black text-white flex items-center gap-3 mb-2">
-            <FileText className="w-8 h-8 text-indigo-400" />
-            운영진 활동 기록 (Archive)
-          </h1>
-          <p className="text-zinc-400">누가, 언제, 어떤 설정을 바꿨는지 모든 기록을 확인합니다.</p>
-        </div>
+    <div className="space-y-6 text-white pb-10">
+      {/* Actions */}
+      <div className="flex justify-end items-start">
         <Button
           variant="outline"
           className="border-white/10 text-white hover:bg-white/10"
@@ -175,7 +162,9 @@ export default function AuditLogPage() {
               </Select>
             </div>
             <div className="flex-1 min-w-[200px]">
-              <label className="text-xs text-zinc-400 mb-1 block">수행한 활동</label>
+              <label className="text-xs text-zinc-400 mb-1 block">
+                수행한 활동
+              </label>
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger className="bg-black/20 border-white/10">
                   <SelectValue placeholder="전체 활동" />

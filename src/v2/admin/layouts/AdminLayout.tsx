@@ -12,7 +12,6 @@ import {
   ChevronDown,
   ChevronRight,
   Store,
-  FileUp,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -88,22 +87,33 @@ export default function AdminLayout() {
   }> = [
     {
       key: "OPS",
-      label: "모니터링",
+      label: "모니터링 & 분석",
       items: [
         {
           icon: LayoutDashboard,
-          label: "대시보드",
-          path: "/admin/dashboard",
-          submenu: [
-            { label: "운영 대시보드", path: "/admin/dashboard" },
-            { label: "골든 레이더", path: "/admin/dashboard/golden" },
-            { label: "이상 탐지", path: "/admin/dashboard/radar" },
-          ],
+          label: "통합 관제 센터",
+          path: "/admin/control",
         },
         {
           icon: LayoutDashboard,
-          label: "운영 분석",
-          path: "/admin/ops/analytics",
+          label: "지표 및 인사이트",
+          path: "/admin/analytics",
+        },
+      ],
+    },
+    {
+      key: "SYSTEM",
+      label: "보안 및 데이터",
+      items: [
+        {
+          icon: Settings,
+          label: "시스템 보안 및 CSV",
+          path: "/admin/system",
+        },
+        {
+          icon: Bell,
+          label: "감사 로그 (Direct)",
+          path: "/admin/ops/audit-logs",
         },
       ],
     },
@@ -115,34 +125,8 @@ export default function AdminLayout() {
         { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
         {
           icon: MessageSquare,
-          label: "메시지 및 고객 상세 관리",
+          label: "메시지 및 고객 관리",
           path: "/admin/marketing/messages",
-        },
-      ],
-    },
-    {
-      key: "SYSTEM",
-      label: "시스템 & 보안",
-      items: [
-        {
-          icon: Settings,
-          label: "서킷 브레이커",
-          path: "/admin/economy/circuit-breaker",
-        },
-        {
-          icon: Settings,
-          label: "지연 극복 관리",
-          path: "/admin/economy/latency",
-        },
-        {
-          icon: Bell,
-          label: "감사 로그",
-          path: "/admin/ops/audit-logs",
-        },
-        {
-          icon: FileUp,
-          label: "로그 데이터 업로드",
-          path: "/admin/ops/csv-import",
         },
       ],
     },
@@ -164,9 +148,6 @@ export default function AdminLayout() {
           icon: Store,
           label: "재고/인벤토리",
           path: "/admin/inventory/tickets",
-          submenu: [
-            { label: "티켓/토큰 관리", path: "/admin/inventory/tickets" },
-          ],
         },
         { icon: Store, label: "상점 & 미션", path: "/admin/economy/shop" },
       ],

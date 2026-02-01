@@ -2,13 +2,8 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import AdminLayout from "../admin/layouts/AdminLayout";
-import OpsDashboard from "../admin/pages/dashboard/OpsDashboard";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
-import CrisisRadarPage from "../admin/pages/dashboard/CrisisRadarPage";
-import GoldenRealTimePage from "../admin/pages/dashboard/GoldenRealTimePage";
-import CSVImportPage from "../admin/pages/ops/CSVImportPage";
 import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
-import AuditLogPage from "../admin/pages/ops/AuditLogPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
@@ -30,19 +25,56 @@ import { AdminGoldenHourPage } from "../admin/pages/placeholders";
 import { isAdminAuthenticated } from "../../auth/adminAuth";
 import V2AdminLoginPage from "../admin/pages/auth/V2AdminLoginPage";
 
+import ControlCenterPage from "../admin/pages/dashboard/ControlCenterPage";
+import SystemSecurityPage from "../admin/pages/ops/SystemSecurityPage";
+
 const V2AdminRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="login" element={<V2AdminLoginPage />} />
       <Route element={<RequireV2AdminAuth />}>
         <Route element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<OpsDashboard />} />
-          <Route path="dashboard/radar" element={<CrisisRadarPage />} />
-          <Route path="dashboard/golden" element={<GoldenRealTimePage />} />
-          <Route path="ops/csv-import" element={<CSVImportPage />} />
-          <Route path="ops/analytics" element={<AnalyticsDashboard />} />
-          <Route path="ops/audit-logs" element={<AuditLogPage />} />
+          <Route index element={<Navigate to="/admin/control" replace />} />
+
+          {/* New Consolidated Pages */}
+          <Route path="control" element={<ControlCenterPage />} />
+          <Route path="system" element={<SystemSecurityPage />} />
+          <Route path="analytics" element={<AnalyticsDashboard />} />
+
+          {/* Legacy Redirects for bookmarks */}
+          <Route
+            path="dashboard"
+            element={<Navigate to="/admin/control" replace />}
+          />
+          <Route
+            path="dashboard/radar"
+            element={<Navigate to="/admin/control" replace />}
+          />
+          <Route
+            path="dashboard/golden"
+            element={<Navigate to="/admin/control" replace />}
+          />
+          <Route
+            path="economy/circuit-breaker"
+            element={<Navigate to="/admin/system" replace />}
+          />
+          <Route
+            path="economy/latency"
+            element={<Navigate to="/admin/system" replace />}
+          />
+          <Route
+            path="ops/csv-import"
+            element={<Navigate to="/admin/system" replace />}
+          />
+          <Route
+            path="ops/audit-logs"
+            element={<Navigate to="/admin/system" replace />}
+          />
+          <Route
+            path="ops/analytics"
+            element={<Navigate to="/admin/analytics" replace />}
+          />
+
           <Route path="marketing" element={<MarketingCenterPage />} />
 
           {/* Users - Tabbed */}
