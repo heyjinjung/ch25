@@ -162,13 +162,6 @@ if payload.golden_hour_start_time is not None:
 
 ---
 
-## 변경 이력
-- 2026-01-31: W05 GAME 문서 생성, 기존 분산 문서 통합
-- 2026-01-31: 골든아워 시간설정 500 에러 이슈 추가
-- 2026-01-31: HQ Margin CSV Import 테스트 실패 (Assert 0 == 1) 추가
-
----
-
 ## 01-31 - [GAME] HQ Margin CSV Import 테스트 실패 (Assert 0 == 1)
 
 **우선순위**: P1
@@ -189,3 +182,23 @@ if payload.golden_hour_start_time is not None:
 
 ### 검증 방법
 - `pytest tests/v2/admin/test_hq_margin_integration.py -v` (Pass 확인)
+
+---
+
+## 02-01 - [GAME] 어드민 게임 결과 로그 시각화 부재
+
+### 📝 증상
+- 어드민 > 유저 디테일 드로우에서 유저의 개별 게임 결과(Dice, Roulette, Lottery) 상세 내역을 확인할 수 없음.
+- 특정 유저의 승/패 패턴이나 보상 지급 내역 디버깅이 어려움.
+
+### 🔍 원인
+- 백엔드에 `GameLog`를 통합 조회하는 API 부재 (개별 게임별로 흩어져 있음).
+- 프론트엔드 UI 미구현.
+
+### 🛠 해결
+- **Backend**: `GET /api/v2/admin/users/{user_id}/game-logs` 엔드포인트 신설. (UserRoutes)
+    - `type`(게임 종류) 필터링 지원 및 `items` 통합 반환.
+- **Frontend**: `UserDetailDrawer` > `Game History` 탭 구현 및 `useUserGameLogs` 훅 연결.
+
+### 📅 적용 일자
+- 2026-02-01 (Feature)

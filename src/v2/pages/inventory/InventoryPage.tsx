@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet";
 import { Button } from "../../components/ui/button";
 import { clsx } from "clsx";
 import confetti from "canvas-confetti";
+import InlineNotice from "../../components/common/InlineNotice";
 
 // ============================================================================
 // Types & Constants
@@ -70,6 +71,9 @@ const getFriendlyItemName = (type: string) => {
     .replace(/_/g, " ")
     .toUpperCase();
 };
+
+const isGifticonType = (type: string) =>
+  (type || "").toUpperCase().includes("GIFTICON");
 
 // Helper to get image path (Keep existing logic)
 const getItemImage = (type: string) => {
@@ -332,6 +336,15 @@ export default function InventoryPage() {
                     </p>
                   </div>
                 </div>
+
+                {isGifticonType(selectedItem.item_type) && (
+                  <InlineNotice
+                    variant="warning"
+                    title="기프티콘 실사용 안내"
+                    description="cc지민 모든 기프트콘은 2만부터 사용가능하십니다"
+                    className="mb-4"
+                  />
+                )}
 
                 {/* Description */}
                 <div className="bg-[#27272A] rounded-2xl p-4 mb-6 border border-white/5">

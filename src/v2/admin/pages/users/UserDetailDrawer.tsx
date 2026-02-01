@@ -734,7 +734,7 @@ export function UserDetailDrawer({
                                   className="border-b border-white/5 hover:bg-white/5"
                                 >
                                   <td className="py-2 px-1 text-zinc-400">
-                                    {formatKst(item.created_at).slice(5, 16)}
+                                    {item.created_at ? formatKst(item.created_at).slice(5, 16) : "-"}
                                   </td>
                                   <td className="py-2 px-1">
                                     <Badge

@@ -8,6 +8,8 @@ import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet";
 import { Button } from "../../components/ui/button";
 import { clsx } from "clsx";
 import confetti from "canvas-confetti";
+import InlineNotice from "../../components/common/InlineNotice";
+import { openExternal } from "../../utils/openExternal";
 
 // ============================================================================
 // Types & Constants
@@ -60,10 +62,23 @@ export default function ExchangePage() {
   const { data: products = [] } = useV2ShopProducts();
   const buyMutation = useV2PurchaseProduct();
 
+  const viteEnv = (import.meta as any)?.env as Record<
+    string,
+    string | undefined
+  >;
+  const depositUrl = viteEnv?.VITE_CC_DEPOSIT_URL || "https://ccc-010.com";
+  const officialChannelUrl =
+    viteEnv?.VITE_TELEGRAM_OFFICIAL_CHANNEL_URL ||
+    "https://t.me/cc_jm_official";
+
   const [activeTab, setActiveTab] = useState("shop");
   const [selectedProduct, setSelectedProduct] = useState<ShopProductDto | null>(
     null,
   );
+  const [benefitsSuspendedOpen, setBenefitsSuspendedOpen] = useState(false);
+
+  const isGifticonType = (type: string) =>
+    (type || "").toUpperCase().includes("GIFTICON");
 
   // Group products or filter based on tab
   // Currently we only have 'shop' products API.
@@ -100,7 +115,14 @@ export default function ExchangePage() {
       alert("구매가 완료되었습니다!");
       setSelectedProduct(null);
     } catch (error: any) {
+      const status = error?.response?.status;
       const detail = error?.response?.data?.detail;
+
+      if (status === 403 && detail === "BENEFITS_SUSPENDED") {
+        setSelectedProduct(null);
+        setBenefitsSuspendedOpen(true);
+        return;
+      }
       if (detail === "INSUFFICIENT_BALANCE") alert("잔액이 부족합니다.");
       else if (detail === "PRODUCT_NOT_FOUND")
         alert("상품을 찾을 수 없습니다.");
@@ -293,6 +315,15 @@ export default function ExchangePage() {
                   </div>
                 </div>
 
+                {isGifticonType(selectedProduct.reward_type) && (
+                  <InlineNotice
+                    variant="warning"
+                    title="기프티콘 실사용 안내"
+                    description="cc지민 모든 기프트콘은 2만부터 사용가능하십니다"
+                    className="mb-4"
+                  />
+                )}
+
                 {/* Price & Action */}
                 <div className="bg-[#27272A] rounded-2xl p-2 mb-6 flex items-center justify-between border border-white/5">
                   <span className="text-sm text-white/60">결제 금액</span>
@@ -340,6 +371,49 @@ export default function ExchangePage() {
               </div>
             </>
           )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Benefits Suspended 안내 Sheet */}
+      <Sheet
+        open={benefitsSuspendedOpen}
+        onOpenChange={setBenefitsSuspendedOpen}
+      >
+        <SheetContent
+          side="bottom"
+          className="bg-[#18181B] border-t border-white/10 rounded-t-[32px] p-0"
+        >
+          <SheetTitle className="sr-only">구매 제한 안내</SheetTitle>
+          <div className="flex flex-col p-6 pb-40">
+            <h2 className="text-xl font-black text-white">구매 제한 안내</h2>
+            <p className="mt-2 text-sm text-white/70 leading-relaxed">
+              최근 7일 내 입금 내역이 없어 현재 상점 이용이 제한됩니다. 입금 후
+              1~2분 내 반영됩니다.
+            </p>
+
+            <div className="mt-4 flex flex-col gap-3">
+              <Button
+                className="h-12 rounded-xl font-bold text-base shadow-xl border border-green-700/60 bg-gradient-to-r from-green-400 via-lime-300 to-green-600 text-green-900 hover:from-green-500 hover:to-green-700 hover:text-white focus-visible:ring-2 focus-visible:ring-lime-400/80 backdrop-blur-md transition-all duration-200"
+                onClick={() => openExternal(depositUrl)}
+              >
+                입금하러 가기
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 rounded-xl border border-white/10 bg-white/5 text-white font-bold"
+                onClick={() => openExternal(officialChannelUrl)}
+              >
+                CC공식텔레 열기
+              </Button>
+              <Button
+                variant="outline"
+                className="h-12 rounded-xl border border-white/10 bg-white/5 text-white font-bold"
+                onClick={() => setBenefitsSuspendedOpen(false)}
+              >
+                닫기
+              </Button>
+            </div>
+          </div>
         </SheetContent>
       </Sheet>
     </div>

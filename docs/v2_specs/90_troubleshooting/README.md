@@ -1,10 +1,26 @@
+문서 타입: 가이드
+버전: v1.1
+작성일: 2026-02-01
+작성자: GitHub Copilot
+대상: V2 운영/개발 담당자
+상태: SoT
+
 # V2 트러블슈팅 운영 가이드
 
 V2 시스템 운영 중 발생하는 문제를 **도메인별 주간 문서**로 관리합니다.
 
 ---
 
-## 📌 운영 정책 (v1.0, 2026-01-31)
+## 📌 운영 정책 (v1.1, 2026-02-01)
+
+### 프론트 UX 공통 규칙 (Shop/Inventory)
+- **기프티콘 실사용 안내**: `reward_type` 또는 `item_type`에 `GIFTICON`이 포함되면 아래 문구를 노출한다.
+   - 문구(원문 유지): `cc지민 모든 기프트콘은 2만부터 사용가능하십니다`
+   - 구현 파일: [src/v2/pages/shop/ExchangePage.tsx](../../../src/v2/pages/shop/ExchangePage.tsx), [src/v2/pages/inventory/InventoryPage.tsx](../../../src/v2/pages/inventory/InventoryPage.tsx)
+- **BENEFITS_SUSPENDED(403) 전용 안내 + 딥링크**: 상점 구매 API에서 `HTTP 403` + `detail=BENEFITS_SUSPENDED` 수신 시 전용 바텀시트를 노출하고 외부 링크를 제공한다.
+   - 구현 파일: [src/v2/pages/shop/ExchangePage.tsx](../../../src/v2/pages/shop/ExchangePage.tsx)
+   - 링크 오픈 규칙(TMA 우선): [src/v2/utils/openExternal.ts](../../../src/v2/utils/openExternal.ts)
+   - 환경변수(선택): `VITE_CC_DEPOSIT_URL` (기본: `https://ccc-010.com`), `VITE_TELEGRAM_OFFICIAL_CHANNEL_URL` (기본: `https://t.me/cc_jm_official`)
 
 ### 도메인 분류
 | 코드 | 도메인명 | 범위 |
@@ -31,6 +47,15 @@ W{주차}_{도메인코드}_troubleshooting.md
 예: W05_AUTH_troubleshooting.md
 ```
 
+### SoT 우선순위 (필수)
+1. **learned_ 최신 문서** (가장 우선)
+2. docs/v2_specs/ 내 최신 SoT 문서
+3. 레거시 문서/운영 메모
+
+**참조 기준 문서**
+- 인덱스: [docs/v2_specs/00_sot_meta/00_INDEX.md](../00_sot_meta/00_INDEX.md)
+- learned 통합 컨텍스트: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
+
 ---
 
 ## 📅 현재 주차 문서 (W05: 01-27 ~ 02-02)
@@ -38,7 +63,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
 | AUTH | [W05_AUTH_troubleshooting.md](./W05_AUTH_troubleshooting.md) | 2 |
-| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 4 |
+| VAULT | [W05_VAULT_troubleshooting.md](./W05_VAULT_troubleshooting.md) | 1 |
+| GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 5 |
 | MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
 | INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 3 |
@@ -108,6 +134,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 문제 | 문서 | 우선순위 |
 |------|------|---------|
 | 403 Forbidden 오류 | [권한/제한](./v2_troubleshooting_20260120_permission_restriction_ko.md) | P1 |
+| 403 BENEFITS_SUSPENDED (상점 구매 제한) | [권한/제한](./v2_troubleshooting_20260120_permission_restriction_ko.md) | P1 |
 | VIP/WHALE 접근 제어 | [게임 토큰 이슈](./v2_troubleshooting_game_token_issues_ko.md#4-premium-룰렛-접근-제어-오류) | P1 |
 
 ---
@@ -145,6 +172,13 @@ Cannot read property 'data' of undefined
 ```
 ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 → 해결: 게임 토큰 이슈 - Premium 룰렛 접근 제어
+```
+
+```
+HTTP 403 + detail=BENEFITS_SUSPENDED
+→ 정상 동작: Strict Vault Policy(최근 7일 무입금)로 상점 구매가 차단됨
+→ FE 동작: 구매 제한 안내 바텀시트 노출 + "입금하러 가기" 딥링크 제공
+→ 관련: src/v2/pages/shop/ExchangePage.tsx, src/v2/utils/openExternal.ts
 ```
 
 ---
@@ -185,6 +219,23 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 
 ## 📝 새로운 트러블슈팅 문서 작성 가이드
 
+### 업데이트/작성 원칙 (SoT 기반)
+1. **증거 기반 작성**: 로그, Stack Trace, DB 제약조건(FK/UNIQUE/CHECK), 실제 API 응답을 근거로 기록.
+2. **정책 우선순위 준수**: learned_ 최신 문서가 SoT보다 우선. 충돌 시 learned_ 기준으로 정렬.
+3. **풀스택 검증**: DB/Migration → Data Integrity → API/Frontend 순서로 교차 검증.
+4. **KST/운영일 준수**: 시간 기준은 **Asia/Seoul, 09:00 리셋**을 명시.
+5. **민감정보 제거**: 토큰/비밀번호/내부 IP/개인정보는 마스킹.
+6. **인덱스 갱신**: 신규/핵심 이슈는 [00_INDEX.md](../00_sot_meta/00_INDEX.md) 변경 이력에 반영.
+7. **FE UX 포함**: 사용자에게 노출되는 안내문구/버튼/딥링크는 **문구 원문**, **트리거 조건(HTTP status + detail)**, **대상 화면**, **환경변수 키/기본값**을 함께 기록.
+
+### 업데이트 절차
+1. **증상 정의** (아래 표)
+2. **근거 수집** (로그/제약조건/응답 캡처)
+3. **원인 분석** (RCA, 정책/구현 충돌 여부)
+4. **즉시 조치/영구 조치** 구분
+5. **검증 방법** 및 재현 절차 기록
+6. **연관 문서 링크** (SoT/learned_/코드 경로)
+
 ### 템플릿
 
 ```markdown
@@ -193,13 +244,23 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 **작성일:** YYYY-MM-DD
 **우선순위:** P0/P1/P2
 
+## 증상 정의 (필수)
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 예: 룰렛 게임 실행, 인벤토리 진입 |
+| HTTP Status | 500 / 400 / 200(Logic Error) |
+| 영향 범위 | 특정 유저(ID=15) / 전체 |
+| 재현 빈도 | 항상 / 간헐적 |
+
 ## 증상
 - 구체적인 증상 나열
 - 에러 메시지
 
-## 근본 원인
+## 근본 원인 (증거 기반)
 - 기술적 원인 설명
 - 코드/시스템 레벨 분석
+- 로그/Stack Trace 캡처
+- DB 제약조건(FK/UNIQUE/CHECK) 위반 여부
 
 ## 해결 방법
 ### Immediate Fix
@@ -210,9 +271,15 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 
 ## 검증 방법
 - 수정 후 테스트 절차
+- DB/Migration/데이터/API/프론트 검증 결과
+- KST 09:00 기준 리셋 구간 확인
 
 ## 예방 가이드라인
 - 재발 방지를 위한 지침
+
+## 관련 문서 (SoT/learned)
+- 문서 링크
+- 코드 경로 링크
 ```
 
 ### 문서 작성 시 주의사항
@@ -223,6 +290,9 @@ ForbiddenError: PREMIUM_ROULETTE_FORBIDDEN
 - [ ] 스크린샷 또는 로그 예제 포함
 - [ ] 관련 문서 링크 제공
 - [ ] 검증 방법 필수 포함
+- [ ] KST 09:00 리셋 정책 명시
+- [ ] DB 제약조건/데이터 정합성 근거 포함
+- [ ] learned_ 최신 문서 기준 반영
 
 ---
 

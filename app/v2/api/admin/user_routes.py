@@ -1252,10 +1252,22 @@ class GameLogItemDto(BaseModel):
         from_attributes = True
 
 
+class GameLogItemDto(BaseModel):
+    id: int
+    game_type: str
+    result: str | None = None
+    reward_type: str | None = None
+    reward_amount: int | None = None
+    vault_earn: int | None = None
+    created_at: str
+
+
 class UserGameLogsResponse(BaseModel):
     user_id: int
     total_count: int
     logs: list[GameLogItemDto]
+
+
 
 
 @router.get("/users/{user_id}/game-logs", response_model=UserGameLogsResponse)

@@ -47,6 +47,9 @@ import {
   Trash2,
   Ticket,
   AlertCircle,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "../../../lib/utils";
 import {
@@ -97,6 +100,23 @@ export default function TicketManagementTab() {
   // Selected Log for Edit/Delete
   const [selectedLog, setSelectedLog] = useState<TicketLogDto | null>(null);
 
+  type SortKey =
+    | "timestamp"
+    | "nickname"
+    | "type"
+    | "itemType"
+    | "amount"
+    | "balanceAfter"
+    | "reason";
+  const [sortConfig, setSortConfig] = useState<{
+    key: SortKey | null;
+    direction: "asc" | "desc" | null;
+  }>({ key: "timestamp", direction: "desc" });
+
+  type DetailFilter = "ALL" | "GRANT" | "USE" | "REVOKE";
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailFilter, setDetailFilter] = useState<DetailFilter>("ALL");
+
   // Hooks
   const {
     data: logs = [],
@@ -112,6 +132,80 @@ export default function TicketManagementTab() {
   const ticketLogs = useMemo(() => {
     return logs.filter((log) => walletItemValues.has(log.itemType));
   }, [logs, walletItemValues]);
+
+  const handleSort = (key: SortKey) => {
+    setSortConfig((prev) => {
+      if (prev.key !== key) {
+        return { key, direction: "asc" };
+      }
+      if (prev.direction === "asc") return { key, direction: "desc" };
+      if (prev.direction === "desc") return { key: null, direction: null };
+      return { key, direction: "asc" };
+    });
+  };
+
+  const getSortIcon = (key: SortKey) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="w-3.5 h-3.5 text-zinc-600" />;
+    }
+    if (sortConfig.direction === "asc") {
+      return <ArrowUp className="w-3.5 h-3.5 text-zinc-300" />;
+    }
+    if (sortConfig.direction === "desc") {
+      return <ArrowDown className="w-3.5 h-3.5 text-zinc-300" />;
+    }
+    return <ArrowUpDown className="w-3.5 h-3.5 text-zinc-600" />;
+  };
+
+  const sortedTicketLogs = useMemo(() => {
+    const rows = [...ticketLogs];
+    if (!sortConfig.key || !sortConfig.direction) return rows;
+
+    const dir = sortConfig.direction === "asc" ? 1 : -1;
+    return rows.sort((a, b) => {
+      const key = sortConfig.key;
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+
+      if (key === "timestamp") {
+        aVal = new Date(a.timestamp).getTime() || 0;
+        bVal = new Date(b.timestamp).getTime() || 0;
+      } else if (key === "nickname") {
+        aVal = (a.nickname || "").toLowerCase();
+        bVal = (b.nickname || "").toLowerCase();
+      } else if (key === "type") {
+        aVal = a.type;
+        bVal = b.type;
+      } else if (key === "itemType") {
+        aVal = a.itemType;
+        bVal = b.itemType;
+      } else if (key === "amount") {
+        aVal = a.amount ?? 0;
+        bVal = b.amount ?? 0;
+      } else if (key === "balanceAfter") {
+        aVal = a.balanceAfter ?? 0;
+        bVal = b.balanceAfter ?? 0;
+      } else if (key === "reason") {
+        aVal = (a.reason || "").toLowerCase();
+        bVal = (b.reason || "").toLowerCase();
+      }
+
+      if (typeof aVal === "number" && typeof bVal === "number") {
+        return aVal === bVal ? 0 : aVal < bVal ? -1 * dir : 1 * dir;
+      }
+      return String(aVal).localeCompare(String(bVal)) * dir;
+    });
+  }, [ticketLogs, sortConfig]);
+
+  const detailLogs = useMemo(() => {
+    if (detailFilter === "ALL") return sortedTicketLogs;
+    return sortedTicketLogs.filter((l) => l.type === detailFilter);
+  }, [detailFilter, sortedTicketLogs]);
+
+  const openDetail = (filter: DetailFilter) => {
+    setDetailFilter(filter);
+    setDetailOpen(true);
+  };
 
   // Stats based on filtered ticket logs
   const stats = useMemo(() => {
@@ -313,77 +407,282 @@ export default function TicketManagementTab() {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-[#18181B] border-white/5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-            <Ticket className="w-16 h-16" />
-          </div>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-zinc-400">
-              티켓 로그
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-400">
-              {stats.totalCount.toLocaleString()}
+        <button
+          type="button"
+          onClick={() => openDetail("ALL")}
+          className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-xl"
+          title="상세 내역 보기"
+        >
+          <Card className="bg-[#18181B] border-white/5 relative overflow-hidden group cursor-pointer hover:border-white/10 transition-colors">
+            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Ticket className="w-16 h-16" />
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">
-              전체 티켓 거래 기록
-            </p>
-          </CardContent>
-        </Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-zinc-400">
+                티켓 로그
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-400">
+                {stats.totalCount.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">
+                전체 티켓 거래 기록
+              </p>
+            </CardContent>
+          </Card>
+        </button>
 
-        <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-zinc-400 flex justify-between items-center">
-              지급 건수 (Issued)
-              <Badge
-                variant="outline"
-                className="bg-emerald-500/10 text-emerald-500 border-none scale-75"
-              >
-                Active
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {stats.totalIssued.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-zinc-500 mt-1">
-              전체 기간 누적 지급
-            </p>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => openDetail("GRANT")}
+          className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-xl"
+          title="지급 상세 내역 보기"
+        >
+          <Card className="bg-[#18181B] border-white/5 relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-zinc-400 flex justify-between items-center">
+                지급 건수 (Issued)
+                <Badge
+                  variant="outline"
+                  className="bg-emerald-500/10 text-emerald-500 border-none scale-75"
+                >
+                  Active
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-white">
+                {stats.totalIssued.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">
+                전체 기간 누적 지급
+              </p>
+            </CardContent>
+          </Card>
+        </button>
 
-        <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-zinc-400">
-              사용 건수 (Used)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-zinc-300">
-              {stats.totalUsed.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-zinc-500 mt-1">
-              사용자가 소모한 건수
-            </p>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => openDetail("USE")}
+          className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-xl"
+          title="사용 상세 내역 보기"
+        >
+          <Card className="bg-[#18181B] border-white/5 relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-zinc-400">
+                사용 건수 (Used)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-zinc-300">
+                {stats.totalUsed.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">
+                사용자가 소모한 건수
+              </p>
+            </CardContent>
+          </Card>
+        </button>
 
-        <Card className="bg-[#18181B] border-white/5 relative overflow-hidden">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-zinc-400">
-              회수 건수 (Revoked)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-400">
-              {stats.totalRevoked.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-zinc-500 mt-1">관리자 회수 건수</p>
-          </CardContent>
-        </Card>
+        <button
+          type="button"
+          onClick={() => openDetail("REVOKE")}
+          className="text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 rounded-xl"
+          title="회수 상세 내역 보기"
+        >
+          <Card className="bg-[#18181B] border-white/5 relative overflow-hidden cursor-pointer hover:border-white/10 transition-colors">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-medium text-zinc-400">
+                회수 건수 (Revoked)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-400">
+                {stats.totalRevoked.toLocaleString()}
+              </div>
+              <p className="text-[10px] text-zinc-500 mt-1">관리자 회수 건수</p>
+            </CardContent>
+          </Card>
+        </button>
       </div>
+
+      {/* DETAIL DIALOG */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="bg-[#18181B] border-white/10 text-white sm:max-w-[1000px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="w-5 h-5 text-zinc-400" />
+              상세 내역
+            </DialogTitle>
+            <DialogDescription className="text-zinc-400">
+              {detailFilter === "ALL"
+                ? "전체 티켓 로그"
+                : detailFilter === "GRANT"
+                  ? "지급(GRANT) 로그"
+                  : detailFilter === "USE"
+                    ? "사용(USE) 로그"
+                    : "회수(REVOKE) 로그"}
+              <span className="ml-2 text-zinc-500">
+                (총 {detailLogs.length.toLocaleString()}건)
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-auto rounded-xl border border-white/10">
+            <Table>
+              <TableHeader className="bg-black/20 sticky top-0 z-10">
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="w-[180px]">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("timestamp")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      시간
+                      {getSortIcon("timestamp")}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("nickname")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      사용자
+                      {getSortIcon("nickname")}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("type")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      구분
+                      {getSortIcon("type")}
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button
+                      type="button"
+                      onClick={() => handleSort("itemType")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      티켓 종류
+                      {getSortIcon("itemType")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("amount")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      수량
+                      {getSortIcon("amount")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("balanceAfter")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      잔액(After)
+                      {getSortIcon("balanceAfter")}
+                    </button>
+                  </TableHead>
+                  <TableHead className="max-w-[360px]">
+                    <button
+                      type="button"
+                      onClick={() => handleSort("reason")}
+                      className="inline-flex items-center gap-1 hover:text-white"
+                    >
+                      사유
+                      {getSortIcon("reason")}
+                    </button>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {detailLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-16 text-zinc-500"
+                    >
+                      표시할 로그가 없습니다.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  detailLogs.map((log) => (
+                    <TableRow
+                      key={log.id}
+                      className="border-white/5 hover:bg-white/[0.04] transition-colors"
+                    >
+                      <TableCell className="text-zinc-500 text-xs font-mono">
+                        {formatKst(log.timestamp)}
+                      </TableCell>
+                      <TableCell className="font-mono text-zinc-300">
+                        <div className="flex flex-col">
+                          <span className="text-white font-bold">
+                            {log.nickname || "-"}
+                          </span>
+                          <span className="text-[10px] text-zinc-500">
+                            #{log.userId}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "border-none px-2 py-0.5 font-bold text-[10px]",
+                            log.type === "GRANT"
+                              ? "bg-emerald-500/10 text-emerald-400"
+                              : log.type === "REVOKE"
+                                ? "bg-red-500/10 text-red-500"
+                                : log.type === "USE"
+                                  ? "bg-blue-500/10 text-blue-400"
+                                  : "bg-zinc-800 text-zinc-400",
+                          )}
+                        >
+                          {log.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {getRewardItemLabel(log.itemType)}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          "font-bold text-right",
+                          log.type === "GRANT"
+                            ? "text-emerald-400"
+                            : "text-red-400",
+                        )}
+                      >
+                        {log.type === "GRANT" ? "+" : "-"}
+                        {(log.amount ?? 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-zinc-400 text-right font-mono text-xs">
+                        {(log.balanceAfter ?? 0).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-zinc-500 max-w-[360px] truncate">
+                        {log.reason}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setDetailOpen(false)}>
+              닫기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-col md:flex-row gap-4 items-end bg-black/20 p-4 rounded-xl border border-white/5">
         <div className="w-full max-w-sm space-y-2">
@@ -462,12 +761,76 @@ export default function TicketManagementTab() {
           <Table>
             <TableHeader className="bg-black/20">
               <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="w-[180px]">시간</TableHead>
-                <TableHead>사용자 닉네임</TableHead>
-                <TableHead>구분</TableHead>
-                <TableHead>티켓 종류</TableHead>
-                <TableHead>잔액 (After)</TableHead>
-                <TableHead className="max-w-[300px]">사유</TableHead>
+                <TableHead className="w-[180px]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("timestamp")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    시간
+                    {getSortIcon("timestamp")}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("nickname")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    사용자
+                    {getSortIcon("nickname")}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("type")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    구분
+                    {getSortIcon("type")}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => handleSort("itemType")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    티켓 종류
+                    {getSortIcon("itemType")}
+                  </button>
+                </TableHead>
+                <TableHead className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("amount")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    수량
+                    {getSortIcon("amount")}
+                  </button>
+                </TableHead>
+                <TableHead className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("balanceAfter")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    잔액(After)
+                    {getSortIcon("balanceAfter")}
+                  </button>
+                </TableHead>
+                <TableHead className="max-w-[300px]">
+                  <button
+                    type="button"
+                    onClick={() => handleSort("reason")}
+                    className="inline-flex items-center gap-1 hover:text-white"
+                  >
+                    사유
+                    {getSortIcon("reason")}
+                  </button>
+                </TableHead>
                 <TableHead className="text-right">액션</TableHead>
               </TableRow>
             </TableHeader>
@@ -491,7 +854,7 @@ export default function TicketManagementTab() {
                   </TableCell>
                 </TableRow>
               ) : (
-                ticketLogs.map((log: TicketLogDto) => (
+                sortedTicketLogs.map((log: TicketLogDto) => (
                   <TableRow
                     key={log.id}
                     className="border-white/5 hover:bg-white/[0.04] transition-colors"
@@ -500,7 +863,14 @@ export default function TicketManagementTab() {
                       {formatKst(log.timestamp)}
                     </TableCell>
                     <TableCell className="font-mono text-zinc-300">
-                      {log.nickname || "-"}
+                      <div className="flex flex-col">
+                        <span className="text-white font-bold">
+                          {log.nickname || "-"}
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          #{log.userId}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -524,7 +894,7 @@ export default function TicketManagementTab() {
                     </TableCell>
                     <TableCell
                       className={cn(
-                        "font-bold",
+                        "font-bold text-right",
                         log.type === "GRANT"
                           ? "text-emerald-400"
                           : "text-red-400",
@@ -533,11 +903,11 @@ export default function TicketManagementTab() {
                       {log.type === "GRANT" ? "+" : "-"}
                       {(log.amount ?? 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-zinc-400">
+                    <TableCell className="text-zinc-400 text-right font-mono text-xs">
                       {(log.balanceAfter ?? 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-zinc-500 max-w-[300px] truncate group border-l border-white/5 pl-4 ml-4">
-                      관리 액션
+                    <TableCell className="text-zinc-500 max-w-[300px] truncate">
+                      {log.reason}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">

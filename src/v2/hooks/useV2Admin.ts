@@ -66,7 +66,6 @@ import {
   InventoryItemUpdateRequest,
   getVaultStats,
   getVaultUsers,
-  getVaultUserLedger,
   getVaultTrend,
   forceEditVault,
   getWithdrawalDetails,
@@ -76,7 +75,6 @@ import {
   VaultStatsDto,
   UserVaultDto,
   VaultDailyTrendDto,
-  VaultLedgerResponseDto,
   WithdrawalDetailsResponse,
   AdminDepositLogDto,
   AdminDepositCreateRequest,
@@ -86,8 +84,6 @@ import {
   updateAdminDepositLog,
   deleteAdminDepositLog,
   getInventoryLogs,
-  getUserGameLogs,
-  UserGameLogsResponse,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -136,12 +132,21 @@ export function useAdminSegmentStats() {
   });
 }
 
+import {
+  fetchVaultUserLedger,
+  fetchUserGameLogs,
+  VaultLedgerResponse,
+  UserGameLogsResponse,
+} from "../../admin/api/adminUserApi";
+
+// ... existing imports ...
+
 export function useVaultUserLedger(userId: number | null) {
-  return useQuery<VaultLedgerResponseDto>({
+  return useQuery<VaultLedgerResponse>({
     queryKey: userId
       ? ADMIN_KEYS.vaultLedger(userId)
       : ["admin", "vault", "ledger"],
-    queryFn: () => getVaultUserLedger(userId as number),
+    queryFn: () => fetchVaultUserLedger(userId as number),
     enabled: typeof userId === "number",
   });
 }
@@ -749,7 +754,7 @@ export function useUserGameLogs(
 ) {
   return useQuery<UserGameLogsResponse>({
     queryKey: ["admin", "users", userId, "game-logs", gameType, limit],
-    queryFn: () => getUserGameLogs(userId!, gameType, limit),
+    queryFn: () => fetchUserGameLogs(userId!),
     enabled: !!userId && userId > 0,
   });
 }

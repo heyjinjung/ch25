@@ -9,7 +9,14 @@ import {
 } from "../../../hooks/useAdminGame";
 import { type AdminLevelDto } from "../../../api/adminApi";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
-import { RefreshCw, Search, AlertCircle, Trophy, Loader2 } from "lucide-react";
+import {
+  RefreshCw,
+  Search,
+  AlertCircle,
+  Trophy,
+  Loader2,
+  Save,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import {
@@ -26,6 +33,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import { Badge } from "../../../components/ui/badge";
 import {
   Tabs,
   TabsContent,
@@ -88,6 +96,7 @@ export default function LevelConfigPage() {
   const [editingLevels, setEditingLevels] = useState<
     Record<number, AdminLevelDto>
   >({});
+  const [savingLevel, setSavingLevel] = useState<number | null>(null);
 
   useEffect(() => {
     if (levels.length > 0) {
@@ -125,12 +134,17 @@ export default function LevelConfigPage() {
     const data = editingLevels[level];
     if (!data) return;
 
-    await updateLevel.mutateAsync({ level, data });
-    setEditingLevels((prev) => {
-      const next = { ...prev };
-      delete next[level];
-      return next;
-    });
+    setSavingLevel(level);
+    try {
+      await updateLevel.mutateAsync({ level, data });
+      setEditingLevels((prev) => {
+        const next = { ...prev };
+        delete next[level];
+        return next;
+      });
+    } finally {
+      setSavingLevel((prev) => (prev === level ? null : prev));
+    }
   };
 
   if (isLoading) {
@@ -142,7 +156,7 @@ export default function LevelConfigPage() {
   }
 
   return (
-    <div className="space-y-8 p-6 pb-20 max-w-[1600px] mx-auto text-white">
+    <div className="space-y-6 p-6 pb-20 max-w-[1600px] mx-auto text-white">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -291,9 +305,21 @@ export default function LevelConfigPage() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">최대 XP:</span>
+                    <span className="text-sm font-bold text-white font-mono">
+                      {globalConfig.maxXp}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
                     <span className="text-xs text-zinc-500">최대 레벨:</span>
                     <span className="text-sm font-bold text-emerald-400 font-mono">
                       {globalConfig.maxLevel}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-zinc-500">미저장 변경:</span>
+                    <span className="text-sm font-bold text-indigo-300 font-mono">
+                      {Object.keys(editingLevels).length}
                     </span>
                   </div>
                 </CardContent>
@@ -302,124 +328,168 @@ export default function LevelConfigPage() {
 
             {/* Level List */}
             <div className="lg:col-span-3 space-y-4">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                  <Input
-                    placeholder="레벨 검색..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-zinc-900 border-white/10"
-                  />
-                </div>
-              </div>
-
               <Card className="bg-zinc-900 border-white/10 overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-white/5">
-                    <TableRow className="border-white/5 hover:bg-transparent">
-                      <TableHead className="text-zinc-400 w-20">
-                        Level
-                      </TableHead>
-                      <TableHead className="text-zinc-400">
-                        요구 경험치 (XP)
-                      </TableHead>
-                      <TableHead className="text-zinc-400">보상 종류</TableHead>
-                      <TableHead className="text-zinc-400">보상 수량</TableHead>
-                      <TableHead className="text-zinc-400 w-24 text-right">
-                        관리
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredLevels.map((lvl) => {
-                      const editData = editingLevels[lvl.level] || lvl;
-                      const isEdited = !!editingLevels[lvl.level];
-                      const isInvalidRewardType = !rewardTypeSet.has(
-                        editData.rewardType,
-                      );
+                <div className="flex flex-col gap-3 p-4 border-b border-white/10 md:flex-row md:items-center md:justify-between">
+                  <div className="relative w-full md:max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <Input
+                      placeholder="레벨 번호로 검색 (예: 1, 10, 20...)"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 bg-zinc-950/40 border-white/10"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-xs text-zinc-500 md:justify-end">
+                    <span>
+                      표시:{" "}
+                      <span className="font-mono text-zinc-300">
+                        {filteredLevels.length}
+                      </span>{" "}
+                      / {levels.length}
+                    </span>
+                    <span className="hidden md:inline">•</span>
+                    <span>
+                      미저장:{" "}
+                      <span className="font-mono text-indigo-300">
+                        {Object.keys(editingLevels).length}
+                      </span>
+                    </span>
+                  </div>
+                </div>
 
-                      return (
-                        <TableRow
-                          key={lvl.level}
-                          className="border-white/5 hover:bg-white/5 group"
-                        >
-                          <TableCell className="font-black text-indigo-400 text-lg font-mono">
-                            {lvl.level}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={editData.requiredXp}
-                              onChange={(e) =>
-                                handleLevelFieldChange(
-                                  lvl.level,
-                                  "requiredXp",
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              className="bg-black/20 border-white/10"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Select
-                              value={editData.rewardType}
-                              onValueChange={(value) =>
-                                handleLevelFieldChange(
-                                  lvl.level,
-                                  "rewardType",
-                                  value,
-                                )
-                              }
-                            >
-                              <SelectTrigger className="bg-black/20 border-white/10">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-zinc-800 border-zinc-700">
-                                {REWARD_ITEMS.map((item) => (
-                                  <SelectItem
-                                    key={item.value}
-                                    value={item.value}
+                <div className="max-h-[72vh] overflow-auto">
+                  <Table className="min-w-[920px]">
+                    <TableHeader className="bg-white/5 sticky top-0 z-10">
+                      <TableRow className="border-white/5 hover:bg-transparent">
+                        <TableHead className="text-zinc-400 w-24">
+                          Level
+                        </TableHead>
+                        <TableHead className="text-zinc-400 w-[220px]">
+                          요구 경험치 (XP)
+                        </TableHead>
+                        <TableHead className="text-zinc-400">
+                          보상 종류
+                        </TableHead>
+                        <TableHead className="text-zinc-400 w-[220px]">
+                          보상 수량
+                        </TableHead>
+                        <TableHead className="text-zinc-400 w-28 text-right">
+                          저장
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredLevels.map((lvl) => {
+                        const editData = editingLevels[lvl.level] || lvl;
+                        const isEdited = !!editingLevels[lvl.level];
+                        const isSaving = savingLevel === lvl.level;
+                        const isInvalidRewardType = !rewardTypeSet.has(
+                          editData.rewardType,
+                        );
+
+                        return (
+                          <TableRow
+                            key={lvl.level}
+                            className={`border-white/5 hover:bg-white/5 group ${isEdited ? "bg-indigo-500/5" : ""} ${isSaving ? "opacity-70" : ""}`}
+                          >
+                            <TableCell className="align-middle">
+                              <div className="flex items-center gap-2">
+                                <span className="font-black text-indigo-300 text-base font-mono">
+                                  {lvl.level}
+                                </span>
+                                {isEdited && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-indigo-500/15 text-indigo-200 border border-indigo-500/20"
                                   >
-                                    {item.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {isInvalidRewardType && (
-                              <p className="text-xs text-red-400 mt-1">
-                                SoT 밖 보상 타입입니다.
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              value={editData.rewardAmount}
-                              onChange={(e) =>
-                                handleLevelFieldChange(
-                                  lvl.level,
-                                  "rewardAmount",
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              className="bg-black/20 border-white/10"
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              disabled={!isEdited}
-                              onClick={() => handleSaveLevel(lvl.level)}
-                            >
-                              저장
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+                                    변경
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              <Input
+                                type="number"
+                                value={editData.requiredXp}
+                                disabled={isSaving}
+                                onChange={(e) =>
+                                  handleLevelFieldChange(
+                                    lvl.level,
+                                    "requiredXp",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
+                              />
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              <Select
+                                value={editData.rewardType}
+                                onValueChange={(value) =>
+                                  handleLevelFieldChange(
+                                    lvl.level,
+                                    "rewardType",
+                                    value,
+                                  )
+                                }
+                                disabled={isSaving}
+                              >
+                                <SelectTrigger className="h-9 bg-zinc-950/40 border-white/10">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                  {REWARD_ITEMS.map((item) => (
+                                    <SelectItem
+                                      key={item.value}
+                                      value={item.value}
+                                    >
+                                      {item.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {isInvalidRewardType && (
+                                <p className="text-xs text-red-400 mt-1">
+                                  SoT 밖 보상 타입입니다.
+                                </p>
+                              )}
+                            </TableCell>
+                            <TableCell className="align-middle">
+                              <Input
+                                type="number"
+                                value={editData.rewardAmount}
+                                disabled={isSaving}
+                                onChange={(e) =>
+                                  handleLevelFieldChange(
+                                    lvl.level,
+                                    "rewardAmount",
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
+                              />
+                            </TableCell>
+                            <TableCell className="align-middle text-right">
+                              <Button
+                                size="sm"
+                                disabled={!isEdited || isSaving}
+                                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                onClick={() => handleSaveLevel(lvl.level)}
+                              >
+                                {isSaving ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <Save className="w-4 h-4" />
+                                )}
+                                <span className="ml-2">저장</span>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </Card>
             </div>
           </div>
@@ -435,7 +505,9 @@ export default function LevelConfigPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-zinc-400">CC ID / 닉네임 / 텔레그램</Label>
+                  <Label className="text-zinc-400">
+                    CC ID / 닉네임 / 텔레그램
+                  </Label>
                   <Input
                     value={ccId}
                     onChange={(e) => setCcId(e.target.value)}
@@ -448,7 +520,14 @@ export default function LevelConfigPage() {
                   disabled={!ccId || isUserLevelLoading}
                   onClick={() => refetchUserLevel()}
                 >
-                  {isUserLevelLoading ? "조회중..." : "조회"}
+                  {isUserLevelLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="ml-2">조회중...</span>
+                    </>
+                  ) : (
+                    "조회"
+                  )}
                 </Button>
                 {userLevel && (
                   <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300 space-y-2">
@@ -482,8 +561,10 @@ export default function LevelConfigPage() {
             </Card>
 
             <Card className="bg-zinc-900 border-white/10 lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-white">레벨/XP 조정</CardTitle>
+              <CardHeader className="space-y-2">
+                <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
+                  레벨/XP 조정
+                </CardTitle>
                 <p className="text-xs text-zinc-500">
                   SoT 기준: 레벨포인트는 GAME_XP만 사용. 보상 지급 없음.
                 </p>
@@ -513,7 +594,12 @@ export default function LevelConfigPage() {
                 </div>
                 <Button
                   className="bg-emerald-600 hover:bg-emerald-700"
-                  disabled={!ccId || !adjustReason || deltaXp === 0}
+                  disabled={
+                    !ccId ||
+                    !adjustReason ||
+                    deltaXp === 0 ||
+                    adjustUserLevelXp.isPending
+                  }
                   onClick={async () => {
                     await adjustUserLevelXp.mutateAsync({
                       ccId,
@@ -523,7 +609,14 @@ export default function LevelConfigPage() {
                     await refetchUserLevel();
                   }}
                 >
-                  XP 가산 적용
+                  {adjustUserLevelXp.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="ml-2">적용중...</span>
+                    </>
+                  ) : (
+                    "XP 가산 적용"
+                  )}
                 </Button>
 
                 <div className="border-t border-white/10 pt-6 space-y-4">
@@ -573,7 +666,8 @@ export default function LevelConfigPage() {
                     disabled={
                       !ccId ||
                       !setReason ||
-                      (setLevelValue === "" && setXpValue === "")
+                      (setLevelValue === "" && setXpValue === "") ||
+                      setUserLevel.isPending
                     }
                     onClick={async () => {
                       await setUserLevel.mutateAsync({
@@ -588,7 +682,14 @@ export default function LevelConfigPage() {
                       await refetchUserLevel();
                     }}
                   >
-                    강제 설정 적용
+                    {setUserLevel.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="ml-2">적용중...</span>
+                      </>
+                    ) : (
+                      "강제 설정 적용"
+                    )}
                   </Button>
                 </div>
               </CardContent>

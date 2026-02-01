@@ -118,4 +118,51 @@ export async function fetchUserVaultState(userId: number) {
   return data;
 }
 
+export interface VaultLogItem {
+  id: number;
+  amount: number;
+  balance_after: number;
+  ref_type: string;
+  ref_id?: string;
+  reason?: string;
+  created_at?: string;
+}
+
+
+export interface VaultLedgerResponse {
+  user_id: number;
+  nickname: string;
+  total_in: number;
+  total_out: number;
+  net_change: number;
+  current_balance: number;
+  items: VaultLogItem[];
+}
+
+export async function fetchVaultUserLedger(userId: number) {
+  const { data } = await adminApi.get<VaultLedgerResponse>(`/api/v2/admin/vault/users/${userId}/ledger`);
+  return data;
+}
+
+export interface GameLogItem {
+  id: number;
+  game_type: string;
+  result?: string;
+  reward_type?: string;
+  reward_amount?: number;
+  vault_earn?: number;
+  created_at: string;
+}
+
+export interface UserGameLogsResponse {
+  user_id: number;
+  total_count: number;
+  logs: GameLogItem[];
+}
+
+export async function fetchUserGameLogs(userId: number) {
+  const { data } = await adminApi.get<UserGameLogsResponse>(`/api/v2/admin/users/${userId}/game-logs`);
+  return data;
+}
+
 export type { AdminUserSummary, AdminUserResolveResponse } from "../types/adminUserSummary";

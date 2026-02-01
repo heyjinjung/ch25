@@ -161,6 +161,7 @@
 
 
 ## 7. 변경 이력
+- v2.9 (2026-02-01, GitHub Copilot): 트러블슈팅 README 작성/업데이트 가이드 SoT 우선순위 및 증거 기반 규칙 보강
 - v2.8 (2026-01-30, GitHub Copilot): V1 Auth 가드/ Celery 헬스체크 개선 및 로컬 마이그레이션 기록
 - v2.2 (2026-01-19, GitHub Copilot): V1→V2 상점 상품 변환 가이드 링크 추가
 - v2.1 (2026-01-19, GitHub Copilot): 상점 상품 UI Config SoT 링크 추가
