@@ -13,9 +13,6 @@ import SurveyPage from "./SurveyPage";
 import {
   MessageSquare,
   ClipboardList,
-  TrendingUp,
-  DollarSign,
-  Megaphone,
 } from "lucide-react";
 
 export default function MarketingTabPage() {
