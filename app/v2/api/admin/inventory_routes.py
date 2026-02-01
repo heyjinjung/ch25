@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 import logging
 from typing import List, Optional
 
@@ -8,9 +8,9 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.game_wallet import UserGameWallet, GameTokenType
-from app.models.game_wallet_ledger import UserGameWalletLedger
-from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.v2.models import UserGameWallet, GameTokenType
+from app.v2.models import UserGameWalletLedger
+from app.v2.models import UserInventoryItem, UserInventoryLedger
 from app.v2.models.user import V2User
 from app.v2.schemas.v2_admin_user import TicketLogDto
 from app.v2.schemas.v2_admin_economy import (

@@ -13,7 +13,7 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.schemas.base import KstBaseModel
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 
 
 class ShopProductPatch(KstBaseModel):

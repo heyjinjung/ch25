@@ -16,7 +16,7 @@ from typing import Any, Sequence
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.team_battle import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
+from app.v2.models import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
 from app.v2.models.user import V2User
 from app.v2.services.admin_audit_service import V2AdminAuditService
 

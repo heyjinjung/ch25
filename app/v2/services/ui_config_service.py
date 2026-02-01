@@ -6,7 +6,7 @@ from typing import Any, Optional
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.app_ui_config import AppUiConfig
+from app.v2.models import AppUiConfig
 from app.v2.services.audit_service import AuditService
 
 

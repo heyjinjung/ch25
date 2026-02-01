@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
+from app.v2.models import OpsCampaign, OpsPlan, OpsPlanTask
 from app.v2.models.user import V2User
 from app.v2.services.admin_inventory_service import V2AdminInventoryService
 from app.v2.services.v2_admin_ops_log_service import V2AdminOpsLogService

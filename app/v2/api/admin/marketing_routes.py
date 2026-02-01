@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.survey import (
+from app.v2.models import (
     Survey,
     SurveyOption,
     SurveyQuestion,

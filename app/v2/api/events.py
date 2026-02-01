@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
-from app.models.user_segment import UserSegment
+from app.v2.models import UserSegment
 from app.schemas.event import ActiveEventOut, EventStatusResponse, GoldenHourStatus
 from app.v2.services.event_service import V2EventService
 

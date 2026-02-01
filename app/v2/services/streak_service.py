@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.v2.models.user import V2User
-from app.models.feature import UserEventLog
+from app.v2.models import UserEventLog
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.ui_config_service import UiConfigService
 from app.v2.schemas.v2_mission import StreakInfoSchema

@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.event import EventParticipationLog
+from app.v2.models import EventParticipationLog
 from app.v2.models.user import V2User
 from app.v2.services.ops_log_service import OpsLogService
 from app.v2.services.reward_scheduler import RewardScheduler
@@ -191,7 +191,7 @@ class V2RetentionInterventionService:
             logger.warning("intervention ops log failed", exc_info=exc)
 
     def _fallback_predicted_ltv(self, db: Session, user_id: int) -> float:
-        from app.models.external_ranking import ExternalRankingData
+        from app.v2.models import ExternalRankingData
 
         row = db.query(ExternalRankingData).filter(ExternalRankingData.user_id == user_id).first()
         if not row:

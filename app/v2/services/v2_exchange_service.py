@@ -5,7 +5,7 @@ SoT: docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260131_puzz
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import InvalidConfigError, NotEnoughTokensError
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 from app.v2.services.inventory_service import V2InventoryService
 
 

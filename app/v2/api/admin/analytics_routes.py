@@ -18,8 +18,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.v2.models.user import V2User
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.v2.models import ExternalRankingDailyDepositDelta
+from app.v2.models import VaultWithdrawalRequest
 from app.v2.services import V2AdminAuditService
 
 router = APIRouter(prefix="/analytics", tags=["admin-analytics"])

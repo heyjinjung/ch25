@@ -9,7 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.mission import Mission, MissionRewardType, UserMissionProgress, UserStreak
+from app.v2.models import Mission, MissionRewardType, UserMissionProgress, UserStreak
 from app.v2.models.user import V2User
 
 from app.v2.services.v2_admin_mission_service import V2AdminMissionService

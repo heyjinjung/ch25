@@ -7,15 +7,15 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.admin_audit_log import AdminAuditLog
-from app.models.game_wallet import GameTokenType
-from app.models.game_wallet import UserGameWallet
-from app.models.inventory import UserInventoryItem
-from app.models.mission import ApprovalStatus, Mission, UserMissionProgress
+from app.v2.models import AdminAuditLog
+from app.v2.models import GameTokenType
+from app.v2.models import UserGameWallet
+from app.v2.models import UserInventoryItem
+from app.v2.models import ApprovalStatus, Mission, UserMissionProgress
 from app.v2.models.user import V2User, V2UserStatus, V2UserRole
-from app.models.user_retention_state import UserRetentionState
-from app.models.user_segment import UserSegment
-from app.models.level_xp import UserLevelProgress, UserXpEventLog
+from app.v2.models import UserRetentionState
+from app.v2.models import UserSegment
+from app.v2.models import UserLevelProgress, UserXpEventLog
 from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
 from app.utils.timezone import utc_to_kst

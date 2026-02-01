@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 from app.schemas.base import KstBaseModel as BaseModel
 
 

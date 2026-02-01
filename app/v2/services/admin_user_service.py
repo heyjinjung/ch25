@@ -8,7 +8,7 @@ from sqlalchemy import func, select, String
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import hash_password
-from app.models.admin_user_profile import AdminUserProfile
+from app.v2.models import AdminUserProfile
 from app.schemas.admin_user import AdminUserCreate
 from app.v2.models.user import V2User
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary
@@ -174,7 +174,7 @@ class V2AdminUserService:
     @staticmethod
     def delete_user(db: Session, user_id: int, *, admin_id: int = 0) -> None:
         """일반 유저 삭제 (CASCADE 의존, TeamMember만 명시 정리)"""
-        from app.models.team_battle import TeamMember
+        from app.v2.models import TeamMember
 
         v2_user = db.get(V2User, user_id)
         if not v2_user:
@@ -232,7 +232,7 @@ class V2AdminUserService:
         }
 
         # ─── 연관 테이블 방어적 삭제 (CASCADE 미보장 대비) ───
-        from app.models import (
+        from app.v2.models import (
             AdminMessageInbox,
             ExternalRankingData,
             ExternalRankingRewardLog,
@@ -257,16 +257,16 @@ class V2AdminUserService:
             VaultWithdrawalRequest,
             VaultStatus,
         )
-        from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+        from app.v2.models import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
         from app.v2.models.v2_user_segment import V2UserSegment as V2UserSegmentRecord
-        from app.models.user_segment import UserSegment
-        from app.models.dice import DiceLog
-        from app.models.roulette import RouletteLog
-        from app.models.lottery import LotteryLog
-        from app.models.admin_user_profile import AdminUserProfile
-        from app.models.telegram_link_code import TelegramLinkCode
+        from app.v2.models import UserSegment
+        from app.v2.models import DiceLog
+        from app.v2.models import RouletteLog
+        from app.v2.models import LotteryLog
+        from app.v2.models import AdminUserProfile
+        from app.v2.models import TelegramLinkCode
         try:
-            from app.models.telegram_unlink_request import TelegramUnlinkRequest
+            from app.v2.models import TelegramUnlinkRequest
         except Exception:
             TelegramUnlinkRequest = None  # type: ignore
 

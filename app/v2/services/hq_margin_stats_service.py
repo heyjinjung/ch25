@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.hq_prospective_user import HQProspectiveUser
-from app.models.admin_audit_log import AdminAuditLog
+from app.v2.models import AdminAuditLog
 from app.v2.schemas.v2_admin_ops import OpsHQMarginStatsDto
 
 class HQMarginStatsService:

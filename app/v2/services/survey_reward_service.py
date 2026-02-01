@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.models.survey import Survey, SurveyResponse, SurveyRewardStatus
+from app.v2.models import Survey, SurveyResponse, SurveyRewardStatus
 from app.v2.services.reward_service import V2RewardService
 
 

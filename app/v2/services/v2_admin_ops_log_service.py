@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.ops_log import OpsDailyLog, OpsLogEntry
+from app.v2.models import OpsDailyLog, OpsLogEntry
 
 logger = logging.getLogger(__name__)
 

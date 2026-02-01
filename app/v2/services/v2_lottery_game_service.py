@@ -18,8 +18,8 @@ from fastapi import HTTPException, status
 
 from app.core.config import get_settings
 from app.core.exceptions import ForbiddenError, InvalidConfigError, LockAcquisitionError, NotEnoughTokensError
-from app.models.feature import FeatureType
-from app.models.game_wallet import GameTokenType
+from app.v2.models import FeatureType
+from app.v2.models import GameTokenType
 from app.schemas.lottery import LotteryPlayResponse, LotteryPrizeSchema, LotteryStatusResponse
 from app.v2.services.feature_service import FeatureService
 from app.v2.services.game_common import GamePlayContext, log_game_play

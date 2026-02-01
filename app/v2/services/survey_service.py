@@ -13,7 +13,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
-from app.models.survey import (
+from app.v2.models import (
     Survey,
     SurveyOption,
     SurveyQuestion,

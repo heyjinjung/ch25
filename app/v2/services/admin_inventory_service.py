@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, and_
 from fastapi import HTTPException
 from app.v2.models import UserGameWallet, GameTokenType, UserGameWalletLedger
-from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.v2.models import UserInventoryItem, UserInventoryLedger
 from app.core.exceptions import NotEnoughTokensError
 
 class V2AdminInventoryService:

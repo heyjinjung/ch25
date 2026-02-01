@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.schemas.base import KstBaseModel as BaseModel
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 
 
 class TrialGrantRequest(BaseModel):

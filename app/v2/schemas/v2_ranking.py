@@ -9,7 +9,7 @@ from pydantic import ConfigDict, Field
 
 from app.schemas.base import KstBaseModel as BaseModel
 
-from app.models.feature import FeatureType
+from app.v2.models import FeatureType
 
 
 class RankingEntry(BaseModel):

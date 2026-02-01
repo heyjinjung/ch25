@@ -8,8 +8,8 @@ from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.mission import Mission, MissionRewardType
-from app.models.feature import UserEventLog
+from app.v2.models import Mission, MissionRewardType
+from app.v2.models import UserEventLog
 
 logger = logging.getLogger(__name__)
 

@@ -10,9 +10,9 @@ from sqlalchemy import and_, func, select, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
+from app.v2.models import Mission, UserMissionProgress, MissionCategory, MissionRewardType
 from app.v2.models.user import V2User
-from app.models.feature import UserEventLog
+from app.v2.models import UserEventLog
 from app.v2.services.reward_service import V2RewardService
 from app.v2.services.ui_config_service import UiConfigService
 from app.v2.schemas.v2_mission import MissionSchema, MissionProgressSchema, MissionWithProgress, StreakInfoSchema
@@ -428,7 +428,7 @@ class V2MissionService:
         return True, str(mission.reward_type), target_amount
 
     def claim_daily_gift(self, user_id: int) -> Tuple[bool, str, int]:
-        from app.models.mission import MissionCategory
+        from app.v2.models import MissionCategory
 
         mission = self.db.query(Mission).filter(Mission.logic_key == "daily_login_gift").first()
         if not mission:

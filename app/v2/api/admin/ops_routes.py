@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.v2.models.user import V2User
-from app.models.user_retention_state import UserRetentionState
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.models.game_wallet_ledger import UserGameWalletLedger
+from app.v2.models import UserRetentionState
+from app.v2.models import ExternalRankingDailyDepositDelta
+from app.v2.models import VaultWithdrawalRequest
+from app.v2.models import UserGameWalletLedger
 from app.v2.services import V2AdminAuditService
 from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 from app.v2.schemas.v2_admin_dashboard import DashboardMetricsResponse, MetricValue
@@ -258,7 +258,7 @@ def get_streak_metrics(
     
     from sqlalchemy import func
     from datetime import date, timedelta
-    from app.models.feature import UserEventLog
+    from app.v2.models import UserEventLog
     
     end_date = datetime.utcnow().date()
     start_date = end_date - timedelta(days=days - 1)
@@ -817,7 +817,7 @@ def get_audit_logs(
     - ROLLBACK_EXECUTE: 롤백 실행 기록
     - 기타 골든 개입 기록
     """
-    from app.models.admin_audit_log import AdminAuditLog
+    from app.v2.models import AdminAuditLog
 
     query = db.query(AdminAuditLog)
 

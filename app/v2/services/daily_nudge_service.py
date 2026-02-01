@@ -15,7 +15,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.v2.models.user import V2User
-from app.models.user_activity import UserActivity
+from app.v2.models import UserActivity
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 from app.utils.timezone import business_day_start

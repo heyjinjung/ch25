@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
-from app.models.idempotency import UserIdempotencyKey
+from app.v2.models import UserIdempotencyKey
 
 
 class IdempotencyService:

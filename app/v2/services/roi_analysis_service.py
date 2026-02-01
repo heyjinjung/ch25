@@ -14,7 +14,7 @@ from typing import Any
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
-from app.models.user_activity import UserActivity
+from app.v2.models import UserActivity
 from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
 from app.utils.timezone import business_day_start
 

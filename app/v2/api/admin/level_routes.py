@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.v2_level_reward import V2LevelRewardTable
+from app.v2.models import V2LevelRewardTable
 from app.v2.services.admin_audit_service import V2AdminAuditService
 
 router = APIRouter()

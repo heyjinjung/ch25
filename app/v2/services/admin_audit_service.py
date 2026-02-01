@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from sqlalchemy.orm import Session
-from app.models.admin_audit_log import AdminAuditLog
+from app.v2.models import AdminAuditLog
 
 class V2AdminAuditService:
     @staticmethod

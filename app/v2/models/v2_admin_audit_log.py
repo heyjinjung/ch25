@@ -6,6 +6,6 @@ canonical model lives in `app.models.admin_audit_log`. This module
 re-exports the model to avoid ModuleNotFoundError.
 """
 
-from app.models.admin_audit_log import AdminAuditLog
+from app.v2.models import AdminAuditLog
 
 __all__ = ["AdminAuditLog"]

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 from app.v2.services.admin_inventory_service import V2AdminInventoryService
 from app.v2.services.vault_service import V2VaultService
 

@@ -4,7 +4,7 @@ from pydantic import Field
 from app.schemas.base import KstBaseModel as BaseModel
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary
 
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 
 
 class GrantGameTokensRequest(BaseModel):

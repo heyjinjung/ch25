@@ -1,6 +1,6 @@
 """V2 Exchange Schema."""
 from app.schemas.base import KstBaseModel as BaseModel
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 
 class CraftRequest(BaseModel):
     target_token_type: str  # e.g. "GOLD_KEY", "DIAMOND_KEY"

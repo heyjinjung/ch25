@@ -8,14 +8,14 @@ from sqlalchemy import func, select, case
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.game_wallet import GameTokenType
+from app.v2.models import GameTokenType
 from app.v2.models.user import V2User
-from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.models.vault_ledger import VaultLedger
-from app.models.external_ranking import ExternalRankingData
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.user_activity import UserActivity
-from app.models.vault_earn_event import VaultEarnEvent
+from app.v2.models import VaultWithdrawalRequest
+from app.v2.models import VaultLedger
+from app.v2.models import ExternalRankingData
+from app.v2.models import ExternalRankingDailyDepositDelta
+from app.v2.models import UserActivity
+from app.v2.models import VaultEarnEvent
 from app.v2.services.user_service import V2UserService
 from app.v2.services.vault2_service import Vault2Service
 from app.v2.services.vault_legacy_bridge import (
@@ -450,9 +450,9 @@ class V2VaultService:
         
         # Aggregated play count from all game logs (including 0-accrual plays)
         # 1. Legacy logs
-        from app.models.dice import DiceLog
-        from app.models.roulette import RouletteLog
-        from app.models.lottery import LotteryLog
+        from app.v2.models import DiceLog
+        from app.v2.models import RouletteLog
+        from app.v2.models import LotteryLog
         
         l_dice = db.query(func.count(DiceLog.id)).filter(DiceLog.user_id == user_id, DiceLog.created_at >= three_days_ago_ts).scalar() or 0
         l_roul = db.query(func.count(RouletteLog.id)).filter(RouletteLog.user_id == user_id, RouletteLog.created_at >= three_days_ago_ts).scalar() or 0
@@ -760,7 +760,7 @@ class V2VaultService:
 
     def get_admin_user_ledger(self, db: Session, user_id: int, limit: int = 50, offset: int = 0) -> dict:
         """Get detailed vault ledger for a specific user."""
-        from app.models.vault_ledger import VaultLedger
+        from app.v2.models import VaultLedger
         user = db.get(V2User, user_id)
         if not user:
              raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
@@ -807,7 +807,7 @@ class V2VaultService:
 
     def force_edit(self, db: Session, admin_id: int, user_id: int, amount: int, reason: str) -> dict:
         """Forcefully edit user vault balance (Admin only)."""
-        from app.models.vault_ledger import VaultLedger
+        from app.v2.models import VaultLedger
         from app.v2.services.admin_audit_service import V2AdminAuditService
         from app.v2.models.user import V2User
 
@@ -977,6 +977,10 @@ class V2VaultService:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="MIN_WITHDRAWAL_AMOUNT_10000")
 
         now = datetime.now(timezone.utc)
+        
+        # Ensure daily spent reset before checking eligibility
+        V2VaultService._ensure_daily_vault_spent_reset(user, now)
+
         settings = get_settings()
         tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
         op_date_kst = self._operational_date_kst(now)
@@ -1044,9 +1048,9 @@ class V2VaultService:
         if play_target > 0:
             three_days_ago_ts = now - timedelta(days=3)
 
-            from app.models.dice import DiceLog
-            from app.models.roulette import RouletteLog
-            from app.models.lottery import LotteryLog
+            from app.v2.models import DiceLog
+            from app.v2.models import RouletteLog
+            from app.v2.models import LotteryLog
             from app.v2.models.v2_dice import V2DiceLog
             from app.v2.models.v2_roulette import V2RouletteLog
             from app.v2.models.v2_lottery import V2LotteryLog
@@ -1081,12 +1085,14 @@ class V2VaultService:
         tier_index = min(int(approved_count), len(tier_minimums) - 1)
         required_min_balance = tier_minimums[tier_index]
 
-        total = int(getattr(user, "vault_locked_balance", 0) or 0)
-        if total < required_min_balance:
+        if amount < required_min_balance:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"MIN_WITHDRAWAL_AMOUNT_{required_min_balance}",
             )
+
+        total = int(getattr(user, "vault_locked_balance", 0) or 0)
+
 
         # 3. Concurrency & Balance checks
         pending_exists = (

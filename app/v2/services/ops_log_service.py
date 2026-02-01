@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional, Tuple
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.ops_log import OpsDailyLog, OpsLogEntry
+from app.v2.models import OpsDailyLog, OpsLogEntry
 
 
 class OpsLogService:

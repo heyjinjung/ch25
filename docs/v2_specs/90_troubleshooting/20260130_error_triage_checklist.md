@@ -18,7 +18,8 @@
 | 19 | ModuleNotFoundError v2_user | 전체 게임 | 🔴 높음 | ✅ 수정완료 |
 | **20** | **다중 테이블 FK v2_user (1452)** | **전체 게임/레벨** | **🔴 높음** | **✅ 마이그레이션 적용** |
 | **21** | **/api/v2/admin/ops/status 500 (ModuleNotFoundError)** | **어드민** | **🔴 높음** | **✅ shim 적용완료** |
-| **22** | **/api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락)** | **어드민** | **🔴 높음** | **⏳ 마이그레이션 생성, 배포필요** |
+| **22** | **/api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락)** | **어드민** | **🔴 높음** | **✅ 마이그레이션 적용완료** |
+| **23** | **ops/status DB 상태 ERROR (text() 누락)** | **어드민** | **🟡 중** | **✅ 코드수정완료 (배포필요)** |
 
 **상세 문서**: 
 - [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)

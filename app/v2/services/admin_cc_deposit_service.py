@@ -1,4 +1,4 @@
-﻿"""Admin CRUD for CC deposit data.
+"""Admin CRUD for CC deposit data.
 
 V2 location (Source of Truth). Legacy import paths should re-export from here.
 NOTE: Season Pass 연동 제거됨 (2026-01-26) - V2 정책: 단일 레벨 시스템만 사용
@@ -11,9 +11,9 @@ from fastapi import HTTPException, status
 from sqlalchemy import delete, select, func
 from sqlalchemy.orm import Session
 
-from app.models.external_ranking import ExternalRankingData
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.user_activity import UserActivity
+from app.v2.models import ExternalRankingData
+from app.v2.models import ExternalRankingDailyDepositDelta
+from app.v2.models import UserActivity
 from app.schemas.cc_deposit import CCDepositCreate, CCDepositUpdate
 from app.v2.models.user import V2User
 from app.v2.services.vault_service import V2VaultService
@@ -404,7 +404,7 @@ class V2AdminCCDepositService:
     @staticmethod
     def _check_whale_qualification(db: Session, *, user: V2User, current_external_total: int, now: datetime):
         from app.core.notifications import send_ops_notification
-        from app.models.admin_user_profile import AdminUserProfile
+        from app.v2.models import AdminUserProfile
 
         # 1. Capture First Deposit (CC)
         if not user.first_deposit_at:

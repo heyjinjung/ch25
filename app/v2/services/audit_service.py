@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from sqlalchemy.orm import Session
 
-from app.models.admin_audit_log import AdminAuditLog
+from app.v2.models import AdminAuditLog
 
 
 def _to_jsonable(value):

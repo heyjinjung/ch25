@@ -10,8 +10,8 @@ from sqlalchemy import and_, select
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError, NotEnoughTokensError
 from app.v2.models import GameTokenType, UserGameWallet, UserGameWalletLedger
-from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.models.trial_token_bucket import TrialTokenBucket
+from app.v2.models import UserInventoryItem, UserInventoryLedger
+from app.v2.models import TrialTokenBucket
 from app.v2.services.idempotency_service import IdempotencyService
 from app.v2.models.v2_exchange_log import V2ExchangeLog
 from app.v2.services.user_service import V2UserService

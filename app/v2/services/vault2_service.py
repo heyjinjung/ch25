@@ -18,10 +18,10 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models.vault2 import VaultProgram, VaultStatus
-from app.models.admin_audit_log import AdminAuditLog
-from app.models.vault_earn_event import VaultEarnEvent
-from app.models.user_cash_ledger import UserCashLedger
+from app.v2.models import VaultProgram, VaultStatus
+from app.v2.models import AdminAuditLog
+from app.v2.models import VaultEarnEvent
+from app.v2.models import UserCashLedger
 from app.v2.models.user import V2User
 from sqlalchemy import func, select
 from app.v2.services.audit_service import AuditService
@@ -626,8 +626,8 @@ class Vault2Service:
         ) or 0
 
         # 5. Total Vault Balances (Locked, Available, Reserved)
-        from app.models.external_ranking import ExternalRankingData
-        from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+        from app.v2.models import ExternalRankingData
+        from app.v2.models import VaultWithdrawalRequest
 
         total_assets = db.query(func.sum(ExternalRankingData.deposit_amount)).scalar() or 0
 
@@ -772,7 +772,7 @@ class Vault2Service:
                 })
 
         elif type == "withdrawal":
-            from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+            from app.v2.models import VaultWithdrawalRequest
 
             rows = (
                 db.query(VaultWithdrawalRequest, V2User)
@@ -820,7 +820,7 @@ class Vault2Service:
 
         # Log to UserCashLedger for visibility (Unified Economy)
         if locked_delta != 0:
-            from app.models.user_cash_ledger import UserCashLedger
+            from app.v2.models import UserCashLedger
             ledger = UserCashLedger(
                 user_id=user_id,
                 delta=int(locked_delta),
@@ -916,7 +916,7 @@ class Vault2Service:
         # Log to UserCashLedger if locked balance changed
         locked_delta = next_locked - prev_locked
         if locked_delta != 0:
-            from app.models.user_cash_ledger import UserCashLedger
+            from app.v2.models import UserCashLedger
             ledger = UserCashLedger(
                 user_id=user_id,
                 delta=int(locked_delta),

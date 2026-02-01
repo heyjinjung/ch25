@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 import logging
 from typing import List, Optional
 
@@ -9,9 +9,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+from app.v2.models import ExternalRankingDailyDepositDelta
 from app.v2.models.user import V2User
-from app.models.vault_withdrawal_request import VaultWithdrawalRequest
+from app.v2.models import VaultWithdrawalRequest
 from app.v2.services import V2AdminAuditService, V2AdminEconomyService, V2AdminInventoryService
 from app.v2.schemas.v2_admin_economy import (
     AdminDepositCreateRequest,
@@ -39,9 +39,9 @@ from app.v2.schemas.v2_admin_economy import (
     AdminCircuitBreakerResetRequest,
     AdminCircuitBreakerLimitUpdateRequest,
 )
-from app.models.game_wallet import UserGameWallet, GameTokenType
-from app.models.game_wallet_ledger import UserGameWalletLedger
-from app.models.inventory import UserInventoryItem, UserInventoryLedger
+from app.v2.models import UserGameWallet, GameTokenType
+from app.v2.models import UserGameWalletLedger
+from app.v2.models import UserInventoryItem, UserInventoryLedger
 from app.utils.timezone import utc_to_kst_iso
 from sqlalchemy import desc, text
 
@@ -64,7 +64,7 @@ def _sync_cumulative_deposit(db: Session, user_id: int) -> None:
 
     upsert_many 내부에서 (1) 누적 증가분 계산, (2) XP/레벨 동기화, (3) commit까지 수행한다.
     """
-    from app.models.external_ranking import ExternalRankingData
+    from app.v2.models import ExternalRankingData
     from app.v2.schemas.v2_cc_deposit import CCDepositCreate
     from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
 

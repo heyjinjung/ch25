@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
 from app.v2.api.deps import get_current_user_id
-from app.models.admin_message import AdminMessageInbox
-from app.models.game_wallet import GameTokenType
-from app.models.mission import MissionCategory
-from app.models.inventory import UserInventoryItem
+from app.v2.models import AdminMessageInbox
+from app.v2.models import GameTokenType
+from app.v2.models import MissionCategory
+from app.v2.models import UserInventoryItem
 from app.v2.models.user import V2User
 from app.schemas.dice import DicePlayResponse, DiceStatusResponse, DicePlayRequest
 from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
@@ -920,7 +920,7 @@ def v2_list_active_surveys(
 ):
     """Compat: V2 alias for legacy `/api/surveys/active`."""
     from sqlalchemy import select
-    from app.models.survey import SurveyResponse, SurveyResponseStatus
+    from app.v2.models import SurveyResponse, SurveyResponseStatus
     from app.v2.services.survey_service import V2SurveyService
 
     service = V2SurveyService()

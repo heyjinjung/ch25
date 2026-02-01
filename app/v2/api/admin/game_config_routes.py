@@ -9,7 +9,7 @@ from app.api.deps import get_current_admin_info, get_db
 from app.v2.models.v2_dice import V2DiceConfig as DiceConfig
 from app.v2.models.v2_lottery import V2LotteryConfig as LotteryConfig, V2LotteryPrize as LotteryPrize
 from app.v2.models.v2_roulette import V2RouletteConfig as RouletteConfig, V2RouletteSegment as RouletteSegment
-from app.models.roulette import RouletteConfig as LegacyRouletteConfig
+from app.v2.models import RouletteConfig as LegacyRouletteConfig
 from app.v2.services import V2AdminAuditService
 from app.v2.schemas.v2_admin_game import (
     DiceConfigDto,

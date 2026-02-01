@@ -12,8 +12,8 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.event import EventConfig
-from app.models.user_segment import UserSegment
+from app.v2.models import EventConfig
+from app.v2.models import UserSegment
 from app.v2.models.user import V2User
 from app.v2.services.vault2_service import Vault2Service
 

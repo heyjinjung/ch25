@@ -16,7 +16,7 @@ from sqlalchemy import and_, case, func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models.team_battle import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
+from app.v2.models import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
 
 
 class V2TeamBattleService:

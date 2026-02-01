@@ -14,9 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_id, get_db
-from app.models.ops_plan import OpsPlanTask
-from app.models.ops_target import OpsTargetList
-from app.models.ops_eval_metric import OpsEvalMetric
+from app.v2.models import OpsPlanTask
+from app.v2.models import OpsTargetList
+from app.v2.models import OpsEvalMetric
 from app.schemas.ops_target import OpsTargetListOut
 from app.schemas.ops_plan import (
     OpsCampaignCreate,

@@ -146,7 +146,7 @@ curl -s https://cc-jm.com/api/v2/admin/ops/status
 
 ## 🎯 체크리스트 완료 현황
 
-### ✅ 완료된 항목
+### ✅ 완료된 항목 (01-30)
 1. ✅ V2User password_hash 컬럼 추가
 2. ✅ Celery Worker/Beat healthcheck 설정
 3. ✅ Telegram Auth hash 검증 확인
@@ -154,6 +154,11 @@ curl -s https://cc-jm.com/api/v2/admin/ops/status
 5. ✅ Auth Event 로깅 확인
 6. ✅ 서비스 로그 정상 확인
 7. ✅ 모든 컨테이너 healthy 상태
+
+### ✅ 완료된 항목 (02-01)
+8. ✅ hq_prospective_user 테이블 마이그레이션 생성
+9. ✅ alembic_version 수동 업데이트 (테이블 이미 생성됨)
+10. ✅ ops/status DB 체크 text() 수정
 
 ### 📝 후속 작업 (선택)
 - [ ] Sentry 에러 모니터링 확인 (외부 서비스)
@@ -168,5 +173,9 @@ curl -s https://cc-jm.com/api/v2/admin/ops/status
 **결론**: 모든 핵심 기능이 정상 작동하며, 마이그레이션과 healthcheck가 성공적으로 적용되었습니다.
 
 **배포 담당자**: Claude AI
-**검증 완료 시간**: 2026-01-30 18:30 KST
-**다음 배포 체크포인트**: 2026-02-01 (정기 점검)
+**검증 완료 시간**: 2026-02-01 09:30 KST
+**다음 배포 체크포인트**: 2026-02-07 (정기 점검)
+
+### 변경 이력
+- 2026-01-30 18:30: 최초 배포 검증 완료
+- 2026-02-01 09:30: Issue 22 핫픽스 (hq_prospective_user + DB 체크 수정)
