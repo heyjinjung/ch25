@@ -74,5 +74,8 @@ from app.models.trial_token_bucket import TrialTokenBucket
 from app.models.telegram_link_code import TelegramLinkCode
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from app.models.vault2 import VaultProgram, VaultStatus
+from app.models.ranking import RankingDaily
+from app.models.user_activity_event import UserActivityEvent
+from app.models.season_pass import SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
 
 

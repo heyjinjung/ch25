@@ -691,7 +691,10 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 연속 출석 일수별 보상 조건 관리
 이거 어드민에서 원하는 일자에 원하는 조건으로 편집/수정/기능 작동하게 해줘 
 
+✅지연극복관리 > 실제 ui 구현된거 있음? 
+어떻게 분석해서 할거임? 
 
+✅감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
 
 -------------------------
@@ -707,10 +710,7 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 
 
 
-지연극복관리 > 실제 ui 구현된거 있음? 
-어떻게 분석해서 할거임? 
 
-감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
 금고 페이지에서 
 총유저수 
@@ -725,7 +725,8 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
  cost_type(다이아/금고)별 가격 뱃지/아이콘 ③ Shop의 프리미엄 판정 로직 일관화 같은 UX 다듬기
 
 
-
+| 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
+이거 백앤드 테스트 실행해야하
 
 -----------------------------------
 
