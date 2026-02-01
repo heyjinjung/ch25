@@ -8,8 +8,8 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
-| 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (배포대기) |
-| 02-01 | /api/v2/admin/ops/status 500 재발 | ⚠️ 재발(배포필요) |
+| 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (shim 적용) |
+| 02-01 | /api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락) | ⏳ 마이그레이션 생성, 배포필요 |
 | 01-31 | Sentry 설정 업데이트 (알림 최적화) | ✅ RESOLVED |
 | 01-31 | Sentry Log Monitoring 활성화 | ✅ RESOLVED |
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
@@ -72,10 +72,10 @@ File "/app/app/v2/services/hq_margin_stats_service.py", line 14, in <module>
 
 ---
 
-## 02-01 - [INFRA/BACKEND] /api/v2/admin/ops/status 500 재발
+## 02-01 - [INFRA/BACKEND] /api/v2/admin/ops/status 500 재발 (진짜 원인 발견!)
 
 **우선순위**: P0
-**관련 도메인**: INFRA, BACKEND, ADMIN
+**관련 도메인**: INFRA, BACKEND, ADMIN, DATABASE
 
 ### 증상
 - Admin Ops Dashboard에서 `GET /api/v2/admin/ops/status` 호출 시 500 지속
@@ -94,26 +94,64 @@ File "/app/app/v2/services/hq_margin_stats_service.py", line 14, in <module>
 - 운영 서버 최근 로그 400줄 기준, `/api/v2/admin/ops/status` 라인 미검출
 	- 로그가 `ch25_event_worker_loop_error (NOGROUP)`로 과다 출력되어 필터 필요
 
-### 근본 원인 (가설)
-- 01-31에 확인된 `ModuleNotFoundError: app.v2.models.v2_admin_audit_log` 패치가 운영에 아직 반영되지 않았을 가능성.
-- 정확한 원인 확정을 위해 ops/status 요청 직후 서버 로그에서 해당 스택트레이스를 재확인 필요.
+### 근본 원인 (**확정!**)
+- ~~01-31에 확인된 `ModuleNotFoundError: app.v2.models.v2_admin_audit_log` 패치가 운영에 아직 반영되지 않았을 가능성.~~
+- **실제 원인**: `hq_prospective_user` 테이블이 DB에 없음!
+- 직접 테스트 스크립트 실행으로 확정:
+```
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1146, 
+"Table 'xmas_event.hq_prospective_user' doesn't exist")
+[SQL: SELECT count(hq_prospective_user.id) AS count_1
+FROM hq_prospective_user
+WHERE hq_prospective_user.segment = %(segment_1)s AND hq_prospective_user.is_joined = false]
+```
+
+### 원인 분석
+- `hq_margin_stats_service.py` Line 50에서 `HQProspectiveUser` 테이블 쿼리
+- 모델 파일은 존재: `app/v2/models/hq_prospective_user.py`
+- **마이그레이션 파일 누락** → DB에 테이블 미생성
 
 ### 해결 방법
 #### Immediate Fix
-- 운영 배포에 `app/v2/models/v2_admin_audit_log.py` shim 포함 여부 확인 후 재배포.
-- 배포 직후 ops/status 호출로 200 응답 확인.
+- 마이그레이션 생성: `alembic/versions/20260201_0900_add_hq_prospective_user.py`
+- 배포 후 `alembic upgrade head` 실행
 
 #### Long-term Fix
+- 새 모델 추가 시 마이그레이션 생성 필수 체크리스트에 포함.
 - 배포 전 `ops/status` 헬스체크를 CI에 추가.
 - `docker logs` 노이즈 감소(워커 에러 로그 분리)로 신속한 에러 추출 가능하게 개선.
+
+### 배포 절차
+```bash
+# 1. 커밋 & 푸시
+git add -A
+git commit -m "fix: Issue 22 - hq_prospective_user 테이블 마이그레이션 추가"
+git push origin main
+
+# 2. 서버에서 배포
+docker compose build --no-cache
+docker compose up -d
+
+# 3. 마이그레이션 적용
+docker compose exec backend alembic upgrade head
+
+# 4. 검증
+curl -s https://cc-jm.com/api/v2/admin/ops/status -H "Authorization: Bearer $TOKEN"
+```
 
 ### 검증 방법
 - 운영 서버에서 `/api/v2/admin/ops/status` 호출 시 200 응답 확인.
 - Admin Ops Dashboard 정상 로딩 확인.
 
 ### 예방 가이드라인
+- **새 모델 추가 시 마이그레이션 생성 필수!**
 - 운영 배포 시 모델/서비스 import 경로 변경 여부 체크리스트에 포함.
 - 워커 로그 레벨 조정 또는 별도 로깅 채널 분리.
+
+### 관련 파일
+- 모델: `app/v2/models/hq_prospective_user.py`
+- 서비스: `app/v2/services/hq_margin_stats_service.py`
+- 마이그레이션: `alembic/versions/20260201_0900_add_hq_prospective_user.py`
 
 ---
 
@@ -169,3 +207,4 @@ xmas-celery-*     Up (healthy)
 
 ## 변경 이력
 - 2026-01-31: W05 INFRA 문서 생성, 기존 분산 문서 통합
+- 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락

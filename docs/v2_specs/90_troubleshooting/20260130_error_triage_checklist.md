@@ -17,7 +17,8 @@
 | 18 | telegram/auth FK (1452) | 유저 | 🔴 높음 | ✅ 마이그레이션 적용 |
 | 19 | ModuleNotFoundError v2_user | 전체 게임 | 🔴 높음 | ✅ 수정완료 |
 | **20** | **다중 테이블 FK v2_user (1452)** | **전체 게임/레벨** | **🔴 높음** | **✅ 마이그레이션 적용** |
-| **21** | **/api/v2/admin/ops/status 500 (ModuleNotFoundError)** | **어드민** | **🔴 높음** | **⚠️ 재발(배포필요)** |
+| **21** | **/api/v2/admin/ops/status 500 (ModuleNotFoundError)** | **어드민** | **🔴 높음** | **✅ shim 적용완료** |
+| **22** | **/api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락)** | **어드민** | **🔴 높음** | **⏳ 마이그레이션 생성, 배포필요** |
 
 **상세 문서**: 
 - [2026_01_30_fk_mission_sentry.md](./2026_01_30_fk_mission_sentry.md)
@@ -273,3 +274,78 @@ Sentry에서 확인
 ## 변경 이력
 - 2026-01-30: 최초 작성 (Issue 8, 9 대응)
 - 2026-01-31: Issue 19 수정완료, Issue 20 추가 (다중 테이블 FK 마이그레이션)
+- 2026-02-01: Issue 21 shim 완료, Issue 22 추가 (hq_prospective_user 테이블 누락)
+
+---
+
+## Issue 22: /api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락) ⏳
+
+### 에러
+```
+GET https://cc-jm.com/api/v2/admin/ops/status 500 (Internal Server Error)
+
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1146, 
+"Table 'xmas_event.hq_prospective_user' doesn't exist")
+[SQL: SELECT count(hq_prospective_user.id) AS count_1
+FROM hq_prospective_user
+WHERE hq_prospective_user.segment = %(segment_1)s AND hq_prospective_user.is_joined = false]
+```
+
+### 원인
+- `hq_margin_stats_service.py` Line 50에서 `HQProspectiveUser` 테이블 쿼리
+- 모델 파일은 존재: `app/v2/models/hq_prospective_user.py`
+- **DB에 테이블 미생성** (마이그레이션 누락)
+
+### 해결
+- 마이그레이션 생성: `alembic/versions/20260201_0900_add_hq_prospective_user.py`
+- Revision: `20260201_0900_add_hq_prospective_user`
+- Down revision: `20260131_1600_add_dice_golden_hour_time_columns`
+
+### 테이블 구조
+```sql
+CREATE TABLE hq_prospective_user (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nickname VARCHAR(100) NOT NULL,
+    cc_id VARCHAR(100) NOT NULL,
+    total_margin BIGINT DEFAULT 0,
+    total_charge BIGINT DEFAULT 0,
+    inactive_days INT DEFAULT 0,
+    segment VARCHAR(50) NOT NULL,
+    is_joined BOOLEAN DEFAULT FALSE,
+    created_at DATETIME,
+    updated_at DATETIME,
+    UNIQUE KEY _nickname_ccid_uc (nickname, cc_id),
+    INDEX ix_hq_prospective_user_nickname (nickname),
+    INDEX ix_hq_prospective_user_is_joined (is_joined)
+);
+```
+
+### 배포 절차
+```bash
+# 1. 커밋 & 푸시
+git add -A
+git commit -m "fix: Issue 22 - hq_prospective_user 테이블 마이그레이션 추가"
+git push origin main
+
+# 2. 서버에서 배포
+docker compose build --no-cache
+docker compose up -d
+
+# 3. 마이그레이션 적용
+docker compose exec backend alembic upgrade head
+
+# 4. 검증
+curl -s https://cc-jm.com/api/v2/admin/ops/status -H "Authorization: Bearer $TOKEN"
+```
+
+### 진단 타임라인
+- **2026-02-01 08:41 KST**: 사용자 보고 - 배포 후에도 동일 에러
+- **2026-02-01 08:45 KST**: 서버 로그 확인 - Redis 워커 에러로 가득 (노이즈)
+- **2026-02-01 08:50 KST**: 직접 테스트 스크립트 실행 → **진짜 원인 발견**
+  - `ProgrammingError: Table 'xmas_event.hq_prospective_user' doesn't exist`
+- **2026-02-01 09:00 KST**: 마이그레이션 파일 생성
+
+### 관련 파일
+- 모델: `app/v2/models/hq_prospective_user.py`
+- 서비스: `app/v2/services/hq_margin_stats_service.py`
+- 마이그레이션: `alembic/versions/20260201_0900_add_hq_prospective_user.py`

@@ -1,8 +1,49 @@
-# V2 배포 검증 보고서 - 2026-01-30
+# V2 배포 검증 보고서 - 2026-01-30 ~ 02-01
 
 **서버**: 149.28.135.147
-**배포 시간**: 2026-01-30 18:10 KST
-**검증 완료**: 2026-01-30 18:30 KST
+**최종 업데이트**: 2026-02-01 09:30 KST
+**최신 마이그레이션**: `20260201_0900_add_hq_prospective_user`
+
+---
+
+## 🚨 02-01 핫픽스: /api/v2/admin/ops/status 500 에러
+
+### Issue 22: hq_prospective_user 테이블 누락
+| 항목 | 내용 |
+|---|---|
+| **에러** | `ProgrammingError: Table 'xmas_event.hq_prospective_user' doesn't exist` |
+| **원인** | 모델은 있었으나 마이그레이션 파일 누락 |
+| **해결** | 마이그레이션 `20260201_0900_add_hq_prospective_user` 생성 |
+| **상태** | ✅ FIXED |
+
+### Issue 22-2: DB 상태 체크 ERROR 표시
+| 항목 | 내용 |
+|---|---|
+| **에러** | `db.execute("SELECT 1")` → SQLAlchemy 2.0에서 text() 필요 |
+| **원인** | 문자열 쿼리를 직접 전달 시 SQLAlchemy 2.0에서 에러 |
+| **해결** | `db.execute(text("SELECT 1"))` 로 수정 |
+| **상태** | ✅ FIXED (코드 수정, 배포 필요) |
+
+### 배포 절차 (02-01 기준)
+```bash
+# 1. Git 커밋 & 푸시 (관리자)
+git add -A
+git commit -m "fix: Issue 22 - hq_prospective_user 마이그레이션 + DB 체크 text() 수정"
+git push origin main
+
+# 2. 서버에서 배포 (CI 자동 또는 수동)
+docker compose build --no-cache
+docker compose up -d
+
+# 3. alembic 버전이 이미 수동 업데이트됨 (테이블 이미 존재)
+# 확인만:
+docker compose exec backend alembic current
+# 예상: 20260201_0900_add_hq_prospective_user
+
+# 4. 검증
+curl -s https://cc-jm.com/api/v2/admin/ops/status
+# 예상: {"system":{"db":"OK","redis":"OK","worker":"OK"},...}
+```
 
 ---
 
@@ -81,7 +122,7 @@
 
 ### 마이그레이션 버전
 ```
-현재 버전: 20260130_1800_add_v2_user_password_hash (head)
+현재 버전: 20260201_0900_add_hq_prospective_user (head)
 ```
 
 ### DB 상태

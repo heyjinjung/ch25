@@ -5,7 +5,7 @@ import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -55,7 +55,7 @@ def get_ops_dashboard_status(
     # System status checks
     db_status = "OK"
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
     except Exception:
         db_status = "ERROR"
 
