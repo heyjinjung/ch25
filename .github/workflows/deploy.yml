@@ -195,7 +195,11 @@ jobs:
             done
             docker compose up -d --remove-orphans
 
-            # Fast fix for transient 502: nginx가 backend 재생성 직후 upstream을 못 잡는 케이스가 있어 1회 재시작
+            # [2026-02-01] 502 Bad Gateway 방지: 백엔드 컨테이너 재시작 후 Nginx DNS 캐시 불일치 해결
+            # 원인: Docker 네트워크에서 컨테이너 IP가 변경되면 Nginx가 이전 IP로 계속 연결 시도
+            # 참조: docs/v2_specs/90_troubleshooting/W05_INFRA_troubleshooting.md
+            echo "[NGINX] Restarting nginx to refresh DNS cache (prevent 502)..."
+            sleep 3
             docker compose restart nginx || true
             sleep 2
 

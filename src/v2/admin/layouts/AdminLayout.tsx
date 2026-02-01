@@ -99,21 +99,10 @@ export default function AdminLayout() {
           label: "지표 및 인사이트",
           path: "/admin/analytics",
         },
-      ],
-    },
-    {
-      key: "SYSTEM",
-      label: "보안 및 데이터",
-      items: [
         {
           icon: Settings,
           label: "시스템 보안 및 CSV",
           path: "/admin/system",
-        },
-        {
-          icon: Bell,
-          label: "감사 로그 (Direct)",
-          path: "/admin/ops/audit-logs",
         },
       ],
     },
@@ -219,9 +208,8 @@ export default function AdminLayout() {
               }}
             >
               <option value="ALL">전체</option>
-              <option value="OPS">모니터링</option>
+              <option value="OPS">모니터링 & 분석</option>
               <option value="USER">유저 & 마케팅</option>
-              <option value="SYSTEM">시스템 & 보안</option>
               <option value="CORE">경제 & 상점</option>
               <option value="GAME">게임 & 콘텐츠</option>
             </select>

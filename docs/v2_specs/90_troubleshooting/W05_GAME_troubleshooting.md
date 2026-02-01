@@ -14,6 +14,7 @@
 | 01-31 | 게임 로그 테이블 FK 누락 | ✅ RESOLVED |
 | 01-31 | 주사위 골든아워 시간설정 500 에러 | ✅ RESOLVED |
 | 02-01 | 어드민 유저 게임 로그 조회 500 (dice_sum 속성) | ✅ RESOLVED |
+| 02-01 | 어드민 유저 게임 로그 조회 500 (V2RouletteLog segment_index 속성 오류) | ✅ FIXED |
 
 ---
 
@@ -255,3 +256,70 @@ vault_earn=getattr(log, "vault_earn", None),
 
 ### 수정 시각
 - 2026-02-01 14:XX KST
+
+---
+
+## 02-01 - [GAME/ADMIN] 어드민 유저 게임 로그 조회 500 (V2RouletteLog segment_index 속성 오류)
+
+**우선순위**: P1
+**관련 도메인**: GAME, ADMIN, BACKEND
+
+### 증상
+- Admin 유저 상세 페이지에서 게임 로그 탭 진입 시 500 에러 발생
+- 프론트엔드 콘솔:
+  ```
+  GET https://cc-jm.com/api/v2/admin/users/1/game-logs 500 (Internal Server Error)
+  ```
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | Admin 유저 게임 로그 조회 (`/api/v2/admin/users/{id}/game-logs`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 어드민 유저 상세 페이지 게임 로그 탭 |
+| **재현 빈도** | 항상 (룰렛 로그가 있는 유저) |
+
+### 증거(로그)
+```
+AttributeError: 'V2RouletteLog' object has no attribute 'segment_index'
+INFO:     144.48.39.14:0 - "GET /api/v2/admin/users/1/game-logs HTTP/1.1" 500 Internal Server Error
+```
+
+### 근본 원인
+- `user_routes.py`의 `get_user_game_logs`에서 `V2RouletteLog`의 속성을 잘못 참조
+- **모델 실제 속성**: `segment_id` (FK to `v2_roulette_segment.id`)
+- **코드에서 사용**: `segment_index` ❌ (존재하지 않는 속성)
+
+### 모델 vs 코드 불일치
+| 항목 | 모델 (`v2_roulette.py`) | 코드 (`user_routes.py`) |
+|---|---|---|
+| 세그먼트 참조 | `segment_id` ✅ | `segment_index` ❌ |
+
+### 해결 코드
+```python
+# Before (버그)
+result=str(log.segment_index) if log.segment_index is not None else None,
+
+# After (수정)
+result=str(log.segment_id) if log.segment_id is not None else None,
+```
+
+### 수정 파일
+- `app/v2/api/admin/user_routes.py` (Line ~1327)
+
+### 검증 방법
+```bash
+# 로컬 검증
+python -c "from app.v2.api.admin.user_routes import router; print('OK')"
+
+# 배포 후 API 테스트
+curl -H "Authorization: Bearer $TOKEN" https://cc-jm.com/api/v2/admin/users/1/game-logs
+```
+
+### 예방 가이드라인
+1. **모델 속성 참조 시 모델 파일 확인 필수**
+2. 게임 로그 DTO 매핑 시 `getattr()` 방어적 패턴 사용 권장
+3. 새 게임 타입 추가 시 모델-라우트 속성 매핑 테스트 추가
+
+### 수정 시각
+- 2026-02-01 12:XX KST

@@ -1324,7 +1324,7 @@ def get_user_game_logs(
             logs.append(GameLogItemDto(
                 id=log.id,
                 game_type="ROULETTE",
-                result=str(log.segment_index) if log.segment_index is not None else None,
+                result=str(log.segment_id) if log.segment_id is not None else None,
                 reward_type=log.reward_type,
                 reward_amount=log.reward_amount,
                 vault_earn=getattr(log, "vault_earn", None),

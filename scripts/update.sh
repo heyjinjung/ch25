@@ -2,6 +2,7 @@
 
 # Quick update script for code changes
 # Use this to update the application without full redeployment
+# 2026-02-01: Nginx 재시작 추가 (DNS 캐시 불일치로 인한 502 에러 방지)
 
 set -e
 
@@ -25,8 +26,21 @@ ${DC} build
 echo "Restarting services..."
 ${DC} up -d
 
+echo "Waiting for backend to be ready (5s)..."
+sleep 5
+
+echo "Restarting Nginx (to refresh DNS cache)..."
+docker restart xmas-nginx
+
 echo "Running migrations (if any)..."
 ${DC} exec -T backend alembic upgrade heads
+
+echo "Verifying health..."
+if curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v2/health | grep -q "200"; then
+    echo "✅ Backend health check passed!"
+else
+    echo "⚠️ Backend health check failed - check logs: ${DC} logs backend"
+fi
 
 echo "Update completed!"
 echo "Check logs with: ${DC} logs -f"

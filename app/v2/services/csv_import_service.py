@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import chardet
 from datetime import datetime
 from pathlib import Path
 from typing import Generator, Optional
@@ -79,7 +80,16 @@ class CSVImportService:
 
         # Check CSV structure
         try:
-            with path.open(encoding="utf-8") as f:
+            # 1. 인코딩 감지
+            raw_data = path.read_bytes()
+            result = chardet.detect(raw_data)
+            encoding = result['encoding'] or 'utf-8'
+            
+            # CP949 대응
+            if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
+                encoding = 'cp949'
+
+            with path.open(encoding=encoding) as f:
                 reader = csv.DictReader(f)
 
                 # Validate headers with alias support
@@ -144,7 +154,14 @@ class CSVImportService:
         path = Path(file_path)
         batch: list[ExternalCasinoGameLogCSV] = []
 
-        with path.open(encoding="utf-8") as f:
+        # 1. 인코딩 감지
+        raw_data = path.read_bytes()
+        result = chardet.detect(raw_data)
+        encoding = result['encoding'] or 'utf-8'
+        if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
+            encoding = 'cp949'
+
+        with path.open(encoding=encoding) as f:
             reader = csv.DictReader(f)
 
             for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
@@ -347,7 +364,14 @@ class CSVImportService:
             return {"total_rows": 0, "estimated_seconds": 0}
 
         # Count rows
-        with path.open(encoding="utf-8") as f:
+        # 1. 인코딩 감지
+        raw_data = path.read_bytes()
+        result = chardet.detect(raw_data)
+        encoding = result['encoding'] or 'utf-8'
+        if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
+            encoding = 'cp949'
+
+        with path.open(encoding=encoding) as f:
             row_count = sum(1 for _ in f) - 1  # Subtract header
 
         estimated_seconds = row_count / rows_per_second

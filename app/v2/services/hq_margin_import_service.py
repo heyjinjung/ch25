@@ -8,6 +8,8 @@ from sqlalchemy import func
 from datetime import datetime
 from typing import Dict, List
 import logging
+import chardet
+from pathlib import Path
 
 from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
 from app.v2.services import V2AdminAuditService
@@ -49,14 +51,47 @@ class HQMarginImportService:
             총 운영 마진, 미접속 경과일, 세그먼트(선택)
         """
         try:
-            # CSV 읽기
-            df = pd.read_csv(file_path, encoding='utf-8-sig')
+            # 1. 인코딩 감지
+            raw_data = Path(file_path).read_bytes()
+            result = chardet.detect(raw_data)
+            encoding = result['encoding'] or 'utf-8-sig'
+            
+            # CP949(Excel) 대응: 만약 신뢰도가 낮거나 None인 경우 한국어 특성상 cp949 시도
+            if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
+                encoding = 'cp949'
 
-            # 필수 컬럼 검증
-            required_cols = ['이름 (아이디)', '총 운영 마진', '미접속 경과일']
-            missing = [c for c in required_cols if c not in df.columns]
-            if missing:
-                raise ValueError(f"필수 컬럼 누락: {missing}")
+            logger.info(f"Detected encoding: {encoding} (confidence: {result['confidence']})")
+
+            # 2. CSV 읽기
+            try:
+                df = pd.read_csv(file_path, encoding=encoding)
+            except UnicodeDecodeError:
+                # 폴백: utf-8-sig 시도
+                df = pd.read_csv(file_path, encoding='utf-8-sig')
+
+            # 3. 필수 컬럼 검증 (유연한 매칭 지원)
+            # excel-calc와 호환성을 위해 공백 제거 및 필드명 유연화
+            df.columns = [c.strip() for c in df.columns]
+            
+            required_map = {
+                '이름 (아이디)': ['이름 (아이디)', '아이디', 'user_id', 'cc_id'],
+                '총 운영 마진': ['총 운영 마진', '마진', 'margin'],
+                '미접속 경과일': ['미접속 경과일', '접속 경과일', 'inactive_days']
+            }
+            
+            final_columns = {}
+            for target_col, aliases in required_map.items():
+                found = False
+                for alias in aliases:
+                    if alias in df.columns:
+                        final_columns[target_col] = alias
+                        found = True
+                        break
+                if not found:
+                    raise ValueError(f"필수 컬럼 누락: {target_col} (검색한 별칭: {aliases})")
+
+            # 컬럼명 정규화
+            df = df.rename(columns={v: k for k, v in final_columns.items()})
 
             # 통계 초기화
             total_rows = len(df)

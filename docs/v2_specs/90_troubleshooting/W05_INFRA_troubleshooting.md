@@ -8,6 +8,7 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
+| 02-01 | 502 Bad Gateway (Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치) | ✅ FIXED |
 | 02-01 | SOT Import 리팩터링 후 누락된 re-export (SurveyQuestionType 외 10개) | ✅ FIXED |
 | 01-31 | /api/v2/admin/ops/status 500 (ModuleNotFoundError) | ✅ FIXED (shim 적용) |
 | 02-01 | /api/v2/admin/ops/status 500 (hq_prospective_user 테이블 누락) | ⏳ 마이그레이션 생성, 배포필요 |
@@ -16,6 +17,95 @@
 | 01-30 | 배포 검증 리포트 | ✅ RESOLVED |
 | 02-01 | /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) | ✅ RESOLVED |
 | 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
+| 02-01 | CSV Import 한글 깨짐 (Mojibake) 및 인코딩 자동 감지 기능 도입 | ✅ FIXED |
+
+---
+
+## 02-01 - [INFRA/NGINX] 502 Bad Gateway (Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치)
+
+**우선순위**: P1
+**관련 도메인**: INFRA, NGINX, DOCKER
+
+### 증상
+- Admin 페이지에서 다수 API 호출 시 502 Bad Gateway 에러 발생
+- 프론트엔드 콘솔:
+  ```
+  GET https://cc-jm.com/api/v2/admin/users/3/game-logs 502 (Bad Gateway)
+  GET https://cc-jm.com/api/v2/admin/vault/users/3/ledger 502 (Bad Gateway)
+  GET https://cc-jm.com/api/v2/admin/users/3 502 (Bad Gateway)
+  GET https://cc-jm.com/api/v2/admin/inventory/logs?limit=50&user_id=3 502 (Bad Gateway)
+  GET https://cc-jm.com/api/v2/admin/users/3/inventory 502 (Bad Gateway)
+  ```
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | Admin API 전체 (users, vault, inventory 등) |
+| **HTTP Status** | 502 (Bad Gateway) |
+| **영향 범위** | 어드민 페이지 전체 |
+| **재현 빈도** | 항상 (컨테이너 재시작 직후) |
+
+### 증거(로그)
+**Nginx 에러 로그:**
+```
+2026/02/01 12:01:49 [error] connect() failed (111: Connection refused) 
+while connecting to upstream, client: 144.48.39.14, server: cc-jm.com, 
+request: "GET /api/v2/admin/users/3/game-logs HTTP/1.1", 
+upstream: "http://172.19.0.6:8000/..."
+```
+
+**Docker 컨테이너 상태:**
+- 백엔드 컨테이너: `About a minute ago` (방금 재시작됨)
+- 현재 백엔드 IP: `172.19.0.8`
+- Nginx가 연결 시도한 IP: `172.19.0.6` (이전 IP)
+
+### 근본 원인
+1. `docker compose build --no-cache; docker compose up -d` 명령으로 백엔드 컨테이너 재시작
+2. 재시작 과정에서 백엔드 컨테이너가 새로운 IP(`172.19.0.8`)를 할당받음
+3. Nginx 프록시 설정에서 `resolver` 캐시가 이전 IP(`172.19.0.6`)를 유지
+4. Nginx가 연결 불가능한 이전 IP로 요청 전달 → 502 Bad Gateway
+
+### 해결 방법
+#### Immediate Fix (적용 완료)
+```bash
+# Nginx 재시작으로 DNS 캐시 초기화
+docker restart xmas-nginx
+```
+
+#### Long-term Fix (✅ 적용 완료)
+**배포 스크립트에 Nginx 재시작 단계 추가:**
+- `scripts/rebuild_all.sh` - 전체 재빌드 스크립트
+- `scripts/update.sh` - 코드 업데이트 스크립트
+
+```bash
+# 적용된 흐름:
+# 1. docker compose up -d
+# 2. sleep 5 (백엔드 헬스체크 대기)
+# 3. docker restart xmas-nginx (DNS 캐시 초기화)
+# 4. 헬스체크 검증
+```
+
+### 검증 방법
+```bash
+# 1. API 헬스체크
+curl -s -o /dev/null -w '%{http_code}' https://cc-jm.com/api/v2/health
+# 기대값: 200
+
+# 2. Nginx 에러 로그 확인 (새 에러 없음)
+docker exec xmas-nginx cat /var/log/nginx/error.log | tail -5
+```
+
+### 예방 가이드라인
+1. **배포 스크립트 사용 권장**: `scripts/rebuild_all.sh` 또는 `scripts/update.sh` (Nginx 재시작 포함)
+2. **GitHub Actions CI/CD에 이미 반영됨**: `.github/workflows/deploy.yml` (Line 197~204)
+3. Docker Compose 네트워크에서 컨테이너명 기반 DNS 사용 시 캐시 주의
+4. 운영 모니터링에 502 에러 알림 추가 (Sentry/Prometheus)
+
+### 관련 파일
+- CI/CD: `.github/workflows/deploy.yml` (Line 197~204)
+- 배포 스크립트: `scripts/rebuild_all.sh`, `scripts/update.sh`
+- Nginx 설정: `nginx/nginx.conf`, `nginx/conf.d/default.conf`
+- Docker Compose: `docker-compose.yml`
 
 ---
 
@@ -372,9 +462,44 @@ xmas-celery-*     Up (healthy)
 
 ---
 
+---
+ 
+## 02-01 - [INFRA/BACKEND] CSV Import 한글 깨짐 (Mojibake) 해결 및 인코딩 자동 감지 도입
+ 
+**우선순위**: P1
+**관련 도메인**: BACKEND, ADMIN, DATA_OPS
+ 
+### 증상
+- 한국형 엑셀(MS Excel)에서 저장한 CSV 파일을 업로드할 때 한글이 알아볼 수 없게 깨짐 (예: `?대쫫 (?꾩씠디??`)
+- 기존 시스템이 `UTF-8` 또는 `UTF-8-sig`만 강제하고 있어, `CP949(EUC-KR)` 인코딩을 인식하지 못함.
+ 
+### 근본 원인
+- **브라우저/서버 인코딩 불일치**: 엑셀의 인코딩 표준인 `CP949`와 웹 표준인 `UTF-8` 간의 매칭 실패.
+- **감지 로직 부재**: 파일 내용을 읽기 전 인코딩을 명시적으로 확인하지 않고 하드코딩된 인코딩으로 파싱 시도.
+ 
+### 해결 조치
+1.  **chardet 라이브러리 도입**: 파일의 바이트 패턴을 분석하여 인코딩을 추정하는 기능 추가.
+2.  **스마트 폴백(Smart Fallback) 적용**:
+    - 인코딩 감지 결과가 낮거나 아스키(ASCII)일 경우 한국어 특성상 `CP949`로 우선 시도.
+    - 실패 시 `UTF-8-sig`로 폴백하여 범용성 확보.
+3.  **서비스 코드 업데이트**: 
+    - [HQMarginImportService](file:///C:/Users/JAVIS/ch/ch25/app/v2/services/hq_margin_import_service.py)
+    - [CSVImportService](file:///C:/Users/JAVIS/ch/ch25/app/v2/services/csv_import_service.py)
+ 
+### 검증 방법
+- `CP949`로 저장된 본사 마진 데이터를 업로드하여 한글 컬럼(`이름 (아이디)`, `총 운영 마진` 등)이 올바르게 인식되는지 확인.
+- `excel-calc` 도구의 파싱 로직과 정합성 대조 완료.
+ 
+### 예방 가이드라인
+- CSV 파싱 로직 작성 시 항상 `chardet`을 통한 인코딩 선감지 패턴을 표준으로 채택할 것.
+ 
+---
+ 
 ## 변경 이력
 - 2026-01-31: W05 INFRA 문서 생성, 기존 분산 문서 통합
 - 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락
 - 2026-02-01: SOT Import 리팩터링 후 re-export 누락 이슈 추가 (커밋 3b64190)
 - 2026-02-01: Issue #24 purge 500 에러 - V2 게임로그 미삭제 원인 확정 및 수정완료
 - 2026-02-01: CSV Import 한글 헤더 지원(Localization) 및 서비스 호출 오타 수정
+- 2026-02-01: CSV Import 한글 깨짐(Mojibake) 해결 및 인코딩 자동 감지 로직 적용
+- 2026-02-01: **502 Bad Gateway 이슈 추가 - Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치**
