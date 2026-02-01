@@ -653,15 +653,33 @@ GoldenHourModal.tsx	새 모달 컴포넌트
 
 ✅ 설계 문서: docs/.../golden/20260131_hq_margin_csv_import_design.md
 ✅ 구현 문서: docs/.../golden/20260131_hq_margin_csv_import_implementation.md
-
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_design.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_implementation.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_phase2_4_detailed_design.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_phase2_4_detailed_implementation.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_phase2_ops_dashboard.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_phase3_prospective_users.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_csv_import_phase4_golden_alignment.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\golden\20260131_hq_margin_dashboard_phase2_design.md
 
 
 ✅  #1. 개선사항
  > 회원관리 유저 디테일드로우 > 금고관리에서 내역로그 볼수 있게 해줘
  > 금고현황 페이지를 기준으로 금고 분석을 통합시켜줘 >> 이 떄 FE 구현된 카드컴포넌트 클릭시 모달로 상세내역 볼수 있게 해줘 
+
+✅ 인벤토리 차감내역도 로그에 남게 해야해! 
+유저관리 > 유저디테일 > 인벤토리관리 > 내역로그
+티켓/인벤토리 메뉴 > 인벤토리 관리 > 내역로그
+그리고 애초에 유저가 어떤 게임을 해서
+어떤 보상을 얻었는지 그거 확인 할 수 있는 데가 어디있는지도 나한테 알려줘
+
+금고내역 로그에
+상점에서 상품산 내역은 왜 로그 기록이 안돼?? 
+유저디테일드로우 반영되게 해줘 
 ---------------------------------------
 
-연속스트릭모달
+연속스트릭모달! - 실제 보상조건 관리 어드민 기능 
+그리고 유저 보상 지급 테스트
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
@@ -672,7 +690,14 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
  docker compose build --no-cache; docker compose up -d
 
 
+https://cc-jm.com/admin/marketing/messages >> 리텐션요약 하드코딩 데이터 제거 / 백앤드 데이터 라우팅 정립   >> 운영분석 페이지로 이동 
+매출탭 삭제 
+마케팅성과 > 페이지 삭제  
 
+지연극복관리 > 실제 ui 구현된거 있음? 
+어떻게 분석해서 할거임? 
+
+감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
 
 ##2.에러사항 
@@ -704,3 +729,38 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
+=======
+SHIP
+실제 구현된 관리자 FE 기준으로 가능한 작업은 아래와 같다.
+
+운영/모니터링
+운영 대시보드에서 시스템 상태, 골든 레이더 요약, 활성 유저, HQ 마진 통계 확인 및 유저 상세 드로어 열기: OpsDashboard.tsx
+골든 실시간 모니터링: 게임 이벤트 스트림 확인, 유저 ID로 인터벤션 로그 조회: GoldenRealTimePage.tsx
+위기 레이더: 이탈 위험 유저 리스트/지표 확인 및 유저 상세 드로어: CrisisRadarPage.tsx
+분석 대시보드: 보유율/수익·지출/마케팅 효율 분석 탭 확인: AnalyticsDashboard.tsx
+시스템 & 보안
+서킷 브레이커 상태 모니터링 및 글로벌 한도 리셋(슬라이드 승인): CircuitBreakerPage.tsx
+지연 극복(증거) 승인/반려 처리: LatencySurvivalPage.tsx
+감사 로그 필터/페이지네이션 조회: AuditLogPage.tsx
+CSV 업로드/검증/임포트(외부 게임 로그, HQ 마진 데이터 타입 선택): CSVImportPage.tsx
+경제 & 자산
+금고 출금 승인/거절, 강제 금고 조정, 금고 통계/스펜드 리밋 조회: VaultControlPage.tsx
+입금 로그 CRUD 및 유저 매칭/정렬: CCDepositPage.tsx
+티켓/인벤토리 관리 탭: TicketInventoryTabPage.tsx
+상점/미션 관리 탭: ShopMissionTabPage.tsx
+유저 & 마케팅
+유저 목록 검색/필터/정렬/생성/상세 드로어: UserListPage.tsx
+세그먼트 규칙 관리, 통계 조회, 배치 실행: UserSegmentPage.tsx
+세그먼트 대상 메시지 발송: MessageSenderPage.tsx
+마케팅 탭(설문/리텐션/매출/성과 패널 포함): MarketingTabPage.tsx
+게임 운영
+레벨 설정, 전역 레벨 설정, 유저 XP/레벨 조정: LevelConfigPage.tsx
+룰렛/주사위/복권 설정 관리:
+RouletteConfigPage.tsx
+DiceConfigPage.tsx
+LotteryConfigPage.tsx
+팀 배틀 시즌/팀 생성, 점수 조정, 강제 참여/탈퇴, 기여도 조정: AdminTeamBattlePage.tsx
+미구현/대기(placeholder)
+
+골든아워 관리 화면은 Pending 표시: placeholders.tsx
+원하는 기능 범위를 좁혀주면 해당 화면 기준으로 더 자세히 정리한다.

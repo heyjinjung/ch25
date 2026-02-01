@@ -12,7 +12,7 @@ from app.models.vault_withdrawal_request import VaultWithdrawalRequest
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.external_ranking import ExternalRankingData
-from app.services.vault_service import VaultService
+from app.v2.services.vault_service import V2VaultService as VaultService
 
 from unittest.mock import patch, MagicMock
 
@@ -82,9 +82,13 @@ def test_withdrawal_tiers(db_session):
     2-2. Strict Withdrawal Policy (Tier Check):
     Verify 10k -> 10k -> 30k -> 50k thresholds based on PENDING+APPROVED count.
     """
-    with patch("app.services.vault_service.get_settings") as MockSettings:
+    with patch("app.v2.services.vault_service.get_settings") as MockSettings, \
+         patch("app.v2.services.vault_service.V2VaultService._operational_date_kst") as MockOpDate:
+        
         MockSettings.return_value.timezone = "Asia/Seoul"
         MockSettings.return_value.streak_day_reset_hour_kst = 9
+        now_date = datetime.now(ZoneInfo("Asia/Seoul")).date()
+        MockOpDate.return_value = now_date
         
         service = VaultService()
         user = setup_valid_user(db_session, user_id=1, locked=500_000, spent_today=20_000)
@@ -98,7 +102,7 @@ def test_withdrawal_tiers(db_session):
 
 
         # Try 10,000 -> Success
-        service.consume_locked_balance(db_session, 1, 20_000)
+        service.consume_locked_for_spend(db_session, 1, 20_000, now=datetime.now(timezone.utc))
         res = service.request_withdrawal(db_session, 1, 10_000)
         assert res["status"] == "PENDING"
 
@@ -108,17 +112,13 @@ def test_withdrawal_tiers(db_session):
         req.status = "APPROVED"
         db_session.commit()
 
-
-
         # --- Tier 2 (Count 1): Min 10,000 ---
-        service.consume_locked_balance(db_session, 1, 20_000)
+        service.consume_locked_for_spend(db_session, 1, 20_000, now=datetime.now(timezone.utc))
         res = service.request_withdrawal(db_session, 1, 10_000)
         req_id = res["request_id"]
         req = db_session.get(VaultWithdrawalRequest, req_id)
         req.status = "APPROVED"
         db_session.commit()
-
-
 
         # --- Tier 3 (Count 2): Min 30,000 ---
         # Try 20,000 -> Fail
@@ -127,14 +127,12 @@ def test_withdrawal_tiers(db_session):
         assert "MIN_WITHDRAWAL_AMOUNT_30000" in str(exc.value.detail)
 
         # Try 30,000 -> Success
-        service.consume_locked_balance(db_session, 1, 20_000)
+        service.consume_locked_for_spend(db_session, 1, 20_000, now=datetime.now(timezone.utc))
         res = service.request_withdrawal(db_session, 1, 30_000)
         req_id = res["request_id"]
         req = db_session.get(VaultWithdrawalRequest, req_id)
         req.status = "APPROVED"
         db_session.commit()
-
-
 
         # --- Tier 4 (Count 3): Min 50,000 ---
         # Try 40,000 -> Fail
@@ -143,7 +141,7 @@ def test_withdrawal_tiers(db_session):
         assert "MIN_WITHDRAWAL_AMOUNT_50000" in str(exc.value.detail)
 
         # Try 50,000 -> Success
-        service.consume_locked_balance(db_session, 1, 20_000)
+        service.consume_locked_for_spend(db_session, 1, 20_000, now=datetime.now(timezone.utc))
         service.request_withdrawal(db_session, 1, 50_000)
 
 def test_daily_spent_reset_check(db_session):
@@ -151,9 +149,14 @@ def test_daily_spent_reset_check(db_session):
     2-2. Strict Withdrawal Policy (Daily Spent Reset):
     Verify that if operational date changed, spent_today resets to 0 and blocks withdrawal.
     """
-    with patch("app.services.vault_service.get_settings") as MockSettings:
+    with patch("app.v2.services.vault_service.get_settings") as MockSettings, \
+         patch("app.v2.services.vault_service.V2VaultService._operational_date_kst") as MockOpDate:
+        
         MockSettings.return_value.timezone = "Asia/Seoul"
         MockSettings.return_value.streak_day_reset_hour_kst = 9
+        # Seed logic uses "today"
+        now_date = datetime.now(ZoneInfo("Asia/Seoul")).date()
+        MockOpDate.return_value = now_date
         
         service = VaultService()
         
@@ -170,7 +173,5 @@ def test_daily_spent_reset_check(db_session):
         with pytest.raises(HTTPException) as exc:
              service.request_withdrawal(db_session, 2, 10_000)
         
-        # PROOF: If reset didn't happen, spent_today would be 20,000, which is > 10,000.
-        # So "MIN_DAILY_SPEND_10000_REQUIRED" would NOT be raised.
-        # The fact it was raised confirms reset took effect in logic.
-        assert "MIN_DAILY_SPEND_10000_REQUIRED" in str(exc.value.detail)
+        assert exc.value.status_code == 403
+        assert "VAULT_SPENT_INSUFFICIENT_10000" in str(exc.value.detail)

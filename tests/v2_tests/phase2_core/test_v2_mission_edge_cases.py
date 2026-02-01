@@ -95,29 +95,36 @@ class TestMissionEdgeCases:
 
     def test_streak_reset_on_skipped_day(self, db_session):
         """연속 플레이 중 하루를 건너뛰면 스트릭이 1로 초기화되는지 확인"""
-        user = _seed_user(db_session, user_id=2)
-        service = V2MissionService(db_session)
+        from unittest.mock import patch
+        # 12:00 KST (After reset hour 09:00)
+        fixed_now = datetime.combine(date.today(), time(12, 0), tzinfo=ZoneInfo("Asia/Seoul"))
         
-        # Day 1: 어제 플레이함
-        yesterday = date.today() - timedelta(days=1)
-        user.last_play_date = yesterday
-        user.play_streak = 5
-        db_session.commit()
-        
-        # 오늘 플레이 -> 스트릭 6
-        service.update_progress(user.id, "PLAY_GAME", delta=1)
-        db_session.refresh(user)
-        assert user.play_streak == 6
-        
-        # Day 2: 이틀 전으로 설정 (어제를 건너뜀)
-        user.last_play_date = date.today() - timedelta(days=2)
-        user.play_streak = 6
-        db_session.commit()
-        
-        # 오늘 플레이 -> 스트릭 1로 초기화
-        service.update_progress(user.id, "PLAY_GAME", delta=1)
-        db_session.refresh(user)
-        assert user.play_streak == 1
+        with patch("app.v2.services.mission_service.V2MissionService._now_tz", return_value=fixed_now):
+            user = _seed_user(db_session, user_id=2)
+            service = V2MissionService(db_session)
+            
+            play_day = fixed_now.date() 
+            
+            # Day 1: 어제 플레이함
+            yesterday = play_day - timedelta(days=1)
+            user.last_play_date = yesterday
+            user.play_streak = 5
+            db_session.commit()
+            
+            # 오늘 플레이 -> 스트릭 6
+            service.update_progress(user.id, "PLAY_GAME", delta=1)
+            db_session.refresh(user)
+            assert user.play_streak == 6
+            
+            # Day 2: 이틀 전으로 설정 (어제를 건너뜀)
+            user.last_play_date = play_day - timedelta(days=2)
+            user.play_streak = 6
+            db_session.commit()
+            
+            # 오늘 플레이 -> 스트릭 1로 초기화
+            service.update_progress(user.id, "PLAY_GAME", delta=1)
+            db_session.refresh(user)
+            assert user.play_streak == 1
 
     def test_new_user_mission_exclusion_for_old_users(self, db_session):
         """신규 유저 미션은 가입 7일이 지난 유저에게 노출되거나 진행되지 않아야 함"""

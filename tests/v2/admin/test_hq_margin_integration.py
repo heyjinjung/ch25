@@ -105,7 +105,6 @@ class TestHQMarginIntegration:
                 )
 
                 # 4. Assertions
-                print(f"\nDEBUG RESULT: {result}")
                 assert result["success"] is True
                 # Mock returns None for existing segment, so it should create a new one
                 assert result["updated_count"] == 0 

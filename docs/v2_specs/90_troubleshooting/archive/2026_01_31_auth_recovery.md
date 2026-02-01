@@ -36,7 +36,7 @@ This report documents the verification of the V2 Telegram Authentication system 
 - **V1 Guard**: `password_hash`가 설정된 경우 검증 강제 로직 확인.
 - **Verification Status**: ✅ JWT/Token 보안 정책 완벽 적용됨.
 
-### 6. �👥 User Management: V2User Auto-Creation
+### 6. 👥 User Management: V2User Auto-Creation
 - **Logic**: `authenticate_telegram` service verified to create `V2User` records independently of legacy V1 `user` table.
 - **Current User Count**: `6` V2Users registered.
 - **Verification Status**: ✅ Confirmed.

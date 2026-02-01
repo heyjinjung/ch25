@@ -130,8 +130,8 @@ def test_legacy_field_lock_verification(db_session):
     db_session.commit()
     
     # Mocking pre-requisites for withdrawal
-    with patch("app.services.vault_service.get_settings") as MockSettings, \
-         patch("app.services.vault_service.VaultService._operational_date_kst") as MockOpDate:
+    with patch("app.v2.services.vault_service.get_settings") as MockSettings, \
+         patch("app.v2.services.vault_service.V2VaultService._operational_date_kst") as MockOpDate:
         
         MockSettings.return_value.timezone = "Asia/Seoul"
         MockSettings.return_value.streak_day_reset_hour_kst = 9
