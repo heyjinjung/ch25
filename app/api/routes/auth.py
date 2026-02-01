@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import AliasChoices, BaseModel, Field
+from typing import Annotated
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -19,14 +20,14 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 class TokenRequest(BaseModel):
     user_id: int | None = None
-    cc_id: str | None = Field(None, validation_alias=AliasChoices("cc_id", "external_id"))
+    cc_id: Annotated[str | None, Field(validation_alias=AliasChoices("cc_id", "external_id"))] = None
     external_id: str | None = None  # Backward compatibility
     password: str | None = None
 
 
 class AuthUser(BaseModel):
     id: int
-    cc_id: str = Field(..., validation_alias=AliasChoices("cc_id", "external_id"))
+    cc_id: Annotated[str, Field(validation_alias=AliasChoices("cc_id", "external_id"))]
     external_id: str  # Backward compatibility
     nickname: str | None = None
     status: str | None = None

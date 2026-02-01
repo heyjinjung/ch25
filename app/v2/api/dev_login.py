@@ -3,6 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import AliasChoices, BaseModel, Field
+from typing import Annotated
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/api/v2/dev", tags=["dev"])
 
 
 class DevLoginRequest(BaseModel):
-    cc_id: str | None = Field(None, validation_alias=AliasChoices("cc_id", "external_id"))
+    cc_id: Annotated[str | None, Field(validation_alias=AliasChoices("cc_id", "external_id"))] = None
     nickname: str | None = None
     create_if_missing: bool = False
 

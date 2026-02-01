@@ -1,6 +1,6 @@
 """Admin user CRUD schemas."""
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Annotated
 
 from pydantic import ConfigDict, Field, AliasChoices
 
@@ -36,7 +36,7 @@ class AdminUserCreate(AdminUserBase):
 
 
 class AdminUserUpdate(BaseModel):
-    cc_id: Optional[str] = Field(None, validation_alias=AliasChoices("cc_id", "external_id"), max_length=100)
+    cc_id: Annotated[Optional[str], Field(validation_alias=AliasChoices("cc_id", "external_id"), max_length=100)] = None
     nickname: Optional[str] = Field(None, max_length=100)
     level: Optional[int] = Field(None, ge=1)
     xp: Optional[int] = Field(None, ge=0)
