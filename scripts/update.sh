@@ -26,14 +26,36 @@ ${DC} build
 echo "Restarting services..."
 ${DC} up -d
 
-echo "Waiting for backend to be ready (5s)..."
-sleep 5
+echo "Waiting for backend container to be running..."
+backend_wait=0
+until ${DC} ps backend --format '{{.State}}' 2>/dev/null | grep -q "running"; do
+  backend_wait=$((backend_wait+1))
+  if [ "$backend_wait" -ge 30 ]; then
+    echo "❌ Backend container failed to start"
+    ${DC} logs --tail=100 backend || true
+    exit 1
+  fi
+  echo "  Backend not ready yet, waiting... (${backend_wait}/30)"
+  sleep 2
+done
+echo "✅ Backend container is running"
 
 echo "Restarting Nginx (to refresh DNS cache)..."
 docker restart xmas-nginx
+sleep 2
 
 echo "Running migrations (if any)..."
-${DC} exec -T backend alembic upgrade heads
+mig_try=0
+until ${DC} exec -T backend alembic upgrade head; do
+  mig_try=$((mig_try+1))
+  if [ "$mig_try" -ge 5 ]; then
+    echo "❌ Migration failed after 5 attempts"
+    ${DC} exec -T backend alembic current || true
+    exit 1
+  fi
+  echo "  Migration retry (${mig_try}/5)..."
+  sleep $((5 + mig_try * 2))
+done
 
 echo "Verifying health..."
 if curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v2/health | grep -q "200"; then

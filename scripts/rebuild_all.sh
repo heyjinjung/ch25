@@ -1,6 +1,7 @@
 #!/bin/bash
 # 소스 변경 후 백엔드/프론트엔드 컨테이너를 강제로 재빌드 및 재시작하는 자동화 스크립트
 # 2026-02-01: Nginx 재시작 추가 (DNS 캐시 불일치로 인한 502 에러 방지)
+# 2026-02-01: 백엔드 컨테이너 running 상태 대기 로직 추가 (alembic 실패 방지)
 
 set -e
 
@@ -10,8 +11,19 @@ docker compose build --no-cache
 echo "[INFO] 도커 서비스 재시작..."
 docker compose up -d
 
-echo "[INFO] 백엔드 헬스체크 대기 (5초)..."
-sleep 5
+echo "[INFO] 백엔드 컨테이너 running 상태 대기..."
+backend_wait=0
+until docker compose ps backend --format '{{.State}}' 2>/dev/null | grep -q "running"; do
+  backend_wait=$((backend_wait+1))
+  if [ "$backend_wait" -ge 30 ]; then
+    echo "[ERROR] 백엔드 컨테이너 시작 실패"
+    docker compose logs --tail=100 backend || true
+    exit 1
+  fi
+  echo "  대기 중... (${backend_wait}/30)"
+  sleep 2
+done
+echo "[INFO] 백엔드 컨테이너 running 확인됨"
 
 echo "[INFO] Nginx 재시작 (DNS 캐시 초기화)..."
 docker restart xmas-nginx
@@ -20,10 +32,19 @@ echo "[INFO] Nginx 시작 대기 (3초)..."
 sleep 3
 
 echo "[INFO] 헬스체크 검증..."
-if curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v2/health | grep -q "200"; then
-    echo "[SUCCESS] 백엔드 헬스체크 통과!"
-else
+health_try=0
+until curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v2/health | grep -q "200"; do
+  health_try=$((health_try+1))
+  if [ "$health_try" -ge 30 ]; then
     echo "[WARNING] 백엔드 헬스체크 실패 - 로그를 확인하세요: docker compose logs backend"
+    break
+  fi
+  echo "  헬스체크 대기 중... (${health_try}/30)"
+  sleep 2
+done
+
+if [ "$health_try" -lt 30 ]; then
+  echo "[SUCCESS] 백엔드 헬스체크 통과!"
 fi
 
 echo "[INFO] 모든 서비스가 최신 소스로 재시작되었습니다."
