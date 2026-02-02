@@ -110,7 +110,7 @@ class V2VaultService:
             reason: 입금 사유 (예: ADMIN_MANUAL, GAME_REWARD, STREAK_REWARD 등)
             ref_type: 참조 타입 (ADMIN, GAME, REWARD, SYSTEM 등)
         """
-        from app.models.vault_ledger import VaultLedger
+        from app.v2.models import VaultLedger
         from datetime import datetime
 
         if amount <= 0:
@@ -140,7 +140,7 @@ class V2VaultService:
         db.add(v2_user)
 
         # Legacy mirror (SoT: user.vault_locked_balance)
-        from app.models.user import User
+        from app.v2.models import User
         legacy_user = db.get(User, user_id)
         if legacy_user is not None:
             legacy_user.vault_locked_balance = new_balance
@@ -176,7 +176,7 @@ class V2VaultService:
             reason: 출금 사유 (예: ADMIN_WITHDRAW, GAME_BET 등)
             ref_type: 참조 타입 (ADMIN, GAME, SYSTEM 등)
         """
-        from app.models.vault_ledger import VaultLedger
+        from app.v2.models import VaultLedger
         from datetime import datetime
 
         if amount <= 0:
@@ -196,7 +196,7 @@ class V2VaultService:
         db.add(v2_user)
 
         # Legacy mirror (SoT: user.vault_locked_balance)
-        from app.models.user import User
+        from app.v2.models import User
         legacy_user = db.get(User, user_id)
         if legacy_user is not None:
             legacy_user.vault_locked_balance = new_balance

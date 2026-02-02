@@ -95,5 +95,28 @@ inactive_days = (now - last_login).days
 
 ---
 
+### [02-02] - DB: V2 서비스 내 Legacy 모델 직접 참조로 인한 SOT 준수 실패
+
+#### ❌ 현상
+- `tests/v2/verification/test_v2_sot_compliance.py` 테스트 실패
+- `AssertionError: SOT Violations found:`
+- `app.v2.services.*` 모듈에서 `app.models.*`를 직접 import 함으로써 V2 Native 격리 정책 위반
+
+#### 🔍 원인
+- `V2AdminUserService`, `V2SegmentService`, `V2VaultService` 등에서 편의상 또는 관성적으로 legacy 모델(`User`, `VaultLedger` 등)을 직접 import 함.
+
+#### ✅ 해결
+- 직접 import 대신 `app.v2.models`에서 제공하는 shim(가상 내보내기)을 사용하도록 수정.
+- 수정 파일: `admin_user_service.py`, `segment_service.py`, `vault_service.py`
+
+#### 📌 재발 방지
+- V2 서비스 개발 시 반드시 `app.v2.models`를 통해 모델을 참조하도록 코드 리뷰 가이드 강화.
+- CI 과정에서 SOT compliance 테스트 상시 수행.
+
+#### 🏷️ 태그
+- `P1` `Architecture` `SOT` `Compliance`
+
+---
+
 ## 📝 관리 가이드
 - Alembic 마이그레이션, FK 제약조건, 데이터 정합성 확인

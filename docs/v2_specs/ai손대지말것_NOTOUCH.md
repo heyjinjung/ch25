@@ -261,26 +261,27 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
 =======
+현재 해당 테스트 영역 최신 sot 확인해서 테스트 재 실행해줘
 
+사용자 요청사항 대응법
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_error_triage_checklist.md
+위의 에러 트리아지 체크리스트에 따라서 작업을 진행한다.
+에러트리아지에 해당되는 경우가 아닌 신규기능 생성일시에는 사용자가 제공한 기술문서들을 확인 후 기준값, 계획 수립후 실행한다
+완료 후 트러블슈팅 문서 업데이트 한다
+주의
+관리자가 직접 깃 커밋/ 푸쉬하니까 넌 깃은 손대지 말것
 
+트래블슈팅문서 업데이트 및 작성법
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\README.md
 
-금고 출금 승인/거절, 강제 금고 조정, 금고 통계/스펜드 리밋 조회: VaultControlPage.tsx
-입금 로그 CRUD 및 유저 매칭/정렬: CCDepositPage.tsx
-티켓/인벤토리 관리 탭: TicketInventoryTabPage.tsx
-상점/미션 관리 탭: ShopMissionTabPage.tsx
-유저 & 마케팅
-유저 목록 검색/필터/정렬/생성/상세 드로어: UserListPage.tsx
-세그먼트 규칙 관리, 통계 조회, 배치 실행: UserSegmentPage.tsx
-세그먼트 대상 메시지 발송: MessageSenderPage.tsx
-마케팅 탭(설문/리텐션/매출/성과 패널 포함): MarketingTabPage.tsx
-게임 운영
-레벨 설정, 전역 레벨 설정, 유저 XP/레벨 조정: LevelConfigPage.tsx
-룰렛/주사위/복권 설정 관리:
-RouletteConfigPage.tsx
-DiceConfigPage.tsx
-LotteryConfigPage.tsx
-팀 배틀 시즌/팀 생성, 점수 조정, 강제 참여/탈퇴, 기여도 조정: AdminTeamBattlePage.tsx
-미구현/대기(placeholder)
+기술 기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned 내 도메인별 폴더/문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk 모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_INDEX.md
 
-골든아워 관리 화면은 Pending 표시: placeholders.tsx
-원하는 기능 범위를 좁혀주면 해당 화면 기준으로 더 자세히 정리한다.
+ssh 접속 실제 운영서버 확인
+C:\Users\JAVIS.ssh\id_ed25519_vultr roott@149.28.135.147
+
+ssh -i C:\Users\JAVIS.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+

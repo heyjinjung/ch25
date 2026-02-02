@@ -174,7 +174,7 @@ class V2AdminUserService:
     def delete_user(db: Session, user_id: int, *, admin_id: int = 0) -> None:
         """일반 유저 삭제 (CASCADE 의존, TeamMember만 명시 정리)"""
         from app.v2.models import TeamMember
-        from app.models.user import User
+        from app.v2.models import User
 
         v2_user = db.get(V2User, user_id)
         if not v2_user:
@@ -375,7 +375,7 @@ class V2AdminUserService:
         db.delete(v2_user)
 
         # Legacy user 동시 삭제 (테스트/호환)
-        from app.models.user import User
+        from app.v2.models import User
         legacy_user = db.get(User, user_id)
         if legacy_user is not None:
             db.delete(legacy_user)

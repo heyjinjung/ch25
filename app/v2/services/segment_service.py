@@ -17,8 +17,8 @@ from app.v2.models.v2_dice import V2DiceLog
 from app.v2.models.v2_lottery import V2LotteryLog
 from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
-from app.models.external_ranking import ExternalRankingData
-from app.models.user_activity import UserActivity
+from app.v2.models import ExternalRankingData
+from app.v2.models import UserActivity
 
 
 @dataclass(frozen=True)
@@ -118,19 +118,30 @@ class V2SegmentService:
     def ensure_default_rules(db: Session) -> None:
         """Ensure baseline V2 rules exist."""
         from sqlalchemy.exc import IntegrityError
-        count = db.execute(select(func.count(V2SegmentRule.id))).scalar()
-        if count == 0:
+        existing_names = set(
+            db.execute(select(V2SegmentRule.name)).scalars().all()
+        )
+        if not existing_names:
+            existing_names = set()
+
+        to_add = []
+        for seed in DEFAULT_SEGMENT_RULE_SEEDS:
+            if seed["name"] in existing_names:
+                continue
+            to_add.append(
+                V2SegmentRule(
+                    name=seed["name"],
+                    segment=seed["segment"],
+                    priority=seed["priority"],
+                    enabled=seed["enabled"],
+                    condition_json=seed["condition_json"],
+                )
+            )
+
+        if to_add:
             try:
-                for seed in DEFAULT_SEGMENT_RULE_SEEDS:
-                    db.add(
-                        V2SegmentRule(
-                            name=seed["name"],
-                            segment=seed["segment"],
-                            priority=seed["priority"],
-                            enabled=seed["enabled"],
-                            condition_json=seed["condition_json"],
-                        )
-                    )
+                for rule in to_add:
+                    db.add(rule)
                 db.commit()
             except IntegrityError:
                 db.rollback()

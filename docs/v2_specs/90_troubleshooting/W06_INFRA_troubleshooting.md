@@ -38,6 +38,10 @@
 - Redis Stream `mission_workers` 키는 존재하나, Consumer Group이 생성되지 않았거나 삭제됨.
 - Celery 워커가 존재하지 않는 그룹 명으로 읽기를 시도함.
 
+**상태 업데이트 (02-02)**
+- 현재 운영 서버 로그 확인 결과 해당 에러 더 이상 발생하지 않음 (안정화됨).
+- 관리 수동 조치 완료 추정.
+
 **해결 방법**
 - 관리자가 직접 Redis CLI에서 그룹 생성 필요:
   `XGROUP CREATE mission_workers mission_group $ MKSTREAM`
