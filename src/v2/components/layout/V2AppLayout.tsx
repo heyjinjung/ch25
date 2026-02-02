@@ -16,7 +16,7 @@ const GOLDEN_HOUR_MODAL_KEY = "golden_hour_modal_dismissed";
 
 export default function V2AppLayout() {
   const navigate = useNavigate();
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const { data: goldenHour } = useGoldenHourStatus();
   const [showGoldenModal, setShowGoldenModal] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);

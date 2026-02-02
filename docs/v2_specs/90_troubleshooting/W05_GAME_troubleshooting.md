@@ -403,5 +403,9 @@ curl -H "Authorization: Bearer $TOKEN" https://cc-jm.com/api/v2/admin/users/1/ga
 ---
 
 ## 변경 이력
+- 2026-01-31: W05 GAME 문서 생성 및 게임 API 모듈 감사
+- 2026-01-31: 복권 퍼즐 미지급 및 주사위 골든아워 미적용 버그 해결 기록
+- 2026-02-01: 어드민 게임 로그 조회 속성(dice_sum/segment_index) 오류 해결
 - 2026-02-02: V2DiceLog 속성 참조 오류 및 게임 모듈 임포트 실패 해결 내역 추가 (Antigravity)
 - 2026-02-02: 게임 토큰 표준화 및 프리미엄 접근 제어 사례 추가 (Antigravity)
+- 2026-02-02: 게임 설정 및 정규화 이슈 분류 내역 추가 (Antigravity)

@@ -346,6 +346,8 @@ WHERE el.event_name = 'streak.reset'
 ---
 
 ## 변경 이력
-- 2026-01-31: W05 MISSION 문서 생성, 기존 분산 문서 통합
+- 2026-01-31: W05 MISSION 문서 생성 및 기존 분산 문서 통합
+- 2026-02-01: 신규 유저 미션 타이머 UX 및 텔레그램 연동 로직 업데이트 반영
 - 2026-02-02: MissionService 로직 결함 및 FK 무결성 패치 내역 추가 (Antigravity)
 - 2026-02-02: 미션 보상 타입 Enum 불일치 해결 내역 추가 (Antigravity)
+- 2026-02-02: 스트릭 무결성 검증 가이드 추가 반영 (Antigravity)
