@@ -19,6 +19,7 @@
 | 01-20 | [GAME] 프리미엄 룰렛 접근 제어 로직 누락 | ✅ FIXED |
 | 01-20 | [GAME] Roulette 스키마 직렬화 실패 (reward_type/grade Error) | ✅ FIXED |
 | 02-02 | 룰렛 체험 티켓 일일 3회 제한 오작동 및 Nudge 지급 버그 | ✅ RESOLVED |
+| 02-02 | 어드민 룰렛 설정 저장 422 (TRIAL_TICKET RewardType 누락) | ✅ RESOLVED |
 
 ---
 
@@ -257,6 +258,44 @@ vault_earn=getattr(log, "vault_earn", None),
 ### 검증 방법
 - 어드민에서 유저 상세 → 게임 로그 탭 진입 시 200 OK 및 리스트 표시 확인.
 - 백엔드 로그에서 `AttributeError` 재발 여부 모니터링.
+
+---
+
+## 02-02 - [GAME/ADMIN] 어드민 룰렛 설정 저장 422 (TRIAL_TICKET RewardType 누락)
+
+**우선순위**: P1
+**관련 도메인**: GAME, ADMIN, FRONTEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 어드민 룰렛 설정 저장 (`PUT /api/v2/admin/game/roulette/config/{id}`) |
+| **HTTP Status** | 422 (Unprocessable Entity) |
+| **영향 범위** | 어드민 룰렛 설정 페이지 저장 기능 전체 |
+| **재현 빈도** | 항상 (TRIAL_TICKET 포함 시) |
+
+### 증거(로그/응답)
+```
+PUT https://cc-jm.com/api/v2/admin/game/roulette/config/4 422 (Unprocessable Entity)
+```
+
+### 근본 원인 (증거 기반)
+- **스키마 불일치**: `app/v2/schemas/v2_admin_game.py`의 `RewardType`에 `TRIAL_TICKET` 누락.
+- **프론트 요청**: `src/v2/constants/rewardItems.ts`에서 `TRIAL_TICKET`을 보상 타입으로 사용하며, 저장 시 `reward_type=TRIAL_TICKET`가 전송됨.
+- 결과적으로 FastAPI/Pydantic 검증에서 422 발생.
+
+### 해결 방법
+#### Immediate Fix
+- `RewardType`에 `TRIAL_TICKET` 추가
+  - 파일: `app/v2/schemas/v2_admin_game.py`
+
+### 검증 방법
+1. 어드민 룰렛 설정에서 `TRIAL_TICKET` 보상 포함 후 저장
+2. 응답 200 OK 확인 및 재조회 시 설정 값 유지 확인
+
+### 예방 가이드라인
+- SoT의 GameTokenType/RewardType과 프론트 보상 목록(REWARD_ITEMS) 정합성 점검 자동화
+- RewardType 업데이트 시 admin 스키마/프론트 보상 목록 동시 갱신
 
 ### 수정 시각
 - 2026-02-01 14:XX KST

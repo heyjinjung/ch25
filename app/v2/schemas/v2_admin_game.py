@@ -27,6 +27,7 @@ RewardType = Literal[
     "LOTTERY_TICKET",
     "GOLD_KEY_TICKET",
     "DIAMOND_TICKET",
+    "TRIAL_TICKET",
     "GOLD_KEY_FRAGMENT",
     "DIAMOND_FRAGMENT",
     "PUZZLE_C",
