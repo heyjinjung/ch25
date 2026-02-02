@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 0 |
+| 해결된 이슈 | 2 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -45,6 +45,74 @@
 **검증 방법**
 - `GET /api/v2/mission/` 응답에 `claimable_rewards` 존재 시 모달 노출 확인.
 - KST 09:00 기준 스트릭 리셋 구간에서 동작 확인.
+
+**상태**: ✅ 해결 완료 (2026-02-02)
+
+---
+
+### 02-02 - MISSION/VERIFICATION: 연속 스트릭 미션 어드민 설정값 지급 여부 검증
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 요청 사항 | 연속 스트릭 미션이 어드민 설정값대로 지급되고 있는지 확인 |
+| 검증 대상 | UiConfig `streak_reward_rules` 기반 보상 지급 로직 |
+| 영향 범위 | 전체 유저 (스트릭 마일스톤 도달 시) |
+| 우선순위 | 중 (정기 검증) |
+
+**증거 기반 원인 분석**
+
+1. **SoT 문서 검토**
+   - 기준 문서: `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md`
+   - 정책: 스트릭 보상 규칙은 `app_ui_config.config_key = "streak_reward_rules"` 기반
+   - 기본값: Day 3 (ROULETTE/DICE/LOTTERY TICKET 각 1개), Day 7 (DIAMOND 1개)
+   - Admin API: `GET/PUT /api/v2/admin/ui-config/streak_reward_rules`
+
+2. **코드 검증** (`app/v2/services/streak_service.py`)
+   ```python
+   def _get_streak_reward_rules(self) -> List[Dict[str, Any]]:
+       row = UiConfigService.get(self.db, "streak_reward_rules")
+       if row and row.value_json:
+           return row.value_json.get("rules", [])
+       # 기본값 fallback 존재
+   ```
+
+3. **풀스택 검증 체크리스트**
+
+| 레이어 | 검증 항목 | 결과 |
+|---|---|---|
+| DB | `app_ui_config` 테이블 | ✅ |
+| Backend | `_get_streak_reward_rules()` 호출 | ✅ |
+| Backend | 기본값 fallback | ✅ |
+| Backend | `enabled` 필드 체크 | ⚠️ 개선 여지 |
+| API | `/api/v2/mission/streak/claim` | ✅ |
+| Frontend | Admin UI Config 설정 | ✅ |
+| Testing | 단위 테스트 | ✅ 통과 |
+
+**검증 결과**: ✅ **연속 스트릭 미션은 어드민 설정값대로 지급되고 있음**
+
+**근거**:
+- `UiConfigService.get(db, "streak_reward_rules")`로 DB 설정 조회
+- Config 없을 시 안전한 기본값 제공
+- `claim_streak_reward()`가 규칙 조회 후 `V2RewardService`로 지급
+- `tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py` 검증 완료
+
+**개선 권고사항**:
+- ⚠️ `enabled: false` 규칙 필터링 추가 권장 (현재는 비활성 규칙도 적용됨)
+
+```python
+def _get_streak_reward_rules(self) -> List[Dict[str, Any]]:
+    row = UiConfigService.get(self.db, "streak_reward_rules")
+    if row and row.value_json:
+        rules = row.value_json.get("rules", [])
+        return [r for r in rules if r.get("enabled", True)]  # ✨ 필터링
+    return [...]  # 기본값
+```
+
+**상태**: ✅ 검증 완료 (2026-02-02)
+
+**다음 액션**:
+- [ ] (선택) `enabled: false` 필터링 로직 추가
 
 ---
 

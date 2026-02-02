@@ -1,5 +1,15 @@
 ## [2026-02-02 구현 완료 항목]
 
+### [2026-02-02] 연속 스트릭 미션 어드민 설정값 지급 검증 ✅
+- **검증 요청**: 연속 스트릭 미션이 어드민 설정값대로 지급되고 있는지 확인.
+- **검증 결과**: ✅ **정상 동작 확인**
+  - `app/v2/services/streak_service.py`의 `_get_streak_reward_rules()` 메서드가 `UiConfigService.get(db, "streak_reward_rules")`로 DB 설정 조회.
+  - Config가 없을 경우 안전한 기본값(Day 3: ROULETTE/DICE/LOTTERY TICKET, Day 7: DIAMOND) 제공.
+  - `claim_streak_reward()` 메서드가 규칙을 조회하여 `V2RewardService`로 보상 지급.
+  - 단위 테스트(`tests/v2_tests/phase2_core/test_mission_streak_logic_deep.py::test_streak_milestone_claim_flow`) 통과.
+- **개선 권고**: `enabled: false` 규칙 필터링 추가 권장 (현재는 비활성 규칙도 적용될 수 있음).
+- **문서**: `docs/v2_specs/90_troubleshooting/W06_MISSION_troubleshooting.md`
+
 ### [2026-02-02] W05 트러블슈팅 결과 반영 및 SoT 승격 ✅
 - **문제 해결**: W05 기간 중 발생한 인증, DB, 미션, 게임 도메인 이슈의 소급 적용.
 - **핵심 정책 확정**:

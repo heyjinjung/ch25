@@ -144,7 +144,7 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         )
         db.add(admin_profile)
 
-        from app.v2.models.user import V2UserRole, V2UserStatus
+        from app.v2.models.user import V2User, V2UserRole, V2UserStatus
         admin = V2User(
             cc_id="admin_e2e", 
             nickname="E2E Admin", 
