@@ -22,7 +22,7 @@ from app.v2.models.user import V2User
 from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence, EvidenceStatus
 from app.v2.services.latency_survival_service import V2LatencySurvivalService
 from app.v2.services.inventory_service import V2InventoryService
-from app.v2.models import GameTokenType
+from app.v2.models import GameTokenType, UserGameWallet, UserInventoryItem
 
 
 # =============================================================================
