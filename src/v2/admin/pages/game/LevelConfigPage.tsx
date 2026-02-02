@@ -13,7 +13,6 @@ import {
   RefreshCw,
   Search,
   AlertCircle,
-  Trophy,
   Loader2,
   Save,
 } from "lucide-react";
@@ -57,6 +56,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../../components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../components/ui/popover";
 
 export default function LevelConfigPage() {
   const { data: levels = [], isLoading, refetch } = useAdminLevels();
@@ -96,7 +100,7 @@ export default function LevelConfigPage() {
   const [editingLevels, setEditingLevels] = useState<
     Record<number, AdminLevelDto>
   >({});
-  const [savingLevel, setSavingLevel] = useState<number | null>(null);
+  const [isBulkSaving, setIsBulkSaving] = useState(false);
 
   useEffect(() => {
     if (levels.length > 0) {
@@ -130,20 +134,26 @@ export default function LevelConfigPage() {
     }));
   };
 
-  const handleSaveLevel = async (level: number) => {
-    const data = editingLevels[level];
-    if (!data) return;
+  const handleBulkSave = async () => {
+    const editedLevelNumbers = Object.keys(editingLevels).map(Number);
+    if (editedLevelNumbers.length === 0) return;
 
-    setSavingLevel(level);
+    setIsBulkSaving(true);
     try {
-      await updateLevel.mutateAsync({ level, data });
-      setEditingLevels((prev) => {
-        const next = { ...prev };
-        delete next[level];
-        return next;
-      });
+      // Save all edited levels sequentially
+      for (const level of editedLevelNumbers) {
+        const data = editingLevels[level];
+        if (data) {
+          await updateLevel.mutateAsync({ level, data });
+        }
+      }
+      // Clear all edits after successful save
+      setEditingLevels({});
+      await refetch();
+    } catch (error) {
+      console.error("Bulk save failed:", error);
     } finally {
-      setSavingLevel((prev) => (prev === level ? null : prev));
+      setIsBulkSaving(false);
     }
   };
 
@@ -158,7 +168,7 @@ export default function LevelConfigPage() {
   return (
     <div className="space-y-6 p-6 pb-20 max-w-[1600px] mx-auto text-white">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start gap-4">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight mb-2">
             레벨 시스템 설정 (Leveling)
@@ -265,239 +275,242 @@ export default function LevelConfigPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="config" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Info Card */}
-            <div className="lg:col-span-1 space-y-4">
-              <Card className="bg-zinc-900 border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
-                    주의사항
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-xs text-zinc-500 leading-relaxed space-y-2">
-                  <p>
-                    • 레벨 구간 설정 변경은 전체 게임 경제에 즉시 영향을
-                    미칩니다.
-                  </p>
-                  <p>• 레벨업 보상은 우편함 또는 인벤토리로 즉시 지급됩니다.</p>
-                  <p>
-                    • 경험치 요구량은 다음 레벨로 가기 위한 누적 경험치입니다.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-zinc-900 border-white/10">
-                <CardHeader>
-                  <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-yellow-500" />
-                    현재 상태
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-zinc-500">
-                      정의된 레벨 수:
-                    </span>
-                    <span className="text-sm font-bold text-white font-mono">
+        <TabsContent value="config" className="mt-6 space-y-4">
+          {/* Stats Bar */}
+          <Card className="bg-zinc-900 border-white/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-6 flex-wrap">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-500">총 레벨:</span>
+                    <span className="text-base font-bold text-white font-mono">
                       {levels.length}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="h-4 w-px bg-white/10" />
+                  <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-500">최대 XP:</span>
-                    <span className="text-sm font-bold text-white font-mono">
-                      {globalConfig.maxXp}
+                    <span className="text-base font-bold text-white font-mono">
+                      {globalConfig.maxXp.toLocaleString()}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="h-4 w-px bg-white/10" />
+                  <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-500">최대 레벨:</span>
-                    <span className="text-sm font-bold text-emerald-400 font-mono">
+                    <span className="text-base font-bold text-emerald-400 font-mono">
                       {globalConfig.maxLevel}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
+                  <div className="h-4 w-px bg-white/10" />
+                  <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-500">미저장 변경:</span>
-                    <span className="text-sm font-bold text-indigo-300 font-mono">
+                    <Badge
+                      variant="secondary"
+                      className={`${
+                        Object.keys(editingLevels).length > 0
+                          ? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/20"
+                          : "bg-white/5 text-zinc-400 border border-white/10"
+                      }`}
+                    >
                       {Object.keys(editingLevels).length}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Level List */}
-            <div className="lg:col-span-3 space-y-4">
-              <Card className="bg-zinc-900 border-white/10 overflow-hidden">
-                <div className="flex flex-col gap-3 p-4 border-b border-white/10 md:flex-row md:items-center md:justify-between">
-                  <div className="relative w-full md:max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                    <Input
-                      placeholder="레벨 번호로 검색 (예: 1, 10, 20...)"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-zinc-950/40 border-white/10"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-3 text-xs text-zinc-500 md:justify-end">
-                    <span>
-                      표시:{" "}
-                      <span className="font-mono text-zinc-300">
-                        {filteredLevels.length}
-                      </span>{" "}
-                      / {levels.length}
-                    </span>
-                    <span className="hidden md:inline">•</span>
-                    <span>
-                      미저장:{" "}
-                      <span className="font-mono text-indigo-300">
-                        {Object.keys(editingLevels).length}
-                      </span>
-                    </span>
+                    </Badge>
                   </div>
                 </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-zinc-400 hover:text-white hover:bg-white/5"
+                    >
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      주의사항
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    side="bottom"
+                    className="bg-zinc-800 border-white/10 text-zinc-300 w-96"
+                  >
+                    <div className="space-y-2 text-xs leading-relaxed">
+                      <p className="font-semibold text-amber-400 flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        주의사항
+                      </p>
+                      <p>• 레벨 구간 설정 변경은 전체 게임 경제에 즉시 영향을 미칩니다.</p>
+                      <p>• 레벨업 보상은 우편함 또는 인벤토리로 즉시 지급됩니다.</p>
+                      <p>• 경험치 요구량은 다음 레벨로 가기 위한 누적 경험치입니다.</p>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </CardContent>
+          </Card>
 
-                <div className="max-h-[72vh] overflow-auto">
-                  <Table className="min-w-[920px]">
-                    <TableHeader className="bg-white/5 sticky top-0 z-10">
-                      <TableRow className="border-white/5 hover:bg-transparent">
-                        <TableHead className="text-zinc-400 w-24">
-                          Level
-                        </TableHead>
-                        <TableHead className="text-zinc-400 w-[220px]">
-                          요구 경험치 (XP)
-                        </TableHead>
-                        <TableHead className="text-zinc-400">
-                          보상 종류
-                        </TableHead>
-                        <TableHead className="text-zinc-400 w-[220px]">
-                          보상 수량
-                        </TableHead>
-                        <TableHead className="text-zinc-400 w-28 text-right">
-                          저장
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredLevels.map((lvl) => {
-                        const editData = editingLevels[lvl.level] || lvl;
-                        const isEdited = !!editingLevels[lvl.level];
-                        const isSaving = savingLevel === lvl.level;
-                        const isInvalidRewardType = !rewardTypeSet.has(
-                          editData.rewardType,
-                        );
+          {/* Level Table */}
+          <Card className="bg-zinc-900 border-white/10 overflow-hidden">
+            <div className="flex flex-col gap-3 p-4 border-b border-white/10 md:flex-row md:items-center md:justify-between">
+              <div className="relative w-full md:max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Input
+                  placeholder="레벨 번호로 검색 (예: 1, 10, 20...)"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-zinc-950/40 border-white/10"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 text-xs text-zinc-500">
+                  <span>
+                    표시:{" "}
+                    <span className="font-mono text-zinc-300">
+                      {filteredLevels.length}
+                    </span>{" "}
+                    / {levels.length}
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={Object.keys(editingLevels).length === 0 || isBulkSaving}
+                  className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                  onClick={handleBulkSave}
+                >
+                  {isBulkSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      저장 중...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      일괄 저장 ({Object.keys(editingLevels).length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
 
-                        return (
-                          <TableRow
-                            key={lvl.level}
-                            className={`border-white/5 hover:bg-white/5 group ${isEdited ? "bg-indigo-500/5" : ""} ${isSaving ? "opacity-70" : ""}`}
+            <div className="max-h-[68vh] overflow-auto">
+              <Table>
+                <TableHeader className="bg-white/5 sticky top-0 z-10">
+                  <TableRow className="border-white/5 hover:bg-transparent">
+                    <TableHead className="text-zinc-400 w-28">
+                      Level
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-[240px]">
+                      요구 경험치 (XP)
+                    </TableHead>
+                    <TableHead className="text-zinc-400">
+                      보상 종류
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-[240px]">
+                      보상 수량
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredLevels.map((lvl) => {
+                    const editData = editingLevels[lvl.level] || lvl;
+                    const isEdited = !!editingLevels[lvl.level];
+                    const isInvalidRewardType = !rewardTypeSet.has(
+                      editData.rewardType,
+                    );
+
+                    return (
+                      <TableRow
+                        key={lvl.level}
+                        className={`border-white/5 hover:bg-white/5 group ${
+                          isEdited ? "bg-indigo-500/5" : ""
+                        } ${isBulkSaving ? "opacity-70" : ""}`}
+                      >
+                        <TableCell className="align-middle">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-indigo-300 text-base font-mono">
+                              {lvl.level}
+                            </span>
+                            {isEdited && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-indigo-500/15 text-indigo-200 border border-indigo-500/20"
+                              >
+                                변경
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          <Input
+                            type="number"
+                            value={editData.requiredXp}
+                            disabled={isBulkSaving}
+                            onChange={(e) =>
+                              handleLevelFieldChange(
+                                lvl.level,
+                                "requiredXp",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
+                            className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
+                          />
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          <Select
+                            value={editData.rewardType}
+                            onValueChange={(value) =>
+                              handleLevelFieldChange(
+                                lvl.level,
+                                "rewardType",
+                                value,
+                              )
+                            }
+                            disabled={isBulkSaving}
                           >
-                            <TableCell className="align-middle">
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-indigo-300 text-base font-mono">
-                                  {lvl.level}
-                                </span>
-                                {isEdited && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="bg-indigo-500/15 text-indigo-200 border border-indigo-500/20"
-                                  >
-                                    변경
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="align-middle">
-                              <Input
-                                type="number"
-                                value={editData.requiredXp}
-                                disabled={isSaving}
-                                onChange={(e) =>
-                                  handleLevelFieldChange(
-                                    lvl.level,
-                                    "requiredXp",
-                                    parseInt(e.target.value) || 0,
-                                  )
-                                }
-                                className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
-                              />
-                            </TableCell>
-                            <TableCell className="align-middle">
-                              <Select
-                                value={editData.rewardType}
-                                onValueChange={(value) =>
-                                  handleLevelFieldChange(
-                                    lvl.level,
-                                    "rewardType",
-                                    value,
-                                  )
-                                }
-                                disabled={isSaving}
-                              >
-                                <SelectTrigger className="h-9 bg-zinc-950/40 border-white/10">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-zinc-800 border-zinc-700">
-                                  {REWARD_ITEMS.map((item) => (
-                                    <SelectItem
-                                      key={item.value}
-                                      value={item.value}
-                                    >
-                                      {item.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {isInvalidRewardType && (
-                                <p className="text-xs text-red-400 mt-1">
-                                  SoT 밖 보상 타입입니다.
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell className="align-middle">
-                              <Input
-                                type="number"
-                                value={editData.rewardAmount}
-                                disabled={isSaving}
-                                onChange={(e) =>
-                                  handleLevelFieldChange(
-                                    lvl.level,
-                                    "rewardAmount",
-                                    parseInt(e.target.value) || 0,
-                                  )
-                                }
-                                className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
-                              />
-                            </TableCell>
-                            <TableCell className="align-middle text-right">
-                              <Button
-                                size="sm"
-                                disabled={!isEdited || isSaving}
-                                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
-                                onClick={() => handleSaveLevel(lvl.level)}
-                              >
-                                {isSaving ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Save className="w-4 h-4" />
-                                )}
-                                <span className="ml-2">저장</span>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </Card>
+                            <SelectTrigger className="h-9 bg-zinc-950/40 border-white/10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              {REWARD_ITEMS.map((item) => (
+                                <SelectItem
+                                  key={item.value}
+                                  value={item.value}
+                                >
+                                  {item.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {isInvalidRewardType && (
+                            <p className="text-xs text-red-400 mt-1">
+                              SoT 밖 보상 타입입니다.
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="align-middle">
+                          <Input
+                            type="number"
+                            value={editData.rewardAmount}
+                            disabled={isBulkSaving}
+                            onChange={(e) =>
+                              handleLevelFieldChange(
+                                lvl.level,
+                                "rewardAmount",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
+                            className="h-9 bg-zinc-950/40 border-white/10 font-mono text-sm text-right"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
-          </div>
+          </Card>
         </TabsContent>
 
         <TabsContent value="user" className="mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="bg-zinc-900 border-white/10 lg:col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <Card className="bg-zinc-900 border-white/10 lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
                   유저 조회
@@ -560,7 +573,7 @@ export default function LevelConfigPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-zinc-900 border-white/10 lg:col-span-2">
+            <Card className="bg-zinc-900 border-white/10 lg:col-span-3">
               <CardHeader className="space-y-2">
                 <CardTitle className="text-sm font-bold text-zinc-400 uppercase tracking-wider">
                   레벨/XP 조정

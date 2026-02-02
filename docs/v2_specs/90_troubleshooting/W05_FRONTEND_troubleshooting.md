@@ -411,6 +411,42 @@ npm run build  # ✅ 성공
 
 ---
 
+---
+
+## 02-02 - [FRONTEND/API] CSV 업로드/검증 시 500 에러 (Multipart Boundary 누락)
+
+### 증상 정의
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | CSV 업로드 및 검증 API (`adminApi.ts`) |
+| HTTP Status | 500 (Internal Server Error) |
+| 영향 범위 | 어드민 CSV 임포트 기능 전체 |
+| 재현 빈도 | 항상 |
+
+### 근본 원인
+- `adminApi.ts`에서 `FormData`를 전송할 때 `Content-Type: multipart/form-data` 헤더를 수동으로 설정함.
+- 브라우저와 Axios는 `multipart/form-data` 전송 시 데이터 구분을 위한 `boundary` 문자열을 자동으로 생성하여 헤더에 포함해야 함 (예: `boundary=----WebKitFormBoundary...`).
+- 수동 헤더 설정 시 이 `boundary` 정보가 누락되어 서버(FastAPI/Pydantic)에서 멀티파트 데이터를 정상적으로 파싱하지 못하고 500 에러를 반환함.
+
+### 해결 방법
+#### 1. 프론트엔드 수정
+- `src/v2/api/adminApi.ts` 내 `validateCSVFile` 및 `uploadCSVFile` 함수에서 Axios 요청 옵션의 수동 `Content-Type` 헤더를 제거.
+- Axios가 `FormData`를 감지하여 올바른 `Content-Type`과 `boundary`를 자동으로 설정하도록 수정.
+
+```patch
+- await v2Client.post("/api/v2/admin/csv-import/validate", formData, {
+-   headers: { "Content-Type": "multipart/form-data" },
+- });
++ await v2Client.post("/api/v2/admin/csv-import/validate", formData);
+```
+
+### 검증 방법
+- 관리자 페이지에서 CSV 파일 선택 후 "내용 확인하기" 버튼 클릭.
+- 네트워크 탭에서 요청 헤더의 `Content-Type`에 `boundary` 값이 포함되어 전송되는지 확인.
+- 서버가 200 OK와 함께 검증 결과를 반환하는지 확인.
+
+---
+
 ## 변경 이력
 - 2026-01-31: W05 FRONTEND 문서 생성 및 초기 UI 로직 안정화
 - 2026-02-01: MissionManagerPage 대규모 리팩토링 및 관심사 분리(SoC) 적용
@@ -418,3 +454,4 @@ npm run build  # ✅ 성공
 - 2026-02-02: 초기 구동 루프 및 방어적 코딩 사례 추가 (Antigravity)
 - 2026-02-02: 어드민 대시보드 및 기능 확장 분류 내역 추가 (Antigravity)
 - 2026-02-02: 회원관리 테이블 정렬 기능 확장 (UID/닉네임/텔레그램 ID) (GitHub Copilot)
+- 2026-02-02: CSV 업로드/검증 500 에러 (Multipart Boundary 누락) 해결 (Antigravity)

@@ -782,6 +782,46 @@ if not file.filename.lower().endswith(".csv"):
 
 ---
 
+---
+
+## 02-02 - [INFRA/BACKEND] HQ Margin CSV 임포트 시 헤더 검증 오류 및 import_type 누락
+
+**우선순위**: P1
+**관련 도메인**: BACKEND, ADMIN, DATA_OPS
+
+### 증상
+- 본사 마진(HQ Margin) CSV 업로드 시, 올바른 파일을 선택했음에도 "필수 컬럼 누락" 에러 또는 500 에러가 발생함.
+- 어드민 UI에서는 `HQ_MARGIN` 타입을 선택했으나, 서버 검증 API에서는 이를 인지하지 못함.
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | CSV 검증 API (`/api/v2/admin/csv-import/validate`) |
+| **HTTP Status** | 500 (Internal Server Error) / 400 (Validation Error) |
+| **영향 범위** | 본사 마진 데이터 연동 기능 |
+| **재현 빈도** | 항상 |
+
+### 근본 원인
+- 프론트엔드(`validateCSVFile`)에서 파일은 전송하지만, `import_type` 파라미터를 API 서버로 전달하지 않음.
+- 백엔드(`/csv-import/validate`) 엔드포인트에서 `import_type` 수신 로직이 없어 기본값인 `GAME_LOG` 검증 로직을 실행.
+- 마진 데이터 CSV에는 게임 로그 필수 컬럼(`timestamp`, `game_type` 등)이 없으므로 검증 실패.
+
+### 해결 방법
+#### 1. 백엔드 수정 (`csv_import_routes.py`)
+- `validate_csv_file` 엔드포인트에 `import_type: str = Form("GAME_LOG")` 매개변수 추가.
+- `import_type` 값에 따라 분기 처리:
+  - `HQ_MARGIN`: `HQMarginImportService.validate_hq_margin_csv` 호출.
+  - 기타: `CSVImportService.validate_csv_file` 호출.
+
+#### 2. 프론트엔드 수정 (`adminApi.ts`)
+- `validateCSVFile` 함수가 `import_type`을 인자로 받아 `FormData`에 추가하여 전송하도록 수정.
+
+### 검증 방법
+- 어드민 페이지에서 "본사 마진 데이터" 타입 선택 후 업로드.
+- 검증 단계에서 500 에러 없이 "정상적인 파일입니다" 메시지 출력 확인.
+
+---
+
 ## 변경 이력
 - 2026-01-31: W05 INFRA 문서 생성 및 초기 SOT Compliance 기준 수립
 - 2026-02-01: Sentry 실시간 모니터링 활성화 및 Purge API 500 에러 해결
@@ -789,3 +829,4 @@ if not file.filename.lower().endswith(".csv"):
 - 2026-02-02: CSV Import 확장자 대소문자(400) 대응 및 런타임 NameError/WS 설정 최적화 (Antigravity)
 - 2026-02-02: Retention Trend(포유율 추이) 조회 범위 하드코딩 수정 (Antigravity)
 - 2026-02-02: V2 SOT Compliance Baseline 및 배포 검증/인프라 안정화 내역 추가 (Antigravity)
+- 2026-02-02: HQ Margin CSV 임포트 헤더 검증(import_type) 누락 해결 (Antigravity)

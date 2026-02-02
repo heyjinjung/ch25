@@ -1,14 +1,8 @@
-"""HQ Margin CSV Import Service
-
-본사 충전/환전 마진 데이터를 V2 세그먼트로 임포트하는 서비스
-"""
-import pandas as pd
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime
-from typing import Dict, List
+import csv
 import logging
 import chardet
+from datetime import datetime
+from typing import Dict, List
 from pathlib import Path
 
 from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
@@ -56,61 +50,61 @@ class HQMarginImportService:
             result = chardet.detect(raw_data)
             encoding = result['encoding'] or 'utf-8-sig'
             
-            # CP949(Excel) 대응: 만약 신뢰도가 낮거나 None인 경우 한국어 특성상 cp949 시도
             if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
                 encoding = 'cp949'
 
             logger.info(f"Detected encoding: {encoding} (confidence: {result['confidence']})")
 
-            # 2. CSV 읽기
-            try:
-                df = pd.read_csv(file_path, encoding=encoding)
-            except UnicodeDecodeError:
-                # 폴백: utf-8-sig 시도
-                df = pd.read_csv(file_path, encoding='utf-8-sig')
-
-            # 3. 필수 컬럼 검증 (유연한 매칭 지원)
-            # excel-calc와 호환성을 위해 공백 제거 및 필드명 유연화
-            df.columns = [c.strip() for c in df.columns]
-            
+            # 2. 필수 컬럼 매핑 정의
             required_map = {
                 '이름 (아이디)': ['이름 (아이디)', '아이디', 'user_id', 'cc_id'],
                 '총 운영 마진': ['총 운영 마진', '마진', 'margin'],
                 '미접속 경과일': ['미접속 경과일', '접속 경과일', 'inactive_days']
             }
+
+            # 3. CSV 읽기 및 처리
+            import io
+            text_data = raw_data.decode(encoding, errors='ignore')
+            f = io.StringIO(text_data)
+            reader = csv.DictReader(f)
             
+            # 헤더 정리 (공백 제거)
+            reader.fieldnames = [name.strip() for name in reader.fieldnames] if reader.fieldnames else []
+            
+            # 실제 컬럼 매핑 찾기
             final_columns = {}
             for target_col, aliases in required_map.items():
                 found = False
                 for alias in aliases:
-                    if alias in df.columns:
+                    if alias in reader.fieldnames:
                         final_columns[target_col] = alias
                         found = True
                         break
                 if not found:
                     raise ValueError(f"필수 컬럼 누락: {target_col} (검색한 별칭: {aliases})")
 
-            # 컬럼명 정규화
-            df = df.rename(columns={v: k for k, v in final_columns.items()})
-
             # 통계 초기화
-            total_rows = len(df)
+            total_rows = 0
             updated_count = 0
             created_count = 0
             prospective_count = 0
             skipped_count = 0
             errors = []
 
-            logger.info(f"HQ Margin CSV import started: {total_rows} rows")
+            from sqlalchemy import func
 
             # 행별 처리
-            for idx, row in df.iterrows():
+            for idx, row in enumerate(reader):
+                total_rows += 1
                 try:
-                    user_key = str(row['이름 (아이디)']).strip()
-                    nickname_raw = str(row.get('닉네임', '')).strip() if '닉네임' in row and pd.notna(row['닉네임']) else None
+                    user_key = str(row.get(final_columns['이름 (아이디)'], '')).strip()
+                    if not user_key:
+                        continue
+
+                    nickname_raw = str(row.get('닉네임', '')).strip() if '닉네임' in row and row['닉네임'] else None
                     nickname = nickname_raw.lower() if nickname_raw else None
 
-                    # V2User 매칭 (cc_id 또는 nickname - Case Insensitive)
+                    # V2User 매칭
                     query = db.query(V2User)
                     if nickname:
                         v2_user = query.filter(
@@ -119,18 +113,21 @@ class HQMarginImportService:
                     else:
                         v2_user = query.filter(V2User.cc_id == user_key).first()
 
+                    # 세그먼트 분류용 row 데이터 변환 (parse_int 적용)
+                    classifier_row = {k: v for k, v in row.items()}
+                    # 정규화된 키로도 접근 가능하게 추가
+                    for target, actual in final_columns.items():
+                        classifier_row[target] = row.get(actual)
+
                     if not v2_user:
-                        # [Phase 3] 가입되지 않은 유저 -> Prospective User로 저장
-                        segment = HQMarginImportService._classify_segment(row)
+                        segment = HQMarginImportService._classify_segment(classifier_row)
                         
-                        # 닉네임 중복 방어: V2User에 동일 닉네임이 있는지 재확인
                         if nickname:
                             existing_v2_users = db.query(V2User).filter(func.lower(V2User.nickname) == nickname).all()
                             if len(existing_v2_users) > 1:
                                 skipped_count += 1
-                                error_msg = f"Row {idx+2}: Ambiguous nickname '{nickname_raw}' (Multiple V2Users found)"
+                                error_msg = f"Row {idx+2}: Ambiguous nickname '{nickname_raw}'"
                                 errors.append(error_msg)
-                                logger.warning(error_msg)
                                 continue
 
                         prospect = db.query(HQProspectiveUser).filter(
@@ -138,66 +135,43 @@ class HQMarginImportService:
                         ).first()
 
                         if prospect:
-                            prospect.total_margin = HQMarginImportService._parse_int(row.get('총 운영 마진', 0))
-                            prospect.total_charge = HQMarginImportService._parse_int(row.get('누적 충전 금액', 0))
-                            prospect.inactive_days = HQMarginImportService._parse_int(row.get('미접속 경과일', 0))
+                            prospect.total_margin = HQMarginImportService._parse_int(classifier_row.get('총 운영 마진', 0))
+                            prospect.total_charge = HQMarginImportService._parse_int(classifier_row.get('누적 충전 금액', 0))
+                            prospect.inactive_days = HQMarginImportService._parse_int(classifier_row.get('미접속 경과일', 0))
                             prospect.segment = segment
                             prospect.is_joined = False
                         else:
                             prospect = HQProspectiveUser(
                                 cc_id=user_key,
-                                nickname=nickname_raw or user_key, # 원본 닉네임 저장하되 매칭은 lower로
-                                total_margin=HQMarginImportService._parse_int(row.get('총 운영 마진', 0)),
-                                total_charge=HQMarginImportService._parse_int(row.get('누적 충전 금액', 0)),
-                                inactive_days=HQMarginImportService._parse_int(row.get('미접속 경과일', 0)),
+                                nickname=nickname_raw or user_key,
+                                total_margin=HQMarginImportService._parse_int(classifier_row.get('총 운영 마진', 0)),
+                                total_charge=HQMarginImportService._parse_int(classifier_row.get('누적 충전 금액', 0)),
+                                inactive_days=HQMarginImportService._parse_int(classifier_row.get('미접속 경과일', 0)),
                                 segment=segment,
                                 is_joined=False
                             )
                             db.add(prospect)
                         
                         prospective_count += 1
-                        logger.info(f"HQ Margin Prospect Saved: nickname={nickname or user_key} → {segment}")
                         continue
 
-                    # 세그먼트 분류
-                    segment = HQMarginImportService._classify_segment(row)
-
-                    # [V2 Native] V2UserSegment 업데이트 또는 생성
-                    user_segment = db.query(V2UserSegment).filter(
-                        V2UserSegment.user_id == v2_user.id
-                    ).first()
+                    segment = HQMarginImportService._classify_segment(classifier_row)
+                    user_segment = db.query(V2UserSegment).filter(V2UserSegment.user_id == v2_user.id).first()
 
                     if user_segment:
-                        old_segment = user_segment.segment
                         user_segment.segment = segment
                         user_segment.updated_at = datetime.utcnow()
                         updated_count += 1
-
-                        logger.info(
-                            f"HQ Margin Update: user_id={v2_user.id} cc_id={user_key} "
-                            f"{old_segment} → {segment}"
-                        )
                     else:
-                        user_segment = V2UserSegment(
-                            user_id=v2_user.id,
-                            segment=segment,
-                        )
+                        user_segment = V2UserSegment(user_id=v2_user.id, segment=segment)
                         db.add(user_segment)
                         created_count += 1
 
-                        logger.info(
-                            f"HQ Margin Create: user_id={v2_user.id} cc_id={user_key} → {segment}"
-                        )
-
                 except Exception as e:
-                    error_msg = f"Row {idx+2}: {str(e)}"
-                    errors.append(error_msg)
-                    logger.error(f"HQ Margin import error: {error_msg}")
+                    errors.append(f"Row {idx+2}: {str(e)}")
 
-            # 커밋
             db.commit()
 
-            # 감사 로그
             V2AdminAuditService.log(
                 db,
                 admin_id=admin_id,
@@ -217,12 +191,6 @@ class HQMarginImportService:
                 },
             )
 
-            logger.info(
-                f"HQ Margin CSV import completed: "
-                f"total={total_rows}, updated={updated_count}, "
-                f"created={created_count}, skipped={skipped_count}"
-            )
-
             return {
                 "success": True,
                 "total_rows": total_rows,
@@ -230,7 +198,7 @@ class HQMarginImportService:
                 "created_count": created_count,
                 "prospective_count": prospective_count,
                 "skipped_count": skipped_count,
-                "errors": errors[:50],  # 최대 50개만 반환
+                "errors": errors[:50],
                 "warnings": [],
             }
 
@@ -258,8 +226,13 @@ class HQMarginImportService:
             if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
                 encoding = 'cp949'
 
-            df = pd.read_csv(file_path, encoding=encoding)
-            df.columns = [c.strip() for c in df.columns]
+            import io
+            text_data = raw_data.decode(encoding, errors='ignore')
+            f = io.StringIO(text_data)
+            reader = csv.DictReader(f)
+            
+            # 헤더 정리 (공백 제거)
+            fieldnames = [name.strip() for name in reader.fieldnames] if reader.fieldnames else []
 
             # 2. 필수 컬럼 체크
             required_map = {
@@ -269,10 +242,12 @@ class HQMarginImportService:
             }
 
             for target_col, aliases in required_map.items():
-                if not any(alias in df.columns for alias in aliases):
+                if not any(alias in fieldnames for alias in aliases):
                     return False, f"필수 컬럼 누락: {target_col} (검색한 별칭: {aliases})"
 
-            if len(df) == 0:
+            # 빈 파일 체크
+            first_row = next(reader, None)
+            if first_row is None:
                 return False, "CSV 파일에 데이터가 없습니다."
 
             return True, "CSV file is valid"

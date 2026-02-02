@@ -375,6 +375,27 @@ npm run build
 
 ---
 
-**상태**: ✅ 구현 및 빌드 완료, 배포 대기
-**다음 단계**: Phase 2 - Ops Dashboard 통합
-**검증 완료**: 2026-01-31 백엔드 Python 문법, 프론트엔드 빌드
+## 14. 버그 수정 (2026-02-02)
+
+### 14.1 [FIX] CSV 검증 시 500 에러 (Multipart Boundary 및 import_type 누락)
+
+**증상**:
+- HQ Margin CSV 업로드 시 `validate_csv_file`에서 500 Internal Server Error 발생.
+- 백엔드에서 `import_type`을 넘겨주지 않아 기본값(`GAME_LOG`) 검증 로직이 실행되어 헤더 불일치 발생.
+
+**원인**:
+1. **프론트엔드 API**: `adminApi.ts`에서 `validateCSVFile` 호출 시 `import_type` 파라미터를 누락함.
+2. **콘텐츠 타입 명시 오류**: `v2Client.post` 호출 시 `{ "Content-Type": "multipart/form-data" }`를 수동으로 지정하여 Axios가 자동으로 생성해야 하는 `boundary` 문자열이 누락됨. 서버(FastAPI)에서 데이터 파싱 중 에러 유발.
+
+**해결**:
+1. **프론트엔드 (`adminApi.ts`)**:
+   - `validateCSVFile` 및 `uploadCSVFile`에서 수동 `Content-Type` 헤더 제거.
+   - `validateCSVFile`에 `import_type` 매개변수 추가 및 FormData에 추가.
+2. **백엔드 (`csv_import_routes.py`)**:
+   - `validate_csv_file` 엔드포인트에서 `import_type: str = Form("GAME_LOG")`를 받도록 수정.
+   - `import_type`에 따라 `HQMarginImportService.validate_hq_margin_csv` 또는 `CSVImportService.validate_csv_file`로 분기 처리.
+
+---
+
+**상태**: ✅ 구현 및 버그 수정 완료 (2026-02-02)
+**검증 완료**: 프론트엔드 Axios 자동 헤더 생성 및 백엔드 서비스 분기 로직 통과
