@@ -473,19 +473,18 @@ class TestDepositDuplicatePrevention:
         )
         
         # When: 첫 번째 Evidence 승인 (matched_log_id=1001)
-        V2LatencySurvivalService.verify_evidence(
+        verified = V2LatencySurvivalService.verify_evidence(
             db, admin_id=1, evidence_id=ev1.id, matched_log_id=1001
         )
+        db.flush()  # Ensure changes are flushed
         
-        # Then: 동일 matched_log_id로 두 번째 승인 시 중복 감지 필요
-        # 현재 구현에서는 서비스 레벨 검증이 없으므로 DB 조회로 감지
-        existing = db.query(V2UserDepositEvidence).filter(
-            V2UserDepositEvidence.matched_log_id == 1001,
-            V2UserDepositEvidence.status == EvidenceStatus.VERIFIED
-        ).first()
+        # Then: 검증 - verified 객체 직접 확인
+        assert verified.status == EvidenceStatus.VERIFIED
+        assert verified.matched_log_id == 1001
         
-        assert existing is not None
-        assert existing.id == ev1.id
+        # DB에서 동일 matched_log_id 조회 시 중복 감지 가능
+        db.refresh(ev1)
+        assert ev1.matched_log_id == 1001
         # 운영 시 matched_log_id 중복 체크 로직 필요 → 문서화
     
     def test_evidence_tx_id_unique_constraint(self, db: Session, v2_user_for_conflict):
@@ -724,3 +723,271 @@ class TestInventoryExtendedCoverage:
         assert ledger.balance_after == 10
         assert ledger.label == "TEST_LABEL"
 
+
+# =============================================================================
+# 10. Game Domain Tests (🎮 Roulette - Clawback FIFO 추적)
+# =============================================================================
+
+class TestGameDomainClawback:
+    """
+    출처: v2_patch_execution_log_ko.md §Game Domain
+    
+    충돌 요소:
+    - 게임 로그 스키마 변경 → Clawback 추적 실패 가능
+    - Clawback 범위 → 선지급 티켓으로 획득한 당첨금까지 회수
+    
+    대응책: FIFO 추적 로직, V2RouletteLog 스키마 의존성
+    """
+    
+    def test_clawback_tracks_provisional_grant_evidence(self, db: Session, v2_user_for_conflict):
+        """Clawback 시 Evidence의 reward_json 기반 추적 확인"""
+        # Given: Provisional Grant
+        evidence = V2LatencySurvivalService.submit_evidence(
+            db, v2_user_for_conflict.id, "TX_FIFO_001", 100000
+        )
+        
+        # Then: reward_json에 지급 내역 기록됨
+        assert evidence.reward_json is not None
+        assert "ROULETTE_TICKET" in evidence.reward_json
+        assert evidence.reward_json["ROULETTE_TICKET"] == 3
+        
+        # When: Reject 시 reward_json 기반으로 정확히 회수
+        rejected = V2LatencySurvivalService.reject_evidence(
+            db, admin_id=1, evidence_id=evidence.id, reason="FIFO_TEST"
+        )
+        
+        # Then: reward_json 그대로 유지 (추적용)
+        assert rejected.reward_json == {"ROULETTE_TICKET": 3}
+    
+    def test_clawback_fifo_order_simulation(self, db: Session, v2_user_for_conflict):
+        """FIFO 순서 시뮬레이션 - 선지급 순서대로 회수"""
+        # Given: 3개의 Provisional Grant (FIFO 순서)
+        ev1 = V2LatencySurvivalService.submit_evidence(
+            db, v2_user_for_conflict.id, "TX_FIFO_A", 10000
+        )
+        ev2 = V2LatencySurvivalService.submit_evidence(
+            db, v2_user_for_conflict.id, "TX_FIFO_B", 20000
+        )
+        ev3 = V2LatencySurvivalService.submit_evidence(
+            db, v2_user_for_conflict.id, "TX_FIFO_C", 30000
+        )
+        
+        # 총 지급: 3 + 3 + 3 = 9
+        balance = V2InventoryService.get_wallet_balance(
+            db, v2_user_for_conflict.id, "ROULETTE_TICKET"
+        )
+        assert balance == 9
+        
+        # When: FIFO 순서로 첫 번째 Reject
+        V2LatencySurvivalService.reject_evidence(db, 1, ev1.id, "FIFO_FIRST")
+        
+        # Then: 3 회수 → 6 남음
+        balance_after = V2InventoryService.get_wallet_balance(
+            db, v2_user_for_conflict.id, "ROULETTE_TICKET"
+        )
+        assert balance_after == 6
+        
+        # 두 번째 Reject
+        V2LatencySurvivalService.reject_evidence(db, 1, ev2.id, "FIFO_SECOND")
+        assert V2InventoryService.get_wallet_balance(
+            db, v2_user_for_conflict.id, "ROULETTE_TICKET"
+        ) == 3
+    
+    def test_clawback_with_partial_usage(self, db: Session, v2_user_with_balance):
+        """부분 사용 후 Clawback - 음수 잔액 발생"""
+        # Given: 기존 잔액 10 + Provisional 3 = 13
+        evidence = V2LatencySurvivalService.submit_evidence(
+            db, v2_user_with_balance.id, "TX_PARTIAL_USE", 50000
+        )
+        assert V2InventoryService.get_wallet_balance(
+            db, v2_user_with_balance.id, "ROULETTE_TICKET"
+        ) == 13
+        
+        # 유저가 12개 사용 (1개 남음)
+        V2InventoryService.consume_wallet_tokens(
+            db, v2_user_with_balance.id, GameTokenType.ROULETTE_TICKET, 12,
+            reason="GAME_USAGE"
+        )
+        assert V2InventoryService.get_wallet_balance(
+            db, v2_user_with_balance.id, "ROULETTE_TICKET"
+        ) == 1
+        
+        # When: Clawback 3개 → -2 음수 잔액
+        V2LatencySurvivalService.reject_evidence(
+            db, 1, evidence.id, "PARTIAL_CLAWBACK"
+        )
+        
+        # Then: 음수 잔액 허용
+        final_balance = V2InventoryService.get_wallet_balance(
+            db, v2_user_with_balance.id, "ROULETTE_TICKET"
+        )
+        assert final_balance == -2
+
+
+# =============================================================================
+# 11. Auth & Security Domain Extended Tests (🔐)
+# =============================================================================
+
+class TestAuthSecurityExtended:
+    """
+    출처: v2_patch_execution_log_ko.md §Auth & Security Domain
+    
+    Rate Limit 정책 SoT:
+    - 시간당 최대: 3회/User
+    - 중복 TX ID: Unique Check
+    - 쿨다운: 429 Error 반환
+    - VPN 우회 불가: User ID 기반 (IP 아님)
+    """
+    
+    def test_rate_limit_resets_after_one_hour(self, db: Session):
+        """1시간 후 Rate Limit 리셋 확인 (시뮬레이션)"""
+        # Given: 새 유저
+        user = V2User(
+            cc_id="rate_reset_user", nickname="RateResetUser",
+            vault_locked_balance=0,
+            created_at=datetime.now(timezone.utc) - timedelta(days=10)
+        )
+        db.add(user)
+        db.commit()
+        
+        # 3회 요청으로 Rate Limit 도달
+        for i in range(3):
+            V2LatencySurvivalService.submit_evidence(
+                db, user.id, f"TX_RESET_{i}", 10000
+            )
+        
+        # 4번째 요청 → 429
+        with pytest.raises(HTTPException) as exc:
+            V2LatencySurvivalService.submit_evidence(
+                db, user.id, "TX_RESET_FAIL", 10000
+            )
+        assert exc.value.status_code == 429
+        
+        # 시뮬레이션: 1시간 전 Evidence의 created_at을 2시간 전으로 변경
+        old_evidences = db.query(V2UserDepositEvidence).filter(
+            V2UserDepositEvidence.user_id == user.id
+        ).all()
+        for ev in old_evidences:
+            ev.created_at = datetime.utcnow() - timedelta(hours=2)
+        db.commit()
+        
+        # Then: Rate Limit 해제되어 새 요청 가능
+        new_evidence = V2LatencySurvivalService.submit_evidence(
+            db, user.id, "TX_RESET_SUCCESS", 50000
+        )
+        assert new_evidence is not None
+    
+    def test_rate_limit_count_per_user_isolation(self, db: Session):
+        """User별 Rate Limit 격리 확인"""
+        # Given: 3명의 유저
+        users = []
+        for i in range(3):
+            user = V2User(
+                cc_id=f"isolation_user_{i}", nickname=f"IsolationUser{i}",
+                vault_locked_balance=0,
+                created_at=datetime.now(timezone.utc) - timedelta(days=10)
+            )
+            db.add(user)
+            users.append(user)
+        db.commit()
+        
+        # User 0: 3회 모두 사용
+        for i in range(3):
+            V2LatencySurvivalService.submit_evidence(
+                db, users[0].id, f"TX_ISO_U0_{i}", 10000
+            )
+        
+        # User 0: 4번째 → 429
+        with pytest.raises(HTTPException) as exc:
+            V2LatencySurvivalService.submit_evidence(
+                db, users[0].id, "TX_ISO_U0_FAIL", 10000
+            )
+        assert exc.value.status_code == 429
+        
+        # User 1, 2: 여전히 3회씩 가능 (격리)
+        for user_idx in [1, 2]:
+            for i in range(3):
+                evidence = V2LatencySurvivalService.submit_evidence(
+                    db, users[user_idx].id, f"TX_ISO_U{user_idx}_{i}", 10000
+                )
+                assert evidence is not None
+    
+    def test_abuse_prevention_rapid_fire(self, db: Session, v2_user_for_conflict):
+        """어뷰징 방지: 빠른 연속 요청 테스트"""
+        # 3회 빠르게 연속 요청
+        evidences = []
+        for i in range(3):
+            ev = V2LatencySurvivalService.submit_evidence(
+                db, v2_user_for_conflict.id, f"TX_RAPID_{i}", 10000 * (i + 1)
+            )
+            evidences.append(ev)
+        
+        # 모두 다른 TX ID로 생성됨
+        tx_ids = [e.tx_id for e in evidences]
+        assert len(set(tx_ids)) == 3  # 중복 없음
+        
+        # 4번째 → 429
+        with pytest.raises(HTTPException) as exc:
+            V2LatencySurvivalService.submit_evidence(
+                db, v2_user_for_conflict.id, "TX_RAPID_BLOCKED", 50000
+            )
+        assert exc.value.status_code == 429
+        assert exc.value.detail == "RATE_LIMIT_EXCEEDED"
+    
+    def test_tx_id_format_validation(self, db: Session, v2_user_for_conflict):
+        """TX ID 다양한 포맷 허용 확인"""
+        # 다양한 포맷의 TX ID
+        valid_tx_ids = [
+            "TX-2026-02-02-001",
+            "tx_lowercase_123",
+            "UPPERCASE_TX_456",
+            # "한글TX아이디789",  # 한글 포함 (정책에 따라 허용/차단)
+        ]
+        
+        for tx_id in valid_tx_ids[:3]:  # Rate Limit 내에서
+            evidence = V2LatencySurvivalService.submit_evidence(
+                db, v2_user_for_conflict.id, tx_id, 10000
+            )
+            assert evidence.tx_id == tx_id
+    
+    def test_evidence_not_found_returns_404(self, db: Session, v2_user_for_conflict):
+        """존재하지 않는 Evidence 조회 시 404"""
+        with pytest.raises(HTTPException) as exc:
+            V2LatencySurvivalService.verify_evidence(
+                db, admin_id=1, evidence_id=99999, matched_log_id=1
+            )
+        assert exc.value.status_code == 404
+        assert exc.value.detail == "EVIDENCE_NOT_FOUND"
+        
+        with pytest.raises(HTTPException) as exc:
+            V2LatencySurvivalService.reject_evidence(
+                db, admin_id=1, evidence_id=99999, reason="NOT_FOUND"
+            )
+        assert exc.value.status_code == 404
+
+
+# =============================================================================
+# 12. SoT Constants Validation Tests
+# =============================================================================
+
+class TestSoTConstantsValidation:
+    """SoT 문서에 정의된 상수값 검증"""
+    
+    def test_provisional_reward_amount_matches_sot(self):
+        """SoT: PROVISIONAL_REWARD_AMOUNT = 3"""
+        assert V2LatencySurvivalService.PROVISIONAL_REWARD_AMOUNT == 3
+    
+    def test_max_provisional_per_hour_matches_sot(self):
+        """SoT: MAX_PROVISIONAL_PER_HOUR = 3"""
+        assert V2LatencySurvivalService.MAX_PROVISIONAL_PER_HOUR == 3
+    
+    def test_provisional_reward_type_matches_sot(self):
+        """SoT: PROVISIONAL_REWARD_TYPE = ROULETTE_TICKET"""
+        assert V2LatencySurvivalService.PROVISIONAL_REWARD_TYPE == "ROULETTE_TICKET"
+    
+    def test_evidence_status_enum_values(self):
+        """EvidenceStatus Enum 값 검증"""
+        assert EvidenceStatus.PENDING.value == "PENDING"
+        assert EvidenceStatus.PROVISIONAL.value == "PROVISIONAL"
+        assert EvidenceStatus.VERIFIED.value == "VERIFIED"
+        assert EvidenceStatus.REJECTED.value == "REJECTED"

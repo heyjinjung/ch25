@@ -11,6 +11,7 @@ import {
   getAdminLatencyEvidences,
   verifyLatencyEvidence,
   rejectLatencyEvidence,
+  getUnmatchedDeposits,
   getAdminCircuitBreakerStatus,
   resetCircuitBreaker,
   updateCircuitBreakerLimit,
@@ -132,6 +133,13 @@ export function useAdminRejectLatencyEvidence() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "latency-evidences"] });
     },
+  });
+}
+
+export function useUnmatchedDeposits(hours: number = 24) {
+  return useQuery({
+    queryKey: ["admin", "unmatched-deposits", hours],
+    queryFn: () => getUnmatchedDeposits(hours),
   });
 }
 

@@ -1247,6 +1247,54 @@ def reject_latency_evidence(
     return {"success": True}
 
 
+@router.get("/economy/deposits/unmatched")
+def list_unmatched_deposits(
+    hours: int = 24,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    Get unmatched deposit logs from the last N hours.
+
+    These are deposits that haven't been matched to a latency evidence yet.
+    Used for admin dropdown selection when verifying latency evidence.
+    """
+    from datetime import datetime, timedelta
+    from app.models.user_cash_ledger import UserCashLedger
+    from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
+
+    # Get deposits from last N hours
+    cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+
+    # Find all deposit log IDs that have been matched
+    matched_log_ids = db.query(V2UserDepositEvidence.matched_log_id).filter(
+        V2UserDepositEvidence.matched_log_id.isnot(None)
+    ).all()
+    matched_ids = [row[0] for row in matched_log_ids]
+
+    # Get unmatched deposits (reason='DEPOSIT' and not in matched list)
+    query = db.query(UserCashLedger).filter(
+        UserCashLedger.reason == 'DEPOSIT',
+        UserCashLedger.created_at >= cutoff_time
+    )
+
+    if matched_ids:
+        query = query.filter(~UserCashLedger.id.in_(matched_ids))
+
+    unmatched_deposits = query.order_by(UserCashLedger.created_at.desc()).limit(50).all()
+
+    return [
+        {
+            "id": deposit.id,
+            "user_id": deposit.user_id,
+            "amount": deposit.amount,
+            "created_at": deposit.created_at.isoformat() if deposit.created_at else None,
+            "label": deposit.label,
+        }
+        for deposit in unmatched_deposits
+    ]
+
+
 # ============================================================================
 # Circuit Breaker (Admin)
 # ============================================================================

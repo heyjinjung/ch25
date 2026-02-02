@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { 
-  useAdminLatencyEvidences, 
-  useAdminVerifyLatencyEvidence, 
-  useAdminRejectLatencyEvidence 
+import {
+  useAdminLatencyEvidences,
+  useAdminVerifyLatencyEvidence,
+  useAdminRejectLatencyEvidence,
+  useUnmatchedDeposits
 } from "../../../hooks/useAdminEconomy";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
@@ -23,19 +24,23 @@ import type { AdminLatencyEvidenceDto } from "../../../api/adminApi";
 
 const LatencySurvivalPage: React.FC = () => {
   const { data: evidences, isLoading } = useAdminLatencyEvidences();
+  const { data: unmatchedDeposits } = useUnmatchedDeposits(24);
   const verifyMutation = useAdminVerifyLatencyEvidence();
   const rejectMutation = useAdminRejectLatencyEvidence();
-  
+
   const [selectedEvidence, setSelectedEvidence] = useState<AdminLatencyEvidenceDto | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
+  const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
 
-  const handleVerify = async (id: number) => {
+  const handleVerify = async () => {
+    if (!selectedEvidence || selectedLogId === null) return;
     try {
-      // 실제 구현에서는 매칭될 로그 ID를 찾는 로직이 필요하나, 
-      // 여기서는 예시로 0(자동매칭) 또는 선택 프로세스를 가정
-      await verifyMutation.mutateAsync({ id, logId: 0 });
+      await verifyMutation.mutateAsync({ id: selectedEvidence.id, logId: selectedLogId });
       toast.success("증거가 확인되었습니다.");
+      setIsVerifyDialogOpen(false);
+      setSelectedLogId(null);
     } catch (error) {
       console.error(error);
       toast.error("확인 중 오류가 발생했습니다.");
@@ -138,10 +143,13 @@ const LatencySurvivalPage: React.FC = () => {
                           >
                             <X className="w-4 h-4 mr-1" /> 반려
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="bg-lime-400 text-black hover:bg-lime-500 h-8 font-bold border-none"
-                            onClick={() => handleVerify(evidence.id)}
+                            onClick={() => {
+                              setSelectedEvidence(evidence);
+                              setIsVerifyDialogOpen(true);
+                            }}
                           >
                             <Check className="w-4 h-4 mr-1" /> 승인
                           </Button>
@@ -168,8 +176,8 @@ const LatencySurvivalPage: React.FC = () => {
             <div className="text-sm text-zinc-400">
               반려 사유를 입력해주세요. 유저의 히스토리에 기록됩니다.
             </div>
-            <Textarea 
-              className="bg-zinc-950 border-white/5 focus:ring-red-500/50" 
+            <Textarea
+              className="bg-zinc-950 border-white/5 focus:ring-red-500/50"
               placeholder="예: TX ID 불일치, 이미 처리된 거래 등"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
@@ -178,6 +186,52 @@ const LatencySurvivalPage: React.FC = () => {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsRejectDialogOpen(false)}>취소</Button>
             <Button variant="destructive" onClick={handleReject} disabled={!rejectReason}>반려 확정</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 승인 다이얼로그 */}
+      <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
+        <DialogContent className="bg-zinc-900 border-white/10 text-zinc-200">
+          <DialogHeader>
+            <DialogTitle>입금 증거 승인</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="text-sm text-zinc-400">
+              매칭할 입금 로그를 선택해주세요.
+            </div>
+            <div className="bg-zinc-950 border border-white/5 rounded-md p-3 space-y-2">
+              <p className="text-xs text-zinc-500">유저: {selectedEvidence?.nickname || `User ${selectedEvidence?.userId}`}</p>
+              <p className="text-xs text-zinc-500">신고 금액: {selectedEvidence?.claimedAmount.toLocaleString()} CC</p>
+            </div>
+            <select
+              className="w-full bg-zinc-950 border border-white/10 rounded-md h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+              value={selectedLogId || ""}
+              onChange={(e) => setSelectedLogId(Number(e.target.value))}
+            >
+              <option value="">입금 로그 선택...</option>
+              {unmatchedDeposits?.map((deposit) => (
+                <option key={deposit.id} value={deposit.id}>
+                  ID: {deposit.id} | 금액: ₩{deposit.amount.toLocaleString()} |
+                  {deposit.created_at ? new Date(deposit.created_at).toLocaleString('ko-KR') : 'N/A'}
+                </option>
+              ))}
+            </select>
+            {unmatchedDeposits?.length === 0 && (
+              <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md p-2">
+                최근 24시간 내 미매칭 입금 로그가 없습니다.
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsVerifyDialogOpen(false)}>취소</Button>
+            <Button
+              className="bg-lime-400 text-black hover:bg-lime-500"
+              onClick={handleVerify}
+              disabled={!selectedLogId}
+            >
+              승인 확정
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

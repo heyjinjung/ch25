@@ -2427,6 +2427,24 @@ export const rejectLatencyEvidence = async (
   });
 };
 
+export interface UnmatchedDepositDto {
+  id: number;
+  user_id: number;
+  amount: number;
+  created_at: string | null;
+  label: string | null;
+}
+
+export const getUnmatchedDeposits = async (
+  hours: number = 24,
+): Promise<UnmatchedDepositDto[]> => {
+  const response = await v2Client.get<UnmatchedDepositDto[]>(
+    "/api/v2/admin/economy/deposits/unmatched",
+    { params: { hours } },
+  );
+  return response.data;
+};
+
 // ============================================================================
 // Circuit Breaker API
 // ============================================================================
@@ -2491,6 +2509,7 @@ export interface CSVImportRequest {
   file_path: string;
   batch_size?: number;
   emit_to_redis?: boolean;
+  save_to_db?: boolean;
   historical_mode?: boolean;
   skip_duplicate_check?: boolean;
   import_type?: string;

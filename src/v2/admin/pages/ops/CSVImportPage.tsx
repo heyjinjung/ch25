@@ -39,6 +39,7 @@ export default function CSVImportPage() {
   const [batchSize, setBatchSize] = useState(250);
   const [isHistorical, setIsHistorical] = useState(false);
   const [emitToRedis] = useState(true);
+  const [saveToDb, setSaveToDb] = useState(true);
   const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN">(
     "GAME_LOG",
   );
@@ -80,6 +81,7 @@ export default function CSVImportPage() {
         batch_size: batchSize,
         historical_mode: isHistorical,
         emit_to_redis: emitToRedis,
+        save_to_db: saveToDb,
         import_type: importType,
       });
       setStep("RESULT");
@@ -289,7 +291,7 @@ export default function CSVImportPage() {
                         <label className="text-xs text-zinc-500 font-bold uppercase">
                           특수 모드
                         </label>
-                        <div className="flex items-center gap-4 h-10">
+                        <div className="flex flex-col gap-2">
                           <label className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
@@ -301,6 +303,19 @@ export default function CSVImportPage() {
                             />
                             <span className="text-sm">
                               기록용으로만 저장 (알림 안 보냄)
+                            </span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={saveToDb}
+                              onChange={(e) =>
+                                setSaveToDb(e.target.checked)
+                              }
+                              className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-600 focus:ring-emerald-500"
+                            />
+                            <span className="text-sm">
+                              DB에 저장 (기본: 활성화)
                             </span>
                           </label>
                         </div>
@@ -359,12 +374,21 @@ export default function CSVImportPage() {
                 기다려 주세요.
               </p>
             </div>
-            <div className="max-w-md mx-auto space-y-2">
+            <div className="max-w-md mx-auto space-y-4">
               <Progress value={undefined} className="h-2" />
               <div className="flex justify-between text-[10px] text-zinc-600 font-mono">
                 <span>상태: 데이터 처리 중</span>
                 <span>배치 크기: {batchSize}</span>
               </div>
+              {validateMutation.data?.total_rows && (
+                <div className="text-xs text-zinc-500 space-y-1">
+                  <p>총 처리 예정: {validateMutation.data.total_rows.toLocaleString()}개 행</p>
+                  <p>예상 소요 시간: 약 {validateMutation.data.estimated_minutes}분</p>
+                  <p className="text-amber-400 mt-2">
+                    💡 진행 중인 작업을 중단하지 마세요. 데이터 손실이 발생할 수 있습니다.
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
         )}

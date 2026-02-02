@@ -119,6 +119,14 @@
 | **잠재고객 관리 페이지** | 미가입 잠재고객 목록 + 알림 | ✅ 완료 (ProspectLinkingPage) |
 | **골든아워 설정 UI** | 골든아워 수동/자동 토글 | ✅ 완료 (DiceConfigPage 내 구현) |
 
+### P3 (추가 개선) - ✅ 2026-02-02 완료
+| Task | 설명 | 구현 완료일 |
+|------|------|----------|
+| **어드민 입금 매칭 Dropdown** | LatencySurvivalPage에서 최근 24시간 미매칭 입금 로그 선택 | ✅ 2026-02-02 |
+| **CSV save_to_db 체크박스** | DB 저장 여부 선택 옵션 | ✅ 2026-02-02 |
+| **CSV 실시간 Progress** | 대용량 CSV 처리 진행률 및 예상 시간 표시 | ✅ 2026-02-02 |
+| **음수 잔액 UI** | WalletBalance 음수 시 붉은색 표시 | ✅ 2026-02-02 |
+
 ---
 
 ## 🔧 프론트엔드 미구현 상세 명세
@@ -208,15 +216,24 @@ export interface OpportunityUserDto {
 
 ---
 
-### CSV Import 확장 UI (🔄 일부 구현)
+### CSV Import 확장 UI (✅ 완료)
 > 출처: [20260202_csv_data_integration_expansion_implementation.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260202_csv_data_integration_expansion_implementation.md)
 
-#### 추가 필요한 UI 요소
+#### UI 요소 구현 상태
 | 요소 | 상태 | 설명 |
 |------|------|------|
-| `save_to_db` 체크박스 | ⏳ 미구현 | DB 저장 여부 선택 (기본 true) |
-| Import 결과 요약 | 🔄 일부 | 성공/실패/스킵 건수 표시 |
-| 실시간 Progress | ⏳ 미구현 | 대용량 CSV 처리 진행률 |
+| `save_to_db` 체크박스 | ✅ 완료 | DB 저장 여부 선택 (기본 true) |
+| Import 결과 요약 | ✅ 완료 | 성공/실패/스킵 건수 표시 |
+| 실시간 Progress | ✅ 완료 | 대용량 CSV 처리 진행률 및 예상 시간 |
+
+**구현 증거** (2026-02-02):
+- **프론트엔드**: `src/v2/admin/pages/ops/CSVImportPage.tsx:40`
+  - `saveToDb` 상태 추가 및 체크박스 UI 구현
+  - 예상 시간 및 진행률 메시지 표시 (라인 357-373)
+- **백엔드 지원**: `app/v2/schemas/v2_csv_import.py:151-154`
+  - `save_to_db` 필드 이미 지원됨
+- **타입 정의**: `src/v2/api/adminApi.ts:2494`
+  - `CSVImportRequest` 인터페이스에 `save_to_db?` 추가
 
 ---
 
@@ -230,11 +247,14 @@ export interface OpportunityUserDto {
 |----------|------|--------|
 | **음수 잔액 (Negative Balance)** | Clawback 시 `Force Deduct`로 음수 잔액 발생 | DB 스키마는 `Integer (Signed)` - 음수 허용됨 |
 | **상점/게임 로직** | 음수 잔액 처리 미비 시 예외 발생 | `inventory_service`는 `allow_negative=False` 기본값, Clawback 시에만 `True` |
-| **프론트 잔액 표시** | 음수 잔액 UI 표시 필요 | `WalletBalance` 컴포넌트에서 음수 시 붉은색 처리 필요 ⏳ |
+| **프론트 잔액 표시** | 음수 잔액 UI 표시 필요 | ✅ **완료** - VaultBalanceCard 음수 시 붉은색 처리 구현됨 |
 
 **영향받는 컴포넌트**:
-- `src/v2/components/user/WalletBalance.tsx` - 음수 잔액 표시 로직 추가 필요
-- `src/v2/pages/vault/VaultPage.tsx` - 음수 잔액 경고 메시지
+- ✅ `src/v2/components/vault/VaultBalanceCard.tsx:14-16` - 음수 잔액 감지 및 스타일 적용
+  - 음수일 때 배경색: `bg-gradient-to-br from-red-950/85 to-red-900/90`
+  - 텍스트 색상: `text-red-400`
+  - 경고 글로우 효과: `bg-red-500/30`
+- `src/v2/pages/vault/VaultPage.tsx` - VaultBalanceCard 사용 (자동 적용)
 
 ---
 
@@ -245,11 +265,20 @@ export interface OpportunityUserDto {
 | 충돌 요소 | 영향 | 대응책 |
 |----------|------|--------|
 | **Provisional Grant vs 실제 입금** | 중복 보상 우려 | `V2UserDepositEvidence.matched_log_id` ↔ `UserCashLedger.id` Soft Link |
-| **어드민 매칭 UX** | 수동 검색 번거로움 | 최근 24시간 미매칭 입금 로그 Dropdown 제공 ⏳ |
+| **어드민 매칭 UX** | 수동 검색 번거로움 | ✅ **완료** - 최근 24시간 미매칭 입금 로그 Dropdown 제공 |
 
-**영향받는 컴포넌트**:
-- `LatencySurvivalPage.tsx` - 어드민 매칭 UI 개선 필요
-- 새 API: `GET /api/v2/admin/deposits/unmatched?hours=24`
+**구현된 컴포넌트** (2026-02-02):
+- ✅ `src/v2/admin/pages/economy/LatencySurvivalPage.tsx:31-35`
+  - 승인 다이얼로그에서 Dropdown으로 입금 로그 선택
+  - `useUnmatchedDeposits(24)` hook 사용
+- ✅ 백엔드 API: `app/v2/api/admin/economy_routes.py:1250-1297`
+  - `GET /api/v2/admin/economy/deposits/unmatched?hours=24`
+  - UserCashLedger에서 미매칭 입금 조회
+- ✅ API 타입: `src/v2/api/adminApi.ts:2430-2445`
+  - `UnmatchedDepositDto` 인터페이스 정의
+  - `getUnmatchedDeposits()` 함수 구현
+- ✅ React Hook: `src/v2/hooks/useAdminEconomy.ts:138-143`
+  - `useUnmatchedDeposits()` hook 구현
 
 ---
 

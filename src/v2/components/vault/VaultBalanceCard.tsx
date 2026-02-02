@@ -13,28 +13,51 @@ export const VaultBalanceCard: React.FC<VaultBalanceCardProps> = ({
 }) => {
   // SoT: available is deprecated (always 0), use balance (= vault_locked_balance)
   const displayBalance = balance ?? 0;
+  const isNegative = displayBalance < 0;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full relative overflow-hidden rounded-3xl bg-gradient-to-br from-black/85 to-slate-900/90 p-8 shadow-2xl backdrop-blur-2xl border border-white/10">
+    <div className={`flex flex-col items-center justify-center h-full w-full relative overflow-hidden rounded-3xl p-8 shadow-2xl backdrop-blur-2xl border ${
+      isNegative
+        ? 'bg-gradient-to-br from-red-950/85 to-red-900/90 border-red-500/20'
+        : 'bg-gradient-to-br from-black/85 to-slate-900/90 border-white/10'
+    }`}>
       {/* Glow Effect */}
-      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-orange-500/20 blur-[100px]" />
-      <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-red-500/10 blur-[100px]" />
+      <div className={`absolute -top-24 -right-24 h-64 w-64 rounded-full blur-[100px] ${
+        isNegative ? 'bg-red-500/30' : 'bg-orange-500/20'
+      }`} />
+      <div className={`absolute -bottom-24 -left-24 h-64 w-64 rounded-full blur-[100px] ${
+        isNegative ? 'bg-red-600/20' : 'bg-red-500/10'
+      }`} />
 
-      <span className="text-white/60 text-sm font-medium mb-2 tracking-wider">
+      <span className={`text-sm font-medium mb-2 tracking-wider ${
+        isNegative ? 'text-red-300/80' : 'text-white/60'
+      }`}>
         나의 금고 잔액
       </span>
       <div className="flex items-baseline gap-2 mb-8">
         <NumberTicker
           value={displayBalance}
-          className="text-5xl font-black text-white bg-clip-text"
+          className={`text-5xl font-black bg-clip-text ${
+            isNegative ? 'text-red-400' : 'text-white'
+          }`}
         />
-        <span className="text-2xl font-bold text-white/80">원</span>
+        <span className={`text-2xl font-bold ${
+          isNegative ? 'text-red-400/80' : 'text-white/80'
+        }`}>원</span>
       </div>
 
       <div className="w-full">
-        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
-          <span className="text-white/40 text-xs block mb-1">출금 가능</span>
-          <span className="text-white font-bold text-lg">
+        <div className={`rounded-2xl p-4 border text-center ${
+          isNegative
+            ? 'bg-red-500/10 border-red-500/20'
+            : 'bg-white/5 border-white/5'
+        }`}>
+          <span className={`text-xs block mb-1 ${
+            isNegative ? 'text-red-300/60' : 'text-white/40'
+          }`}>출금 가능</span>
+          <span className={`font-bold text-lg ${
+            isNegative ? 'text-red-400' : 'text-white'
+          }`}>
             {displayBalance.toLocaleString()}원
           </span>
         </div>
