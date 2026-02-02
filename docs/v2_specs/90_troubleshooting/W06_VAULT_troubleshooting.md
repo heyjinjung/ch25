@@ -35,14 +35,14 @@
 
 **근본 원인 (증거 기반)**
 - `V2LatencySurvivalService.submit_evidence()`는 선반영 보상을 **고정 상수**로 지급하며, XP/레벨 서비스 호출이 없음.
-	- 상수: `PROVISIONAL_REWARD_TYPE = "ROULETTE_TICKET"`, `PROVISIONAL_REWARD_AMOUNT = 5`
+	- 상수: `PROVISIONAL_REWARD_TYPE = "ROULETTE_TICKET"`, `PROVISIONAL_REWARD_AMOUNT = 3`
 	- 지급 경로: `V2InventoryService.grant_wallet_tokens()` 또는 `V2InventoryService.grant_item()`
 	- 관련 코드: [app/v2/services/latency_survival_service.py](../../app/v2/services/latency_survival_service.py)
 
 **결론**
 - 입금지연 신청 시 **레벨 XP는 증가하지 않음**.
 - 레벨에 따른 보상도 **지급되지 않음**.
-- 보상은 임의 생성이 아니라 **상수로 정의된 고정 지급**(현행: 룰렛 티켓 5장)임.
+- 보상은 임의 생성이 아니라 **상수로 정의된 고정 지급**(현행: 룰렛 티켓 3장)임.
 
 **검증 방법**
 - `submit_evidence()` 호출 시 XP/레벨 관련 서비스 호출이 없는지 코드 확인.
