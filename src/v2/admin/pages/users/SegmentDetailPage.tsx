@@ -51,10 +51,14 @@ import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
 
 // 세그먼트 메타데이터
-const SEGMENT_META: Record<
-  string,
-  { label: string; color: string; bgClass: string; borderClass: string }
-> = {
+type SegmentMeta = {
+  label: string;
+  color: string;
+  bgClass: string;
+  borderClass: string;
+};
+
+const SEGMENT_META: Record<string, SegmentMeta> = {
   NEW: {
     label: "신규(7일)",
     color: "text-rose-400",
@@ -94,7 +98,13 @@ export default function SegmentDetailPage() {
   const [limit, setLimit] = useState(50);
 
   const segmentKey = segment?.toUpperCase() || "COMMON";
-  const meta = SEGMENT_META[segmentKey] ?? SEGMENT_META.COMMON;
+  const defaultMeta: SegmentMeta = SEGMENT_META.COMMON ?? {
+    label: "일반",
+    color: "text-zinc-300",
+    bgClass: "bg-zinc-500/10",
+    borderClass: "border-zinc-500/20",
+  };
+  const meta: SegmentMeta = SEGMENT_META[segmentKey] ?? defaultMeta;
 
   // 세그먼트 통계
   const { data: stats } = useQuery({
