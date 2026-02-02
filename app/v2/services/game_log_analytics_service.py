@@ -358,7 +358,7 @@ class GameLogAnalyticsService:
                 }
             ]
         """
-        # V2UserSegment에서 VIP/WHALE 조회
+        # V2UserSegment에서 VIP/WHALE 조회 (HQ 마진 데이터 포함)
         results = self.db.query(
             V2UserSegment.user_id,
             V2User.nickname,
@@ -426,7 +426,7 @@ class GameLogAnalyticsService:
                 "last_activity_at": u["last_game_at"],
             })
         
-        # 2. AT_RISK 세그먼트 유저
+        # 2. AT_RISK 세그먼트 유저 (HQ에서 동기화된 inactive_days 사용)
         at_risk_users = self.db.query(
             V2UserSegment.user_id,
             V2User.nickname,
