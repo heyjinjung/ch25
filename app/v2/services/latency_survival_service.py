@@ -156,16 +156,18 @@ class V2LatencySurvivalService:
                         token_type=GameTokenType(item_type),
                         amount=amount,
                         reason="LATENCY_CLAWBACK",
-                        label=str(evidence.id)
+                        label=str(evidence.id),
+                        allow_negative=True  # Clawback 시 음수 잔액 허용
                     )
                 else:
                     V2InventoryService.consume_item(
                         db,
-                        user_id=evidence.user_id,
+                        v2_user_id=evidence.user_id,
                         item_type=item_type,
                         amount=amount,
                         reason="LATENCY_CLAWBACK",
-                        related_id=str(evidence.id)
+                        related_id=str(evidence.id),
+                        allow_negative=True  # Clawback 시 음수 잔액 허용
                     )
         
         db.add(evidence)

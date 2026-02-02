@@ -12,8 +12,8 @@ from app.v2.schemas.v2_admin_segment_rule import (
 from app.v2.services import V2SegmentService
 from app.v2.middleware.admin_audit import log_admin_action
 from app.models.user_segment import UserSegment
-from app.v2.models.v2_user import V2User
-from app.models.hq_prospective_user import HQProspectiveUser
+from app.v2.models.user import V2User
+from app.v2.models.hq_prospective_user import HQProspectiveUser
 
 router = APIRouter()
 
