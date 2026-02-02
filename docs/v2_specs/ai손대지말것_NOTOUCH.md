@@ -191,28 +191,36 @@ TRIAL_TICKET은 정책상 무료 체험 티켓으로 user_game_wallet.token_type
 ✅ roi 분석 기능 구현
 V2 골든 프로젝트에 대해 포괄적으로 학습
 
-연속스트릭 모달 업데이트 및 정상작동하게 할것
+✅ 연속스트릭 모달 업데이트 및 정상작동하게 할것
+연속 스트릭미션은 어드민 설정값대로 지급되고 있는가?
 
-
-지연극복관리 > 실제 ui 구현된거 있음? 유저/ 어드민 모두 다 
+✅ 지연극복관리 > 실제 ui 구현된거 있음? 유저/ 어드민 모두 다 
 어떻게 분석해서 할거임? 
 . Latency Survival (지연 입금 선반영 시스템)
 "돈은 보냈는데 아직 안 들어왔어요..."라는 유저를 놓치지 않는 기능입니다.
 
-문제: 은행/코인망 지연으로 입금 확인까지 4~12시간이 걸리면, 게임하고 싶어 온 유저는 기다리다 지쳐 이탈합니다.
+✅ 문제: 은행/코인망 지연으로 입금 확인까지 4~12시간이 걸리면, 게임하고 싶어 온 유저는 기다리다 지쳐 이탈합니다.
 해결책 (구현됨): 유저가 입금 증거(TX ID 등)를 제출하면, 시스템이 '신용 가불(Provisional Grant)' 형태로 게임 머니를 즉시 선지급합니다.
 구현 위치: app/v2/services/latency_survival_service.py
 안전 장치:
 한도 제한: 시간당 최대 3회 등 어뷰징 방지.
 클로백(Clawback): 나중에 허위 입금으로 밝혀지면, 선지급된 재화를 시스템이 자동으로 회수(차감)하는 로직이 완성되어 있습니다.
 
--------------------------
-1) 연속 스트릭미션은 어드민 설정값대로 지급되고 있는가?
-2) 입금지연 신청시에 레벨xp?  어떻게 처리되는가
+✅ 현재 해당 테스트 영역 최신 sot 확인해서 테스트 재 실행해줘
+
+✅ 입금지연 신청시에 레벨xp?  어떻게 처리되는가
 그리고 그 레벨에 따른 보상이 지급되는가? 
-아니면 임의로 생성된 보상인가? 
+아니면 임의로 생성된 보상인가? 하드코딩 상수 룰렛 3장 
+
+✅ 최종 미구현 항목 요약 (P3+)
+우선순위	항목	설명	구현 난이도
+P3	어드민 입금 매칭 Dropdown	LatencySurvivalPage에서 최근 24시간 미매칭 입금 로그 선택	30분
+P3	CSV save_to_db 체크박스	DB 저장 여부 선택 옵션	15분
+P3	CSV 실시간 Progress	대용량 CSV 처리 진행률	1시간
+P3	음수 잔액 UI	WalletBalance 음수 시 붉은색 표시	15분
 
 
+-------------------------
 
 
 ## 사용자 요청사항 대응법 
@@ -260,7 +268,7 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
 =======
-현재 해당 테스트 영역 최신 sot 확인해서 테스트 재 실행해줘
+
 
 사용자 요청사항 대응법
 C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_error_triage_checklist.md
@@ -284,3 +292,10 @@ C:\Users\JAVIS.ssh\id_ed25519_vultr roott@149.28.135.147
 
 ssh -i C:\Users\JAVIS.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
 
+
+
+HQ Margin CSV의 누적 충전 금액이 실제 CC 입금으로 반영되려면:
+HQ Margin Import 시 자동 입금 로그 생성 (델타 계산)
+미매칭 입금 로그 API: GET /api/v2/admin/deposits/unmatched?hours=24
+작업 설명
+옵션 A HQ Margin Import 시 ExternalRankingDailyDepositDelta에 자동 delta 삽입

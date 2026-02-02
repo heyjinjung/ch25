@@ -152,11 +152,11 @@ export default function GamedashPage() {
                 >
                   <MatrixText text="CC CASINO V2" />
                 </motion.span>
-                <h1 className="text-3xl font-black text-white leading-[1.1] mb-4">
-                  <MatrixText text="GRAND OPEN" />
+                <h1 className="text-2xl font-black text-white leading-[1] mb-4">
+                  <MatrixText text="CC카지노지민코드" />
                   <br />
                   <span className="text-[#9AFFFA] italic">
-                    <MatrixText text="SUPER EVENT" />
+                    <MatrixText text="EVENT" />
                   </span>
                 </h1>
 

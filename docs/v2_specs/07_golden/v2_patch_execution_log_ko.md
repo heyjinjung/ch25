@@ -821,6 +821,10 @@ src/v2/admin/
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |------|------|----------|--------|
+| v3.7 | 2026-02-02 | P3 우선순위 4개 기능 구현 완료 및 증거자료 추가 | Claude Sonnet 4.5 |
+| v3.6 | 2026-02-02 | Latency Survival 입금 매칭 Dropdown 구현 | Claude Sonnet 4.5 |
+| v3.5 | 2026-02-02 | CSV save_to_db 체크박스 및 실시간 Progress 구현 | Claude Sonnet 4.5 |
+| v3.4 | 2026-02-02 | 음수 잔액 UI (VaultBalanceCard) 구현 | Claude Sonnet 4.5 |
 | v3.3 | 2026-02-02 | Ops Dashboard/Golden CRM/잠재고객 관리 프론트 구현 반영 | GitHub Copilot |
 | v3.2 | 2026-02-03 | 프론트엔드 미구현 상세 명세, 도메인 충돌 분석 6개 섹션 추가 | JAVIS |
 | v3.1 | 2026-02-03 | CSV 통합, Game Log, ROI Analysis, Latency Survival 상세 추가 | GitHub Copilot |

@@ -197,7 +197,7 @@ export default function HomePage() {
             }}
           >
             <div className="tile-content">
-              <span className="tile-title">DICE BATTLE</span>
+              <span className="tile-title">주사위배틀</span>
               <img src="/assets/01home/1.png" alt="dice" className="tile-img" />
             </div>
             <div className="tile-shine" />
@@ -247,7 +247,7 @@ export default function HomePage() {
               alt="all"
               className="tile-img-small"
             />
-            <span className="tile-title">레벨 미션</span>
+            <span className="tile-title">레벨미션</span>
           </div>
         </div>
 

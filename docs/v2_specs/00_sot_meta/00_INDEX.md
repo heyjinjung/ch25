@@ -114,6 +114,7 @@
 - **Golden 개입 로직 SoT**: docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md
 - **Golden Ops 로직 SoT**: docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md
 - **골든아워 정책 SoT**: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
+- **HQ Margin → CC 입금 자동 반영 설계**: docs/v2_specs/07_golden/v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 - **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
 - V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
@@ -185,6 +186,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.17 (2026-02-03, GitHub Copilot): HQ Margin → CC 입금 자동 반영 상세 설계 문서 추가
 - v2.16 (2026-02-02, Antigravity Agent): W05 트러블슈팅 결과 기반 Core SoT 승격 및 주간 문서 아카이브 전략 적용
 - v2.15 (2026-02-02, Antigravity Agent): HQ Margin CSV 임포트 500 에러 해결 (Pandas 의존성 제거 리팩토링 & Multipart Boundary 수정)
 - v2.14 (2026-02-02, Antigravity Agent): 룰렛 체험 티켓(`TRIAL_TICKET`) 일일 제한 강제 및 넛지 서비스 버그 수정 (W05_GAME)
