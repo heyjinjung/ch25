@@ -187,6 +187,7 @@ md
 ## 7. 변경 이력
 - v2.10 (2026-02-02, Antigravity Agent): 신규 유저 미션(7일/FAB 타이머) SOT 및 트러블슈팅 업데이트
 - v2.11 (2026-02-02, GitHub Copilot): V2 세그먼트 키 COMMON/VIP/WHALE/AT_RISK 통일 및 learned_ 기록 추가
+- v2.12 (2026-02-02, GitHub Copilot): NEW 세그먼트(가입 7일/텔레그램 인증/입금 이력 제외) 추가 및 SoT/learned_ 정합성 갱신
 - v2.9 (2026-02-01, GitHub Copilot): 트러블슈팅 README 작성/업데이트 가이드 SoT 우선순위 및 증거 기반 규칙 보강
 - v2.8 (2026-01-30, GitHub Copilot): V1 Auth 가드/ Celery 헬스체크 개선 및 로컬 마이그레이션 기록
 - v2.2 (2026-01-19, GitHub Copilot): V1→V2 상점 상품 변환 가이드 링크 추가

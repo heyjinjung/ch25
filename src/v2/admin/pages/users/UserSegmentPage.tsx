@@ -240,6 +240,7 @@ export default function UserSegmentPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-800 border-zinc-700">
+                      <SelectItem value="NEW">신규(7일)</SelectItem>
                       <SelectItem value="COMMON">일반</SelectItem>
                       <SelectItem value="VIP">VIP</SelectItem>
                       <SelectItem value="WHALE">고액(Whale)</SelectItem>

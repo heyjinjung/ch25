@@ -1,6 +1,7 @@
 // src/admin/constants/segmentLabels.ts
 
 export const SEGMENT_LABELS_KO: Record<string, string> = {
+  NEW: "신규(7일)",
   COMMON: "일반",
   VIP: "VIP",
   WHALE: "고액",

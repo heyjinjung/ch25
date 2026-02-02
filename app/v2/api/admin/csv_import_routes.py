@@ -81,7 +81,7 @@ def upload_csv_file(
         raise HTTPException(status_code=403, detail="Requires ADMIN role")
 
     # Validate file extension
-    if not file.filename or not file.filename.endswith(".csv"):
+    if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are allowed")
 
     # Save to upload directory

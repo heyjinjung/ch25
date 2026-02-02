@@ -1,0 +1,2 @@
+timestamp,user_id,game_type,result,bet_amount,payout_amount,balance_after
+2025-01-20T10:00:00Z,1,DICE,WIN,100,200,5100

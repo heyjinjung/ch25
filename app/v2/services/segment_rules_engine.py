@@ -29,6 +29,9 @@ class SegmentContext:
     cash_balance: float = 0.0
     vault_balance: float = 0.0
     login_streak: int = 0
+    account_age_days: int | None = None
+    is_telegram_linked: bool = False
+    has_charge_history: bool = False
 
 
 def _coerce_number(value: Any) -> float | None:

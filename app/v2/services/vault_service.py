@@ -538,7 +538,10 @@ class V2VaultService:
 
         play_target = 30
         spend_target = 10000
-        if "AT_RISK" in segments:
+        if "NEW" in segments:
+            play_target = 100
+            spend_target = 30000
+        elif "AT_RISK" in segments:
             play_target = 100
             spend_target = 30000
         elif deposit_7d >= 3000000:
@@ -1086,7 +1089,10 @@ class V2VaultService:
 
         play_target = 30
         spend_target = 10000
-        if "AT_RISK" in segments:
+        if "NEW" in segments:
+            play_target = 100
+            spend_target = 30000
+        elif "AT_RISK" in segments:
             play_target = 100
             spend_target = 30000
         elif deposit_7d >= 3000000:

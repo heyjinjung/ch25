@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -16,6 +17,8 @@ from app.v2.models.v2_dice import V2DiceLog
 from app.v2.models.v2_lottery import V2LotteryLog
 from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
+from app.models.external_ranking import ExternalRankingData
+from app.models.user_activity import UserActivity
 
 
 @dataclass(frozen=True)
@@ -26,6 +29,19 @@ class SegmentResult:
 
 
 DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
+    {
+        "name": "기본: NEW (가입 7일 이내, 텔레그램 인증)",
+        "segment": "NEW",
+        "priority": 1,
+        "enabled": True,
+        "condition_json": {
+            "all": [
+                {"field": "account_age_days", "op": "<=", "value": 7},
+                {"field": "is_telegram_linked", "op": "==", "value": 1},
+                {"field": "has_charge_history", "op": "==", "value": 0},
+            ]
+        },
+    },
     {
         "name": "기본: WHALE (7일 입금 300만+)",
         "segment": "WHALE",
@@ -70,7 +86,7 @@ DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
 
 
 class V2SegmentService:
-    ALLOWED_SEGMENTS = {"COMMON", "VIP", "WHALE", "AT_RISK"}
+    ALLOWED_SEGMENTS = {"NEW", "COMMON", "VIP", "WHALE", "AT_RISK"}
 
     @staticmethod
     def normalize_segment(segment: str | None) -> str:
@@ -84,7 +100,19 @@ class V2SegmentService:
     @staticmethod
     def get_current_segment(db: Session, user_id: int) -> str:
         row = db.get(V2UserSegment, user_id)
-        return V2SegmentService.normalize_segment(row.segment if row else None)
+        if row is not None:
+            return V2SegmentService.normalize_segment(row.segment)
+
+        user = db.get(V2User, user_id)
+        if user is None:
+            return "COMMON"
+
+        rules = V2SegmentService.list_enabled_rules(db)
+        ctx = V2SegmentService._build_context(db, user, datetime.utcnow())
+        rec = V2SegmentService._recommend_segment(rules, ctx)
+        if rec is None:
+            return "COMMON"
+        return V2SegmentService.normalize_segment(rec[0])
 
     @staticmethod
     def ensure_default_rules(db: Session) -> None:
@@ -206,6 +234,36 @@ class V2SegmentService:
             )
         ).scalar_one() or 0
 
+        ext_deposit_amount = db.execute(
+            select(ExternalRankingData.deposit_amount).where(ExternalRankingData.user_id == user.id)
+        ).scalar_one_or_none() or 0
+
+        last_charge_at = db.execute(
+            select(UserActivity.last_charge_at).where(UserActivity.user_id == user.id)
+        ).scalar_one_or_none()
+
+        now_utc = now
+        if now_utc.tzinfo is None:
+            now_utc = now_utc.replace(tzinfo=timezone.utc)
+        now_kst = now_utc.astimezone(ZoneInfo("Asia/Seoul"))
+
+        created_at = getattr(user, "created_at", None)
+        if created_at is not None:
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            created_kst = created_at.astimezone(ZoneInfo("Asia/Seoul"))
+            account_age_days = max(0, (now_kst - created_kst).days)
+        else:
+            account_age_days = None
+
+        is_telegram_linked = bool(getattr(user, "telegram_id", None))
+        has_charge_history = bool(
+            (int(getattr(user, "total_charge_amount", 0) or 0) > 0)
+            or getattr(user, "first_deposit_at", None)
+            or (int(ext_deposit_amount) > 0)
+            or last_charge_at
+        )
+
         return SegmentContext(
             last_login_at=None,
             last_charge_at=None,
@@ -225,6 +283,9 @@ class V2SegmentService:
             cash_balance=0.0,
             vault_balance=float(user.vault_locked_balance or 0),
             login_streak=0,
+            account_age_days=account_age_days,
+            is_telegram_linked=is_telegram_linked,
+            has_charge_history=has_charge_history,
         )
 
     @staticmethod
@@ -347,6 +408,7 @@ class V2SegmentService:
 
         return {
             "segments": {
+                "NEW": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "NEW")).scalar() or 0,
                 "COMMON": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "COMMON")).scalar() or 0,
                 "VIP": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "VIP")).scalar() or 0,
                 "WHALE": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "WHALE")).scalar() or 0,

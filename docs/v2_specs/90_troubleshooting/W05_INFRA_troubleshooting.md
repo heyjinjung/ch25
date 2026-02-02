@@ -19,6 +19,7 @@
 | 02-01 | /api/v2/admin/users/{id}/purge 500 (V2 게임로그 미삭제) | ✅ RESOLVED |
 | 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 | 02-01 | CSV Import 한글 깨짐 (Mojibake) 및 인코딩 자동 감지 기능 도입 | ✅ FIXED |
+| 02-02 | CSV Import 400 Bad Request (확장자 대소문자 구분 문제) | ✅ FIXED |
 
 ---
 
@@ -566,8 +567,36 @@ xmas-celery-*     Up (healthy)
 - 2026-02-01: CSV Import 한글 깨짐(Mojibake) 해결 및 인코딩 자동 감지 로직 적용
 - 2026-02-01: **502 Bad Gateway 이슈 추가 - Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치**
 - 2026-02-02: **일별 포유율 추이(Retention Trend) 최신화 수정 - 집계 기준일 변경 (D30 → Yesterday)**
+- 2026-02-02: **Full Stack Integrity Check (Frontend Build/Type + Backend Syntax) - ALL PASS**
 
 ---
+
+## 02-02 - [INFRA/OPS] Full Stack Integrity Verification (System Health Check)
+
+**우선순위**: P2
+**관련 도메인**: INFRA, FRONTEND, BACKEND
+
+### 목적
+- 주요 리팩터링 및 기능 추가(Retention Trend 등) 이후 시스템 전체 무결성 검증.
+- 타입/빌드/구문 에러 전수 검사.
+
+### 검증 항목 및 결과
+1. **Frontend Type Check**
+   - 명령: `npx tsc --noEmit`
+   - 결과: **PASSED** (No Type Errors)
+2. **Frontend Build Check**
+   - 명령: `npm run build`
+   - 결과: **PASSED** (Production Build Success)
+3. **Backend Syntax Check**
+   - 명령: `python -m compileall app/v2`
+   - 결과: **PASSED** (No Syntax Errors)
+4. **Critical Import Check**
+   - 명령: `python -c "from app.v2.models import v2_admin_audit_log; print('Shim OK')"`
+   - 결과: **PASSED** (Shim Works)
+
+### 결론
+- 현재 시스템(V2)은 빌드 및 런타임 시작 관점에서 **Clean State**입니다.
+
 
 ## 02-02 - [INFRA/ADMIN] 일별 포유율 추이(Retention Trend) 최신화 수정
 
@@ -600,3 +629,46 @@ xmas-celery-*     Up (healthy)
 - Backend: `app/v2/api/admin/analytics_routes.py`
 - Frontend: `src/v2/admin/pages/ops/AnalyticsDashboard.tsx`
 - Test: `tests/v2/admin/test_analytics_retention_20260202.py`
+
+---
+
+## 02-02 - [INFRA/BACKEND] CSV Import 400 Bad Request (확장자 대소문자 구분 문제)
+
+**우선순위**: P1
+**관련 도메인**: BACKEND, ADMIN, INFRA
+
+### 증상
+- 파일명 끝이 대문자인 CSV 파일(예: `.CSV`) 업로드 시 400 에러 발생
+- 에러 메시지: `detail: "Only CSV files are allowed"`
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | CSV 파일 업로드 (`/api/v2/admin/csv-import/upload`) |
+| **HTTP Status** | 400 (Bad Request) |
+| **영향 범위** | 어드민 CSV 임포트 기능 전체 |
+| **재현 빈도** | 항상 (대문자 확장자 사용 시) |
+
+### 근본 원인
+- 백엔드 코드에서 `file.filename.endswith(".csv")` 형식을 사용하여 대소문자를 엄격하게 구분함.
+- 윈도우 환경이나 특정 엑셀 내보내기에서 확장자가 `.CSV`로 생성될 경우 필터링에 걸림.
+
+### 해결 조치
+- 확장자 체크 시 `.lower()`를 추가하여 대소문자 구분 없이 인식하도록 수정.
+- 대상 파일: `app/v2/api/admin/csv_import_routes.py`, `app/api/admin/routes/admin_crm.py`
+
+```python
+# Before
+if not file.filename.endswith(".csv"):
+
+# After
+if not file.filename.lower().endswith(".csv"):
+```
+
+### 검증 방법
+- `.CSV` 확장자를 가진 파일로 업로드 테스트 수행 시 정상적으로 200 OK 반환 확인.
+
+### 예방 가이드라인
+- 모든 파일 업로드 라우터에서 확장자 검증 시 반드시 `.lower()`를 사용하여 케이스 케어(Case Care)를 수행할 것.
+
+---

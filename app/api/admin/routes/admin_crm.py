@@ -208,7 +208,7 @@ async def import_profiles(
     """Import User Profiles from CSV.
     Expected columns: external_id, real_name, phone, telegram, memo, tags (comma-sep)
     """
-    if not file.filename.endswith(".csv"):
+    if not file.filename.lower().endswith(".csv"):
         raise HTTPException(400, "Only CSV files are supported.")
 
     content = await file.read()

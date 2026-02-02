@@ -45,6 +45,15 @@ def get_segment_stats(
 
     segments_list = [
         {
+            "name": "NEW",
+            "label": "신규(7일)",
+            "count": segment_data.get("NEW", 0),
+            "color": "text-rose-400",
+            "bg": "bg-rose-500/10",
+            "border": "border-rose-500/20",
+            "desc": "가입 7일 이내/텔레그램 인증",
+        },
+        {
             "name": "COMMON",
             "label": "일반",
             "count": segment_data.get("COMMON", 0),
