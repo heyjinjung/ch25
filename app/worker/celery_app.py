@@ -12,6 +12,7 @@ celery_app = Celery(
         "app.v2.tasks.daily_nudge_tasks",
         "app.v2.tasks.roi_tasks",
         "app.v2.tasks.segment_tasks",
+        "app.v2.tasks.unmatched_deposit_tasks",
     ],
 )
 
@@ -40,6 +41,10 @@ celery_app.conf.update(
         "segment-batch-early-morning": {
             "task": "app.v2.tasks.segment_tasks.execute_segment_batch_task",
             "schedule": crontab(hour=1, minute=0),  # 매일 01:00 KST
+        },
+        "unmatched-deposit-cleanup": {
+            "task": "app.v2.tasks.unmatched_deposit_tasks.cleanup_old_unmatched_logs_task",
+            "schedule": crontab(hour=2, minute=0),  # 매일 02:00 KST
         },
     },
 )

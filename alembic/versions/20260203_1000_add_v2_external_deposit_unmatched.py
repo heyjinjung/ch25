@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20260203_1000_add_v2_external_deposit_unmatched'
-down_revision = '20260202_1600_add_external_linking_fields'
+down_revision = '20260202_1530_extend_v2_user_segment'
 branch_labels = None
 depends_on = None
 

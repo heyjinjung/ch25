@@ -198,9 +198,8 @@ export default function MissionsPage() {
                 <DailyStreakBoard
                   currentStreak={streak_info?.current_streak || 0}
                 />
-                <div className="flex flex-col gap-2 text-xs text-zinc-400">
-                  <p>매일 접속 시 출석이 인정됩니다. (KST 09:00 기준 갱신)</p>
-                  <p>3일/7일차 보상은 모달에서 확인 및 수령합니다.</p>
+                <div className="text-xs text-zinc-400">
+                  <p>매일 접속 시 출석 인정됩니다. (오전 9시 기준갱신)</p>
                 </div>
                 {attendance_streak_enabled && streak_info && (
                   <button
