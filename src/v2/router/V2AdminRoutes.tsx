@@ -7,6 +7,7 @@ import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
 import ProspectLinkingPage from "../admin/pages/prospect/ProspectLinkingPage";
 import GoldenCRMPage from "../admin/pages/dashboard/GoldenCRMPage";
 import SegmentDetailPage from "../admin/pages/users/SegmentDetailPage";
+import RoiDashboardPage from "../admin/pages/analytics/RoiDashboardPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
@@ -43,6 +44,7 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="control" element={<ControlCenterPage />} />
           <Route path="system" element={<SystemSecurityPage />} />
           <Route path="analytics" element={<AnalyticsDashboard />} />
+          <Route path="analytics/roi" element={<RoiDashboardPage />} />
 
           {/* Legacy Redirects for bookmarks */}
           <Route

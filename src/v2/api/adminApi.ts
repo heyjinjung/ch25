@@ -1097,11 +1097,11 @@ export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
 export const getSegmentUsers = async (
   segment: string,
   page: number = 1,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<SegmentUsersResponse> => {
   const response = await v2Client.get<SegmentUsersResponse>(
     `/api/v2/admin/segments/${segment}/users`,
-    { params: { page, limit } }
+    { params: { page, limit } },
   );
   return response.data;
 };

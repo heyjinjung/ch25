@@ -204,7 +204,9 @@ export default function SegmentDetailPage() {
                           {segCount.toLocaleString()}
                         </p>
                       </div>
-                      <ExternalLink className={`h-4 w-4 ${m.color} opacity-50`} />
+                      <ExternalLink
+                        className={`h-4 w-4 ${m.color} opacity-50`}
+                      />
                     </div>
                   </CardContent>
                 </Card>

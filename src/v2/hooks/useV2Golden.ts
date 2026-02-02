@@ -31,7 +31,7 @@ export function useGoldenHourStatus() {
 
 /**
  * Golden 개입 해결 훅
- * 
+ *
  * 보상이 지급되면 자동으로 Toast 알림을 표시합니다.
  * - 포인트 보상: "🎁 골든 보너스 지급! +{amount}P"
  * - 아이템 보상: "🎁 골든 보너스 지급! {reward_type}"
@@ -46,12 +46,15 @@ export function useV2ResolveIntervention() {
       // If reward was granted, show toast notification
       if (data.eligible && data.reward_type) {
         const rewardAmount = data.capped_amount ?? data.reward_amount ?? 0;
-        
+
         // 보상 타입에 따른 Toast 메시지
         if (data.reward_type === "POINT" && rewardAmount > 0) {
-          toast.success(`🎁 골든 보너스 지급! +${rewardAmount.toLocaleString()}P`, {
-            duration: 4000,
-          });
+          toast.success(
+            `🎁 골든 보너스 지급! +${rewardAmount.toLocaleString()}P`,
+            {
+              duration: 4000,
+            },
+          );
         } else if (data.reward_type === "ITEM") {
           toast.success(`🎁 골든 보너스 아이템 지급!`, {
             duration: 4000,
@@ -61,7 +64,7 @@ export function useV2ResolveIntervention() {
             duration: 4000,
           });
         }
-        
+
         // Invalidate inventory (if item reward)
         queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
         // Invalidate vault/balance (if point reward)
