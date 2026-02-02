@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '20260202_1530_extend_v2_user_segment'
-down_revision = '20260202_1400_add_v2_game_log'
+down_revision = '20260202_1600_add_external_linking_fields'
 branch_labels = None
 depends_on = None
 
