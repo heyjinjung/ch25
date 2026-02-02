@@ -38,7 +38,8 @@ const V2TelegramLoginPage: FC = () => {
   // CC 닉네임 입력 관련
   const [ccNickname, setCcNickname] = useState("");
   const [isLinking, setIsLinking] = useState(false);
-  const [linkResult, setLinkResult] = useState<{
+  // linkResult는 향후 확장을 위해 유지 (현재 Toast로 대체)
+  const [, setLinkResult] = useState<{
     success: boolean;
     segment?: string;
     message?: string;

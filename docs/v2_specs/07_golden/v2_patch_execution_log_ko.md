@@ -123,8 +123,9 @@
 
 ## 🔧 프론트엔드 미구현 상세 명세
 
-### Ops Dashboard 확장 (⏳ 미구현)
+### Ops Dashboard 확장 (✅ 완료)
 > 출처: [14.csv_data_integration_expansion_spec.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/14.csv_data_integration_expansion_spec.md)
+> **구현 파일**: `OpsDashboard.tsx` - Risk Users / Opportunity Users 테이블 완료
 
 #### 기회 그룹 상세 UI
 ```tsx

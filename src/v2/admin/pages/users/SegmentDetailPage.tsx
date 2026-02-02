@@ -94,7 +94,7 @@ export default function SegmentDetailPage() {
   const [limit, setLimit] = useState(50);
 
   const segmentKey = segment?.toUpperCase() || "COMMON";
-  const meta = SEGMENT_META[segmentKey] || SEGMENT_META.COMMON;
+  const meta = SEGMENT_META[segmentKey] ?? SEGMENT_META.COMMON;
 
   // 세그먼트 통계
   const { data: stats } = useQuery({
