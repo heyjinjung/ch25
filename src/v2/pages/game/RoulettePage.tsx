@@ -158,6 +158,14 @@ export default function RoulettePage() {
             {status?.token_balance?.toLocaleString() ?? 0}
           </span>
         </div>
+        {status?.max_daily_spins && status.max_daily_spins > 0 ? (
+          <div className="roulette-stat-card">
+            <span className="stat-label-small">오늘</span>
+            <span className="stat-value text-amber-400">
+              {status.remaining_spins}/{status.max_daily_spins}
+            </span>
+          </div>
+        ) : null}
       </div>
 
       {/* 2. Wheel Section */}
@@ -198,13 +206,24 @@ export default function RoulettePage() {
           disabled={
             isSpinning ||
             playMutation.isPending ||
-            (status?.token_balance ?? 0) <= 0
+            (status?.token_balance ?? 0) <= 0 ||
+            (status?.max_daily_spins !== undefined &&
+              status.max_daily_spins > 0 &&
+              status.remaining_spins <= 0)
           }
         >
           {playMutation.isPending ? (
             <Loader2 className="w-7 h-7 animate-spin" />
           ) : (
-            <span>{isSpinning ? "SPINNING..." : "SPIN NOW"}</span>
+            <span>
+              {isSpinning
+                ? "SPINNING..."
+                : status?.max_daily_spins &&
+                    status.max_daily_spins > 0 &&
+                    status.remaining_spins <= 0
+                  ? "LIMIT REACHED"
+                  : "SPIN NOW"}
+            </span>
           )}
         </button>
       </div>

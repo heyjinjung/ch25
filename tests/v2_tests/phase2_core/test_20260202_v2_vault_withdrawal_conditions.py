@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from typing import Generator
 
 import pytest
 from sqlalchemy import create_engine
@@ -14,7 +15,7 @@ from app.v2.services.vault_service import V2VaultService
 
 
 @pytest.fixture()
-def db_session() -> Session:
+def db_session() -> Generator[Session, None, None]:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:",
         connect_args={"check_same_thread": False},

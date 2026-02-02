@@ -15,7 +15,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.v2.models.user import V2User
-from app.v2.models import UserActivity
+from app.v2.models import UserActivity, GameTokenType
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 from app.utils.timezone import business_day_start
@@ -90,7 +90,7 @@ class DailyNudgeService:
     def send_daily_nudge(
         db: Session,
         user_id: int,
-        ticket_amount: int = 1,
+        ticket_amount: int = 3,
         skip_suspension_check: bool = False,
     ) -> dict[str, Any]:
         """
@@ -131,10 +131,10 @@ class DailyNudgeService:
 
         # TRIAL_TICKET 지급
         try:
-            V2InventoryService.grant_ticket(
+            V2InventoryService.grant_wallet_tokens(
                 db=db,
-                user_id=user_id,
-                token_type="ROULETTE",  # TRIAL_TICKET은 ROULETTE로 사용
+                v2_user_id=user_id,
+                token_type=GameTokenType.TRIAL_TICKET,
                 amount=ticket_amount,
                 reason="daily_nudge",
             )

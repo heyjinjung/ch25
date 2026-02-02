@@ -251,7 +251,14 @@ export interface UserSearchParams {
   maxLevel?: number;
   startDate?: string; // 가입일 시작
   endDate?: string; // 가입일 종료
-  sortBy?: "last_active" | "level" | "vault_balance" | "created_at";
+  sortBy?:
+    | "last_active"
+    | "level"
+    | "vault_balance"
+    | "created_at"
+    | "uid"
+    | "nickname"
+    | "telegram_id";
   sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;

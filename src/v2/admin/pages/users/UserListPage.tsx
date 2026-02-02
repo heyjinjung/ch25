@@ -102,7 +102,13 @@ export default function UserListPage({
   const [minLevel, setMinLevel] = useState<string>("");
   const [maxLevel, setMaxLevel] = useState<string>("");
   const [sortBy, setSortBy] = useState<
-    "last_active" | "level" | "vault_balance" | "created_at"
+    | "last_active"
+    | "level"
+    | "vault_balance"
+    | "created_at"
+    | "uid"
+    | "nickname"
+    | "telegram_id"
   >("last_active");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
@@ -127,7 +133,14 @@ export default function UserListPage({
   const totalPages = Math.ceil(total / limit);
 
   const handleSort = (
-    field: "last_active" | "level" | "vault_balance" | "created_at",
+    field:
+      | "last_active"
+      | "level"
+      | "vault_balance"
+      | "created_at"
+      | "uid"
+      | "nickname"
+      | "telegram_id",
   ) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -327,9 +340,33 @@ export default function UserListPage({
                     className="border-zinc-600"
                   />
                 </TableHead>
-                <TableHead className="w-[100px] text-zinc-400">UID</TableHead>
-                <TableHead className="text-zinc-400">닉네임</TableHead>
-                <TableHead className="text-zinc-400">텔레그램 ID</TableHead>
+                <TableHead className="w-[100px] text-zinc-400">
+                  <button
+                    className="flex items-center gap-1 hover:text-white transition-colors"
+                    onClick={() => handleSort("uid")}
+                  >
+                    UID
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
+                <TableHead className="text-zinc-400">
+                  <button
+                    className="flex items-center gap-1 hover:text-white transition-colors"
+                    onClick={() => handleSort("nickname")}
+                  >
+                    닉네임
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
+                <TableHead className="text-zinc-400">
+                  <button
+                    className="flex items-center gap-1 hover:text-white transition-colors"
+                    onClick={() => handleSort("telegram_id")}
+                  >
+                    텔레그램 ID
+                    <ArrowUpDown className="w-3 h-3" />
+                  </button>
+                </TableHead>
                 <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"

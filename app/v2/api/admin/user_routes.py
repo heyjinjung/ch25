@@ -132,6 +132,12 @@ def get_admin_users_list(
         order_col = func.coalesce(V2User.vault_locked_balance, 0)
     elif sortBy == "created_at":
         order_col = V2User.created_at
+    elif sortBy == "uid":
+        order_col = V2User.id
+    elif sortBy == "nickname":
+        order_col = V2User.nickname
+    elif sortBy == "telegram_id":
+        order_col = V2User.telegram_id
     else:
         order_col = V2User.updated_at
 

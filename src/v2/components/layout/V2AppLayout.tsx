@@ -11,6 +11,7 @@ import GoldenHourModal from "../game/GoldenHourModal";
 import { useGoldenHourStatus } from "../../hooks/useV2Golden";
 import { useAuth, setAuth } from "../../../auth/authStore";
 import { v2Client } from "../../api/client";
+import { ToastProvider } from "../common/ToastProvider";
 
 const GOLDEN_HOUR_MODAL_KEY = "golden_hour_modal_dismissed";
 
@@ -31,7 +32,7 @@ export default function V2AppLayout() {
       }
 
       // 텔레그램 환경인지 확인
-      const tg = window.Telegram?.WebApp;
+      const tg = (window as any).Telegram?.WebApp;
       if (tg?.initData) {
         // 자동 재인증 시도
         try {
@@ -116,42 +117,44 @@ export default function V2AppLayout() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-black flex flex-col w-full overflow-x-hidden relative">
-      {/* Global Background Particles */}
-      <V2SparkleBackground />
+    <ToastProvider>
+      <div className="min-h-[100dvh] bg-black flex flex-col w-full overflow-x-hidden relative">
+        {/* Global Background Particles */}
+        <V2SparkleBackground />
 
-      {/* 64px Fixed Header */}
-      <V2AppHeader />
+        {/* 64px Fixed Header */}
+        <V2AppHeader />
 
-      {/* 32px Fixed Live Feed Bar (follows Header) */}
-      <V2LiveFeedBar />
+        {/* 32px Fixed Live Feed Bar (follows Header) */}
+        <V2LiveFeedBar />
 
-      {/* 100px Header + 32px Live Feed Bar Gap */}
-      <main className="flex-1 w-full max-w-[391px] mx-auto px-2 pt-[calc(var(--header-offset)+32px)] pb-[var(--nav-offset)] flex flex-col relative z-20">
-        <Outlet />
-      </main>
+        {/* 100px Header + 32px Live Feed Bar Gap */}
+        <main className="flex-1 w-full max-w-[391px] mx-auto px-2 pt-[calc(var(--header-offset)+32px)] pb-[var(--nav-offset)] flex flex-col relative z-20">
+          <Outlet />
+        </main>
 
-      {/* 86.87px Fixed Bottom Navigation */}
-      <V2MobileBottomNav />
+        {/* 86.87px Fixed Bottom Navigation */}
+        <V2MobileBottomNav />
 
-      {/* Overlays & Floating UI */}
-      <V2FloatingSideMenu />
-      <V2InboxDrawer />
-      <V2MusicSettingsModal />
+        {/* Overlays & Floating UI */}
+        <V2FloatingSideMenu />
+        <V2InboxDrawer />
+        <V2MusicSettingsModal />
 
-      {/* 골든아워 알림 모달 */}
-      {goldenHour && (
-        <GoldenHourModal
-          isOpen={showGoldenModal}
-          onClose={handleCloseGoldenModal}
-          isActive={goldenHour.isActive}
-          isUpcoming={goldenHour.isUpcoming}
-          minutesUntilStart={goldenHour.minutesUntilStart}
-          multiplier={goldenHour.multiplier}
-          startTime={goldenHour.startTimeKst}
-          endTime={goldenHour.endTimeKst}
-        />
-      )}
-    </div>
+        {/* 골든아워 알림 모달 */}
+        {goldenHour && (
+          <GoldenHourModal
+            isOpen={showGoldenModal}
+            onClose={handleCloseGoldenModal}
+            isActive={goldenHour.isActive}
+            isUpcoming={goldenHour.isUpcoming}
+            minutesUntilStart={goldenHour.minutesUntilStart}
+            multiplier={goldenHour.multiplier}
+            startTime={goldenHour.startTimeKst}
+            endTime={goldenHour.endTimeKst}
+          />
+        )}
+      </div>
+    </ToastProvider>
   );
 }

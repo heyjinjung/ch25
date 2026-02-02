@@ -17,6 +17,37 @@ import {
   useAdminActiveUserStats,
 } from "../../../../../hooks/useAdminGame";
 
+const CHART_HEIGHT_CLASSES = [
+  "h-[5%]",
+  "h-[10%]",
+  "h-[15%]",
+  "h-[20%]",
+  "h-[25%]",
+  "h-[30%]",
+  "h-[35%]",
+  "h-[40%]",
+  "h-[45%]",
+  "h-[50%]",
+  "h-[55%]",
+  "h-[60%]",
+  "h-[65%]",
+  "h-[70%]",
+  "h-[75%]",
+  "h-[80%]",
+  "h-[85%]",
+  "h-[90%]",
+  "h-[95%]",
+  "h-[100%]",
+];
+
+const getHeightClass = (heightPercent: number) => {
+  const index = Math.min(
+    Math.max(Math.floor(heightPercent / 5) - 1, 0),
+    CHART_HEIGHT_CLASSES.length - 1,
+  );
+  return CHART_HEIGHT_CLASSES[index];
+};
+
 export function StatsTabContent() {
   const { data: missionStats, isLoading: isMissionStatsLoading } =
     useAdminMissionStats();
@@ -106,6 +137,7 @@ export function StatsTabContent() {
                   1,
                 );
                 const heightPercent = Math.max((day.dau / maxDau) * 100, 5);
+                const heightClass = getHeightClass(heightPercent);
                 return (
                   <div
                     key={idx}
@@ -115,8 +147,10 @@ export function StatsTabContent() {
                       {day.dau}
                     </div>
                     <div
-                      className="w-full bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-md transition-all duration-300 hover:from-emerald-400 hover:to-emerald-300"
-                      style={{ height: `${heightPercent}%`, minHeight: "8px" }}
+                      className={cn(
+                        "w-full min-h-2 bg-gradient-to-t from-emerald-500 to-emerald-400 rounded-t-md transition-all duration-300 hover:from-emerald-400 hover:to-emerald-300",
+                        heightClass,
+                      )}
                       title={`${day.date}: ${day.dau}명`}
                     />
                     <div className="text-[11px] text-zinc-500">

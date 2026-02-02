@@ -1,5 +1,148 @@
 # W05 FRONTEND 트러블슈팅 (01-27 ~ 02-02)
 
+## 02-02 - [FRONTEND/ADMIN] 회원관리 테이블 정렬 기능 확장 (UID, 닉네임, 텔레그램 ID)
+
+### 증상 정의
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | V2 관리자 회원관리 페이지 (`UserListPage`) |
+| HTTP Status | N/A (신규 기능) |
+| 영향 범위 | 어드민 UX 개선 |
+| 재현 빈도 | N/A |
+
+### 배경 (Why)
+- 기존 정렬 옵션: `level(레벨)`, `vault_balance(금고 잔액)`, `last_active(최근 접속일)`, `created_at(생성일)`만 지원
+- 사용자 요청: `uid(UID/CC ID)`, `nickname(닉네임)`, `telegram_id(텔레그램 ID)` 칼럼도 정렬 가능하도록 확장 필요
+- 회원 관리 시 특정 필드로 검색/정렬하는 행정 작업 효율성 향상
+
+### 해결 방법 (What)
+
+#### 1. 프론트엔드 변경
+```typescript
+// 1) sortBy 상태 타입 확장
+const [sortBy, setSortBy] = useState<
+  "last_active" | "level" | "vault_balance" | "created_at" | "uid" | "nickname" | "telegram_id"
+>("last_active");
+
+// 2) handleSort 함수 타입 확장
+const handleSort = (
+  field: "last_active" | "level" | "vault_balance" | "created_at" | "uid" | "nickname" | "telegram_id"
+) => {
+  if (sortBy === field) {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  } else {
+    setSortBy(field);
+    setSortOrder("desc");
+  }
+};
+
+// 3) 테이블 헤더에 클릭 가능한 정렬 버튼 추가
+<TableHead className="w-[100px] text-zinc-400">
+  <button
+    className="flex items-center gap-1 hover:text-white transition-colors"
+    onClick={() => handleSort("uid")}
+  >
+    UID
+    <ArrowUpDown className="w-3 h-3" />
+  </button>
+</TableHead>
+
+<TableHead className="text-zinc-400">
+  <button
+    className="flex items-center gap-1 hover:text-white transition-colors"
+    onClick={() => handleSort("nickname")}
+  >
+    닉네임
+    <ArrowUpDown className="w-3 h-3" />
+  </button>
+</TableHead>
+
+<TableHead className="text-zinc-400">
+  <button
+    className="flex items-center gap-1 hover:text-white transition-colors"
+    onClick={() => handleSort("telegram_id")}
+  >
+    텔레그램 ID
+    <ArrowUpDown className="w-3 h-3" />
+  </button>
+</TableHead>
+```
+
+#### 2. TypeScript 타입 정의 변경
+**파일:** `src/v2/api/adminApi.ts`
+```typescript
+export interface UserSearchParams {
+  search?: string;
+  status?: string;
+  minLevel?: number;
+  maxLevel?: number;
+  sortBy?: "last_active" | "level" | "vault_balance" | "created_at" | "uid" | "nickname" | "telegram_id";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+```
+
+#### 3. 백엔드 쿼리 로직 확장
+**파일:** `app/v2/api/admin/user_routes.py`
+```python
+if sortBy == "vault_balance":
+    order_col = func.coalesce(V2User.vault_locked_balance, 0)
+elif sortBy == "created_at":
+    order_col = V2User.created_at
+elif sortBy == "uid":
+    order_col = V2User.id
+elif sortBy == "nickname":
+    order_col = V2User.nickname
+elif sortBy == "telegram_id":
+    order_col = V2User.telegram_id
+else:
+    order_col = V2User.updated_at
+
+if sortOrder == "asc":
+    query = query.order_by(order_col.asc())
+else:
+    query = query.order_by(order_col.desc())
+```
+
+### 동작 흐름
+
+| 단계 | 사용자 액션 | 시스템 응답 |
+|------|-----------|---------|
+| 1 | UID 헤더 클릭 | `sortBy="uid"`, `sortOrder="desc"` 적용 |
+| 2 | UID 헤더 재클릭 | 정렬 방향 토글 (`desc` → `asc`) |
+| 3 | 닉네임 헤더 클릭 | `sortBy="nickname"` 변경, `sortOrder="desc"` 리셋 |
+| 4 | API 호출 | `/users?sortBy=uid&sortOrder=desc...` 백엔드 쿼리 실행 |
+| 5 | 테이블 갱신 | 정렬된 회원 목록 렌더링 |
+
+### 검증 방법
+```bash
+# 1. 프론트엔드 타입 체크
+npx tsc --noEmit
+
+# 2. 빌드 테스트
+npm run build
+
+# 3. 로컬 브라우저 테스트
+# - 관리자 로그인
+# - 회원관리 페이지 진입
+# - UID, 닉네임, 텔레그램 ID 헤더 클릭 및 정렬 동작 확인
+# - 오름차순/내림차순 토글 확인
+```
+
+### 영향받는 파일
+
+**수정:**
+- `src/v2/admin/pages/users/UserListPage.tsx` - `sortBy` 상태, `handleSort` 함수, 테이블 헤더 업데이트
+- `src/v2/api/adminApi.ts` - `UserSearchParams` 인터페이스 타입 확장
+- `app/v2/api/admin/user_routes.py` - SQLAlchemy 쿼리 로직 확장
+
+### 관련 문서
+- learned_ 프론트엔드 도메인: `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/frontend/` (해당 문서 참조)
+- 어드민 UX 설계 원칙: React Admin 패턴
+
+---
+
 ## 02-01 - [FRONTEND/REFACTOR] MissionManagerPage 대규모 리팩토링 (2944→284줄, 90% 감소)
 
 ### 증상 정의
@@ -274,3 +417,4 @@ npm run build  # ✅ 성공
 - 2026-02-02: 프론트엔드 빌드 에러 해결 및 대시보드 UI 최적화 내역 추가 (Antigravity)
 - 2026-02-02: 초기 구동 루프 및 방어적 코딩 사례 추가 (Antigravity)
 - 2026-02-02: 어드민 대시보드 및 기능 확장 분류 내역 추가 (Antigravity)
+- 2026-02-02: 회원관리 테이블 정렬 기능 확장 (UID/닉네임/텔레그램 ID) (GitHub Copilot)

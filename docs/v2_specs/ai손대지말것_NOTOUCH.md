@@ -696,8 +696,41 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 
 ✅감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
+✅ 금고 페이지에서 
+총유저수 / 총 잠금잔액 / 총 가용잔액
+제재유저 이렇게 카드를 누르면 상세내역모달이 뜨는데
+이 떄 뜨는 유저를 클릭하면 그 유저관리 디테일드로우페이지로 갈수 있게 해줘 
+
+✅v2.14 (2026-02-02, Antigravity Agent): 룰렛 체험 티켓(`TRIAL_TICKET`) 일일 제한 강제 및 넛지 서비스 버그 수정 (W05_GAME)
 
 -------------------------
+
+
+## 사용자 요청사항 대응법 
+1. C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\20260130_error_triage_checklist.md
+위의 에러 트리아지 체크리스트에 따라서 작업을 진행한다.
+2. 에러트리아지에 해당되는 경우가 아닌 신규기능 생성일시에는 사용자가 제공한 기술문서들을 확인 후 기준값, 계획 수립후 실행한다
+3. 완료 후 트러블슈팅 문서 업데이트 한다 
+
+## 주의 
+관리자가 직접 깃 커밋/ 푸쉬하니까 넌 깃은 손대지 말것 
+
+### 트래블슈팅문서 업데이트 및 작성법
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\90_troubleshooting\README.md
+
+### 기술 기준문서 :
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned 내 도메인별 폴더/문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk  모든문서
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\00_con.md
+C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_INDEX.md
+
+#### ssh 접속 실제 운영서버 확인 
+C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
+
+ ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+
+
+
 
 룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
@@ -712,20 +745,13 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 
 
 
-금고 페이지에서 
-총유저수 
-총 잠금잔액
-총 가용잔액
-제재유저
-이렇게 카드를 누르면 상세내역모달이 뜨는데
-이 떄 
-뜨는 유저를 클릭하면 그 유저관리 디테일드로우페이지로 갈수 있게 해줘 
+
 
 
  cost_type(다이아/금고)별 가격 뱃지/아이콘 ③ Shop의 프리미엄 판정 로직 일관화 같은 UX 다듬기
 
 
-| 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
+CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 이거 백앤드 테스트 실행해야하
 
 -----------------------------------
@@ -749,15 +775,6 @@ ssh 접속 실제 운영서버 확인
 C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
  ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
-
-
-✅ 일별 포유율 추이(Retention Trend) 최신화 수정 (2026-02-02)
-- **이슈**: 어드민 분석 대시보드에서 최근 30일간의 데이터가 보이지 않음 (D30 집계 대기 탓).
-- **해결**: 
-  - 백엔드(`analytics_routes.py`): 집계 종료일을 `today - 31`에서 `today - 1`로 변경하여 어제 데이터까지 반환.
-  - 프론트엔드(`AnalyticsDashboard.tsx`): 아직 도래하지 않은 기간(Pending)은 `0.0%` 대신 `-`로 표기하여 오해 방지.
-- **검증**: `tests/v2/admin/test_analytics_retention_20260202.py` 테스트 통과.
-
 
 
 ---------

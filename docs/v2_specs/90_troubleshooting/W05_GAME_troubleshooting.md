@@ -18,6 +18,7 @@
 | 01-20 | [GAME] 게임 토큰 명칭 불일치 (GOLD_KEY vs GOLD_KEY_TICKET) | ✅ FIXED |
 | 01-20 | [GAME] 프리미엄 룰렛 접근 제어 로직 누락 | ✅ FIXED |
 | 01-20 | [GAME] Roulette 스키마 직렬화 실패 (reward_type/grade Error) | ✅ FIXED |
+| 02-02 | 룰렛 체험 티켓 일일 3회 제한 오작동 및 Nudge 지급 버그 | ✅ RESOLVED |
 
 ---
 
@@ -409,3 +410,52 @@ curl -H "Authorization: Bearer $TOKEN" https://cc-jm.com/api/v2/admin/users/1/ga
 - 2026-02-02: V2DiceLog 속성 참조 오류 및 게임 모듈 임포트 실패 해결 내역 추가 (Antigravity)
 - 2026-02-02: 게임 토큰 표준화 및 프리미엄 접근 제어 사례 추가 (Antigravity)
 - 2026-02-02: 게임 설정 및 정규화 이슈 분류 내역 추가 (Antigravity)
+- 2026-02-02: 룰렛 체험 티켓 일일 제한 강제 및 Nudge 서비스 버그 수정 (Antigravity)
+
+---
+
+## 02-02 - [GAME] 룰렛 체험 티켓 일일 3회 제한 오작동 및 Nudge 지급 버그
+
+**우선순위**: P0 (정책 미준수 및 재화 오류)
+**관련 도메인**: GAME, INVENTORY, RETENTION
+
+## 증상 정의 (필수)
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 룰렛 체험 티켓 (`TRIAL_TICKET`) 플레이 및 일일 넛지 지급 |
+| HTTP Status | 200 (Logic Error) -> 400 (DAILY_LIMIT_REACHED)로 강제 |
+| 영향 범위 | 전체 유저 (체험 티켓 보유자) |
+| 재현 빈도 | 항상 |
+
+### 증상
+1. 룰렛 체험 티켓(`TRIAL_TICKET`)의 "하루 3번" 제한이 작동하지 않고 보유한 티켓만큼 무제한 플레이 가능.
+2. 일일 넛지(`DailyNudgeService`)로 티켓이 1장만 지급되거나, 잘못된 메서드 호출로 지급 자체가 실패함.
+3. 프론트엔드 UI에서 남은 횟수 표시가 없어서 사용자가 제한 여부를 알 수 없음.
+
+### 근본 원인 (증거 기반)
+- **백엔드**: `V2RouletteGameService.play`에서 플레이 횟수 검증(`DailyLimitReachedError`) 로직이 누락되어 `v2_roulette_config.max_daily_spins` 값이 무시됨.
+- **서비스 오류**: `DailyNudgeService`에서 `V2InventoryService`의 레거시/미존재 메서드(`grant_ticket`)를 호출하고, 토큰 타입도 `GameTokenType.TRIAL_TICKET` 대신 일반 `ROULETTE` 명칭을 사용함.
+- **프론트엔드**: `RoulettePage.tsx`에서 서버가 제공하는 `remaining_spins` 데이터를 실시간으로 반영하여 버튼을 제어하는 로직이 부재함.
+
+### 해결 방법
+#### Immediate Fix (Backend)
+- `V2RouletteGameService.play` 및 `get_status` 수정: `Asia/Seoul` (KST) 09:00 리셋 정책(`_operational_date_kst`)을 적용하여 일일 3회 제한 강제.
+- `DailyNudgeService.send_daily_nudge` 수정: `grant_wallet_tokens` 사용, `TRIAL_TICKET` 명입, 기본 수량 **3장**으로 상향.
+
+#### Immediate Fix (Frontend)
+- `RoulettePage.tsx`: 상단 스탯 영역에 `오늘 남은 횟수: {remaining}/{max}` UI 추가.
+- 일일 제한 도달 시 `SPIN NOW` 버튼을 `LIMIT REACHED`로 변경하고 `disabled` 처리.
+
+### 검증 방법
+1. **플레이 제한**: 3회 플레이 후 4회째에 `400 Bad Request (DAILY_LIMIT_REACHED)` 응답 및 팝업 확인.
+2. **Nudge 지급**: `DailyNudgeService` 트리거 후 `TrialTokenBucket`에 3장이 정상 지급되는지 DB 확인.
+3. **UI 피드백**: 제한 도달 시 버튼 비활성화 및 상단 스탯 갱신(3/3) 확인.
+
+### 예방 가이드라인
+- **SoT 준수**: 모든 게임 모드 추가 시 `max_daily_spins` 필드 검증을 필수 체크리스트에 포함.
+- **KST 정책**: 시간 관련 로직은 반드시 프로젝트 공통 유틸리티(`_operational_date_kst`)를 사용하여 09:00 리셋을 유지할 것.
+
+### 관련 문서 (SoT/learned)
+- [v2_ticket_enum_sot_ko.md](../01_core/v2_ticket_enum_sot_ko.md)
+- [W05_GAME_troubleshooting.md (본 문서)](#02-02---game-룰렛-체험-티켓-일일-3회-제한-오작동-및-nudge-지급-버그)
+- [app/v2/services/v2_roulette_game_service.py](../../../app/v2/services/v2_roulette_game_service.py)

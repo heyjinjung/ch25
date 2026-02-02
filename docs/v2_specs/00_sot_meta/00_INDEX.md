@@ -185,6 +185,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.14 (2026-02-02, Antigravity Agent): 룰렛 체험 티켓(`TRIAL_TICKET`) 일일 제한 강제 및 넛지 서비스 버그 수정 (W05_GAME)
 - v2.10 (2026-02-02, Antigravity Agent): 신규 유저 미션(7일/FAB 타이머) SOT 및 트러블슈팅 업데이트
 - v2.11 (2026-02-02, GitHub Copilot): V2 세그먼트 키 COMMON/VIP/WHALE/AT_RISK 통일 및 learned_ 기록 추가
 - v2.12 (2026-02-02, GitHub Copilot): NEW 세그먼트(가입 7일/텔레그램 인증/입금 이력 제외) 추가 및 SoT/learned_ 정합성 갱신

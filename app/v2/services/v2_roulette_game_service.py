@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.exceptions import ForbiddenError, InvalidConfigError
+from app.core.exceptions import ForbiddenError, InvalidConfigError, DailyLimitReachedError
 from app.v2.models import FeatureType
 from app.v2.models import GameTokenType
 from app.schemas.roulette import (
@@ -181,13 +181,13 @@ class V2RouletteGameService:
                 )
             ).scalar_one()
 
-        unlimited = 0
-        remaining = 0
+        max_daily = config.max_daily_spins if config else 0
+        remaining = max(0, max_daily - today_spins) if max_daily > 0 else 0
 
         return RouletteStatusResponse(
             config_id=config.id if config else 0,
             name=config.name if config else "UNCONFIGURED",
-            max_daily_spins=unlimited,
+            max_daily_spins=max_daily,
             today_spins=int(today_spins),
             remaining_spins=remaining,
             token_type=self._normalize_ticket_type(ticket_type),
@@ -259,6 +259,20 @@ class V2RouletteGameService:
                 .order_by(V2RouletteSegment.slot_index)
                 .all()
             )
+
+        # === 일일 제한 체크 (KST 09:00 리셋) ===
+        if config.max_daily_spins > 0:
+            today_spins = db.execute(
+                select(func.count())
+                .select_from(V2RouletteLog)
+                .where(
+                    V2RouletteLog.user_id == user_id,
+                    V2RouletteLog.config_id == config.id,
+                    func.date(V2RouletteLog.created_at) == today,
+                )
+            ).scalar_one()
+            if today_spins >= config.max_daily_spins:
+                raise DailyLimitReachedError("오늘 룰렛 횟수를 모두 사용했습니다.")
 
         chosen = self._pick_weighted_segment(segments)
         reward_type = str(chosen.reward_type)
