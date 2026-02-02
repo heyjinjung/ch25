@@ -425,3 +425,5 @@ NUL
 .env.*.vite
 .agent/skills
 
+test.db-journal
+uploads/csv_imports/casino_log_20260202_093157_test_file.CSV
