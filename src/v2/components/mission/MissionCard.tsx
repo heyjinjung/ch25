@@ -14,7 +14,8 @@ import { motion } from "framer-motion";
 import { MissionDto } from "../../api/missionApi";
 import { BorderBeam } from "../../components/ui/BorderBeam";
 import { useViralAction } from "../../hooks/useViralAction";
-import { triggerHaptic } from "../../utils/haptic";
+import { triggerHaptic, triggerNotification } from "../../utils/haptic";
+import { useToast } from "../../components/common/ToastProvider";
 
 interface MissionCardProps {
   mission: MissionDto;
@@ -30,6 +31,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
   const [isJoined, setIsJoined] = useState(false);
   const { recordAction, verifyChannel, isRecording, isVerifying } =
     useViralAction();
+  const { addToast } = useToast();
 
   const viteEnv = (import.meta as any)?.env as Record<
     string,
@@ -85,10 +87,31 @@ export const MissionCard: React.FC<MissionCardProps> = ({
         setIsJoined(true);
       } else {
         // Step 2: Verify Subscription
-        await verifyChannel({
-          missionId: parseInt(mission.id),
-          channelUsername: buildVerifyChannelUsername(),
-        });
+        try {
+          const result: any = await verifyChannel({
+            missionId: parseInt(mission.id),
+            channelUsername: buildVerifyChannelUsername(),
+          });
+          
+          if (result.success) {
+            triggerNotification("success");
+            addToast({ 
+              message: result.message || "인증 성공! 보상이 지급되었습니다.", 
+              type: "success", 
+              duration: 3000 
+            });
+          } else {
+             triggerNotification("warning");
+             addToast({ 
+              message: result.message || "채널 가입이 확인되지 않았습니다.", 
+              type: "error", 
+              duration: 3000 
+            });
+          }
+        } catch (e) {
+          triggerNotification("error");
+          console.error(e);
+        }
       }
     } else if (actionType === "SHARE_STORY") {
       // SHARE_STORY: Trust-based immediate recording

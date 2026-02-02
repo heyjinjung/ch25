@@ -18,14 +18,12 @@ export function useViralAction() {
   });
 
   const verifyChannelMutation = useMutation({
-    mutationFn: ({ missionId, channelUsername }: { missionId: number; channelUsername?: string }) => 
-      verifyChannelSubscription(missionId, channelUsername),
-    onSuccess: (data) => {
-      if (data.success) {
-        triggerNotification("success");
-      } else {
-        triggerNotification("warning");
-      }
+    mutationFn: async ({ missionId, channelUsername }: { missionId: number; channelUsername?: string }) => {
+      const result = await verifyChannelSubscription(missionId, channelUsername);
+      return result; 
+    },
+    onSuccess: () => {
+      // MissionCard에서 메시지를 처리하므로 여기서는 쿼리 갱신만 수행
       queryClient.invalidateQueries({ queryKey: ["v2", "missions"] });
     },
     onError: (error) => {

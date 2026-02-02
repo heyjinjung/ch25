@@ -23,7 +23,7 @@ class HQMarginStatsService:
         Metrics:
         - VIP Count (Segment='VIP')
         - Whale Count (Segment='WHALE')
-        - At Risk Count (Segment='DORMANT') -> Mapped to 'atRisk'
+        - At Risk Count (Segment='AT_RISK') -> Mapped to 'atRisk'
         - Prospective VIP Count (HQProspectiveUser Segment='VIP', Not Joined)
         - Last Sync Time (From Audit Log)
         """
@@ -40,7 +40,7 @@ class HQMarginStatsService:
         ).scalar() or 0
         
         dormant_count = db.query(func.count(V2UserSegment.user_id)).filter(
-            V2UserSegment.segment == "DORMANT"
+            V2UserSegment.segment == "AT_RISK"
         ).scalar() or 0
         
         # 2. Prospective VIPs

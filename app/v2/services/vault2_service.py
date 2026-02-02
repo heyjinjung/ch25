@@ -248,7 +248,7 @@ class Vault2Service:
         if segment_allow:
             from app.v2.models.v2_user_segment import V2UserSegment
             user_seg = db.query(V2UserSegment).filter(V2UserSegment.user_id == user_id).first()
-            user_segment_val = user_seg.segment if user_seg else "NEW"
+            user_segment_val = user_seg.segment if user_seg else "COMMON"
             if user_segment_val != segment_allow:
                 return False
 

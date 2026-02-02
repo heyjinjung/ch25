@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
-from app.v2.models import UserSegment
+from app.v2.services.segment_service import V2SegmentService
 from app.schemas.event import ActiveEventOut, EventStatusResponse, GoldenHourStatus
 from app.v2.services.event_service import V2EventService
 
@@ -42,7 +42,7 @@ def get_event_status(
             )
         )
 
-    segment = db.query(UserSegment.segment).filter(UserSegment.user_id == user_id).scalar() or "COMMON"
+    segment = V2SegmentService.get_current_segment(db, user_id)
     for cfg in service.list_active_event_configs(db, now=now, segment=segment):
         if cfg.event_type in {"SEGMENT_CAMPAIGN", "GOLDEN_HOUR"}:
             continue

@@ -26,7 +26,7 @@ V2 미션 관련 용어와 SoT 기준을 단일 문서로 확정한다.
 | 승인 워크플로우 | Approval | approval_status | 승인 필요 미션의 지급 통제 | 미승인 지급 차단이 기본 |
 | 미션 종류 | DAILY | mission.category | 데일리 미션 | 주기: 일 단위 |
 | 미션 종류 | WEEKLY | mission.category | 위클리 미션 | 주기: 주 단위 |
-| 미션 종류 | NEW_USER | mission.category | 신규전용 미션 | 신규 유저 대상 |
+| 미션 종류 | NEW_USER | mission.category | 신규전용 미션 | 가입 후 7일간 유효, 4종 Starter 미션 제공 (CC채널가입 폐기) |
 | 미션 종류 | SPECIAL_EVENT | mission.category | 특별이벤트 미션 | 이벤트 기간 한정 |
 
 ## 5. 미션 카테고리/보상타입 매핑 (Mapping SoT)

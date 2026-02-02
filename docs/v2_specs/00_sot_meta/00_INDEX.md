@@ -72,9 +72,16 @@
 - **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
 - **V1->V2 상점 이관 검증 보고서**: docs/v2_specs/99_verification/sot_verification_report_shop.md
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
-- 검증/세그먼트 SoT: docs/v2_specs/01_core/v2_grade_segment_sot_ko.md
-- 유저 세그먼트 정책 SoT: docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md
-- 알림/피드 스키마 SoT: docs/v2_specs/03_api/v2_notification_feed_schema_ko.md
+- 검증/세그먼트 So# Tasks
+
+- [x] Consolidate Monitoring & Analytics menu structure
+- [x] Fix HQ Margin CSV import encoding issues
+- [x] Improve User Detail Drawer with Vault and Game Logs
+- [x] Fix GameLogItemDto key error (segment_index -> segment_id)
+- [/] Localize User Inventory Item Names
+  - [ ] Update `InventoryPage.tsx` to use `getRewardItemLabel`
+  - [ ] Verify Korean item names in User Inventory Page
+- [ ] Final verification and documentation update
 - 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
 - Auth/User API 계약: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
 - Mission/Streak API 계약: docs/v2_specs/03_api/v2_mission_streak_api_contract_ko.md
@@ -127,7 +134,18 @@
 - (Backend Runtime) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_backend_runtime_ko.md
 - (Frontend Startup) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_frontend_startup_ko.md
 - (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
-- (Ticket/Inventory Search) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260121_ticket_inventory_search_ko.md
+- (Ticket/Inventory Search)# Localization: User Inventory Item Names
+
+Implement Korean localization for inventory item names in the user-facing inventory page by adhering to SOT standards.
+
+## Proposed Changes
+
+### [User Frontend]
+
+#### [MODIFY] [InventoryPage.tsx](file:///C:/Users/JAVIS/ch/ch25/src/v2/pages/inventory/InventoryPage.tsx)
+- Replace local `ITEM_NAME_MAP` and `getFriendlyItemName` with `getRewardItemLabel` from `src/v2/constants/rewardItems.ts`.
+- Ensure all item types (including vouchers and gifticons) are correctly localized using the centralized mapping.
+md
 - (CSV Import) docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md
 - **(배포 트러블슈팅 가이드)** docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md
 
@@ -161,6 +179,8 @@
 
 
 ## 7. 변경 이력
+- v2.10 (2026-02-02, Antigravity Agent): 신규 유저 미션(7일/FAB 타이머) SOT 및 트러블슈팅 업데이트
+- v2.11 (2026-02-02, GitHub Copilot): V2 세그먼트 키 COMMON/VIP/WHALE/AT_RISK 통일 및 learned_ 기록 추가
 - v2.9 (2026-02-01, GitHub Copilot): 트러블슈팅 README 작성/업데이트 가이드 SoT 우선순위 및 증거 기반 규칙 보강
 - v2.8 (2026-01-30, GitHub Copilot): V1 Auth 가드/ Celery 헬스체크 개선 및 로컬 마이그레이션 기록
 - v2.2 (2026-01-19, GitHub Copilot): V1→V2 상점 상품 변환 가이드 링크 추가

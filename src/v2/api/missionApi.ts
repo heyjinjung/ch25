@@ -85,6 +85,7 @@ export interface StreakInfoDto {
 export interface MissionListResponse {
   readonly missions: MissionDto[];
   readonly streak_info: StreakInfoDto;
+  readonly new_user_deadline?: string;
 }
 
 export interface SeasonPassLevelDto {

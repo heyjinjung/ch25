@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from sqlalchemy import func, select
@@ -15,6 +15,7 @@ from app.v2.models.v2_roulette import V2RouletteLog
 from app.v2.models.v2_dice import V2DiceLog
 from app.v2.models.v2_lottery import V2LotteryLog
 from app.v2.models.user import V2User
+from app.v2.models import ExternalRankingDailyDepositDelta
 
 
 @dataclass(frozen=True)
@@ -26,42 +27,42 @@ class SegmentResult:
 
 DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
     {
-        "name": "기본: VIP (입금 100만+)",
+        "name": "기본: WHALE (7일 입금 300만+)",
+        "segment": "WHALE",
+        "priority": 5,
+        "enabled": True,
+        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 3000000},
+    },
+    {
+        "name": "기본: VIP (7일 입금 50만+)",
         "segment": "VIP",
         "priority": 10,
         "enabled": True,
-        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 1000000},
+        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 500000},
     },
     {
-        "name": "기본: ACTIVE (최근활동 0~1일)",
-        "segment": "ACTIVE",
-        "priority": 20,
-        "enabled": True,
-        "condition_json": {"field": "days_since_last_active", "op": "<=", "value": 1},
-    },
-    {
-        "name": "기본: AT_RISK (최근활동 2~6일)",
+        "name": "기본: AT_RISK (최근활동 7일+)",
         "segment": "AT_RISK",
         "priority": 30,
         "enabled": True,
+        "condition_json": {"field": "days_since_last_active", "op": ">=", "value": 7},
+    },
+    {
+        "name": "기본: COMMON (최근활동 0~6일)",
+        "segment": "COMMON",
+        "priority": 90,
+        "enabled": True,
         "condition_json": {
             "all": [
-                {"field": "days_since_last_active", "op": ">=", "value": 2},
+                {"field": "days_since_last_active", "op": ">=", "value": 0},
                 {"field": "days_since_last_active", "op": "<=", "value": 6},
             ]
         },
     },
     {
-        "name": "기본: DORMANT (최근활동 7일+)",
-        "segment": "DORMANT",
-        "priority": 40,
-        "enabled": True,
-        "condition_json": {"field": "days_since_last_active", "op": ">=", "value": 7},
-    },
-    {
-        "name": "기본: NEW (활동기록 거의 없음)",
-        "segment": "NEW",
-        "priority": 90,
+        "name": "기본: COMMON (활동기록 없음)",
+        "segment": "COMMON",
+        "priority": 95,
         "enabled": True,
         "condition_json": {"field": "days_since_last_active", "op": "is_null"},
     },
@@ -69,6 +70,22 @@ DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
 
 
 class V2SegmentService:
+    ALLOWED_SEGMENTS = {"COMMON", "VIP", "WHALE", "AT_RISK"}
+
+    @staticmethod
+    def normalize_segment(segment: str | None) -> str:
+        if not segment:
+            return "COMMON"
+        normalized = str(segment).strip().upper()
+        if normalized in V2SegmentService.ALLOWED_SEGMENTS:
+            return normalized
+        return "COMMON"
+
+    @staticmethod
+    def get_current_segment(db: Session, user_id: int) -> str:
+        row = db.get(V2UserSegment, user_id)
+        return V2SegmentService.normalize_segment(row.segment if row else None)
+
     @staticmethod
     def ensure_default_rules(db: Session) -> None:
         """Ensure baseline V2 rules exist."""
@@ -180,6 +197,15 @@ class V2SegmentService:
             select(func.count()).select_from(V2LotteryLog).where(V2LotteryLog.user_id == user.id)
         ).scalar_one()
 
+        seven_days_ago_date = (now - timedelta(days=6)).date()
+        deposit_7d = db.execute(
+            select(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0))
+            .where(
+                ExternalRankingDailyDepositDelta.user_id == user.id,
+                ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
+            )
+        ).scalar_one() or 0
+
         return SegmentContext(
             last_login_at=None,
             last_charge_at=None,
@@ -189,7 +215,7 @@ class V2SegmentService:
             days_since_last_charge=None,
             days_since_last_play=days_since_last_play,
             days_since_last_active=days_since_last_play,
-            deposit_amount=0,
+            deposit_amount=int(deposit_7d),
             roulette_plays=int(roulette_plays or 0),
             dice_plays=int(dice_plays or 0),
             lottery_plays=int(lottery_plays or 0),
@@ -270,7 +296,9 @@ class V2SegmentService:
 
         if rec is None:
             existing = db.get(V2UserSegment, user_id)
-            segment_value = existing.segment if existing else "NEW"
+            segment_value = existing.segment if existing else "COMMON"
+            if existing is None:
+                V2SegmentService.upsert_user_segment(db, user_id, segment_value)
             return SegmentResult(user_id=user_id, segment=segment_value, matched_rule=None)
 
         segment_value, rule_name = rec
@@ -286,9 +314,9 @@ class V2SegmentService:
         for user_id in users:
             processed += 1
             before = db.get(V2UserSegment, user_id)
-            before_segment = before.segment if before else None
+            before_segment = before.segment if before else "COMMON"
             result = V2SegmentService.segment_user(db, user_id, now_dt)
-            if result.segment != (before_segment or "NEW"):
+            if result.segment != (before_segment or "COMMON"):
                 changed += 1
         db.commit()
         return {"processed": processed, "changed": changed}
@@ -319,9 +347,9 @@ class V2SegmentService:
 
         return {
             "segments": {
-                "DAILY": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "ACTIVE")).scalar() or 0,
-                "WEEKLY": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "VIP")).scalar() or 0,
-                "MONTHLY": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "AT_RISK")).scalar() or 0,
-                "DORMANT": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "DORMANT")).scalar() or 0,
+                "COMMON": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "COMMON")).scalar() or 0,
+                "VIP": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "VIP")).scalar() or 0,
+                "WHALE": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "WHALE")).scalar() or 0,
+                "AT_RISK": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "AT_RISK")).scalar() or 0,
             }
         }

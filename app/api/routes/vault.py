@@ -254,7 +254,7 @@ def status(db: Session = Depends(get_db), user_id: int = Depends(get_current_use
         spend_target = 0
     elif deposit_7d >= 500000: # VIP
         play_target = 15
-        spend_target = 20000  # Changed from 5000 to 20000
+        spend_target = 5000
 
     res.daily_play_count = int(recent_play_count) # Reusing field name but semantic is now 7-day
     res.daily_play_target = int(play_target)

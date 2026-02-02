@@ -52,7 +52,7 @@ export default function UserSegmentPage() {
   const [newRule, setNewRule] = useState<CreateSegmentRuleRequest>({
     label: "",
     rule: "",
-    targetSegment: "VIP_Potential",
+    targetSegment: "COMMON",
     description: "",
   });
 
@@ -78,7 +78,7 @@ export default function UserSegmentPage() {
       setNewRule({
         label: "",
         rule: "",
-        targetSegment: "VIP_Potential",
+        targetSegment: "COMMON",
         description: "",
       });
     },
@@ -240,10 +240,10 @@ export default function UserSegmentPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-zinc-800 border-zinc-700">
-                      <SelectItem value="VIP_Potential">VIP 잠재</SelectItem>
-                      <SelectItem value="Churn_Risk">이탈 위험</SelectItem>
-                      <SelectItem value="New_User">신규 유저</SelectItem>
-                      {/* Add other segments dynamically if possible, or hardcode common ones */}
+                      <SelectItem value="COMMON">일반</SelectItem>
+                      <SelectItem value="VIP">VIP</SelectItem>
+                      <SelectItem value="WHALE">고액(Whale)</SelectItem>
+                      <SelectItem value="AT_RISK">이탈 위험</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

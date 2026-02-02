@@ -2,7 +2,7 @@ import pytest
 import csv
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from app.v2.services.csv_import_service import CSVImportService
 from app.v2.services.hq_margin_import_service import HQMarginImportService
 
@@ -33,15 +33,18 @@ def test_csv_import_encoding_detection_cp949():
         
         assert is_valid, f"Failed to validate CP949 CSV: {error_msg}"
         
-        # Test parsing
-        rows = service.parse_csv_rows(str(csv_path))
+        # Test parsing (returns a generator yielding batches)
+        batches = list(service.parse_csv_rows(str(csv_path)))
+        assert len(batches) == 1
+        rows = batches[0]
         assert len(rows) == 1
-        assert rows[0]["user_id"] == 123
-        assert rows[0]["bet_amount"] == 1000
+        assert str(rows[0].user_id) == "123"
+        assert rows[0].bet_amount == 1000
     finally:
         csv_path.unlink()
 
-def test_hq_margin_import_encoding_detection_cp949():
+@pytest.mark.asyncio
+async def test_hq_margin_import_encoding_detection_cp949():
     """Test that HQMarginImportService correctly handles CP949 encoding."""
     headers = ["이름 (아이디)", "닉네임", "총 운영 마진", "미접속 경과일"]
     row = {
@@ -62,19 +65,23 @@ def test_hq_margin_import_encoding_detection_cp949():
         # Mock DB and other services
         db = MagicMock()
         # Mocking the query to avoid actual DB access
-        db.query.return_value.filter.return_value.first.return_value = None
+        # The service uses db.query(V2User).filter(...).first()
+        query_mock = MagicMock()
+        db.query.return_value = query_mock
+        query_mock.filter.return_value.first.return_value = None
         
-        # import_hq_margin_csv is a class method but we can call it directly
-        # However, it expects a db session
-        result = HQMarginImportService.import_hq_margin_csv(
-            db=db,
-            file_path=str(csv_path),
-            admin_id="test_admin"
-        )
-        
-        assert result["success"] is True
-        # Since user doesn't exist, it should be in prospective_count
-        assert result["processed_count"] == 1
+        # Mock V2AdminAuditService.log to avoid errors
+        with patch("app.v2.services.admin_audit_service.V2AdminAuditService.log") as mock_log:
+            result = await HQMarginImportService.import_hq_margin_csv(
+                db=db,
+                file_path=str(csv_path),
+                admin_id="test_admin"
+            )
+            
+            assert result["success"] is True
+            # Since user doesn't exist, it should be processed as prospective
+            assert result["total_rows"] == 1
+            assert result["prospective_count"] == 1
     finally:
         csv_path.unlink()
 
@@ -105,8 +112,10 @@ def test_csv_import_encoding_detection_utf8_sig():
         assert is_valid, f"Failed to validate UTF-8-sig CSV: {error_msg}"
         
         # Test parsing
-        rows = service.parse_csv_rows(str(csv_path))
+        batches = list(service.parse_csv_rows(str(csv_path)))
+        assert len(batches) == 1
+        rows = batches[0]
         assert len(rows) == 1
-        assert rows[0]["user_id"] == 456
+        assert str(rows[0].user_id) == "456"
     finally:
         csv_path.unlink()

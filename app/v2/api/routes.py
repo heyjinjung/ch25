@@ -369,7 +369,25 @@ def list_missions(
     service = V2MissionService(db)
     missions = service.get_user_missions(user_id, category=category)
     streak_info = service.get_streak_info(user_id)
-    return MissionListResponse(missions=missions, streak_info=streak_info)
+    
+    # Calculate New User Deadline (created_at + 7 days)
+    new_user_deadline = None
+    if category == MissionCategory.NEW_USER and v2_user.created_at:
+        from datetime import timedelta
+        # Ensure created_at is aware or handled consistently
+        created_at = v2_user.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=ZoneInfo("UTC"))
+        
+        # 7 days from creation
+        deadline = created_at + timedelta(days=7)
+        new_user_deadline = deadline.isoformat()
+
+    return MissionListResponse(
+        missions=missions, 
+        streak_info=streak_info,
+        new_user_deadline=new_user_deadline
+    )
 
 
 @router.post("/mission/{mission_id:int}/claim", tags=["v2-mission"])

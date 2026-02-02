@@ -55,6 +55,7 @@ class StreakInfoSchema(BaseModel):
 class MissionListResponse(BaseModel):
     missions: list[MissionWithProgress]
     streak_info: StreakInfoSchema = Field(serialization_alias="streak")
+    new_user_deadline: Optional[str] = None  # ISO format string for timer
     
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

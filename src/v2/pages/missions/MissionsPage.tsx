@@ -11,6 +11,58 @@ import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
 import { MorphicNavbar } from "../../components/layout/MorphicNavbar";
 import { Meteors } from "../../components/effects/Meteors";
 import "./MissionRedesign.css";
+import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
+
+const FloatingTimer = ({ deadline }: { deadline: string }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(deadline) - +new Date();
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((difference / 1000 / 60) % 60);
+        const seconds = Math.floor((difference / 1000) % 60);
+        return `${String(days).padStart(2, "0")}일 ${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      }
+      return "00일 00:00:00";
+    };
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    setTimeLeft(calculateTimeLeft()); // Initial call
+
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.8, y: 20 }}
+      className="fixed bottom-[calc(var(--nav-offset)+1.5rem)] right-4 z-50 pointer-events-none"
+    >
+      <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-black/90 backdrop-blur-xl border border-rose-500/50 shadow-[0_4px_20px_rgba(244,63,94,0.3)] shadow-rose-900/20">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-20" />
+          <div className="relative w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+        </div>
+        <div className="flex flex-col items-start leading-none">
+          <span className="text-[9px] font-bold text-rose-400/80 uppercase tracking-widest mb-1">
+            혜택 종료까지
+          </span>
+          <span className="text-sm font-black text-white font-mono tabular-nums tracking-tight">
+            {timeLeft}
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 
 const CATEGORIES = [
   { id: "DAILY", label: "일일", emoji: "🔥" },
@@ -133,6 +185,8 @@ export default function MissionsPage() {
           </motion.div>
         ) : (
           <div className="space-y-6">
+
+
             {activeCategory === "DAILY" && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -162,6 +216,11 @@ export default function MissionsPage() {
             </div>
           </div>
         )}
+        <AnimatePresence>
+          {activeCategory === "NEW_USER" && data?.new_user_deadline && (
+            <FloatingTimer deadline={data.new_user_deadline} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

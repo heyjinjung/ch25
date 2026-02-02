@@ -12,6 +12,7 @@
 | 01-31 | [ADMIN/MISSION] 로그인 미션 검증 집계가 Admin만 표시 | ✅ RESOLVED |
 | 01-31 | 신규 채널 가입 미션 UI 비활성화 | ✅ RESOLVED |
 | 01-30 | CC 입금 미션 XP 미지급 | ✅ RESOLVED |
+| 02-01 | 신규 유저 미션 타이머 UX 및 기간 정책 수정 + 텔레그램 채널 연동 UX | ✅ RESOLVED |
 
 ---
 
@@ -206,6 +207,37 @@ login_mission = db.query(Mission).filter(
 
 ### 관련 파일
 - `app/v2/services/mission_service.py` (claim_reward 로직)
+
+---
+
+## 02-01 - [MISSION/UX] 신규 유저 미션 타이머 UX 및 기간 정책 수정
+
+**우선순위**: P1 (UX Critical)
+**관련 도메인**: MISSION, FRONTEND
+
+### 증상
+- 신규 유저 탭의 타이머 위치가 부적절하다는 피드백(반려).
+- 자격 기간에 대한 혼선 (기존 72시간 vs 시스템 7일).
+
+### 근본 원인
+- **정책 불일치**: SOT상 72시간이었으나 코드(`mission_service.py`)는 7일로 구현됨.
+- **UX 설계**: 초기 카드 형태의 타이머가 메인 컨텐츠와 충돌.
+
+### 해결 방법
+#### Policy Fix
+- 기간을 **7일 (168시간)**로 확정하고 SOT 및 로직을 일치시킴.
+
+#### Frontend Fix (UX)
+- 타이머를 메인 컨텐츠를 가리지 않는 **Floating Action Button(FAB)** 형태로 변경.
+- **위치**: 우측 하단 고정 (`fixed bottom-20 right-4`).
+- **디자인**: 검은색 반투명 배경 + Rose 컬러 텍스트 + 펄스 애니메이션 적용.
+- **구현 파일**: `src/v2/pages/missions/MissionsPage.tsx` 내 `FloatingTimer` 컴포넌트.
+
+### 검증 방법
+1. 신규 가입 7일 이내 계정으로 미션 페이지 진입.
+2. "신규 유저" 탭 선택.
+3. 우측 하단에 FAB 타이머가 노출되며 "혜택 종료까지 00일 00:00:00" 카운트다운 동작 확인.
+4. 스크롤 시에도 위치가 고정되는지 확인.
 
 ---
 

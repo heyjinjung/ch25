@@ -531,9 +531,9 @@ class V2VaultService:
             ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
         ).scalar() or 0
 
-        from app.v2.models.v2_user_segment import V2UserSegment
-        
-        current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
+        from app.v2.services.segment_service import V2SegmentService
+
+        current_segment = V2SegmentService.get_current_segment(db, user_id)
         segments = [str(current_segment).upper()] if current_segment else []
 
         play_target = 30
@@ -546,7 +546,7 @@ class V2VaultService:
             spend_target = 0
         elif deposit_7d >= 500000:
             play_target = 15
-            spend_target = 20000
+            spend_target = 5000
 
         withdrawal_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
             VaultWithdrawalRequest.user_id == user_id,
@@ -1073,9 +1073,9 @@ class V2VaultService:
                     has_cc_deposit_today = True
 
         # 1. Strict Withdrawal Eligibility (SoT): deposit today + play target + spend target
-        from app.v2.models.v2_user_segment import V2UserSegment
+        from app.v2.services.segment_service import V2SegmentService
 
-        current_segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar()
+        current_segment = V2SegmentService.get_current_segment(db, user_id)
         segments = [str(current_segment).upper()] if current_segment else []
 
         seven_days_ago_date = (now - timedelta(days=6)).date()
@@ -1094,7 +1094,7 @@ class V2VaultService:
             spend_target = 0
         elif deposit_7d >= 500000:
             play_target = 15
-            spend_target = 20000
+            spend_target = 5000
 
         # Deposit must be confirmed for the operational day (KST 09:00 reset)
         if not has_cc_deposit_today:

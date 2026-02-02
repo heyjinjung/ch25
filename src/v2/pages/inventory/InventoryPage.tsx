@@ -11,6 +11,7 @@ import { Button } from "../../components/ui/button";
 import { clsx } from "clsx";
 import confetti from "canvas-confetti";
 import InlineNotice from "../../components/common/InlineNotice";
+import { getRewardItemLabel } from "../../constants/rewardItems";
 
 // ============================================================================
 // Types & Constants
@@ -43,33 +44,8 @@ const VOUCHER_ITEM_TYPES = new Set([
   "VOUCHER_LOTTERY_TICKET_1",
 ]);
 
-const ITEM_NAME_MAP: Record<string, string> = {
-  VOUCHER_GOLD_KEY_1: "골드키",
-  VOUCHER_DIAMOND_KEY_1: "다이아키",
-  VOUCHER_ROULETTE_COIN_1: "룰렛티켓",
-  VOUCHER_DICE_TOKEN_1: "주사위티켓",
-  VOUCHER_LOTTERY_TICKET_1: "복권티켓",
-};
-
 const getFriendlyItemName = (type: string) => {
-  // 1. Map from table
-  if (ITEM_NAME_MAP[type]) return ITEM_NAME_MAP[type];
-
-  // 2. Gifticon Regex (BRAND_GIFTICON_AMOUNT)
-  const gifticonRegex = /^([A-Z]+)_GIFTICON_(\d+)$/;
-  const match = type.match(gifticonRegex);
-  if (match && match[2]) {
-    const brand = match[1] || "Unknown";
-    const amount = parseInt(match[2]).toLocaleString();
-    return `${brand} ${amount}원 깁콘`;
-  }
-
-  // 3. Fallback: Humanize
-  return type
-    .replace("VOUCHER_", "")
-    .replace("_1", "")
-    .replace(/_/g, " ")
-    .toUpperCase();
+  return getRewardItemLabel(type);
 };
 
 const isGifticonType = (type: string) =>

@@ -31,31 +31,63 @@
 
 ---
 
-## 3. 정책 및 제한 (Policies & Constraints)
+## 3. 참여 자격 및 기간
+1. **대상**: 신규 가입한 모든 유저
+2. **기간**: 가입 시점(`created_at`)으로부터 **7일 (168시간)**
+   - 기존 72시간에서 7일로 연장됨.
+   - *기간 설정은 시스템 기본값이며, 추후 어드민 정책에 따라 변경될 수 있음.*
+3. **만료 처리**:
+   - 7일이 지나면 "신규 유저" 탭이 비활성화되거나 미션 수행 불가 상태로 전환.
+   - **UX**: "신규 유저" 탭 진입 시 우측 하단에 **Floating Action Button(FAB)** 형태로 "혜택 종료까지 남은 시간"이 카운트다운됨.
 
-### 3.1. 참가 자격 (Eligibility)
-- **대상**: `user.created_at` 기준 72시간(3일) 이내의 유저.
-- **예외**: 어뷰징 의심 유저(`is_abuser=True`)는 미션 목록 노출 및 수령 불가.
+## 4. 미션 상세 (Starter Missions)
+신규 유저 미션은 **총 5종**의 Starter Mission으로 구성된다 (시스템 시드 기준).
 
-### 3.2. 유효 기간 (Time Window)
-- **Start**: 가입 시점(`created_at`)부터 타이머 시작.
-- **End**: 72시간 경과 시 `EXPIRATION` 처리되어 더 이상 달성/수령 불가.
-- **UI 표시**: 남은 시간을 "00:00:00" 형태로 카운트다운 노출.
+### A. 게임 플레이 & 로그인
+1. **[미션] 신규 첫로그인 (NEW_USER_FIRST_LOGIN)**
+   - **조건**: 서비스 최초 가입 후 로그인
+   - **보상**: 3,000 POINT
+   - **자동 지급**: 미션 탭 진입 시 자동 체크
 
-### 3.3. 보상 및 재화 (Rewards)
-- 모든 보상은 `v2_reward_type_standard_sot_ko.md`를 준수해야 한다.
-- `BUNDLE` 타입 보상은 `Inventory`로 `Box Item` 형태로 지급되며, 유저가 직접 "사용"해야 실제 내용물을 획득한다.
+2. **[미션] 신규 첫게임 (NEW_USER_FIRST_GAME)**
+   - **조건**: 아무 게임(Dice, Roulette, Lottery) 1회 플레이
+   - **보상**: 2,000 POINT
+   - **자동 지급**: 게임 플레이 후 미션 탭 진입 시 수령 가능
+
+3. **[미션] 신규 다음날 로그인 1일 (NEW_USER_NEW_USER_NEXT_DAY_LOGIN_1)**
+   - **조건**: 가입 다음날(D+1) 로그인 (09:00 KST 기준)
+   - **보상**: 1,000 POINT
+
+### B. 커뮤니티 (Channel Join)
+4. **[미션] 신규 텔레그램 채널가입 (NEW_USER_TELEGRAM_JOIN)**
+   - **조건**: 공식 텔레그램 채널 입장
+   - **액션**: `JOIN_TELEGRAM_CHANNEL`
+   - **보상**: **PIZZA_GIFTICON_10000** (피자 1만원권)
+   - **검증**: '가입 확인' 버튼 클릭 시 멤버십 확인
+   - **UX Flow**:
+     1. **초기 상태**: "채널 입장하기" 버튼 노출.
+     2. **클릭 시**: 텔레그램 앱(공식 채널)으로 딥링크 이동 (`tg://resolve?domain=...`).
+     3. **복귀 후**: 버튼이 "가입 확인"으로 변경됨 (User Interaction 유도).
+     4. **확인 클릭**: `verifyChannel` API 호출하여 실제 멤버십 여부 체크.
+        - **성공**: "인증되었습니다" Toast 노출 → 보상 수령(Claim) 가능 상태로 전환.
+        - **실패**: "채널 가입이 확인되지 않았습니다" 에러 Toast 노출.
+
+5. **[미션] 신규 CC채널가입 (NEW_USER_CC_CHANNEL_JOIN)**
+   - **상태**: ⛔ **폐기 (Deprecated)** - 운영 정책에 따라 더 이상 제공되지 않음.
+   - **조건**: 공식 CC 채널 입장
+   - **액션**: `JOIN_CC_CHANNEL` (비활성)
+   - **보상**: 0 POINT
 
 ---
 
-## 4. 데이터 연동 규칙 (Integration Rules)
+## 5. 데이터 연동 규칙 (Integration Rules)
 
-### 4.1. API Response Spec
+### 5.1. API Response Spec
 `GET /api/new-user/status` 응답에 6종 미션 상태가 모두 포함되어야 한다.
 - `missions`: 배열 내에 6개 객체가 존재하며 `logic_key`로 구분.
 - `actions`: "Welcome" 미션 수령은 별도 액션이 아닌, 미션 리스트 내 `claim` 동작으로 통합 권장 (단, 레거시 호환을 위해 `/claim-welcome` 유지 가능).
 
-### 4.2. Redis Golden Channel Interaction
+### 5.2. Redis Golden Channel Interaction
 - 미션 달성 시 실시간 피드백을 위해 `golden:v2:mission:complete` 채널로 이벤트를 발행한다.
 - **Format**: `{"user_id": 123, "mission_key": "start_first_win", "reward": {...}}`
 
