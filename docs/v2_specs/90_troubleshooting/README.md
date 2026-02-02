@@ -74,7 +74,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 7 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
 | INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 7 |
-| FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 5 |
+| FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 6 |
 
 ---
 
@@ -129,6 +129,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | Sentry Logs 탭 온보딩 화면 고정 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#01-31---infra-sentry-log-monitoring-logs-탭-활성화) | P2 |
 | 게임 API ModuleNotFoundError | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md#01-31---game-게임-api-modulenotfounderror-v2_user-경로-오류) | P0 |
 | CSV Import 한글 헤더 오류 및 오타 | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md#02-01---infrabackend-csv-import-한글-헤더-지원-및-import-오류-수정) | P1 |
+| CSV Import HQ_MARGIN 결과 화면 오류 | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md#02-02---frontendbackend-csv-import-hq_margin-타입-결과-화면-오류-tolocalestring-undefined) | P1 |
 
 ### 프론트엔드 관련
 | 문제 | 문서 | 우선순위 |
@@ -137,6 +138,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | Cannot read property of undefined | [Undefined 오류](./v2_troubleshooting_20260120_undefined_error_ko.md) | P1 |
 | 빌드 실패 (Vite/Webpack) | [프론트엔드 시작](./v2_troubleshooting_20260120_frontend_startup_ko.md) | P1 |
 | MissionManagerPage 파일 비대화 (2944줄) | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md#02-01---frontendrefactor-missionmanagerpage-대규모-리팩토링-2944284줄-90-감소) | P2 |
+| CSV Import 결과 화면 toLocaleString 오류 | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md#02-02---frontendbackend-csv-import-hq_margin-타입-결과-화면-오류-tolocalestring-undefined) | P1 |
 
 ### 권한/보안 관련
 | 문제 | 문서 | 우선순위 |
@@ -150,6 +152,18 @@ W{주차}_{도메인코드}_troubleshooting.md
 ## 🔍 에러 메시지로 찾기
 
 ### 자주 보이는 에러 메시지
+
+```
+NameError: name 'Session' is not defined
+→ 해결: W05_FRONTEND - CSV Import HQ_MARGIN 타입 결과 화면 오류
+→ 조치: hq_margin_import_service.py에 Session import 추가
+```
+
+```
+TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+→ 해결: W05_FRONTEND - CSV Import HQ_MARGIN 타입 결과 화면 오류
+→ 조치: CSVImportPage.tsx에서 nullish coalescing(??) 적용 및 타입별 분기 처리
+```
 
 ```
 ImportError: cannot import name 'SurveyQuestionType' from 'app.v2.models'

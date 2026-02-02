@@ -115,15 +115,14 @@ GET /login 200 (referrer: /v2/missions)
 - 운영 로그에서 `/api/v2/mission/streak/claim` 호출 로그가 확인되지 않음(최근 500라인 기준).
 
 ### 근본 원인 (증거 기반)
-- 스트릭 모달/클레임 플로우가 `V2AppHeader`에서 제거되어 클레임 API 호출 경로 자체가 없음.
+- **Schema Mismatch**: Frontend `V2AppHeader`는 `streakInfo.claimable_rewards` (List)를 기대하나, Backend `StreakService` 분리 후 `StreakInfoSchema`가 `claimable_day` (Int)만 반환하도록 변경됨. 이로 인해 Frontend에서 보상 수령 가능 상태를 감지하지 못함 (`claimable_rewards` undefined).
+- `V2AppHeader` 내 모달 로직은 존재했으나 데이터 불일치로 동작하지 않음.
 
 ### 해결 방법
 #### Immediate Fix
-- `src/v2/components/layout/V2AppHeader.tsx`에 스트릭 모달 노출 로직 복구:
-   - `useV2Missions("DAILY")`로 `streak_info` 수신
-   - `useModalVisibility()` 기반 `attendance_streak_enabled` 체크
-   - `showModalOverride === "STREAK_ATTENDANCE"` 또는 `claimable_rewards` 감지 시 모달 오픈
-   - `V2StreakModalContainer` 렌더링
+- `app/v2/schemas/v2_mission.py`: `StreakInfoSchema`에 `claimable_rewards: list[int]` 필드 추가.
+- `app/v2/services/mission_service.py` & `streak_service.py`: `get_streak_info` 반환 시 `[claimable_day]` 리스트를 `claimable_rewards`로 매핑하여 반환.
+- Frontend 수정 없이 Backend 응답 규격을 Frontend 기대치에 맞춤.
 
 ### 검증 방법
 1. 스트릭 보상 가능 유저로 접속

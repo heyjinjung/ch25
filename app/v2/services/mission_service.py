@@ -182,7 +182,8 @@ class V2MissionService:
             is_hot=is_hot,
             is_legend=is_legend,
             next_milestone=next_milestone,
-            claimable_day=claimable_day
+            claimable_day=claimable_day,
+            claimable_rewards=[claimable_day] if claimable_day else []
         )
 
     def _get_streak_multiplier(self, streak_days: int) -> float:

@@ -48,6 +48,7 @@ class StreakInfoSchema(BaseModel):
     is_legend: bool
     next_milestone: int
     claimable_day: Optional[int] = None
+    claimable_rewards: list[int] = Field(default_factory=list)
     
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

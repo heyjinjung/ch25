@@ -691,8 +691,8 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 연속 출석 일수별 보상 조건 관리
 이거 어드민에서 원하는 일자에 원하는 조건으로 편집/수정/기능 작동하게 해줘 
 
-✅지연극복관리 > 실제 ui 구현된거 있음? 
-어떻게 분석해서 할거임? 
+✅CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
+이거 백앤드 테스트 실행해야하
 
 ✅감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
@@ -702,8 +702,38 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 이 떄 뜨는 유저를 클릭하면 그 유저관리 디테일드로우페이지로 갈수 있게 해줘 
 
 ✅v2.14 (2026-02-02, Antigravity Agent): 룰렛 체험 티켓(`TRIAL_TICKET`) 일일 제한 강제 및 넛지 서비스 버그 수정 (W05_GAME)
+룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
+
+✅ MissionCard에서 useToast를 호출하지만, ToastProvider가 컴포넌트 트리에 없어서 throw new Error("useToast must be used within a ToastProvider")가 발생합니다.
+해결 방법: V2AppLayout을 ToastProvider로 감싸야 합니다.
+V2AppLayout.tsx+1-0
+이제 return 부분을 ToastProvider로 감쌉니다:
+
+✅ 레벨페이지 디자인 수정
+
+✅ VERIFY: 체험 티켓 Enum 정의/매핑 근거: 03.game.md:33-40
+일일 넛지 대상/조건: daily_nudge_service.py:28-80
+일일 넛지 지급 경로(TRIAL_TICKET): daily_nudge_service.py:132-142
+보상 지급 매핑(TRIAL_TICKET): reward_service.py:174-204
+트라이얼 소비 추적(TrialTokenBucket): game_wallet_service.py:46-120
+레거시 티켓 카운트(TRIAL_TOKEN 포함): vault.py:55-60
+SHIP: 지급 경로
+일일 넛지(Daily Nudge): V2InventoryService.grant_wallet_tokens로 TRIAL_TICKET 지급. daily_nudge_service.py:132-142
+보상 지급 파이프라인: RewardService의 ticket_map에서 TRIAL_TICKET을 GameTokenType.TRIAL_TICKET으로 매핑해 지갑에 지급. reward_service.py:174-204
+지급 조건/대상
+일일 넛지 대상: 최근 3일 내 접속 기록, 오늘(운영일 기준) 미접속, benefits_suspended 아님. 운영일 기준은 KST 오전 9시 시작 로직을 사용. daily_nudge_service.py:28-80
+보상 지급 대상: 게임/이벤트/어드민 설정 등에서 reward_type=TRIAL_TICKET인 경우 해당 유저에게 지급. reward_service.py:174-204
+참고/주의
+TRIAL_TICKET은 정책상 무료 체험 티켓으로 user_game_wallet.token_type 및 RewardType에 매핑됨. 03.game.md:33-40
+트라이얼 소비 여부는 TrialTokenBucket으로 추적되며, 소비 기록에 consumed_trial 메타가 남음(지급 경로는 아님). game_wallet_service.py:46-120
+레거시 금고 상태 API는 TRIAL_TOKEN을 티켓 합산에 포함(구형 네이밍). vault.py:55-60
 
 -------------------------
+
+
+지연극복관리 > 실제 ui 구현된거 있음? 
+어떻게 분석해서 할거임? 
+
 
 
 ## 사용자 요청사항 대응법 
@@ -732,7 +762,6 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
 
 
-룰렛체험티켓 하루 3번 돌릴수 있는 규칙 있으나 무시되고 계속 돌아감 
 
 
 ----------
@@ -751,8 +780,7 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
  cost_type(다이아/금고)별 가격 뱃지/아이콘 ③ Shop의 프리미엄 판정 로직 일관화 같은 UX 다듬기
 
 
-CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
-이거 백앤드 테스트 실행해야하
+
 
 -----------------------------------
 

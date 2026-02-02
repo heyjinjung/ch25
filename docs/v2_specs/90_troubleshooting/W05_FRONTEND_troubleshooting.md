@@ -447,6 +447,142 @@ npm run build  # ✅ 성공
 
 ---
 
+## 02-02 - [FRONTEND/BACKEND] CSV Import HQ_MARGIN 타입 결과 화면 오류 (toLocaleString undefined)
+
+### 증상 정의
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | CSV Import 결과 화면 (HQ_MARGIN 타입) |
+| HTTP Status | 200 (백엔드 정상) / 프론트 런타임 에러 |
+| 영향 범위 | 관리자 CSV 임포트 기능 |
+| 재현 빈도 | 100% (HQ_MARGIN 타입 임포트 시) |
+
+### 원인 분석
+
+#### 1. 백엔드 NameError
+**파일:** `app/v2/services/hq_margin_import_service.py`
+
+```
+NameError: name 'Session' is not defined
+NameError: name 'pd' is not defined
+```
+
+- `Session` import 누락
+- `_classify_segment` 메서드에서 `pd.Series` 타입 힌트 사용 및 `pd.notna()` 호출하나 pandas 미import
+
+#### 2. 프론트엔드 TypeError
+**파일:** `src/v2/admin/pages/ops/CSVImportPage.tsx`
+
+```
+TypeError: Cannot read properties of undefined (reading 'toLocaleString')
+at CSVImportPage.tsx:386:58
+```
+
+- `HQ_MARGIN` 타입의 import 결과는 `GAME_LOG` 타입과 다른 응답 구조 반환
+- `HQ_MARGIN` 응답 필드: `updated_count`, `created_count`, `prospective_count`, `skipped_count`
+- `GAME_LOG` 응답 필드: `successful_rows`, `total_bet`, `total_payout`, `win_count`, `loss_count` 등
+- 프론트엔드가 `GAME_LOG` 필드를 그대로 접근하여 undefined 에러 발생
+
+### 해결 방법
+
+#### 1. 백엔드 수정 (`hq_margin_import_service.py`)
+
+**Session import 추가:**
+```python
+from sqlalchemy.orm import Session
+```
+
+**pd.Series → dict 타입 변경:**
+```python
+# Before
+def _classify_segment(row: pd.Series) -> str:
+    if '세그먼트' in row and pd.notna(row['세그먼트']):
+        ...
+
+# After
+def _classify_segment(row: dict) -> str:
+    segment_val = row.get('세그먼트')
+    if segment_val and str(segment_val).strip():
+        ...
+```
+
+#### 2. 프론트엔드 수정
+
+**타입 정의 확장 (`adminApi.ts`):**
+```typescript
+export interface CSVImportResult {
+  // 공통 필드
+  total_rows: number;
+  errors?: string[];
+  warnings?: string[];
+  
+  // GAME_LOG 타입 전용
+  successful_rows?: number;
+  failed_rows?: number;
+  skipped_rows?: number;
+  duration_seconds?: number;
+  total_bet?: number;
+  total_payout?: number;
+  win_count?: number;
+  loss_count?: number;
+  jackpot_count?: number;
+  unique_user_count?: number;
+  
+  // HQ_MARGIN 타입 전용
+  updated_count?: number;
+  created_count?: number;
+  prospective_count?: number;
+  skipped_count?: number;
+  success?: boolean;
+}
+```
+
+**결과 화면 분기 처리 (`CSVImportPage.tsx`):**
+```tsx
+{importType === "HQ_MARGIN" ? (
+  // HQ_MARGIN 전용 결과 화면
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <AnalyticsCard label="총 처리 행" value={`${(data.total_rows ?? 0).toLocaleString()} 행`} />
+    <AnalyticsCard label="업데이트됨" value={`${(data.updated_count ?? 0).toLocaleString()} 건`} />
+    <AnalyticsCard label="신규 생성" value={`${(data.created_count ?? 0).toLocaleString()} 건`} />
+    <AnalyticsCard label="잠재 유저" value={`${(data.prospective_count ?? 0).toLocaleString()} 건`} />
+  </div>
+) : (
+  // GAME_LOG 기존 결과 화면 (nullish coalescing 적용)
+  <AnalyticsCard label="총 베팅" value={`₩ ${(data.total_bet ?? 0).toLocaleString()}`} />
+  ...
+)}
+```
+
+### 영향받는 파일
+
+**백엔드:**
+- `app/v2/services/hq_margin_import_service.py` - Session import, dict 타입 힌트
+
+**프론트엔드:**
+- `src/v2/api/adminApi.ts` - `CSVImportResult` 인터페이스 확장
+- `src/v2/admin/pages/ops/CSVImportPage.tsx` - import 타입별 결과 화면 분기
+
+### 검증 방법
+```bash
+# 1. 백엔드 import 테스트
+docker compose exec backend python -c "from app.v2.services.hq_margin_import_service import HQMarginImportService; print('OK')"
+
+# 2. 프론트엔드 빌드 테스트
+npm run build
+
+# 3. 실제 CSV 파일 임포트 테스트
+# - HQ_MARGIN 타입 선택
+# - 본사 마진 CSV 업로드
+# - 결과 화면 정상 렌더링 확인
+```
+
+### 관련 문서
+- CSV Import Pipeline Guide: `docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md`
+- HQ Margin Import Service: `app/v2/services/hq_margin_import_service.py`
+
+---
+
 ## 변경 이력
 - 2026-01-31: W05 FRONTEND 문서 생성 및 초기 UI 로직 안정화
 - 2026-02-01: MissionManagerPage 대규모 리팩토링 및 관심사 분리(SoC) 적용
@@ -455,3 +591,4 @@ npm run build  # ✅ 성공
 - 2026-02-02: 어드민 대시보드 및 기능 확장 분류 내역 추가 (Antigravity)
 - 2026-02-02: 회원관리 테이블 정렬 기능 확장 (UID/닉네임/텔레그램 ID) (GitHub Copilot)
 - 2026-02-02: CSV 업로드/검증 500 에러 (Multipart Boundary 누락) 해결 (Antigravity)
+- 2026-02-02: CSV Import HQ_MARGIN 타입 결과 화면 오류 해결 (GitHub Copilot)
