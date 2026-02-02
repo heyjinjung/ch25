@@ -23,6 +23,31 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - VAULT/정책 확인: 지연 입금 선반영 XP/레벨 보상 여부
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 지연 입금 선반영(증거 제출 시 즉시 지급) |
+| HTTP Status | 200 (정책 확인) |
+| 영향 범위 | 유저 보상/레벨 시스템 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- `V2LatencySurvivalService.submit_evidence()`는 선반영 보상을 **고정 상수**로 지급하며, XP/레벨 서비스 호출이 없음.
+	- 상수: `PROVISIONAL_REWARD_TYPE = "ROULETTE_TICKET"`, `PROVISIONAL_REWARD_AMOUNT = 5`
+	- 지급 경로: `V2InventoryService.grant_wallet_tokens()` 또는 `V2InventoryService.grant_item()`
+	- 관련 코드: [app/v2/services/latency_survival_service.py](../../app/v2/services/latency_survival_service.py)
+
+**결론**
+- 입금지연 신청 시 **레벨 XP는 증가하지 않음**.
+- 레벨에 따른 보상도 **지급되지 않음**.
+- 보상은 임의 생성이 아니라 **상수로 정의된 고정 지급**(현행: 룰렛 티켓 5장)임.
+
+**검증 방법**
+- `submit_evidence()` 호출 시 XP/레벨 관련 서비스 호출이 없는지 코드 확인.
+- `V2InventoryService` 지급 로그(지갑/인벤토리 원장)만 생성되는지 확인.
+
 ### 02-02 - VAULT/ADMIN: 지연 입금 증거 승인 500
 
 **증상 정의**

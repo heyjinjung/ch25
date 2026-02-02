@@ -19,7 +19,7 @@ class V2LatencySurvivalService:
     # Provisional Reward Config (Can be moved to DB Config later)
     # Provisional Reward Config (Can be moved to DB Config later)
     PROVISIONAL_REWARD_TYPE = "ROULETTE_TICKET"
-    PROVISIONAL_REWARD_AMOUNT = 5
+    PROVISIONAL_REWARD_AMOUNT = 3
     MAX_PROVISIONAL_PER_HOUR = 3  # Rate Limit per User
     
     @classmethod

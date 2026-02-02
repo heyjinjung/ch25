@@ -36,11 +36,11 @@ def test_submit_evidence_grants_provisional_reward(db: Session, v2_user):
     
     # Then
     assert evidence.status == EvidenceStatus.PROVISIONAL
-    assert evidence.reward_json == {"ROULETTE_TICKET": 5}
+    assert evidence.reward_json == {"ROULETTE_TICKET": 3}
     
     # Check Inventory Grant
     balance = V2InventoryService.get_wallet_balance(db, v2_user.id, "ROULETTE_TICKET")
-    assert balance == 5
+    assert balance == 3
 
 def test_submit_evidence_rate_limit(db: Session, v2_user):
     # Submit 3 (Max)
@@ -79,14 +79,14 @@ def test_verify_evidence_keeps_reward(db: Session, v2_user):
     
     # Reward should persist
     balance = V2InventoryService.get_wallet_balance(db, v2_user.id, "ROULETTE_TICKET")
-    assert balance == 5
+    assert balance == 3
 
 def test_reject_evidence_clawbacks_reward(db: Session, v2_user):
     # Given
     evidence = V2LatencySurvivalService.submit_evidence(
         db, v2_user.id, "TX_REJECT", 50000
     )
-    assert V2InventoryService.get_wallet_balance(db, v2_user.id, "ROULETTE_TICKET") == 5
+    assert V2InventoryService.get_wallet_balance(db, v2_user.id, "ROULETTE_TICKET") == 3
     
     # When
     rejected = V2LatencySurvivalService.reject_evidence(
