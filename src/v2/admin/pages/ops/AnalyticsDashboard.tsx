@@ -39,8 +39,8 @@ import {
   useAdminMarketingChannelPerformance,
   useAdminMarketingCampaignPerformance,
   useAdminDailyFinance,
-
 } from "../../../hooks/useAdminGame";
+import { useOpsStatus } from "../../../hooks/useV2Admin";
 
 export default function AnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState("retention");
@@ -61,7 +61,7 @@ export default function AnalyticsDashboard() {
   const { data: campaignData, isLoading: isLoadingCampaign } =
     useAdminMarketingCampaignPerformance();
   const { data: dailyFinance } = useAdminDailyFinance();
-
+  const { data: opsStatus } = useOpsStatus();
 
   const formatPercent = (val: number) => `${(val * 100).toFixed(1)}%`;
   const formatCurrency = (val: number) => `₩${val.toLocaleString()}`;
@@ -70,18 +70,28 @@ export default function AnalyticsDashboard() {
   const formatCountMaybe = (val?: number) =>
     typeof val === "number" ? val.toLocaleString() : "-";
 
+  // CSV 기반 revenueStats fallback 적용
+  const csvRevenueStats = opsStatus?.revenueStats;
   const todayRevenue =
-    dailyFinance?.revenue?.total_deposits ?? revenueSummary?.today_revenue;
-  const todayDepositCount = dailyFinance?.revenue?.deposit_count;
+    dailyFinance?.revenue?.total_deposits ??
+    revenueSummary?.today_revenue ??
+    csvRevenueStats?.todayRevenue;
+  const todayDepositCount =
+    dailyFinance?.revenue?.deposit_count ?? csvRevenueStats?.depositCount;
   const todayExpenses =
-    dailyFinance?.spending?.total_withdrawals ?? revenueSummary?.today_expenses;
+    dailyFinance?.spending?.total_withdrawals ??
+    revenueSummary?.today_expenses ??
+    csvRevenueStats?.todayExpenses;
   const pendingWithdrawals = dailyFinance?.spending?.pending_withdrawals;
   const netIncome =
     typeof dailyFinance?.net_income === "number"
       ? dailyFinance.net_income
-      : typeof todayRevenue === "number" && typeof todayExpenses === "number"
-        ? todayRevenue - todayExpenses
-        : undefined;
+      : typeof csvRevenueStats?.netIncome === "number"
+        ? csvRevenueStats.netIncome
+        : typeof todayRevenue === "number" && typeof todayExpenses === "number"
+          ? todayRevenue - todayExpenses
+          : undefined;
+  const weeklyGrowthRate = csvRevenueStats?.weeklyGrowthRate;
 
   return (
     <div className="space-y-6 min-h-screen p-6 text-white pb-20">
@@ -167,13 +177,21 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-2xl font-bold ${(revenueSummary?.revenue_growth_rate ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+              className={`text-2xl font-bold ${(revenueSummary?.revenue_growth_rate ?? weeklyGrowthRate ?? 0) >= 0 ? "text-emerald-400" : "text-rose-400"}`}
             >
               {revenueSummary?.revenue_growth_rate !== undefined
                 ? `${revenueSummary.revenue_growth_rate >= 0 ? "+" : ""}${formatPercent(revenueSummary.revenue_growth_rate)}`
-                : "-"}
+                : weeklyGrowthRate !== undefined
+                  ? `${weeklyGrowthRate >= 0 ? "+" : ""}${formatPercent(weeklyGrowthRate / 100)}`
+                  : "-"}
             </div>
-            <p className="text-xs text-zinc-500 mt-1">전주 대비</p>
+            <p className="text-xs text-zinc-500 mt-1">
+              전주 대비{" "}
+              {weeklyGrowthRate !== undefined &&
+              !revenueSummary?.revenue_growth_rate
+                ? "(CSV)"
+                : ""}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -305,14 +323,18 @@ export default function AnalyticsDashboard() {
                         // 날짜 차이 계산 (Pending 체크용)
                         const rowDate = new Date(row.date);
                         const today = new Date();
-                        const diffTime = Math.abs(today.getTime() - rowDate.getTime());
-                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        const diffTime = Math.abs(
+                          today.getTime() - rowDate.getTime(),
+                        );
+                        const diffDays = Math.ceil(
+                          diffTime / (1000 * 60 * 60 * 24),
+                        );
                         // diffDays는 "며칠 전"인지 나타냄 (예: 어제=1, 오늘=0)
-                        
+
                         // D1: 가입 후 1일 지남 (diffDays > 1)
                         // D7: 가입 후 7일 지남 (diffDays > 7)
                         // D30: 가입 후 30일 지남 (diffDays > 30)
-                        
+
                         return (
                           <tr
                             key={row.date}
@@ -323,13 +345,25 @@ export default function AnalyticsDashboard() {
                               {row.new_users}명
                             </td>
                             <td className="py-2 text-right text-blue-400">
-                              {diffDays > 1 ? formatPercent(row.d1_rate) : <span className="text-zinc-600">-</span>}
+                              {diffDays > 1 ? (
+                                formatPercent(row.d1_rate)
+                              ) : (
+                                <span className="text-zinc-600">-</span>
+                              )}
                             </td>
                             <td className="py-2 text-right text-emerald-400">
-                              {diffDays > 7 ? formatPercent(row.d7_rate) : <span className="text-zinc-600">-</span>}
+                              {diffDays > 7 ? (
+                                formatPercent(row.d7_rate)
+                              ) : (
+                                <span className="text-zinc-600">-</span>
+                              )}
                             </td>
                             <td className="py-2 text-right text-amber-400">
-                              {diffDays > 30 ? formatPercent(row.d30_rate) : <span className="text-zinc-600">-</span>}
+                              {diffDays > 30 ? (
+                                formatPercent(row.d30_rate)
+                              ) : (
+                                <span className="text-zinc-600">-</span>
+                              )}
                             </td>
                           </tr>
                         );
@@ -729,53 +763,89 @@ export default function AnalyticsDashboard() {
               )}
             </CardContent>
           </Card>
-          
+
           {/* New Section: Campaign ROI Analysis */}
           <div className="mt-8">
             <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
               캠페인(개입)별 성과 분석
               <InfoTooltip
                 title="캠페인 ROI"
-                description={"넛지, 위기 구조 등 시스템 개입에 따른 투자 대비 성과입니다."}
+                description={
+                  "넛지, 위기 구조 등 시스템 개입에 따른 투자 대비 성과입니다."
+                }
               />
             </h3>
-            
+
             <Card className="bg-zinc-900 border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">캠페인 ROI 순위 (Top 20)</CardTitle>
+                <CardTitle className="text-white">
+                  캠페인 ROI 순위 (Top 20)
+                </CardTitle>
                 <CardDescription className="text-zinc-400">
                   이벤트/트리거별 마케팅 비용 효율성
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {isLoadingCampaign ? (
-                   <div className="text-center py-10 text-zinc-500">로딩중...</div>
+                  <div className="text-center py-10 text-zinc-500">
+                    로딩중...
+                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/10">
-                          <th className="text-left py-2 text-zinc-400">캠페인/트리거</th>
-                          <th className="text-right py-2 text-zinc-400">대상 유저</th>
-                          <th className="text-right py-2 text-zinc-400">총 비용</th>
-                          <th className="text-right py-2 text-zinc-400">총 회수</th>
-                          <th className="text-right py-2 text-zinc-400">평균 ROI</th>
+                          <th className="text-left py-2 text-zinc-400">
+                            캠페인/트리거
+                          </th>
+                          <th className="text-right py-2 text-zinc-400">
+                            대상 유저
+                          </th>
+                          <th className="text-right py-2 text-zinc-400">
+                            총 비용
+                          </th>
+                          <th className="text-right py-2 text-zinc-400">
+                            총 회수
+                          </th>
+                          <th className="text-right py-2 text-zinc-400">
+                            평균 ROI
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {campaignData?.map((row) => (
-                          <tr key={row.event_type} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="py-2 text-white">{row.event_type}</td>
-                            <td className="py-2 text-right text-zinc-300">{row.user_count.toLocaleString()}</td>
-                            <td className="py-2 text-right text-rose-400">₩{row.total_cost.toLocaleString()}</td>
-                            <td className="py-2 text-right text-white">₩{row.total_return.toLocaleString()}</td>
-                            <td className={`py-2 text-right ${row.avg_roi > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                          <tr
+                            key={row.event_type}
+                            className="border-b border-white/5 hover:bg-white/5"
+                          >
+                            <td className="py-2 text-white">
+                              {row.event_type}
+                            </td>
+                            <td className="py-2 text-right text-zinc-300">
+                              {row.user_count.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-rose-400">
+                              ₩{row.total_cost.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-white">
+                              ₩{row.total_return.toLocaleString()}
+                            </td>
+                            <td
+                              className={`py-2 text-right ${row.avg_roi > 0 ? "text-emerald-400" : "text-rose-400"}`}
+                            >
                               {row.avg_roi.toFixed(1)}%
                             </td>
                           </tr>
                         ))}
                         {!campaignData?.length && (
-                           <tr><td colSpan={5} className="text-center py-4 text-zinc-500">데이터가 없습니다.</td></tr>
+                          <tr>
+                            <td
+                              colSpan={5}
+                              className="text-center py-4 text-zinc-500"
+                            >
+                              데이터가 없습니다.
+                            </td>
+                          </tr>
                         )}
                       </tbody>
                     </table>
@@ -785,7 +855,6 @@ export default function AnalyticsDashboard() {
             </Card>
           </div>
         </TabsContent>
-
       </Tabs>
     </div>
   );

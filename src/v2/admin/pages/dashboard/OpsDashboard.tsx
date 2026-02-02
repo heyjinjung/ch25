@@ -139,35 +139,54 @@ export default function OpsDashboard() {
                 본사 입금액 대조 (Margin)
               </h3>
               <p className="text-obsidian-muted text-xs">
-                {status?.hqStats?.lastSyncAt 
+                {status?.hqStats?.lastSyncAt
                   ? `마지막 업데이트: ${new Date(status.hqStats.lastSyncAt).toLocaleString()}`
                   : "아직 데이터 없음"}
               </p>
             </div>
-            <Badge variant="outline" className="border-emerald-500/30 text-emerald-500 bg-emerald-500/5">
+            <Badge
+              variant="outline"
+              className="border-emerald-500/30 text-emerald-500 bg-emerald-500/5"
+            >
               본사 데이터
             </Badge>
           </div>
 
           <div className="grid grid-cols-2 gap-3 z-10">
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">VIP 유저(100만+)</p>
-              <p className="text-xl font-bold text-purple-400">{status?.hqStats?.vipCount ?? 0}</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">
+                VIP 유저(100만+)
+              </p>
+              <p className="text-xl font-bold text-purple-400">
+                {status?.hqStats?.vipCount ?? 0}
+              </p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">큰손 유저(500만+)</p>
-              <p className="text-xl font-bold text-blue-400">{status?.hqStats?.whaleCount ?? 0}</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">
+                큰손 유저(500만+)
+              </p>
+              <p className="text-xl font-bold text-blue-400">
+                {status?.hqStats?.whaleCount ?? 0}
+              </p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">떠날 위험군</p>
-              <p className="text-xl font-bold text-orange-400">{status?.hqStats?.atRiskCount ?? 0}</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">
+                떠날 위험군
+              </p>
+              <p className="text-xl font-bold text-orange-400">
+                {status?.hqStats?.atRiskCount ?? 0}
+              </p>
             </div>
             <div className="bg-black/20 p-3 rounded-lg border border-white/5">
-              <p className="text-[10px] text-zinc-500 uppercase font-bold">잠재 VIP 고객</p>
-              <p className="text-xl font-bold text-zinc-400">{status?.hqStats?.prospectiveVipCount ?? 0}</p>
+              <p className="text-[10px] text-zinc-500 uppercase font-bold">
+                잠재 VIP 고객
+              </p>
+              <p className="text-xl font-bold text-zinc-400">
+                {status?.hqStats?.prospectiveVipCount ?? 0}
+              </p>
             </div>
           </div>
-          
+
           {/* Background Decor */}
           <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
             <DollarSign size={150} />
@@ -241,15 +260,43 @@ export default function OpsDashboard() {
             <Card className="bg-black/20 border-emerald-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm text-emerald-400 flex items-center gap-2">
-                  <PulsatingDot color="#10b981" /> 기회 그룹 (고액 유저)
+                  <PulsatingDot color="#10b981" /> 기회 그룹 (VIP/WHALE)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center py-8 text-obsidian-muted text-sm">
-                  {status?.goldenRadar?.highRollers > 0
-                    ? `${status.goldenRadar.highRollers}명의 큰손 유저가 활동 중입니다.`
-                    : "현재 활동 중인 기회 그룹 유저가 없습니다."}
-                </div>
+                {status?.opportunityUsers &&
+                status.opportunityUsers.length > 0 ? (
+                  <div className="space-y-2">
+                    {status.opportunityUsers.slice(0, 5).map((u) => (
+                      <div
+                        key={u.userId}
+                        className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-obsidian-border hover:bg-white/10 cursor-pointer transition-colors"
+                        onClick={() => handleUserClick(u.userId)}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-white">
+                            {u.nickname || `유저 #${u.userId}`}
+                          </span>
+                          <span className="text-[10px] text-obsidian-muted">
+                            총 마진: ₩{(u.totalMargin ?? 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] ${u.segment === "WHALE" ? "border-blue-500/50 text-blue-400" : "border-purple-500/50 text-purple-400"}`}
+                        >
+                          {u.segment === "WHALE" ? "큰손 🐋" : "VIP ⭐"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-obsidian-muted text-sm">
+                    {status?.goldenRadar?.highRollers > 0
+                      ? `${status.goldenRadar.highRollers}명의 큰손 유저가 활동 중입니다.`
+                      : "현재 활동 중인 기회 그룹 유저가 없습니다."}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -259,18 +306,18 @@ export default function OpsDashboard() {
         <div className="md:col-span-1 rounded-xl bg-obsidian-surface border border-obsidian-border p-6 relative flex flex-col">
           <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-400" />
-             알림
+            알림
           </h3>
           <div className="space-y-4 overflow-y-auto pr-2">
             {/* Mock Alerts for now, can be connected to real logs later */}
             <div className="p-3 rounded-lg bg-zinc-800/50 border border-obsidian-border text-sm">
               <div className="flex justify-between mb-1">
-                <span className="font-bold text-zinc-400">데이터베이스 백업</span>
+                <span className="font-bold text-zinc-400">
+                  데이터베이스 백업
+                </span>
                 <span className="text-xs text-zinc-500">1h ago</span>
               </div>
-              <p className="text-zinc-500">
-                데이터베이스 백업
-              </p>
+              <p className="text-zinc-500">데이터베이스 백업</p>
             </div>
           </div>
         </div>

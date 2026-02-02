@@ -31,6 +31,9 @@ from app.v2.schemas.v2_admin_ops import (
     InterventionLogDto,
     GoldenGameEventDto,
     OpsHQMarginStatsDto,
+    RevenueStatsDto,
+    DetailedRiskUserDto,
+    OpportunityUserDto,
 )
 from app.v2.schemas.v2_admin_streak import StreakDailyMetric, StreakMetricsResponse
 from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotConfig
@@ -158,11 +161,56 @@ def get_ops_dashboard_status(
     from app.v2.services.hq_margin_stats_service import HQMarginStatsService
     hq_stats = HQMarginStatsService.get_hq_margin_stats(db)
 
+    # [Phase 3] CSV 데이터 기반 확장 - GameLogAnalyticsService
+    from app.v2.services.game_log_analytics_service import GameLogAnalyticsService
+    
+    game_analytics = GameLogAnalyticsService(db)
+    revenue_stats_data = game_analytics.get_revenue_summary()
+    risk_users_data = game_analytics.get_risk_users(limit=10)
+    opportunity_users_data = game_analytics.get_opportunity_users(limit=10)
+    
+    # DTO 변환
+    revenue_stats = RevenueStatsDto(
+        today_revenue=revenue_stats_data.get("today_revenue", 0),
+        today_expenses=revenue_stats_data.get("today_expenses", 0),
+        net_income=revenue_stats_data.get("net_income", 0),
+        deposit_count=revenue_stats_data.get("deposit_count", 0),
+        weekly_growth_rate=revenue_stats_data.get("weekly_growth_rate", 0.0),
+    ) if revenue_stats_data else None
+    
+    detailed_risk_users = [
+        DetailedRiskUserDto(
+            user_id=r["user_id"],
+            nickname=r.get("nickname", ""),
+            risk_type=r.get("risk_type", "UNKNOWN"),
+            risk_level=r.get("risk_level", "MEDIUM"),
+            risk_score=r.get("risk_score", 0.0),
+            details=r.get("details", ""),
+            last_activity_at=r.get("last_activity_at"),
+        )
+        for r in risk_users_data
+    ]
+    
+    opportunity_user_list = [
+        OpportunityUserDto(
+            user_id=o["user_id"],
+            nickname=o.get("nickname", ""),
+            segment=o.get("segment", "VIP"),
+            total_margin=o.get("total_margin", 0),
+            total_charge=o.get("total_charge", 0),
+            last_activity_at=o.get("last_activity_at"),
+        )
+        for o in opportunity_users_data
+    ]
+
     return OpsDashboardResponse(
         system=system_status, 
         golden_radar=golden_radar, 
         metrics=metrics,
-        hq_stats=hq_stats
+        hq_stats=hq_stats,
+        revenue_stats=revenue_stats,
+        risk_users=detailed_risk_users,
+        opportunity_users=opportunity_user_list,
     )
 
 

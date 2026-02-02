@@ -19,6 +19,7 @@ from app.v2.schemas.v2_csv_import import (
 )
 from app.v2.services.csv_to_redis_service import CSVToRedisService
 from app.v2.models.user import V2User
+from app.v2.models.v2_game_log import V2GameLog
 
 logger = logging.getLogger(__name__)
 
@@ -278,6 +279,24 @@ class CSVImportService:
                                     record.user_id,
                                     record.balance_after,
                                 )
+                        
+                        # [Phase 3] DB 저장 - V2GameLog 테이블에 저장
+                        if request.save_to_db:
+                            game_log = V2GameLog(
+                                user_id=record.user_id,
+                                game_type=record.game_type,
+                                result=record.result.value if hasattr(record.result, 'value') else record.result,
+                                bet_amount=int(record.bet_amount),
+                                payout_amount=int(record.payout_amount),
+                                balance_after=int(record.balance_after),
+                                recorded_at=record.timestamp if isinstance(record.timestamp, datetime) else datetime.fromisoformat(str(record.timestamp)),
+                                import_job_id=job_id,
+                            )
+                            self.db.add(game_log)
+                            
+                            # Batch commit every 100 records
+                            if total_rows % 100 == 0:
+                                self.db.commit()
 
                         # Update analytics
                         successful_rows += 1
@@ -313,6 +332,14 @@ class CSVImportService:
         except Exception as e:  # noqa: BLE001
             errors.append(f"Import failed: {e!s}")
             logger.error("CSV import failed", exc_info=e)
+        
+        # [Phase 3] Final DB commit for remaining records
+        try:
+            self.db.commit()
+        except Exception as e:  # noqa: BLE001
+            logger.error("Failed to commit final batch", exc_info=e)
+            self.db.rollback()
+            errors.append(f"DB commit failed: {e!s}")
 
         duration = (datetime.utcnow() - start_time).total_seconds()
 

@@ -1,588 +1,3 @@
-# 0125일자 트러블슈팅 (v2)
-
-- 작성일: 2026-01-25
-- 작성자: GitHub Copilot
-- 범위: v2 어드민 및 게임(주사위/룰렛/복권)/금고/회원관리 관련 문제 요약 및 우선순위화
-
-
-## 🔢 사건 목록 (사용자 신고 순서 및 원문 요약)
-1
-   ✅ **회원관리상세페이지 회원 관리 - 구플래쉬 작업중 **
-   약 11명의 회원을 관리하고 상세 정보를 조회합니다.
-   회원 목록
-   닉네임, CC_id, telegram_id, telegram_username 검색 필터
-
-4. ✅**드롭다운 선택시 텍스트가 검정색** - 구글플래쉬 작업완료
-   - 증상: 드롭다운(Select) 선택 항목의 텍스트가 UI 기준(밝은 테마)과 불일치 — 가독성 저하.
-   - 우선순위: P2
-
-5. ✅**레벨관리: 정의된 레벨수 / 최대레벨을 어드민에서 수정 불가** - 코텍스 작업완료 
-   - 증상: 어드민에서 레벨 수/최대레벨 설정 필드가 제공되지 않음 혹은 동작하지 않음.
-   - 우선순위: P1
-
-6.✅ **레벨보상종류 DB 데이터 이상 의심 — 추가 확인 필요** - 코덱스 작업완료 
-   - 증상: 레벨 보상 종류 테이블 데이터가 의심스럽고 정상 데이터보다 더 많은 값이 존재할 수 있음.
-   - 우선순위: P1
-
-7. ✅**금고페이지에서 관리자가 금액 강제조정 기능 부재** - 코덱스 작업완료 
-   - 증상: 관리자(어드민)가 사용자 금고 잔액을 강제 조정하는 UI/엔드포인트가 없음.
-   - 우선순위: P1
-
-
-9. ✅**미션관리 페이지의 CRUD 기능 - 프론트에 저장 기능 없음** -코덱스 작업완료
-   - 증상: 미션 생성/수정/저장 버튼 동작 또는 네트워크 호출이 없음(혹은 UI에서 저장 로직 누락).
-   - 우선순위: P0
-
-10. ✅**미션기능 오류 로그 (생성 시 400, DUPLICATE_LOGIC_KEY)** - 코덱스 작업완료
-    - 증상: `POST /api/v2/admin/game/missions` 응답 400 (Bad Request), 상세: `DUPLICATE_LOGIC_KEY` (중복 로직키)
-    - 클라이언트 에러: Axios `ERR_BAD_REQUEST` 로 포착됨.
-    - 우선순위: P0
-1.✅ **룰렛 플레이 실패 (POST /api/v2/roulette/play → 400 Bad Request)** - 코덱스 작업완료 
-   - 클라이언트 로그: `POST /api/v2/roulette/play 400 (Bad Request)` / Axios ERR_BAD_REQUEST, V2Adapter: "Failed to play roulette" 로그
-   - 우선순위: P0
-   - 권장조치: 요청 payload/토큰 검증, 서버 측 validation 에러(detail) 확인, 관련 backend logs와 request body 저장(에러 시 상세 반환).
-
-2. ✅ **룰렛 상태 조회 실패 (GET /api/v2/roulette/status?ticket_type=ROULETTE_TICKET → 400)** - 코덱스 작업완료
-   - 브라우저 Request 헤더 스냅샷 포함(Authorization 포함). 응답: 400 Bad Request
-   - 우선순위: P0
-   - 권장조치: 쿼리 파라미터(ticket_type) 값 유효성 확인 및 API 핸들러의 validation/exception 메시지 보강.
-
-4. ✅ **출금조건 모달 한글 깨짐** - 구플래쉬 작업완료 
-   - 증상: 출금조건 모달의 한글 텍스트가 깨져 보임
-   - 우선순위: P2
-   - 권장조치: 프론트 i18n/인코딩 점검(문자열 원천, 폰트/encoding), 컴포넌트에서 안전한 렌더링(escape) 적용.
-
-4. ✅**주사위 페이지 글자 깨짐(텍스트 인코딩/스타일 문제)** - 구플래쉬 작업완료
-   - 증상: 주사위 페이지 일부 텍스트가 깨져 보임
-   - 우선순위: P1
-   - 권장조치: 폰트/인코딩/문자열 원본 점검, CSS overflow/word-break 확인.
-
-11. ✅**룰렛 티켓관리 기능에서 체험(Trial) 티켓 관리 기능이 사라짐** - 코덱스 작업완료
-   - 증상: UI에서 체험티켓 관련 관리 항목이 누락됨.
-   - 조치: 룰렛 설정의 소모 티켓 타입 옵션에 체험 티켓 추가.
-   - 우선순위: P2
-
-12. ✅ **주사위관리 기능에서 오류 발생 — PUT /api/v2/admin/game/dice/config/1 -> 422 Unprocessable Entity** - 코덱스 작업완료 
-    - 증상: 관리자에서 주사위 설정 저장 요청이 422 응답을 반환. (요청 payload/validation 문제 의심)
-    - 우선순위: P0
-
-13. ✅**로또(복권) 개별설정이 저장되는데 화면 재진입 시 초기화됨(비영구화)** - 코덱스 작업완료
-   - 증상: 개별 설정이 API로 성공 저장되나 UI가 재진입 시 초기값으로 돌아감(프론트 상태/캐시 or 조회 호출 문제)
-   - 원인: 어드민 복권 설정 목록 응답에서 `puzzle_piece_probability`가 0으로 고정 반환됨.
-   - 조치: 목록 응답에서 DB 값 그대로 반환.
-   - 우선순위: P1
-3. ✅**복권 상태 조회 실패 (Invalid lottery config → 400 Bad Request)** - 코덱스 작업완료 
-   - 클라이언트 에러: `Failed to fetch lottery status` / response.data.detail: `INVALID_LOTTERY_CONFIG`
-   - 조치: 무효 설정 에러 코드를 `INVALID_LOTTERY_CONFIG`로 통일하고 경품/가중치 요약 로그 추가.
-   - 우선순위: P0
-
-7. ✅**미션 프론트 디자인 전면 재작업 필요** - 구글3 작업중
-   - 증상: 미션 UI가 완성되지 않아 사용성/저장 흐름 보완 필요
-   - 우선순위: P1
-   - 권장조치: UX/디자인 스펙 확정 → 컴포넌트 재구축(폼, validation, 네트워크 호출, 사용자 피드백).
-
-
-5. ✅ **상점 구매 기능 실패 (POST → 400 Bad Request)** - 코덱스 작업완료 
-   - 클라이언트 로그: Axios ERR_BAD_REQUEST, shopApi.ts 호출 스택 포함
-   - 증거: response.detail = `INSUFFICIENT_BALANCE`, payload sku=`SOT_GOLD_KEY_FRAGMENT`
-   - 조치: detail 기반 사용자 안내(잔액 부족 등) 메시지 처리
-   - 우선순위: P0
-
-6. ✅ **인벤토리 아이템 사용 실패 (V2 inventory use → 400 Bad Request)** - 코덱스 작업완료 
-   - 클라이언트 로그: `[inventoryApi] Failed to use V2 inventory item` / Axios ERR_BAD_REQUEST
-   - 증거: response.detail = `INVALID_VOUCHER_TYPE`
-   - 조치: 바우처 타입만 사용 허용 + detail 기반 사용자 안내
-   - 우선순위: P0
-
-8. ✅**복권 페이지 SVG 삽입 에러**
-   - 증상: SVG 삽입 시 렌더 에러 발생(콘솔 스택 확인 필요)
-   - 우선순위: P2
-   - 권장조치: SVG 인라인/컴포넌트 변환 검토 및 React 안전 렌더링(권장 라이브러리 사용).
-
-✅---. **v2 주사위 게임 요청** 구글 3 작업중 
-   정적이고 재미없고 억지스러워 보임. 개선할것 
-
-2.✅ 상점 관리 / 미션 관리 - 상점/미션 탭 수정 - 구글3 완료 
-
-
-✅1. 티켓관리/ 인벤토리 - 구글 3 작업중 
-티켓 관리
-인벤토리 관리
-인벤토리 관리(Inventory Management)
-유저 아이템 지급/회수 로그를 관리하고 아이템을 지급합니다.
-
-8.  ✅현재 미션관리에 dtet - 코덱스작업완료
-스타벅스 기프티콘 1만원12개 test
-tet포인트 (P)\100개 이렇게 설정했는데 유저에 대한 미션관리 기능/ 미션보상 지급기능이 없음
-- 조치: 유저 미션 관리 액션(진행값 수정/리셋/강제 완료/보상 지급) 추가
-
-1) ✅ 레벨관리에서 포인트 / cc포인트 지급시 어떻게 누적되는지 알려줘 - 코덱스작업중
-2) ✅ 금고관리 페이지에 아직 강제조정 가능한 기능 없어1! - 코텍스 작업중
-
-3) ✅룰렛에 이제 체험티켓은 열렸지만 체험티켓 설정탭이 없어상단에 3개 탭만 존재해서 설정이 안돼
-   체험티켓용 탭도 만들어줘  - 코덱스 작업완료
- 
------ 유저
-1) ✅ ncaught TypeError: Cannot read properties of undefined (reading 'toLocaleString') -코덱스 작업완료 
-    at Ze (WithdrawalRulesChecklist.tsx:113:47)
-    at Vg (react-dom.production.min.js:160:137)
-    at H1 (react-dom.production.min.js:289:337)
-    at B1 (react-dom.production.min.js:279:389)
-    at oD (react-dom.production.min.js:279:320)
-    at ah (react-dom.production.min.js:279:180)
-    this error2
-
-
-2. ✅[V2Adapter] Failed to fetch lottery status   
-[V2Adapter] Failed to fetch lottery status 
-response.config
-st {message: 'Request failed with status code 400', name: 'AxiosError',name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
-
-- 조치: 복권 상태 조회에서 INVALID_LOTTERY_CONFIG 발생 시 빈 prize_preview로 200 반환
-
-3. ✅[V2Adapter] Failed to fetch roulette status (DIAMOND/ROULETTE/TRIAL/GOLD_KEY)
-- 조치: 룰렛 상태 조회에서 INVALID_ROULETTE_CONFIG/V2_ROULETTE_CONFIG_MISSING 발생 시 빈 segments로 200 반환
-4. ✅룰렛 플레이 400 (INVALID_ROULETTE_CONFIG)
-- 조치: 특정 ticket_type 설정이 없으면 ROULETTE_TICKET 설정으로 fallback 후 플레이
-281
-
-8.✅ **금고페이지 프론트: 당일금고잔액 / 당일금고적립액 / 당일금고출금신청내역 카드가 없음** - 구3 
-   - 증상: 관련 카드 컴포넌트가 화면에서 렌더되지 않음(데이터 없음 또는 조건부 렌더링 누락).
-   - 우선순위: P1
-
-
-4. ✅ 금고 출금 모달caught TypeError: Cannot read properties of undefined (reading 'toLocaleString')
-    at Ze (WithdrawalRulesChecklist.tsx:113:47)
-    at Vg (react-dom.production.min.js:160:137)
-    at H1 (react-dom.production.min.js:289:337)
-    at B1 (react-dom.production.min.js:279:389)
-    at oD (react-dom.production.min.js:279:320)
-    at ah (react-dom.production.min.js:279:180)
-    at fx (react-dom.production.min.js:270:88)
-    at F1 (react-dom.production.min.js:272:300)
-    at Ji (react-dom.production.min.js:127:105)
-    at react-dom.production.min.js:266:273
-Ze @ WithdrawalRulesChecklist.tsx:113
-Vg @ react-dom.production.min.js:160
-H1 @ react-dom.production.min.js:289
-B1 @ react-dom.production.min.js:279
-oD @ react-dom.production.min.js:279
-ah @ react-dom.production.min.js:279
-fx @ react-dom.production.min.js:270
-F1 @ react-dom.production.min.js:272
-Ji @ react-dom.production.min.js:127
-(anonymous) @ react-dom.production.min.js:266Understand this error
-
-## 빌드 이슈
-- ✅ **프론트 빌드 실패 (TS5103: Invalid value for '--ignoreDeprecations')**
-   - 증상: `npm run build` 중 `tsconfig.json`의 `ignoreDeprecations: "6.0"`에서 오류 발생
-   - 조치: `ignoreDeprecations` 값을 `"5.0"`으로 수정
-
-1) ✅ 유저별 레벨관리 기능이 없음
-유저별 레벨포인트 관리 / 레벨등급 관리기능 백앤드/프론트 모두 
-v2 어드민시스템에 구현되어야해 
----
-
-✅ 추가 
-1) 룰렛설정값 관리에서
-각 티켓별 라벨값이 다르게 설정되어야하는데
-모두 동기화처리됨 하나 바꾸면 4종 다 바뀜 
-가중치 / 보상타임 / 수량 / 잭팟여부 등 
-모든 설정값이 다 동기화 처리됨 
-
-
-✅ 2) 어드민페이지 복권설정 
-
-http://localhost:3000/api/v2/admin/game/lottery/config/1/prize/5
-요청 메서드
-PUT
-상태 코드
-422 Unprocessable Entity
-원격 주소
-access-control-allow-origin
-http://localhost:3000
-connection
-
-
-✅ 각 컨피그마다 입력/저장시 모두 오류 / 정상이 다름.. 
-그리고 완전 저장/. 활성화 하고 새로고침하면
-다시 비활성화 / 중지됨으로 바꾸어져 있음 
-
-- 원인: `/api/v2/admin/game/lottery/configs` 응답이 다중일 때 프론트가 첫 항목만 사용하여 새로고침 시 다른 config가 표시됨.
-- 조치: 백엔드 `/configs` 정렬 안정화 + 프론트에서 LOTTERY_TICKET 우선 선택.
-- 추가: Select/Switch 경고는 undefined 값으로 uncontrolled 렌더링된 것이라 기본값 보정.
-
-
-3) ✅ 개발유저 - 백앤드에서 소환하여 상태표시는 되지만
-실제 게임플레이 티켓차감 / 증감
-보상누적 전혀 확인되지 않음 
-그냥 원래 로그인했던 그 상태임 
-
- ✅ 상점품목 중 골든티켓이라는 항목발견 / 데이터베이스 정합성 검증 필요 
-
-인박스 모달
-✅ 2. **어드민에서 메시지 발송했는데 네트워크/서버 로그 미존재**
-   - 증상: 어드민에서 발송 작업을 수행했으나 프론트/서버(access/nginx/backend) 어디에도 관련 요청/로그가 남지 않음.
-   -
-admin Side (Works Correctly)
-Routing: Correctly routed to MarketingTabPage > MessageSenderPage.
-Logic: Uses proper V2 services (createV2AdminMessage, getAdminSegmentStats).
-Component: Fully implemented and functional.
-User Side (Partial - Missing UI)
-Backend/Hook: useV2Inbox hook exists and is connected to V2 API (/api/v2/inbox).
-
-✅ 골든프로젝트 백앤드 
-C:\Users\JAVIS\ch\ch25\docs\v2_specs\07_golden\00_golden_project_status_v2_ko.md
-✅ 팀배틀페이지 어드민 / 풀스택 연결 
-
-✅ 유저미션관리 > 닉네임으로 조회되게 
-/api/v2/admin/users/resolve?identifier=<nickname> 응답 확인
-
-✅ 금고페이지 출금조건 확인 - 구플래쉬 작업완료 
-
-✅ 모달 및 애니메이션 
-모달 텍스트에 https://ui.aceternity.com/components/encrypted-text
-Encrypted Text 적용가능한지 체크 
-V2WithdrawalGuideModal.tsx
-V2AttendanceStreakModal.tsx
-
-LotteryCollectionModal.tsx
-DiceResultModal.tsx
-LotteryResultModal.tsx
-RouletteResultModal.tsx
-
-✅  티켓 /인벤토리 로그 kst 가능한지 확인할것 
-티켓/인벤토리 로그 KST 변환 적용 
-수정된 파일:
-timezone.py - utc_to_kst(), utc_to_kst_iso() 헬퍼 함수 추가
-economy_routes.py - TicketLogDto 응답 시 KST 변환 적용
-user_routes.py - UserActivityLogDto 응답 시 KST 변환 적용
-정책:
-DB 저장: UTC (기존 유지)
-API 응답: KST ISO 형식 (2026-01-26T15:30:00+09:00)
-문서 업데이트:
-
-✅ 미션 프론트 디비 EUAM 오류 해결 
-미션 관련 프론트 enum 업데이트 기록 이후 - 인벤토리 / 티켓 관련 업데이트 사항 문서 업데이트 
-
-✅ 유저 인박스 팝업에서 읽음처리 한번에 할수 있게 해줘 
-그리고 인박스 메시지 가독성 4.5 :1 확보 
-
-✅ 유저 삭제 / 퍼지기능 회원관리 / 서랍에 구현 
-✅ 유저 삭제 / 퍼지기능 회원관리 / 서랍에 구현 / 에러발생 / 코덱스 작업완료 
-
-✅ 상점페이지 리디자인
-
-✅ 주사위 게임로직과 결과맵핑이 맞지않음!!! 
-
-✅  메인페이지 메인 히어로 텍스트에 https://ui.aceternity.com/components/encrypted-text
-주사위 게임로직과 결과맵핑이 맞지않음!!! 
-
-✅ 팀배틀 닉네임으로 유저조회 및 처리 가능하게 해줘 
-
-
-✅ 주사위게임에서 티켓은 차감되나
-금고 잔액이 현재 차감되지 않고 있어
-특별한 에러나 로그도 없어 - 금고한도 / 에러메시지 + 주사위음수차감 
-[V2Adapter] Dice Status Data: {
-    "config_id": 1,
-    "name": "Default Digtce Config",
-    "max_daily_plays": 0,
-    "today_plays": 13,
-    "remaining_plays": 0,
-    "token_type": "DICE_TICKET",
-
-✅ 팀배틀 
-팀별 팀멤버 상세조회관리 기능
-팀멤버 가입일자 게임점수 기여도내역 
-어드민 프론트에 구현되야함 
-
-✅  1. 룰렛티켓 구매시 아래와 같은 오류 발생 
-
-shopApi.ts:76 [shopApi] Failed to purchase V2 shop product 
-ct {message: 'Request failed with status code 400', name: 'AxiosError', code: 'ERR_BAD_REQUEST', config: {…}, request: XMLHttpRequest, …}
-code
-"Bad Request"
-[[Prototype]]
-: 
-"AxiosError: Request failed with status code 400\n    at kE (http://localhost:3000/assets/index-BLQ9nVW2.js:424:1088)\n    at XMLHttpRequest.N (http://localhost:3000/assets/index-BLQ9nVW2.js:424:5847)\n    at Vo.request (http://localhost:3000/assets/index-BLQ9nVW2.js:426:2094)\n    at async z (http://localhost:3000/assets/ExchangePage-DzgUxSWy.js:1:602)"
-[[Prototype]]
-: 
-Error
-
-✅  2. 치킨은 구매는 가능하나 금고에서 돈이 차감안됨
-
-✅ 금고출금조건에 현재 플레이횟수가 전혀 카운팅 되고 있지 않음 
-새로 빌드하거나 새로고침해도 계속 실패함 
-
- ✅ 팀배틀 stub v2 서비스 연결 완료 
-
- ✅   주사위 골든아워 (Golden Hour)
- 분기 기준 확인
-
-src/v2/components/game/DiceResultModal.tsx를 읽고 “골든아워 여부”, “승/패 여부”를 어떤 값으로 판단하는지 확인
-4케이스(골든승/일반승/골든패/일반패) 매핑 테이블을 내부적으로 정리(문서화는 코드 주석 없이 내 머리에서만)
-디자인 패치(분기/데이터 흐름은 그대로)
-
-✅  “Dice Battle Result” span 제거
-아이콘 74x74: 승리=주사위, 골든패=해골, 일반패=유령
-타이틀(36) + 잘림 방지(줄바꿈/최대폭/패딩/leading 조정)
-서브타이틀 타이핑 애니메이션:
-골든승 “2배 적립 축하”, 일반승 “승리 축하”, 골든패 “2배 놓침 ㅠㅠ”, 일반패 “패배했습니다”
-애니메이션:
-일반 승/패: “살짝 떠오름”(opacity+translate+scale), 회전 금지
-골든패: 흔들림 강도 낮춤
-골든승: 불꽃 느낌은 confetti 컬러/파티클 튜닝으로 최대 근접(새 라이브러리 추가 없이)
-금액 표시 섹션 정리
-
-코인 아이콘을 public/assets/logo_cc_v2.webp로 고정
-“P” 표기는 유지하되 UI 정렬만 정돈
-CTA 구성 확정 및 “다른게임” 경로 연결 방식 결정
-
-버튼은 다시하기 / 다른게임 / 닫기 3개로 통일(케이스별 노출 차이는 요구사항대로)
-“다른게임”은 v2 게임 대시보드로 이동:
-우선 기존 코드에 navigate나 onGoTo... 콜백이 있으면 그대로 사용
-없으면 라우터에서 실제 대시보드 경로를 검색해서 정확한 path로 연결(추측 금지)
-
-ㄴ재수정 해야함 
-1) "닫기" 3번째 버튼은 6개에서 모두 삭제
-2) 골든아워 패배 애니메이션 개선 
-3) 모든 게임모달 햅틱 애니메이션 추가
-4) 일반 주사위 승리 컬러감 개선 
-5) 씨씨코인 아이콘 변경해주기
-
-
-✅ 미션관리
-일일 조건이 붙은건 일일 액션타입과 매치되어야 하는건지
-현재 어떤 조건에 어떻게 붙어야 하는건지 관리자가 매우 헷갈려함 
-로직을 타이핑하는게 어려워서 드롭다운으로 선택하게 한건데
-이게 미션이 어떻게 조립이 되는지 모르겠음 
-
-✅ 예를 들어 골든하워 * 게임플레이 = 성립가능???  
-* 그리고 같은 로직키가 같은 탭안에서는 일일/주말/신규/스페셜의 조건에선 성립이 안됨 
-
-어드민 미션관리 미션편집 모달 수정 후 테스트 - 이게 정상작동되는지 모르겠음
-우선 주간단위 미션은 생성 . 편집에서 오류 있음 
-
-✅ 어드민 회원 레벨관리 
-입금 넣었는데도 회원조회시 레벨 변경이 안됨
-
-
-V1레거시 삭제후  V2유지 
-check_db_state.py	2026-01-27 16:27
-check_deposit_baseline.py	2026-01-27 16:16
-check_user_progress.py	2026-01-27 15:41
-column_enums.txt	2026-01-27 15:25
-compare_users_tables.py	2026-01-27 16:30
-fix_user_id_mismatch.py	2026-01-27 16:36
-fi
-
-
-✅ 복권 게임결과 모달  
-백앤드 테스트 진행 
-
-   등급 1: BIG_WIN
-   조건: 금고에 적립되는 모든 포인트(POINT) 보상.
-   조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
-   연출: 'Celestial Reveal' (화려한 콘페티 + 햅틱강도 0.8 + 테두리 Shine + 레드오렌지핑크 그라데이션 배경컬러 값  + 상품명 EncryptedText 효과).
-   아이콘 : 
-   모든포인트 : C:\Users\JAVIS\ch\ch25\public\assets\asset_coin_gold.webp
-   골드키 : C:\Users\JAVIS\ch\ch25\public\assets\icons\goldkey.png
-   다이아몬드티켓 : C:\Users\JAVIS\ch\ch25\public\assets\icons\diakey.png
-
-   from-[#컬]/70
-   ring-red-500/62
-   shadow-[0_0_50px_rgba(255,0,84,0.31)]
-   drop-shadow 0.44
-
-   등급 2: NORMAL (일반 당첨)
-   조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
-   조건: 기타 아이템 및 퍼즐 조각.
-   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력모션 + 햅틱강도 0.3 +입체감 있는 카드 + 골드 0.5 테두리 ).
-   전체적으로 깔끔하게 디자인. 컬러, 폰트, 흐릿한 블러처리는 금지 
-   텍스트 애니메이션은 가볍게 전체적으로 움직이는 미세모션 
-   아이콘 : 
-   치킨 C:\Users\JAVIS\ch\ch25\public\assets\icons\chiken.png
-   피자 C:\Users\JAVIS\ch\ch25\public\assets\icons\pizza2.png
-   스타벅스 C:\Users\JAVIS\ch\ch25\public\assets\icons\takeaway-cup-dynamic-color.png
- 
-   shadow-[0_0_50px_rgba(255,0,84,0.31)]
-   drop-shadow 0.44
-
-   등급 3: FAIL, 아이콘 해골, 컬러 투명하지만 그레이, 다크그린 톤으로, 글래스모피즘
-   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매), + NONE 타입
-   연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
-
-
-✅ 복권에서 다이아티켓 뽑았는데
-실제 티켓 저장소에 들어가지 않는거 같음
-RL
-http://localhost:3000/api/v2/roulette/status?ticket_type=DIAMOND_TICKET
-요청 메서드
-strict-origin-when-cross-origin
-
-✅  아이템 2만원치 넘게 샀는데 >> 작업중 
-그리고 실제 1만으로 한도 수정해야하고
-금고 출금조건에 안 잡힘 
-
-✅ 게임결과 모달 및 애니메이션 
-ㄴ 꽝에는 실패용 모달 / 애니메이션 
-
-
-BackgroundPaths 에셋으로 배경효과 
-
-Magic UI 적용:
-Meteors & Shimmer: 타워 미션 영역에 Meteors (유성 효과)를 적용하고, 미션 카드에는 shimmer 애니메이션이 적용되어 시각적 주목도를 높였습니다. 
-MatrixText: 텍스트가 암호처럼 변하며 나타나는 효과를 적용하여 미래지향적인 분위기를 조성했습니다.
-룰렛 
-   등급 1: BIG_WIN
-   조건: 금고에 적립되는 모든 포인트(POINT) 보상.
-   조건: 골드 키(Gold Key), 다이아몬드 티켓(Diamond Ticket) 등 희귀 티켓.
-   연출: 'Celestial Reveal' (화려한 콘페티 + 햅틱강도 0.8 + 테두리 Shine + 레드오렌지핑크 그라데이션 배경컬러 값  + 상품명 EncryptedText 효과).
-   아이콘 : 
-   모든포인트 : C:\Users\JAVIS\ch\ch25\public\assets\asset_coin_gold.webp
-   골드키 : C:\Users\JAVIS\ch\ch25\public\assets\icons\goldkey.png
-   다이아몬드티켓 : C:\Users\JAVIS\ch\ch25\public\assets\icons\diakey.png
-
-   등급 2: NORMAL (일반 당첨)
-   조건: 기프티콘(GIFTICON), 바우처(VOUCHER) 보상.
-   조건: 기타 아이템 및 퍼즐 조각.
-   연출: 'Stable Victory' (부드러운 글로우 + 차분한 탄력모션 + 햅틱강도 0.3 +입체감 있는 카드 + 골드 0.5 테두리 ).
-   전체적으로 깔끔하게 디자인. 컬러, 폰트, 흐릿한 블러처리는 금지 
-   텍스트 애니메이션은 가볍게 전체적으로 움직이는 미세모션 
-   아이콘 : 
-   치킨 C:\Users\JAVIS\ch\ch25\public\assets\icons\chiken.png
-   피자 C:\Users\JAVIS\ch\ch25\public\assets\icons\pizza2.png
-   스타벅스 C:\Users\JAVIS\ch\ch25\public\assets\icons\takeaway-cup-dynamic-color.png
-
-   등급 3: FAIL, 아이콘 해골, 컬러 투명하지만 그레이, 다크그린 톤으로, 글래스모피즘
-   조건: 룰렛, 주사위, 복권 등 일반 게임 티켓 (1~5매), + NONE 타입
-   연출: 저채도 심플 연출. 무겁게 가라앉는 애니메이션 , 흐릿한 블러처리는 금지  
-
-✅ 1. 403 에러 (BENEFITS_SUSPENDED)에 대하여
-네, 정상적인 동작입니다. 현재 적용된 **"강력한 금고 정책(Strict Vault Policy)"**에 따라, 최근 7일 내에 입금 내역이 없는 유저는 상점 이용 및 유료 게임 이용이 차단됩니다.
-원인: 테스트 중인 계정이 7일간 입금이 없는 '혜택 중단' 상태입니다.
-해결: 테스트를 위해서는 DB에서 해당 유저의 최근 입금 일자를 오늘로 수정하거나, 입금 로직을 한 번 실행하시면 차단이 해제됩니다.
-ㄴ 에러메시지 마련할것 
-
-✅ 출석미션 반영 / 횟수 카운트 - 구플래쉬3 작업중 
-신규유저 관련 미션 엣지케이스 추가, 테스트 진행중 
-
-✅ 미션허브 탭 디자인 수정
-✅ 레벨페이지 배경과 아이콘 
-✅ 메인페이지 디렉션 체크 1차
-ㄴ 카드그리드 디렉션 위치 다양화
-ㄴ  cta 버튼 디렉션 링크 확인 
-
-✅ 레벨페이지 애니메이션 - 엘리베이터..
-✅ 레벨표시 한글조건 + 수량 
-✅ 룰렛페이지 세그먼트값 백엔드 데이터연동 
-   어드민 API에서 정렬 순서를 ticket_type, id DESC로 변경하여 각 ticket_type별로 가장 높은 ID가 먼저 오도록 합니다.
-
-
-✅ 레벨 1일 300한도 ?? 한도 폐기? 확인할 것 
-
-✅ Auth SoT: docs/v2_specs/00_sot_meta/v2_telegram_auth_sot_ko.md
-트러블 매핑표: C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\v2_auth_trouble_mapping_ko.md
-기술 가이드: docs/v2_specs/00_sot_meta/v2_auth_technical_guide_ko.md
-신규 생성 코드 (v2 경로)
-app/v2/core/telegram.py - Telegram initData 검증 (hash 비교 수정)
-app/v2/models/auth_event.py - V2UserAuthEvent 모델
-app/v2/models/refresh_token.py - V2UserRefreshToken 모델
-app/v2/api/telegram_routes.py - V2 Telegram 인증 API
-DB Migration 생성 (v2_user_auth_event, v2_user_refresh_token)
-DB Migration 실행
-models/__init__.py에 새 모델 export 추가
-routes.py에 telegram_routes 등록 확인
-문서 업데이트 (SoT, Trouble Mapping, Technical Guide)
-
-✅ 검증 계획
- app/v2/core/telegram.py: initData 검증 성공/실패
- V2UserAuthEvent: 이벤트 기록 CRUD
- V2UserRefreshToken: 토큰 생성/갱신/폐기
- Telegram 신규 유저 → 로그인 → 이벤트 기록
- Access Token 만료 → Refresh → 새 토큰
- 로그아웃 → Refresh Token 무효화
-E2E 테스트
- Telegram Mini App에서 실제 initData로 인증
- DEV 로그인 (DEV 환경) / 차단 (PROD 환경)
-
-Telegram initData는 HMAC-SHA256 서명 기반이라 테스트용 토큰을 생성할 수 있습니다.
-테스트용 initData 생성 스크립트를 만들고 pytest로 백테스트를 실행하겠습니다.
-Write C:\Users\JAVIS\ch\ch25\tests\v2\test_telegram_auth.py
-
-✅ 어드민 기능구현
-- **활성 유저 통계**
-  - 관련 함수/코드 미확인
-- **일간 CC입금액 확익(daily_revenue) 계산**
-  - 관련 함수/코드 미확인
-- **일간 지출(daily_spending) 계산**
-  - 관련 함수/코드 미확인
-- **전체 금고 잔액 집계**
-  - 사용자별 금고 합계, 제한된 금액 비율
-  - 관련 함수 직접 명시 없음
-- **지출 한도 추적**
-  - daily_vault_spent 현황, 한도 도달율(%)
-  - 관련 함수 직접 명시 없음
-- **미션 강제 리셋**
-  - 특정 사용자 미션 상태 초기화 (감시 로그)
-  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `reset_user_missions()` ✅ 구현완료
-- **마일스톤 리워드 배포**
-  - 관리자 임의 배포 기능 (사유 기록 필수)
-  - 파일: [streak_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/streak_routes.py) → `distribute_milestone_reward()` ✅ 구현완료
-- **미션 목록 조회 (Admin)**
-  - 사용자별 미션 진행도 상세 조회
-  - 파일: [user_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/user_routes.py) → `get_user_missions_admin()` ✅ 구현완료
-- **로그인 미션 검증**
-  - 금일 로그인 리셋 상태 확인 (09:00 KST 기준)
-  - 파일: [mission_routes.py](file:///c:/Users/JAVIS/ch/ch25/app/v2/api/admin/mission_routes.py) → `verify_login_missions()` ✅ 구현완료
-- **감시 로그: MISSION_RESET, STREAK_REWARD_DISTRIBUTE**
-  - 관리자 개입(미션/스트릭 초기화 및 지급) 기록 ✅ 구현완료 (V2AdminAuditService 연동)
-
-✅ admin fe 구현 
-reset_user_missions
-get_user_missions_admin
-reset_user_streak
-set_streak_count
-get_user_streak_admin
-get_milestone_progress
-force_grant_milestone
-distribute_milestone_reward
-유저 개별 미션 강제 리셋
-로그인 미션 검증
-미션 통계
-활성 유저 통계
-✅ admin fe 구현 
-제재 해제 로깅
-감사 로그 (MISSION_RESET_ALL, STREAK_RESET 등)
-전체 금고 잔액 집계
-지출 한도 추적
-지출 한도 요약
-재고 수량 조정
-재고 부족 알림
-보유율 분석
-보유율 추이
-수익/지출 분석
-수익 요약
-마케팅 효율성 분석
-일간 수익/지출 계산
-
-✅ http://localhost:3000/admin/ops/analytics - 이것 아직도 목업데이터 
-http://localhost:3000/admin/ops/audit-logs - 아예 백지상태
-http://localhost:3000/admin/inventory/stock - 역시 하드코딩or 목업데이터
-실제 데이터베이스로  실제 API/WS 상태 기반으로 전환, 라우팅 연동 할 것 
-데이터가 없는 상태는 없는 상태로 나오게 할것 
-
-✅ 그리고 앞선 테스트 기록 로그 남아있는
-http://localhost:3000/admin/inventory/tickets
-http://localhost:3000/admin/inventory/tickets
-티켓 로그 목록 (Ticket Logs)
-Inventory Log List
-이것도 초기화 해줘 
-
-✅ auth.py에서 UserEventLog 삽입 로직을 V2EventLog로 변경 (장기 해결)
-
-
 ✅  학습 완료 - 현재 상황 분석
 🔴 핵심 문제점
 1. User ↔ V2User 이중 테이블 구조
@@ -693,6 +108,51 @@ C:\Users\JAVIS\ch\ch25\docs\v2_specs\00_sot_meta\00_A_sot_code_ops_chk\learned_\
 
 ✅CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 이거 백앤드 테스트 실행해야하
+💡 핵심 요약
+구분	목적	비유	담당 파일
+GAME_LOG	통계 파악	일일 정산 계산기	
+csv_import_service.py
+HQ_MARGIN	유저 관리	고객 분류기	
+hq_margin_import_service.py
+
+ 자동 재관여 메시지 (Re-engagement Queue)
+트리거: 세그먼트가 AT_RISK(CHURN_RISK)로 판별되거나, 이탈 확률 점수가 0.7(70%) 이상일 때.
+액션: PREDICTIVE_REENGAGEMENT 유형의 개인화 메시지 발송 대기열에 등록됩니다.
+채널: 텔레그램 등의 연결된 채널로 복귀 유도 프로모션 메시지가 전송됩니다.
+B. 골든 타임 개입 (Intervention Rewards)
+유저가 다시 접속해서 게임을 할 때, **위기 상황(돈을 다 잃거나 로그아웃 하려 할 때)**에 시스템이 자동으로 개입합니다.
+
+상황: LOSS_STREAK(연패), ASSET_DEPLETION(잔고 소진), SESSION_END(이탈 감지)
+보상: 유저의 **예상 가치(LTV)**에 비레하여 계산된 맞춤형 보상(무료 스핀, 캐시백 등)을 즉시 지급합니다.
+계산식: 보상 = LTV × 기본요율(3%) × 이탈확률
+
+ 자동 재관여 메시지 (Re-engagement Queue) 구현 방식
+"메시지 발송 대기열 등록"까지가 현재 코드의 역할입니다.
+
+구현 위치: app/v2/services/retention_intervention_service.py의 enqueue_reengagement 함수
+작동 방식:
+유저가 AT_RISK 등의 조건에 해당하면 함수가 호출됩니다.
+OpsLogService를 통해 운영 로그(ops_log_entry)를 DB에 생성합니다.
+action_code: "OFFER_PERSONALIZED_TRACKED"
+meta: 타겟 채널(텔레그램 등), 이탈 확률 등의 정보 포함
+발송 실행 (중요): 현재 코드베이스(admin_message_service.py)에는 **"PUSH 기능은 제거됨"**이라는 주석과 함께 직접 발송 로직이 없습니다.
+따라서, 실제 텔레그램 메시지 전송은 **이 로그를 모니터링하는 별도의 외부 워커(Worker)**가 수행하거나, 운영자가 대시보드에서 대기열을 보고 수동 승인/발송 처리하는 구조로 설계되어 있습니다.
+2. 골든 타임 개입 (Intervention Rewards) 구현 방식
+유저가 위기 상황일 때 보상을 계산하는 로직은 파이썬 코드로 완벽히 구현되어 있습니다.
+
+구현 위치: app/v2/services/retention_intervention_service.py의 resolve_intervention 함수
+작동 프로세스:
+실험군 배정: 유저 ID를 해싱하여 A/B 테스트 그룹(Control, Free Spin, Cashback 등)을 나눕니다.
+데이터 조회: V2UserRetentionState 테이블에서 유저의 이탈 확률과 예상 LTV를 가져옵니다.
+보상 계산 (수식 구현):
+python
+# 실제 코드 로직 요약
+base_rate = SEGMENT_BASE_RATE.get(segment, 0.02) # 기본 2% ~ 4%
+ltv_reward = predicted_ltv * base_rate * max(churn_prob, 0.1) # LTV x 요율 x 이탈확률
+final_reward = max(base_reward, int(ltv_reward)) # 최소 보상 보장
+스케줄링 & 캡핑: 너무 자주 주지 않도록 RewardScheduler가 빈도를 조절하고, cmax(최대 한도)를 적용하여 과도한 보상을 막습니다.
+결과 반환: 최종적으로 "지급 가능 여부(eligible)"와 "얼마(reward_amount)"를 반환하면, 게임 서버가 이를 유저에게 보여줍니다.
+
 
 ✅감사로그??? 정확하게 어떻게 쓰라고 이걸 만든거임?? 
 
@@ -728,11 +188,133 @@ TRIAL_TICKET은 정책상 무료 체험 티켓으로 user_game_wallet.token_type
 트라이얼 소비 여부는 TrialTokenBucket으로 추적되며, 소비 기록에 consumed_trial 메타가 남음(지급 경로는 아님). game_wallet_service.py:46-120
 레거시 금고 상태 API는 TRIAL_TOKEN을 티켓 합산에 포함(구형 네이밍). vault.py:55-60
 
+
+roi 분석 기능 구
 -------------------------
+
+이제 V2 골든 프로젝트에 대해 포괄적으로 학습했습니다. 정리해드리겠습니다.
+
+🏆 V2 Golden 프로젝트 종합 학습 완료
+📋 1. 시스템 개요 (System Definition)
+Golden V2는 단순 마케팅이 아닌 **"데이터 기반 유기적 리텐션 운영 시스템"**입니다.
+
+핵심 컴포넌트
+구분	설명
+Golden Core	적응형 리텐션 엔진 (Adaptive Retention Engine)
+Golden Ops	관제 및 개입 시스템 (Operations & Intervention)
+Golden Data	증거 기반 의사결정 데이터 파이프라인
+Loop Architecture
+📋 2. SoT 값 및 정책 정리
+2.1 Redis Pub/Sub 채널 SoT
+채널	목적	Producer → Consumer
+ch25_events	원본 게임 이벤트 스트림	Game → GoldenEventWorker
+golden:v2:events:game	V2 게임 이벤트 스트림	Game/Gateway → Analysis
+golden:v2:events:intervention	개입 이벤트 스트림	Worker → API(User Push)
+2.2 Redis 키 SoT
+키 패턴	타입	의미
+golden:v2:user:{user_id}:loss_streak	Int	연속 패배 횟수
+golden:v2:user:{user_id}:session_start_balance	Int	세션 시작 잔액
+golden:v2:user:{user_id}:psych_state	String	심리 상태 (예: FRUSTRATED)
+golden:v2:cooldown:{trigger_id}:{user_id}	TTL	트리거별 쿨다운
+2.3 개입(Intervention) 트리거 SoT
+Trigger ID	조건	액션	쿨다운
+TRG_LOSE_5	연속 5패	Trigger_Pity_Win	1h
+TRG_BAL_DROP_50	잔액 50% 급감	Crisis_Intervention	1h
+TRG_ZERO_BAL	잔액 0	Offer_Zero_Ticket	24h
+2.4 개입 상태(Status) SoT
+상태	의미
+PENDING_APPROVAL	승인 대기 (발송/지급 금지)
+APPROVED	운영자 승인 완료
+REJECTED	운영자 거절
+SENT	발송/지급 완료
+2.5 골든아워(Golden Hour) SoT
+구분	SoT 위치	기본값
+전역 활성화	golden_hour_config.enabled	false
+수동제어	golden_hour_config.manual_override	AUTO
+전역 배율	golden_hour_config.multiplier	2.0
+시작 시각	start_time_kst	21:30:00
+종료 시각	end_time_kst	22:30:00
+주사위 적용 게이트	V2DiceConfig.enable_golden_hour	true
+주사위 배율	V2DiceConfig.golden_hour_multiplier	2.0
+📋 3. 백엔드 구현
+3.1 핵심 모델
+모델	테이블	용도
+V2GoldenInterventionLog	v2_golden_intervention_log	개입 로그 기록
+V2UserRetentionState	v2_user_retention_state	유저 리텐션 상태
+V2RetentionRoiLog	v2_retention_roi_log	ROI 분석 로그
+3.2 핵심 서비스
+서비스	파일	기능
+GoldenV2EventService	golden_event_service.py	Redis Pub/Sub 이벤트 발행
+GoldenInterventionService	golden_intervention_service.py	개입 트리거 감지/실행
+GoldenSchedulerService	golden_scheduler_service.py	HQ 세그먼트 기반 스케줄러
+3.3 워커
+워커	파일	역할
+golden_event_worker	golden_event_worker.py	ch25_events → golden:v2 채널 브릿지
+golden_intervention_worker	golden_intervention_worker.py	게임 이벤트 소비 → 개입 이벤트 발행
+3.4 API 엔드포인트
+Method	Endpoint	기능
+POST	/api/v2/golden/intervention/resolve	개입 해결 처리
+POST	/api/v2/golden/reengagement/queue	리인게이지먼트 큐 등록
+GET	/api/v2/golden/status	골든 상태 조회
+GET	/api/v2/golden/history	골든 이력 조회
+WS	/api/v2/admin/ws/golden/events	실시간 이벤트 스트림 (Admin)
+POST	/api/v2/admin/crm/approve	복수 건 승인/거절
+📋 4. 프론트엔드 구현
+4.1 핵심 컴포넌트
+컴포넌트	파일	기능
+GoldenEventStream	GoldenEventStream.tsx	실시간 게임 이벤트 스트리밍
+InterventionLogTable	InterventionLogTable.tsx	개입 로그 테이블
+GoldenRealTimePage	GoldenRealTimePage.tsx	관리자 실시간 관제 페이지
+4.2 API 클라이언트
+함수	파일	기능
+resolveV2Intervention	goldenApi.ts	개입 해결 요청
+queueV2Reengagement	goldenApi.ts	리인게이지먼트 큐 등록
+4.3 아키텍처 원칙
+Feature-Based Structure: src/features/golden/
+Suspense-First: useSuspenseQuery 기본 사용
+TMA SDK 연동: Haptic Feedback, Main/Back Button
+📋 5. Ops Plan 액션 종류 (Kind)
+Kind	설명	처리 방식
+INVENTORY_GRANT_ALL	전체 유저 일괄 지급	Async Worker
+TARGETED_ITEM_GRANT	타겟 리스트 지급	Async Worker
+GOLDEN_HOUR	골든아워 제어	DB Config 업데이트
+TARGETLIST_BROADCAST	타겟 리스트 마킹	Sync/Async
+MESSAGE_TEMPLATE	메시지 템플릿 발송	Async Worker
+📋 6. 문서 SoT 위치
+문서	경로
+시스템 정의서	golden_v2_system_definition_ko.md
+개입 로직	golden_v2_intervention_logic_ko.md
+운영 로직	golden_v2_operational_logic_ko.md
+골든아워 정책	v2_golden_hour_policy_sot_ko.md
+실시간 아키텍처	02_golden_v2_realtime_architecture.md
+프론트엔드 스펙	2026_01_28_golden_frontend_spec.md
+경제체계 용어집	golden_v2_core_economy_glossary_ko.md
+학습 완료! V2 골든 프로젝트의 SoT 값, 기능, 백엔드/프론트엔드 구현을 모두 파악했습니다. 추가 질문이나 작업이 필요하시면 말씀해 주세요.
+
+
+
+
+
+
 
 
 지연극복관리 > 실제 ui 구현된거 있음? 
 어떻게 분석해서 할거임? 
+. Latency Survival (지연 입금 선반영 시스템)
+"돈은 보냈는데 아직 안 들어왔어요..."라는 유저를 놓치지 않는 기능입니다.
+
+문제: 은행/코인망 지연으로 입금 확인까지 4~12시간이 걸리면, 게임하고 싶어 온 유저는 기다리다 지쳐 이탈합니다.
+해결책 (구현됨): 유저가 입금 증거(TX ID 등)를 제출하면, 시스템이 '신용 가불(Provisional Grant)' 형태로 게임 머니를 즉시 선지급합니다.
+구현 위치: app/v2/services/latency_survival_service.py
+안전 장치:
+한도 제한: 시간당 최대 3회 등 어뷰징 방지.
+클로백(Clawback): 나중에 허위 입금으로 밝혀지면, 선지급된 재화를 시스템이 자동으로 회수(차감)하는 로직이 완성되어 있습니다.
+
+
+
+
+연속스트릭 모달 업데이트 및 정상작동하게 할것
+
 
 
 

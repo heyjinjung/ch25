@@ -58,6 +58,14 @@ class V2User(Base):
     password_hash = Column(String(128), nullable=True)
     created_at = Column(DateTime, nullable=False, default=_kst_now)
     updated_at = Column(DateTime, nullable=False, default=_kst_now, onupdate=_kst_now)
+    
+    # External platform linking (HQ Casino 연동)
+    external_nickname = Column(String(100), nullable=True, index=True)
+    external_linked_at = Column(DateTime, nullable=True)
+    hq_segment = Column(String(50), nullable=True)  # VIP, WHALE, AT_RISK from HQ
 
     # Relationships for wallet/inventory (FK migrated from legacy user)
     game_wallets = relationship("UserGameWallet", back_populates="user", lazy="dynamic")
+    
+    # V2 Game Log relationship (for CSV import analytics)
+    game_logs = relationship("V2GameLog", back_populates="user", lazy="dynamic")

@@ -1,6 +1,6 @@
 """HQ Prospective User model for tracking unjoined high-value users."""
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Integer, String, BigInteger, Boolean, Index, UniqueConstraint
+from sqlalchemy import Column, DateTime, Integer, String, BigInteger, Boolean, Index, UniqueConstraint, ForeignKey
 
 from app.db.base_class import Base
 
@@ -19,6 +19,14 @@ class HQProspectiveUser(Base):
     inactive_days = Column(Integer, default=0)
     segment = Column(String(50), nullable=False)
     is_joined = Column(Boolean, default=False, index=True)
+    
+    # Linking fields
+    linked_user_id = Column(Integer, ForeignKey("v2_user.id"), nullable=True, index=True)
+    linked_at = Column(DateTime, nullable=True)
+    ignored = Column(Boolean, default=False, index=True)  # Admin이 무시 처리한 경우
+    ignored_at = Column(DateTime, nullable=True)
+    ignored_reason = Column(String(200), nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

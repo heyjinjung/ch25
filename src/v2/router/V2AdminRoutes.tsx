@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import AdminLayout from "../admin/layouts/AdminLayout";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
+import ProspectLinkingPage from "../admin/pages/prospect/ProspectLinkingPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
@@ -79,6 +80,9 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Users - Tabbed */}
           <Route path="users" element={<UserManagementTabPage />} />
+          
+          {/* Prospect Linking */}
+          <Route path="prospect/linking" element={<ProspectLinkingPage />} />
 
           {/* Economy */}
           <Route path="economy/vault" element={<VaultControlPage />} />
@@ -113,6 +117,10 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />
+
+          {/* Prospect Linking */}
+          <Route path="prospect/linking" element={<ProspectLinkingPage />} />
+
           <Route
             path="*"
             element={<Navigate to="/admin/dashboard" replace />}

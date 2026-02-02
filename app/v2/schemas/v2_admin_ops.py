@@ -57,11 +57,52 @@ class OpsHQMarginStatsDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
+class RevenueStatsDto(BaseModel):
+    """Game Log 기반 수익 통계."""
+    today_revenue: int = Field(default=0, alias="todayRevenue", serialization_alias="todayRevenue")
+    today_expenses: int = Field(default=0, alias="todayExpenses", serialization_alias="todayExpenses")
+    net_income: int = Field(default=0, alias="netIncome", serialization_alias="netIncome")
+    deposit_count: int = Field(default=0, alias="depositCount", serialization_alias="depositCount")
+    weekly_growth_rate: float = Field(default=0.0, alias="weeklyGrowthRate", serialization_alias="weeklyGrowthRate")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class DetailedRiskUserDto(BaseModel):
+    """상세 위험 유저 정보."""
+    user_id: int = Field(alias="userId", serialization_alias="userId")
+    nickname: str
+    risk_type: str = Field(alias="riskType", serialization_alias="riskType")  # LOSS_STREAK | INACTIVE | BALANCE_DROP
+    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(alias="riskLevel", serialization_alias="riskLevel")
+    risk_score: float = Field(alias="riskScore", serialization_alias="riskScore")
+    details: dict = Field(default_factory=dict)
+    last_activity_at: datetime | None = Field(default=None, alias="lastActivityAt", serialization_alias="lastActivityAt")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class OpportunityUserDto(BaseModel):
+    """기회 유저 상세 정보."""
+    user_id: int = Field(alias="userId", serialization_alias="userId")
+    nickname: str
+    segment: str  # VIP | WHALE
+    total_margin: int = Field(default=0, alias="totalMargin", serialization_alias="totalMargin")
+    total_charge: int = Field(default=0, alias="totalCharge", serialization_alias="totalCharge")
+    last_activity_at: datetime | None = Field(default=None, alias="lastActivityAt", serialization_alias="lastActivityAt")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class OpsDashboardResponse(BaseModel):
     system: OpsSystemStatusDto
     golden_radar: OpsGoldenRadarDto = Field(alias="goldenRadar", serialization_alias="goldenRadar")
     metrics: OpsMetricsDto
     hq_stats: OpsHQMarginStatsDto | None = Field(default=None, alias="hqStats", serialization_alias="hqStats")
+    
+    # CSV 데이터 기반 확장 필드
+    revenue_stats: RevenueStatsDto | None = Field(default=None, alias="revenueStats", serialization_alias="revenueStats")
+    risk_users: list[DetailedRiskUserDto] = Field(default_factory=list, alias="riskUsers", serialization_alias="riskUsers")
+    opportunity_users: list[OpportunityUserDto] = Field(default_factory=list, alias="opportunityUsers", serialization_alias="opportunityUsers")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

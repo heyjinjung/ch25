@@ -145,7 +145,6 @@ export interface InterventionExecutionResponse {
   details?: Record<string, unknown>;
 }
 
-
 export interface OpsDashboardResponse {
   system: {
     db: "OK" | "DEGRADED" | "ERROR";
@@ -167,6 +166,37 @@ export interface OpsDashboardResponse {
     activeUsers24h: number;
   };
   hqStats?: OpsHQMarginStatsDto | null;
+  // CSV 데이터 기반 확장 필드
+  revenueStats?: RevenueStatsDto | null;
+  riskUsers?: DetailedRiskUserDto[];
+  opportunityUsers?: OpportunityUserDto[];
+}
+
+export interface RevenueStatsDto {
+  todayRevenue: number;
+  todayExpenses: number;
+  netIncome: number;
+  depositCount: number;
+  weeklyGrowthRate: number;
+}
+
+export interface DetailedRiskUserDto {
+  userId: number;
+  nickname: string;
+  riskType: string;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  riskScore: number;
+  details: string;
+  lastActivityAt?: string | null;
+}
+
+export interface OpportunityUserDto {
+  userId: number;
+  nickname: string;
+  segment: "VIP" | "WHALE";
+  totalMargin: number;
+  totalCharge: number;
+  lastActivityAt?: string | null;
 }
 
 export interface OpsHQMarginStatsDto {
@@ -3213,4 +3243,3 @@ export const getAdminMarketingCampaignPerformance = async (params?: {
   );
   return response.data;
 };
-

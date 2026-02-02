@@ -148,6 +148,10 @@ class CSVImportRequest(BaseModel):
         True,
         description="Whether to emit events to Redis (set False for dry-run)",
     )
+    save_to_db: bool = Field(
+        True,
+        description="Whether to save records to V2GameLog table for analytics",
+    )
     historical_mode: bool = Field(
         False,
         description="If True, process as historical data (skip real-time intervention triggers)",

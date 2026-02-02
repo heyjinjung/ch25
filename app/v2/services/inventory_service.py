@@ -162,13 +162,15 @@ class V2InventoryService:
         reason: str | None = None,
         label: str | None = None,
         meta: dict | None = None,
+        meta: dict | None = None,
         auto_commit: bool = True,
+        allow_negative: bool = False,
     ) -> int:
         if amount <= 0:
             raise ValueError("INVALID_TOKEN_AMOUNT")
         storage_user_id = cls._resolve_storage_user_id(db, v2_user_id)
         wallet = cls._get_or_create_wallet(db, storage_user_id, token_type, auto_commit=auto_commit)
-        if int(wallet.balance or 0) < int(amount):
+        if not allow_negative and int(wallet.balance or 0) < int(amount):
             raise ValueError("INSUFFICIENT_BALANCE")
         wallet.balance -= int(amount)
         db.add(wallet)
@@ -313,6 +315,7 @@ class V2InventoryService:
         related_id: str | None = None,
         *,
         auto_commit: bool = True,
+        allow_negative: bool = False,
     ) -> UserInventoryItem:
         if amount <= 0:
             raise ValueError("Amount must be positive")
@@ -324,8 +327,16 @@ class V2InventoryService:
             )
             .with_for_update()
         )
-        if not item or item.quantity < amount:
+        )
+        if not allow_negative and (not item or item.quantity < amount):
             raise HTTPException(status_code=400, detail="INSUFFICIENT_ITEM_QUANTITY")
+        
+        if not item:
+            # If item doesn't exist but allow_negative is True, create it with 0 quantity to deduct from
+            item = UserInventoryItem(user_id=storage_user_id, item_type=item_type, quantity=0)
+            db.add(item)
+            db.flush()
+            
         item.quantity -= int(amount)
 
         ledger = UserInventoryLedger(

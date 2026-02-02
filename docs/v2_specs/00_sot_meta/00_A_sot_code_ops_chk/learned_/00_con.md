@@ -1,3 +1,23 @@
+## [2026-02-02 구현 완료 항목]
+
+### [2026-02-02] CSV 데이터 통합 확장 - 모든 대시보드 연동 ✅
+- **문제 해결**: 분석 대시보드 "오늘 수익 ₩0" + Ops Dashboard 기회 그룹 미표시
+- **백엔드 구현**:
+  - `app/v2/models/v2_game_log.py` - 게임 로그 영속 저장 테이블
+  - `alembic/versions/20260202_1400_add_v2_game_log.py` - 마이그레이션
+  - `app/v2/services/game_log_analytics_service.py` - 수익/위험/기회 분석 서비스
+  - `app/v2/schemas/v2_admin_ops.py` - RevenueStatsDto, DetailedRiskUserDto, OpportunityUserDto 추가
+  - `app/v2/api/admin/ops_routes.py` - GameLogAnalyticsService 연동
+  - `app/v2/services/csv_import_service.py` - `save_to_db` 옵션으로 DB 저장 지원
+- **프론트엔드 구현**:
+  - `src/v2/api/adminApi.ts` - 신규 DTO 인터페이스 추가
+  - `src/v2/admin/pages/dashboard/OpsDashboard.tsx` - opportunityUsers 리스트 표시
+  - `src/v2/admin/pages/ops/AnalyticsDashboard.tsx` - CSV revenueStats fallback 적용
+- **데이터 흐름**: CSV Import → V2GameLog 저장 → Analytics Service → /ops/status API → Dashboard UI
+- **문서**: `learned_/golden/20260202_csv_data_integration_expansion_implementation.md`
+
+---
+
 ## [2026-01-31 구현 완료 항목]
 
 ### [2026-01-31] 복권 퍼즐모음 → 골드키 교환 풀스택 구현 ✅

@@ -111,6 +111,7 @@ export default function AdminLayout() {
       label: "유저 & 마케팅",
       items: [
         { icon: Users, label: "사용자 통합", path: "/admin/users" },
+        { icon: Users, label: "잠재 유저 매칭", path: "/admin/prospect/linking" },
         { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
         {
           icon: MessageSquare,
