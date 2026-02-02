@@ -10,8 +10,12 @@ import {
 } from "../api/adminApi";
 
 export function useValidateCSV() {
-  return useMutation<CSVImportValidateResponse, Error, File>({
-    mutationFn: validateCSVFile,
+  return useMutation<
+    CSVImportValidateResponse,
+    Error,
+    { file: File; importType: string }
+  >({
+    mutationFn: ({ file, importType }) => validateCSVFile(file, importType),
   });
 }
 

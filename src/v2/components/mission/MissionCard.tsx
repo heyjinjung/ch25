@@ -92,20 +92,20 @@ export const MissionCard: React.FC<MissionCardProps> = ({
             missionId: parseInt(mission.id),
             channelUsername: buildVerifyChannelUsername(),
           });
-          
+
           if (result.success) {
             triggerNotification("success");
-            addToast({ 
-              message: result.message || "인증 성공! 보상이 지급되었습니다.", 
-              type: "success", 
-              duration: 3000 
+            addToast({
+              message: result.message || "인증 성공! 보상이 지급되었습니다.",
+              type: "success",
+              duration: 3000,
             });
           } else {
-             triggerNotification("warning");
-             addToast({ 
-              message: result.message || "채널 가입이 확인되지 않았습니다.", 
-              type: "error", 
-              duration: 3000 
+            triggerNotification("warning");
+            addToast({
+              message: result.message || "채널 가입이 확인되지 않았습니다.",
+              type: "error",
+              duration: 3000,
             });
           }
         } catch (e) {
@@ -184,7 +184,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({
     if (
       actionType === "JOIN_CHANNEL" ||
       actionType === "SUBSCRIBE_CHANNEL" ||
-      actionType === "JOIN_TELEGRAM_CHANNEL" ||
+      actionType === "CHANNEL_JOIN" ||
       actionType === "JOIN_TELEGRAM_CHANNEL"
     ) {
       return (

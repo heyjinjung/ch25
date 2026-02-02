@@ -238,6 +238,47 @@ class HQMarginImportService:
             logger.error(f"HQ Margin CSV import failed: {e}")
             db.rollback()
             raise
+    @staticmethod
+    def validate_hq_margin_csv(file_path: str) -> tuple[bool, str]:
+        """
+        HQ Margin CSV 파일의 구조 및 필수 컬럼 검증
+
+        Returns:
+            (성공여부, 에러메시지)
+        """
+        path = Path(file_path)
+        if not path.exists():
+            return False, f"File not found: {file_path}"
+        
+        try:
+            # 1. 인코딩 감지 및 읽기
+            raw_data = path.read_bytes()
+            result = chardet.detect(raw_data)
+            encoding = result['encoding'] or 'utf-8-sig'
+            if encoding.lower() == 'ascii' or result['confidence'] < 0.8:
+                encoding = 'cp949'
+
+            df = pd.read_csv(file_path, encoding=encoding)
+            df.columns = [c.strip() for c in df.columns]
+
+            # 2. 필수 컬럼 체크
+            required_map = {
+                '이름 (아이디)': ['이름 (아이디)', '아이디', 'user_id', 'cc_id'],
+                '총 운영 마진': ['총 운영 마진', '마진', 'margin'],
+                '미접속 경과일': ['미접속 경과일', '접속 경과일', 'inactive_days']
+            }
+
+            for target_col, aliases in required_map.items():
+                if not any(alias in df.columns for alias in aliases):
+                    return False, f"필수 컬럼 누락: {target_col} (검색한 별칭: {aliases})"
+
+            if len(df) == 0:
+                return False, "CSV 파일에 데이터가 없습니다."
+
+            return True, "CSV file is valid"
+
+        except Exception as e:
+            return False, f"CSV 검증 중 오류 발생: {str(e)}"
 
     @staticmethod
     def _parse_int(value) -> int:

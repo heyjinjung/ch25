@@ -67,6 +67,7 @@ interface BackendMissionListResponse {
   // V2 schema uses serialization_alias="streak" for streak_info
   readonly streak_info?: BackendStreakInfoSchema;
   readonly streak?: BackendStreakInfoSchema;
+  readonly new_user_deadline?: string | null;
 }
 
 export interface StreakRuleDto {
@@ -200,7 +201,11 @@ export const getV2Missions = async (
     const streak_info = mapBackendStreakInfo(
       response.data.streak_info ?? response.data.streak,
     );
-    return { missions, streak_info };
+    return {
+      missions,
+      streak_info,
+      new_user_deadline: response.data.new_user_deadline ?? undefined,
+    };
   } catch (error) {
     console.error("[missionApi] Failed to fetch V2 missions", error);
     throw error;

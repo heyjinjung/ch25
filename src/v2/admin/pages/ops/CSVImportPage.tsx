@@ -61,7 +61,10 @@ export default function CSVImportPage() {
       setFilePath(uploadRes.file_path);
 
       // 2. Validate
-      await validateMutation.mutateAsync(selectedFile);
+      await validateMutation.mutateAsync({
+        file: selectedFile,
+        importType: importType,
+      });
       setStep("VALIDATE");
     } catch (err) {
       console.error(err);

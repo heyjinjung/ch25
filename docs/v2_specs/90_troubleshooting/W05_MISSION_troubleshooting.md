@@ -13,7 +13,8 @@
 | 01-31 | 신규 채널 가입 미션 UI 비활성화 | ✅ RESOLVED |
 | 01-30 | CC 입금 미션 XP 미지급 | ✅ RESOLVED |
 | 02-01 | 신규 유저 미션 타이머 UX 및 기간 정책 수정 + 텔레그램 채널 연동 UX | ✅ RESOLVED |
-| 02-02 | 미션 페이지 빈 화면 (미션 API 401) | 🟡 조사중 |
+| 02-02 | 미션 페이지 빈 화면 (미션 API 401) | ⚪ 오탐(환경 경고) |
+| 02-02 | 신규 유저 타이머 미노출/채널 가입 버튼 비활성 | ✅ RESOLVED |
 | 01-20 | [MISSION] 미션 rewardType Enum 불일치 (missions PUT 500) | ✅ FIXED |
 
 ---
@@ -60,6 +61,38 @@ GET /login 200 (referrer: /v2/missions)
 1. 텔레그램 웹뷰에서 `/v2/missions` 진입
 2. 네트워크 탭에서 `/api/v2/mission`, `/api/v2/inbox`, `/api/events/status`가 200인지 확인
 3. 401 발생 시 로그인 재인증 후 정상 렌더링 확인
+
+---
+
+## 02-02 - [MISSION/FRONTEND] 신규 유저 타이머 미노출/채널 가입 버튼 비활성
+
+**우선순위**: P1
+**관련 도메인**: MISSION, FRONTEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 신규 유저 미션 탭, 채널 가입형 미션 CTA |
+| **HTTP Status** | 200 (Logic Error) |
+| **영향 범위** | 신규 유저 미션 UX 일부 |
+| **재현 빈도** | 항상 |
+
+### 증거(로그)
+- 운영 로그에서 미션 API 200 확인됨: `/api/v2/mission/?category=NEW_USER` 200 OK
+
+### 근본 원인 (증거 기반)
+1) 프론트 `getV2Missions`가 `new_user_deadline` 필드를 반환하지 않아 타이머가 조건에서 항상 누락됨.
+2) `MissionCard`가 텔레그램 채널 액션 타입을 일부만 인식해 채널 가입형 버튼이 비활성 상태로 노출됨.
+
+### 해결 방법
+#### Immediate Fix
+- `src/v2/api/missionApi.ts`: `new_user_deadline` 매핑 추가
+- `src/v2/components/mission/MissionCard.tsx`: `JOIN_TELEGRAM_CHANNEL`/`CHANNEL_JOIN` 타입 처리 정합화
+
+### 검증 방법
+1. 신규 유저 계정으로 `/v2/missions?cat=NEW_USER` 진입
+2. FAB 타이머가 노출되는지 확인
+3. 채널 가입형 미션 버튼이 "채널 가입" → "가입 확인" 단계로 정상 전환되는지 확인
 
 ---
 

@@ -2447,9 +2447,11 @@ export interface CSVImportResult {
 
 export const validateCSVFile = async (
   file: File,
+  import_type: string = "GAME_LOG",
 ): Promise<CSVImportValidateResponse> => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("import_type", import_type);
   const response = await v2Client.post<CSVImportValidateResponse>(
     "/api/v2/admin/csv-import/validate",
     formData,

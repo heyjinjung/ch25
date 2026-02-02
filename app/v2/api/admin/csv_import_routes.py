@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -19,6 +19,7 @@ router = APIRouter()
 @router.post("/csv-import/validate", response_model=dict[str, Any])
 def validate_csv_file(
     file: UploadFile = File(...),
+    import_type: str = Form("GAME_LOG"),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
@@ -41,15 +42,18 @@ def validate_csv_file(
         tmp_path = Path(tmp_file.name)
 
     try:
-        service = CSVImportService(db)
-
-        # Validate file
-        is_valid, error_msg = service.validate_csv_file(str(tmp_path))
-
-        # Get estimate
+        # Route based on import type
         estimate = {}
-        if is_valid:
-            estimate = service.estimate_import_time(str(tmp_path))
+        if import_type == "HQ_MARGIN":
+            from app.v2.services.hq_margin_import_service import HQMarginImportService
+            is_valid, error_msg = HQMarginImportService.validate_hq_margin_csv(str(tmp_path))
+        else:
+            service = CSVImportService(db)
+            # Validate file
+            is_valid, error_msg = service.validate_csv_file(str(tmp_path))
+            # Get estimate
+            if is_valid:
+                estimate = service.estimate_import_time(str(tmp_path))
 
         return {
             "is_valid": is_valid,
