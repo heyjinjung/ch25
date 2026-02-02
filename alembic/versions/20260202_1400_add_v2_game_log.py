@@ -8,6 +8,7 @@ Create Date: 2026-02-02 14:00:00+09:00
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
+from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = '20260202_1400_add_v2_game_log'
@@ -18,6 +19,15 @@ depends_on = None
 
 def upgrade() -> None:
     """Create v2_game_log table for external game log CSV imports."""
+    # Check if table already exists (for idempotent migration)
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    existing_tables = inspector.get_table_names()
+    
+    if 'v2_game_log' in existing_tables:
+        # Table already exists, skip creation
+        return
+    
     op.create_table(
         'v2_game_log',
         sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
