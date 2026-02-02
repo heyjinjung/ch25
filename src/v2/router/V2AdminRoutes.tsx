@@ -6,6 +6,7 @@ import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
 import ProspectLinkingPage from "../admin/pages/prospect/ProspectLinkingPage";
 import GoldenCRMPage from "../admin/pages/dashboard/GoldenCRMPage";
+import SegmentDetailPage from "../admin/pages/users/SegmentDetailPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
@@ -81,6 +82,9 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Users - Tabbed */}
           <Route path="users" element={<UserManagementTabPage />} />
+
+          {/* Segment Detail */}
+          <Route path="segments/:segment" element={<SegmentDetailPage />} />
 
           {/* Prospect Linking */}
           <Route path="prospect/linking" element={<ProspectLinkingPage />} />

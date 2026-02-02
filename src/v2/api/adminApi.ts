@@ -348,6 +348,24 @@ export interface SegmentStatsResponse {
   lastBatchTime: string;
 }
 
+// Segment User List Types
+export interface SegmentUserDto {
+  userId: number;
+  nickname: string;
+  segment: string;
+  lastActivityAt: string | null;
+  totalMargin: number;
+  totalCharge: number;
+  createdAt: string | null;
+}
+
+export interface SegmentUsersResponse {
+  users: SegmentUserDto[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // User Mission History Types
 export interface UserMissionHistoryDto {
   id: number;
@@ -1072,6 +1090,18 @@ export const runV2SegmentBatch = async (): Promise<void> => {
 export const getAdminSegmentStats = async (): Promise<SegmentStatsResponse> => {
   const response = await v2Client.get<SegmentStatsResponse>(
     "/api/v2/admin/segments/stats",
+  );
+  return response.data;
+};
+
+export const getSegmentUsers = async (
+  segment: string,
+  page: number = 1,
+  limit: number = 50
+): Promise<SegmentUsersResponse> => {
+  const response = await v2Client.get<SegmentUsersResponse>(
+    `/api/v2/admin/segments/${segment}/users`,
+    { params: { page, limit } }
   );
   return response.data;
 };

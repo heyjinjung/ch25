@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Optional
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -10,6 +11,9 @@ from app.v2.schemas.v2_admin_segment_rule import (
 )
 from app.v2.services import V2SegmentService
 from app.v2.middleware.admin_audit import log_admin_action
+from app.models.user_segment import UserSegment
+from app.v2.models.v2_user import V2User
+from app.models.hq_prospective_user import HQProspectiveUser
 
 router = APIRouter()
 
@@ -217,3 +221,54 @@ def delete_segment_rule_endpoint(
     )
     
     return {"message": "deleted"}
+
+
+@router.get("/segments/{segment}/users")
+def get_segment_users(
+    segment: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """특정 세그먼트에 속한 유저 목록을 반환합니다."""
+    offset = (page - 1) * limit
+    
+    # 유효한 세그먼트 확인
+    valid_segments = {"NEW", "COMMON", "VIP", "WHALE", "AT_RISK"}
+    segment_upper = segment.upper()
+    if segment_upper not in valid_segments:
+        return {"users": [], "total": 0, "page": page, "limit": limit}
+    
+    # UserSegment + V2User 조인
+    query = (
+        db.query(UserSegment, V2User, HQProspectiveUser)
+        .join(V2User, UserSegment.user_id == V2User.id)
+        .outerjoin(
+            HQProspectiveUser,
+            (HQProspectiveUser.matched_user_id == V2User.id)
+        )
+        .filter(UserSegment.segment == segment_upper)
+    )
+    
+    total = query.count()
+    rows = query.order_by(UserSegment.updated_at.desc()).offset(offset).limit(limit).all()
+    
+    users = []
+    for seg, user, prospect in rows:
+        users.append({
+            "userId": user.id,
+            "nickname": user.nickname,
+            "segment": seg.segment,
+            "lastActivityAt": user.last_activity_at.isoformat() if user.last_activity_at else None,
+            "totalMargin": prospect.total_margin if prospect else 0,
+            "totalCharge": prospect.total_charge if prospect else 0,
+            "createdAt": user.created_at.isoformat() if user.created_at else None,
+        })
+    
+    return {
+        "users": users,
+        "total": total,
+        "page": page,
+        "limit": limit,
+    }

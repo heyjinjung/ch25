@@ -1,7 +1,7 @@
 ﻿문서 타입: Golden 프로젝트 통합 진행 현황
-버전: v3.2
+버전: v3.5
 작성일: 2026-02-02
-업데이트: 2026-02-03
+업데이트: 2026-02-02
 작성자: GitHub Copilot
 대상: V2 운영/개발
 상태: SoT
@@ -75,21 +75,21 @@
 | **Analytics Dashboard** | 오늘 수익 표시 | ✅ 완료 | `AnalyticsDashboard.tsx` |
 | | 데이터 소스 배지 | ✅ 완료 | `AnalyticsDashboard.tsx` |
 | | 총 충전 표시 | ✅ 완료 | `AnalyticsDashboard.tsx` |
-| **Ops Dashboard** | HQ Margin 현황 카드 | 🔄 일부 | `OpsDashboard.tsx` |
-| | VIP/WHALE/AT_RISK 카운트 | ⏳ 예정 | `OpsDashboard.tsx` |
-| | 잠재 VIP 알림 | ⏳ 예정 | `OpsDashboard.tsx` |
+| **Ops Dashboard** | HQ Margin 현황 카드 | ✅ 완료 | `OpsDashboard.tsx` |
+| | VIP/WHALE/AT_RISK 카운트 | ✅ 완료 | `OpsDashboard.tsx` |
+| | 잠재 VIP 알림 | ✅ 완료 | `OpsDashboard.tsx` |
 | **Golden 실시간** | 이벤트 스트림 | ✅ 완료 | `GoldenEventStream.tsx` |
 | | 개입 로그 테이블 | ✅ 완료 | `InterventionLogTable.tsx` |
 | | 실시간 모니터링 페이지 | ✅ 완료 | `GoldenRealTimePage.tsx` |
-| **Golden CRM** | 승인/거절 UI | ⏳ 예정 | (미구현) |
-| | 복수 건 일괄 처리 | ⏳ 예정 | (미구현) |
+| **Golden CRM** | 승인/거절 UI | ✅ 완료 | `GoldenCRMPage.tsx` |
+| | 복수 건 일괄 처리 | ✅ 완료 | `GoldenCRMPage.tsx` |
 | **Latency Survival** | 유저 신고 폼 | ✅ 완료 | `LatencyReportModal.tsx` |
 | | 어드민 승인/반려 UI | ✅ 완료 | `LatencySurvivalPage.tsx` |
-| **가입 플로우** | CC 닉네임 직접 입력 필드 | ⏳ 예정 | (미구현) |
-| | 닉네임 매칭 결과 UI | ⏳ 예정 | (미구현) |
-| | VIP 매칭 완료 알림 | ⏳ 예정 | (미구현) |
-| **잠재고객 관리** | 잠재고객 목록 페이지 | ⏳ 예정 | (미구현) |
-| | 수동 V2User 연결 모달 | ⏳ 예정 | (미구현) |
+| **가입 플로우** | CC 닉네임 직접 입력 필드 | ✅ 완료 | `V2TelegramLoginPage.tsx` |
+| | 닉네임 매칭 결과 UI | ✅ 완료 | `V2TelegramLoginPage.tsx` |
+| | VIP 매칭 완료 알림 | ✅ 완료 | `V2TelegramLoginPage.tsx` |
+| **잠재고객 관리** | 잠재고객 목록 페이지 | ✅ 완료 | `ProspectLinkingPage.tsx` |
+| | 수동 V2User 연결 모달 | ✅ 완료 | `ProspectLinkingPage.tsx` |
 
 ---
 
@@ -98,19 +98,19 @@
 ### P0 (즉시 필요)
 | Task | 설명 | 예상 시간 |
 |------|------|----------|
-| **가입 시 CC 닉네임 입력** | 유저가 직접 CC 닉네임 입력 → 즉시 VIP 매칭 | 1시간 |
-| **Ops Dashboard 세그먼트 카드** | VIP/WHALE/AT_RISK/잠재VIP 카운트 표시 | 30분 |
-| **Risk Users 테이블** | 7일+ 미접속 위험 유저 리스트 | 30분 |
-| **Opportunity Users 테이블** | VIP/WHALE 기회 유저 리스트 | 30분 |
+| **가입 시 CC 닉네임 입력** | 유저가 직접 CC 닉네임 입력 → 즉시 VIP 매칭 | ✅ 완료 |
+| **Ops Dashboard 세그먼트 카드** | VIP/WHALE/AT_RISK/잠재VIP 카운트 표시 | ✅ 완료 |
+| **Risk Users 테이블** | 7일+ 미접속 위험 유저 리스트 | ✅ 완료 |
+| **Opportunity Users 테이블** | VIP/WHALE 기회 유저 리스트 | ✅ 완료 |
 
 ### P1 (중요)
 | Task | 설명 | 예상 시간 |
 |------|------|----------|
-| **잠재고객 관리 페이지** | 미매칭 잠재고객 목록 + 수동 V2User 연결 | 2시간 |
-| **Golden CRM 페이지** | 개입 승인/거절 관리 UI | 1시간 |
-| **Golden 개입 알림** | 실시간 Toast 알림 | 20분 |
-| **세그먼트 상세 페이지** | 세그먼트별 유저 목록 + 액션 | 1시간 |
-| **가입 시 VIP 매칭 알림** | 닉네임 매칭 시 "🎉 VIP 회원으로 등록되었습니다!" Toast | 30분 |
+| **잠재고객 관리 페이지** | 미매칭 잠재고객 목록 + 수동 V2User 연결 | ✅ 완료 |
+| **Golden CRM 페이지** | 개입 승인/거절 관리 UI | ✅ 완료 |
+| **가입 시 VIP 매칭 알림** | 닉네임 매칭 시 "🎉 VIP 회원으로 등록되었습니다!" Toast | ✅ 완료 |
+| **Golden 개입 알림** | 실시간 Toast 알림 | ✅ 완료 |
+| **세그먼트 상세 페이지** | 세그먼트별 유저 목록 + 액션 | ✅ 완료 |
 
 ### P2 (개선)
 | Task | 설명 | 예상 시간 |
@@ -791,6 +791,7 @@ src/v2/admin/
 
 | 버전 | 날짜 | 변경 내용 | 작성자 |
 |------|------|----------|--------|
+| v3.3 | 2026-02-02 | Ops Dashboard/Golden CRM/잠재고객 관리 프론트 구현 반영 | GitHub Copilot |
 | v3.2 | 2026-02-03 | 프론트엔드 미구현 상세 명세, 도메인 충돌 분석 6개 섹션 추가 | JAVIS |
 | v3.1 | 2026-02-03 | CSV 통합, Game Log, ROI Analysis, Latency Survival 상세 추가 | GitHub Copilot |
 | v3.0 | 2026-02-02 | 15개 Learned SoT 문서 링크, 진행 현황 표 통합 | GitHub Copilot |
