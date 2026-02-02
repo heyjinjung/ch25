@@ -65,6 +65,7 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 | telegram_link_code.expires_at | DATETIME | 만료 시각 | |
 | telegram_link_code.used_at | DATETIME, NULL | 사용 시각 | |
 | admin_user_profile.tags | JSON | RBAC 태그 | ROLE_* 형식 |
+| v2_user_auth_event.user_id | INT, INDEX | 유저 참조 | 성능/LOGIN_FAILED 대응을 위해 물리적 FK 생략 (App Level 관리) |
 
 ### [B] Auth Event Type Enum (신규 정의)
 
@@ -358,6 +359,15 @@ CREATE TABLE v2_user_auth_event (
     INDEX idx_created_at (created_at)
 );
 ```
+
+> [!IMPORTANT]
+> **물리적 FK 미설정 사유 및 무결성 정책**
+> - **미설정 사유**:
+>   1. **성능**: 로그인 폭주 시 FK 제약 검사에 따른 오버헤드 방지.
+>   2. **LOGIN_FAILED 대응**: 아직 가입되지 않은 유저나 잘못된 ID로 시도하는 `LOGIN_FAILED` 케이스를 동일 테이블에 기록하기 위해 물리적 제약을 해제함.
+> - **애플리케이션 레벨 무결성 유지 정책**:
+>   - 유저 삭제(`delete_user`, `purge_user`) 시, `auth_service.py`에서 해당 `user_id`를 가진 로그를 명시적으로 정리하거나 `user_id`를 NULL로 업데이트함.
+>   - 통계 집계 시 `JOIN` 대신 `user_id` 존재 여부를 애플리케이션 서비스 레이어에서 방어적으로 로드.
 
 ### 11.3 보존/압축 정책
 

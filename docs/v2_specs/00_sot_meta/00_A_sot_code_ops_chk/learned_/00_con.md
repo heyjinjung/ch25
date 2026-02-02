@@ -1,5 +1,21 @@
 ## [2026-02-02 구현 완료 항목]
 
+### [2026-02-02] W05 트러블슈팅 결과 반영 및 SoT 승격 ✅
+- **문제 해결**: W05 기간 중 발생한 인증, DB, 미션, 게임 도메인 이슈의 소급 적용.
+- **핵심 정책 확정**:
+  - **Auth**: `v2_user_auth_event` 물리적 FK 미설정 사유(성능/LOGIN_FAILED) 명문화.
+  - **DB**: 게임 로그(`dice`, `roulette`, `lottery`) 및 상점 주문 테이블의 `user_id` FK를 `ON DELETE SET NULL`로 표준화.
+  - **Mission**: 신규 유저 미션 자격 기간을 **7일(168시간)**로 확정 및 FAB 타이머 디자인 가이드 수립.
+  - **Golden**: 골든아워 적용 시 전역 Config와 게임별 Config의 **AND 조건** 교차 검증 로직 확정.
+  - **Vault**: 세그먼트별(COMMON/VIP/WHALE/AT_RISK) 일일 사용 목표 금액 기준 공식화.
+- **아카이브**: W05 문서를 `archive/weekly/` 폴더로 이동 및 README 앵커 링크 업데이트 완료.
+- **문서**:
+  - `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/auth/v2_telegram_auth_sot_ko.md`
+  - `docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md`
+  - `docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md`
+  - `docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md`
+  - `docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md`
+
 ### [2026-02-02] CSV 데이터 통합 확장 - 모든 대시보드 연동 ✅
 - **문제 해결**: 분석 대시보드 "오늘 수익 ₩0" + Ops Dashboard 기회 그룹 미표시
 - **백엔드 구현**:

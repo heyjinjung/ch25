@@ -17,9 +17,23 @@ V2 완전 리셋 배포를 위한 **베이스라인 스냅샷 마이그레이션
 - 스냅샷 마이그레이션: `20260119_0904_3bc52f37e0c0_baseline_v2_snapshot`
 - 기존 히스토리 마이그레이션은 `alembic/versions_archive/`로 아카이브
 
-## 4. 운영/검증 (QA)
+## 4. 핵심 데이터 무결성 규칙 (Integrity Rules)
+
+주간 트러블슈팅(W05) 결과에 따라 아래 테이블의 `user_id` FK 제약조건을 표준화한다.
+
+| 대상 테이블 | FK 기준 테이블 | 제약조건 (Action) | 비고 |
+| :--- | :--- | :--- | :--- |
+| `v2_dice_log` | `v2_user.id` | `ON DELETE SET NULL` | 유저 삭제 시에도 로그 보존 |
+| `v2_roulette_log` | `v2_user.id` | `ON DELETE SET NULL` | 유저 삭제 시에도 로그 보존 |
+| `v2_lottery_log` | `v2_user.id` | `ON DELETE SET NULL` | 유저 삭제 시에도 로그 보존 |
+| `v2_shop_order` | `v2_user.id` | `ON DELETE SET NULL` | 주문 내역 보존 |
+
+---
+
+## 5. 운영/검증 (QA)
 - [ ] v2 DB가 빈 상태에서 스냅샷 적용으로 전체 스키마 생성되는지 확인
 - [ ] 이후 변경은 누적 마이그레이션으로만 추가
 
-## 5. 변경 이력
+## 6. 변경 이력
+- v1.1 (2026-02-02, Antigravity Agent): W05 트러블슈팅 기반 게임로그/주문 테이블 FK 표준(`ON DELETE SET NULL`) 추가
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

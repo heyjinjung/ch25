@@ -66,6 +66,13 @@
 | 주사위 적용 게이트 | V2 Dice Config | `enable_golden_hour` | 주사위 게임에서 골든아워 적용 여부 SoT |
 | 주사위 보상 배율 | V2 Dice Config | `golden_hour_multiplier` | 주사위 게임 보상 배율 SoT(골든아워 활성 시 적용) |
 
+> [!IMPORTANT]
+> **골든아워 교차 적용 로직 (AND GATE Policy)**
+> 특정 게임에 골든아워 배율이 적용되기 위해서는 아래 **두 가지 조건이 모두 충족(AND)**되어야 한다.
+> 1. **전역 활성화**: `GoldenHourConfig.enabled`가 `true`이거나 `manual_override`가 `FORCE_ON` 상태여야 함.
+> 2. **게임별 활성화**: 해당 게임의 `Config.enable_golden_hour` 필드가 `true`여야 함.
+> - 하나라도 `false`인 경우, 해당 게임에는 골든아워 배율이 적용되지 않는다.
+
 ### 6.2 Ops Plan (Kind=GOLDEN_HOUR) Payload SoT
 
 | 필드 | 타입 | 설명 |
