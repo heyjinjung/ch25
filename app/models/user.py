@@ -81,7 +81,7 @@ class User(Base):
     telegram_link_nonce = Column(String(64), nullable=True)
     telegram_link_nonce_expires_at = Column(DateTime, nullable=True)
 
-    admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    # admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     # NOTE: game_wallets relationship removed (2026-01-30)
     # FK migrated to v2_user table. Use V2User.game_wallets instead.

@@ -14,7 +14,7 @@ from app.db.base_class import Base
 class AdminUserProfile(Base):
     __tablename__ = "admin_user_profile"
 
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
     
     # External ID mirror (optional, for easier lookup without join)
     external_id = Column(String(100), index=True, nullable=True)
@@ -40,4 +40,4 @@ class AdminUserProfile(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    user = relationship("User", back_populates="admin_profile")
+    user = relationship("V2User", back_populates="admin_profile")

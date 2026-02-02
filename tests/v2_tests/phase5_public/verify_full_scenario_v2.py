@@ -20,8 +20,8 @@ from app.models.game_wallet_ledger import UserGameWalletLedger
 from app.models.game_wallet import UserGameWallet
 from app.models.inventory import UserInventoryItem
 from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
-from app.models.user import User
 from app.models.vault_ledger import VaultLedger
+from app.v2.models import AdminUserProfile
 from app.v2.api.deps import get_current_user_id as get_v2_user_id
 from app.v2.models.v2_admin_message import V2AdminMessage, V2AdminMessageInbox
 from app.v2.models.v2_level_reward import V2LevelRewardTable
@@ -131,22 +131,33 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
             _ensure_feature_config(db, feature)
 
         v2_user = _seed_v2_user(db)
-        legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user.id)
+        v2_user.nickname = "E2E User"
+        db.add(v2_user)
+        db.flush()
 
-        user = db.get(User, legacy_user_id)
-        if user is None:
-            user = _seed_user(db)
-        user.external_id = v2_user.cc_id
-        user.nickname = "E2E User"
-        db.add(user)
+        # Seed Admin Profile for CRM data testing (Pure V2 Native)
+        admin_profile = AdminUserProfile(
+            user_id=v2_user.id,
+            real_name="E2E Real Name",
+            phone_number="010-1234-5678",
+            memo="E2E Test User Memo"
+        )
+        db.add(admin_profile)
 
-        admin = User(external_id="admin_e2e", nickname="E2E Admin", status="ACTIVE")
+        from app.v2.models.user import V2UserRole, V2UserStatus
+        admin = V2User(
+            cc_id="admin_e2e", 
+            nickname="E2E Admin", 
+            status=V2UserStatus.ACTIVE,
+            role=V2UserRole.ADMIN
+        )
         db.add(admin)
+        db.flush()
 
         _seed_roulette_config(db)
         dice_config = _seed_dice_config(db)
         lottery_config = _seed_lottery_config(db)
-        _grant_game_tickets(db, legacy_user_id)
+        _grant_game_tickets(db, v2_user.id)
         _seed_level_rewards(db)
 
         # Make game rewards deterministic and vault-positive
@@ -200,12 +211,12 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         print("CC Deposit Response:", r_deposit.status_code, r_deposit.json())
         assert r_deposit.status_code == 200
 
-        progress = db.query(UserLevelProgress).filter(UserLevelProgress.user_id == legacy_user_id).first()
+        progress = db.query(UserLevelProgress).filter(UserLevelProgress.user_id == v2_user.id).first()
         reward_log = db.query(UserLevelRewardLog).filter(
-            UserLevelRewardLog.user_id == legacy_user_id,
+            UserLevelRewardLog.user_id == v2_user.id,
             UserLevelRewardLog.level == 2,
         ).first()
-        xp_log = db.query(UserXpEventLog).filter(UserXpEventLog.user_id == legacy_user_id).first()
+        xp_log = db.query(UserXpEventLog).filter(UserXpEventLog.user_id == v2_user.id).first()
         print("Level Progress:", progress.level if progress else None, progress.xp if progress else None)
         print("Level Reward Log:", reward_log.level if reward_log else None, reward_log.reward_type if reward_log else None)
         print("XP Event Log:", xp_log.source if xp_log else None, xp_log.delta if xp_log else None)
@@ -215,9 +226,9 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         assert reward_log.reward_type == "ROULETTE_TICKET"  # normalized enum
 
         print("\n========== Phase5 Scenario 2: Gambler's Loop ==========")
-        user.vault_locked_balance = 0
-        db.query(UserGameWallet).filter(UserGameWallet.user_id == legacy_user_id).delete()
-        db.query(UserInventoryItem).filter(UserInventoryItem.user_id == legacy_user_id).delete()
+        v2_user.vault_locked_balance = 0
+        db.query(UserGameWallet).filter(UserGameWallet.user_id == v2_user.id).delete()
+        db.query(UserInventoryItem).filter(UserInventoryItem.user_id == v2_user.id).delete()
         db.query(V2AdminMessageInbox).filter(V2AdminMessageInbox.user_id == v2_user.id).delete()
         db.commit()
 
@@ -231,9 +242,9 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         assert r_tz.status_code == 200
         assert r_tz.json().get("granted") is True
 
-        tz_log = db.query(V2TicketZeroLog).filter(V2TicketZeroLog.user_id == legacy_user_id).first()
+        tz_log = db.query(V2TicketZeroLog).filter(V2TicketZeroLog.user_id == v2_user.id).first()
         tz_wallet = db.query(UserGameWallet).filter(
-            UserGameWallet.user_id == legacy_user_id,
+            UserGameWallet.user_id == v2_user.id,
             UserGameWallet.token_type == GameTokenType.ROULETTE_COIN,
         ).first()
         print("TicketZero Log:", tz_log.ticket_type if tz_log else None, tz_log.ticket_amount if tz_log else None)
@@ -250,7 +261,7 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
 
         r_force = client.post(
             "/api/v2/admin/vault/force-edit",
-            json={"user_id": legacy_user_id, "amount": 5000, "reason": "E2E_ADMIN_FIX"}
+            json={"user_id": v2_user.id, "amount": 5000, "reason": "E2E_ADMIN_FIX"}
         )
         print("Admin Force Edit:", r_force.status_code, r_force.json())
         assert r_force.status_code == 200
@@ -282,10 +293,10 @@ def test_verify_full_scenario_v2(monkeypatch: pytest.MonkeyPatch) -> None:
         print("Inbox Read:", r_read.status_code, r_read.json())
         assert r_read.status_code == 200
 
-        vault_ledger = db.query(VaultLedger).filter(VaultLedger.user_id == legacy_user_id).order_by(VaultLedger.id.desc()).first()
+        vault_ledger = db.query(VaultLedger).filter(VaultLedger.user_id == v2_user.id).order_by(VaultLedger.id.desc()).first()
         message = db.query(V2AdminMessage).order_by(V2AdminMessage.id.desc()).first()
         inbox_row = db.query(V2AdminMessageInbox).order_by(V2AdminMessageInbox.id.desc()).first()
-        wallet_ledger = db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == legacy_user_id).order_by(UserGameWalletLedger.id.desc()).first()
+        wallet_ledger = db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == v2_user.id).order_by(UserGameWalletLedger.id.desc()).first()
 
         print("Vault Ledger:", vault_ledger.amount if vault_ledger else None, vault_ledger.ref_type if vault_ledger else None)
         print("Admin Message Row:", message.id if message else None, message.title if message else None)

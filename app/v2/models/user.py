@@ -69,3 +69,6 @@ class V2User(Base):
     
     # V2 Game Log relationship (for CSV import analytics)
     game_logs = relationship("V2GameLog", back_populates="user", lazy="dynamic")
+
+    # Admin Profile link ( CRM Data )
+    admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")

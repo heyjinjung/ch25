@@ -59,5 +59,3 @@ class V2UserService:
             
         return user
 
-
-
