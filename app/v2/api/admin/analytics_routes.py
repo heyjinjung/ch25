@@ -21,6 +21,7 @@ from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
 from app.v2.models import VaultWithdrawalRequest
 from app.v2.services import V2AdminAuditService
+from app.v2.services.roi_analysis_service import V2RoiAnalysisService
 
 router = APIRouter(prefix="/analytics", tags=["admin-analytics"])
 
@@ -679,3 +680,35 @@ def get_channel_performance(
         overall_roi=round(overall_roi, 4),
     )
 
+
+# ============================================================================
+# ROI Analysis (Campaign Performance)
+# ============================================================================
+
+class RoiCampaignDto(BaseModel):
+    event_type: str
+    user_count: int
+    avg_roi: float
+    total_cost: float
+    total_return: float
+
+@router.get("/marketing/campaign-performance", response_model=List[RoiCampaignDto])
+def get_roi_campaign_performance(
+    start_date: str = Query(None, description="yyyy-MM-dd"),
+    end_date: str = Query(None, description="yyyy-MM-dd"),
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    개입/넛지 캠페인별 ROI 성과를 조회합니다.
+    (예: Pity System, Daily Nudge 등)
+    """
+    period_start = datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
+    period_end = datetime.strptime(end_date, "%Y-%m-%d") if end_date else None
+    
+    top_campaigns = V2RoiAnalysisService.get_top_roi_campaigns(
+        db, limit=limit, start_date=period_start, end_date=period_end
+    )
+    
+    return [RoiCampaignDto(**c) for c in top_campaigns]

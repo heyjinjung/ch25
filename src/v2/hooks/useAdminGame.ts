@@ -74,6 +74,7 @@ import {
   getAdminRevenueBreakdown,
   getAdminRevenueSummary,
   getAdminMarketingChannelPerformance,
+  getAdminMarketingCampaignPerformance,
   // Inventory Stock API
   adjustAdminStock,
   getAdminGifticonDeliveries,
@@ -727,6 +728,18 @@ export function useAdminMarketingChannelPerformance(params?: {
     queryFn: () => getAdminMarketingChannelPerformance(params),
   });
 }
+
+export function useAdminMarketingCampaignPerformance(params?: {
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+}) {
+  return useQuery({
+    queryKey: ["admin", "analytics", "marketing", "campaign-performance", params],
+    queryFn: () => getAdminMarketingCampaignPerformance(params),
+  });
+}
+
 
 // ============================================================================
 // Inventory Stock Hooks (재고 관리)

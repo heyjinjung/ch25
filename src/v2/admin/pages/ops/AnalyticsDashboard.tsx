@@ -37,7 +37,9 @@ import {
   useAdminRevenueBreakdown,
   useAdminRevenueSummary,
   useAdminMarketingChannelPerformance,
+  useAdminMarketingCampaignPerformance,
   useAdminDailyFinance,
+
 } from "../../../hooks/useAdminGame";
 
 export default function AnalyticsDashboard() {
@@ -56,7 +58,10 @@ export default function AnalyticsDashboard() {
   const { data: revenueSummary } = useAdminRevenueSummary();
   const { data: marketingData, isLoading: isLoadingMarketing } =
     useAdminMarketingChannelPerformance();
+  const { data: campaignData, isLoading: isLoadingCampaign } =
+    useAdminMarketingCampaignPerformance();
   const { data: dailyFinance } = useAdminDailyFinance();
+
 
   const formatPercent = (val: number) => `${(val * 100).toFixed(1)}%`;
   const formatCurrency = (val: number) => `₩${val.toLocaleString()}`;
@@ -724,7 +729,63 @@ export default function AnalyticsDashboard() {
               )}
             </CardContent>
           </Card>
+          
+          {/* New Section: Campaign ROI Analysis */}
+          <div className="mt-8">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
+              캠페인(개입)별 성과 분석
+              <InfoTooltip
+                title="캠페인 ROI"
+                description={"넛지, 위기 구조 등 시스템 개입에 따른 투자 대비 성과입니다."}
+              />
+            </h3>
+            
+            <Card className="bg-zinc-900 border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">캠페인 ROI 순위 (Top 20)</CardTitle>
+                <CardDescription className="text-zinc-400">
+                  이벤트/트리거별 마케팅 비용 효율성
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingCampaign ? (
+                   <div className="text-center py-10 text-zinc-500">로딩중...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-2 text-zinc-400">캠페인/트리거</th>
+                          <th className="text-right py-2 text-zinc-400">대상 유저</th>
+                          <th className="text-right py-2 text-zinc-400">총 비용</th>
+                          <th className="text-right py-2 text-zinc-400">총 회수</th>
+                          <th className="text-right py-2 text-zinc-400">평균 ROI</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {campaignData?.map((row) => (
+                          <tr key={row.event_type} className="border-b border-white/5 hover:bg-white/5">
+                            <td className="py-2 text-white">{row.event_type}</td>
+                            <td className="py-2 text-right text-zinc-300">{row.user_count.toLocaleString()}</td>
+                            <td className="py-2 text-right text-rose-400">₩{row.total_cost.toLocaleString()}</td>
+                            <td className="py-2 text-right text-white">₩{row.total_return.toLocaleString()}</td>
+                            <td className={`py-2 text-right ${row.avg_roi > 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                              {row.avg_roi.toFixed(1)}%
+                            </td>
+                          </tr>
+                        ))}
+                        {!campaignData?.length && (
+                           <tr><td colSpan={5} className="text-center py-4 text-zinc-500">데이터가 없습니다.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
+
       </Tabs>
     </div>
   );

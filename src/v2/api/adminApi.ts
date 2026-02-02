@@ -145,6 +145,7 @@ export interface InterventionExecutionResponse {
   details?: Record<string, unknown>;
 }
 
+
 export interface OpsDashboardResponse {
   system: {
     db: "OK" | "DEGRADED" | "ERROR";
@@ -3188,3 +3189,28 @@ export const getUserGameLogs = async (
   );
   return response.data;
 };
+
+// ============================================================================
+// ROI Analysis API
+// ============================================================================
+
+export interface RoiCampaignDto {
+  event_type: string;
+  user_count: number;
+  avg_roi: number;
+  total_cost: number;
+  total_return: number;
+}
+
+export const getAdminMarketingCampaignPerformance = async (params?: {
+  start_date?: string;
+  end_date?: string;
+  limit?: number;
+}): Promise<RoiCampaignDto[]> => {
+  const response = await v2Client.get<RoiCampaignDto[]>(
+    "/api/v2/admin/analytics/marketing/campaign-performance",
+    { params },
+  );
+  return response.data;
+};
+

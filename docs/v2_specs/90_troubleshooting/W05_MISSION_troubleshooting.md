@@ -17,6 +17,7 @@
 | 02-02 | 신규 유저 타이머 미노출/채널 가입 버튼 비활성 | ✅ RESOLVED |
 | 02-02 | 텔레그램 채널 인증 미션 진행 미반영 | ✅ RESOLVED |
 | 02-02 | 연속출석(스트릭) 보상 클레임 불가 | ✅ RESOLVED |
+| 02-02 | 연속출석 안내/보상 규칙 미노출 (UX) | ✅ RESOLVED |
 | 01-20 | [MISSION] 미션 rewardType Enum 불일치 (missions PUT 500) | ✅ FIXED |
 
 ---
@@ -128,6 +129,42 @@ GET /login 200 (referrer: /v2/missions)
 1. 스트릭 보상 가능 유저로 접속
 2. 스트릭 모달 자동 노출 확인
 3. "오늘의 보상 받기" 클릭 → `/api/v2/mission/streak/claim` 호출 로그 확인
+
+---
+
+## 02-02 - [MISSION/FRONTEND] 연속출석 안내/보상 규칙 미노출 (UX)
+
+**우선순위**: P2
+**관련 도메인**: MISSION, FRONTEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | V2 미션 페이지 연속출석 보드 (`/v2/missions?cat=DAILY`) |
+| **HTTP Status** | 200 (Logic/UX) |
+| **영향 범위** | 유저가 무엇을 해야 하는지/보상 규칙을 알 수 없음 |
+| **재현 빈도** | 항상 |
+
+### 증거(스크린샷)
+- 연속출석 카드가 숫자만 표시되고, 보상/규칙/행동 CTA가 노출되지 않음
+
+### 근본 원인 (증거 기반)
+- `src/v2/pages/missions/MissionsPage.tsx`에서 `DailyStreakBoard`만 렌더링하고, 모달 오픈 CTA/안내 문구가 없음.
+- 스트릭 모달은 `claimable_rewards` 또는 어드민 강제 노출 조건에서만 자동 오픈되어, 일반 상태에서는 유저가 보상/규칙을 확인할 경로가 없음.
+
+### 해결 방법
+#### Immediate Fix
+- 미션 페이지(DAILY 탭)에 안내 문구 및 "보상/규칙 보기" 버튼 추가
+- 버튼으로 스트릭 모달 수동 오픈 가능하도록 연결
+
+### 수정 파일
+- `src/v2/pages/missions/MissionsPage.tsx`
+
+### 검증 방법
+1. `DAILY` 탭 진입
+2. 연속출석 안내 문구 노출 확인
+3. "보상/규칙 보기" 클릭 시 스트릭 모달 오픈 확인
+4. 클레임 가능 시 "오늘 보상 받기"로 CTA 텍스트 변경 확인
 
 ---
 
