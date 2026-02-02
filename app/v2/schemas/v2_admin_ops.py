@@ -75,7 +75,7 @@ class DetailedRiskUserDto(BaseModel):
     user_id: int = Field(alias="userId", serialization_alias="userId")
     nickname: str
     risk_type: str = Field(alias="riskType", serialization_alias="riskType")  # LOSS_STREAK | INACTIVE | BALANCE_DROP
-    risk_level: Literal["LOW", "MEDIUM", "HIGH"] = Field(alias="riskLevel", serialization_alias="riskLevel")
+    risk_level: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"] = Field(alias="riskLevel", serialization_alias="riskLevel")
     risk_score: float = Field(alias="riskScore", serialization_alias="riskScore")
     details: dict = Field(default_factory=dict)
     last_activity_at: datetime | None = Field(default=None, alias="lastActivityAt", serialization_alias="lastActivityAt")

@@ -221,9 +221,49 @@ export default function OpsDashboard() {
                   <PulsatingDot color="#ef4444" /> 위기 그룹 (곧 떠날 유저)
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {status?.goldenRadar?.riskUsers &&
-                status.goldenRadar.riskUsers.length > 0 ? (
+              <CardContent className="space-y-4 max-h-[280px] overflow-y-auto">
+                {/* DetailedRiskUser 사용 (우선) */}
+                {status?.riskUsers && status.riskUsers.length > 0 ? (
+                  <div className="space-y-2">
+                    {status.riskUsers.slice(0, 5).map((u) => (
+                      <div
+                        key={u.userId}
+                        className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-obsidian-border hover:bg-white/10 cursor-pointer transition-colors"
+                        onClick={() => handleUserClick(u.userId)}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-white">
+                            {u.nickname || `유저 #${u.userId}`}
+                          </span>
+                          <span className="text-[10px] text-obsidian-muted">
+                            {u.riskType === "LOSS_STREAK" &&
+                              `연패: ${u.details?.loss_streak ?? "-"}회`}
+                            {u.riskType === "INACTIVE" &&
+                              `미접속: ${u.details?.inactive_days ?? "-"}일`}
+                            {u.riskType === "BALANCE_DROP" &&
+                              `잔액 급감: ${u.details?.balance_drop_pct ?? "-"}%`}
+                            {![
+                              "LOSS_STREAK",
+                              "INACTIVE",
+                              "BALANCE_DROP",
+                            ].includes(u.riskType) &&
+                              `위험도: ${(u.riskScore * 100).toFixed(0)}%`}
+                          </span>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] ${u.riskLevel === "HIGH" || u.riskLevel === "CRITICAL" ? "border-red-500/50 text-red-400" : "border-amber-500/50 text-amber-400"}`}
+                        >
+                          {u.riskLevel === "HIGH" || u.riskLevel === "CRITICAL"
+                            ? "매우 위험"
+                            : "주의"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : status?.goldenRadar?.riskUsers &&
+                  status.goldenRadar.riskUsers.length > 0 ? (
+                  /* Fallback: goldenRadar.riskUsers */
                   <div className="space-y-2">
                     {status.goldenRadar.riskUsers.map((u) => (
                       <div

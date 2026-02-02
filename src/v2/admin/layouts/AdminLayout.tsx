@@ -116,6 +116,11 @@ export default function AdminLayout() {
           label: "잠재 유저 매칭",
           path: "/admin/prospect/linking",
         },
+        {
+          icon: Users,
+          label: "Golden CRM",
+          path: "/admin/golden/crm",
+        },
         { icon: Settings, label: "레벨 관리", path: "/admin/game/level" },
         {
           icon: MessageSquare,

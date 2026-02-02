@@ -5,6 +5,7 @@ import AdminLayout from "../admin/layouts/AdminLayout";
 import MarketingCenterPage from "../admin/pages/dashboard/MarketingCenterPage";
 import AnalyticsDashboard from "../admin/pages/ops/AnalyticsDashboard";
 import ProspectLinkingPage from "../admin/pages/prospect/ProspectLinkingPage";
+import GoldenCRMPage from "../admin/pages/dashboard/GoldenCRMPage";
 
 import VaultControlPage from "../admin/pages/economy/VaultControlPage";
 import VaultAnalyticsPage from "../admin/pages/economy/VaultAnalyticsPage";
@@ -83,6 +84,9 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Prospect Linking */}
           <Route path="prospect/linking" element={<ProspectLinkingPage />} />
+
+          {/* Golden CRM */}
+          <Route path="golden/crm" element={<GoldenCRMPage />} />
 
           {/* Economy */}
           <Route path="economy/vault" element={<VaultControlPage />} />

@@ -1,6 +1,7 @@
 ﻿문서 타입: Golden 프로젝트 통합 진행 현황
-버전: v3.0
+버전: v3.2
 작성일: 2026-02-02
+업데이트: 2026-02-03
 작성자: GitHub Copilot
 대상: V2 운영/개발
 상태: SoT
@@ -783,3 +784,15 @@ src/v2/admin/
 - **실시간 아키텍처**: [02_golden_v2_realtime_architecture.md](02_golden_v2_realtime_architecture.md)
 - **골든아워 정책**: [v2_golden_hour_policy_sot_ko.md](v2_golden_hour_policy_sot_ko.md)
 - **프론트엔드 스펙**: [2026_01_28_golden_frontend_spec.md](2026_01_28_golden_frontend_spec.md)
+
+---
+
+## 📝 변경 이력
+
+| 버전 | 날짜 | 변경 내용 | 작성자 |
+|------|------|----------|--------|
+| v3.2 | 2026-02-03 | 프론트엔드 미구현 상세 명세, 도메인 충돌 분석 6개 섹션 추가 | JAVIS |
+| v3.1 | 2026-02-03 | CSV 통합, Game Log, ROI Analysis, Latency Survival 상세 추가 | GitHub Copilot |
+| v3.0 | 2026-02-02 | 15개 Learned SoT 문서 링크, 진행 현황 표 통합 | GitHub Copilot |
+| v2.0 | 2026-02-02 | 잠재고객 매칭 전략 3안, 프론트 To-Do 추가 | GitHub Copilot |
+| v1.0 | 2026-02-02 | HQ Margin → Analytics 연동 PATCH 초안 | GitHub Copilot |

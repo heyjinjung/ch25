@@ -185,10 +185,16 @@ export interface RevenueStatsDto {
 export interface DetailedRiskUserDto {
   userId: number;
   nickname: string;
-  riskType: string;
+  riskType: "LOSS_STREAK" | "INACTIVE" | "BALANCE_DROP" | "UNKNOWN";
   riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   riskScore: number;
-  details: string;
+  details: {
+    loss_streak?: number;
+    total_loss?: number;
+    inactive_days?: number;
+    total_margin?: number;
+    balance_drop_pct?: number;
+  };
   lastActivityAt?: string | null;
 }
 

@@ -187,7 +187,7 @@ def get_ops_dashboard_status(
             risk_type=r.get("risk_type", "UNKNOWN"),
             risk_level=r.get("risk_level", "MEDIUM"),
             risk_score=r.get("risk_score", 0.0),
-            details=r.get("details", ""),
+            details=r.get("details", {}),
             last_activity_at=r.get("last_activity_at"),
         )
         for r in risk_users_data
@@ -453,6 +453,173 @@ def get_intervention_logs(
     )
 
     return logs
+
+
+# ==================== Golden CRM APIs ====================
+
+class InterventionApprovalRequest(BaseModel):
+    """개입 승인/거절 요청."""
+    action: str  # APPROVE | REJECT
+
+
+@router.get("/ops/interventions/pending")
+def get_pending_interventions(
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    대기 중인 개입 목록 조회.
+    
+    Returns:
+    ```json
+    {
+        "total": 10,
+        "pending": [
+            {
+                "id": 1,
+                "user_id": 42,
+                "nickname": "테스트유저",
+                "trigger_id": "TRG_LOSE_5",
+                "action_taken": "Trigger_Pity_Win",
+                "user_balance_before": 10000,
+                "created_at": "2026-02-03T10:00:00"
+            }
+        ]
+    }
+    ```
+    """
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+    
+    query = db.query(V2GoldenInterventionLog, V2User.nickname).join(
+        V2User, V2User.id == V2GoldenInterventionLog.user_id
+    ).filter(
+        V2GoldenInterventionLog.status == "PENDING_APPROVAL"
+    ).order_by(V2GoldenInterventionLog.created_at.desc())
+    
+    total = query.count()
+    results = query.offset(offset).limit(limit).all()
+    
+    return {
+        "total": total,
+        "pending": [
+            {
+                "id": log.id,
+                "user_id": log.user_id,
+                "nickname": nickname or f"User#{log.user_id}",
+                "trigger_id": log.trigger_id,
+                "trigger_condition": log.trigger_condition,
+                "action_taken": log.action_taken,
+                "user_balance_before": log.user_balance_before,
+                "recent_results": log.recent_results,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+            for log, nickname in results
+        ]
+    }
+
+
+@router.post("/ops/interventions/{intervention_id}/approve")
+def approve_intervention(
+    intervention_id: int,
+    request: InterventionApprovalRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    개입 승인/거절 처리.
+    
+    - APPROVE: 개입 실행 (보상 지급)
+    - REJECT: 개입 거절 (보상 미지급)
+    """
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    intervention = db.query(V2GoldenInterventionLog).filter(
+        V2GoldenInterventionLog.id == intervention_id
+    ).first()
+    
+    if not intervention:
+        raise HTTPException(status_code=404, detail="INTERVENTION_NOT_FOUND")
+    
+    if intervention.status != "PENDING_APPROVAL":
+        raise HTTPException(status_code=400, detail="INTERVENTION_ALREADY_PROCESSED")
+    
+    action = request.action.upper()
+    if action not in ["APPROVE", "REJECT"]:
+        raise HTTPException(status_code=400, detail="INVALID_ACTION")
+    
+    if action == "APPROVE":
+        intervention.status = "APPROVED"
+        # TODO: 실제 보상 지급 로직 연결
+        # golden_intervention_service.execute_intervention(intervention)
+    else:
+        intervention.status = "REJECTED"
+    
+    db.commit()
+    
+    # 감사 로그 기록
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        f"INTERVENTION_{action}",
+        "GOLDEN_CRM",
+        str(intervention_id),
+        after={"user_id": intervention.user_id, "trigger_id": intervention.trigger_id},
+    )
+    
+    return {
+        "success": True,
+        "intervention_id": intervention_id,
+        "status": intervention.status,
+    }
+
+
+@router.post("/ops/interventions/batch")
+def batch_approve_interventions(
+    intervention_ids: List[int],
+    action: str = Query(..., description="APPROVE 또는 REJECT"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    복수 개입 일괄 처리.
+    """
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    action = action.upper()
+    if action not in ["APPROVE", "REJECT"]:
+        raise HTTPException(status_code=400, detail="INVALID_ACTION")
+    
+    new_status = "APPROVED" if action == "APPROVE" else "REJECTED"
+    
+    updated = db.query(V2GoldenInterventionLog).filter(
+        V2GoldenInterventionLog.id.in_(intervention_ids),
+        V2GoldenInterventionLog.status == "PENDING_APPROVAL"
+    ).update({"status": new_status}, synchronize_session=False)
+    
+    db.commit()
+    
+    # 감사 로그
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        f"INTERVENTION_BATCH_{action}",
+        "GOLDEN_CRM",
+        ",".join(map(str, intervention_ids)),
+        after={"count": updated},
+    )
+    
+    return {
+        "success": True,
+        "processed_count": updated,
+        "action": action,
+    }
 
 
 @router.websocket("/ws/golden/events")
