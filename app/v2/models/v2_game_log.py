@@ -41,7 +41,7 @@ class V2GameLog(Base):
     # 유저 연결 (V2User와 FK)
     user_id = Column(
         Integer,
-        ForeignKey("v2_users.id", ondelete="CASCADE"),
+        ForeignKey("v2_user.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
         comment="V2 유저 ID",
