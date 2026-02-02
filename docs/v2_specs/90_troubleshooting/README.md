@@ -56,6 +56,12 @@ W{주차}_{도메인코드}_troubleshooting.md
 - 인덱스: [docs/v2_specs/00_sot_meta/00_INDEX.md](../00_sot_meta/00_INDEX.md)
 - learned 통합 컨텍스트: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
 
+**기술 기준문서 (필수 참조)**
+- learned_ 도메인별 최신 문서: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_](../00_sot_meta/00_A_sot_code_ops_chk/learned_)
+- learned 통합 컨텍스트: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
+- 00_A_sot_code_ops_chk 전체 문서: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk](../00_sot_meta/00_A_sot_code_ops_chk)
+- 인덱스 최신 변경 이력: [docs/v2_specs/00_sot_meta/00_INDEX.md](../00_sot_meta/00_INDEX.md)
+
 ---
 
 ## 📅 현재 주차 문서 (W05: 01-27 ~ 02-02)
@@ -65,9 +71,9 @@ W{주차}_{도메인코드}_troubleshooting.md
 | AUTH | [W05_AUTH_troubleshooting.md](./W05_AUTH_troubleshooting.md) | 2 |
 | VAULT | [W05_VAULT_troubleshooting.md](./W05_VAULT_troubleshooting.md) | 4 |
 | GAME | [W05_GAME_troubleshooting.md](./W05_GAME_troubleshooting.md) | 7 |
-| MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 3 |
+| MISSION | [W05_MISSION_troubleshooting.md](./W05_MISSION_troubleshooting.md) | 6 |
 | DB | [W05_DB_troubleshooting.md](./W05_DB_troubleshooting.md) | 4 |
-| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 6 |
+| INFRA | [W05_INFRA_troubleshooting.md](./W05_INFRA_troubleshooting.md) | 7 |
 | FRONTEND | [W05_FRONTEND_troubleshooting.md](./W05_FRONTEND_troubleshooting.md) | 4 |
 
 ---
@@ -237,6 +243,13 @@ HTTP 403 + detail=BENEFITS_SUSPENDED
 4. **즉시 조치/영구 조치** 구분
 5. **검증 방법** 및 재현 절차 기록
 6. **연관 문서 링크** (SoT/learned_/코드 경로)
+7. **운영 서버 확인** (필요 시)
+   - SSH 접속 후 백엔드 로그 확인
+   - 명령 예시:
+
+```bash
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+```
 
 ### 템플릿
 

@@ -15,6 +15,9 @@
 | 01-31 | 주사위 골든아워 시간설정 500 에러 | ✅ RESOLVED |
 | 02-01 | 어드민 유저 게임 로그 조회 500 (dice_sum 속성) | ✅ RESOLVED |
 | 02-01 | 어드민 유저 게임 로그 조회 500 (V2RouletteLog segment_index 속성 오류) | ✅ FIXED |
+| 01-20 | [GAME] 게임 토큰 명칭 불일치 (GOLD_KEY vs GOLD_KEY_TICKET) | ✅ FIXED |
+| 01-20 | [GAME] 프리미엄 룰렛 접근 제어 로직 누락 | ✅ FIXED |
+| 01-20 | [GAME] Roulette 스키마 직렬화 실패 (reward_type/grade Error) | ✅ FIXED |
 
 ---
 
@@ -321,5 +324,84 @@ curl -H "Authorization: Bearer $TOKEN" https://cc-jm.com/api/v2/admin/users/1/ga
 2. 게임 로그 DTO 매핑 시 `getattr()` 방어적 패턴 사용 권장
 3. 새 게임 타입 추가 시 모델-라우트 속성 매핑 테스트 추가
 
-### 수정 시각
-- 2026-02-01 12:XX KST
+---
+
+## [REFERENCE] V2 게임 토큰 관련 트러블슈팅 (Game Token & Premium)
+
+### 1. 골드키/다이아키 티켓 차감 누락
+- **원인**: 프론트엔드(`GOLD_KEY`)와 백엔드 DB(`GOLD_KEY_TICKET`) 간의 토큰 타입 명칭 불일치.
+- **해결**: 
+    - FE: `TOKEN_TYPE_V2_MAP`을 통한 표준 명칭 매핑.
+    - BE: `GameTokenType` Enum에 Legacy Alias 포함 및 서비스 레이어에서 양방향 호환(`in_()`) 처리.
+
+### 2. Premium 룰렛 접근 제어 오류
+- **증상**: VIP/WHALE 전용 게임에 COMMON 유저가 접근하거나, 정당한 권한자가 차단됨.
+- **해결**: `GOLD_KEY`와 `GOLD_KEY_TICKET`을 모두 'Premium' 집합으로 관리하고, `UserSegment`를 조회하여 `["VIP", "WHALE"]` 여부를 엄격히 검증.
+
+---
+
+---
+
+## 01-20 - [GAME/CONFIG] 게임 토큰 명칭 불일치 (GOLD_KEY vs GOLD_KEY_TICKET)
+
+**우선순위**: P1
+**관련 도메인**: GAME, VAULT, INVENTORY
+
+### 증상
+- 특정 게임(GOLD_KEY 룰렛 등) 실행 시 자산 부족 에러 발생 또는 토큰 소모 실패.
+- 인벤토리에는 아이템이 있으나 게임 서버에서 인식하지 못함.
+
+### 근본 원인
+- 소스 코드 및 DB 설정 간 토큰 식별자 혼용: `GOLD_KEY` vs `GOLD_KEY_TICKET`.
+- 이전 V1/V2 전환 과정에서 명칭 정의가 상이하게 적용됨.
+
+### 해결 조치
+- 모든 게임 설정 및 백엔드 로직에서 `GOLD_KEY_TICKET`으로 명칭 표준화(`token_type` 정규화).
+
+### 검증 방법
+- 황금열쇠 룰렛 실행 시 인벤토리의 열쇠가 정상 차감되고 게임이 시작되는지 확인.
+
+---
+
+## 01-20 - [GAME/ACCESS] 프리미엄 룰렛 접근 제어 및 티켓 검증
+
+**우선순위**: P2
+**관련 도메인**: GAME, AUTH
+
+### 증상
+- 일반 티켓 유저가 프리미엄 룰렛(황금열쇠 전용)에 접근 가능하거나, 잘못된 토큰 타입으로 게임 시도 시 500 에러 발생.
+
+### 근본 원인
+- `v2_roulette_game_service.py`에서 플레이 시도 시 사용자가 보유한 티켓 타입과 룰렛 설정(`reward_type`) 간의 엄격한 매칭 로직 누락.
+
+### 해결 조치
+- 게임 플레이 진입점(`play_game`)에서 `is_premium` 필드 및 `required_token_type` 검증 단계 추가.
+
+### 검증 방법
+- 일반 티켓 유저로 프리미엄 룰렛 API 호출 시 `403 Forbidden` 또는 `400 Invalid Token` 반환 확인.
+
+---
+
+## 01-20 - [GAME/SCHEMA] Roulette 스키마 직렬화 실패 (reward_type/grade)
+
+**우선순위**: P2
+**관련 도메인**: GAME, BACKEND
+
+### 증상
+- `/api/v2/admin/game/roulette/configs` 호출 시 `Pydantic ValidationError` 또는 500 에러 발생.
+
+### 근본 원인
+- DB에 저장된 `reward_type` (예: `TICKET_DICE`) 또는 `grade` 값이 Pydantic DTO의 Enum 허용 범위(`POINT|CREDIT|TICKET`)를 벗어남.
+
+### 해결 조치
+- `RouletteSegmentDto` 및 `RouletteConfigDto` 레벨에서 데이터 정규화(Normalization) 로직 추가.
+- `TICKET_*` 로 시작하는 값은 자동으로 `TICKET`으로 매핑 처리.
+
+### 검증 방법
+- 어드민 룰렛 설정 페이지 로딩 시 에러 없이 리스트가 출력되는지 확인.
+
+---
+
+## 변경 이력
+- 2026-02-02: V2DiceLog 속성 참조 오류 및 게임 모듈 임포트 실패 해결 내역 추가 (Antigravity)
+- 2026-02-02: 게임 토큰 표준화 및 프리미엄 접근 제어 사례 추가 (Antigravity)

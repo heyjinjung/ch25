@@ -203,4 +203,71 @@ npm run build  # ✅ 성공
 | 01-31 | 금고 내역 차감 누락 | Copilot |
 | 01-31 | 게임 로그 UI 추가 | Copilot |
 | 01-31 | 인벤토리 로그 UI 추가 | Copilot |
-| 02-01 | 어드민 페이지 허브화 및 최적화 | Copilot |
+| 01-20 | 무한 리다이렉트 루프 (Redirect Loop) | ✅ FIXED |
+| 01-20 | 대시보드 런타임 크래시 (toLocaleString) | ✅ FIXED |
+| 01-20 | 빌드 에러 (TS6133: Unused React) | ✅ FIXED |
+---
+
+## 01-20 - [FRONTEND/LOGIN] 무한 리다이렉트 루프 (Infinite Redirect Loop)
+
+**우선순위**: P1
+**관련 도메인**: FRONTEND, ADMIN
+
+### 증상
+- 로그인 후 대시보드 진입 시 URL이 `/v2/admin/login/dashboard/dashboard...` 형태로 무한 반복되며 브라우저 멈춤.
+
+### 근본 원인
+- `OpsDashboard.tsx` 또는 퀵 액션 버튼의 `navigate` 경로 설정 오류.
+- V1 Admin Router(`/admin/*`) 경로로 진입하여 메인 라우터와 리다이렉트 경합 발생.
+
+### 해결 조치
+- 모든 내부 링크 경로를 V2 표준(`navigate("/v2/admin/...")`)으로 통일하여 수정.
+
+### 검증 방법
+- 로그인 후 대시보드 및 각 메뉴 이동 시 URL 정합성 확인.
+
+---
+
+## 01-20 - [FRONTEND/UI] 대시보드 및 유저 리스트 런타임 크래시 (toLocaleString)
+
+**우선순위**: P1
+**관련 도메인**: FRONTEND, BACKEND
+
+### 증상
+- 대시보드 로드 또는 유저 상세 드로어 오픈 시 흰 화면(White-out)과 함께 크래시 발생.
+- 에러: `Cannot read properties of undefined (reading 'toLocaleString')`
+
+### 근본 원인
+- API 응답 데이터(`metrics`, `user.ticketBalance` 등)가 초기 로드 중이거나 값이 누락되어 `undefined` 상태일 때 방어 로직 없이 직접 메서드 호출.
+
+### 해결 조치
+- Optional Chaining(`?.`) 및 Nullish Coalescing(`??`) 연산자 적용.
+- 예: `status?.metrics?.todayRevenue?.toLocaleString() ?? "0"`
+
+### 검증 방법
+- 데이터 로딩 중 또는 데이터가 비어있는 계정의 상세 정보를 열람하여 화면 크래시 여부 재확인.
+
+---
+
+## 01-20 - [FRONTEND/BUILD] 미사용 변수/임포트로 인한 빌드 실패 (TS6133)
+
+**우선순위**: P2
+**관련 도메인**: FRONTEND, DEVOPS
+
+### 증상
+- `npm run build` 중 `error TS6133: 'React' is declared but its value is never read` 발생 및 배포 중단.
+
+### 근본 원인
+- `tsconfig.json`의 `noUnusedLocals` 옵션이 활성화된 상태에서, JSX 변환 방식 변경으로 인해 명시적인 `import React`가 불필요해졌음에도 코드에 남아있어 발생.
+
+### 해결 조치
+- 사용되지 않는 `import React` 구문 제거 또는 타입 전용 임포트(`import type { FC } from 'react'`)로 변경.
+
+### 검증 방법
+- `npx tsc --noEmit` 실행하여 타입/린트 에러 0건 확인.
+
+---
+
+## 변경 이력
+- 2026-02-02: 프론트엔드 빌드 에러 해결 및 대시보드 UI 최적화 내역 추가 (Antigravity)
+- 2026-02-02: 초기 구동 루프 및 방어적 코딩 사례 추가 (Antigravity)

@@ -20,6 +20,57 @@
 | 02-01 | CSV Import 한글 헤더 지원 및 Import 오류 수정 | ✅ FIXED |
 | 02-01 | CSV Import 한글 깨짐 (Mojibake) 및 인코딩 자동 감지 기능 도입 | ✅ FIXED |
 | 02-02 | CSV Import 400 Bad Request (확장자 대소문자 구분 문제) | ✅ FIXED |
+| 01-20 | [BACKEND] NameError/BaseModel/Circular Import (런타임 초기화 오류) | ✅ FIXED |
+| 01-20 | [INFRA] Nginx WebSocket Upgrade 설정 누락 (WS 404/502) | ✅ FIXED |
+| 02-02 | /admin/api/ui-config/streak_reward_rules 401 (인증 실패) | 🟡 모니터링 |
+
+---
+
+## 02-02 - [INFRA/BACKEND] /admin/api/ui-config/streak_reward_rules 401 (인증 실패)
+
+**우선순위**: P2
+**관련 도메인**: INFRA, BACKEND, ADMIN
+
+### 증상
+- 운영 서버 로그에서 `GET /admin/api/ui-config/streak_reward_rules` 요청이 401 반환
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | Admin UI Config 조회 (`/admin/api/ui-config/streak_reward_rules`) |
+| **HTTP Status** | 401 (Unauthorized) |
+| **영향 범위** | 어드민 UI 설정 조회(인증 필요 시) |
+| **재현 빈도** | 간헐적(로그 단발 확인) |
+
+### 증거(로그)
+```
+INFO:     172.19.0.1:0 - "GET /admin/api/ui-config/streak_reward_rules HTTP/1.0" 401 Unauthorized
+```
+
+### 근본 원인 (증거 기반)
+- 해당 엔드포인트는 인증이 필요한 경로이며, 요청에 인증 헤더/세션이 없을 때 401이 반환됨.
+
+### 해결 방법
+#### Immediate Fix
+- 어드민 클라이언트에서 인증 토큰/세션 전달 여부 확인
+- 프록시/게이트웨이에서 Authorization 헤더 전달 누락 여부 확인
+
+#### Long-term Fix
+- 인증 실패 시 UI에서 재로그인 유도/토큰 갱신 플로우 점검
+- 모니터링 규칙에 401 반복 발생 시 알림 추가
+
+### 검증 방법
+```bash
+# 인증 포함 요청 시 200 반환 확인 (토큰/쿠키는 운영 정책에 맞게 주입)
+curl -i https://cc-jm.com/admin/api/ui-config/streak_reward_rules
+```
+
+### 예방 가이드라인
+1. Admin API 호출 전 인증 상태 점검 및 만료 시 재로그인 처리
+2. 프록시 설정에서 Authorization 헤더 전달 유지
+
+### 수정 시각
+- 2026-02-02 KST
 
 ---
 
@@ -558,6 +609,63 @@ xmas-celery-*     Up (healthy)
  
 ---
  
+---
+
+## 01-20 - [INFRA/BACKEND] 백엔드 런타임 초기화 오류 (NameError & Circular Import)
+
+**우선순위**: P1
+**관련 도메인**: BACKEND, INFRA
+
+### 증상
+- 백엔드 컨테이너 기동 시 `NameError: name 'Body' is not defined` 또는 `BaseModel` 관련 에러로 무한 재시작.
+- `app/v2/api/__init__.py` 로딩 중 순환 참조 또는 조기 초기화로 인한 기동 실패.
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 백엔드 API 서버 기동 (`uvicorn`) |
+| **에러 메시지** | `NameError: name 'Body' is not defined` |
+| **영향 범위** | 백엔드 전체 가용성 |
+
+### 근본 원인
+- **Import 누락**: `fastapi` 및 `pydantic` 모델 정의 시 필수 데코레이터/클래스 임포트 누락.
+- **초기화 부수 효과**: `__init__.py`에서 라우터를 성급하게 임포트하여 모듈 로드 순서가 엉킴.
+- **볼륨 마운트**: `docker-compose.yml`에 소스 코드 볼륨 마운트가 누락되어 수정 사항이 실시간 반영되지 않음.
+
+### 해결 조치
+- **코드 수정**: `admin_routes.py` 등에 필수 임포트 구문(`from fastapi import Body`, `from pydantic import BaseModel`) 추가.
+- **구조 개선**: `app/v2/api/__init__.py` 본문을 비워 패키지 임포트 시의 사이드 이펙트 제거.
+- **인프라 수정**: `docker-compose.yml`에 `- ./app:/app/app` 볼륨 마운트 추가.
+
+### 검증 방법
+- `docker compose up -d` 후 로그에서 `Application startup complete` 메시지 확인.
+
+---
+
+## 01-20 - [INFRA/NGINX] WebSocket 연결 실패 및 502/404 에러
+
+**우선순위**: P1
+**관련 도메인**: INFRA, FRONTEND
+
+### 증상
+- 프론트엔드에서 `/api/ws/events` 연결 시도 시 404 또는 연결 거부 발생.
+- Nginx 로그에 WebSocket 요청이 1.0 HTTP로 기록되며 실패.
+
+### 근본 원인
+- Nginx Gateway 설정에서 WebSocket 업그레이드 헤더(`Connection: Upgrade`) 설정 누락.
+- 리버스 프록시 시 HTTP 버전이 1.1로 명시되지 않아 백엔드에서 WS 핸드셰이크 실패.
+
+### 해결 조치
+- `nginx.conf` 및 각 도메인 `conf` 파일의 `/api/` 블록에 아래 설정 추가:
+  ```nginx
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  ```
+
+### 검증 방법
+- 브라우저 개발자 도구 (Network 탭)에서 `101 Switching Protocols` 응답 확인.
+
 ## 변경 이력
 - 2026-01-31: W05 INFRA 문서 생성, 기존 분산 문서 통합
 - 2026-02-01: 02-01 에러 진짜 원인 발견 및 수정 - hq_prospective_user 테이블 누락
@@ -568,7 +676,8 @@ xmas-celery-*     Up (healthy)
 - 2026-02-01: **502 Bad Gateway 이슈 추가 - Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치**
 - 2026-02-02: **일별 포유율 추이(Retention Trend) 최신화 수정 - 집계 기준일 변경 (D30 → Yesterday)**
 - 2026-02-02: **Full Stack Integrity Check (Frontend Build/Type + Backend Syntax) - ALL PASS**
-
+- 2026-02-01~02: 각 개별 이슈 상세 내역 업데이트
+- 2026-02-02: V2 가이드 및 백엔드 런타임 레거시 사례 통합 (Antigravity)
 ---
 
 ## 02-02 - [INFRA/OPS] Full Stack Integrity Verification (System Health Check)
@@ -672,3 +781,11 @@ if not file.filename.lower().endswith(".csv"):
 - 모든 파일 업로드 라우터에서 확장자 검증 시 반드시 `.lower()`를 사용하여 케이스 케어(Case Care)를 수행할 것.
 
 ---
+
+## 변경 이력
+- 2026-01-31: W05 INFRA 문서 생성 및 초기 SOT Compliance 기준 수립
+- 2026-02-01: Sentry 실시간 모니터링 활성화 및 Purge API 500 에러 해결
+- 2026-02-01: CSV Import 한글 헤더/인코딩(Mojibake) 지원 및 Nginx DNS 캐시 이슈 해결
+- 2026-02-02: CSV Import 확장자 대소문자(400) 대응 및 런타임 NameError/WS 설정 최적화 (Antigravity)
+- 2026-02-02: Retention Trend(포유율 추이) 조회 범위 하드코딩 수정 (Antigravity)
+- 2026-02-02: V2 SOT Compliance Baseline 및 배포 검증/인프라 안정화 내역 추가 (Antigravity)

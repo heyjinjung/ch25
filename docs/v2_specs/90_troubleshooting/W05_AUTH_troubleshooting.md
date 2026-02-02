@@ -10,6 +10,7 @@
 |---|---|---|
 | 01-31 | V2 Auth Production 검증 완료 | ✅ RESOLVED |
 | 01-31 | v2_user_auth_event FK 정책 결정 | ✅ RESOLVED |
+| 01-20 | [AUTH] 어드민 지갑/인벤토리 수정 권한 제약 (403 Forbidden) | ✅ FIXED |
 
 ---
 
@@ -57,5 +58,44 @@
 
 ---
 
+---
+
+## [REFERENCE] V2 Admin 권한 제약(SuperAdmin) 트러블슈팅
+
+### 1. Wallet Adjustment 403 Forbidden (Jan 20)
+- **증상**: `ADMIN` 권한 운영자가 자산 수정 시 `403 Forbidden` 발생.
+- **원인**: 백엔드 함수 내부의 하드코딩된 직급 제한(`SUPER_ADMIN`, `OPERATOR`만 허용).
+- **해결**: 불필요한 직급 필터링 로직을 삭제하고 `get_current_admin_info` 인증 체계로 단권화.
+
+---
+
 ## 변경 이력
-- 2026-01-31: W05 AUTH 문서 생성, 기존 분산 문서 통합
+---
+
+## 01-20 - [AUTH/ADMIN] 어드민 지갑 및 인벤토리 수정 권한 제약 (403 Forbidden)
+
+**우선순위**: P2
+**관련 도메인**: AUTH, ADMIN, VAULT
+
+### 증상
+- `ADMIN` 직급의 운영자가 유저 상세 드로어에서 자산 수정(티켓/금고) 또는 아이템 지급 시 `403 Forbidden` 발생.
+
+### 근본 원인
+- 백엔드 라우터(`user_routes.py`, `inventory_routes.py`) 내부에서 `SUPER_ADMIN` 또는 `OPERATOR` 직급만 허용하는 하드코딩된 체크 로직 잔존.
+- V2 Admin은 이미 `get_current_admin_info` 의존성을 통해 통합 인증을 수행하므로, 2중 직급 필터링이 운영 방해 요소로 작용함.
+
+### 해결 조치
+- `adjust_user_wallet` 및 `check_admin_permission` 내의 하드코딩된 직급 필터링 로직 제거.
+- `get_current_admin_info`로 확인된 모든 인증된 어드민에게 운영 기능 개방 (RBAC 단순화).
+
+### 검증 방법
+- `ADMIN` 계정으로 로그인 후 유저 지갑 금액 수정 및 아이템 지급 동작 확인.
+
+---
+
+## 변경 이력
+- 2026-01-31: W05 AUTH 문서 생성 및 V2 Auth Production 환경 검증 완료
+- 2026-01-31: v2_user_auth_event FK 유지 정책 및 성능 최적화 결정
+- 2026-02-02: 어드민 로그인 IntegrityError 및 V2User 보안 필드 추가 내역 반영 (Antigravity)
+- 2026-02-02: 어드민 권한 제약 간소화 사례 추가 (Antigravity)
+- 2026-02-02: 통합/인증/라우팅 이슈 분류 내역 추가 (Antigravity)

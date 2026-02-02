@@ -11,6 +11,7 @@
 | 01-31 | V2 로그/주문 테이블 FK 누락 | ✅ RESOLVED |
 | 01-31 | V2 도메인 FK 전체 감사 | ✅ RESOLVED |
 | 01-30 | user_activity FK 오류 | ✅ RESOLVED |
+| 01-20 | [DB] Alembic 리비전 그래프 단절 및 더미 마이그레이션 누락 | ✅ FIXED |
 
 ---
 
@@ -79,5 +80,45 @@ V2User 생성 시 `user` 테이블에 해당 ID 없음
 
 ---
 
+---
+
+## [REFERENCE] Alembic Legacy 마이그레이션 트러블슈팅
+
+### 1. [DB] 더미 파일 잔존 이슈 (Jan 20)
+- **증상**: Alembic 명령 실행 시 `revision` 식별자 누락 에러 발생.
+- **원인**: `alembic/versions` 폴더에 필수 변수(`revision`, `down_revision`)가 없는 빈 파일이나 주석만 있는 파일이 잔존.
+- **해결**: 불량 파일 영구 삭제. 마이그레이션 아카이빙 시 반드시 파일을 **이동(Move)** 또는 삭제해야 함.
+
+### 2. [DB] Revision 그래프 단절
+- **증상**: `Can't locate revision` 에러.
+- **해결**: 누락된 revision id에 대해 **no-op shim 마이그레이션**을 추가하여 연결 고리를 복구하거나 `alembic stamp`로 강제 정렬.
+
+---
+
+---
+
+## 01-20 - [DB] Alembic 리비전 그래프 단절 및 더미 마이그레이션 누락
+
+**우선순위**: P2
+**관련 도메인**: DB
+
+### 증상
+- `alembic upgrade head` 실행 시 `Could not find migration file` 또는 리비전 식별자 오류 발생.
+- 특정 환경에서 DB의 `alembic_version`과 소스 코드의 마이그레이션 파일 간 연결 고리(Parent/Child)가 끊어짐.
+
+### 근본 원인
+- 협업 과정에서 마이그레이션 파일 삭제 또는 `version_locations` 설정 불일치.
+- 레거시 환경에서 사용하던 더미(Dummy) 마이그레이션 파일이 신규 V2 환경에 포함되지 않아 발생.
+
+### 해결 조치
+- 누락된 리비전을 채우기 위한 더미 마이그레이션 파일 생성 및 리비전 그래프(`down_revision`) 수동 복구.
+- `alembic.ini`의 `version_locations` 경로 재확인.
+
+### 검증 방법
+- `alembic current` 및 `alembic history` 명령어가 에러 없이 리스트를 출력하는지 확인.
+
+---
+
 ## 변경 이력
-- 2026-01-31: W05 DB 문서 생성, 기존 분산 문서 통합
+- 2026-02-02: FK 명칭 충돌 및 컬럼 누락, 환경 변수 불일치 해결 내역 추가 (Antigravity)
+- 2026-02-02: Alembic Legacy 대응 사례 추가 (Antigravity)

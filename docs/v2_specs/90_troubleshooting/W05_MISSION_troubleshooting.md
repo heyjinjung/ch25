@@ -13,6 +13,53 @@
 | 01-31 | 신규 채널 가입 미션 UI 비활성화 | ✅ RESOLVED |
 | 01-30 | CC 입금 미션 XP 미지급 | ✅ RESOLVED |
 | 02-01 | 신규 유저 미션 타이머 UX 및 기간 정책 수정 + 텔레그램 채널 연동 UX | ✅ RESOLVED |
+| 02-02 | 미션 페이지 빈 화면 (미션 API 401) | 🟡 조사중 |
+| 01-20 | [MISSION] 미션 rewardType Enum 불일치 (missions PUT 500) | ✅ FIXED |
+
+---
+
+## 02-02 - [MISSION/FRONTEND] 미션 페이지 빈 화면 (미션 API 401)
+
+**우선순위**: P1
+**관련 도메인**: MISSION, FRONTEND, AUTH
+
+### 증상
+- 텔레그램 웹뷰에서 미션 페이지 진입 시 화면이 빈 화면으로만 표시됨.
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | V2 미션 페이지 (`/v2/missions`) |
+| **HTTP Status** | 401 (Unauthorized) |
+| **영향 범위** | 미션 페이지 전체(데이터 로딩 실패 시 빈 화면) |
+| **재현 빈도** | 현재 보고 기준: 항상 |
+
+### 증거(로그)
+```
+GET /api/v2/mission/?category=DAILY 401
+GET /api/v2/inbox 401
+GET /api/events/status 401
+GET /api/v2/vault/status 401
+GET /login 200 (referrer: /v2/missions)
+```
+
+### 근본 원인 (증거 기반)
+- 미션 페이지 렌더링에 필요한 API 호출이 인증 없이 호출되어 401 반환.
+- 인증 토큰/세션이 미첨부된 상태에서 `/v2/missions` 진입 시, 데이터 로딩 실패로 빈 화면이 노출됨.
+
+### 해결 방법
+#### Immediate Fix
+- 텔레그램 웹뷰 진입 플로우에서 인증 토큰/세션 전달 여부 확인
+- `/v2/missions` 진입 전에 로그인/토큰 갱신 완료 여부 점검
+
+#### Long-term Fix
+- 미션 페이지 진입 시 401 발생하면 로그인 화면/재인증 플로우로 명확히 이동 처리
+- 텔레그램 웹뷰 전용 인증 세션 유지 로직 점검
+
+### 검증 방법
+1. 텔레그램 웹뷰에서 `/v2/missions` 진입
+2. 네트워크 탭에서 `/api/v2/mission`, `/api/v2/inbox`, `/api/events/status`가 200인지 확인
+3. 401 발생 시 로그인 재인증 후 정상 렌더링 확인
 
 ---
 
@@ -241,5 +288,64 @@ login_mission = db.query(Mission).filter(
 
 ---
 
+---
+
+## [REFERENCE] 스트릭 무결성 검증 가이드 (Streak Continuity)
+
+**관련 이슈**: 01-31 - 이벤트 미션 로그인 카운트 미증가
+
+### 🧠 스트릭의 심리학 (유저 리텐션 핵심)
+- 유저가 매일 접속하는 이유는 '연속 기록'에 대한 애착 때문입니다. 시스템 오류로 스트릭이 깨지면 유저는 '상실감'보다는 '배신감'을 느끼며, 이는 영구적으로 이탈(Rage Quit)하는 원인이 됩니다.
+
+### ✅ 수동 검증 시나리오 (Manual Test Scenarios)
+
+#### Scenario C2: 초기 시간 로그인 (오전 9시 리셋 전)
+- **Day 2, 02:00 AM KST**: 리셋 전 로그인
+- **기대 결과**: 
+    - `operational_play_date`는 Day 1(어제) 반환.
+    - `play_streak`은 유지(증가하지 않음).
+    - `last_play_date`는 Day 1 유지.
+- **Why**: 만약 2AM에 스트릭이 먼저 증가하면, 9AM 리셋 후 첫 접속 시 `last_play_date == operational_day`가 되어 중복 처리로 간주되고 정작 당일 스트릭 증가가 누락되어 스트릭이 깨지게 됩니다.
+
+#### Scenario C4: 스트릭 초기화 감지 (Streak Break)
+- **Day 3**까지 정상 로그인 후 **Day 4** 건너뜀.
+- **Day 5, 10:00 AM** 로그인 시:
+- **기대 결과**:
+    - `play_streak`이 1로 리셋.
+    - `UserEventLog`에 `event_name = "streak.reset"` 생성.
+    - `meta_json`에 `prev_streak_days = 3` 포함되어 복구 근거 확보.
+
+### 📊 모니터링 쿼리 (False Resets 감지)
+```sql
+SELECT u.id, u.nickname, u.play_streak, el.meta_json
+FROM user_event_log el
+JOIN v2_user u ON u.id = el.user_id
+WHERE el.event_name = 'streak.reset'
+  AND el.created_at >= NOW() - INTERVAL 1 DAY
+  AND JSON_EXTRACT(el.meta_json, '$.prev_streak_days') >= 3;
+---
+
+## 01-20 - [MISSION/ADMIN] 미션 rewardType Enum 불일치 (missions PUT 500)
+
+**우선순위**: P2
+**관련 도메인**: MISSION, GAME, ADMIN
+
+### 증상
+- `PUT /api/v2/admin/game/missions/{id}` 요청 시 500 에러 발생하며 미션 정보 수정 실패.
+
+### 근본 원인
+- 백엔드 모델(`SAEnum(MissionRewardType)`)에 프론트엔드가 보낸 문자열(`payload.rewardType`)을 직접 대입하려 시도하여 Enum 변환 예외 발생.
+
+### 해결 조치
+- 데이터 저장 전 `MissionRewardType`으로 명시적 변환 및 검증 로직 추가.
+- 유효하지 않은 값 수신 시 400 (`INVALID_REWARD_TYPE`)을 반환하도록 처리.
+
+### 검증 방법
+- 미션 관리 페이지에서 개별 미션의 보상 타입 변경 및 저장 성공 확인.
+
+---
+
 ## 변경 이력
 - 2026-01-31: W05 MISSION 문서 생성, 기존 분산 문서 통합
+- 2026-02-02: MissionService 로직 결함 및 FK 무결성 패치 내역 추가 (Antigravity)
+- 2026-02-02: 미션 보상 타입 Enum 불일치 해결 내역 추가 (Antigravity)
