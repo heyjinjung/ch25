@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from app.v2.models.user import V2User
-from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType
+from app.models.mission import Mission, UserMissionProgress, MissionCategory, MissionRewardType, ApprovalStatus
 
 @pytest.fixture
 def test_client(test_db_session):
@@ -33,14 +33,17 @@ def test_user(test_db_session: Session):
 
 @pytest.fixture
 def auth_client(test_client, test_user):
-    from app.v2.api.deps import get_current_user
+    from app.v2.api.deps import get_current_user, get_current_user_id
     from app.main import app
     
     # Override V2 dependency
     app.dependency_overrides[get_current_user] = lambda: test_user
+    app.dependency_overrides[get_current_user_id] = lambda: test_user.id
     yield test_client
     if get_current_user in app.dependency_overrides:
         del app.dependency_overrides[get_current_user]
+    if get_current_user_id in app.dependency_overrides:
+        del app.dependency_overrides[get_current_user_id]
 
 def test_mission_action_type_aliases(test_db_session: Session, test_user):
     """V2MissionService의 Action Type Alias 처리가 정상인지 확인"""
@@ -129,20 +132,30 @@ def test_telegram_mission_approval_flow(mock_check, auth_client, test_db_session
         UserMissionProgress.mission_id == mission.id
     ).first()
     assert progress.is_completed is True
-    assert progress.approval_status == "PENDING"
+    assert progress.approval_status == ApprovalStatus.PENDING
     
     # 4. 클레임 시도 (실패해야 함 - APPROVAL_PENDING)
-    claim_resp = auth_client.post(f"/api/v2/mission/{mission.id}/claim")
+    # Header required
+    claim_resp = auth_client.post(
+        f"/api/v2/mission/{mission.id}/claim",
+        headers={"X-Idempotency-Key": "test_claim_1"}
+    )
     assert claim_resp.status_code == 400
     assert "APPROVAL_PENDING" in claim_resp.json()["detail"]
 
-    # 5. 관리자 승인 (Simulated via DB update directly or Admin API if available)
-    # Here we simulate Admin Action
-    progress.approval_status = "APPROVED"
+    # 5. 관리자 승인 (Simulated via DB update directly)
+    progress.approval_status = ApprovalStatus.APPROVED
     test_db_session.commit()
 
     # 6. 클레임 재시도 (성공)
-    claim_resp = auth_client.post(f"/api/v2/mission/{mission.id}/claim")
+    claim_resp = auth_client.post(
+        f"/api/v2/mission/{mission.id}/claim",
+        headers={"X-Idempotency-Key": "test_claim_2"}
+    )
+    
+    if claim_resp.status_code != 200:
+        print(claim_resp.json())
+        
     assert claim_resp.status_code == 200
     assert claim_resp.json()["success"] is True
     
@@ -176,16 +189,19 @@ def test_cc_mission_auto_approval(mock_check, auth_client, test_db_session, test
     )
     assert response.status_code == 200
     
-    # 3. 진행 상태 확인 (APPROVED or None/implied approved)
+    # 3. 진행 상태 확인
     progress = test_db_session.query(UserMissionProgress).filter(
         UserMissionProgress.user_id == test_user.id,
         UserMissionProgress.mission_id == mission.id
     ).first()
     assert progress.is_completed is True
-    # If requires_approval is False, approval_status might be 'APPROVED' or check skipped.
+    # approval_status defaults to NONE or whatever, which is fine since requires_approval=False
     
     # 4. 클레임 시도 (성공해야 함)
-    claim_resp = auth_client.post(f"/api/v2/mission/{mission.id}/claim")
+    claim_resp = auth_client.post(
+        f"/api/v2/mission/{mission.id}/claim",
+        headers={"X-Idempotency-Key": "test_claim_cc"}
+    )
     assert claim_resp.status_code == 200
     assert claim_resp.json()["success"] is True
 

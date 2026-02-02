@@ -10,7 +10,7 @@ from sqlalchemy import and_, func, select, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.v2.models import Mission, UserMissionProgress, MissionCategory, MissionRewardType
+from app.v2.models import Mission, UserMissionProgress, MissionCategory, MissionRewardType, ApprovalStatus
 from app.v2.models.user import V2User
 from app.v2.models import UserEventLog
 from app.v2.services.reward_service import V2RewardService
@@ -508,6 +508,9 @@ class V2MissionService:
                     progress.current_value = mission.target_value
                     progress.is_completed = True
                     progress.completed_at = datetime.utcnow()
+
+                    if mission.requires_approval:
+                        progress.approval_status = ApprovalStatus.PENDING
 
                     if mission.auto_claim and not mission.requires_approval:
                         try:
