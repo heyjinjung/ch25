@@ -20,6 +20,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.game_wallet import GameTokenType
 from app.v2.models.user import V2User
+from app.models.user import User
 from app.models.vault_earn_event import VaultEarnEvent
 from app.models.feature import UserEventLog
 from app.models.vault_ledger import VaultLedger
@@ -954,6 +955,11 @@ class VaultService:
         
         # self._ensure_locked_expiry(user, now_dt)  <-- DISABLED
         self.sync_legacy_mirror(user)
+
+        legacy_user = db.get(User, user.id)
+        if legacy_user is not None:
+            legacy_user.vault_locked_balance = int(user.vault_locked_balance or 0)
+            db.add(legacy_user)
 
         bonus_amount = 0 # Phase 1: No bonus logic here yet
         reward_kind = "BASE" if bonus_amount == 0 else "BASE_PLUS_BONUS"

@@ -95,7 +95,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
   const isClaimable = !!claimableDay;
 
   return (
-    <div className="fixed inset-0 z-[10001] flex items-start justify-center overflow-y-auto px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))]">
+    <div className="fixed inset-0 z-[10001] flex items-center justify-center overflow-hidden px-3 pt-[calc(12px+env(safe-area-inset-top))] pb-[calc(12px+env(safe-area-inset-bottom))]">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -108,12 +108,12 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="relative w-full max-w-md max-h-[calc(100dvh-2rem)] my-0 rounded-[40px] border border-white/10 bg-zinc-950 overflow-y-auto shadow-2xl"
+        className="relative w-full max-w-[360px] max-h-[calc(var(--tg-viewport-height,100dvh)-24px)] my-0 rounded-[40px] border border-white/10 bg-zinc-950 overflow-hidden shadow-2xl"
       >
         {/* Header Decoration */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-amber-500/10 to-transparent pointer-events-none" />
 
-        <div className="relative p-6 sm:p-8">
+        <div className="relative max-h-full overflow-y-auto p-6 sm:p-8">
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div>

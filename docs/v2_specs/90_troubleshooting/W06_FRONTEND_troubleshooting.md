@@ -24,6 +24,27 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - FRONTEND/UX: 텔레그램 인앱에서 스트릭 모달 레이아웃 깨짐
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 연속 스트릭 모달 UI |
+| HTTP Status | 200 (UI Layout Error) |
+| 영향 범위 | 텔레그램 인앱 뷰 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 모달 컨테이너가 `100dvh` 기준으로 계산되어 TMA 뷰포트에서 상/하단 잘림 발생.
+- 관련 코드: [src/v2/components/mission/V2AttendanceStreakModal.tsx](../../src/v2/components/mission/V2AttendanceStreakModal.tsx)
+
+**해결 방법**
+- `var(--tg-viewport-height,100dvh)` 기반 max-height 적용.
+- 외부 컨테이너 overflow 차단, 내부 스크롤로 분리.
+
+**검증 방법**
+- 텔레그램 인앱 뷰에서 모달 전체가 표시되고 CTA 버튼이 화면 내에 고정되는지 확인.
+
 ---
 
 ## 📝 관리 가이드

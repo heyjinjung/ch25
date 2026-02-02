@@ -65,19 +65,27 @@ def client(test_engine) -> TestClient:
 
 
 def _seed_user(db: Session) -> User:
+    from datetime import timedelta
     cc_id = f"test-{uuid.uuid4().hex}"
+    eight_days_ago = datetime.utcnow() - timedelta(days=8)
+    
     user = User(
         external_id=cc_id,
         nickname="V2 Public Smoke",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=eight_days_ago,
+        updated_at=eight_days_ago,
         vault_locked_balance=10000,
     )
     db.add(user)
     db.flush()
     
     # [V2 Native] Ensure user exists in v2_user table
-    V2UserService.get_or_create_v2_user_from_legacy(db, cc_id)
+    v2_user = V2UserService.get_or_create_v2_user_from_legacy(db, cc_id)
+    if v2_user:
+        v2_user.created_at = eight_days_ago
+        db.add(v2_user)
+        db.flush()
+        
     db.commit()
     return user
 

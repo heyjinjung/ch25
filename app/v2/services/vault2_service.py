@@ -144,7 +144,7 @@ class Vault2Service:
 
     def get_config_value(self, db: Session, key: str, default: Any = None) -> Any:
         """Helper to get value from the default program's config_json."""
-        program = self.get_default_program(db, ensure=False)
+        program = self.get_default_program(db, ensure=True)
         if program is None:
             return default
 

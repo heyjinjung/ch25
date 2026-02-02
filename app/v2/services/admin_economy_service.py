@@ -68,13 +68,23 @@ class V2AdminEconomyService:
 
     @staticmethod
     def verify_latency_evidence(db: Session, evidence_id: int, log_id: int, admin_id: int) -> None:
-        from app.v2.services.latency_survival_service import LatencySurvivalService
-        LatencySurvivalService.verify_evidence(db, evidence_id, log_id)
+        from app.v2.services.latency_survival_service import V2LatencySurvivalService
+        V2LatencySurvivalService.verify_evidence(
+            db,
+            admin_id,
+            evidence_id,
+            matched_log_id=log_id,
+        )
 
     @staticmethod
     def reject_latency_evidence(db: Session, evidence_id: int, reason: str, admin_id: int) -> None:
-        from app.v2.services.latency_survival_service import LatencySurvivalService
-        LatencySurvivalService.reject_evidence(db, evidence_id, reason)
+        from app.v2.services.latency_survival_service import V2LatencySurvivalService
+        V2LatencySurvivalService.reject_evidence(
+            db,
+            admin_id,
+            evidence_id,
+            reason,
+        )
 
     @staticmethod
     def get_circuit_breaker_status(db: Session) -> List[dict]:

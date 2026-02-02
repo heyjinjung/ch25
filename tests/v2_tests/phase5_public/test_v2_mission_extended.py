@@ -22,8 +22,14 @@ def test_engine():
         poolclass=StaticPool,
         future=True,
     )
+    
+    # [V2 Native] OperationalError: table survey_response already exists 방지
+    # Base.metadata.create_all은 이미 로드된 모든 모델을 생성하므로 중복 임포트 주의
     import app.db.base
     import app.v2.models
+    
+    # 기존 메타데이터 초기화 후 생성
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     yield engine
     engine.dispose()
@@ -89,7 +95,7 @@ def test_v2_streak_info_with_data(client: TestClient, seed_session: Session):
     user = _seed_user(seed_session)
     v2_user = _seed_v2_user(seed_session, user)
     
-    # 1. Seed StreakConfig
+    # 1. Seed StreakConfig (UserStreak 테이블용이 아닌 어드민 설정용인 경우)
     config = StreakConfig(
         day_number=1,
         reward_type="CASH",
@@ -98,9 +104,10 @@ def test_v2_streak_info_with_data(client: TestClient, seed_session: Session):
     )
     seed_session.add(config)
     
-    # 2. Current implementation: get_streak_info reads User.play_streak directly
-    # not UserStreak table. So we set User.play_streak.
-    user.play_streak = 1
+    # 2. V2MissionService.get_streak_info reads V2User.play_streak directly.
+    # We must update the V2User row, not just the legacy User row.
+    v2_user.play_streak = 1
+    seed_session.add(v2_user)
     seed_session.commit()
 
     _override_auth(v2_user.id)
@@ -110,7 +117,7 @@ def test_v2_streak_info_with_data(client: TestClient, seed_session: Session):
         assert resp.status_code == 200
         data = resp.json()
         
-        # Streak should show 1 (from User.play_streak)
+        # Streak should show 1 (from V2User.play_streak)
         assert data["streak"]["current_streak"] == 1
         
     finally:

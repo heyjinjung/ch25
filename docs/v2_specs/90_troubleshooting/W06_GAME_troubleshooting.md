@@ -24,6 +24,27 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - GAME/VAULT: 주사위 패배 금고 차감 미반영 (테스트 실패)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | V2 주사위 플레이 금고 차감 |
+| HTTP Status | 200 (Logic Error) |
+| 영향 범위 | 테스트 시나리오(phase5) |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- `record_game_play_earn_event`에서 V2User만 갱신되고 레거시 User 동기화가 누락됨.
+- 테스트가 레거시 User 기준으로 검증하여 차감 미반영으로 판정.
+- 관련 코드: [app/services/vault_service.py](../../app/services/vault_service.py)
+
+**해결 방법**
+- 게임 적립/차감 시 `User.vault_locked_balance`를 V2User와 동기화.
+
+**검증 방법**
+- `tests/v2_tests/phase5_scenarios/test_v2_backend_scenario.py` 재실행 통과 확인.
+
 ---
 
 ## 📝 관리 가이드

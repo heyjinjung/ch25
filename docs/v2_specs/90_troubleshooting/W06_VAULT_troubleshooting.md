@@ -23,6 +23,28 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - VAULT/ADMIN: 지연 입금 증거 승인 500
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 지연 입금 증거 승인/반려 |
+| HTTP Status | 500 (Server Error) |
+| 영향 범위 | 어드민 화면 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 어드민 서비스에서 잘못된 클래스명(`LatencySurvivalService`) 사용 및 시그니처 불일치로 예외 발생.
+- 관련 코드: [app/v2/services/admin_economy_service.py](../../app/v2/services/admin_economy_service.py)
+
+**해결 방법**
+- `V2LatencySurvivalService`로 교체.
+- `verify_evidence`/`reject_evidence` 호출 시 `admin_id` 및 매개변수 순서를 SoT와 일치.
+
+**검증 방법**
+- 어드민에서 승인/반려 버튼 클릭 시 200 응답 확인.
+- 관련 테스트 재실행: tests/v2/test_latency_survival.py
+
 ### 02-02 - VAULT/FRONTEND: 지연 입금 즉시신청 UI 미노출
 
 **증상 정의**
