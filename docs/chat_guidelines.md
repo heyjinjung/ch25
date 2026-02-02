@@ -34,6 +34,3 @@
 
 ## 6. 변경 이력
 - v1.0 (2026-01-28, Copilot): 최초 작성
-
----
-본 지침은 .github/instructions/rule2026.instructions.md 및 learned_ 최신 규칙을 기반으로 작성됨.
