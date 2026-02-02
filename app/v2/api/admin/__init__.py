@@ -19,6 +19,7 @@ from .rollback_routes import router as rollback_router
 from .analytics_routes import router as analytics_router
 from .ui_config_routes import router as ui_config_router
 from .prospect_routes import router as prospect_router
+from .unmatched_deposit_routes import router as unmatched_deposit_router
 
 router = APIRouter(prefix="/admin", tags=["v2-admin-ui"])
 router.include_router(marketing_router)
@@ -40,5 +41,6 @@ router.include_router(rollback_router)
 router.include_router(analytics_router)
 router.include_router(ui_config_router)
 router.include_router(prospect_router, prefix="/prospect", tags=["v2-admin-prospect"])
+router.include_router(unmatched_deposit_router, tags=["v2-admin-unmatched-deposit"])
 
 __all__ = ["router"]

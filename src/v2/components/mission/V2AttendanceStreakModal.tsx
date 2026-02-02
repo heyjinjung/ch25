@@ -119,11 +119,11 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black tracking-widest uppercase mb-3">
                 <Zap size={12} className="fill-current" />
-                연속 출석 보너스 (Streak)
+                연속출석 보너스(7일)
               </div>
               <h2 className="text-3xl font-black text-white tracking-tight">
                 {isClaimable ? (
-                  <EncryptedText text="오늘의 보상 도착!" />
+                  <EncryptedText text="오늘의 보상도착!" />
                 ) : (
                   <>
                     🔥 <EncryptedText text={`${currentStreak}일 출석 중!`} />
@@ -185,16 +185,17 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                           ? {
                               scale: [1, 1.05, 1],
                               rotate: [0, 2, -2, 0],
+                              opacity: [1, 0.8, 1],
                             }
                           : {}
                       }
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
                       className={clsx(
                         "relative w-16 h-16 flex items-center justify-center rounded-2xl border-2 transition-all duration-300",
                         isPast
                           ? "bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400 shadow-lg shadow-amber-500/30"
                           : isToday || isTarget
-                            ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)] animate-pulse"
+                            ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)]"
                             : "bg-zinc-900 border-zinc-800",
                       )}
                     >
@@ -252,17 +253,18 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                           ? {
                               scale: [1, 1.08, 1],
                               rotate: [0, 3, -3, 0],
+                              opacity: [1, 0.8, 1],
                             }
                           : {}
                       }
-                      transition={{ duration: 2, repeat: Infinity }}
+                      transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
                       className={clsx(
                         "relative flex items-center justify-center rounded-2xl border-2 transition-all duration-300",
                         isFinal ? "w-20 h-20" : "w-16 h-16",
                         isPast
                           ? "bg-gradient-to-br from-amber-500 to-orange-600 border-amber-400 shadow-lg shadow-amber-500/30"
                           : isToday || isTarget
-                            ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)] animate-pulse"
+                            ? "bg-gradient-to-br from-white to-gray-100 border-white shadow-[0_0_24px_rgba(255,255,255,0.5)]"
                             : "bg-zinc-900 border-zinc-800",
                       )}
                     >
@@ -282,10 +284,15 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                         )}
                         {isFinal && !isPast && (
                           <div className="absolute -top-2 -right-2">
-                            <Star
-                              size={16}
-                              className="text-amber-500 fill-amber-500 animate-pulse"
-                            />
+                            <motion.div
+                              animate={{ opacity: [1, 0.5, 1], scale: [1, 1.1, 1] }}
+                              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                              <Star
+                                size={16}
+                                className="text-amber-500 fill-amber-500"
+                              />
+                            </motion.div>
                           </div>
                         )}
                       </div>
@@ -324,7 +331,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-bold text-white/80">
-                    일 연속 플레이 중!
+                    일 연속 출석중!
                   </p>
                   <p className="text-[11px] font-medium text-white/40">
                     매일 오전 (09:00) 기준갱신
@@ -356,7 +363,7 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
               ) : currentStreak === 0 ? (
                 "게임하고 보상받기 🎮"
               ) : (
-                "내일 다시 만나요!"
+                "오빠 내일봐용!"
               )}
             </Button>
 

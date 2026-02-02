@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
 import {
@@ -52,26 +52,11 @@ export default function GamedashPage() {
   const rouletteStatusQuery = useV2RouletteStatus();
   const lotteryStatusQuery = useV2LotteryStatus();
 
-  const noticeItems = useMemo(() => {
-    const diceRemaining = diceStatusQuery.data?.remaining_plays;
-    const rouletteRemaining = rouletteStatusQuery.data?.remaining_spins;
-    const lotteryRemaining = lotteryStatusQuery.data?.remaining_tickets;
-
-    const toText = (label: string, value?: number) =>
-      `${label} 잔여 ${
-        typeof value === "number" ? value.toLocaleString() : "-"
-      }회`;
-
-    return [
-      toText("룰렛", rouletteRemaining),
-      toText("주사위", diceRemaining),
-      toText("복권", lotteryRemaining),
-    ];
-  }, [
-    diceStatusQuery.data?.remaining_plays,
-    rouletteStatusQuery.data?.remaining_spins,
-    lotteryStatusQuery.data?.remaining_tickets,
-  ]);
+  const noticeItems = [
+    "🔥 지민코드 2월 업뎃!",
+    "📢 매일 터지는 이벤트",
+    "✨ 지민전용 특별선물",
+  ];
 
   const getGameBadge = (gameId: string) => {
     if (gameId === "dice") return diceStatusQuery.data?.remaining_plays;
@@ -150,10 +135,10 @@ export default function GamedashPage() {
                   transition={{ delay: 0.5 }}
                   className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.3em] mb-2 block"
                 >
-                  <MatrixText text="CC CASINO V2" />
+                  <MatrixText text="CC카지노 지민코드" />
                 </motion.span>
                 <h1 className="text-2xl font-black text-white leading-[1] mb-4">
-                  <MatrixText text="CC카지노지민코드" />
+                  <MatrixText text="CC CASINO"/>
                   <br />
                   <span className="text-[#9AFFFA] italic">
                     <MatrixText text="EVENT" />

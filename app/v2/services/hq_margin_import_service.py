@@ -2,19 +2,91 @@ import csv
 import logging
 import chardet
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
-from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
+from app.v2.models import V2User, V2UserSegment, HQProspectiveUser, ExternalRankingData
 from app.v2.services import V2AdminAuditService
+from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
+from app.v2.services.unmatched_deposit_log_service import UnmatchedDepositLogService
+from app.v2.schemas.v2_cc_deposit import CCDepositCreate
+from app.v2.models.v2_external_deposit_unmatched import UnmatchedStatus, UnmatchedReason
 
 logger = logging.getLogger(__name__)
 
 
 class HQMarginImportService:
-    """본사 충전/환전 마진 데이터를 V2 세그먼트로 임포트"""
+    """본사 충전/환전 마진 데이터를 V2 세그먼트로 임포트 + CC Deposit 자동 반영"""
+
+    @staticmethod
+    def _match_v2_user(
+        db: Session,
+        user_key: str,
+        nickname: Optional[str],
+    ) -> Tuple[Optional[V2User], str]:
+        """
+        V2User 매칭 시도.
+        
+        설계 문서 섹션 5.2 매칭 우선순위:
+        1. V2User.cc_id (case-insensitive exact)
+        2. V2User.external_nickname (case-insensitive exact)
+        3. V2User.nickname (case-insensitive exact)
+        4. V2User.telegram_username (case-insensitive exact, @ 제거)
+        
+        Returns:
+            (V2User or None, match_status)
+            match_status: "MATCHED", "USER_NOT_FOUND", "AMBIGUOUS"
+        """
+        candidates = []
+        
+        # 1. cc_id 매칭 (최우선)
+        users_by_ccid = db.query(V2User).filter(
+            func.lower(V2User.cc_id) == user_key.lower()
+        ).all()
+        if users_by_ccid:
+            if len(users_by_ccid) == 1:
+                return users_by_ccid[0], "MATCHED"
+            candidates.extend(users_by_ccid)
+        
+        # 2. external_nickname 매칭
+        if nickname:
+            users_by_ext_nick = db.query(V2User).filter(
+                func.lower(V2User.external_nickname) == nickname.lower()
+            ).all()
+            if users_by_ext_nick and len(users_by_ext_nick) == 1:
+                return users_by_ext_nick[0], "MATCHED"
+            candidates.extend(users_by_ext_nick)
+        
+        # 3. nickname 매칭
+        if nickname:
+            users_by_nick = db.query(V2User).filter(
+                func.lower(V2User.nickname) == nickname.lower()
+            ).all()
+            if users_by_nick and len(users_by_nick) == 1 and not candidates:
+                return users_by_nick[0], "MATCHED"
+            candidates.extend(users_by_nick)
+        
+        # 4. telegram_username 매칭 (@ 제거)
+        clean_key = user_key.lstrip("@")
+        users_by_tg = db.query(V2User).filter(
+            func.lower(V2User.telegram_username) == clean_key.lower()
+        ).all()
+        if users_by_tg and len(users_by_tg) == 1 and not candidates:
+            return users_by_tg[0], "MATCHED"
+        candidates.extend(users_by_tg)
+        
+        # 중복 제거
+        unique_candidates = {u.id: u for u in candidates}
+        
+        if len(unique_candidates) == 0:
+            return None, "USER_NOT_FOUND"
+        elif len(unique_candidates) == 1:
+            return list(unique_candidates.values())[0], "MATCHED"
+        else:
+            return None, "AMBIGUOUS"
 
     @staticmethod
     async def import_hq_margin_csv(
@@ -91,9 +163,16 @@ class HQMarginImportService:
             created_count = 0
             prospective_count = 0
             skipped_count = 0
+            cc_deposit_count = 0  # CC Deposit 반영 건수
+            unmatched_count = 0   # 미매칭 로그 저장 건수
             errors = []
+            warnings = []
 
-            from sqlalchemy import func
+            # 서비스 초기화
+            unmatched_log_service = UnmatchedDepositLogService(db)
+            
+            # CC Deposit 일괄 처리용 버퍼
+            cc_deposit_payloads: List[CCDepositCreate] = []
 
             # 행별 처리
             for idx, row in enumerate(reader):
@@ -106,14 +185,10 @@ class HQMarginImportService:
                     nickname_raw = str(row.get('닉네임', '')).strip() if '닉네임' in row and row['닉네임'] else None
                     nickname = nickname_raw.lower() if nickname_raw else None
 
-                    # V2User 매칭
-                    query = db.query(V2User)
-                    if nickname:
-                        v2_user = query.filter(
-                            (V2User.cc_id == user_key) | (func.lower(V2User.nickname) == nickname)
-                        ).first()
-                    else:
-                        v2_user = query.filter(V2User.cc_id == user_key).first()
+                    # V2User 매칭 (향상된 매칭 로직)
+                    v2_user, match_status = HQMarginImportService._match_v2_user(
+                        db, user_key, nickname
+                    )
 
                     # 세그먼트 분류용 row 데이터 변환 (parse_int 적용)
                     classifier_row = {k: v for k, v in row.items()}
@@ -121,19 +196,57 @@ class HQMarginImportService:
                     for target, actual in final_columns.items():
                         classifier_row[target] = row.get(actual)
 
-                    if not v2_user:
+                    # 누적 충전 금액 파싱
+                    total_charge = HQMarginImportService._parse_int(classifier_row.get('누적 충전 금액', 0))
+
+                    if match_status == "MATCHED" and v2_user:
+                        # ========== 매칭 성공: CC Deposit 반영 ==========
                         segment = HQMarginImportService._classify_segment(classifier_row)
                         
-                        if nickname:
-                            existing_v2_users = db.query(V2User).filter(func.lower(V2User.nickname) == nickname).all()
-                            if len(existing_v2_users) > 1:
-                                skipped_count += 1
-                                error_msg = f"Row {idx+2}: Ambiguous nickname '{nickname_raw}'"
-                                errors.append(error_msg)
-                                continue
-
+                        # 세그먼트 업데이트
+                        user_segment = db.query(V2UserSegment).filter(
+                            V2UserSegment.user_id == v2_user.id
+                        ).first()
+                        
+                        if user_segment:
+                            user_segment.segment = segment
+                            user_segment.updated_at = datetime.utcnow()
+                            updated_count += 1
+                        else:
+                            user_segment = V2UserSegment(user_id=v2_user.id, segment=segment)
+                            db.add(user_segment)
+                            created_count += 1
+                        
+                        # CC Deposit 페이로드 추가 (누적 충전 금액 반영)
+                        if total_charge > 0:
+                            cc_deposit_payloads.append(CCDepositCreate(
+                                user_id=v2_user.id,
+                                deposit_amount=total_charge,
+                                play_count=0,  # HQ CSV에 플레이 카운트 없음
+                            ))
+                            cc_deposit_count += 1
+                    
+                    elif match_status == "AMBIGUOUS":
+                        # ========== 동명이인: 미매칭 로그 저장 ==========
+                        unmatched_log_service.save_unmatched(
+                            raw_cc_id=user_key,
+                            raw_nickname=nickname_raw,
+                            total_charge=total_charge,
+                            prev_total=0,
+                            status=UnmatchedStatus.AMBIGUOUS.value,
+                            reason=UnmatchedReason.AMBIGUOUS.value,
+                        )
+                        unmatched_count += 1
+                        warnings.append(f"Row {idx+2}: Ambiguous match for '{nickname_raw or user_key}'")
+                    
+                    else:
+                        # ========== 매칭 실패: 잠재 고객 + 미매칭 로그 ==========
+                        segment = HQMarginImportService._classify_segment(classifier_row)
+                        
+                        # 기존 잠재 고객 로직 유지
                         prospect = db.query(HQProspectiveUser).filter(
-                            (HQProspectiveUser.cc_id == user_key) | (func.lower(HQProspectiveUser.nickname) == nickname)
+                            (HQProspectiveUser.cc_id == user_key) | 
+                            (func.lower(HQProspectiveUser.nickname) == (nickname or ""))
                         ).first()
 
                         if prospect:
@@ -155,22 +268,33 @@ class HQMarginImportService:
                             db.add(prospect)
                         
                         prospective_count += 1
-                        continue
-
-                    segment = HQMarginImportService._classify_segment(classifier_row)
-                    user_segment = db.query(V2UserSegment).filter(V2UserSegment.user_id == v2_user.id).first()
-
-                    if user_segment:
-                        user_segment.segment = segment
-                        user_segment.updated_at = datetime.utcnow()
-                        updated_count += 1
-                    else:
-                        user_segment = V2UserSegment(user_id=v2_user.id, segment=segment)
-                        db.add(user_segment)
-                        created_count += 1
+                        
+                        # 미매칭 로그 저장 (충전 금액이 있을 때만)
+                        if total_charge > 0:
+                            unmatched_log_service.save_unmatched(
+                                raw_cc_id=user_key,
+                                raw_nickname=nickname_raw,
+                                total_charge=total_charge,
+                                prev_total=0,
+                                status=UnmatchedStatus.UNMATCHED.value,
+                                reason=UnmatchedReason.USER_NOT_FOUND.value,
+                            )
+                            unmatched_count += 1
 
                 except Exception as e:
                     errors.append(f"Row {idx+2}: {str(e)}")
+
+            # CC Deposit 일괄 처리 (청크 단위)
+            if cc_deposit_payloads:
+                CHUNK_SIZE = 250
+                for i in range(0, len(cc_deposit_payloads), CHUNK_SIZE):
+                    chunk = cc_deposit_payloads[i:i + CHUNK_SIZE]
+                    try:
+                        V2AdminCCDepositService.upsert_many(db, chunk)
+                        logger.info(f"CC Deposit chunk processed: {len(chunk)} items")
+                    except Exception as e:
+                        logger.error(f"CC Deposit chunk failed: {e}")
+                        errors.append(f"CC Deposit batch error: {str(e)}")
 
             db.commit()
 
@@ -182,15 +306,24 @@ class HQMarginImportService:
                 target_id=None,
                 after={
                     "category": "GOLDEN",
-                    "reason": "HQ margin CSV import",
+                    "reason": "HQ margin CSV import with CC Deposit auto-reflection",
                     "stats": {
                         "total_rows": total_rows,
                         "updated": updated_count,
                         "created": created_count,
                         "prospective": prospective_count,
                         "skipped": skipped_count,
+                        "cc_deposit_reflected": cc_deposit_count,
+                        "unmatched_logged": unmatched_count,
                     }
                 },
+            )
+
+            logger.info(
+                "HQ Margin CSV import completed: total=%d, updated=%d, created=%d, "
+                "prospective=%d, cc_deposit=%d, unmatched=%d",
+                total_rows, updated_count, created_count, 
+                prospective_count, cc_deposit_count, unmatched_count
             )
 
             return {
@@ -200,14 +333,17 @@ class HQMarginImportService:
                 "created_count": created_count,
                 "prospective_count": prospective_count,
                 "skipped_count": skipped_count,
+                "cc_deposit_count": cc_deposit_count,
+                "unmatched_count": unmatched_count,
                 "errors": errors[:50],
-                "warnings": [],
+                "warnings": warnings[:50],
             }
 
         except Exception as e:
             logger.error(f"HQ Margin CSV import failed: {e}")
             db.rollback()
             raise
+
     @staticmethod
     def validate_hq_margin_csv(file_path: str) -> tuple[bool, str]:
         """
