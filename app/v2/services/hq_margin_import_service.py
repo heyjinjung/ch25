@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Dict, List
 from pathlib import Path
 
+from sqlalchemy.orm import Session
+
 from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
 from app.v2.services import V2AdminAuditService
 

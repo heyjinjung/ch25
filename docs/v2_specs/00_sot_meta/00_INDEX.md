@@ -185,7 +185,7 @@ md
 
 
 ## 7. 변경 이력
-- v2.15 (2026-02-02, Antigravity Agent): HQ Margin CSV 임포트 헤더 매칭 및 500 에러(Multipart Boundary) 해결 (W05_FRONTEND, W05_INFRA)
+- v2.15 (2026-02-02, Antigravity Agent): HQ Margin CSV 임포트 500 에러 해결 (Pandas 의존성 제거 리팩토링 & Multipart Boundary 수정)
 - v2.14 (2026-02-02, Antigravity Agent): 룰렛 체험 티켓(`TRIAL_TICKET`) 일일 제한 강제 및 넛지 서비스 버그 수정 (W05_GAME)
 - v2.10 (2026-02-02, Antigravity Agent): 신규 유저 미션(7일/FAB 타이머) SOT 및 트러블슈팅 업데이트
 - v2.11 (2026-02-02, GitHub Copilot): V2 세그먼트 키 COMMON/VIP/WHALE/AT_RISK 통일 및 learned_ 기록 추가

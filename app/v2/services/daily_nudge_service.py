@@ -78,7 +78,7 @@ class DailyNudgeService:
                 continue
 
             # benefits_suspended 체크
-            is_suspended, _ = V2VaultService.is_benefits_suspended(user)
+            is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
             if is_suspended:
                 continue
 
@@ -120,7 +120,7 @@ class DailyNudgeService:
 
         # benefits_suspended 체크 (관리자가 아닌 경우)
         if not skip_suspension_check:
-            is_suspended, _ = V2VaultService.is_benefits_suspended(user)
+            is_suspended, _ = V2VaultService.is_benefits_suspended(db, user_id)
             if is_suspended:
                 return {
                     "success": False,
@@ -262,7 +262,7 @@ class DailyNudgeService:
         all_users_count = db.query(func.count(V2User.id)).scalar()
         suspended_count = 0
         for user in db.query(V2User).all():
-            is_suspended, _ = V2VaultService.is_benefits_suspended(user)
+            is_suspended, _ = V2VaultService.is_benefits_suspended(db, user.id)
             if is_suspended:
                 suspended_count += 1
 

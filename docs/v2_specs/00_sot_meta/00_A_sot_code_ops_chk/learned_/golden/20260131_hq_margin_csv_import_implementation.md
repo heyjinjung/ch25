@@ -391,9 +391,10 @@ npm run build
 1. **프론트엔드 (`adminApi.ts`)**:
    - `validateCSVFile` 및 `uploadCSVFile`에서 수동 `Content-Type` 헤더 제거.
    - `validateCSVFile`에 `import_type` 매개변수 추가 및 FormData에 추가.
-2. **백엔드 (`csv_import_routes.py`)**:
-   - `validate_csv_file` 엔드포인트에서 `import_type: str = Form("GAME_LOG")`를 받도록 수정.
-   - `import_type`에 따라 `HQMarginImportService.validate_hq_margin_csv` 또는 `CSVImportService.validate_csv_file`로 분기 처리.
+3. **백엔드 의존성 최적화 (`HQMarginImportService`)**:
+   - 운영 서버에 `pandas` 라이브러리가 설치되어 있지 않아 발생한 `ModuleNotFoundError`를 해결하기 위해, 중량 라이브러리인 `pandas` 의존성을 완전히 제거.
+   - 파이썬 표준 `csv` 모듈과 `io.StringIO`를 사용하여 가볍고 빠른 파싱 로직으로 전체 리팩토링 완료.
+   - `chardet`을 이용한 인코딩 감지 및 `cp949` 폴백 로직은 그대로 유지하여 호환성 확보.
 
 ---
 

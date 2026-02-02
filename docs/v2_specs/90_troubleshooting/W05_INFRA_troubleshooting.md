@@ -784,41 +784,43 @@ if not file.filename.lower().endswith(".csv"):
 
 ---
 
-## 02-02 - [INFRA/BACKEND] HQ Margin CSV 임포트 시 헤더 검증 오류 및 import_type 누락
+## 02-02 - [INFRA/BACKEND] HQ Margin CSV 임포트 시 500 에러 (Pandas 누락 및 import_type 미전달)
 
 **우선순위**: P1
 **관련 도메인**: BACKEND, ADMIN, DATA_OPS
 
 ### 증상
-- 본사 마진(HQ Margin) CSV 업로드 시, 올바른 파일을 선택했음에도 "필수 컬럼 누락" 에러 또는 500 에러가 발생함.
-- 어드민 UI에서는 `HQ_MARGIN` 타입을 선택했으나, 서버 검증 API에서는 이를 인지하지 못함.
+- 본사 마진(HQ Margin) CSV 업로드/검증 시 500 Internal Server Error 발생.
+- 어드민 UI에서는 `HQ_MARGIN` 타입을 선택했으나, 서버 측에서 데이터 처리에 실패함.
 
 ### 증상 정의 (Symptom Abstraction)
 | 항목 | 내용 |
 |---|---|
-| **대상 기능** | CSV 검증 API (`/api/v2/admin/csv-import/validate`) |
-| **HTTP Status** | 500 (Internal Server Error) / 400 (Validation Error) |
-| **영향 범위** | 본사 마진 데이터 연동 기능 |
+| **대상 기능** | CSV 검증 및 임포트 API (`/api/v2/admin/csv-import/...`) |
+| **HTTP Status** | 500 (Internal Server Error) |
+| **영향 범위** | 본사 마진 데이터 연동 기능 및 대시보드 |
 | **재현 빈도** | 항상 |
 
 ### 근본 원인
-- 프론트엔드(`validateCSVFile`)에서 파일은 전송하지만, `import_type` 파라미터를 API 서버로 전달하지 않음.
-- 백엔드(`/csv-import/validate`) 엔드포인트에서 `import_type` 수신 로직이 없어 기본값인 `GAME_LOG` 검증 로직을 실행.
-- 마진 데이터 CSV에는 게임 로그 필수 컬럼(`timestamp`, `game_type` 등)이 없으므로 검증 실패.
+1.  **백엔드 의존성 누락**: 운영 서버 환경에 `pandas` 라이브러리가 설치되어 있지 않음 (`ModuleNotFoundError: No module named 'pandas'`). `HQMarginImportService`가 `pandas`에 의존하고 있어 런타임 에러 발생.
+2.  **파라미터 누락**: 프론트엔드(`validateCSVFile`)에서 `import_type`을 전달하지 않아 백엔드가 기본값인 `GAME_LOG`로 오인하여 헤더 검증 실패 유발.
+3.  **멀티파트 바운더리 오류**: 프론트엔드에서 `Content-Type`을 수동 지정하여 Axios의 `boundary` 생성을 방해함 (500 에러의 또 다른 원인).
 
 ### 해결 방법
-#### 1. 백엔드 수정 (`csv_import_routes.py`)
-- `validate_csv_file` 엔드포인트에 `import_type: str = Form("GAME_LOG")` 매개변수 추가.
-- `import_type` 값에 따라 분기 처리:
-  - `HQ_MARGIN`: `HQMarginImportService.validate_hq_margin_csv` 호출.
-  - 기타: `CSVImportService.validate_csv_file` 호출.
+#### 1. 백엔드 리팩토링 (`HQMarginImportService`)
+- **Pandas 제거**: 무거운 외부 라이브러리 의존성을 없애고, 파이썬 표준 `csv` 모듈을 사용하여 데이터를 파싱하도록 전체 로직을 리팩토링함.
+- **성능 및 안정성**: 표준 모듈 사용으로 서버 환경 제약 없이 작동하며, 파일 포인터 처리를 최적화하여 메모리 효율성 개선.
 
-#### 2. 프론트엔드 수정 (`adminApi.ts`)
-- `validateCSVFile` 함수가 `import_type`을 인자로 받아 `FormData`에 추가하여 전송하도록 수정.
+#### 2. 라우터 및 스키마 수정
+- `csv_import_routes.py`에서 `import_type`을 `Form` 파라미터로 명확히 수신하고, 서비스 분기 로직 강화.
+
+#### 3. 프론트엔드 API 수정
+- `adminApi.ts`에서 수동 `Content-Type` 헤더 제거 (Axios 자동 설정 유도).
+- `validateCSVFile`에 `import_type` 파라미터 추가 전송.
 
 ### 검증 방법
-- 어드민 페이지에서 "본사 마진 데이터" 타입 선택 후 업로드.
-- 검증 단계에서 500 에러 없이 "정상적인 파일입니다" 메시지 출력 확인.
+- 운영 서버 로그에서 `ModuleNotFoundError`가 사라진 것을 확인.
+- 어드민 페이지에서 HQ Margin CSV 업로드 시 200 OK와 함께 정상 검증 결과(is_valid) 반환 확인.
 
 ---
 
@@ -829,4 +831,4 @@ if not file.filename.lower().endswith(".csv"):
 - 2026-02-02: CSV Import 확장자 대소문자(400) 대응 및 런타임 NameError/WS 설정 최적화 (Antigravity)
 - 2026-02-02: Retention Trend(포유율 추이) 조회 범위 하드코딩 수정 (Antigravity)
 - 2026-02-02: V2 SOT Compliance Baseline 및 배포 검증/인프라 안정화 내역 추가 (Antigravity)
-- 2026-02-02: HQ Margin CSV 임포트 헤더 검증(import_type) 누락 해결 (Antigravity)
+- 2026-02-02: HQ Margin CSV 임포트 500 에러 (Pandas 누락 및 Boundary 오류) 해결 (Antigravity)
