@@ -162,7 +162,6 @@ class V2InventoryService:
         reason: str | None = None,
         label: str | None = None,
         meta: dict | None = None,
-        meta: dict | None = None,
         auto_commit: bool = True,
         allow_negative: bool = False,
     ) -> int:
@@ -326,7 +325,6 @@ class V2InventoryService:
                 and_(UserInventoryItem.user_id == storage_user_id, UserInventoryItem.item_type == item_type)
             )
             .with_for_update()
-        )
         )
         if not allow_negative and (not item or item.quantity < amount):
             raise HTTPException(status_code=400, detail="INSUFFICIENT_ITEM_QUANTITY")

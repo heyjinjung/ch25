@@ -78,6 +78,7 @@ from app.v2.api.telegram_routes import router as telegram_router
 from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
 from app.v2.api.user_link_routes import router as user_link_router
+from app.v2.api.user_latency_routes import router as user_latency_router
 
 
 router.include_router(admin_router)
@@ -88,6 +89,7 @@ router.include_router(exchange_router)
 router.include_router(user_router)
 router.include_router(vault_router)
 router.include_router(user_link_router, prefix="/user", tags=["v2-user-linking"])
+router.include_router(user_latency_router, prefix="/user/economy", tags=["v2-user-latency"])
 
 
 class V2InventoryUseRequest(BaseModel):

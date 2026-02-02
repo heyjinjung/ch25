@@ -9,6 +9,7 @@ import { VaultProgress } from "../../components/vault/VaultProgress";
 import { VaultStats } from "../../components/vault/VaultStats";
 import { VaultCTA } from "../../components/vault/VaultCTA";
 import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModal";
+import LatencyReportModal from "../../components/user/LatencyReportModal";
 import "./VaultRedesign.css";
 
 // const WITHDRAWAL_GOAL = 100000; // Deprecated: Now dynamic from backend
@@ -20,6 +21,7 @@ const VaultPage: React.FC = () => {
   const { data: vault, isLoading, error } = useVaultStatus();
   const withdrawMutation = useWithdraw();
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showLatencyModal, setShowLatencyModal] = useState(false);
   const todayEarnings = vault?.today_earnings || 0;
   const withdrawalGoal = vault?.minimum_withdrawal_amount || 100000;
 
@@ -138,6 +140,16 @@ const VaultPage: React.FC = () => {
             isLoading={withdrawMutation.isPending}
             className="mt-auto pb-6"
           />
+
+          {/* Latency Report Link */}
+          <div className="text-center pb-4">
+            <button
+              onClick={() => setShowLatencyModal(true)}
+              className="text-xs text-amber-400/70 hover:text-amber-400 underline underline-offset-2 transition-colors"
+            >
+              입금이 지연되고 있나요?
+            </button>
+          </div>
         </div>
       </BackgroundBeamsWithCollision>
 
@@ -146,6 +158,12 @@ const VaultPage: React.FC = () => {
         isOpen={showGuideModal}
         onClose={() => setShowGuideModal(false)}
         vaultData={vault}
+      />
+
+      {/* Latency report modal */}
+      <LatencyReportModal
+        isOpen={showLatencyModal}
+        onClose={() => setShowLatencyModal(false)}
       />
     </div>
   );
