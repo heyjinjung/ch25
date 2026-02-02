@@ -70,7 +70,10 @@ interface ProspectStats {
   ignored: number;
   pending: number;
   link_rate: number;
-  by_segment: Record<string, { total: number; linked: number; pending: number }>;
+  by_segment: Record<
+    string,
+    { total: number; linked: number; pending: number }
+  >;
 }
 
 interface UserSearchResult {
@@ -86,7 +89,7 @@ interface UserSearchResult {
 
 const fetchProspects = async (
   segment?: string,
-  includeIgnored?: boolean
+  includeIgnored?: boolean,
 ): Promise<ProspectListResponse> => {
   const params = new URLSearchParams();
   if (segment && segment !== "ALL") params.append("segment", segment);
@@ -94,14 +97,14 @@ const fetchProspects = async (
   params.append("limit", "100");
 
   const response = await v2Client.get<ProspectListResponse>(
-    `/api/v2/admin/prospect/prospects?${params}`
+    `/api/v2/admin/prospect/prospects?${params}`,
   );
   return response.data;
 };
 
 const fetchProspectStats = async (): Promise<ProspectStats> => {
   const response = await v2Client.get<ProspectStats>(
-    "/api/v2/admin/prospect/prospects/stats"
+    "/api/v2/admin/prospect/prospects/stats",
   );
   return response.data;
 };
@@ -109,7 +112,7 @@ const fetchProspectStats = async (): Promise<ProspectStats> => {
 const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
   if (!query || query.length < 1) return [];
   const response = await v2Client.get<{ users: UserSearchResult[] }>(
-    `/api/v2/admin/prospect/users/search?q=${encodeURIComponent(query)}`
+    `/api/v2/admin/prospect/users/search?q=${encodeURIComponent(query)}`,
   );
   return response.data.users;
 };
@@ -117,7 +120,7 @@ const searchUsers = async (query: string): Promise<UserSearchResult[]> => {
 const linkProspect = async (prospectId: number, userId: number) => {
   const response = await v2Client.post(
     `/api/v2/admin/prospect/prospects/${prospectId}/link`,
-    { user_id: userId }
+    { user_id: userId },
   );
   return response.data;
 };
@@ -125,7 +128,7 @@ const linkProspect = async (prospectId: number, userId: number) => {
 const ignoreProspect = async (prospectId: number, reason?: string) => {
   const response = await v2Client.post(
     `/api/v2/admin/prospect/prospects/${prospectId}/ignore`,
-    { reason }
+    { reason },
   );
   return response.data;
 };
@@ -137,13 +140,19 @@ export default function ProspectLinkingPage() {
   const [segmentFilter, setSegmentFilter] = useState<string>("ALL");
   const [includeIgnored, setIncludeIgnored] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null);
+  const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(
+    null,
+  );
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [ignoreReason, setIgnoreReason] = useState("");
 
   // Queries
-  const { data: prospectsData, isLoading: isLoadingProspects, refetch } = useQuery({
+  const {
+    data: prospectsData,
+    isLoading: isLoadingProspects,
+    refetch,
+  } = useQuery({
     queryKey: ["prospects", segmentFilter, includeIgnored],
     queryFn: () => fetchProspects(segmentFilter, includeIgnored),
   });
@@ -161,8 +170,13 @@ export default function ProspectLinkingPage() {
 
   // Mutations
   const linkMutation = useMutation({
-    mutationFn: ({ prospectId, userId }: { prospectId: number; userId: number }) =>
-      linkProspect(prospectId, userId),
+    mutationFn: ({
+      prospectId,
+      userId,
+    }: {
+      prospectId: number;
+      userId: number;
+    }) => linkProspect(prospectId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prospects"] });
       queryClient.invalidateQueries({ queryKey: ["prospect-stats"] });
@@ -172,8 +186,13 @@ export default function ProspectLinkingPage() {
   });
 
   const ignoreMutation = useMutation({
-    mutationFn: ({ prospectId, reason }: { prospectId: number; reason?: string }) =>
-      ignoreProspect(prospectId, reason),
+    mutationFn: ({
+      prospectId,
+      reason,
+    }: {
+      prospectId: number;
+      reason?: string;
+    }) => ignoreProspect(prospectId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["prospects"] });
       queryClient.invalidateQueries({ queryKey: ["prospect-stats"] });
@@ -202,7 +221,10 @@ export default function ProspectLinkingPage() {
 
   const handleConfirmIgnore = () => {
     if (selectedProspect) {
-      ignoreMutation.mutate({ prospectId: selectedProspect.id, reason: ignoreReason });
+      ignoreMutation.mutate({
+        prospectId: selectedProspect.id,
+        reason: ignoreReason,
+      });
     }
   };
 
@@ -356,14 +378,21 @@ export default function ProspectLinkingPage() {
                         {prospect.segment}
                       </Badge>
                       {prospect.ignored && (
-                        <Badge variant="outline" className="bg-zinc-700/50 text-zinc-500">
+                        <Badge
+                          variant="outline"
+                          className="bg-zinc-700/50 text-zinc-500"
+                        >
                           무시됨
                         </Badge>
                       )}
                     </div>
                     <div className="text-xs text-zinc-500 space-x-4">
-                      <span>마진: ₩{prospect.total_margin?.toLocaleString()}</span>
-                      <span>충전: ₩{prospect.total_charge?.toLocaleString()}</span>
+                      <span>
+                        마진: ₩{prospect.total_margin?.toLocaleString()}
+                      </span>
+                      <span>
+                        충전: ₩{prospect.total_charge?.toLocaleString()}
+                      </span>
                       <span>비활성: {prospect.inactive_days}일</span>
                     </div>
                   </div>
@@ -372,13 +401,17 @@ export default function ProspectLinkingPage() {
                   <div className="flex-1 px-4">
                     {prospect.suggestions.length > 0 ? (
                       <div className="space-y-1">
-                        <span className="text-xs text-zinc-500">추천 매칭:</span>
+                        <span className="text-xs text-zinc-500">
+                          추천 매칭:
+                        </span>
                         {prospect.suggestions.slice(0, 2).map((s) => (
                           <div
                             key={s.user_id}
                             className="flex items-center gap-2 text-sm"
                           >
-                            <span className="text-emerald-400">{s.nickname}</span>
+                            <span className="text-emerald-400">
+                              {s.nickname}
+                            </span>
                             <span className="text-xs text-zinc-500">
                               ({s.similarity}%)
                             </span>
@@ -433,37 +466,38 @@ export default function ProspectLinkingPage() {
 
           <div className="space-y-4">
             {/* Suggested Matches */}
-            {selectedProspect?.suggestions && selectedProspect.suggestions.length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium mb-2 text-zinc-400">
-                  추천 매칭
-                </h4>
-                <div className="space-y-2">
-                  {selectedProspect.suggestions.map((s) => (
-                    <div
-                      key={s.user_id}
-                      className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors"
-                      onClick={() => handleConfirmLink(s.user_id)}
-                    >
-                      <div>
-                        <span className="font-medium">{s.nickname}</span>
-                        {s.telegram_username && (
-                          <span className="text-xs text-zinc-500 ml-2">
-                            @{s.telegram_username}
-                          </span>
-                        )}
+            {selectedProspect?.suggestions &&
+              selectedProspect.suggestions.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-2 text-zinc-400">
+                    추천 매칭
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedProspect.suggestions.map((s) => (
+                      <div
+                        key={s.user_id}
+                        className="flex items-center justify-between p-3 bg-zinc-800 rounded-lg cursor-pointer hover:bg-zinc-700 transition-colors"
+                        onClick={() => handleConfirmLink(s.user_id)}
+                      >
+                        <div>
+                          <span className="font-medium">{s.nickname}</span>
+                          {s.telegram_username && (
+                            <span className="text-xs text-zinc-500 ml-2">
+                              @{s.telegram_username}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-emerald-500/20 text-emerald-400">
+                            {s.similarity}%
+                          </Badge>
+                          <CheckCircle className="w-4 h-4 text-emerald-400" />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-emerald-500/20 text-emerald-400">
-                          {s.similarity}%
-                        </Badge>
-                        <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Manual Search */}
             <div>

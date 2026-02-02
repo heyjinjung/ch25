@@ -80,7 +80,7 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Users - Tabbed */}
           <Route path="users" element={<UserManagementTabPage />} />
-          
+
           {/* Prospect Linking */}
           <Route path="prospect/linking" element={<ProspectLinkingPage />} />
 

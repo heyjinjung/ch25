@@ -41,7 +41,7 @@
 각 diff의 적용일자/핫픽스/테스트 결과를 SoT 변경 이력에 기록함
 - **통합 컨텍스트**: [learned_/00_con.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
 - **도메인별 최신 Learned SoT**:
-  - **Auth/User**: [auth.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/auth.md) | [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md)
+  - **Auth/User**: [auth.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/auth.md) | [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md) | [잠재유저 매칭](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/20260202_prospect_linking_implementation.md)
   - **Admin**: [01.admin.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.admin.md) | [Admin 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.adminguide.md)
   - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md) | [복권 UI/BE 싱크](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260205_lottery_ui_backend_tier_sync.md)
   - **Inventory**: [05.inventory.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory.md) | [인벤 패치 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory_patch_guide.md)

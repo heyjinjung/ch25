@@ -59,15 +59,21 @@ const fetchLinkStatus = async (): Promise<LinkStatus> => {
 };
 
 const linkExternalAccount = async (nickname: string): Promise<LinkResponse> => {
-  const response = await v2Client.post<LinkResponse>("/api/v2/user/link-external", {
-    external_nickname: nickname,
-  });
+  const response = await v2Client.post<LinkResponse>(
+    "/api/v2/user/link-external",
+    {
+      external_nickname: nickname,
+    },
+  );
   return response.data;
 };
 
-const unlinkExternalAccount = async (): Promise<{ success: boolean; message: string }> => {
+const unlinkExternalAccount = async (): Promise<{
+  success: boolean;
+  message: string;
+}> => {
   const response = await v2Client.delete<{ success: boolean; message: string }>(
-    "/api/v2/user/link-external"
+    "/api/v2/user/link-external",
   );
   return response.data;
 };
@@ -185,7 +191,10 @@ export default function ExternalLinkCard() {
               <h4 className="text-sm font-medium text-zinc-300">적용된 혜택</h4>
               <ul className="space-y-1">
                 {linkStatus.benefits.map((benefit, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm text-zinc-400">
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2 text-sm text-zinc-400"
+                  >
                     <CheckCircle className="w-4 h-4 text-emerald-400" />
                     {benefit}
                   </li>
@@ -274,12 +283,17 @@ export default function ExternalLinkCard() {
                       <AlertCircle className="w-5 h-5 text-zinc-400 mt-0.5" />
                     )}
                     <div>
-                      <p className="text-sm font-medium">{linkResult.message}</p>
+                      <p className="text-sm font-medium">
+                        {linkResult.message}
+                      </p>
                       {linkResult.segment && (
                         <div className="mt-2 text-xs text-zinc-400">
                           <p>세그먼트: {linkResult.segment}</p>
                           {linkResult.total_margin !== undefined && (
-                            <p>총 마진: ₩{linkResult.total_margin.toLocaleString()}</p>
+                            <p>
+                              총 마진: ₩
+                              {linkResult.total_margin.toLocaleString()}
+                            </p>
                           )}
                         </div>
                       )}
@@ -329,7 +343,9 @@ export default function ExternalLinkCard() {
                     </Button>
                     <Button
                       onClick={handleLink}
-                      disabled={!externalNickname.trim() || linkMutation.isPending}
+                      disabled={
+                        !externalNickname.trim() || linkMutation.isPending
+                      }
                       className="bg-indigo-600 hover:bg-indigo-700"
                     >
                       {linkMutation.isPending ? (
