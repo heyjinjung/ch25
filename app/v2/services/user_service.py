@@ -59,28 +59,5 @@ class V2UserService:
             
         return user
 
-    @staticmethod
-    def ensure_legacy_user_id(db: Session, v2_user_id: int) -> int:
-        """Ensure a corresponding legacy User exists with the same ID (Same ID Policy)."""
-        from app.models.user import User
-        from datetime import datetime
 
-        v2_user = db.get(V2User, v2_user_id)
-        if not v2_user:
-            raise ValueError(f"V2User with ID {v2_user_id} not found")
-
-        legacy_user = db.get(User, v2_user_id)
-        if not legacy_user:
-            legacy_user = User(
-                id=v2_user_id,
-                external_id=v2_user.cc_id,
-                nickname=v2_user.nickname or "User",
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-                vault_locked_balance=0,
-            )
-            db.add(legacy_user)
-            db.flush()
-
-        return legacy_user.id
 

@@ -47,8 +47,9 @@
   `XGROUP CREATE mission_workers mission_group $ MKSTREAM`
 
 **상태 업데이트 (02-02)**
-- 운영 서버 Redis에서 그룹 존재 확인 및 로그 재검증 완료
-- `docker logs xmas-backend --tail=200` 기준 NOGROUP 미발생
+- 운영 Redis에서 `mission_workers` 그룹 생성/확인 완료
+- `docker exec xmas-redis redis-cli XINFO GROUPS mission_workers`로 `mission_group` 확인
+- 운영 로그 재확인 기준 NOGROUP 미발생
 
 ---
 
