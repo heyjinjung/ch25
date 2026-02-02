@@ -178,6 +178,8 @@ export interface RevenueStatsDto {
   netIncome: number;
   depositCount: number;
   weeklyGrowthRate: number;
+  totalCharge: number;
+  dataSource: "HQ_MARGIN" | "GAME_LOG";
 }
 
 export interface DetailedRiskUserDto {

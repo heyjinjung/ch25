@@ -471,25 +471,143 @@ class GameLogAnalyticsService:
         """
         분석 대시보드용 수익 요약.
         
+        데이터 소스 우선순위:
+        1. HQ Margin CSV (V2UserSegment) - 실제 충전/환전 마진
+        2. Game Log (V2GameLog) - 배팅/지급 데이터 (보조)
+        
         Returns:
             {
-                "today_revenue": int,
-                "today_expenses": int,
-                "net_income": int,
-                "deposit_count": int,
-                "weekly_growth_rate": float,
+                "today_revenue": int,       # HQ 총 운영 마진
+                "today_expenses": int,      # HQ 총 환전액
+                "net_income": int,          # 순수익
+                "deposit_count": int,       # 동기화된 유저 수
+                "weekly_growth_rate": float,# 주간 성장률
+                "total_charge": int,        # HQ 총 충전액
+                "data_source": str,         # 데이터 소스 표시
             }
         """
-        today = self.get_today_revenue()
-        weekly_growth = self.get_weekly_growth_rate()
+        # 1. HQ Margin 데이터 (Primary)
+        hq_margin = self.get_hq_margin_summary()
+        
+        # 2. Game Log 데이터 (Secondary/보조)
+        game_log = self.get_today_revenue()
+        
+        # 데이터 소스 결정: HQ Margin에 데이터가 있으면 HQ 기준
+        has_hq_data = hq_margin.get("synced_users", 0) > 0
+        
+        if has_hq_data:
+            return {
+                "today_revenue": hq_margin.get("total_margin", 0),
+                "today_expenses": hq_margin.get("total_withdrawal", 0),
+                "net_income": hq_margin.get("total_margin", 0),  # margin = 순수익
+                "deposit_count": hq_margin.get("synced_users", 0),
+                "weekly_growth_rate": self.get_hq_weekly_growth_rate(),
+                "total_charge": hq_margin.get("total_charge", 0),
+                "data_source": "HQ_MARGIN",
+            }
+        else:
+            # HQ 데이터 없으면 Game Log 사용
+            return {
+                "today_revenue": game_log["total_bet"],
+                "today_expenses": game_log["total_payout"],
+                "net_income": game_log["net_revenue"],
+                "deposit_count": game_log["bet_count"],
+                "weekly_growth_rate": self.get_weekly_growth_rate(),
+                "total_charge": 0,
+                "data_source": "GAME_LOG",
+            }
+
+    def get_hq_margin_summary(self) -> dict:
+        """
+        HQ Margin CSV 기반 전체 수익 통계.
+        
+        데이터 소스: V2UserSegment (total_margin, total_charge)
+        
+        Returns:
+            {
+                "total_margin": int,         # 전체 운영 마진 (충전 - 환전)
+                "total_charge": int,         # 전체 충전액  
+                "total_withdrawal": int,     # 전체 환전액 (charge - margin)
+                "vip_count": int,            # VIP 유저 수
+                "whale_count": int,          # WHALE 유저 수
+                "at_risk_count": int,        # AT_RISK 유저 수
+                "active_users": int,         # 7일 내 활성 유저
+                "synced_users": int,         # HQ 동기화 유저 수
+                "last_synced_at": datetime,  # 마지막 동기화 시각
+            }
+        """
+        # 전체 마진/충전 집계
+        totals = self.db.query(
+            func.coalesce(func.sum(V2UserSegment.total_margin), 0).label("total_margin"),
+            func.coalesce(func.sum(V2UserSegment.total_charge), 0).label("total_charge"),
+            func.count(V2UserSegment.user_id).label("synced_users"),
+            func.max(V2UserSegment.last_synced_at).label("last_synced_at"),
+        ).filter(
+            V2UserSegment.is_synced_from_hq == True
+        ).first()
+        
+        total_margin = int(totals.total_margin or 0)
+        total_charge = int(totals.total_charge or 0)
+        total_withdrawal = total_charge - total_margin  # 환전 = 충전 - 마진
+        
+        # 세그먼트별 카운트
+        segment_counts = self.db.query(
+            V2UserSegment.segment,
+            func.count(V2UserSegment.user_id).label("count")
+        ).filter(
+            V2UserSegment.is_synced_from_hq == True
+        ).group_by(
+            V2UserSegment.segment
+        ).all()
+        
+        segment_map = {s.segment: s.count for s in segment_counts}
+        
+        # 활성 유저 (7일 내 inactive_days < 7)
+        active_users = self.db.query(
+            func.count(V2UserSegment.user_id)
+        ).filter(
+            V2UserSegment.is_synced_from_hq == True,
+            V2UserSegment.inactive_days < 7
+        ).scalar() or 0
         
         return {
-            "today_revenue": today["total_bet"],
-            "today_expenses": today["total_payout"],
-            "net_income": today["net_revenue"],
-            "deposit_count": today["bet_count"],
-            "weekly_growth_rate": weekly_growth,
+            "total_margin": total_margin,
+            "total_charge": total_charge,
+            "total_withdrawal": total_withdrawal,
+            "vip_count": segment_map.get("VIP", 0),
+            "whale_count": segment_map.get("WHALE", 0),
+            "at_risk_count": segment_map.get("AT_RISK", 0),
+            "active_users": active_users,
+            "synced_users": int(totals.synced_users or 0),
+            "last_synced_at": totals.last_synced_at,
         }
+
+    def get_hq_weekly_growth_rate(self) -> float:
+        """
+        HQ Margin 기반 주간 성장률 추정.
+        
+        Note: HQ CSV는 누적 데이터이므로, 실제 주간 변화량 계산은 제한적.
+        현재는 active_users 비율과 margin 기반 추정치 반환.
+        
+        Returns:
+            float: 추정 성장률 (%)
+        """
+        # HQ 데이터는 스냅샷이므로, 활성 유저 비율로 성장률 추정
+        totals = self.db.query(
+            func.count(V2UserSegment.user_id).label("total"),
+            func.sum(case((V2UserSegment.inactive_days < 7, 1), else_=0)).label("active"),
+        ).filter(
+            V2UserSegment.is_synced_from_hq == True
+        ).first()
+        
+        if not totals or totals.total == 0:
+            return 0.0
+        
+        # 활성 비율 기반 성장률 (활성 비율 50% 초과 시 양수 성장으로 간주)
+        active_ratio = (totals.active or 0) / totals.total
+        estimated_growth = (active_ratio - 0.5) * 100 * 2  # -100% ~ +100% 스케일
+        
+        return round(estimated_growth, 2)
 
 
 # Factory function

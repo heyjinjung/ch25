@@ -58,12 +58,14 @@ class OpsHQMarginStatsDto(BaseModel):
 
 
 class RevenueStatsDto(BaseModel):
-    """Game Log 기반 수익 통계."""
+    """HQ Margin + Game Log 통합 수익 통계."""
     today_revenue: int = Field(default=0, alias="todayRevenue", serialization_alias="todayRevenue")
     today_expenses: int = Field(default=0, alias="todayExpenses", serialization_alias="todayExpenses")
     net_income: int = Field(default=0, alias="netIncome", serialization_alias="netIncome")
     deposit_count: int = Field(default=0, alias="depositCount", serialization_alias="depositCount")
     weekly_growth_rate: float = Field(default=0.0, alias="weeklyGrowthRate", serialization_alias="weeklyGrowthRate")
+    total_charge: int = Field(default=0, alias="totalCharge", serialization_alias="totalCharge")
+    data_source: str = Field(default="GAME_LOG", alias="dataSource", serialization_alias="dataSource")
 
     model_config = ConfigDict(populate_by_name=True)
 

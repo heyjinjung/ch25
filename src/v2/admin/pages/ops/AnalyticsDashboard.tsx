@@ -92,6 +92,8 @@ export default function AnalyticsDashboard() {
           ? todayRevenue - todayExpenses
           : undefined;
   const weeklyGrowthRate = csvRevenueStats?.weeklyGrowthRate;
+  const dataSource = csvRevenueStats?.dataSource;
+  const totalCharge = csvRevenueStats?.totalCharge;
 
   return (
     <div className="space-y-6 min-h-screen p-6 text-white pb-20">
@@ -108,6 +110,16 @@ export default function AnalyticsDashboard() {
           <Badge variant="outline" className="mt-3">
             KST 기준
           </Badge>
+          {dataSource && (
+            <Badge
+              variant={dataSource === "HQ_MARGIN" ? "default" : "secondary"}
+              className="mt-3 ml-2"
+            >
+              {dataSource === "HQ_MARGIN"
+                ? "📊 HQ 마진 데이터"
+                : "🎮 게임 로그"}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -125,7 +137,9 @@ export default function AnalyticsDashboard() {
               {formatCurrencyMaybe(todayRevenue)}
             </div>
             <p className="text-xs text-zinc-500 mt-1">
-              입금 {formatCountMaybe(todayDepositCount)}건
+              {dataSource === "HQ_MARGIN"
+                ? `총 충전 ${formatCurrencyMaybe(totalCharge)}`
+                : `입금 ${formatCountMaybe(todayDepositCount)}건`}
             </p>
           </CardContent>
         </Card>

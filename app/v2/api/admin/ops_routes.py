@@ -176,6 +176,8 @@ def get_ops_dashboard_status(
         net_income=revenue_stats_data.get("net_income", 0),
         deposit_count=revenue_stats_data.get("deposit_count", 0),
         weekly_growth_rate=revenue_stats_data.get("weekly_growth_rate", 0.0),
+        total_charge=revenue_stats_data.get("total_charge", 0),
+        data_source=revenue_stats_data.get("data_source", "GAME_LOG"),
     ) if revenue_stats_data else None
     
     detailed_risk_users = [
