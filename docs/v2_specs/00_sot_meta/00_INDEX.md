@@ -78,9 +78,15 @@
 - [x] Fix HQ Margin CSV import encoding issues
 - [x] Improve User Detail Drawer with Vault and Game Logs
 - [x] Fix GameLogItemDto key error (segment_index -> segment_id)
-- [/] Localize User Inventory Item Names
-  - [ ] Update `InventoryPage.tsx` to use `getRewardItemLabel`
-  - [ ] Verify Korean item names in User Inventory Page
+# Tasks
+
+- [x] Consolidate Monitoring & Analytics menu structure
+- [x] Fix HQ Margin CSV import encoding issues
+- [x] Improve User Detail Drawer with Vault and Game Logs
+- [x] Fix GameLogItemDto key error (segment_index -> segment_id)
+- [x] Localize User Inventory Item Names
+  - [x] Update `InventoryPage.tsx` to use `getRewardItemLabel`
+  - [x] Verify Korean item names in User Inventory Page
 - [ ] Final verification and documentation update
 - 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
 - Auth/User API 계약: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md

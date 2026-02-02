@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -69,7 +69,13 @@ const Checkbox = ({
   />
 );
 
-export default function UserListPage() {
+export default function UserListPage({
+  initialUserId,
+  initialDrawerTab,
+}: {
+  initialUserId?: number | null;
+  initialDrawerTab?: string | null;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
@@ -84,6 +90,12 @@ export default function UserListPage() {
   const [createStatus, setCreateStatus] = useState<
     "ACTIVE" | "INACTIVE" | "SUSPENDED"
   >("ACTIVE");
+
+  useEffect(() => {
+    if (!initialUserId) return;
+    setSelectedUserId(initialUserId);
+    setSelectedDrawerTab(initialDrawerTab || "wallet");
+  }, [initialDrawerTab, initialUserId]);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -174,7 +186,8 @@ export default function UserListPage() {
             회원 관리
           </h1>
           <p className="text-sm text-zinc-400">
-            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를 조회합니다.
+            총 {total.toLocaleString()}명의 회원을 관리하고 상세 정보를
+            조회합니다.
           </p>
         </div>
         <Button
@@ -191,7 +204,7 @@ export default function UserListPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
           <Input
-                        placeholder="닉네임, CC ID, Telegram ID, Telegram Username 검색..."
+            placeholder="닉네임, CC ID, Telegram ID, Telegram Username 검색..."
             className="pl-9 bg-zinc-900 border-zinc-800 text-zinc-200 focus:ring-[#D2FD9C]"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -411,8 +424,8 @@ export default function UserListPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
         <div className="text-sm text-zinc-400">
-                    {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
-                    명
+          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
+          명
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -542,9 +555,7 @@ export default function UserListPage() {
             <Button
               className="bg-[#D2FD9C] text-black hover:bg-[#D2FD9C]/90 font-bold"
               onClick={handleCreateUser}
-              disabled={
-                createUserMutation.isPending || !createCcId.trim()
-              }
+              disabled={createUserMutation.isPending || !createCcId.trim()}
             >
               {createUserMutation.isPending ? "등록 중.." : "등록"}
             </Button>

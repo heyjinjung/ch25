@@ -296,26 +296,39 @@ export default function AnalyticsDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {retentionTrend?.trend?.slice(-10).map((row) => (
-                        <tr
-                          key={row.date}
-                          className="border-b border-white/5 hover:bg-white/5"
-                        >
-                          <td className="py-2 text-white">{row.date}</td>
-                          <td className="py-2 text-right text-zinc-300">
-                            {row.new_users}명
-                          </td>
-                          <td className="py-2 text-right text-blue-400">
-                            {formatPercent(row.d1_rate)}
-                          </td>
-                          <td className="py-2 text-right text-emerald-400">
-                            {formatPercent(row.d7_rate)}
-                          </td>
-                          <td className="py-2 text-right text-amber-400">
-                            {formatPercent(row.d30_rate)}
-                          </td>
-                        </tr>
-                      ))}
+                      {retentionTrend?.trend?.slice(-10).map((row) => {
+                        // 날짜 차이 계산 (Pending 체크용)
+                        const rowDate = new Date(row.date);
+                        const today = new Date();
+                        const diffTime = Math.abs(today.getTime() - rowDate.getTime());
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                        // diffDays는 "며칠 전"인지 나타냄 (예: 어제=1, 오늘=0)
+                        
+                        // D1: 가입 후 1일 지남 (diffDays > 1)
+                        // D7: 가입 후 7일 지남 (diffDays > 7)
+                        // D30: 가입 후 30일 지남 (diffDays > 30)
+                        
+                        return (
+                          <tr
+                            key={row.date}
+                            className="border-b border-white/5 hover:bg-white/5"
+                          >
+                            <td className="py-2 text-white">{row.date}</td>
+                            <td className="py-2 text-right text-zinc-300">
+                              {row.new_users}명
+                            </td>
+                            <td className="py-2 text-right text-blue-400">
+                              {diffDays > 1 ? formatPercent(row.d1_rate) : <span className="text-zinc-600">-</span>}
+                            </td>
+                            <td className="py-2 text-right text-emerald-400">
+                              {diffDays > 7 ? formatPercent(row.d7_rate) : <span className="text-zinc-600">-</span>}
+                            </td>
+                            <td className="py-2 text-right text-amber-400">
+                              {diffDays > 30 ? formatPercent(row.d30_rate) : <span className="text-zinc-600">-</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

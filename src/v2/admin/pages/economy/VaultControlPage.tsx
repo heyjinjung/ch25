@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import {
   CheckCircle2,
@@ -123,6 +124,7 @@ const cardDetailInfo: Record<
 };
 
 export default function VaultControlPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("withdrawals");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -135,6 +137,12 @@ export default function VaultControlPage() {
   const handleCardClick = (type: CardDetailType) => {
     setCardDetailType(type);
     setIsCardDetailOpen(true);
+  };
+
+  const handleUserDetailNavigate = (userId: number) => {
+    setIsCardDetailOpen(false);
+    setCardDetailType(null);
+    navigate(`/admin/users?userId=${userId}&tab=vault`);
   };
 
   // Withdrawals State
@@ -934,10 +942,18 @@ export default function VaultControlPage() {
                           className="border-white/5 hover:bg-white/5"
                         >
                           <TableCell>
-                            <span className="text-white">{u.nickname}</span>
-                            <span className="text-zinc-500 text-xs ml-2">
-                              #{u.user_id}
-                            </span>
+                            <button
+                              type="button"
+                              className="text-white hover:underline"
+                              onClick={() =>
+                                handleUserDetailNavigate(u.user_id)
+                              }
+                            >
+                              {u.nickname}
+                              <span className="text-zinc-500 text-xs ml-2">
+                                #{u.user_id}
+                              </span>
+                            </button>
                           </TableCell>
                           <TableCell className="text-right font-mono text-emerald-400">
                             ₩{u.vault_balance.toLocaleString()}
@@ -983,10 +999,18 @@ export default function VaultControlPage() {
                             className="border-white/5 hover:bg-white/5"
                           >
                             <TableCell>
-                              <span className="text-white">{u.nickname}</span>
-                              <span className="text-zinc-500 text-xs ml-2">
-                                #{u.user_id}
-                              </span>
+                              <button
+                                type="button"
+                                className="text-white hover:underline"
+                                onClick={() =>
+                                  handleUserDetailNavigate(u.user_id)
+                                }
+                              >
+                                {u.nickname}
+                                <span className="text-zinc-500 text-xs ml-2">
+                                  #{u.user_id}
+                                </span>
+                              </button>
                             </TableCell>
                             <TableCell className="text-right font-mono text-emerald-400">
                               ₩{u.vault_balance.toLocaleString()}
@@ -1034,10 +1058,18 @@ export default function VaultControlPage() {
                             className="border-white/5 hover:bg-white/5"
                           >
                             <TableCell>
-                              <span className="text-white">{u.nickname}</span>
-                              <span className="text-zinc-500 text-xs ml-2">
-                                #{u.user_id}
-                              </span>
+                              <button
+                                type="button"
+                                className="text-white hover:underline"
+                                onClick={() =>
+                                  handleUserDetailNavigate(u.user_id)
+                                }
+                              >
+                                {u.nickname}
+                                <span className="text-zinc-500 text-xs ml-2">
+                                  #{u.user_id}
+                                </span>
+                              </button>
                             </TableCell>
                             <TableCell className="text-right font-mono text-blue-400">
                               ₩{u.vault_balance.toLocaleString()}
@@ -1162,10 +1194,18 @@ export default function VaultControlPage() {
                               className="border-white/5 hover:bg-white/5"
                             >
                               <TableCell>
-                                <span className="text-white">{u.nickname}</span>
-                                <span className="text-zinc-500 text-xs ml-2">
-                                  #{u.user_id}
-                                </span>
+                                <button
+                                  type="button"
+                                  className="text-white hover:underline"
+                                  onClick={() =>
+                                    handleUserDetailNavigate(u.user_id)
+                                  }
+                                >
+                                  {u.nickname}
+                                  <span className="text-zinc-500 text-xs ml-2">
+                                    #{u.user_id}
+                                  </span>
+                                </button>
                               </TableCell>
                               <TableCell className="text-right font-mono text-emerald-400">
                                 ₩{u.vault_balance.toLocaleString()}

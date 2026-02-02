@@ -565,3 +565,38 @@ xmas-celery-*     Up (healthy)
 - 2026-02-01: CSV Import 한글 헤더 지원(Localization) 및 서비스 호출 오타 수정
 - 2026-02-01: CSV Import 한글 깨짐(Mojibake) 해결 및 인코딩 자동 감지 로직 적용
 - 2026-02-01: **502 Bad Gateway 이슈 추가 - Docker 컨테이너 재시작 후 Nginx DNS 캐시 불일치**
+- 2026-02-02: **일별 포유율 추이(Retention Trend) 최신화 수정 - 집계 기준일 변경 (D30 → Yesterday)**
+
+---
+
+## 02-02 - [INFRA/ADMIN] 일별 포유율 추이(Retention Trend) 최신화 수정
+
+**우선순위**: P2
+**관련 도메인**: INFRA, BACKEND, ADMIN, FRONTEND
+
+### 증상
+- 어드민 분석 대시보드(Retention Trend)에서 최근 30일간의 데이터가 조회되지 않음.
+- 가장 최근 데이터가 31일 전 데이터로 표시됨.
+
+### 근본 원인 (증거 기반)
+- **코드 로직 제한**: `analytics_routes.py`에서 D30(30일차 잔존율) 측정이 가능한 시점(`today - 31`)까지만 데이터를 조회하도록 `period_end`가 하드코딩 되어 있었음.
+- **D1/D7 미표출**: D30이 아직 도래하지 않았지만 D1, D7 데이터는 확정된 최근 가입자(예: 어제 가입자)의 데이터조차 조회 범위 제한으로 인해 노출되지 않음.
+
+### 해결 조치
+1. **백엔드 (`analytics_routes.py`)**:
+   - 집계 종료일(`period_end`)을 `today - 31`에서 **`today - 1` (어제)** 로 변경.
+   - 최근 데이터까지 조회되도록 쿼리 범위 확장.
+2. **프론트엔드 (`AnalyticsDashboard.tsx`)**:
+   - 도래하지 않은 기간(Pending)에 대한 표시 로직 추가.
+   - `0.0%` (실패로 오인 가능) 대신 `-` (집계 대기)으로 표기하여 혼동 방지.
+
+### 검증 방법
+- **테스트 코드**: `tests/v2/admin/test_analytics_retention_20260202.py`
+  - 어제 가입자(`User1D`)가 트렌드 데이터에 포함되는지 검증 (PASSED).
+  - 미래의 D7, D30 데이터가 `0.0`으로 안전하게 반환되는지 검증 (PASSED).
+- **화면 확인**: 어드민 대시보드에서 어제 날짜 데이터가 노출되고, D1 잔존율이 정상 표기됨을 확인.
+
+### 관련 파일
+- Backend: `app/v2/api/admin/analytics_routes.py`
+- Frontend: `src/v2/admin/pages/ops/AnalyticsDashboard.tsx`
+- Test: `tests/v2/admin/test_analytics_retention_20260202.py`

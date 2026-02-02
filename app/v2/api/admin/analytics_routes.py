@@ -303,7 +303,8 @@ def get_retention_trend(
     - 그래프 작성용 데이터
     """
     today = _get_kst_date()
-    period_end = today - timedelta(days=31)  # D30 측정 가능한 마지막 날짜
+    # period_end = today - timedelta(days=31)  # 기존: D30 측정 가능한 마지막 날짜
+    period_end = today - timedelta(days=1)     # 변경: 어제까지 표시 (미도래 기간은 0.0 처리)
     period_start = period_end - timedelta(days=days - 1)
 
     trend: List[RetentionTrendDto] = []
