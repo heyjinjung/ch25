@@ -23,6 +23,28 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - VAULT/FRONTEND: 지연 입금 즉시신청 UI 미노출
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 유저 지연 입금 즉시신청 진입 |
+| HTTP Status | 200 (UI Visibility Error) |
+| 영향 범위 | 유저 화면 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 금고 페이지에 텍스트 링크만 존재하여 UX 가시성이 낮아 기능 미노출로 인식됨.
+- 관련 코드: [src/v2/pages/vault/VaultPage.tsx](../../src/v2/pages/vault/VaultPage.tsx)
+
+**해결 방법**
+- 금고 CTA에 “입금 지연 신고” 버튼 추가 및 모달 트리거 연결.
+- 관련 코드: [src/v2/components/vault/VaultCTA.tsx](../../src/v2/components/vault/VaultCTA.tsx)
+
+**검증 방법**
+- 금고 화면 하단 CTA에 버튼 노출 확인.
+- 클릭 시 지연 입금 신고 모달 표시 확인.
+
 ---
 
 ## 📝 관리 가이드

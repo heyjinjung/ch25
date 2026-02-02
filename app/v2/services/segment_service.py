@@ -17,8 +17,8 @@ from app.v2.models.v2_dice import V2DiceLog
 from app.v2.models.v2_lottery import V2LotteryLog
 from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
-from app.v2.models import ExternalRankingData
-from app.v2.models import UserActivity
+from app.models.external_ranking import ExternalRankingData
+from app.models.user_activity import UserActivity
 
 
 @dataclass(frozen=True)

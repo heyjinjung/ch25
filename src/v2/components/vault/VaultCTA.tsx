@@ -6,6 +6,7 @@ interface VaultCTAProps {
   onWithdraw: () => void;
   onGuideClick: () => void;
   onHomeClick: () => void;
+  onLatencyReport?: () => void;
   isWithdrawEnabled: boolean;
   isLoading?: boolean;
   className?: string;
@@ -15,6 +16,7 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
   onWithdraw,
   onGuideClick,
   onHomeClick,
+  onLatencyReport,
   isWithdrawEnabled,
   isLoading = false,
   className = "",
@@ -115,6 +117,17 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
           <span>출금 조건</span>
         </motion.button>
       </div>
+
+      {onLatencyReport && (
+        <motion.button
+          onClick={onLatencyReport}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full h-11 rounded-[22px] bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2 text-sm font-semibold text-amber-300"
+        >
+          입금 지연 신고
+        </motion.button>
+      )}
 
       {/* Hint text */}
       {/* 출금 조건 안내 문구 완전 삭제 */}

@@ -60,6 +60,7 @@ interface BackendStreakInfoSchema {
   readonly is_legend?: boolean;
   readonly next_milestone?: number;
   readonly claimable_day?: number | null;
+  readonly claimable_rewards?: number[];
 }
 
 interface BackendMissionListResponse {
@@ -180,12 +181,18 @@ const mapBackendStreakInfo = (
 ): StreakInfoDto => {
   const currentStreak = info?.current_streak ?? info?.streak_days ?? 0;
   const claimableDay = info?.claimable_day ?? null;
+  const claimableRewards =
+    info?.claimable_rewards && info.claimable_rewards.length > 0
+      ? info.claimable_rewards
+      : claimableDay
+        ? [claimableDay]
+        : [];
 
   return {
     current_streak: currentStreak,
     today_completed: false,
     last_completed_date: null,
-    claimable_rewards: claimableDay ? [claimableDay] : [],
+    claimable_rewards: claimableRewards,
   };
 };
 

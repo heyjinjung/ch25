@@ -24,6 +24,28 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-02 - MISSION/FRONTEND: 연속 스트릭 모달 미노출
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 유저 연속 스트릭 미션 모달/UX |
+| HTTP Status | 200 (Logic/UI Error) |
+| 영향 범위 | 유저 화면 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 프론트 매핑에서 `claimable_rewards` 필드가 누락되어 모달 노출 조건이 충족되지 않음.
+- 관련 코드: [src/v2/api/missionApi.ts](../../src/v2/api/missionApi.ts)
+
+**해결 방법**
+- `BackendStreakInfoSchema`에 `claimable_rewards` 추가.
+- 매핑 시 `claimable_rewards` 우선 적용, 없을 경우 `claimable_day` fallback.
+
+**검증 방법**
+- `GET /api/v2/mission/` 응답에 `claimable_rewards` 존재 시 모달 노출 확인.
+- KST 09:00 기준 스트릭 리셋 구간에서 동작 확인.
+
 ---
 
 ## 📝 관리 가이드

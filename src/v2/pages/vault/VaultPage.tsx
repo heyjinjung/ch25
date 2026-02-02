@@ -136,20 +136,11 @@ const VaultPage: React.FC = () => {
             onWithdraw={handleWithdraw}
             onGuideClick={() => setShowGuideModal(true)}
             onHomeClick={handleHomeClick}
+            onLatencyReport={() => setShowLatencyModal(true)}
             isWithdrawEnabled={isEligible}
             isLoading={withdrawMutation.isPending}
             className="mt-auto pb-6"
           />
-
-          {/* Latency Report Link */}
-          <div className="text-center pb-4">
-            <button
-              onClick={() => setShowLatencyModal(true)}
-              className="text-xs text-amber-400/70 hover:text-amber-400 underline underline-offset-2 transition-colors"
-            >
-              입금이 지연되고 있나요?
-            </button>
-          </div>
         </div>
       </BackgroundBeamsWithCollision>
 

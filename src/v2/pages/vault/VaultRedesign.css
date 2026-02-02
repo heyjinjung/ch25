@@ -82,7 +82,6 @@
   padding-top: calc(env(safe-area-inset-top) + 16px);
   padding-bottom: calc(env(safe-area-inset-bottom) + 80px);
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Loading spinner */
