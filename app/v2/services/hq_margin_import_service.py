@@ -1,3 +1,4 @@
+from __future__ import annotations
 import csv
 import logging
 import chardet
@@ -269,7 +270,7 @@ class HQMarginImportService:
             return 0
 
     @staticmethod
-    def _classify_segment(row: pd.Series) -> str:
+    def _classify_segment(row: dict) -> str:
         """
         본사 마진 데이터 기반 세그먼트 분류
 
@@ -281,14 +282,15 @@ class HQMarginImportService:
         5. 기본 → COMMON
 
         Args:
-            row: pandas Series (CSV 한 행)
+            row: Dict (CSV 한 행)
 
         Returns:
             세그먼트 코드 (VIP/WHALE/AT_RISK/COMMON)
         """
         # CSV에 세그먼트가 명시되어 있으면 우선 사용
-        if '세그먼트' in row and pd.notna(row['세그먼트']):
-            explicit_segment = str(row['세그먼트']).strip().upper()
+        segment_val = row.get('세그먼트')
+        if segment_val and str(segment_val).strip():
+            explicit_segment = str(segment_val).strip().upper()
             if explicit_segment in {'VIP', 'WHALE', 'AT_RISK', 'COMMON'}:
                 return explicit_segment
 
