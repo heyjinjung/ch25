@@ -517,8 +517,8 @@ class V2MissionService:
                             self.claim_reward(user_id, mission.id)
                         except Exception:
                             pass
-
-            updated_list.append(progress)
+                
+                updated_list.append(progress)
 
         self.db.commit()
         for p in updated_list:

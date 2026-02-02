@@ -139,6 +139,13 @@ class V2VaultService:
         v2_user.vault_locked_balance = new_balance
         db.add(v2_user)
 
+        # Legacy mirror (SoT: user.vault_locked_balance)
+        from app.models.user import User
+        legacy_user = db.get(User, user_id)
+        if legacy_user is not None:
+            legacy_user.vault_locked_balance = new_balance
+            db.add(legacy_user)
+
         # === VaultLedger 기록 ===
         db.add(VaultLedger(
             user_id=user_id,
@@ -187,6 +194,13 @@ class V2VaultService:
 
         v2_user.vault_locked_balance = new_balance
         db.add(v2_user)
+
+        # Legacy mirror (SoT: user.vault_locked_balance)
+        from app.models.user import User
+        legacy_user = db.get(User, user_id)
+        if legacy_user is not None:
+            legacy_user.vault_locked_balance = new_balance
+            db.add(legacy_user)
 
         # === VaultLedger 기록 ===
         db.add(VaultLedger(

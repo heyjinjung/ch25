@@ -426,7 +426,7 @@ class VaultService:
     def _get_or_create_user(self, db: Session, user_id: int) -> V2User:
         user = db.query(V2User).filter(V2User.id == user_id).one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -506,7 +506,7 @@ class VaultService:
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -595,7 +595,7 @@ class VaultService:
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -694,7 +694,7 @@ class VaultService:
             q = q.with_for_update()
         user = q.one_or_none()
         if user is None and db.bind and db.bind.dialect.name == "sqlite":
-            user = V2User(id=user_id, external_id=f"test-user-{user_id}")
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
             db.add(user)
             db.commit()
             db.refresh(user)
@@ -1162,7 +1162,7 @@ class VaultService:
                 q = q.with_for_update()
             user = q.one_or_none()
             if user is None and db.bind and db.bind.dialect.name == "sqlite":
-                user = V2User(id=user_id, external_id=f"test-user-{user_id}")
+                user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
                 db.add(user)
                 db.commit()
                 db.refresh(user)

@@ -260,8 +260,8 @@ def list_admin_withdrawals(
             risk = "MEDIUM"
 
         safe_nickname = "Unknown"
-        if r.user and (r.V2User.nickname is not None):
-            safe_nickname = r.V2User.nickname or "(미설정)"
+        if r.user and (r.user.nickname is not None):
+            safe_nickname = r.user.nickname or "(미설정)"
 
         safe_status = str(r.status or "").strip().upper()
         if safe_status not in {"PENDING", "APPROVED", "REJECTED"}:

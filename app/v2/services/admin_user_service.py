@@ -60,10 +60,9 @@ class V2AdminUserService:
 
         user = V2User(
             id=payload.user_id,
-            external_id=payload.cc_id,
+            cc_id=payload.cc_id,
             nickname=nickname,
             level=payload.level or 1,
-            xp=payload.xp or 0,
             status=payload.status or "ACTIVE",
             telegram_id=payload.telegram_id,
             telegram_username=telegram_username,
@@ -93,8 +92,8 @@ class V2AdminUserService:
                 except Exception:
                     pass
 
-        external_id = (getattr(user, "external_id", "") or "").strip()
-        m = _TG_EXTERNAL_ID_RE.match(external_id)
+        cc_id = (getattr(user, "cc_id", "") or "").strip()
+        m = _TG_EXTERNAL_ID_RE.match(cc_id)
         if m:
             try:
                 return int(m.group(1))
@@ -107,7 +106,7 @@ class V2AdminUserService:
         admin_profile = getattr(user, "admin_profile", None)
         return AdminUserSummary(
             id=int(user.id),
-            cc_id=str(user.external_id),
+            cc_id=str(user.cc_id),
             nickname=(user.nickname or None),
             tg_id=V2AdminUserService.derive_tg_id(user),
             tg_username=(user.telegram_username or None),
@@ -146,7 +145,7 @@ class V2AdminUserService:
         if match: return int(match)
 
         # 3. External ID
-        match = db.execute(select(V2User.id).where(func.lower(V2User.external_id) == func.lower(clean))).scalar_one_or_none()
+        match = db.execute(select(V2User.id).where(func.lower(V2User.cc_id) == func.lower(clean))).scalar_one_or_none()
         if match: return int(match)
 
         # 4. Real Name
@@ -175,6 +174,7 @@ class V2AdminUserService:
     def delete_user(db: Session, user_id: int, *, admin_id: int = 0) -> None:
         """일반 유저 삭제 (CASCADE 의존, TeamMember만 명시 정리)"""
         from app.v2.models import TeamMember
+        from app.models.user import User
 
         v2_user = db.get(V2User, user_id)
         if not v2_user:
@@ -199,6 +199,11 @@ class V2AdminUserService:
 
         # V2 유저 테이블 삭제
         db.delete(v2_user)
+
+        # Legacy user 동시 삭제 (테스트/호환)
+        legacy_user = db.get(User, user_id)
+        if legacy_user is not None:
+            db.delete(legacy_user)
 
         V2AdminAuditService.log(
             db,
@@ -368,6 +373,12 @@ class V2AdminUserService:
 
         # Finally, delete the V2User
         db.delete(v2_user)
+
+        # Legacy user 동시 삭제 (테스트/호환)
+        from app.models.user import User
+        legacy_user = db.get(User, user_id)
+        if legacy_user is not None:
+            db.delete(legacy_user)
 
         # Safety net: sqlite FK quirks
         db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)

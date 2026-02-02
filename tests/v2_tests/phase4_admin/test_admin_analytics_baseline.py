@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from app.db.base_class import Base
 from app.models.user import User
 from app.schemas.admin_user import AdminUserCreate
+from app.v2.models.user import V2User
 from app.v2.services.admin_user_service import V2AdminUserService
 from app.v2.services.vault2_service import Vault2Service
 from app.models.vault_earn_event import VaultEarnEvent
@@ -47,7 +48,7 @@ def test_admin_user_service_crud(db_session: Session) -> None:
     user = service.create_user(db_session, payload)
     db_session.commit()
     
-    assert user.external_id == "v2_tester_01"
+    assert user.cc_id == "v2_tester_01"
     assert user.nickname == "V2Tester"
     
     # Duplicate check
@@ -76,7 +77,9 @@ def test_vault2_stats_aggregation(db_session: Session) -> None:
     
     # Create test data
     user = User(id=1, external_id="u1", vault_locked_balance=1000)
+    v2_user = V2User(id=1, cc_id="u1", vault_locked_balance=1000)
     db_session.add(user)
+    db_session.add(v2_user)
     
     event = VaultEarnEvent(
         user_id=1,

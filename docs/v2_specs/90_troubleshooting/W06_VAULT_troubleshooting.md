@@ -14,14 +14,14 @@
 
 ---
 
-## � 연관 문서
+## 🔗 연관 문서
 - [Troubleshooting 메인 (README)](./README.md)
 - [W05 (이전 주차) VAULT 리포트](./archive/weekly/W05_VAULT_troubleshooting.md)
 - [V2 Strict Vault Policy SoT](../01_core/v2_strict_vault_policy_sot_ko.md)
 
 ---
 
-## �🔍 주간 이슈 내역
+## 🔍 주간 이슈 내역
 
 ---
 

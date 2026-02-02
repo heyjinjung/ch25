@@ -8,6 +8,7 @@
 ## 요약
 | 날짜 | 이슈 | 상태 |
 |---|---|---|
+| 02-02 | Phase4 Admin 회귀 테스트 실패 (Admin/Economy/Vault/Segment) | 🔴 OPEN |
 | 01-31 | V2 로그/주문 테이블 FK 누락 | ✅ RESOLVED |
 | 01-31 | V2 도메인 FK 전체 감사 | ✅ RESOLVED |
 | 01-30 | user_activity FK 오류 | ✅ RESOLVED |
@@ -34,6 +35,58 @@
 
 ### 검증 방법
 - `SHOW CREATE TABLE v2_shop_order` 명령어 실행 시 `v2_user` 테이블 대상의 CONSTRAINT 항목이 정상 노출되는지 확인.
+
+---
+
+## 02-02 - [ADMIN/ECONOMY/Vault/Segment] Phase4 Admin 회귀 테스트 실패
+
+**우선순위**: P1
+**관련 도메인**: ADMIN, ECONOMY, VAULT, SEGMENT
+
+### 증상 정의 (에러 트리아지 체크리스트)
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | Admin API (경제/출금/권한/세그먼트), Phase4 Admin 회귀 테스트 |
+| HTTP Status | 500 (서버 에러), 200(Logic Error) |
+| 영향 범위 | 로컬 테스트 환경(Phase4 Admin 스위트) |
+| 재현 빈도 | 항상 |
+
+### 증상
+- `pytest -q tests/v2_tests/phase4_admin` 실행 시 다수 실패 (10 failed)
+- 대표 에러:
+	- `TypeError: 'external_id' is an invalid keyword argument for V2User`
+	- `AttributeError: 'VaultWithdrawalRequest' object has no attribute 'V2User'`
+	- `AssertionError` (XP/금고 잔액/세그먼트 NEW 기대값 불일치)
+- 로그:
+	- `[CircuitBreaker] Redis Error: Error 111 connecting to localhost:6379. Connection refused.`
+
+### 근거(로그/스택트레이스)
+- `app/services/vault_service.py:598`에서 `V2User(id=user_id, external_id=...)` 생성 시도 → `TypeError`
+- `app/v2/api/admin/economy_routes.py:263`에서 `r.V2User` 접근 → `AttributeError`
+- 테스트 실패 위치:
+	- `tests/v2_tests/phase4_admin/test_admin_analytics_baseline.py`
+	- `tests/v2_tests/phase4_admin/test_admin_economy_routes_coverage_extended.py`
+	- `tests/v2_tests/phase4_admin/test_admin_ops_security.py`
+	- `tests/v2_tests/phase4_admin/test_admin_user_routes_coverage_extended.py`
+	- `tests/v2_tests/phase4_admin/test_economy_coverage.py`
+
+### 원인 분석 (증거 기반)
+- **모델 필드 불일치**: `V2User` 모델에 `external_id` 필드가 없는데 생성자에 전달됨.
+- **관계 속성 접근 오류**: `VaultWithdrawalRequest`에서 `V2User` 관계 속성 미정의 상태에서 접근.
+- **로직 기대값 불일치**: XP/금고 잔액/세그먼트 결과가 테스트 기대값과 불일치.
+- **환경 의존성**: Redis 미가동으로 인한 Circuit Breaker 경고 출력.
+
+### 즉시 조치
+- 테스트 실패 로그와 스택트레이스 기록 (본 문서).
+
+### 다음 조치 (TODO)
+- `V2User` 생성 경로에서 필드 정합성 점검 (external_id 사용 여부).
+- 출금 리스트 조회 로직에서 관계 속성 명칭/조인 관계 확인.
+- XP/금고/세그먼트 로직 기대값과 최신 SoT 정합성 재검증.
+- 테스트 환경 Redis 의존성 분리 또는 테스트 설정 정리.
+
+### 검증 방법
+- 수정 후 `docker compose exec backend pytest -q tests/v2_tests/phase4_admin` 재실행.
 
 ---
 
@@ -124,3 +177,4 @@ V2User 생성 시 `user` 테이블에 해당 ID 없음
 - 2026-02-02: FK 명칭 충돌 및 컬럼 누락, 환경 변수 불일치 해결 내역 추가 (Antigravity)
 - 2026-02-02: Alembic Legacy 대응 사례 추가 (Antigravity)
 - 2026-02-02: DB 마이그레이션(1091/1452) 및 스키마 장애 조치 내역 추가 (Antigravity)
+- 2026-02-02: Phase4 Admin 회귀 테스트 실패 기록 추가 (GitHub Copilot)

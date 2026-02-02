@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.security import hash_password
 from app.services.audit_service import AuditService
 from app.v2.models.user import V2User
+from app.models.user import User
 from app.models.team_battle import TeamMember
 from app.models.season_pass import SeasonPassConfig, SeasonPassLevel, SeasonPassProgress
 from app.schemas.admin_user import AdminUserCreate, AdminUserUpdate
@@ -123,7 +124,7 @@ class AdminUserService:
                     val_clean = val.lstrip("@")
                     stmt = stmt.where(V2User.telegram_username.ilike(f"%{val_clean}%"))
                 elif prefix == "code":
-                    stmt = stmt.where(V2User.external_id.ilike(vterm))
+                    stmt = stmt.where(V2User.cc_id.ilike(vterm))
                 elif prefix == "real":
                     stmt = stmt.where(AdminUserProfile.real_name.ilike(vterm))
                 elif prefix == "phone":
@@ -138,7 +139,7 @@ class AdminUserService:
                     conditions = [
                         V2User.telegram_username.ilike(term),
                         V2User.nickname.ilike(term),
-                        V2User.external_id.ilike(term),
+                        V2User.cc_id.ilike(term),
                         AdminUserProfile.real_name.ilike(term),
                         AdminUserProfile.tags.ilike(term),
                     ]
@@ -151,7 +152,7 @@ class AdminUserService:
                 conditions = [
                     V2User.telegram_username.ilike(term),
                     V2User.nickname.ilike(term),
-                    V2User.external_id.ilike(term),
+                    V2User.cc_id.ilike(term),
                     AdminUserProfile.real_name.ilike(term),
                     AdminUserProfile.tags.ilike(term),
                 ]
@@ -169,7 +170,7 @@ class AdminUserService:
     def create_user(db: Session, payload: AdminUserCreate) -> V2User:
         if payload.user_id is not None and db.get(V2User, payload.user_id):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="USER_ID_EXISTS")
-        if db.query(V2User).filter(V2User.external_id == payload.external_id).first():
+        if db.query(V2User).filter(V2User.cc_id == payload.cc_id).first():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
 
         # Set nickname: prefer provided nickname; else fall back to telegram_username if present; else external_id
@@ -179,16 +180,15 @@ class AdminUserService:
         elif payload.telegram_username and str(payload.telegram_username).strip():
             nickname = AdminUserService._clean_telegram_username(payload.telegram_username) or str(payload.telegram_username).strip()
         else:
-            nickname = payload.external_id
+            nickname = payload.cc_id
 
         telegram_username = AdminUserService._clean_telegram_username(getattr(payload, "telegram_username", None))
 
         user = V2User(
             id=payload.user_id,
-            external_id=payload.external_id,
+            cc_id=payload.cc_id,
             nickname=nickname,
             level=payload.level,
-            xp=payload.xp,
             status=payload.status,
             telegram_id=getattr(payload, "telegram_id", None),
             telegram_username=telegram_username,
@@ -223,14 +223,14 @@ class AdminUserService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="USER_NOT_FOUND")
 
         update_data = payload.model_dump(exclude_unset=True)
-        if "external_id" in update_data:
+        if "cc_id" in update_data:
             if (
                 db.query(V2User)
-                .filter(V2User.external_id == update_data["external_id"], V2User.id != user_id)
+                .filter(V2User.cc_id == update_data["cc_id"], V2User.id != user_id)
                 .first()
             ):
                 raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="EXTERNAL_ID_EXISTS")
-            user.external_id = update_data["external_id"]
+            user.cc_id = update_data["cc_id"]
 
         # Detection for history (UX-004)
         from app.models.user_history import UserIdentityHistory
@@ -322,6 +322,19 @@ class AdminUserService:
         for item in history_items:
             db.add(item)
 
+        # Legacy mirror (User table) for compatibility
+        legacy_user = db.get(User, user_id)
+        if legacy_user is not None:
+            if "cc_id" in update_data:
+                legacy_user.external_id = update_data["cc_id"]
+            if "nickname" in update_data:
+                legacy_user.nickname = user.nickname
+            if "level" in update_data:
+                legacy_user.level = user.level
+            if "xp" in update_data:
+                legacy_user.xp = update_data["xp"]
+            db.add(legacy_user)
+
         db.add(user)
         db.commit()
         db.refresh(user)
@@ -356,7 +369,7 @@ class AdminUserService:
 
         before = {
             "user_id": int(user.id),
-            "external_id": str(user.external_id),
+            "external_id": str(user.cc_id),
             "telegram_id": int(user.telegram_id) if user.telegram_id is not None else None,
         }
 

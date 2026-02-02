@@ -42,7 +42,8 @@ def v2_user(db_session: Session):
         id=200,
         cc_id="e2e0a701-447a-4b9e-8c5e-8b6b6c6b6c6b",
         nickname="EconomyTester",
-        vault_locked_balance=0
+        vault_locked_balance=0,
+        telegram_id=123
     )
     db_session.add(user)
     db_session.flush()
