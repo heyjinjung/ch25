@@ -59,33 +59,3 @@ class V2UserService:
             
         return user
 
-    @staticmethod
-    def ensure_legacy_user_id(db: Session, v2_user_id: int) -> int:
-        """
-        V2 유저 ID를 기반으로 레거시(User 테이블) 유저 생성을 보장함.
-        V2 Native 환경에서도 일부 기능(출금, 랭킹 등)은 레거시 User 테이블을 참조함.
-        """
-        from app.models.user import User
-        
-        # 1. 이미 존재하는지 확인
-        legacy_user = db.get(User, v2_user_id)
-        if legacy_user:
-            return int(legacy_user.id)
-            
-        # 2. V2User 정보 가져오기
-        v2_user = db.get(V2User, v2_user_id)
-        if not v2_user:
-            raise ValueError(f"V2User not found: {v2_user_id}")
-            
-        # 3. 레거시 유저 생성 (ID 공유 정책)
-        legacy_user = User(
-            id=v2_user.id,
-            external_id=v2_user.cc_id,
-            nickname=v2_user.nickname or "User",
-            status="ACTIVE",
-            vault_locked_balance=v2_user.vault_locked_balance,
-        )
-        db.add(legacy_user)
-        db.flush()
-        
-        return int(legacy_user.id)

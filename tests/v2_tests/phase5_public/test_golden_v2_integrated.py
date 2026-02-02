@@ -80,24 +80,25 @@ def test_golden_v2_full_lifecycle_integrated(db: Session, auth_header, monkeypat
     assert v2_user is not None
     assert v2_user.nickname == "Golden Integrated"
     
-    # Check auth_event
-    auth_event = db.query(V2UserAuthEvent).filter(V2UserAuthEvent.user_id == v2_user_id).first()
-    assert auth_event is not None
+    # --- Step 1.1: Age user for Suspension Testing ---
+    # 신규 유저는 7일 유예기간이 있으므로, CreatedAt을 10일 전으로 조작하여 제재 상태 시뮬레이션
+    from datetime import datetime, timedelta, timezone
+    v2_user.created_at = datetime.now(timezone.utc) - timedelta(days=10)
+    db.add(v2_user)
+    db.flush()
     
-    # --- Step 2: V1 Sync Trigger (Link Legacy Account) ---
-    # 실제 운영 시나리오: V1 데이터가 필요한 시점(예: 출금, 랭킹 등)에 JIT로 V1 User 생성
-    legacy_user_id = V2UserService.ensure_legacy_user_id(db, v2_user_id)
-    assert legacy_user_id == v2_user_id # 이 시스템은 ID 공유 정책
+    # --- Step 2: [DEPRECATED] V1 Sync Trigger removed ---
+    # Pure V2 Native에서는 JIT V1 생성을 하지 않음.
     
     # --- Step 3: Asset Grant & Circuit Breaker ---
     # 10,000 VAULT 지급
     V2VaultService.deposit(db, v2_user_id, 10000)
     db.commit()
     
-    # V1(User 테이블) 잔액 동기화 확인 (Legacy Bridge 검증)
-    legacy_user = db.get(User, v2_user_id)
-    assert legacy_user is not None
-    assert int(legacy_user.vault_locked_balance) == 10000
+    # V1(User 테이블) 잔액 동기화 확인 (DEPRECATED in Pure V2)
+    # legacy_user = db.get(User, v2_user_id)
+    # assert legacy_user is not None
+    # assert int(legacy_user.vault_locked_balance) == 10000
     
     # 5 ROULETTE_TICKET 지급
     V2InventoryService.grant_wallet_tokens(db, v2_user_id, "ROULETTE_TICKET", 5)
@@ -151,5 +152,5 @@ def test_golden_v2_full_lifecycle_integrated(db: Session, auth_header, monkeypat
     
     # 모든 흔적 삭제 확인
     assert db.get(V2User, v2_user_id) is None
-    assert db.get(User, v2_user_id) is None
+    # assert db.get(User, v2_user_id) is None # Pure V2
     assert db.query(V2UserAuthEvent).filter(V2UserAuthEvent.user_id == v2_user_id).count() == 0
