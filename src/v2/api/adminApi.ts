@@ -2428,21 +2428,28 @@ export interface CSVImportRequest {
 }
 
 export interface CSVImportResult {
-  job_id: string;
+  job_id?: string;
   total_rows: number;
-  successful_rows: number;
-  failed_rows: number;
-  skipped_rows: number;
-  duration_seconds: number;
-  // Analysis
-  total_bet: number;
-  total_payout: number;
-  win_count: number;
-  loss_count: number;
-  jackpot_count: number;
-  unique_user_count: number;
-  errors: string[];
-  warnings: string[];
+  successful_rows?: number;
+  failed_rows?: number;
+  skipped_rows?: number;
+  duration_seconds?: number;
+  // Analysis (GAME_LOG type)
+  total_bet?: number;
+  total_payout?: number;
+  win_count?: number;
+  loss_count?: number;
+  jackpot_count?: number;
+  unique_user_count?: number;
+  // HQ_MARGIN type
+  updated_count?: number;
+  created_count?: number;
+  prospective_count?: number;
+  skipped_count?: number;
+  success?: boolean;
+  // Common
+  errors?: string[];
+  warnings?: string[];
 }
 
 export const validateCSVFile = async (

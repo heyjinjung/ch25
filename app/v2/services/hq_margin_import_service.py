@@ -1,4 +1,3 @@
-from __future__ import annotations
 import csv
 import logging
 import chardet
@@ -270,7 +269,7 @@ class HQMarginImportService:
             return 0
 
     @staticmethod
-    def _classify_segment(row: dict) -> str:
+    def _classify_segment(row: Dict) -> str:
         """
         본사 마진 데이터 기반 세그먼트 분류
 

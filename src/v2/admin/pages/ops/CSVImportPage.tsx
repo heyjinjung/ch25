@@ -383,8 +383,12 @@ export default function CSVImportPage() {
                   </h2>
                   <p className="text-emerald-400/60 text-sm">
                     성공적으로{" "}
-                    {importMutation.data.successful_rows.toLocaleString()}개의
-                    기록을 시스템에 반영했습니다.
+                    {(
+                      importMutation.data.successful_rows ??
+                      importMutation.data.updated_count ??
+                      0
+                    ).toLocaleString()}
+                    개의 기록을 시스템에 반영했습니다.
                   </p>
                 </div>
               </div>
@@ -395,8 +399,10 @@ export default function CSVImportPage() {
                   </p>
                   <p className="text-xl font-bold">
                     {(
-                      (importMutation.data.successful_rows /
-                        importMutation.data.total_rows) *
+                      ((importMutation.data.successful_rows ??
+                        importMutation.data.updated_count ??
+                        0) /
+                        (importMutation.data.total_rows || 1)) *
                       100
                     ).toFixed(1)}
                     %
@@ -407,107 +413,188 @@ export default function CSVImportPage() {
                     총 소요 시간
                   </p>
                   <p className="text-xl font-bold">
-                    {importMutation.data.duration_seconds.toFixed(1)}초
+                    {(importMutation.data.duration_seconds ?? 0).toFixed(1)}초
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Analysis Grid */}
-            <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
-              <BarChart3 className="w-5 h-5 text-indigo-400" /> 오늘 가져온
-              데이터 요약
-            </h3>
+            {/* HQ_MARGIN 타입인 경우 다른 요약 표시 */}
+            {importType === "HQ_MARGIN" ? (
+              <>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
+                  <BarChart3 className="w-5 h-5 text-indigo-400" /> 세그먼트
+                  임포트 요약
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <AnalyticsCard
+                    label="총 처리 행"
+                    value={`${(importMutation.data.total_rows ?? 0).toLocaleString()} 행`}
+                    icon={FileText}
+                    subtext="CSV 파일의 총 데이터 행 수"
+                  />
+                  <AnalyticsCard
+                    label="업데이트됨"
+                    value={`${(importMutation.data.updated_count ?? 0).toLocaleString()} 건`}
+                    color="text-emerald-400"
+                    icon={CheckCircle2}
+                    subtext="기존 세그먼트 업데이트"
+                  />
+                  <AnalyticsCard
+                    label="신규 생성"
+                    value={`${(importMutation.data.created_count ?? 0).toLocaleString()} 건`}
+                    icon={Users}
+                    subtext="새로 생성된 세그먼트"
+                  />
+                  <AnalyticsCard
+                    label="잠재 유저"
+                    value={`${(importMutation.data.prospective_count ?? 0).toLocaleString()} 건`}
+                    icon={ArrowRight}
+                    color="text-amber-400"
+                    subtext="매칭 안된 잠재 유저"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* GAME_LOG 타입 - 기존 분석 그리드 */}
+                <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
+                  <BarChart3 className="w-5 h-5 text-indigo-400" /> 오늘 가져온
+                  데이터 요약
+                </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <AnalyticsCard
-                label="총 베팅 규모"
-                value={`₩ ${importMutation.data.total_bet.toLocaleString()}`}
-                icon={DollarSign}
-                subtext="가져온 데이터의 총 베팅합"
-              />
-              <AnalyticsCard
-                label="총 당첨 규모"
-                value={`₩ ${importMutation.data.total_payout.toLocaleString()}`}
-                color="text-emerald-400"
-                icon={PieChart}
-                subtext="유저들에게 지급된 총 당첨금"
-              />
-              <AnalyticsCard
-                label="참여 유저 수"
-                value={`${importMutation.data.unique_user_count.toLocaleString()} 명`}
-                icon={Users}
-                subtext="기록에 포함된 실제 유저 수"
-              />
-              <AnalyticsCard
-                label="본사 예상 수익"
-                value={`₩ ${(importMutation.data.total_bet - importMutation.data.total_payout).toLocaleString()}`}
-                icon={ArrowRight}
-                color={
-                  importMutation.data.total_bet -
-                    importMutation.data.total_payout >=
-                  0
-                    ? "text-indigo-400"
-                    : "text-red-400"
-                }
-                subtext="베팅액 - 당첨금액"
-              />
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <AnalyticsCard
+                    label="총 베팅 규모"
+                    value={`₩ ${(importMutation.data.total_bet ?? 0).toLocaleString()}`}
+                    icon={DollarSign}
+                    subtext="가져온 데이터의 총 베팅합"
+                  />
+                  <AnalyticsCard
+                    label="총 당첨 규모"
+                    value={`₩ ${(importMutation.data.total_payout ?? 0).toLocaleString()}`}
+                    color="text-emerald-400"
+                    icon={PieChart}
+                    subtext="유저들에게 지급된 총 당첨금"
+                  />
+                  <AnalyticsCard
+                    label="참여 유저 수"
+                    value={`${(importMutation.data.unique_user_count ?? 0).toLocaleString()} 명`}
+                    icon={Users}
+                    subtext="기록에 포함된 실제 유저 수"
+                  />
+                  <AnalyticsCard
+                    label="본사 예상 수익"
+                    value={`₩ ${((importMutation.data.total_bet ?? 0) - (importMutation.data.total_payout ?? 0)).toLocaleString()}`}
+                    icon={ArrowRight}
+                    color={
+                      (importMutation.data.total_bet ?? 0) -
+                        (importMutation.data.total_payout ?? 0) >=
+                      0
+                        ? "text-indigo-400"
+                        : "text-red-400"
+                    }
+                    subtext="베팅액 - 당첨금액"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-              <Card className="bg-[#18181B] border-white/5">
-                <CardHeader>
-                  <CardTitle className="text-sm font-bold">
-                    결과 분포 (Distribution)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <DistributionBar
-                      label="WIN"
-                      count={importMutation.data.win_count}
-                      total={importMutation.data.successful_rows}
-                      color="bg-emerald-500"
-                    />
-                    <DistributionBar
-                      label="LOSE"
-                      count={importMutation.data.loss_count}
-                      total={importMutation.data.successful_rows}
-                      color="bg-zinc-700"
-                    />
-                    <DistributionBar
-                      label="JACKPOT"
-                      count={importMutation.data.jackpot_count}
-                      total={importMutation.data.successful_rows}
-                      color="bg-amber-500"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <Card className="bg-[#18181B] border-white/5">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-bold">
+                        결과 분포 (Distribution)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="space-y-4">
+                        <DistributionBar
+                          label="WIN"
+                          count={importMutation.data.win_count ?? 0}
+                          total={importMutation.data.successful_rows ?? 1}
+                          color="bg-emerald-500"
+                        />
+                        <DistributionBar
+                          label="LOSE"
+                          count={importMutation.data.loss_count ?? 0}
+                          total={importMutation.data.successful_rows ?? 1}
+                          color="bg-zinc-700"
+                        />
+                        <DistributionBar
+                          label="JACKPOT"
+                          count={importMutation.data.jackpot_count ?? 0}
+                          total={importMutation.data.successful_rows ?? 1}
+                          color="bg-amber-500"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="bg-[#18181B] border-white/5">
-                <CardHeader>
-                  <CardTitle className="text-sm font-bold flex justify-between items-center">
-                    <span>오류 및 경고</span>
-                    <Badge
-                      variant="outline"
-                      className="border-white/10 text-zinc-500"
-                    >
-                      Total:{" "}
-                      {importMutation.data.failed_rows +
-                        importMutation.data.skipped_rows}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {importMutation.data.errors.length === 0 &&
-                  importMutation.data.warnings.length === 0 ? (
-                    <div className="py-10 text-center text-zinc-600 text-sm">
-                      발견된 오류나 경고가 없습니다.
-                    </div>
-                  ) : (
+                  <Card className="bg-[#18181B] border-white/5">
+                    <CardHeader>
+                      <CardTitle className="text-sm font-bold flex justify-between items-center">
+                        <span>오류 및 경고</span>
+                        <Badge
+                          variant="outline"
+                          className="border-white/10 text-zinc-500"
+                        >
+                          Total:{" "}
+                          {(importMutation.data.failed_rows ?? 0) +
+                            (importMutation.data.skipped_rows ?? 0)}
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {(importMutation.data.errors?.length ?? 0) === 0 &&
+                      (importMutation.data.warnings?.length ?? 0) === 0 ? (
+                        <div className="py-10 text-center text-zinc-600 text-sm">
+                          발견된 오류나 경고가 없습니다.
+                        </div>
+                      ) : (
+                        <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
+                          {(importMutation.data.errors ?? []).map((err, i) => (
+                            <div
+                              key={i}
+                              className="p-2 rounded bg-red-500/5 border border-red-500/10 text-[10px] text-red-400 font-mono"
+                            >
+                              [ERR] {err}
+                            </div>
+                          ))}
+                          {(importMutation.data.warnings ?? []).map(
+                            (wrn, i) => (
+                              <div
+                                key={i}
+                                className="p-2 rounded bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400 font-mono"
+                              >
+                                [WRN] {wrn}
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            )}
+
+            {/* 오류/경고 섹션 - HQ_MARGIN 타입도 표시 */}
+            {importType === "HQ_MARGIN" &&
+              (importMutation.data.errors?.length ?? 0) > 0 && (
+                <Card className="bg-[#18181B] border-white/5 mt-6">
+                  <CardHeader>
+                    <CardTitle className="text-sm font-bold flex justify-between items-center">
+                      <span>오류 및 경고</span>
+                      <Badge
+                        variant="outline"
+                        className="border-white/10 text-zinc-500"
+                      >
+                        Total: {importMutation.data.errors?.length ?? 0}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-2 max-h-[160px] overflow-y-auto pr-2 custom-scrollbar">
-                      {importMutation.data.errors.map((err, i) => (
+                      {(importMutation.data.errors ?? []).map((err, i) => (
                         <div
                           key={i}
                           className="p-2 rounded bg-red-500/5 border border-red-500/10 text-[10px] text-red-400 font-mono"
@@ -515,19 +602,10 @@ export default function CSVImportPage() {
                           [ERR] {err}
                         </div>
                       ))}
-                      {importMutation.data.warnings.map((wrn, i) => (
-                        <div
-                          key={i}
-                          className="p-2 rounded bg-amber-500/5 border border-amber-500/10 text-[10px] text-amber-400 font-mono"
-                        >
-                          [WRN] {wrn}
-                        </div>
-                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
+              )}
 
             <div className="flex justify-center pt-8">
               <Button
