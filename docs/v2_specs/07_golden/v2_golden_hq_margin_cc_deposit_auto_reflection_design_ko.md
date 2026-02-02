@@ -1,9 +1,9 @@
 문서 타입: 설계
-버전: v1.1
+버전: v2.0
 작성일: 2026-02-03
 작성자: GitHub Copilot
 대상: 백엔드/운영/어드민
-상태: SoT
+상태: 구현완료
 
 ---
 
@@ -500,3 +500,11 @@ def link_unmatched_deposit(db, unmatched_id: int, user_id: int, admin_id: int):
 
 ## 13. 변경 이력
 - v1.0 (2026-02-03, GitHub Copilot): HQ Margin CSV → CC 입금 자동 반영 상세 설계 초안
+- v1.1 (2026-02-03, GitHub Copilot): 설계 섹션 1-8 상세 확장, 합의 사항 반영
+- **v2.0 (2026-02-03, GitHub Copilot): 기능 구현 완료**
+  - Alembic 마이그레이션: `20260203_1000_add_v2_external_deposit_unmatched`
+  - SQLAlchemy 모델: `V2ExternalDepositUnmatched`
+  - 서비스: `UnmatchedDepositLogService`
+  - API 라우터: `/admin/deposits/unmatched` (조회/매칭/무시/통계/정리)
+  - HQMarginImportService 확장: CC Deposit 자동 반영 + 미매칭 로그 저장
+  - Celery Beat 태스크: `cleanup_old_unmatched_logs_task` (매일 02:00 KST)
