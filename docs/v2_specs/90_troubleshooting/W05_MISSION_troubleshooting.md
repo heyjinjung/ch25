@@ -15,6 +15,8 @@
 | 02-01 | 신규 유저 미션 타이머 UX 및 기간 정책 수정 + 텔레그램 채널 연동 UX | ✅ RESOLVED |
 | 02-02 | 미션 페이지 빈 화면 (미션 API 401) | ⚪ 오탐(환경 경고) |
 | 02-02 | 신규 유저 타이머 미노출/채널 가입 버튼 비활성 | ✅ RESOLVED |
+| 02-02 | 텔레그램 채널 인증 미션 진행 미반영 | ✅ RESOLVED |
+| 02-02 | 연속출석(스트릭) 보상 클레임 불가 | ✅ RESOLVED |
 | 01-20 | [MISSION] 미션 rewardType Enum 불일치 (missions PUT 500) | ✅ FIXED |
 
 ---
@@ -93,6 +95,71 @@ GET /login 200 (referrer: /v2/missions)
 1. 신규 유저 계정으로 `/v2/missions?cat=NEW_USER` 진입
 2. FAB 타이머가 노출되는지 확인
 3. 채널 가입형 미션 버튼이 "채널 가입" → "가입 확인" 단계로 정상 전환되는지 확인
+
+---
+
+## 02-02 - [MISSION/FRONTEND] 연속출석(스트릭) 보상 클레임 불가
+
+**우선순위**: P1
+**관련 도메인**: MISSION, FRONTEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 연속출석(스트릭) 보상 클레임 |
+| **HTTP Status** | 200/미호출 (Logic Error) |
+| **영향 범위** | 스트릭 보상 클레임 전체 |
+| **재현 빈도** | 항상 |
+
+### 증거(로그)
+- 운영 로그에서 `/api/v2/mission/streak/claim` 호출 로그가 확인되지 않음(최근 500라인 기준).
+
+### 근본 원인 (증거 기반)
+- 스트릭 모달/클레임 플로우가 `V2AppHeader`에서 제거되어 클레임 API 호출 경로 자체가 없음.
+
+### 해결 방법
+#### Immediate Fix
+- `src/v2/components/layout/V2AppHeader.tsx`에 스트릭 모달 노출 로직 복구:
+   - `useV2Missions("DAILY")`로 `streak_info` 수신
+   - `useModalVisibility()` 기반 `attendance_streak_enabled` 체크
+   - `showModalOverride === "STREAK_ATTENDANCE"` 또는 `claimable_rewards` 감지 시 모달 오픈
+   - `V2StreakModalContainer` 렌더링
+
+### 검증 방법
+1. 스트릭 보상 가능 유저로 접속
+2. 스트릭 모달 자동 노출 확인
+3. "오늘의 보상 받기" 클릭 → `/api/v2/mission/streak/claim` 호출 로그 확인
+
+---
+
+## 02-02 - [MISSION/FRONTEND] 텔레그램 채널 인증 미션 진행 미반영
+
+**우선순위**: P1
+**관련 도메인**: MISSION, FRONTEND
+
+### 증상 정의 (Symptom Abstraction)
+| 항목 | 내용 |
+|---|---|
+| **대상 기능** | 신규 유저 텔레그램 채널 인증 미션 |
+| **HTTP Status** | 200 (Logic Error) |
+| **영향 범위** | 채널 가입 인증 미션 진행도 |
+| **재현 빈도** | 항상 |
+
+### 증거(로그)
+- `/api/viral/verify/channel` 200 OK
+- 미션 진행도는 `/api/v2/mission/?category=NEW_USER`에서 변화 없음
+
+### 근본 원인 (증거 기반)
+- 채널 인증 API가 레거시 `MissionService`를 사용하여 V2 미션 진행도가 갱신되지 않음.
+
+### 해결 방법
+#### Immediate Fix
+- `app/api/routes/viral.py`에서 `V2MissionService`로 전환해 V2 미션 진행 업데이트 수행.
+
+### 검증 방법
+1. 텔레그램 웹뷰에서 채널 가입 → "가입 확인" 클릭
+2. `/api/viral/verify/channel` 200 OK 확인
+3. `/api/v2/mission/?category=NEW_USER`에서 해당 미션 `progress.current_value` 증가 확인
 
 ---
 

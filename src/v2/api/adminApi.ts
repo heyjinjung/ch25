@@ -2455,7 +2455,6 @@ export const validateCSVFile = async (
   const response = await v2Client.post<CSVImportValidateResponse>(
     "/api/v2/admin/csv-import/validate",
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return response.data;
 };
@@ -2468,7 +2467,6 @@ export const uploadCSVFile = async (
   const response = await v2Client.post<CSVImportUploadResponse>(
     "/api/v2/admin/csv-import/upload",
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return response.data;
 };

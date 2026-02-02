@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.v2.api import deps
 from app.v2.models.user import V2User
 from app.services.mission_service import MissionService
+from app.v2.services.mission_service import V2MissionService
 from app.services.notification_service import NotificationService
 from app.core.config import get_settings
 
@@ -56,9 +57,9 @@ def verify_channel(
         return {"success": False, "message": "채널 가입이 확인되지 않았습니다. 가입 후 다시 시도해주세요."}
 
     # 2. Update Mission Progress (Idempotency is handled inside MissionService.update_progress)
-    ms = MissionService(db)
-    # JOIN_CHANNEL matches aliases in MissionService
-    updated = ms.update_progress(current_user.id, "JOIN_CHANNEL", 1)
+    # V2 미션 진행 업데이트 (V2User 기반)
+    v2_ms = V2MissionService(db)
+    updated = v2_ms.update_progress(current_user.id, "JOIN_CHANNEL", 1)
     
     if updated:
         logger.info(f"[VIRAL_VERIFY] User {current_user.id} verified for channel {target_channel}")
