@@ -43,18 +43,18 @@ DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
         },
     },
     {
-        "name": "기본: WHALE (7일 입금 300만+)",
+        "name": "기본: WHALE (7일 입금 500만+)",
         "segment": "WHALE",
         "priority": 5,
         "enabled": True,
-        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 3000000},
+        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 5000000},
     },
     {
-        "name": "기본: VIP (7일 입금 50만+)",
+        "name": "기본: VIP (7일 입금 300만+)",
         "segment": "VIP",
         "priority": 10,
         "enabled": True,
-        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 500000},
+        "condition_json": {"field": "deposit_amount", "op": ">=", "value": 3000000},
     },
     {
         "name": "기본: AT_RISK (최근활동 7일+)",
