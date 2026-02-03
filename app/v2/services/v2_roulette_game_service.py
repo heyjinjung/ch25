@@ -32,6 +32,7 @@ from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.mission_service import V2MissionService
 from app.v2.models.v2_roulette import V2RouletteConfig, V2RouletteLog, V2RouletteSegment
 from app.v2.services.game_config_service import V2GameConfigService
+from app.v2.models.user import V2User
 
 
 _KST = ZoneInfo("Asia/Seoul")
@@ -356,6 +357,28 @@ class V2RouletteGameService:
                 reward_amount=reward_amount,
                 meta={"reason": "v2_roulette_spin", "segment_id": chosen.id},
             )
+
+        # === 🔴 Real-time Reward Notification (Jackpot) ===
+        try:
+            is_jackpot = (reward_type in ["DIAMOND_KEY", "GOLD_KEY"]) or (
+                reward_type in ["POINT", "CC_POINT"] and reward_amount >= 10000
+            )
+            
+            if is_jackpot:
+                # 텔레그램 ID 조회를 위해 유저 로드
+                user = db.get(V2User, user_id)
+                if user and user.telegram_id:
+                    msg = (
+                        f"🎰 **JACKPOT!!**\n\n"
+                        f"축하합니다! [{chosen.label}]에 당첨되셨습니다!\n"
+                        f"지금 바로 인벤토리를 확인해보세요. ✨"
+                    )
+                    # Sync 컨텍스트에서 Async 함수 호출을 위해 비동기 루프 스케줄링 필요하지만,
+                    # 서비스 계층에서는 로직만 정의하고 라우터/워커 위임이 원칙.
+                    # 여기서는 개념 증명(POC) 코드로 남겨둡니다.
+                    pass
+        except Exception:
+            pass
 
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.ROULETTE.value, today=today)
         log_game_play(

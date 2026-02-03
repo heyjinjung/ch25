@@ -33,3 +33,31 @@ def notify_admin_action(admin_id: int, action: str, details: str):
     """Notify when an admin changes sensitive configurations."""
     msg = f"⚙️ **Admin Action**\n- AdminID: `{admin_id}`\n- Action: `{action}`\n- Details: `{details}`"
     send_ops_notification(msg, channel="admin")
+
+async def send_telegram_user_message(user_id: int, text: str) -> bool:
+    """
+    Send a direct message to a specific Telegram user via the Bot API.
+    Used for real-time reward notifications and alerts.
+    """
+    settings = get_settings()
+    if not settings.telegram_bot_token:
+        logger.warning("[TG-NOTIFY] Bot token not configured, skipping message.")
+        return False
+
+    url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
+    payload = {
+        "chat_id": user_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            res = await client.post(url, json=payload, timeout=5.0)
+            if res.status_code != 200:
+                logger.error(f"[TG-NOTIFY] Failed to send to {user_id}: {res.text}")
+                return False
+            return True
+    except Exception as e:
+        logger.error(f"[TG-NOTIFY] Exception sending to {user_id}: {e}")
+        return False
