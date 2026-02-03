@@ -1,0 +1,16 @@
+file,chat_name,text,sentiment,nouns,loss_aversion,social_proof
+result.json,최재훈 / persipic,안녕하세요,neutral,안녕하세요,0,0
+result.json,최재훈 / persipic,안녕하세요!,neutral,안녕하세요,0,0
+result.json,최재훈 / persipic,가입시 닉넴/성함,neutral,"가입시, 닉넴, 성함",0,0
+result.json,최재훈 / persipic,알려주시면 빠르게 소통 도와드릴게요,neutral,"알려주시면, 빠르게, 소통, 도와드릴게요",0,0
+result.json,최재훈 / persipic,persipic 최재훈,neutral,최재훈,0,0
+result.json,최재훈 / persipic,"넵! 자기님이시구낭 ㅠㅠ 반갑습니다
+제가 어제 새벽에 대응 못해드려서 입플도 못 챙기셨던거 같아서
+부랴부랴 아침에 전화드렸어요",neutral,"자기님이시구낭, 반갑습니다, 제가, 어제, 새벽에, 대응, 못해드려서, 입플도, 챙기셨던거, 같아서, 부랴부랴, 아침에, 전화드렸어요",0,0
+result.json,최재훈 / persipic,아 네네 저도 문자보고 가입한거라 잘몰랐습니다,neutral,"네네, 저도, 문자보고, 가입한거라, 잘몰랐습니다",0,0
+result.json,최재훈 / persipic,제가 소액베터인데 새벽에 좀 많이 죽었네요ㅜ,neutral,"제가, 소액베터인데, 새벽에, 많이, 죽었네요",0,0
+result.json,최재훈 / persipic,앞으로 잘 좀 부탁드립니다,neutral,"앞으로, 부탁드립니다",0,0
+result.json,최재훈 / persipic,넵 지금이라도 챙겨드릴게요!,neutral,"지금이라도, 챙겨드릴게요",0,0
+result.json,최재훈 / persipic,감사합니다,neutral,감사합니다,0,0
+result.json,최재훈 / persipic,ㅠㅠㅠ 넵넵 우선 저희 혜택/케어방안내 도와들리게요,neutral,"넵넵, 우선, 저희, 혜택, 케어방안내, 도와들리게요",0,0
+result.json,최재훈 / persipic,네네,neutral,네네,0,0

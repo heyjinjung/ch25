@@ -1,0 +1,221 @@
+{
+  "main": {
+    "id": "d81ea02d16a96c34",
+    "type": "split",
+    "children": [
+      {
+        "id": "ca24c719e0d66828",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3350c5b848e1d363",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "개선방안_1주.md",
+                "mode": "preview",
+                "source": true,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": true,
+                  "extraContext": true,
+                  "sortOrder": "alphabetical",
+                  "showSearch": true,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "개선방안_1주"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "5c74810e946da2e3",
+    "type": "split",
+    "children": [
+      {
+        "id": "2c274dca46e0ec52",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8af4447cd52aeea3",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "파일 탐색기"
+            }
+          },
+          {
+            "id": "9a534abdf1e86ff6",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "0f2326db506544f7",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "1c15f234d0904f37",
+    "type": "split",
+    "children": [
+      {
+        "id": "46dd5fcfe17f30b3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9344779e27ef04f9",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "개선방안_1주.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for 개선방안_1주"
+            }
+          },
+          {
+            "id": "051b3b213967cebd",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "개선방안_1주.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from 개선방안_1주"
+            }
+          },
+          {
+            "id": "2c8fbc0ba1514c71",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "5f7e862d293b26ba",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "ea5c6e31ee6f27ae",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "개선방안_1주.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "개선방안_1주 의 개요"
+            }
+          }
+        ],
+        "currentTab": 4
+      }
+    ],
+    "direction": "horizontal",
+    "width": 815.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:빠른 전환기 열기": false,
+      "graph:그래프 뷰 열기": false,
+      "canvas:새 캔버스 만들기": false,
+      "daily-notes:오늘의 일일 노트 열기": false,
+      "templates:템플릿 삽입": false,
+      "command-palette:명령어 팔레트 열기": false,
+      "bases:새 베이스 생성하기": false
+    }
+  },
+  "active": "3350c5b848e1d363",
+  "lastOpenFiles": [
+    "개선방안_1주기록.md",
+    "개선방안_1주.md.tmp.19072.1770115010995",
+    "개선방안_1주.md",
+    "개선방안_개요.md",
+    "개선방안1주_2주플레이북.md",
+    "실패리포트.md",
+    "개선방안_1주.md.tmp.19072.1770114795715",
+    "개선방안1주_2주플레이북.md.tmp.19072.1770114354395",
+    "개선방안_1주기록.md.tmp.19072.1770114333501",
+    "개선방안_1주.md.tmp.19072.1770114315777",
+    "개선방안1주_2주플레이북.md.tmp.19816.1770113998971",
+    "개선방안_1주기록.md.tmp.19816.1770113971338",
+    "개선방안_개요 1.md",
+    "개선방안_개요.md.tmp.19816.1770113909006",
+    "무제.base",
+    "MARKETING_w4.md",
+    "MARKETING_w3.md",
+    "MARKETING_w2.md",
+    "무제 1.base",
+    "MANUAL_OUTREACH_PLAYBOOK_W1W2_20260203.md",
+    "2026-02-03.md",
+    "Untitled.canvas"
+  ]
+}

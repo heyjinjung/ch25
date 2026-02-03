@@ -1,0 +1,13 @@
+﻿metric,value,percentage,avg_per_msg
+총 채팅 수,293,,
+총 메시지 수,24420,,
+감정_positive,864,3.5%,
+감정_negative,192,0.8%,
+감정_neutral,23364,95.7%,
+키워드_loss_aversion,728,,0.030
+키워드_social_proof,724,,0.030
+키워드_referral,1177,,0.048
+키워드_incentive,4734,,0.194
+키워드_welcome,2780,,0.114
+키워드_cta,4306,,0.176
+키워드_value_prop,1450,,0.059

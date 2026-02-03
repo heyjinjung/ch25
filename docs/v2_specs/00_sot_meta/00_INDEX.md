@@ -49,6 +49,7 @@
   - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md)
   - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [플레이 횟수 업데이트](docs/v2_specs/00_sot_meta/vault/20260127_vault_play_count_update.md) | [주사위 차감 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260127_dice_vault_deduction_fix.md)
   - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md) | [닉네임 조회 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/20260126_team_battle_nickname_lookup_update.md)
+  - **Ops/Growth**: [W1/W2 운영 자동화·트래킹](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260203_ops_marketing_w1_w2_automation_tracking.md)
 
 ## 1. 도메인별 기본 SoT (Legacy/Standard)
 - 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
@@ -186,6 +187,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.18 (2026-02-03, GitHub Copilot): W1/W2 마케팅 플랜 기반 Ops/Growth(메시지 가드레일·자동화·트래킹) learned_ 문서 추가 및 메시지 정책 SoT 보강
 - v2.17 (2026-02-03, GitHub Copilot): HQ Margin → CC 입금 자동 반영 상세 설계 문서 추가
 - v2.16 (2026-02-02, Antigravity Agent): W05 트러블슈팅 결과 기반 Core SoT 승격 및 주간 문서 아카이브 전략 적용
 - v2.15 (2026-02-02, Antigravity Agent): HQ Margin CSV 임포트 500 에러 해결 (Pandas 의존성 제거 리팩토링 & Multipart Boundary 수정)
