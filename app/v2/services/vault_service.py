@@ -480,6 +480,13 @@ class V2VaultService:
         now_dt = now or datetime.utcnow()
         eligible, user, _ = self.get_status(db, user_id, now_dt)
 
+        # 운영일(KST 09:00 리셋) 기준으로 daily_vault_spent 최신화
+        prev_reset_date = getattr(user, "vault_spent_reset_date", None)
+        V2VaultService._ensure_daily_vault_spent_reset(user, now_dt)
+        if getattr(user, "vault_spent_reset_date", None) != prev_reset_date:
+            db.add(user)
+            db.commit()
+
         locked_balance = int(getattr(user, "vault_locked_balance", 0) or 0)
         reserved_amount = self.get_withdrawal_reserved_amount(db=db, user_id=user_id)
         available_amount = max(locked_balance - reserved_amount, 0)

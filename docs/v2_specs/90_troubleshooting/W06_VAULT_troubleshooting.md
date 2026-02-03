@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 0 |
+| 해결된 이슈 | 1 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -22,6 +22,44 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-03 - VAULT/출금조건: "오늘 사용 금액" 충족 후 출금조건 갱신 안됨 (JM9567)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 출금조건 모달 갱신 (오늘 사용 금액/플레이 횟수/오늘 입금) |
+| HTTP Status | 200 (조건 미충족 표시) |
+| 영향 범위 | 특정 유저 (telegram_username=jm9567, user_id=1) |
+| 재현 빈도 | 항상 |
+
+**증거 기반 RCA**
+- 운영 서버 확인 결과, 해당 유저의 조건은 **"오늘 입금(Deposit Today)" 미충족**으로 판단됨.
+	- `daily_vault_spent=10000`, `daily_vault_spent_target=5000`
+	- `daily_play_count=66`, `daily_play_target=15`
+	- `daily_deposit_confirmed=False`
+	- `deposit_delta_today=0`
+- 금일(운영일 KST 09:00 기준) **SHOP 소비 원장(`VaultLedger.ref_type=SHOP`)이 0건**임.
+	- 따라서 “오늘 사용 금액”은 **상점 소비 기준**으로 계산되며, 게임/기타 사용은 반영되지 않음.
+
+**근거 로그/쿼리**
+- 운영 서버: `docker exec xmas-backend python` 조회
+	- `V2VaultService.get_vault_info()` 출력에서 `daily_deposit_confirmed=False` 확인
+	- `ExternalRankingDailyDepositDelta`의 `kst_date=2026-02-03` 델타 0 확인
+	- `VaultLedger(ref_type=SHOP)` 금일 기록 0건 확인
+
+**결론**
+- 출금조건 미갱신 원인은 **“오늘 입금(Deposit Today)” 조건 미충족**으로 확정.
+- “오늘 사용 금액”은 **상점 소비만 반영**되며, 게임 플레이 비용은 조건 충족으로 카운트되지 않음.
+
+**조치/안내**
+1) 오늘 입금(운영일 기준) 기록이 필요
+2) 상점(VAULT 결제) 소비가 있어야 오늘 사용 금액이 반영됨
+
+**검증 방법**
+- `GET /api/v2/vault/status`에서 `daily_deposit_confirmed=True` 확인
+- `VaultLedger(ref_type=SHOP)` 금일 기록 생성 확인
+- 출금조건 모달에서 “오늘 사용 금액/플레이 조건” 정상 갱신 확인
 
 ### 02-02 - VAULT/정책 확인: 지연 입금 선반영 XP/레벨 보상 여부
 
