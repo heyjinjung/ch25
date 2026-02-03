@@ -468,6 +468,177 @@ def link_unmatched_deposit(db, unmatched_id: int, user_id: int, admin_id: int):
 
 ---
 
+## 10.1 미매칭 유저 자동/수동 재동기화 설계 (2026-02-03 추가)
+
+### 10.1.1 문제 상황 (엣지케이스 분류)
+
+| 케이스 | 상황 | 원인 | DB 상태 |
+|--------|------|------|---------|
+| **A** | V2User.external_nickname 있음 + HQ 데이터 있음 + 미매칭 | CSV Import 후 유저 연동, 시점 차이 | `V2User.hq_segment=None`, `HQProspectiveUser.linked_user_id=None` |
+| **B** | V2User.external_nickname 있음 + HQ 데이터 없음 | 오타, HQ 미등록 | `V2User.hq_segment=None`, HQ 레코드 없음 |
+| **C** | HQ 데이터 있음 + V2User 없음 | 미니앱 미가입 | `HQProspectiveUser.is_joined=False` (기존 처리됨) |
+
+### 10.1.2 해결 방안
+
+#### 방안 1: HQ CSV Import 시 자동 재매칭 (P0, 권장)
+**구현 위치**: `hq_margin_import_service.py`
+
+```python
+def sync_pending_external_users(self, db: Session) -> dict:
+    """
+    external_nickname은 있지만 hq_segment가 없는 유저들을
+    HQ 데이터와 자동 재매칭 시도.
+    
+    케이스 A 해결: CSV Import 후 유저 연동 시점 차이
+    """
+    now = datetime.utcnow()
+    synced_count = 0
+    skipped_count = 0
+    
+    # 1. 미매칭 V2User 조회 (external_nickname 있고, hq_segment 없음)
+    pending_users = db.query(V2User).filter(
+        V2User.external_nickname.isnot(None),
+        V2User.hq_segment.is_(None)
+    ).all()
+    
+    for user in pending_users:
+        # 2. HQ 데이터에서 닉네임 매칭 (정확 일치, 대소문자 무시)
+        prospect = db.query(HQProspectiveUser).filter(
+            func.lower(HQProspectiveUser.nickname) == user.external_nickname.lower(),
+            HQProspectiveUser.linked_user_id.is_(None)  # 아직 연결 안 된 것만
+        ).first()
+        
+        if not prospect:
+            skipped_count += 1
+            continue
+        
+        # 3. 이미 다른 유저에 연결되어 있으면 스킵 (중복 방지)
+        if prospect.linked_user_id and prospect.linked_user_id != user.id:
+            logger.warning(f"[ReSync] Prospect {prospect.id} already linked to user {prospect.linked_user_id}, skip user {user.id}")
+            skipped_count += 1
+            continue
+        
+        # 4. 양방향 연결 수행
+        prospect.is_joined = True
+        prospect.linked_user_id = user.id
+        prospect.linked_at = now
+        
+        user.hq_segment = prospect.segment
+        
+        # 5. V2UserSegment 업데이트
+        segment = db.query(V2UserSegment).filter_by(user_id=user.id).first()
+        if segment:
+            segment.segment = prospect.segment
+            segment.is_synced_from_hq = True
+            segment.last_synced_at = now
+        else:
+            db.add(V2UserSegment(
+                user_id=user.id,
+                segment=prospect.segment,
+                is_synced_from_hq=True,
+                last_synced_at=now
+            ))
+        
+        # 6. CC Deposit 반영 (델타 계산 포함)
+        if prospect.total_charge and prospect.total_charge > 0:
+            payload = CCDepositCreate(
+                user_id=user.id,
+                deposit_amount=prospect.total_charge,
+                play_count=0
+            )
+            V2AdminCCDepositService.upsert_many(db, [payload])
+        
+        synced_count += 1
+        logger.info(f"[ReSync] Auto-linked user {user.id} ({user.external_nickname}) to prospect {prospect.id}, segment={prospect.segment}")
+    
+    return {
+        "synced": synced_count,
+        "skipped": skipped_count,
+        "total_pending": len(pending_users)
+    }
+```
+
+**호출 시점**: `import_hq_margin_csv()` 완료 직후
+
+#### 방안 2: 어드민 "재동기화" 버튼 (P1)
+**구현 위치**: 
+- API: `app/v2/api/admin/prospect_routes.py`
+- UI: `src/v2/admin/pages/prospect/ProspectLinkingPage.tsx`
+
+**API 설계**:
+```
+POST /api/v2/admin/prospect/sync-pending-users
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "synced": 3,
+  "skipped": 1,
+  "total_pending": 4,
+  "details": [
+    {"user_id": 8, "nickname": "참새참새", "segment": "COMMON", "total_charge": 150000}
+  ]
+}
+```
+
+### 10.1.3 중복 방지 로직 (Critical)
+
+| 체크 포인트 | 로직 | 처리 |
+|------------|------|------|
+| **HQ 중복 연결 방지** | `prospect.linked_user_id is not None` | 이미 연결된 HQ 데이터는 스킵 |
+| **V2User 중복 연결 방지** | `user.hq_segment is not None` | 이미 세그먼트 설정된 유저는 스킵 |
+| **델타 중복 계산 방지** | `upsert_many` 내부 `prev_deposit` 비교 | 동일 금액이면 delta=0, 처리 스킵 |
+| **XP 중복 지급 방지** | `deposit_steps = delta // 100,000` | delta 기반 계산, 동일 금액 재처리 시 0 |
+| **미션 중복 진행 방지** | `delta > 0` 조건 | 델타 없으면 미션 업데이트 스킵 |
+
+### 10.1.4 실행 순서
+
+```
+[HQ CSV Import 시작]
+    ↓
+[1. 기존 로직: 행별 유저 매칭 + 세그먼트 업데이트]
+    ↓
+[2. 신규 로직: sync_pending_external_users() 호출]
+    ↓ 케이스 A 유저 발견
+[3. 양방향 연결 (HQProspectiveUser ↔ V2User)]
+    ↓
+[4. CC Deposit 처리 (델타 계산 → 금고/XP/미션)]
+    ↓
+[Import 완료 + 동기화 결과 반환]
+```
+
+### 10.1.5 어드민 UI 설계
+
+**위치**: 잠재유저 페이지 (`ProspectLinkingPage.tsx`)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ [탭] HQ 잠재 유저 | 연결된 유저 관리 | [NEW] 미동기화 유저     │
+├──────────────────────────────────────────────────────────────┤
+│ ⚠️ 외부 닉네임은 설정되었으나 HQ 세그먼트가 없는 유저: 3명      │
+│                                                              │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ ID │ V2 닉네임  │ 외부 닉네임  │ HQ 매칭 후보        │ 액션 │ │
+│ ├────┼───────────┼─────────────┼───────────────────┼──────┤ │
+│ │ 8  │ 참새참새   │ 참새참새    │ ✅ 참새참새 (COMMON) │ 동기화 │ │
+│ │ 11 │ 지민이공식 │ 지민공식    │ ❌ 없음             │ 수정  │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                              │
+│ [🔄 일괄 동기화] - 케이스 A 유저 전체 자동 매칭               │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### 10.1.6 검증 시나리오
+
+- [ ] **케이스 A**: 참새참새 (V2User.external_nickname="참새참새", HQ 존재) → 자동 동기화 후 `hq_segment="COMMON"` 설정
+- [ ] **케이스 B**: 지민공식 (HQ에 없음) → 스킵, 어드민 수동 수정 필요
+- [ ] **중복 방지**: 이미 연결된 HQ 데이터에 다른 유저 연결 시도 → 스킵
+- [ ] **델타 중복**: 동일 금액 재처리 → delta=0, XP/미션 변동 없음
+
+---
+
 ## 11. 검증 시나리오
 - [ ] 신규 유저 0 → 100,000: 금고 +100,000, 일별 델타 +100,000, XP 지급
 - [ ] 100,000 → 100,000: 변동 없음, 델타 미생성
@@ -508,3 +679,15 @@ def link_unmatched_deposit(db, unmatched_id: int, user_id: int, admin_id: int):
   - API 라우터: `/admin/deposits/unmatched` (조회/매칭/무시/통계/정리)
   - HQMarginImportService 확장: CC Deposit 자동 반영 + 미매칭 로그 저장
   - Celery Beat 태스크: `cleanup_old_unmatched_logs_task` (매일 02:00 KST)
+- **v2.1 (2026-02-03, GitHub Copilot): 미매칭 유저 재동기화 설계 추가**
+  - 섹션 10.1: 엣지케이스 분류 (케이스 A/B/C)
+  - 방안 1: HQ CSV Import 시 자동 재매칭 (`sync_pending_external_users`)
+  - 방안 2: 어드민 "재동기화" 버튼 (`POST /api/v2/admin/prospect/sync-pending-users`)
+  - 중복 방지 로직: HQ 중복 연결, V2User 중복 연결, 델타/XP/미션 중복 처리 방지
+- **v2.2 (2026-02-03, GitHub Copilot): 구현 완료**
+  - 백엔드 구현: `HQMarginImportService.sync_pending_external_users()` 함수
+  - CSV Import 자동 호출 통합: `import_hq_margin_csv()` 완료 직후 자동 실행
+  - API 엔드포인트: `GET /api/v2/admin/prospect/pending-sync-users`, `POST /api/v2/admin/prospect/sync-pending-users`
+  - 프론트엔드 구현: `ProspectLinkingPage.tsx`에 "미동기화 유저" 탭 추가
+    - 미동기화 유저 목록 표시 (HQ 매칭 가능 여부 표시)
+    - "일괄 동기화" 버튼 추가

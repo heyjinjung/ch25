@@ -296,6 +296,16 @@ class HQMarginImportService:
                         logger.error(f"CC Deposit chunk failed: {e}")
                         errors.append(f"CC Deposit batch error: {str(e)}")
 
+            # ========== 미매칭 유저 자동 재동기화 (방안 1) ==========
+            # external_nickname은 있지만 hq_segment 없는 유저들을 HQ 데이터와 재매칭
+            try:
+                resync_result = HQMarginImportService.sync_pending_external_users(db)
+                logger.info(f"[ReSync] Auto-sync result: {resync_result}")
+            except Exception as e:
+                logger.error(f"[ReSync] Auto-sync failed: {e}")
+                warnings.append(f"Auto-resync failed: {str(e)}")
+                resync_result = {"synced": 0, "skipped": 0, "total_pending": 0}
+
             db.commit()
 
             V2AdminAuditService.log(
@@ -315,15 +325,18 @@ class HQMarginImportService:
                         "skipped": skipped_count,
                         "cc_deposit_reflected": cc_deposit_count,
                         "unmatched_logged": unmatched_count,
+                        "resync_synced": resync_result.get("synced", 0),
+                        "resync_skipped": resync_result.get("skipped", 0),
                     }
                 },
             )
 
             logger.info(
                 "HQ Margin CSV import completed: total=%d, updated=%d, created=%d, "
-                "prospective=%d, cc_deposit=%d, unmatched=%d",
+                "prospective=%d, cc_deposit=%d, unmatched=%d, resync_synced=%d",
                 total_rows, updated_count, created_count, 
-                prospective_count, cc_deposit_count, unmatched_count
+                prospective_count, cc_deposit_count, unmatched_count,
+                resync_result.get("synced", 0)
             )
 
             return {
@@ -335,6 +348,7 @@ class HQMarginImportService:
                 "skipped_count": skipped_count,
                 "cc_deposit_count": cc_deposit_count,
                 "unmatched_count": unmatched_count,
+                "resync_result": resync_result,
                 "errors": errors[:50],
                 "warnings": warnings[:50],
             }
@@ -443,3 +457,127 @@ class HQMarginImportService:
             return 'WHALE'
         else:
             return 'COMMON'
+
+    @staticmethod
+    def sync_pending_external_users(db: Session) -> Dict:
+        """
+        external_nickname은 있지만 hq_segment가 없는 유저들을
+        HQ 데이터(HQProspectiveUser)와 자동 재매칭 시도.
+        
+        케이스 A 해결: CSV Import 후 유저 연동 시점 차이
+        
+        중복 방지:
+        - HQ 중복 연결 방지: prospect.linked_user_id가 이미 있으면 스킵
+        - V2User 중복 연결 방지: user.hq_segment가 이미 있으면 스킵
+        - 델타 중복 계산 방지: upsert_many 내부에서 prev_deposit 비교
+        
+        Returns:
+            {
+                "synced": int,
+                "skipped": int, 
+                "total_pending": int,
+                "details": [{"user_id": int, "nickname": str, "segment": str, "total_charge": int}]
+            }
+        """
+        from app.v2.models import V2UserSegment
+        
+        now = datetime.utcnow()
+        synced_count = 0
+        skipped_count = 0
+        details = []
+        
+        # 1. 미매칭 V2User 조회 (external_nickname 있고, hq_segment 없음)
+        pending_users = db.query(V2User).filter(
+            V2User.external_nickname.isnot(None),
+            V2User.hq_segment.is_(None)
+        ).all()
+        
+        total_pending = len(pending_users)
+        logger.info(f"[ReSync] Found {total_pending} pending users with external_nickname but no hq_segment")
+        
+        # CC Deposit 일괄 처리용 버퍼
+        cc_deposit_payloads: List[CCDepositCreate] = []
+        
+        for user in pending_users:
+            # 2. HQ 데이터에서 닉네임 매칭 (정확 일치, 대소문자 무시)
+            prospect = db.query(HQProspectiveUser).filter(
+                func.lower(HQProspectiveUser.nickname) == user.external_nickname.lower(),
+                HQProspectiveUser.linked_user_id.is_(None)  # 아직 연결 안 된 것만
+            ).first()
+            
+            if not prospect:
+                logger.debug(f"[ReSync] No HQ match for user {user.id} ({user.external_nickname})")
+                skipped_count += 1
+                continue
+            
+            # 3. 이미 다른 유저에 연결되어 있으면 스킵 (중복 방지 - 이중 체크)
+            if prospect.linked_user_id and prospect.linked_user_id != user.id:
+                logger.warning(
+                    f"[ReSync] Prospect {prospect.id} already linked to user {prospect.linked_user_id}, "
+                    f"skip user {user.id}"
+                )
+                skipped_count += 1
+                continue
+            
+            # 4. 양방향 연결 수행
+            prospect.is_joined = True
+            prospect.linked_user_id = user.id
+            prospect.linked_at = now
+            
+            user.hq_segment = prospect.segment
+            
+            # 5. V2UserSegment 업데이트
+            segment = db.query(V2UserSegment).filter_by(user_id=user.id).first()
+            if segment:
+                segment.segment = prospect.segment
+                segment.is_synced_from_hq = True
+                segment.last_synced_at = now
+            else:
+                db.add(V2UserSegment(
+                    user_id=user.id,
+                    segment=prospect.segment,
+                    is_synced_from_hq=True,
+                    last_synced_at=now
+                ))
+            
+            # 6. CC Deposit 반영 (델타 계산 포함) - 충전 금액이 있을 때만
+            if prospect.total_charge and prospect.total_charge > 0:
+                cc_deposit_payloads.append(CCDepositCreate(
+                    user_id=user.id,
+                    deposit_amount=prospect.total_charge,
+                    play_count=0
+                ))
+            
+            synced_count += 1
+            details.append({
+                "user_id": user.id,
+                "nickname": user.external_nickname,
+                "segment": prospect.segment,
+                "total_charge": prospect.total_charge or 0
+            })
+            logger.info(
+                f"[ReSync] Auto-linked user {user.id} ({user.external_nickname}) "
+                f"to prospect {prospect.id}, segment={prospect.segment}"
+            )
+        
+        # 7. CC Deposit 일괄 처리 (청크 단위)
+        if cc_deposit_payloads:
+            CHUNK_SIZE = 250
+            for i in range(0, len(cc_deposit_payloads), CHUNK_SIZE):
+                chunk = cc_deposit_payloads[i:i + CHUNK_SIZE]
+                try:
+                    V2AdminCCDepositService.upsert_many(db, chunk)
+                    logger.info(f"[ReSync] CC Deposit chunk processed: {len(chunk)} items")
+                except Exception as e:
+                    logger.error(f"[ReSync] CC Deposit chunk failed: {e}")
+        
+        db.commit()
+        
+        logger.info(f"[ReSync] Completed: synced={synced_count}, skipped={skipped_count}, total={total_pending}")
+        
+        return {
+            "synced": synced_count,
+            "skipped": skipped_count,
+            "total_pending": total_pending,
+            "details": details
+        }

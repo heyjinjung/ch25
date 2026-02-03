@@ -366,3 +366,117 @@ def unlink_user_external(
         "unlinked_nickname": old_nickname,
         "unlinked_segment": old_segment
     }
+
+
+# ==================== 미동기화 유저 재동기화 ====================
+
+@router.get("/pending-sync-users")
+def list_pending_sync_users(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    미동기화 유저 목록 조회.
+    
+    external_nickname은 있지만 hq_segment가 없는 유저 (케이스 A).
+    HQ 데이터와의 매칭 가능 여부도 함께 반환.
+    """
+    from app.v2.models.user import V2User
+    from app.v2.models.hq_prospective_user import HQProspectiveUser
+    
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    # 미동기화 유저 조회
+    pending_users = db.query(V2User).filter(
+        V2User.external_nickname.isnot(None),
+        V2User.hq_segment.is_(None)
+    ).all()
+    
+    result = []
+    for user in pending_users:
+        # HQ 매칭 후보 찾기
+        prospect = db.query(HQProspectiveUser).filter(
+            func.lower(HQProspectiveUser.nickname) == user.external_nickname.lower(),
+            HQProspectiveUser.linked_user_id.is_(None)
+        ).first()
+        
+        result.append({
+            "user_id": user.id,
+            "nickname": user.nickname,
+            "external_nickname": user.external_nickname,
+            "telegram_username": user.telegram_username,
+            "hq_match": {
+                "found": prospect is not None,
+                "prospect_id": prospect.id if prospect else None,
+                "segment": prospect.segment if prospect else None,
+                "total_charge": prospect.total_charge if prospect else None,
+                "total_margin": prospect.total_margin if prospect else None,
+            } if prospect else {"found": False}
+        })
+    
+    return {
+        "total": len(result),
+        "syncable": len([r for r in result if r["hq_match"]["found"]]),
+        "users": result
+    }
+
+
+@router.post("/sync-pending-users")
+def sync_pending_external_users(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    미동기화 유저 일괄 재동기화 (방안 2: 어드민 수동 버튼).
+    
+    external_nickname은 있지만 hq_segment가 없는 유저들을
+    HQ 데이터(HQProspectiveUser)와 자동 매칭.
+    
+    처리 내용:
+    - HQProspectiveUser ↔ V2User 양방향 연결
+    - V2User.hq_segment 설정
+    - V2UserSegment 생성/업데이트
+    - CC Deposit 처리 (금고/XP/미션 반영)
+    
+    중복 방지:
+    - 이미 연결된 HQ 데이터는 스킵
+    - 델타 계산 기반 XP/미션 처리 (동일 금액은 0)
+    """
+    from app.v2.services.hq_margin_import_service import HQMarginImportService
+    from app.v2.services import V2AdminAuditService
+    
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    try:
+        result = HQMarginImportService.sync_pending_external_users(db)
+        
+        # 감사 로그 기록
+        V2AdminAuditService.log(
+            db,
+            admin_id=str(admin_id),
+            action="PROSPECT_RESYNC",
+            target_type="USER",
+            target_id=None,
+            after={
+                "category": "GOLDEN",
+                "reason": "Manual pending users sync",
+                "stats": {
+                    "synced": result["synced"],
+                    "skipped": result["skipped"],
+                    "total_pending": result["total_pending"],
+                }
+            },
+        )
+        
+        return {
+            "success": True,
+            "message": f"{result['synced']}명의 유저가 동기화되었습니다.",
+            **result
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

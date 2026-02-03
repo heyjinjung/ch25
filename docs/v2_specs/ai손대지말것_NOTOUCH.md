@@ -263,13 +263,6 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
  docker compose build --no-cache; docker compose up -d
 
 
-
-
- cost_type(다이아/금고)별 가격 뱃지/아이콘 ③ Shop의 프리미엄 판정 로직 일관화 같은 UX 다듬기
-
-
-
-
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
