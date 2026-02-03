@@ -9,7 +9,7 @@ export default function InlineNotice({
   className,
 }: {
   title?: string;
-  description: string;
+  description: React.ReactNode;
   variant?: InlineNoticeVariant;
   className?: string;
 }) {

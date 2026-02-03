@@ -630,8 +630,37 @@ class V2MissionService:
         LOGIN 미션 진행을 보장합니다 (V2 Auth 전용).
         
         기존 V1 의존성 없이 순수 V2 로직으로 미션 정보를 업데이트합니다.
+        
+        [2026-02-03 버그수정] 중복 호출 방지: 당일(운영일 기준) 이미 LOGIN 진행이 
+        업데이트된 경우 스킵하여 V1/V2 동시 호출 시 +2 문제 방지.
         """
         service = cls(db)
+        now_tz = service._now_tz()
+        today_reset_date = service._operational_play_date(now_tz).isoformat()
+        week_reset_date = now_tz.strftime("%Y-W%V")
+        
+        # [중복 호출 방지] 당일 DAILY LOGIN 미션 진행이 이미 있는지 확인
+        # DAILY 또는 WEEKLY LOGIN 미션 중 하나라도 오늘 업데이트되었으면 스킵
+        from app.v2.models import Mission, MissionCategory
+        
+        daily_login_mission = db.query(Mission).filter(
+            Mission.action_type == "LOGIN",
+            Mission.category == MissionCategory.DAILY,
+            Mission.is_active == True
+        ).first()
+        
+        if daily_login_mission:
+            existing_daily = db.query(UserMissionProgress).filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == daily_login_mission.id,
+                UserMissionProgress.reset_date == today_reset_date,
+                UserMissionProgress.current_value >= 1  # 이미 +1 이상 됨
+            ).first()
+            
+            if existing_daily:
+                # 이미 오늘 LOGIN 진행됨 - 중복 호출 스킵
+                return
+        
         # 1. 'LOGIN' 액션 타입 미션 진행 (출석 등)
         service.update_progress(user_id, "LOGIN", delta=1)
         
@@ -640,7 +669,6 @@ class V2MissionService:
         try:
             user = db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
             if user and user.last_play_date:
-                now_tz = service._now_tz()
                 today = service._operational_play_date(now_tz)
                 yesterday = today - timedelta(days=1)
                 

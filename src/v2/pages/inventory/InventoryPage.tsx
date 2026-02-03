@@ -321,7 +321,12 @@ export default function InventoryPage() {
                   <InlineNotice
                     variant="warning"
                     title="기프티콘 실사용 안내"
-                    description="cc지민 모든 기프트콘은 2만부터 사용가능하십니다"
+                    description={
+                      <>
+                        치킨/스벅 깁콘은 2만부터<br />
+                        피자 깁콘은 3만부터 사용가능하십니다
+                      </>
+                    }
                     className="mb-4"
                   />
                 )}

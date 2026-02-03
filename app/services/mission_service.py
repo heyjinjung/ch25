@@ -775,12 +775,37 @@ class MissionService:
         """
         Ensures the user has the correct login mission progress.
         Typically called on login or user creation.
+        
+        [2026-02-03 버그수정] 중복 호출 방지: 당일(운영일 기준) 이미 LOGIN 진행이 
+        업데이트된 경우 스킵하여 V1/V2 동시 호출 시 +2 문제 방지.
         """
         user = self.db.query(V2User).filter(V2User.id == user_id).first()
         if not user:
             return
 
         now_tz = self._now_tz()
+        today_reset_date = self._operational_play_date(now_tz).isoformat()
+        
+        # [중복 호출 방지] 당일 DAILY LOGIN 미션 진행이 이미 있는지 확인
+        from app.models.mission import Mission, MissionCategory, UserMissionProgress
+        
+        daily_login_mission = self.db.query(Mission).filter(
+            Mission.action_type == "LOGIN",
+            Mission.category == MissionCategory.DAILY,
+            Mission.is_active == True
+        ).first()
+        
+        if daily_login_mission:
+            existing_daily = self.db.query(UserMissionProgress).filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == daily_login_mission.id,
+                UserMissionProgress.reset_date == today_reset_date,
+                UserMissionProgress.current_value >= 1  # 이미 +1 이상 됨
+            ).first()
+            
+            if existing_daily:
+                # 이미 오늘 LOGIN 진행됨 - 중복 호출 스킵
+                return
         
         # 1. Update all general LOGIN missions (DAILY, etc.) once.
         # This handles standard progress and ensures records exist.
