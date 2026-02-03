@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
@@ -8,6 +8,10 @@ import {
   RefreshCw,
   CheckCircle,
   AlertCircle,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Filter,
 } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
@@ -135,6 +139,14 @@ const ignoreProspect = async (prospectId: number, reason?: string) => {
 
 // ==================== Component ====================
 
+type SortField =
+  | "nickname"
+  | "total_margin"
+  | "total_charge"
+  | "inactive_days"
+  | "similarity";
+type SortOrder = "asc" | "desc";
+
 export default function ProspectLinkingPage() {
   const queryClient = useQueryClient();
   const [segmentFilter, setSegmentFilter] = useState<string>("ALL");
@@ -146,6 +158,15 @@ export default function ProspectLinkingPage() {
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
   const [isIgnoreDialogOpen, setIsIgnoreDialogOpen] = useState(false);
   const [ignoreReason, setIgnoreReason] = useState("");
+
+  // 검색/필터/정렬 상태
+  const [nicknameSearch, setNicknameSearch] = useState("");
+  const [marginMin, setMarginMin] = useState<string>("");
+  const [marginMax, setMarginMax] = useState<string>("");
+  const [inactiveDaysMin, setInactiveDaysMin] = useState<string>("");
+  const [inactiveDaysMax, setInactiveDaysMax] = useState<string>("");
+  const [sortField, setSortField] = useState<SortField>("total_margin");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // Queries
   const {
@@ -167,6 +188,123 @@ export default function ProspectLinkingPage() {
     queryFn: () => searchUsers(searchQuery),
     enabled: searchQuery.length >= 1,
   });
+
+  // 필터링 및 정렬된 목록 생성
+  const filteredAndSortedProspects = useMemo(() => {
+    if (!prospectsData?.prospects) return [];
+
+    let filtered = [...prospectsData.prospects];
+
+    // 닉네임 검색
+    if (nicknameSearch.trim()) {
+      const search = nicknameSearch.toLowerCase().trim();
+      filtered = filtered.filter((p) =>
+        p.nickname.toLowerCase().includes(search),
+      );
+    }
+
+    // 마진 범위 필터
+    if (marginMin) {
+      const min = parseInt(marginMin, 10);
+      if (!isNaN(min)) {
+        filtered = filtered.filter((p) => (p.total_margin ?? 0) >= min);
+      }
+    }
+    if (marginMax) {
+      const max = parseInt(marginMax, 10);
+      if (!isNaN(max)) {
+        filtered = filtered.filter((p) => (p.total_margin ?? 0) <= max);
+      }
+    }
+
+    // 비활성 일수 범위 필터
+    if (inactiveDaysMin) {
+      const min = parseInt(inactiveDaysMin, 10);
+      if (!isNaN(min)) {
+        filtered = filtered.filter((p) => (p.inactive_days ?? 0) >= min);
+      }
+    }
+    if (inactiveDaysMax) {
+      const max = parseInt(inactiveDaysMax, 10);
+      if (!isNaN(max)) {
+        filtered = filtered.filter((p) => (p.inactive_days ?? 0) <= max);
+      }
+    }
+
+    // 정렬
+    filtered.sort((a, b) => {
+      let aVal: number = 0;
+      let bVal: number = 0;
+
+      switch (sortField) {
+        case "nickname":
+          return sortOrder === "asc"
+            ? a.nickname.localeCompare(b.nickname)
+            : b.nickname.localeCompare(a.nickname);
+        case "total_margin":
+          aVal = a.total_margin ?? 0;
+          bVal = b.total_margin ?? 0;
+          break;
+        case "total_charge":
+          aVal = a.total_charge ?? 0;
+          bVal = b.total_charge ?? 0;
+          break;
+        case "inactive_days":
+          aVal = a.inactive_days ?? 0;
+          bVal = b.inactive_days ?? 0;
+          break;
+        case "similarity":
+          aVal = a.suggestions[0]?.similarity ?? 0;
+          bVal = b.suggestions[0]?.similarity ?? 0;
+          break;
+      }
+
+      return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+    });
+
+    return filtered;
+  }, [
+    prospectsData?.prospects,
+    nicknameSearch,
+    marginMin,
+    marginMax,
+    inactiveDaysMin,
+    inactiveDaysMax,
+    sortField,
+    sortOrder,
+  ]);
+
+  // 정렬 토글 함수
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+  };
+
+  // 정렬 아이콘 렌더링
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field)
+      return <ArrowUpDown className="w-3 h-3 text-zinc-600" />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="w-3 h-3 text-indigo-400" />
+    ) : (
+      <ArrowDown className="w-3 h-3 text-indigo-400" />
+    );
+  };
+
+  // 필터 초기화
+  const resetFilters = () => {
+    setNicknameSearch("");
+    setMarginMin("");
+    setMarginMax("");
+    setInactiveDaysMin("");
+    setInactiveDaysMax("");
+    setSortField("total_margin");
+    setSortOrder("desc");
+  };
 
   // Mutations
   const linkMutation = useMutation({
@@ -317,123 +455,312 @@ export default function ProspectLinkingPage() {
       )}
 
       {/* Filters */}
-      <div className="flex gap-4 items-center">
-        <Select value={segmentFilter} onValueChange={setSegmentFilter}>
-          <SelectTrigger className="w-40 bg-zinc-900 border-zinc-700">
-            <SelectValue placeholder="세그먼트" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">전체</SelectItem>
-            <SelectItem value="VIP">VIP</SelectItem>
-            <SelectItem value="WHALE">WHALE</SelectItem>
-            <SelectItem value="AT_RISK">AT_RISK</SelectItem>
-          </SelectContent>
-        </Select>
+      <Card className="bg-zinc-900 border-zinc-800">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Filter className="w-4 h-4 text-indigo-400" />
+              필터 및 검색
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFilters}
+              className="text-zinc-400 hover:text-white"
+            >
+              초기화
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* 첫 번째 행: 세그먼트, 닉네임 검색, 무시 항목 */}
+          <div className="flex flex-wrap gap-4 items-center">
+            <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+              <SelectTrigger className="w-32 bg-zinc-800 border-zinc-700">
+                <SelectValue placeholder="세그먼트" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">전체</SelectItem>
+                <SelectItem value="VIP">VIP</SelectItem>
+                <SelectItem value="WHALE">WHALE</SelectItem>
+                <SelectItem value="AT_RISK">AT_RISK</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <label className="flex items-center gap-2 text-sm text-zinc-400">
-          <input
-            type="checkbox"
-            checked={includeIgnored}
-            onChange={(e) => setIncludeIgnored(e.target.checked)}
-            className="rounded border-zinc-700 bg-zinc-900"
-          />
-          무시된 항목 포함
-        </label>
-      </div>
+            <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <Input
+                placeholder="닉네임 검색..."
+                value={nicknameSearch}
+                onChange={(e) => setNicknameSearch(e.target.value)}
+                className="pl-10 bg-zinc-800 border-zinc-700"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-zinc-400">
+              <input
+                type="checkbox"
+                checked={includeIgnored}
+                onChange={(e) => setIncludeIgnored(e.target.checked)}
+                className="rounded border-zinc-700 bg-zinc-900"
+              />
+              무시된 항목
+            </label>
+          </div>
+
+          {/* 두 번째 행: 마진/비활성 필터 */}
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500 whitespace-nowrap">
+                마진:
+              </span>
+              <Input
+                type="number"
+                placeholder="최소"
+                value={marginMin}
+                onChange={(e) => setMarginMin(e.target.value)}
+                className="w-24 bg-zinc-800 border-zinc-700 text-sm"
+              />
+              <span className="text-zinc-600">~</span>
+              <Input
+                type="number"
+                placeholder="최대"
+                value={marginMax}
+                onChange={(e) => setMarginMax(e.target.value)}
+                className="w-24 bg-zinc-800 border-zinc-700 text-sm"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-zinc-500 whitespace-nowrap">
+                비활성:
+              </span>
+              <Input
+                type="number"
+                placeholder="최소"
+                value={inactiveDaysMin}
+                onChange={(e) => setInactiveDaysMin(e.target.value)}
+                className="w-20 bg-zinc-800 border-zinc-700 text-sm"
+              />
+              <span className="text-zinc-600">~</span>
+              <Input
+                type="number"
+                placeholder="최대"
+                value={inactiveDaysMax}
+                onChange={(e) => setInactiveDaysMax(e.target.value)}
+                className="w-20 bg-zinc-800 border-zinc-700 text-sm"
+              />
+              <span className="text-xs text-zinc-500">일</span>
+            </div>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <span className="text-xs text-zinc-500">정렬:</span>
+              <Select
+                value={sortField}
+                onValueChange={(v) => setSortField(v as SortField)}
+              >
+                <SelectTrigger className="w-28 bg-zinc-800 border-zinc-700 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total_margin">마진</SelectItem>
+                  <SelectItem value="total_charge">충전</SelectItem>
+                  <SelectItem value="inactive_days">비활성</SelectItem>
+                  <SelectItem value="nickname">닉네임</SelectItem>
+                  <SelectItem value="similarity">유사도</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
+                className="border-zinc-700 px-2"
+              >
+                {sortOrder === "asc" ? (
+                  <ArrowUp className="w-4 h-4" />
+                ) : (
+                  <ArrowDown className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Prospect List */}
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-lg">
-            대기 중인 잠재 유저 ({prospectsData?.total ?? 0})
+            대기 중인 잠재 유저 ({filteredAndSortedProspects.length}명 / 전체{" "}
+            {prospectsData?.total ?? 0}명)
           </CardTitle>
           <CardDescription>
             유사도 추천을 확인하고 연결하거나 무시 처리하세요.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* 테이블 헤더 - 정렬 가능 */}
+          <div className="flex items-center px-4 py-2 mb-2 bg-zinc-800/30 rounded-lg text-xs text-zinc-500 font-medium">
+            <div className="flex-1 min-w-[140px]">
+              <button
+                onClick={() => handleSort("nickname")}
+                className="flex items-center gap-1 hover:text-white transition-colors"
+              >
+                닉네임 <SortIcon field="nickname" />
+              </button>
+            </div>
+            <div className="w-20 text-center">세그먼트</div>
+            <div className="w-28 text-right">
+              <button
+                onClick={() => handleSort("total_margin")}
+                className="flex items-center gap-1 justify-end hover:text-white transition-colors ml-auto"
+              >
+                마진 <SortIcon field="total_margin" />
+              </button>
+            </div>
+            <div className="w-28 text-right">
+              <button
+                onClick={() => handleSort("total_charge")}
+                className="flex items-center gap-1 justify-end hover:text-white transition-colors ml-auto"
+              >
+                충전 <SortIcon field="total_charge" />
+              </button>
+            </div>
+            <div className="w-20 text-right">
+              <button
+                onClick={() => handleSort("inactive_days")}
+                className="flex items-center gap-1 justify-end hover:text-white transition-colors ml-auto"
+              >
+                비활성 <SortIcon field="inactive_days" />
+              </button>
+            </div>
+            <div className="flex-1 px-4 min-w-[150px]">
+              <button
+                onClick={() => handleSort("similarity")}
+                className="flex items-center gap-1 hover:text-white transition-colors"
+              >
+                추천 매칭 <SortIcon field="similarity" />
+              </button>
+            </div>
+            <div className="w-32 text-right">액션</div>
+          </div>
+
           {isLoadingProspects ? (
             <div className="text-center py-8 text-zinc-500">로딩 중...</div>
-          ) : prospectsData?.prospects.length === 0 ? (
+          ) : filteredAndSortedProspects.length === 0 ? (
             <div className="text-center py-8 text-zinc-500">
-              대기 중인 잠재 유저가 없습니다.
+              {nicknameSearch ||
+              marginMin ||
+              marginMax ||
+              inactiveDaysMin ||
+              inactiveDaysMax
+                ? "필터 조건에 맞는 잠재 유저가 없습니다."
+                : "대기 중인 잠재 유저가 없습니다."}
             </div>
           ) : (
-            <div className="space-y-3">
-              {prospectsData?.prospects.map((prospect) => (
+            <div className="space-y-2">
+              {filteredAndSortedProspects.map((prospect) => (
                 <div
                   key={prospect.id}
-                  className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50"
+                  className="flex items-center px-4 py-3 bg-zinc-800/50 rounded-lg border border-zinc-700/50 hover:bg-zinc-800 transition-colors"
                 >
-                  {/* Prospect Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                  {/* 닉네임 */}
+                  <div className="flex-1 min-w-[140px]">
+                    <div className="flex items-center gap-2">
                       <span className="font-bold text-white">
                         {prospect.nickname}
                       </span>
-                      <Badge
-                        variant="outline"
-                        className={getSegmentBadge(prospect.segment)}
-                      >
-                        {prospect.segment}
-                      </Badge>
                       {prospect.ignored && (
                         <Badge
                           variant="outline"
-                          className="bg-zinc-700/50 text-zinc-500"
+                          className="bg-zinc-700/50 text-zinc-500 text-[10px] px-1"
                         >
                           무시됨
                         </Badge>
                       )}
                     </div>
-                    <div className="text-xs text-zinc-500 space-x-4">
-                      <span>
-                        마진: ₩{prospect.total_margin?.toLocaleString()}
-                      </span>
-                      <span>
-                        충전: ₩{prospect.total_charge?.toLocaleString()}
-                      </span>
-                      <span>비활성: {prospect.inactive_days}일</span>
+                    <div className="text-[10px] text-zinc-600 mt-0.5">
+                      ID: {prospect.cc_id}
                     </div>
                   </div>
 
-                  {/* Suggestions */}
-                  <div className="flex-1 px-4">
+                  {/* 세그먼트 */}
+                  <div className="w-20 flex justify-center">
+                    <Badge
+                      variant="outline"
+                      className={getSegmentBadge(prospect.segment)}
+                    >
+                      {prospect.segment}
+                    </Badge>
+                  </div>
+
+                  {/* 마진 */}
+                  <div className="w-28 text-right">
+                    <span
+                      className={`text-sm ${(prospect.total_margin ?? 0) >= 1000000 ? "text-emerald-400 font-semibold" : "text-zinc-300"}`}
+                    >
+                      ₩{(prospect.total_margin ?? 0).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* 충전 */}
+                  <div className="w-28 text-right">
+                    <span className="text-sm text-zinc-400">
+                      ₩{(prospect.total_charge ?? 0).toLocaleString()}
+                    </span>
+                  </div>
+
+                  {/* 비활성 */}
+                  <div className="w-20 text-right">
+                    <span
+                      className={`text-sm ${(prospect.inactive_days ?? 0) > 30 ? "text-red-400" : "text-zinc-400"}`}
+                    >
+                      {prospect.inactive_days}일
+                    </span>
+                  </div>
+
+                  {/* 추천 매칭 */}
+                  <div className="flex-1 px-4 min-w-[150px]">
                     {prospect.suggestions.length > 0 ? (
-                      <div className="space-y-1">
-                        <span className="text-xs text-zinc-500">
-                          추천 매칭:
-                        </span>
+                      <div className="space-y-0.5">
                         {prospect.suggestions.slice(0, 2).map((s) => (
                           <div
                             key={s.user_id}
                             className="flex items-center gap-2 text-sm"
                           >
-                            <span className="text-emerald-400">
+                            <span className="text-emerald-400 truncate max-w-[80px]">
                               {s.nickname}
                             </span>
-                            <span className="text-xs text-zinc-500">
-                              ({s.similarity}%)
+                            <span
+                              className={`text-[10px] px-1 rounded ${
+                                s.similarity >= 90
+                                  ? "bg-emerald-500/20 text-emerald-400"
+                                  : s.similarity >= 70
+                                    ? "bg-amber-500/20 text-amber-400"
+                                    : "bg-zinc-500/20 text-zinc-400"
+                              }`}
+                            >
+                              {s.similarity}%
                             </span>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-xs text-zinc-600">
-                        추천 매칭 없음
-                      </span>
+                      <span className="text-xs text-zinc-600">없음</span>
                     )}
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
+                  {/* 액션 */}
+                  <div className="w-32 flex justify-end gap-1">
                     <Button
                       size="sm"
                       onClick={() => handleLinkClick(prospect)}
                       disabled={prospect.ignored}
-                      className="bg-indigo-600 hover:bg-indigo-700"
+                      className="bg-indigo-600 hover:bg-indigo-700 h-7 text-xs px-2"
                     >
-                      <Link className="w-4 h-4 mr-1" />
+                      <Link className="w-3 h-3 mr-1" />
                       연결
                     </Button>
                     <Button
@@ -441,10 +768,9 @@ export default function ProspectLinkingPage() {
                       variant="outline"
                       onClick={() => handleIgnoreClick(prospect)}
                       disabled={prospect.ignored}
-                      className="border-zinc-700 hover:bg-zinc-800"
+                      className="border-zinc-700 hover:bg-zinc-800 h-7 text-xs px-2"
                     >
-                      <XCircle className="w-4 h-4 mr-1" />
-                      무시
+                      <XCircle className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
