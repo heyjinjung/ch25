@@ -320,11 +320,12 @@ def update_user_nickname(
     db.refresh(user)
 
     # 감사 로그 기록
-    V2AdminAuditService.log_action(
+    V2AdminAuditService.log(
         db,
         admin_id,
         "UPDATE_NICKNAME",
-        str(user_id),
+        target_type="USER",
+        target_id=str(user_id),
         before={"nickname": old_nickname},
         after={"nickname": new_nickname},
     )

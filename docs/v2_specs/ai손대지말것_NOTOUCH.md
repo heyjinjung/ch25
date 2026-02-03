@@ -220,6 +220,13 @@ P3	CSV 실시간 Progress	대용량 CSV 처리 진행률	1시간
 P3	음수 잔액 UI	WalletBalance 음수 시 붉은색 표시	15분
 
 
+✅  HQ Margin CSV의 누적 충전 금액이 실제 CC 입금으로 반영되려면:
+HQ Margin Import 시 자동 입금 로그 생성 (델타 계산)
+미매칭 입금 로그 API: GET /api/v2/admin/deposits/unmatched?hours=24
+작업 설명
+옵션 A HQ Margin Import 시 ExternalRankingDailyDepositDelta에 자동 delta 삽입
+
+
 -------------------------
 
 
@@ -250,7 +257,6 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
 
 
-
 ----------
 https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
 
@@ -270,8 +276,3 @@ http://localhost:8501/ - 엑셀 누적 데이터!
 =======
 
 
-HQ Margin CSV의 누적 충전 금액이 실제 CC 입금으로 반영되려면:
-HQ Margin Import 시 자동 입금 로그 생성 (델타 계산)
-미매칭 입금 로그 API: GET /api/v2/admin/deposits/unmatched?hours=24
-작업 설명
-옵션 A HQ Margin Import 시 ExternalRankingDailyDepositDelta에 자동 delta 삽입

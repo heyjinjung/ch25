@@ -6,6 +6,7 @@
  * - 자동 인증 (initData 기반)
  * - 신규 유저 CC 닉네임 입력 (VIP 매칭)
  */
+/// <reference types="../../../types/telegram" />
 import { useState, useEffect, type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send, Shield, Zap, Gift, Star, Loader2 } from "lucide-react";
@@ -314,9 +315,9 @@ const V2TelegramLoginPage: FC = () => {
                 onChange={(e) => setCcNickname(e.target.value)}
                 placeholder="예: user123"
                 disabled={isLinking}
-                className="w-full px-4 py-3 rounded-xl bg-obsidian-card border border-obsidian-border 
-                         text-white placeholder-obsidian-muted/50
-                         focus:border-obsidian-accent focus:ring-1 focus:ring-obsidian-accent
+                className="w-full px-4 py-3 rounded-xl bg-white/10 border-2 border-white/30 
+                         text-white placeholder-white/50
+                         focus:border-amber-400 focus:ring-2 focus:ring-amber-400/50 focus:bg-white/15
                          disabled:opacity-50"
               />
               <p className="text-xs text-obsidian-muted">
