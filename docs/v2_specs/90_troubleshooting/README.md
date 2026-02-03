@@ -74,12 +74,22 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
 | AUTH | [W06_AUTH_troubleshooting.md](./W06_AUTH_troubleshooting.md) | 0 |
-| VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | 0 |
-| GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | 0 |
+| VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **4** |
+| GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
-| DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | 1 |
+| DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
 | INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | 0 |
 | FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | 0 |
+
+### W06 주요 이슈 요약 (02-03)
+| # | 도메인 | 이슈 | 상태 |
+|---|---|---|---|
+| 1 | GAME | V1→V2 토큰 타입 매핑 오류 (reward_service.py) | ✅ 해결 |
+| 2 | GAME | 민똘이 V1 토큰 잔액 회수 불가 (프로덕션 수동 마이그레이션) | ✅ 해결 |
+| 3 | VAULT | wallet/adjust API force 옵션 추가 | ✅ 해결 |
+| 4 | VAULT | 유저 Reset API 신규 구현 | ✅ 완료 |
+| 5 | VAULT | CSV Import Baseline 델타 계산 로직 | ✅ 해결 |
+| 6 | DB | baseline_charge_amount 마이그레이션 체인 오류 | ✅ 해결 |
 
 ---
 

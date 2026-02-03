@@ -9,8 +9,8 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 1 |
-| SoT 승격 예정 | 0 |
+| 해결된 이슈 | 4 |
+| SoT 승격 예정 | 1 (CSV Import Baseline) |
 
 ---
 
@@ -22,6 +22,136 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-03] - VAULT/ADMIN: wallet/adjust API 잔액 부족 시 차감 불가 (force 옵션 추가)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 토큰 조정 (POST /users/{id}/wallet/adjust) |
+| HTTP Status | 400 (`INSUFFICIENT_TOKEN_BALANCE`) |
+| 영향 범위 | 어드민 토큰 회수 기능 |
+| 재현 빈도 | 잔액 < 회수량일 때 항상 |
+
+**증거 기반 RCA**
+- 어드민이 유저 토큰을 회수하려 할 때, 현재 잔액보다 많은 양을 차감하면 에러 발생
+- 잘못 지급된 토큰을 회수할 수 없는 상황
+
+**해결 방법**
+`force` 옵션 추가: 잔액 부족 시에도 **가능한 만큼만 차감**
+
+```python
+# app/v2/api/admin/user_routes.py
+class AdminWalletAdjustRequest(BaseModel):
+    token_type: str
+    delta: int
+    reason: Optional[str] = None
+    force: bool = False  # ← 신규 추가
+
+# 로직: force=True면 min(available, abs(delta)) 만큼 차감
+```
+
+**수정 파일**
+- `app/v2/api/admin/user_routes.py` (force 옵션 처리)
+- `app/v2/schemas/v2_admin_user.py` (force 필드 추가)
+
+**검증 방법**
+- `tests/v2/test_admin_user_reset.py` 12개 테스트 통과 확인
+
+**🏷️ 태그**
+`P1` `ADMIN` `WALLET` `FORCE_OPTION`
+
+---
+
+### [02-03] - VAULT/ADMIN: 유저 레벨/입금액/금고/토큰 초기화 API 신규 구현 ⭐
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 유저 데이터 초기화 (레벨, 입금액, 금고, 토큰) |
+| HTTP Status | N/A (기능 미구현) |
+| 영향 범위 | 어드민 운영 기능 |
+| 재현 빈도 | 항상 |
+
+**근본 원인**
+- 어드민에서 유저 테스트/운영 시 데이터 초기화 기능 부재
+- 레벨/입금액/금고/토큰을 개별적으로 리셋할 수 없음
+
+**해결 방법**
+신규 API 구현: `POST /api/v2/admin/users/{user_id}/reset`
+
+```python
+class AdminUserResetRequest(BaseModel):
+    reset_level: bool = False      # 레벨 1로 초기화
+    reset_deposit: bool = False    # 입금액/baseline 0으로 초기화
+    reset_vault: bool = False      # 금고 잔액 0으로 초기화
+    reset_tokens: bool = False     # 모든 토큰 잔액 0으로 초기화
+```
+
+**주요 기능**
+1. `reset_level`: `user_level_progress.level=1, xp=0` + `v2_user` 레벨 필드 동기화
+2. `reset_deposit`: `v2_user.total_charge_amount=0, baseline_charge_amount=0`
+3. `reset_vault`: `user.vault_locked_balance=0, vault_available_balance=0`
+4. `reset_tokens`: `user_game_wallet.balance=0` (전체 토큰 타입)
+
+**수정 파일**
+- `app/v2/api/admin/user_routes.py` (reset 엔드포인트)
+- `app/v2/schemas/v2_admin_user.py` (Request/Response 스키마)
+
+**검증 방법**
+- `tests/v2/test_admin_user_reset.py` 테스트 통과 확인
+
+**🏷️ 태그**
+`P1` `ADMIN` `RESET_API` `NEW_FEATURE`
+
+---
+
+### [02-03] - VAULT/CSV: HQ Margin Import 시 전체 기간 누적액 반영 문제 ⭐ SoT 승격 예정
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | HQ Margin CSV Import → CC 입금 자동 반영 |
+| HTTP Status | 200 (Logic Error - 잘못된 금액 반영) |
+| 영향 범위 | CSV Import 사용 유저 |
+| 재현 빈도 | 항상 |
+
+**증거 기반 RCA**
+- CSV의 `총입금액` 컬럼은 **전체 기간 누적액**
+- 시스템은 이를 **일일 입금액**으로 처리하여 과다 반영
+- 예: 총입금액 100만원 → 매일 Import 시 100만원씩 추가
+
+**해결 방법**
+**Baseline 델타 계산 로직 도입**:
+1. `v2_user.baseline_charge_amount` 컬럼 추가 (마이그레이션)
+2. 첫 Import: baseline만 설정, 실제 반영 없음
+3. 이후 Import: `effective_charge = csv_total - baseline`만 반영
+
+```python
+# 핵심 로직
+if baseline == 0:
+    # 첫 Import: baseline 설정만
+    user.baseline_charge_amount = csv_charge
+    effective_charge = 0
+else:
+    # 이후 Import: 델타 계산
+    effective_charge = max(0, csv_charge - baseline)
+    user.baseline_charge_amount = csv_charge
+```
+
+**수정 파일**
+- `app/v2/models/user.py` (baseline_charge_amount 컬럼)
+- `app/v2/services/hq_margin_import_service.py` (델타 계산 로직)
+- `alembic/versions/20260203_0100_add_baseline_charge_amount.py` (마이그레이션)
+
+**검증 방법**
+- `tests/v2/test_csv_import_baseline.py` 8개 테스트 통과 확인
+- 로컬 Docker 마이그레이션 적용 완료
+
+**🏷️ 태그**
+`P0` `CSV_IMPORT` `BASELINE` `DELTA_CALCULATION` `SoT승격예정`
+
+---
 
 ### 02-03 - VAULT/출금조건: "오늘 사용 금액" 충족 후 출금조건 갱신 안됨 (JM9567)
 

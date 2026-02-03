@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 2 |
+| 해결된 이슈 | 3 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -115,6 +115,47 @@ inactive_days = (now - last_login).days
 
 #### 🏷️ 태그
 - `P1` `Architecture` `SOT` `Compliance`
+
+---
+
+### [02-03] - DB/MIGRATION: baseline_charge_amount 마이그레이션 down_revision 오류
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | Alembic 마이그레이션 적용 |
+| HTTP Status | N/A (CLI 에러) |
+| 영향 범위 | 로컬 Docker 환경 |
+| 재현 빈도 | 항상 |
+
+**에러 메시지**
+```
+KeyError: '20260201_1200_add_external_deposit_unmatched_log'
+```
+
+**근본 원인**
+- 새 마이그레이션 파일의 `down_revision`이 존재하지 않는 리비전을 참조
+- 마이그레이션 체인: `20260202_1530_extend_v2_user_segment` → `20260203_1000_add_v2_external_deposit_unmatched` → **20260203_0100_add_baseline_charge_amount**
+- 잘못된 `down_revision`: `20260201_1200_add_external_deposit_unmatched_log` (존재하지 않음)
+
+**해결 방법**
+```python
+# alembic/versions/20260203_0100_add_baseline_charge_amount.py
+# Before
+down_revision = "20260201_1200_add_external_deposit_unmatched_log"
+
+# After
+down_revision = "20260203_1000_add_v2_external_deposit_unmatched"
+```
+
+**검증 방법**
+```bash
+docker compose exec backend alembic current
+# 결과: 20260203_0100_add_baseline_charge_amount (head) ✅
+```
+
+**🏷️ 태그**
+`P1` `ALEMBIC` `MIGRATION` `CHAIN`
 
 ---
 
