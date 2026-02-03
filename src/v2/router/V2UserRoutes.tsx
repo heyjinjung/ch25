@@ -4,8 +4,12 @@ import V2AppLayout from "../components/layout/V2AppLayout";
 
 // Lazy load pages - Auth
 const DevLoginPage = lazy(() => import("../pages/auth/V2UserLoginPage"));
-const TelegramLoginPage = lazy(() => import("../pages/auth/V2TelegramLoginPage"));
-const TelegramTestLoginPage = lazy(() => import("../pages/auth/V2TelegramTestLoginPage"));
+const TelegramLoginPage = lazy(
+  () => import("../pages/auth/V2TelegramLoginPage"),
+);
+const TelegramTestLoginPage = lazy(
+  () => import("../pages/auth/V2TelegramTestLoginPage"),
+);
 const HomePage = lazy(() => import("../pages/home/HomePage"));
 const GamedashPage = lazy(() => import("../pages/game/GamedashPage"));
 const VaultPage = lazy(() => import("../pages/vault/VaultPage"));
