@@ -203,3 +203,166 @@ def search_users_for_linking(
             for u in users
         ]
     }
+
+
+# ==================== 연결된 유저 관리 ====================
+
+@router.get("/linked-users")
+def list_linked_users(
+    q: Optional[str] = Query(None, description="닉네임 검색"),
+    segment: Optional[str] = Query(None, description="세그먼트 필터"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    이미 외부 계정과 연결된 V2User 목록.
+    external_nickname 수정/연결 해제용.
+    """
+    from app.v2.models.user import V2User
+    
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "OPERATOR", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    query = db.query(V2User).filter(V2User.external_nickname.isnot(None))
+    
+    if q:
+        query = query.filter(
+            func.lower(V2User.nickname).contains(q.lower()) |
+            func.lower(V2User.external_nickname).contains(q.lower())
+        )
+    
+    if segment:
+        query = query.filter(V2User.hq_segment == segment)
+    
+    total = query.count()
+    users = query.order_by(V2User.external_linked_at.desc()).offset(offset).limit(limit).all()
+    
+    return {
+        "total": total,
+        "users": [
+            {
+                "id": u.id,
+                "nickname": u.nickname,
+                "external_nickname": u.external_nickname,
+                "hq_segment": u.hq_segment,
+                "telegram_username": u.telegram_username,
+                "external_linked_at": u.external_linked_at.isoformat() if u.external_linked_at else None,
+            }
+            for u in users
+        ]
+    }
+
+
+class ExternalNicknameUpdateRequest(BaseModel):
+    """외부 닉네임 수정 요청."""
+    new_nickname: str = Field(..., description="새 외부 닉네임", min_length=1, max_length=100)
+
+
+@router.patch("/users/{user_id}/external-nickname")
+def update_user_external_nickname(
+    user_id: int,
+    request: ExternalNicknameUpdateRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    V2User의 external_nickname 수정.
+    오타 수정 등에 사용.
+    """
+    from app.v2.models.user import V2User
+    from app.v2.models.hq_prospective_user import HQProspectiveUser
+    
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    user = db.query(V2User).filter_by(id=user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    
+    old_nickname = user.external_nickname
+    new_nickname = request.new_nickname.strip()
+    
+    # HQ에서 새 닉네임으로 잠재유저 찾기 (세그먼트 자동 업데이트용)
+    prospect = db.query(HQProspectiveUser).filter(
+        func.lower(HQProspectiveUser.nickname) == new_nickname.lower()
+    ).first()
+    
+    user.external_nickname = new_nickname
+    
+    if prospect:
+        # HQ에서 매칭되면 세그먼트도 업데이트
+        user.hq_segment = prospect.segment
+        if not prospect.linked_user_id:
+            prospect.linked_user_id = user_id
+            prospect.is_joined = True
+            from datetime import datetime
+            prospect.linked_at = datetime.utcnow()
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"외부 닉네임이 '{old_nickname}' → '{new_nickname}'으로 수정되었습니다.",
+        "user": {
+            "id": user.id,
+            "nickname": user.nickname,
+            "external_nickname": user.external_nickname,
+            "hq_segment": user.hq_segment,
+        },
+        "prospect_matched": prospect is not None
+    }
+
+
+@router.delete("/users/{user_id}/external-link")
+def unlink_user_external(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    V2User의 외부 연결 해제.
+    - external_nickname, hq_segment 초기화
+    - HQProspectiveUser의 linked_user_id도 해제
+    """
+    from app.v2.models.user import V2User
+    from app.v2.models.hq_prospective_user import HQProspectiveUser
+    
+    admin_id, admin_role = admin_info
+    if admin_role not in ["ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="NOT_AUTHORIZED")
+    
+    user = db.query(V2User).filter_by(id=user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    
+    if not user.external_nickname:
+        raise HTTPException(status_code=400, detail="USER_NOT_LINKED")
+    
+    old_nickname = user.external_nickname
+    old_segment = user.hq_segment
+    
+    # HQProspectiveUser에서 연결 해제
+    prospect = db.query(HQProspectiveUser).filter_by(linked_user_id=user_id).first()
+    if prospect:
+        prospect.linked_user_id = None
+        prospect.is_joined = False
+        prospect.linked_at = None
+    
+    # V2User 초기화
+    user.external_nickname = None
+    user.external_linked_at = None
+    user.hq_segment = None
+    
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"'{old_nickname}' 연결이 해제되었습니다. (기존 세그먼트: {old_segment})",
+        "user_id": user_id,
+        "unlinked_nickname": old_nickname,
+        "unlinked_segment": old_segment
+    }
