@@ -9,8 +9,8 @@ import "./EventPage.css";
 const EVENT_ITEMS = [
   {
     id: "attendance",
-    title: "연속출석 이벤트",
-    desc: "끊기지 않는 보너스의 즐거움",
+    title: "연속출석 이벤",
+    desc: "매일매일 보너스",
     icon: "🔥",
     color: "from-orange-500/20 to-amber-500/20",
     badge: "DAILY",
@@ -18,16 +18,16 @@ const EVENT_ITEMS = [
   },
   {
     id: "golden",
-    title: "골든아워 이벤트",
-    desc: "언제 터질지 모르는 황금빛 찬스!",
+    title: "골든아워 이벤",
+    desc: "계속 터지는 황금빛찬스",
     icon: "✨",
     color: "from-yellow-500/20 to-amber-600/20",
     badge: "RANDOM",
   },
   {
     id: "newuser",
-    title: "신규유저 이벤트",
-    desc: "지민코드가 환영하는 첫 발걸음",
+    title: "신규유저 이벤",
+    desc: "지민코드 웰컴이벤",
     icon: "🎁",
     color: "from-emerald-500/20 to-teal-600/20",
     badge: "WELCOME",
@@ -35,15 +35,15 @@ const EVENT_ITEMS = [
   {
     id: "deposit",
     title: "입금지연 보상",
-    desc: "지연의 아쉬움을 즐거움으로",
+    desc: "이제 빠른입금반영",
     icon: "💎",
     color: "from-blue-500/20 to-indigo-600/20",
     badge: "FIXED",
   },
   {
     id: "teambattle",
-    title: "팀배틀 이벤트",
-    desc: "승리의 영광, 곧 함께할 수 있습니다",
+    title: "팀배틀 이벤",
+    desc: "승리의 영광, 함께해요",
     icon: "🏆",
     color: "from-purple-500/20 to-rose-600/20",
     badge: "COMING SOON",
@@ -111,10 +111,10 @@ const EventPage: React.FC = () => {
                     </span>
                     <span className="text-2xl">{item.icon}</span>
                   </div>
-                  <h3 className="text-xl font-black text-white mb-1 tracking-tight">
+                  <h3 className="text-[16px] font-black text-white mb-1 tracking-tight whitespace-nowrap">
                     {item.title}
                   </h3>
-                  <p className="text-[11px] font-medium text-white/40 leading-tight">
+                  <p className="text-[10px] font-medium text-white/40 leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                     {item.desc}
                   </p>
                 </div>

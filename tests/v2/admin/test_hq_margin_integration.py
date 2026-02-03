@@ -92,10 +92,13 @@ class TestHQMarginIntegration:
 
         mock_db.query.side_effect = query_side_effect
         
-        # Patch V2SegmentService.upsert_user_segment
+        # Patch _match_v2_user to align with new matching logic
         try:
-            with patch("app.v2.services.segment_service.V2SegmentService.upsert_user_segment") as mock_upsert:
-                mock_upsert.return_value = True
+            with patch("app.v2.services.hq_margin_import_service.HQMarginImportService._match_v2_user") as mock_match:
+                mock_match.side_effect = [
+                    (mock_user1, "MATCHED"),
+                    (None, "USER_NOT_FOUND"),
+                ]
 
                 # 3. Execute
                 result = await HQMarginImportService.import_hq_margin_csv(
@@ -107,8 +110,8 @@ class TestHQMarginIntegration:
                 # 4. Assertions
                 assert result["success"] is True
                 # Mock returns None for existing segment, so it should create a new one
-                assert result["updated_count"] == 0 
-                assert result["created_count"] == 1 
+                assert result["updated_count"] == 0
+                assert result["created_count"] == 1
                 assert result["prospective_count"] == 1
         finally:
             if csv_path.exists():

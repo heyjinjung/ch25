@@ -114,9 +114,9 @@ def test_golden_v2_full_lifecycle_integrated(db: Session, auth_header, monkeypat
     evidence = V2LatencySurvivalService.submit_evidence(db, v2_user_id, "TX_INTEGRATED_001", 50000)
     db.commit()
     
-    # 보상 확인 (ROULETTE_TICKET +5 -> 총 10)
+    # 보상 확인 (ROULETTE_TICKET +3 -> 총 8)
     balance = V2InventoryService.get_wallet_balance(db, v2_user_id, "ROULETTE_TICKET")
-    assert balance == 10
+    assert balance == 8
     
     # 제재 예외(Bypass) 확인
     is_suspended_now, _ = V2VaultService.is_benefits_suspended(db, v2_user_id)

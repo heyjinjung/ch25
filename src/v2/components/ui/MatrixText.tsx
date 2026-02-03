@@ -47,7 +47,10 @@ export const MatrixText: React.FC<MatrixTextProps> = ({
 
   return (
     <span
-      className={cn("font-mono", className)}
+      className={cn(
+        !className?.includes("font-") && "font-mono",
+        className
+      )}
       onMouseEnter={onHover ? scramble : undefined}
     >
       {displayText}

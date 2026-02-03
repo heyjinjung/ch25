@@ -48,7 +48,7 @@ def test_get_vault_info_golden_hour_force_on(db, monkeypatch):
     db.commit()
 
     # Golden Hour FORCE_ON 설정
-    def _get_config_value(_db, key, default=None):
+    def _get_config_value(_self, _db, key, default=None):
         if key == "golden_hour_config":
             return {"enabled": True, "manual_override": "FORCE_ON", "multiplier": 3.0}
         if key == "show_modal_override":
@@ -101,7 +101,7 @@ def test_get_vault_info_golden_hour_auto_window(db, monkeypatch):
     start_str = (now_kst - timedelta(minutes=1)).strftime("%H:%M:%S")
     end_str = (now_kst + timedelta(minutes=5)).strftime("%H:%M:%S")
 
-    def _get_config_value(_db, key, default=None):
+    def _get_config_value(_self, _db, key, default=None):
         if key == "golden_hour_config":
             return {
                 "enabled": True,

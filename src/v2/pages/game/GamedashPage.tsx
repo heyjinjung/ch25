@@ -135,7 +135,7 @@ export default function GamedashPage() {
                   transition={{ delay: 0.5 }}
                   className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.3em] mb-2 block"
                 >
-                  <MatrixText text="CC카지노 지민코드" />
+                  <MatrixText text="CC카지노 지민코드" className="font-sans" />
                 </motion.span>
                 <h1 className="text-2xl font-black text-white leading-[1] mb-4">
                   <MatrixText text="CC CASINO"/>
