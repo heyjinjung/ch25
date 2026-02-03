@@ -116,61 +116,72 @@ export default function GamedashPage() {
           animate={{ opacity: 1, y: 0 }}
           className="relative mt-2 mb-6"
         >
-          <div className="magic-hero-card !bg-neutral-900/40 !border-white/10 overflow-hidden backdrop-blur-md">
-            <div className="absolute inset-0 z-0 opacity-20">
-              <Meteors number={12} />
-            </div>
-            <BorderBeam
-              size={250}
-              duration={15}
-              colorFrom="#10b981"
-              colorTo="#3b82f6"
-            />
+          <a
+            href="https://t.me/jm956"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="텔레그램으로 문의하기"
+            className="block"
+          >
+            <div className="magic-hero-card !bg-neutral-900/40 !border-white/10 overflow-hidden backdrop-blur-md cursor-pointer transition-transform active:scale-[0.98] hover:!border-emerald-500/30">
+              <div className="absolute inset-0 z-0 opacity-20">
+                <Meteors number={12} />
+              </div>
+              <BorderBeam
+                size={250}
+                duration={15}
+                colorFrom="#10b981"
+                colorTo="#3b82f6"
+              />
 
-            <div className="magic-hero-content relative z-10 pt-6 pb-4">
-              <div className="magic-hero-left">
-                <motion.span
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="text-[10px] font-black text-emerald-500/80 uppercase tracking-widest mb-2 block"
-                >
-                  <MatrixText text="CC카지노 지민코드" className="font-sans" />
-                </motion.span>
-                <h1 className="text-2xl font-black text-white leading-[1] mb-4">
-                  <MatrixText text="CC CASINO"/>
-                  <br />
-                  <span className="text-[#9AFFFA] italic">
-                    <MatrixText text="EVENT" />
-                  </span>
-                </h1>
+              <div className="magic-hero-content relative z-10 pt-6 pb-4">
+                <div className="magic-hero-left">
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-[10px] font-black text-emerald-500/80 uppercase tracking-widest mb-2 block"
+                  >
+                    <MatrixText
+                      text="CC카지노 지민코드"
+                      className="font-sans"
+                    />
+                  </motion.span>
+                  <h1 className="text-2xl font-black text-white leading-[1] mb-4">
+                    <MatrixText text="CC CASINO" />
+                    <br />
+                    <span className="text-[#9AFFFA] italic">
+                      <MatrixText text="EVENT" />
+                    </span>
+                  </h1>
 
-                <div className="magic-stat-row">
-                  <div className="notice-container notice-container--full">
-                    <div className="notice-wrapper">
-                      {noticeItems.map((text, idx) => (
-                        <div
-                          key={`notice-${idx}`}
-                          className="notice-item notice-item--muted"
-                        >
-                          {text}
-                        </div>
-                      ))}
+                  <div className="magic-stat-row">
+                    <div className="notice-container notice-container--full">
+                      <div className="notice-wrapper">
+                        {noticeItems.map((text, idx) => (
+                          <div
+                            key={`notice-${idx}`}
+                            className="notice-item notice-item--muted"
+                          >
+                            {text}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <motion.img
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
-                src={`${ASSET_PATH}/Ellipse 374.svg`}
-                className="character-img character-img--glow"
-                alt="character"
-              />
+                <motion.img
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
+                  src={`${ASSET_PATH}/Ellipse 374.svg`}
+                  className="character-img character-img--glow"
+                  alt="character"
+                />
+              </div>
             </div>
-          </div>
+          </a>
         </motion.div>
 
         {/* Gaming Bento Grid */}

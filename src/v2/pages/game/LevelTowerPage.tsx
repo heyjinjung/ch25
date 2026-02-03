@@ -8,6 +8,7 @@ import AnimatedNumber from "../../components/common/AnimatedNumber";
 import Button from "../../components/common/Button";
 import { useV2LevelXPStatus } from "../../hooks/useV2Mission";
 import { triggerHaptic } from "../../utils/haptic";
+import type { LevelXPStatusResponse } from "../../api/missionApi";
 import "./LevelTowerPage.css";
 
 const NODE_ICON_CLEARED = "/assets/season_pass/icon_node_cleared.webp";
@@ -35,10 +36,65 @@ const getRewardLabel = (type: string, amount: number) => {
   }
 };
 
+const ParticleBackground: React.FC = () => {
+  const particles = useMemo(() => 
+    Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      duration: `${10 + Math.random() * 15}s`,
+      delay: `${Math.random() * 10}s`,
+      size: `${2 + Math.random() * 4}px`,
+    })), []);
+
+  return (
+    <div className="level-tower-particles">
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          className="particle"
+          style={{
+            left: p.left,
+            width: p.size,
+            height: p.size,
+            "--duration": p.duration,
+            animationDelay: p.delay,
+          } as any}
+        />
+      ))}
+    </div>
+  );
+};
+
+const towerContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const floorVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { type: "spring", stiffness: 100, damping: 12 }
+  },
+};
+
 const LevelTowerPage: React.FC = () => {
   const navigate = useNavigate();
   // Switch to V2 Native Level XP Status (Unified Level System)
-  const { data: levelStatus, isLoading, isError, refetch } = useV2LevelXPStatus();
+  const { data: levelStatus, isLoading, isError, refetch } = useV2LevelXPStatus() as {
+    data: LevelXPStatusResponse | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    refetch: () => void;
+  };
   
   const [missionsOpen, setMissionsOpen] = useState(false);
   const hasTriggeredHaptic = useRef(false);
@@ -140,12 +196,18 @@ const LevelTowerPage: React.FC = () => {
         <div className="vault-aurora-blob blob-2" />
         <div className="vault-aurora-blob blob-3" />
       </div>
+      <ParticleBackground />
       {/* Darken aurora one step for Obsidian theme */}
       <div className="level-tower-aurora-dim" />
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center relative z-10">
         <div className="relative mx-auto w-full max-w-sm">
           {/* Tower Floors */}
-          <div className="relative flex flex-col gap-0 border-2 border-white/15 bg-gradient-to-b from-zinc-900/90 to-black/95 rounded-2xl overflow-hidden backdrop-blur-md">
+          <motion.div
+            variants={towerContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="relative flex flex-col gap-0 border-2 border-white/15 bg-gradient-to-b from-zinc-900/90 to-black/95 rounded-2xl overflow-hidden backdrop-blur-md"
+          >
             <AnimatePresence mode="popLayout" initial={false}>
               {view.visibleFloors.map((floor) => {
                 const isCurrent = floor.level === view.currentLevel;
@@ -174,14 +236,12 @@ const LevelTowerPage: React.FC = () => {
                 return (
                   <motion.div
                     layout
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 20 }}
-                    transition={{ duration: 0.3 }}
+                    variants={floorVariants}
                     key={floor.level}
+                    whileHover={{ x: 5, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
                     className={cn(
-                      "relative px-3 py-3 border-b border-white/5 transition-all duration-500",
-                      isCurrent && "bg-emerald-500/10",
+                      "relative px-4 py-4 border-b border-white/5 transition-all duration-500",
+                      isCurrent && "tower-floor-current",
                       isCompleted && "bg-white/5 opacity-60",
                       isLocked && "opacity-30",
                       isNext && "bg-amber-500/5",
@@ -191,17 +251,26 @@ const LevelTowerPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div
                         className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden bg-black/40",
+                          "w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden bg-black/40 relative",
                           isCurrent
-                            ? "border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.4)]"
+                            ? "border-emerald-400 node-glow-pulse"
                             : "border-white/10",
                         )}
                       >
-                        <img
+                        <motion.img
+                          animate={isCurrent ? {
+                            y: [0, -4, 0],
+                            rotate: [0, 5, -5, 0]
+                          } : {}}
+                          transition={{ 
+                            repeat: Infinity, 
+                            duration: 3,
+                            ease: "easeInOut"
+                          }}
                           src={nodeIconSrc}
                           alt={nodeIconAlt}
                           className={cn(
-                            "w-6 h-6 object-contain",
+                            "w-6 h-6 object-contain relative z-10",
                             isCurrent || isNext ? "opacity-95" : "opacity-80",
                           )}
                           draggable={false}
@@ -254,11 +323,12 @@ const LevelTowerPage: React.FC = () => {
 
                   {isCurrent && (
                     <div className="mt-3 relative z-10">
-                      <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10">
+                      <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 progress-liquid">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${view.progressPct}%` }}
-                          className="h-full bg-emerald-500 rounded-full"
+                          transition={{ duration: 1.5, ease: "easeOut" }}
+                          className="h-full bg-emerald-500 rounded-full relative z-10"
                         />
                       </div>
                       <div className="flex justify-between mt-1.5">
@@ -275,7 +345,7 @@ const LevelTowerPage: React.FC = () => {
                 );
               })}
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
       </div>
 

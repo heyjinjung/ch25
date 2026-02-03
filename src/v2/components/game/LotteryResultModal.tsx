@@ -248,23 +248,66 @@ export default function LotteryResultModal({
     // Normal Icon Logic
     if (isNormal) {
       const pKey = safePrizeLabel.toUpperCase();
+      const rType = rewardType.toUpperCase();
       let normalAsset = "/assets/lottery/icon_gift.webp"; // Fallback
 
-      if (isPoint) {
+      // Priority 1: Check rewardType for precise matching
+      if (
+        rType.includes("PUZZLE_C") ||
+        pKey.includes("C1") ||
+        pKey.includes("C2")
+      ) {
+        normalAsset = "/assets/icons/puzzle_c.png";
+      } else if (
+        rType.includes("PUZZLE_J") ||
+        pKey.includes("PUZZLE_J") ||
+        pKey.includes("J")
+      ) {
+        normalAsset = "/assets/icons/puzzle_j.png";
+      } else if (
+        rType.includes("PUZZLE_M") ||
+        pKey.includes("PUZZLE_M") ||
+        pKey.includes("M")
+      ) {
+        normalAsset = "/assets/icons/puzzle_m.png";
+      }
+      // Priority 2: Standard Types
+      else if (isPoint) {
         normalAsset = "/assets/asset_coin_gold.webp";
       } else if (isTicket) {
         normalAsset = "/assets/asset_ticket_green.webp";
-      } else {
-        // Item Mapping
-        if (pKey.includes("치킨")) normalAsset = "/assets/icons/chiken.png";
-        else if (pKey.includes("피자"))
-          normalAsset = "/assets/icons/pizza2.png";
-        else if (pKey.includes("버거") || pKey.includes("햄버거"))
-          normalAsset = "/assets/icons/burgerset.png";
-        else if (pKey.includes("배민") || pKey.includes("배달"))
-          normalAsset = "/assets/icons/baemin.png";
-        else if (pKey.includes("스타벅스") || pKey.includes("커피"))
-          normalAsset = "/assets/icons/takeaway-cup-dynamic-color.png";
+      }
+      // Priority 3: Gifticon Item Mapping (prizeLabel based)
+      else if (pKey.includes("치킨") || rType.includes("CHICKEN")) {
+        normalAsset = "/assets/icons/chiken.png";
+      } else if (pKey.includes("피자") || rType.includes("PIZZA")) {
+        normalAsset = "/assets/icons/pizza2.png";
+      } else if (
+        pKey.includes("버거") ||
+        pKey.includes("햄버거") ||
+        rType.includes("BURGER")
+      ) {
+        normalAsset = "/assets/icons/burgerset.png";
+      } else if (
+        pKey.includes("배민") ||
+        pKey.includes("배달") ||
+        rType.includes("BAEMIN")
+      ) {
+        normalAsset = "/assets/icons/baemin.png";
+      } else if (
+        pKey.includes("스타벅스") ||
+        pKey.includes("스벅") ||
+        pKey.includes("커피") ||
+        rType.includes("STARBUCKS") ||
+        rType.includes("COFFEE")
+      ) {
+        normalAsset = "/assets/icons/takeaway-cup-dynamic-color.png";
+      } else if (
+        pKey.includes("구글") ||
+        pKey.includes("GOOGLE") ||
+        rType.includes("GOOGLE")
+      ) {
+        normalAsset = "/assets/icons/bell.png";
       }
 
       return (

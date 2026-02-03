@@ -57,9 +57,10 @@ const getItemImage = (type: string) => {
   if (t.includes("starbucks"))
     return "/assets/icons/takeaway-cup-dynamic-color.png";
   if (t.includes("google")) return "/assets/icons/bell.png";
-  if (t.includes("diamond")) return "/assets/icons/diakey.png";
+  // Gold Key MUST be checked before diamond (GOLD_KEY_TICKET contains "KEY")
   if (t.includes("gold_key") || t.includes("goldkey"))
     return "/assets/icons/goldkey.png";
+  if (t.includes("diamond")) return "/assets/icons/diakey.png";
   if (t.includes("point") || t.includes("balance"))
     return "/assets/asset_coin_gold.png";
   if (t.includes("roulette") || t.includes("bundle"))

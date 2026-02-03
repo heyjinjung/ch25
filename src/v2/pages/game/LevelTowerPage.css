@@ -5,10 +5,130 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(
-    circle at 50% 35%,
-    rgba(0, 0, 0, 0.35) 0%,
-    rgba(0, 0, 0, 0.75) 55%,
-    rgba(0, 0, 0, 0.92) 100%
-  );
+  background: radial-gradient(circle at 50% 35%,
+      rgba(0, 0, 0, 0.35) 0%,
+      rgba(0, 0, 0, 0.75) 55%,
+      rgba(0, 0, 0, 0.92) 100%);
+}
+
+/* Floor Item Animations */
+.tower-floor-current {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)) !important;
+}
+
+.tower-floor-current::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent);
+  transform: skewX(-25deg);
+  animation: shine-sweep 4s infinite linear;
+}
+
+@keyframes shine-sweep {
+  0% {
+    left: -100%;
+  }
+
+  33%,
+  100% {
+    left: 200%;
+  }
+}
+
+/* Floating Particles */
+.level-tower-particles {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.3;
+  filter: blur(1px);
+  animation: float-up var(--duration) linear infinite;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(110vh) scale(0.5);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.3;
+  }
+
+  90% {
+    opacity: 0.3;
+  }
+
+  100% {
+    transform: translateY(-10vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+/* Pulse Glow for Current */
+.node-glow-pulse {
+  animation: node-pulse 2s infinite ease-in-out;
+}
+
+@keyframes node-pulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.4);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(52, 211, 153, 0.6);
+  }
+}
+
+/* Liquid Progress Animation */
+.progress-liquid {
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-liquid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  animation: liquid-move 2s infinite linear;
+  background-size: 200% 100%;
+}
+
+@keyframes liquid-move {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
