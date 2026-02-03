@@ -3,7 +3,7 @@
  *
  * SoT Policy:
  * - Trust First: 유저를 먼저 믿고 즉시 선지급
- * - Provisional Reward: 룰렛 티켓 5장
+ * - Provisional Reward: 룰렛 티켓 3장
  * - Rate Limit: 시간당 최대 3회
  * - Clawback: 반려 시 원금 + 당첨금 전액 회수
  */
@@ -150,8 +150,9 @@ export default function LatencyReportModal({
             입금반영이 늦나요?
           </DialogTitle>
           <DialogDescription className="text-zinc-400 leading-relaxed">
-            기다리게 해서 죄송합니다!<br/>
-            <span className="text-lime-400 font-black">룰렛 티켓 3장</span>을
+            기다리게 해서 죄송합니다!
+            <br />
+            <span className="text-lime-400 font-black">룰렛티켓 3장</span>을
             미리 선물해 드릴게요!
           </DialogDescription>
         </DialogHeader>
@@ -166,14 +167,18 @@ export default function LatencyReportModal({
               <h3 className="text-lg font-black text-white italic">
                 소중한 의견 감사합니다!
               </h3>
-              <p className="text-sm text-zinc-400">정상적으로 접수되었어요. {result.message}</p>
+              <p className="text-sm text-zinc-400">
+                정상적으로 접수되었어요. {result.message}
+              </p>
             </div>
 
             {/* Reward Display */}
             <div className="bg-lime-500/10 border border-lime-500/30 rounded-lg p-4 flex items-center gap-3">
               <Gift className="w-6 h-6 text-lime-400" />
               <div>
-                <p className="text-sm font-black text-lime-300">선물 지급 완료!</p>
+                <p className="text-sm font-black text-lime-300">
+                  선물 지급 완료!
+                </p>
                 <p className="text-xs text-zinc-400">
                   룰렛 티켓 {result.reward_granted?.ROULETTE_TICKET || 5}장
                 </p>
@@ -259,7 +264,9 @@ export default function LatencyReportModal({
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-amber-200 space-y-1">
-                  <p className="font-black text-amber-200 italic">꼭 읽어주세요!</p>
+                  <p className="font-black text-amber-200 italic">
+                    꼭 읽어주세요!
+                  </p>
                   <ul className="list-disc list-inside text-amber-300/80 space-y-0.5">
                     <li>선지급된 티켓이 우선 사용된 것으로 간주됩니다.</li>
                     <li>허위 신고 시 선지급 재화 + 당첨금 전액 회수</li>
@@ -284,18 +291,11 @@ export default function LatencyReportModal({
               </span>
             </label>
 
-            <DialogFooter className="gap-2">
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                className="border-zinc-700"
-              >
-                취소
-              </Button>
+            <DialogFooter className="gap-2 pt-2">
               <Button
                 onClick={handleSubmit}
                 disabled={!isValid || submitMutation.isPending}
-                className="bg-lime-600 hover:bg-lime-700 disabled:opacity-50"
+                className="w-full bg-lime-600 hover:bg-lime-700 disabled:bg-zinc-700 disabled:opacity-50 text-white font-bold shadow-lg"
               >
                 {submitMutation.isPending ? (
                   <>
@@ -303,7 +303,7 @@ export default function LatencyReportModal({
                     처리 중...
                   </>
                 ) : (
-                  "신고 접수"
+                  "입금 접수"
                 )}
               </Button>
             </DialogFooter>

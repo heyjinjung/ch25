@@ -50,7 +50,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
     if (remaining === 1) {
       return {
         icon: AlertCircle,
-        text: `💪 조금만 더! ${remaining}개 조건만 채우면 출금 가능`,
+        text: `💪 쫌만 더! ${remaining}개 조건채우면 출금!`,
         color: "text-amber-400",
         bgColor: "bg-amber-500/10",
         borderColor: "border-amber-500/20",

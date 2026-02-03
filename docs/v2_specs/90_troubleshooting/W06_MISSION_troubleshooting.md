@@ -24,6 +24,99 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-03 - MISSION/CRITICAL: V1/V2 중복 호출로 인한 주간 미션 초과 달성 버그 🔴
+
+**에러 트리아지 체크리스트 적용**
+- 기준 문서: [docs/v2_specs/90_troubleshooting/archive/20260130_error_triage_checklist.md](./archive/20260130_error_triage_checklist.md)
+- 분류 결과: **데이터 정합성 버그(Data Integrity Bug)**
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 주간 출석(WEEKLY_LOGIN_STREAK_TEST) 미션 |
+| HTTP Status | 200 (Logic Error) |
+| 영향 범위 | 전체 유저 (V1/V2 동시 호출 경로 있는 경우) |
+| 재현 빈도 | 항상 |
+
+**운영 서버 증거 (jm9567, user_id=1)**
+```
+now_kst             = 2026-02-03 09:56:12
+weekday             = 1 (화요일)
+W06 start           = 2026-02-02 (월요일)
+
+WEEKLY_LOGIN_STREAK_TEST:
+  reset_date        = 2026-W06
+  current_value     = 3  ← 🔴 W06 시작(2/2) 후 하루 만에 3 달성
+  is_completed      = True
+  is_claimed        = True
+  updated_at        = 2026-02-02 23:26:52
+```
+
+**버그 현상**
+- W06 시작일(2월 2일) 하루 만에 `current_value=3` 달성 (target_value=3)
+- 정상적으로는 월/화/수 3일에 걸쳐 달성해야 함
+- **하루에 +2~+3 증가하는 중복 버그**
+
+**증거 기반 근본 원인 분석 (RCA)**
+
+1. **호출 경로 분석**: `ensure_login_progress` 호출 위치 7개 발견
+   ```
+   app\v2\routes\auth_routes.py:71         ← V2 라우터
+   app\v2\routes\telegram_routes.py:126    ← V2 텔레그램
+   app\services\telegram.py:252            ← V1 서비스
+   app\services\telegram.py:265            ← V1 서비스
+   tests/... (테스트 파일들)
+   ```
+
+2. **중복 호출 메커니즘**
+   - 텔레그램 로그인 시 **V1 telegram.py**와 **V2 telegram_routes.py**가 **동시 호출**
+   - 각각 `ensure_login_progress()`를 독립 호출 → DAILY LOGIN 미션 +2~+3 증가
+   - DAILY LOGIN 미션 완료 시 WEEKLY_LOGIN_STREAK 미션도 동시에 +2~+3 증가
+
+3. **데이터 흐름**
+   ```
+   [텔레그램 로그인]
+        │
+        ├─► V1 telegram.py:252 → ensure_login_progress() → DAILY +1, WEEKLY +1
+        │
+        └─► V2 telegram_routes.py:126 → ensure_login_progress() → DAILY +1, WEEKLY +1
+        
+   결과: DAILY +2, WEEKLY +2 (또는 경합에 따라 +3)
+   ```
+
+**수정 내용 (2026-02-03)**
+
+1. **V2 mission_service.py** (`app/v2/services/mission_service.py`)
+   - `ensure_login_progress()` 시작 부분에 중복 호출 방지 로직 추가
+   ```python
+   # 중복 호출 방지: 오늘 이미 DAILY LOGIN 미션이 +1 이상이면 스킵
+   if daily_login_mission:
+       existing_daily = db.query(UserMissionProgress).filter(
+           UserMissionProgress.user_id == user_id,
+           UserMissionProgress.mission_id == daily_login_mission.id,
+           UserMissionProgress.reset_date == today_reset_date,
+           UserMissionProgress.current_value >= 1
+       ).first()
+       
+       if existing_daily:
+           return  # 이미 오늘 LOGIN 진행됨 - 중복 호출 스킵
+   ```
+
+2. **V1 mission_service.py** (`app/services/mission_service.py`)
+   - 동일한 중복 방지 로직 적용
+
+**검증 방법**
+- 백엔드 재시작 후 텔레그램 로그인 테스트
+- `UserMissionProgress.current_value`가 1만 증가하는지 확인
+- V1/V2 동시 호출해도 중복 증가 없음 확인
+
+**상태**: ✅ 해결 완료 (2026-02-03)
+
+**SoT 승격 대상**
+- 중복 호출 방지 패턴을 `learned_/mission/` 문서에 추가 예정
+
+---
+
 ### 02-03 - MISSION/주간 출석 갱신 미반영 (jm9567)
 
 **에러 트리아지 체크리스트 적용**

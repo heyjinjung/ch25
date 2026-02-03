@@ -3,7 +3,7 @@ import gsap from "gsap";
 import confetti from "canvas-confetti";
 import { Skull, Ghost, ArrowRight } from "lucide-react";
 import { useSound } from "../../../hooks/useSound";
-import { MatrixText } from "../ui/MatrixText";
+import { EncryptedText } from "../ui/EncryptedText";
 import { BackgroundPaths } from "../effects/BackgroundPaths";
 import { cn } from "../../lib/utils";
 
@@ -265,7 +265,7 @@ export default function RouletteResultModal({
 
   const cardStyle = cn(
     "w-full max-w-[340px] rounded-[44px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.8)]",
-    "animate-shimmer", // Added shimmer animation class
+    "animate-shimmer",
     isBigWin &&
       "bg-gradient-to-br from-[#121214] via-[#3d1119] to-[#121214] border-red-500/30",
     isNormal && "bg-[#121214] border-[2px] border-[#FFD700]/50",
@@ -277,14 +277,11 @@ export default function RouletteResultModal({
       ref={modalRef}
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300"
     >
-      {/* Background Paths for ambient effect */}
       <BackgroundPaths className="opacity-40" count={8} />
 
       <div ref={contentRef} className={cardStyle}>
-        {/* Shimmer Overlay */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] z-0" />
 
-        {/* Header Shine for BIG WIN */}
         {isBigWin && (
           <div
             ref={shineRef}
@@ -292,7 +289,6 @@ export default function RouletteResultModal({
           />
         )}
 
-        {/* Header Section */}
         <div className="flex flex-col items-center gap-1.5 mb-8 z-20">
           <span
             className={cn(
@@ -304,27 +300,28 @@ export default function RouletteResultModal({
                   : "text-zinc-600",
             )}
           >
-            <MatrixText text="Spin 결과" />
+            Spin 결과
           </span>
           <h2
             className={cn(
               "text-4xl font-black italic tracking-tighter",
               isBigWin
-                ? "text-red-100 drop-shadow-[0_0_25px_rgba(239,68,68,0.6)]"
+                ? "text-white drop-shadow-lg"
                 : isNormal
-                  ? "text-white"
-                  : "text-zinc-500",
+                  ? "text-yellow-400"
+                  : "text-zinc-600",
             )}
           >
-            <MatrixText
+            <EncryptedText
+              key={`res-title-${isOpen}`}
               text={
-                isBigWin ? "천상의 보상!" : isNormal ? "당첨!" : "아쉽습니다"
+                isBigWin ? "잭 팟 !" : isNormal ? "축하합니다!" : "다음 기회에"
               }
+              loop={isBigWin}
             />
           </h2>
         </div>
 
-        {/* Center Visual */}
         <div className="relative mb-8 z-20 flex justify-center items-center h-32">
           {isBigWin && (
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-orange-600/20 to-pink-600/20 blur-[60px] animate-pulse rounded-full" />
@@ -332,11 +329,18 @@ export default function RouletteResultModal({
           {renderIcon()}
         </div>
 
-        {/* Prize Name Section */}
         <div className="flex flex-col items-center z-20 w-full px-4 mb-9">
+          <span
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-widest mb-1.5",
+              isBigWin ? "text-white/70" : "text-zinc-500",
+            )}
+          >
+            획득 상품
+          </span>
           <div
             className={cn(
-              "text-2xl font-black text-center mb-1 drop-shadow-md",
+              "text-2xl font-black text-center drop-shadow-md min-h-[1.5em]",
               isBigWin
                 ? "text-white"
                 : isNormal
@@ -344,7 +348,15 @@ export default function RouletteResultModal({
                   : "text-zinc-500",
             )}
           >
-            <MatrixText text={rewardLabel} />
+            {isBigWin ? (
+              <EncryptedText
+                key={`prize-${rewardLabel}-${isOpen}`}
+                text={rewardLabel}
+                loop={true}
+              />
+            ) : (
+              <div className="animate-pulse-subtle">{rewardLabel}</div>
+            )}
           </div>
 
           {rewardAmount > 0 && (
@@ -358,32 +370,28 @@ export default function RouletteResultModal({
                 +{rewardAmount.toLocaleString()}
               </span>
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest pt-1">
-                <MatrixText
-                  text={rewardType === "TICKET" ? "티켓" : "포인트"}
-                />
+                {rewardType === "TICKET" ? "티켓" : "포인트"}
               </span>
             </div>
           )}
         </div>
 
-        {/* Interaction Group */}
         <div className="w-full flex flex-col gap-3.5 z-20">
           <button
-            aria-label={isFail ? "다시 하기" : "보상 받기"}
             onClick={() => {
               playTabTouch();
               onClose();
             }}
             className={cn(
-              "w-full h-16 rounded-[28px] font-black text-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2.5 group",
+              "w-full h-16 rounded-[28px] font-black text-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2.5 group shadow-xl",
               isBigWin
-                ? "bg-gradient-to-r from-red-600 via-orange-600 to-pink-600 text-white shadow-[0_15px_30px_rgba(239,68,68,0.3)]"
+                ? "bg-white text-red-600 hover:scale-105"
                 : isNormal
-                  ? "bg-[#FFD700] text-black shadow-lg hover:bg-amber-400"
+                  ? "bg-[#FFD700] text-black hover:bg-amber-400"
                   : "bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300",
             )}
           >
-            <MatrixText text={isFail ? "다시 하기" : "보상 받기"} />
+            {isFail ? "다시 하기" : isBigWin ? "확인" : "보상 받기"}
             <ArrowRight
               size={22}
               className="group-hover:translate-x-1.5 transition-transform"
@@ -391,21 +399,23 @@ export default function RouletteResultModal({
           </button>
 
           <button
-            aria-label="닫기"
             onClick={onClose}
-            className="w-full h-12 rounded-2xl bg-white/5 text-zinc-500 font-bold text-sm hover:text-white transition-all hover:bg-white/10"
+            className={cn(
+              "w-full h-12 rounded-2xl font-bold text-sm transition-all",
+              isBigWin
+                ? "bg-white/20 text-white hover:bg-white/30"
+                : "bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10",
+            )}
           >
-            <MatrixText text="닫기" />
+            닫기
           </button>
         </div>
 
-        {/* Decorative Light Leaks */}
         {isBigWin && (
           <div className="absolute -top-20 -left-20 w-80 h-80 bg-red-600/10 blur-[120px] pointer-events-none rounded-full" />
         )}
       </div>
 
-      {/* Tailwind global style injection for shimmer if not in CSS */}
       <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -421,7 +431,15 @@ export default function RouletteResultModal({
           background-size: 200% 100%;
           animation: shimmer 3s infinite linear;
         }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 2s infinite ease-in-out;
+        }
+        @keyframes pulse-subtle {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(0.98); }
+        }
       `}</style>
     </div>
   );
 }
+
