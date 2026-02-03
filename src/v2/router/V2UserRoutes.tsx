@@ -33,11 +33,11 @@ export const V2UserRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Auth - Telegram Login */}
-        <Route path="/login" element={<TelegramTestLoginPage />} />
-        {/* 프로덕션용 (정식 오픈 후 /login으로 변경) */}
-        <Route path="/login/prod" element={<TelegramLoginPage />} />
-        {/* 기존 개발용 로그인 (레거시) */}
+        {/* Auth - Telegram Login (프로덕션) */}
+        <Route path="/login" element={<TelegramLoginPage />} />
+        {/* 테스트용 (개발 환경에서만 사용) */}
+        <Route path="/login/test" element={<TelegramTestLoginPage />} />
+        {/* 개발용 직접 로그인 (레거시) */}
         <Route path="/login/dev" element={<DevLoginPage />} />
 
         {/* App Layout (V1-style bottom nav) */}
