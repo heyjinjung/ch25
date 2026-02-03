@@ -431,3 +431,5 @@ uploads/csv_imports/casino_log_20260202_095049_test_file.CSV
 uploads/csv_imports/casino_log_20260203_001141_test_file.CSV
 .gitignore
 uploads/csv_imports/casino_log_20260203_000519_test_file.CSV
+uploads/csv_imports/casino_log_20260203_001339_test_file.CSV
+pytest.ini

@@ -90,6 +90,10 @@ export default function InventoryPage() {
       navigate("/shop");
       return;
     }
+    if (tabId === "event") {
+      navigate("/event");
+      return;
+    }
     setActiveTab(tabId);
   };
 

@@ -1,0 +1,61 @@
+.event-page {
+  --header-offset: calc(env(safe-area-inset-top) + 52px);
+  --nav-offset: calc(env(safe-area-inset-bottom) + 80px);
+}
+
+.event-container {
+  padding-top: var(--header-offset);
+  padding-bottom: var(--nav-offset);
+}
+
+.event-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.event-card:active {
+  transform: scale(0.98);
+}
+
+.event-card-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.event-card:hover .event-card-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+.event-banner-img {
+  width: 100%;
+  height: auto;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.event-card-wide {
+  grid-column: span 2;
+}
