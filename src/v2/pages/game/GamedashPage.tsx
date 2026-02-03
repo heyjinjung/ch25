@@ -133,7 +133,7 @@ export default function GamedashPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="text-[10px] font-black text-emerald-500/80 uppercase tracking-[0.3em] mb-2 block"
+                  className="text-[10px] font-black text-emerald-500/80 uppercase tracking-widest mb-2 block"
                 >
                   <MatrixText text="CC카지노 지민코드" className="font-sans" />
                 </motion.span>
