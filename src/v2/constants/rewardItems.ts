@@ -51,42 +51,42 @@ export const REWARD_ITEMS: RewardItem[] = [
   { value: "DIAMOND", label: "다이아몬드", category: "GAME_TICKET" },
   {
     value: "CHICKEN_GIFTICON_5000",
-    label: "치킨 기프티콘 5천원",
+    label: "치킨깁콘 5천원",
     category: "INVENTORY",
   },
   {
     value: "CHICKEN_GIFTICON_10000",
-    label: "치킨 기프티콘 1만원",
+    label: "치킨깁콘 1만원",
     category: "INVENTORY",
   },
   {
     value: "STARBUCKS_GIFTICON_2000",
-    label: "스타벅스 기프티콘 2천원",
+    label: "스벅깁콘 2천원",
     category: "INVENTORY",
   },
   {
     value: "STARBUCKS_GIFTICON_10000",
-    label: "스타벅스 기프티콘 1만원",
+    label: "스벅깁콘 1만원",
     category: "INVENTORY",
   },
   {
     value: "PIZZA_GIFTICON_5000",
-    label: "피자 기프티콘 5천원",
+    label: "피자깁콘 5천원",
     category: "INVENTORY",
   },
   {
     value: "PIZZA_GIFTICON_10000",
-    label: "피자 기프티콘 1만원",
+    label: "피자깁콘 1만원",
     category: "INVENTORY",
   },
   {
     value: "GOOGLE_GIFTICON_5000",
-    label: "구글 기프트카드 5천원",
+    label: "구콘키드 5천원",
     category: "INVENTORY",
   },
   {
     value: "GOOGLE_GIFTICON_10000",
-    label: "구글 기프트카드 1만원",
+    label: "구글카드 1만원",
     category: "INVENTORY",
   },
 ];

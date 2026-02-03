@@ -236,7 +236,7 @@ const LotteryPage: React.FC = () => {
           disabled={isPlaying}
           /* Aurora 효과 중첩 방지: 버튼 내부 오로라 절대 추가 금지 */
         >
-          {isRevealed ? "NEXT GAME" : isPlaying ? "MIXING..." : "PLAY NOW"}
+          {isRevealed ? "다음 게임" : isPlaying ? "섞는 중..." : "시작하기"}
         </button>
       </div>
 

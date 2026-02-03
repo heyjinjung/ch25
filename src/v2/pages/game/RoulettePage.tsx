@@ -217,12 +217,12 @@ export default function RoulettePage() {
           ) : (
             <span>
               {isSpinning
-                ? "SPINNING..."
+                ? "돌리는 중..."
                 : status?.max_daily_spins &&
                     status.max_daily_spins > 0 &&
                     status.remaining_spins <= 0
-                  ? "LIMIT REACHED"
-                  : "SPIN NOW"}
+                  ? "한도 초과"
+                  : "시작하기"}
             </span>
           )}
         </button>

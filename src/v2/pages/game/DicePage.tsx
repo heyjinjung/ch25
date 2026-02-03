@@ -228,7 +228,7 @@ const DicePage = () => {
             onClick={rollDice}
             disabled={isRolling || !isPlayable}
           >
-            {isRolling ? "ROLLING..." : "SPIN"}
+            {isRolling ? "던지는 중..." : "주사위 굴리기"}
           </button>
         </div>
 
