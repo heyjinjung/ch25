@@ -27,7 +27,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
-        "🎉 **지민코드에 오신 것을 환영합니다!**\n\n 2월코드 멤버로 선정되셨습니다.\n지금 바로 입장하여 다양한 혜택을 확인하세요!",
+        "🎉 **지민코드에 오신 것을 환영합니다!**\n\n 2월 코드멤버로 선정되셨습니다.\n지금 바로 입장하여 다양한 혜택을 확인하세요!",
         reply_markup=reply_markup,
         parse_mode='Markdown'
     )

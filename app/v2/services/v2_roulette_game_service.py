@@ -373,10 +373,9 @@ class V2RouletteGameService:
                         f"축하합니다! [{chosen.label}]에 당첨되셨습니다!\n"
                         f"지금 바로 인벤토리를 확인해보세요. ✨"
                     )
-                    # Sync 컨텍스트에서 Async 함수 호출을 위해 비동기 루프 스케줄링 필요하지만,
-                    # 서비스 계층에서는 로직만 정의하고 라우터/워커 위임이 원칙.
-                    # 여기서는 개념 증명(POC) 코드로 남겨둡니다.
-                    pass
+                    # Sync Wrapper를 사용하여 즉시 발송
+                    from app.core.notifications import send_telegram_user_message_sync
+                    send_telegram_user_message_sync(user.telegram_id, msg)
         except Exception:
             pass
 

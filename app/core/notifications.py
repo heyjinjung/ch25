@@ -61,3 +61,30 @@ async def send_telegram_user_message(user_id: int, text: str) -> bool:
     except Exception as e:
         logger.error(f"[TG-NOTIFY] Exception sending to {user_id}: {e}")
         return False
+
+def send_telegram_user_message_sync(user_id: int, text: str) -> bool:
+    """
+    Synchronous version of send_telegram_user_message.
+    Use this in synchronous contexts (e.g. Service methods) where async await is not possible.
+    """
+    settings = get_settings()
+    if not settings.telegram_bot_token:
+        return False
+
+    url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
+    payload = {
+        "chat_id": user_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+
+    try:
+        # Use sync httpx.post
+        res = httpx.post(url, json=payload, timeout=5.0)
+        if res.status_code != 200:
+            logger.error(f"[TG-NOTIFY-SYNC] Failed to send to {user_id}: {res.text}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"[TG-NOTIFY-SYNC] Exception sending to {user_id}: {e}")
+        return False
