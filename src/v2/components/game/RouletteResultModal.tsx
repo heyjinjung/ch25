@@ -47,12 +47,13 @@ export default function RouletteResultModal({
 
     if (isPoint || isRareTicket)
       return { isBigWin: true, isNormal: false, isFail: false };
-    if (
-      rewardType === "NONE" ||
-      (rewardType === "TICKET" && rewardAmount <= 5)
-    ) {
+    
+    // Fail only if there is absolutely no reward (NONE)
+    if (rewardType === "NONE" || rewardAmount <= 0) {
       return { isBigWin: false, isNormal: false, isFail: true };
     }
+    
+    // Everything else (including small tickets) is Normal/Small Win
     return { isBigWin: false, isNormal: true, isFail: false };
   }, [rewardType, rewardAmount, rewardLabel]);
 

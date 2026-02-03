@@ -66,6 +66,7 @@ const V2AppHeader: React.FC = () => {
   const vaultBalance = vault?.vaultBalance ?? 0;
   const ticketCount = vault?.ticketCount ?? 0;
   const segment = (user?.segment || "common").toLowerCase();
+  const userLevel = user?.level ?? 1;
 
   const getGlowClass = (seg: string) => {
     switch (seg) {
@@ -75,6 +76,22 @@ const V2AppHeader: React.FC = () => {
         return "border-amber-400/50 shadow-[0_0_10px_rgba(251,191,36,0.3)]";
       default:
         return "border-cc-lime/50 shadow-[0_0_10px_rgba(210,253,156,0.2)]";
+    }
+  };
+
+  const getSegmentEmoji = (seg: string) => {
+    switch (seg) {
+      case "whale":
+        return "🐋";
+      case "vip":
+        return "👑";
+      case "new":
+        return "🌱";
+      case "at_risk":
+        return "⚠️";
+      case "common":
+      default:
+        return "⭐";
     }
   };
 
@@ -102,11 +119,14 @@ const V2AppHeader: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col leading-none">
-              <span className="text-[14px] font-black text-white truncate max-w-[80px]">
-                {user?.nickname || "Guest"}
-              </span>
+              <div className="flex items-center gap-1">
+                <span className="text-[12px]">{getSegmentEmoji(segment)}</span>
+                <span className="text-[14px] font-black text-white truncate max-w-[70px]">
+                  {user?.nickname || "Guest"}
+                </span>
+              </div>
               <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter mt-1">
-                LEVEL 1
+                LEVEL {userLevel}
               </span>
             </div>
           </div>
