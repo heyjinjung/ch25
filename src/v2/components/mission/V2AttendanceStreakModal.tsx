@@ -56,10 +56,18 @@ const V2AttendanceStreakModal: React.FC<V2AttendanceStreakModalProps> = ({
     const g = grants[0];
     if (!g) return <Star className={clsx(sizeClass, "text-white/20")} />;
 
-    if (g.token_type === "ROULETTE_COIN")
+    // Aligned with docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
+    if (g.token_type === "ROULETTE_TICKET")
       return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🎯</span>;
-    if (g.token_type === "DICE_TOKEN")
+    if (g.token_type === "DICE_TICKET")
       return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🎲</span>;
+    if (g.token_type === "LOTTERY_TICKET")
+      return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🎫</span>;
+    if (g.token_type === "GOLD_KEY_TICKET")
+      return <span className={isLastDay ? "text-4xl" : "text-3xl"}>🔑</span>;
+    if (g.token_type === "DIAMOND_TICKET")
+      return <span className={isLastDay ? "text-4xl" : "text-3xl"}>💎</span>;
+
     if (g.item_type === "DIAMOND" || g.token_type === "DIAMOND") {
       return (
         <img

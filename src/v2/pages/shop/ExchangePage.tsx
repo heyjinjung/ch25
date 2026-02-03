@@ -41,6 +41,7 @@ const getItemImage = (type: string) => {
   const t = type.toLowerCase();
   if (t.includes("starbucks"))
     return "/assets/icons/takeaway-cup-dynamic-color.png";
+  if (t.includes("google")) return "/assets/icons/bell.png";
   if (t.includes("diamond")) return "/assets/icons/diakey.png";
   if (t.includes("gold_key") || t.includes("goldkey"))
     return "/assets/icons/goldkey.png";
@@ -321,7 +322,8 @@ export default function ExchangePage() {
                     title="기프티콘 실사용 안내"
                     description={
                       <>
-                        치킨/스벅 깁콘은 2만부터<br />
+                        치킨/스벅 깁콘은 2만부터
+                        <br />
                         피자 깁콘은 3만부터 사용가능하십니다
                       </>
                     }

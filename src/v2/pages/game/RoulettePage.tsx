@@ -11,6 +11,7 @@ import {
 import "./RouletteRedesign.css";
 import { useSound } from "../../../hooks/useSound";
 import { Loader2 } from "lucide-react";
+import { triggerHaptic } from "../../utils/haptic";
 
 type RouletteTicketType =
   | "ROULETTE_TICKET"
@@ -102,6 +103,7 @@ export default function RoulettePage() {
     mutationFn: () =>
       playV2Roulette({ ticket_type: activeTab, bet_multiplier: 1 }),
     onSuccess: (data) => {
+      triggerHaptic("medium"); // 스핀 시작 햅틱
       setWinningSegment(data.game_data.segment.slot_index);
       setLastWinAmount(data.game_data.segment.reward_amount);
       setLastWinType(data.game_data.segment.reward_type);
@@ -111,6 +113,7 @@ export default function RoulettePage() {
   });
 
   const handleSpinComplete = () => {
+    triggerHaptic("heavy"); // 스핀 완료 햅틱
     setIsSpinning(false);
     queryClient.invalidateQueries({ queryKey: ["v2-roulette-status"] });
     queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });

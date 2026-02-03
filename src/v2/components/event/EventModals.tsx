@@ -5,6 +5,12 @@ import { MatrixText } from "../ui/MatrixText";
 import { Button } from "../ui/button";
 import { useV2Missions, useV2StreakRules, useV2ClaimStreakReward } from "../../hooks/useV2Mission";
 import { tryHaptic } from "../../utils/haptics";
+import type { V2StreakRule, MissionListResponse } from "../../api/missionApi";
+
+interface AttendanceReward {
+  label: string;
+  icon: string;
+}
 
 interface EventModalsProps {
   selectedId: string | null;
@@ -12,8 +18,8 @@ interface EventModalsProps {
 }
 
 const AttendanceModalContent: React.FC = () => {
-  const { data: missionData, isLoading: missionsLoading } = useV2Missions("DAILY");
-  const { data: rules = [], isLoading: rulesLoading } = useV2StreakRules();
+  const { data: missionData, isLoading: missionsLoading } = useV2Missions("DAILY") as { data: MissionListResponse | undefined, isLoading: boolean };
+  const { data: rules = [], isLoading: rulesLoading } = useV2StreakRules() as { data: V2StreakRule[] | undefined, isLoading: boolean };
   const claimMutation = useV2ClaimStreakReward();
 
   if (missionsLoading || rulesLoading) {
@@ -38,13 +44,18 @@ const AttendanceModalContent: React.FC = () => {
     }
   };
 
-  const getRewardInfo = (rule: any) => {
+  const getRewardInfo = (rule: V2StreakRule): AttendanceReward => {
     const grant = rule.grants[0];
     if (!grant) return { label: "Reward", icon: "🎁" };
-    if (grant.token_type === "ROULETTE_COIN") return { label: "룰렛 티켓", icon: "🎯" };
-    if (grant.token_type === "DICE_TOKEN") return { label: "다이스 티켓", icon: "🎲" };
+    
+    // Aligned with docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
+    if (grant.token_type === "ROULETTE_TICKET") return { label: "룰렛 티켓", icon: "🎯" };
+    if (grant.token_type === "DICE_TICKET") return { label: "다이스 티켓", icon: "🎲" };
     if (grant.token_type === "LOTTERY_TICKET") return { label: "복권 티켓", icon: "🎫" };
+    if (grant.token_type === "GOLD_KEY_TICKET") return { label: "골드 키", icon: "🔑" };
+    if (grant.token_type === "DIAMOND_TICKET") return { label: "다이아 티켓", icon: "💎" };
     if (grant.token_type === "DIAMOND" || grant.item_type === "DIAMOND") return { label: "다이아몬드", icon: "💎" };
+    
     return { label: "특별 보상", icon: "🎁" };
   };
 
@@ -273,6 +284,7 @@ export const EventModals: React.FC<EventModalsProps> = ({ selectedId, onClose })
             
             <button
               onClick={onClose}
+              aria-label="닫기"
               className="absolute top-6 right-6 p-2 rounded-full bg-white/5 border border-white/10 text-white/40 hover:text-white transition-colors"
             >
               <X size={20} />
