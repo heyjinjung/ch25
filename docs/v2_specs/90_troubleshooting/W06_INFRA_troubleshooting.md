@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 2 |
+| 해결된 이슈 | 3 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -22,6 +22,33 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-03 - API: Admin 닉네임 수정 500 에러 (AttributeError: log_action) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | PATCH /api/v2/admin/users/{id}/nickname |
+| HTTP Status | 500 (Internal Server Error) |
+| 영향 범위 | 관리자 유저 닉네임 수정 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- Stack Trace: `AttributeError: type object 'V2AdminAuditService' has no attribute 'log_action'`
+- `V2AdminAuditService` 클래스에는 `log()` 메서드만 존재, `log_action()` 호출은 잘못됨
+- 코드에서 잘못된 메서드명 사용 + 파라미터 순서 불일치
+
+**해결 방법**
+- `user_routes.py` 323라인 수정:
+  - `V2AdminAuditService.log_action(db, admin_id, "UPDATE_NICKNAME", str(user_id), ...)` 
+  - → `V2AdminAuditService.log(db, admin_id, "UPDATE_NICKNAME", target_type="USER", target_id=str(user_id), ...)`
+- 관련 파일: [app/v2/api/admin/user_routes.py](../../../app/v2/api/admin/user_routes.py#L323-L331)
+
+**검증 방법**
+- 관리자 페이지에서 유저 닉네임 수정 → 200 OK 응답 확인
+- `docker logs xmas-backend --tail=50`에서 AttributeError 없음 확인
+
+---
 
 ### 02-02 - INFRA Redis Consumer Group NOGROUP 에러 (mission_workers)
 | 항목 | 내용 |

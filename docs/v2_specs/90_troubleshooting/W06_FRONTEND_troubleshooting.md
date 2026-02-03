@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 0 |
+| 해결된 이슈 | 2 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,56 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-03 - FRONTEND/UX: 신규 가입 CC 닉네임 입력 필드 대비 부족 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | V2TelegramLoginPage 닉네임 입력 필드 |
+| HTTP Status | N/A (UI 문제) |
+| 영향 범위 | 신규 가입 전체 유저 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 입력 필드 배경(`bg-obsidian-card`)과 페이지 배경이 거의 동일하여 시각적 구분 불가
+- border도 `border-obsidian-border`로 너무 희미함
+
+**해결 방법**
+- 입력 필드 스타일 변경:
+  - `bg-obsidian-card` → `bg-white/10`
+  - `border border-obsidian-border` → `border-2 border-white/30`
+  - focus 시 `border-amber-400` + `ring-2 ring-amber-400/50`
+- 관련 파일: [src/v2/pages/auth/V2TelegramLoginPage.tsx](../../../src/v2/pages/auth/V2TelegramLoginPage.tsx#L311-L320)
+
+**검증 방법**
+- 텔레그램 인앱에서 입력 필드가 명확하게 보이는지 확인
+- 입력 시 amber 포커스 링이 표시되는지 확인
+
+---
+
+### 02-03 - FRONTEND/TS: Telegram 타입 정의 인식 오류 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | V2TelegramLoginPage 빌드 |
+| HTTP Status | N/A (타입 에러) |
+| 영향 범위 | 빌드 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- `window.Telegram` 타입이 `src/types/telegram.d.ts`에 정의되어 있으나 파일에서 인식 못함
+- 에러: `'Window & typeof globalThis' 형식에 'Telegram' 속성이 없습니다.`
+
+**해결 방법**
+- 파일 상단에 `/// <reference types="../../../types/telegram" />` 추가
+- 관련 파일: [src/v2/pages/auth/V2TelegramLoginPage.tsx](../../../src/v2/pages/auth/V2TelegramLoginPage.tsx#L9)
+
+**검증 방법**
+- `npm run build` 또는 `tsc --noEmit` 통과 확인
+
+---
 
 ### 02-02 - FRONTEND/UX: 텔레그램 인앱에서 스트릭 모달 레이아웃 깨짐
 
