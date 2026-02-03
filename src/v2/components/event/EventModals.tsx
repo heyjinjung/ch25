@@ -40,11 +40,12 @@ const AttendanceModalContent: React.FC = () => {
 
   const getRewardInfo = (rule: any) => {
     const grant = rule.grants[0];
-    if (!grant) return "Reward";
-    if (grant.token_type === "ROULETTE_COIN") return "룰렛 티켓 🎯";
-    if (grant.token_type === "DICE_TOKEN") return "다이스 티켓 🎲";
-    if (grant.token_type === "DIAMOND" || grant.item_type === "DIAMOND") return "다이아몬드 💎";
-    return "특별 보상 🎁";
+    if (!grant) return { label: "Reward", icon: "🎁" };
+    if (grant.token_type === "ROULETTE_COIN") return { label: "룰렛 티켓", icon: "🎯" };
+    if (grant.token_type === "DICE_TOKEN") return { label: "다이스 티켓", icon: "🎲" };
+    if (grant.token_type === "LOTTERY_TICKET") return { label: "복권 티켓", icon: "🎫" };
+    if (grant.token_type === "DIAMOND" || grant.item_type === "DIAMOND") return { label: "다이아몬드", icon: "💎" };
+    return { label: "특별 보상", icon: "🎁" };
   };
 
   return (
@@ -67,35 +68,39 @@ const AttendanceModalContent: React.FC = () => {
         <p className="text-[13px] text-white/50 px-8 leading-relaxed">매일 접속만 해도 쏟아지는 혜택!<br/>7일 연속 달성 시 잭팟 기회가 주어집니다.</p>
       </div>
       
-      <div className="bg-white/5 rounded-[32px] p-6 border border-white/5 max-h-[320px] overflow-y-auto no-scrollbar">
-        <div className="space-y-3">
+      <div className="max-h-[380px] overflow-y-auto no-scrollbar pr-1">
+        <div className="grid grid-cols-1 gap-2.5">
           {rules.slice().sort((a, b) => a.day - b.day).map((rule) => {
             const isCompleted = currentStreak >= rule.day;
             const isTarget = claimableDay === rule.day;
+            const reward = getRewardInfo(rule);
             
             return (
               <div 
                 key={rule.day} 
-                className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                className={`flex items-center gap-4 p-4 rounded-3xl border transition-all ${
                   isTarget ? 'bg-emerald-500/10 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : 
-                  isCompleted ? 'bg-white/5 border-white/10 opacity-60' : 'bg-transparent border-white/5'
+                  isCompleted ? 'bg-white/5 border-white/10 opacity-60' : 'bg-white/5 border-white/5'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black ${
-                     isCompleted ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white/40'
-                   }`}>
-                     {isCompleted ? <CheckCircle2 size={16} /> : rule.day}
-                   </div>
-                  <span className={`text-[13px] font-bold ${isCompleted ? 'text-white' : 'text-white/40'}`}>
-                    {rule.day}일차
-                  </span>
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-xl ${
+                  isCompleted ? 'bg-emerald-500 text-black' : 'bg-emerald-500/10'
+                }`}>
+                  {isCompleted ? <CheckCircle2 size={18} strokeWidth={3} /> : reward.icon}
                 </div>
-                <div className="flex flex-col items-end">
-                   <span className={`text-[12px] font-black ${isTarget ? 'text-emerald-400' : isCompleted ? 'text-white/60' : 'text-white/20'}`}>
-                    {getRewardInfo(rule)}
-                    {rule.grants[0]?.amount && rule.grants[0].amount > 1 && ` x${rule.grants[0].amount}`}
-                   </span>
+                
+                <div className="flex-1">
+                  <div className={`text-[13px] font-bold ${isCompleted ? 'text-white' : 'text-white/60'}`}>
+                    {rule.day}일차 출석
+                  </div>
+                  <div className={`text-[11px] font-black ${isTarget ? 'text-emerald-400' : isCompleted ? 'text-emerald-500/50' : 'text-emerald-500/80'}`}>
+                    {reward.label}
+                    {rule.grants[0]?.amount && rule.grants[0].amount > 1 && ` x${rule.grants[0].amount}`} 지급
+                  </div>
+                </div>
+
+                <div className="text-[10px] font-black text-white/20 uppercase tracking-tighter">
+                  DAY 0{rule.day}
                 </div>
               </div>
             );
