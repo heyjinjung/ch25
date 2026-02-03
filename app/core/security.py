@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 import jwt
-import hashlib
+import bcrypt
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
@@ -76,11 +76,22 @@ def decode_telegram_link_token(token: str) -> Dict[str, Any]:
 
 
 def hash_password(password: str) -> str:
-    """Simple SHA256-based hash (lightweight, not for production)."""
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    """Hash password using bcrypt (new accounts) or SHA256 (legacy)."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(password: str, password_hash: str | None) -> bool:
+    """Verify password against bcrypt or SHA256 hash (legacy compatibility)."""
     if not password_hash:
         return False
-    return hash_password(password) == password_hash
+    
+    # Check if it's a bcrypt hash (starts with $2b$)
+    if password_hash.startswith("$2b$") or password_hash.startswith("$2a$"):
+        try:
+            return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+        except Exception:
+            return False
+    
+    # Legacy SHA256 fallback
+    import hashlib
+    return hashlib.sha256(password.encode("utf-8")).hexdigest() == password_hash
