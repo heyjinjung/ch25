@@ -240,43 +240,43 @@ class RewardService:
             bundle_items = []
             if reward_amount == 3:  # Level 3: All-in-one Bundle
                 bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 1),
-                    (GameTokenType.DICE_TOKEN, 1),
+                    (GameTokenType.ROULETTE_TICKET, 1),
+                    (GameTokenType.DICE_TICKET, 1),
                     (GameTokenType.LOTTERY_TICKET, 1),
                 ]
             elif reward_amount == 6:  # Level 5: Mini Ticket bomb
                 bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 3),
-                    (GameTokenType.DICE_TOKEN, 3),
+                    (GameTokenType.ROULETTE_TICKET, 3),
+                    (GameTokenType.DICE_TICKET, 3),
                 ]
             elif reward_amount == 7:  # Level 7: 10,000 Point + Gold Key 1
                 # [FIX] Force grant_point -> _grant_vault_locked
                 self._grant_vault_locked(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7", meta=meta, commit=commit)
-                bundle_items = [(GameTokenType.GOLD_KEY, 1)]
+                bundle_items = [(GameTokenType.GOLD_KEY_TICKET, 1)]
             elif reward_amount == 12:  # Level 14: Special Bundle
                 bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 5),
-                    (GameTokenType.DICE_TOKEN, 5),
+                    (GameTokenType.ROULETTE_TICKET, 5),
+                    (GameTokenType.DICE_TICKET, 5),
                     (GameTokenType.LOTTERY_TICKET, 2),
                 ]
             elif reward_amount == 15:  # Level 15: Gold Key 2 + 100,000 Point
                 # [FIX] Force grant_point -> _grant_vault_locked
                 self._grant_vault_locked(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15", meta=meta, commit=commit)
-                bundle_items = [(GameTokenType.GOLD_KEY, 2)]
+                bundle_items = [(GameTokenType.GOLD_KEY_TICKET, 2)]
             elif reward_amount == 30:  # Level 17: Mega Ticket Bundle
                 bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 10),
-                    (GameTokenType.DICE_TOKEN, 10),
+                    (GameTokenType.ROULETTE_TICKET, 10),
+                    (GameTokenType.DICE_TICKET, 10),
                     (GameTokenType.LOTTERY_TICKET, 10),
                 ]
             elif reward_amount == 20:  # Level 20: Diamond Key 3 + 300,000 Point
                 # [FIX] Force grant_point -> _grant_vault_locked
                 self._grant_vault_locked(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20", meta=meta, commit=commit)
-                bundle_items = [(GameTokenType.DIAMOND_KEY, 3)]
+                bundle_items = [(GameTokenType.DIAMOND_TICKET, 3)]
             elif reward_amount == 4:  # Legacy/Small
                 bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 2),
-                    (GameTokenType.DICE_TOKEN, 2),
+                    (GameTokenType.ROULETTE_TICKET, 2),
+                    (GameTokenType.DICE_TICKET, 2),
                 ]
             
             for token_type, amount in bundle_items:
@@ -374,21 +374,22 @@ class RewardService:
             "PUZZLE_M": GameTokenType.PUZZLE_M,
             "PUZZLE_C1": GameTokenType.PUZZLE_C1,
             "PUZZLE_C2": GameTokenType.PUZZLE_C2,
-            "TICKET_ROULETTE": GameTokenType.ROULETTE_COIN,
-            "ROULETTE_TICKET": GameTokenType.ROULETTE_COIN,
-            "ROULETTE_COIN": GameTokenType.ROULETTE_COIN,
-            "TICKET_DICE": GameTokenType.DICE_TOKEN,
-            "DICE_TICKET": GameTokenType.DICE_TOKEN,
-            "DICE_TOKEN": GameTokenType.DICE_TOKEN,
+            # V2 Standard Names (Preferred) - SoT Compliant
+            "TICKET_ROULETTE": GameTokenType.ROULETTE_TICKET,
+            "ROULETTE_TICKET": GameTokenType.ROULETTE_TICKET,
+            "TICKET_DICE": GameTokenType.DICE_TICKET,
+            "DICE_TICKET": GameTokenType.DICE_TICKET,
             "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
-            # "CC_COIN": GameTokenType.CC_COIN,  # [REMOVED]
-            "GOLD_KEY": GameTokenType.GOLD_KEY,
-            "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
             "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY_TICKET,
             "DIAMOND_TICKET": GameTokenType.DIAMOND_TICKET,
             "GOLD_KEY_FRAGMENT": GameTokenType.GOLD_KEY_FRAGMENT,
             "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_FRAGMENT,
+            # V1 Legacy Names (For backward compatibility with old DB entries)
+            "ROULETTE_COIN": GameTokenType.ROULETTE_TICKET,
+            "DICE_TOKEN": GameTokenType.DICE_TICKET,
+            "GOLD_KEY": GameTokenType.GOLD_KEY_TICKET,
+            "DIAMOND_KEY": GameTokenType.DIAMOND_TICKET,
         }
         if reward_type in ticket_map:
             token_type = ticket_map[reward_type]

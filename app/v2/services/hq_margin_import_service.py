@@ -217,14 +217,36 @@ class HQMarginImportService:
                             db.add(user_segment)
                             created_count += 1
                         
-                        # CC Deposit 페이로드 추가 (누적 충전 금액 반영)
-                        if total_charge > 0:
+                        # ========== V2 가입일 기준 충전액 계산 (baseline 차액) ==========
+                        # baseline_charge_amount: V2 가입 시점의 기준 누적액
+                        # - 최초 Import: baseline = 0 → 현재 CSV 누적액을 baseline으로 설정
+                        # - 이후 Import: 유효 충전액 = CSV 누적액 - baseline
+                        baseline = int(v2_user.baseline_charge_amount or 0)
+                        
+                        if baseline == 0 and total_charge > 0:
+                            # 최초 Import: baseline 설정 (기존 충전 내역은 무시)
+                            v2_user.baseline_charge_amount = total_charge
+                            logger.info(
+                                f"[CSV Import] Set baseline for user_id={v2_user.id}: {total_charge}"
+                            )
+                            # 최초 Import는 CC Deposit 반영하지 않음 (baseline 설정만)
+                            skipped_count += 1
+                        elif total_charge > baseline:
+                            # 이후 Import: baseline 이후 신규 충전액만 반영
+                            effective_charge = total_charge - baseline
                             cc_deposit_payloads.append(CCDepositCreate(
                                 user_id=v2_user.id,
-                                deposit_amount=total_charge,
+                                deposit_amount=effective_charge,
                                 play_count=0,  # HQ CSV에 플레이 카운트 없음
                             ))
                             cc_deposit_count += 1
+                            logger.info(
+                                f"[CSV Import] Effective charge for user_id={v2_user.id}: "
+                                f"CSV={total_charge}, baseline={baseline}, effective={effective_charge}"
+                            )
+                        else:
+                            # 충전액 변동 없음 (baseline 이하)
+                            skipped_count += 1
                     
                     elif match_status == "AMBIGUOUS":
                         # ========== 동명이인: 미매칭 로그 저장 ==========

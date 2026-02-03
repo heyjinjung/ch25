@@ -44,6 +44,8 @@ class V2User(Base):
     vault_spent_today = Column(Integer, nullable=False, default=0)
     vault_spent_reset_date = Column(String(10), nullable=True)  # YYYY-MM-DD
     total_charge_amount = Column(Integer, nullable=False, default=0)
+    # V2 가입 시점 기준 누적 충전액 (CSV Import 시 차액 계산용)
+    baseline_charge_amount = Column(Integer, nullable=False, default=0)
     # Streak system inherited for mission logic
     play_streak = Column(Integer, nullable=False, default=0)
     last_play_date = Column(Date, nullable=True)

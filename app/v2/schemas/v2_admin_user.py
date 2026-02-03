@@ -123,6 +123,24 @@ class AdminWalletAdjustmentRequest(BaseModel):
     amount: int = Field(..., description="Amount to change (positive for grant, negative for revoke)")
     token_type: str = Field("VAULT", description="VAULT or specific Token name")
     reason: str = Field(..., min_length=1)
+    force: bool = Field(False, description="Force mode: ignore insufficient balance and set to 0 if needed")
+
+
+class AdminUserResetRequest(BaseModel):
+    """유저 데이터 강제 초기화 요청."""
+    reset_level: bool = Field(False, description="Reset level and XP to 0")
+    reset_deposit: bool = Field(False, description="Reset total_charge_amount and baseline to 0")
+    reset_vault: bool = Field(False, description="Reset vault balances to 0")
+    reset_tokens: bool = Field(False, description="Reset all game tokens to 0")
+    reason: str = Field(..., min_length=1, description="Admin audit reason")
+
+
+class AdminUserResetResponse(BaseModel):
+    """유저 데이터 초기화 결과."""
+    success: bool
+    user_id: int
+    reset_items: List[str]
+    message: str
 
 
 class InterventionExecutionResponse(BaseModel):

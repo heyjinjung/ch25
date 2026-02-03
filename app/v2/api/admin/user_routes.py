@@ -27,6 +27,8 @@ from app.v2.schemas.v2_admin_user import (
     AdminWalletAdjustmentRequest,
     AdminNicknameUpdateRequest,
     AdminNicknameUpdateResponse,
+    AdminUserResetRequest,
+    AdminUserResetResponse,
     CreateUserNoteRequest,
     InterventionActionDto,
     InterventionExecutionResponse,
@@ -485,6 +487,116 @@ def set_admin_user_level(
     )
 
 
+@router.post("/users/{user_id}/reset", response_model=AdminUserResetResponse)
+def reset_user_data(
+    user_id: int,
+    payload: AdminUserResetRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    유저 데이터 강제 초기화 API.
+    
+    - reset_level: 레벨/XP를 0으로 (V2User.level + user_level_progress)
+    - reset_deposit: 입금액/baseline을 0으로
+    - reset_vault: 금고 잔액을 0으로
+    - reset_tokens: 모든 게임 토큰을 0으로
+    
+    ⚠️ 위험한 작업이므로 감사 로그 필수 기록.
+    """
+    admin_id, admin_role = admin_info
+    
+    user = db.query(V2User).filter(V2User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    
+    reset_items = []
+    before_state = {}
+    after_state = {}
+    
+    # 1) 레벨/XP 초기화
+    if payload.reset_level:
+        # V2User.level
+        before_state["v2_user_level"] = user.level
+        user.level = 0
+        after_state["v2_user_level"] = 0
+        
+        # user_level_progress 테이블
+        progress = db.get(UserLevelProgress, user_id)
+        if progress:
+            before_state["level_progress"] = {"level": progress.level, "xp": progress.xp}
+            progress.level = 0
+            progress.xp = 0
+            after_state["level_progress"] = {"level": 0, "xp": 0}
+        
+        reset_items.append("level")
+        logger.info(f"[ADMIN RESET] user_id={user_id} level reset by admin={admin_id}")
+    
+    # 2) 입금액/baseline 초기화
+    if payload.reset_deposit:
+        before_state["total_charge_amount"] = user.total_charge_amount
+        before_state["baseline_charge_amount"] = getattr(user, 'baseline_charge_amount', 0)
+        
+        user.total_charge_amount = 0
+        if hasattr(user, 'baseline_charge_amount'):
+            user.baseline_charge_amount = 0
+        
+        after_state["total_charge_amount"] = 0
+        after_state["baseline_charge_amount"] = 0
+        reset_items.append("deposit")
+        logger.info(f"[ADMIN RESET] user_id={user_id} deposit reset by admin={admin_id}")
+    
+    # 3) 금고 잔액 초기화
+    if payload.reset_vault:
+        before_state["vault_locked"] = user.vault_locked_balance
+        before_state["vault_available"] = user.vault_available_balance
+        
+        user.vault_locked_balance = 0
+        user.vault_available_balance = 0
+        
+        after_state["vault_locked"] = 0
+        after_state["vault_available"] = 0
+        reset_items.append("vault")
+        logger.info(f"[ADMIN RESET] user_id={user_id} vault reset by admin={admin_id}")
+    
+    # 4) 게임 토큰 초기화
+    if payload.reset_tokens:
+        wallets = db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).all()
+        before_tokens = {}
+        for w in wallets:
+            token_name = w.token_type.name if hasattr(w.token_type, "name") else str(w.token_type)
+            before_tokens[token_name] = w.balance
+            w.balance = 0
+        
+        before_state["tokens"] = before_tokens
+        after_state["tokens"] = {k: 0 for k in before_tokens}
+        reset_items.append("tokens")
+        logger.info(f"[ADMIN RESET] user_id={user_id} tokens reset by admin={admin_id}")
+    
+    if not reset_items:
+        raise HTTPException(status_code=400, detail="NO_RESET_OPTION_SELECTED")
+    
+    # 감사 로그 기록
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "USER_DATA_RESET",
+        "USER",
+        str(user_id),
+        before=before_state,
+        after={"reset_items": reset_items, "reason": payload.reason, **after_state},
+    )
+    
+    db.commit()
+    
+    return AdminUserResetResponse(
+        success=True,
+        user_id=user_id,
+        reset_items=reset_items,
+        message=f"초기화 완료: {', '.join(reset_items)}",
+    )
+
+
 @router.get("/users/{user_id}", response_model=AdminUserDetailDto)
 def get_admin_user_detail(
     user_id: int,
@@ -631,7 +743,14 @@ def adjust_user_wallet(
             if payload.amount > 0:
                 V2VaultService.deposit(db, user_id, payload.amount, reason="ADMIN_MANUAL", ref_type="ADMIN")
             else:
-                V2VaultService.withdraw(db, user_id, abs(payload.amount), reason="ADMIN_MANUAL", ref_type="ADMIN")
+                # Force mode: 잔액 부족 시 잔액만큼만 차감 (0으로 설정)
+                if payload.force:
+                    current_balance = int(user.vault_locked_balance or 0)
+                    withdraw_amount = min(abs(payload.amount), current_balance)
+                    if withdraw_amount > 0:
+                        V2VaultService.withdraw(db, user_id, withdraw_amount, reason="ADMIN_MANUAL_FORCE", ref_type="ADMIN")
+                else:
+                    V2VaultService.withdraw(db, user_id, abs(payload.amount), reason="ADMIN_MANUAL", ref_type="ADMIN")
         except ValueError as e:
             msg = str(e).lower()
             if "insufficient" in msg:
@@ -653,14 +772,32 @@ def adjust_user_wallet(
                     label=f"ADMIN:{admin_id}",
                 )
             else:
-                V2AdminInventoryService.revoke_tokens(
-                    db,
-                    user_id=user_id,
-                    token_type=token_enum,
-                    amount=abs(payload.amount),
-                    reason=payload.reason,
-                    label=f"ADMIN:{admin_id}",
-                )
+                # Force mode: 잔액 부족 시 잔액만큼만 차감
+                if payload.force:
+                    wallet = db.query(UserGameWallet).filter(
+                        UserGameWallet.user_id == user_id,
+                        UserGameWallet.token_type == token_enum
+                    ).first()
+                    current_balance = int(wallet.balance or 0) if wallet else 0
+                    revoke_amount = min(abs(payload.amount), current_balance)
+                    if revoke_amount > 0:
+                        V2AdminInventoryService.revoke_tokens(
+                            db,
+                            user_id=user_id,
+                            token_type=token_enum,
+                            amount=revoke_amount,
+                            reason=payload.reason + " (FORCE)",
+                            label=f"ADMIN:{admin_id}",
+                        )
+                else:
+                    V2AdminInventoryService.revoke_tokens(
+                        db,
+                        user_id=user_id,
+                        token_type=token_enum,
+                        amount=abs(payload.amount),
+                        reason=payload.reason,
+                        label=f"ADMIN:{admin_id}",
+                    )
         except NotEnoughTokensError:
             raise HTTPException(status_code=400, detail="INSUFFICIENT_TOKEN_BALANCE")
 
@@ -672,7 +809,7 @@ def adjust_user_wallet(
         "WALLET_ADJUST",
         "USER",
         str(user_id),
-        before={"token_type": payload.token_type, "amount_change": payload.amount},
+        before={"token_type": payload.token_type, "amount_change": payload.amount, "force": payload.force},
         after={"reason": payload.reason},
     )
 
