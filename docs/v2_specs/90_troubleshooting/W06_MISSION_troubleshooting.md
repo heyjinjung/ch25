@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 2 |
+| 해결된 이슈 | 3 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,42 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-03 - MISSION/주간 출석 갱신 미반영 (jm9567)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 주간 출석(주간 미션) 갱신 |
+| HTTP Status | 200 (UI/표시 불일치) |
+| 영향 범위 | 특정 유저 (telegram_username=jm9567, user_id=1) |
+| 재현 빈도 | 항상 |
+
+**증거 기반 RCA**
+- 주간 리셋 키는 **ISO 주차 키(`%Y-W%V`)**로 계산되며, 별도 배치가 아닌 **액션 트리거(미션 이벤트 발생)** 시점에 새 `reset_date`로 진행 기록이 생성됨.
+    - 근거: `V2MissionService._get_reset_date_str()` → WEEKLY는 `now_tz.strftime("%Y-W%V")`
+    - 근거: `update_progress()`가 발생해야 `UserMissionProgress` 생성/갱신
+
+**운영 서버 증거 (jm9567)**
+- 현재 KST 기준 주차 키: `2026-W06`
+- 주간 미션 2개 확인
+    1) `WEEKLY_LOGIN_STREAK_TEST` (주간 연속출석, action=LOGIN)
+         - `UserMissionProgress.reset_date=2026-W06`, `current_value=3`, `is_completed=True`, `is_claimed=True`
+    2) `WEEKLY_WEEKLY_CC_DEPOSIT_3` (주간 CC 입금 3회)
+         - 최신 진행 `reset_date=2026-W05`, `current_value=1`, `is_completed=False`
+
+**결론**
+- **주간 출석(로그인) 미션은 W06로 정상 갱신/완료** 상태임.
+- 반면 **주간 CC 입금 미션은 W06 주차에 트리거가 발생하지 않아** 신규 진행이 생성되지 않음.
+    - 즉, “갱신 안됨”이 **주간 로그인 미션이 아닌** 다른 주간 미션(입금/플레이 등)일 가능성이 높음.
+
+**조치/안내**
+1) UI가 “주간 출석”으로 표시하는 대상이 **로그인 미션**인지 **주간 CC 입금 미션**인지 확인 필요
+2) 주간 CC 입금은 **입금 이벤트(CC_DEPOSIT)**가 발생해야 W06 진행이 생성됨
+
+**검증 방법**
+- `UserMissionProgress.reset_date`가 `YYYY-Www`로 갱신되는지 확인
+- 해당 미션의 action_type 이벤트(`LOGIN` 또는 `CC_DEPOSIT`) 발생 후 진행도 생성 확인
 
 ### 02-02 - MISSION/정책 확인: 지연 입금 선반영 XP/레벨 보상 여부
 

@@ -94,7 +94,7 @@ const AttendanceModalContent: React.FC = () => {
                 <div className="flex flex-col items-end">
                    <span className={`text-[12px] font-black ${isTarget ? 'text-emerald-400' : isCompleted ? 'text-white/60' : 'text-white/20'}`}>
                     {getRewardInfo(rule)}
-                    {rule.grants[0]?.amount > 1 && ` x${rule.grants[0].amount}`}
+                    {rule.grants[0]?.amount && rule.grants[0].amount > 1 && ` x${rule.grants[0].amount}`}
                    </span>
                 </div>
               </div>

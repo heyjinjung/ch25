@@ -125,7 +125,7 @@ export const VaultCTA: React.FC<VaultCTAProps> = ({
           whileTap={{ scale: 0.98 }}
           className="w-full h-11 rounded-[22px] bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-2 text-sm font-semibold text-amber-300"
         >
-          입금 지연 신고
+          입금반영이 늦을 때
         </motion.button>
       )}
 

@@ -145,16 +145,14 @@ export default function LatencyReportModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-xl italic font-black">
             <Clock className="w-5 h-5 text-amber-400" />
-            입금 지연 신고
+            입금반영이 늦나요?
           </DialogTitle>
-          <DialogDescription className="text-zinc-400">
-            입금이 지연되고 있다면 신고해 주세요.
-            <br />
-            확인 즉시{" "}
-            <span className="text-lime-400 font-medium">룰렛 티켓 5장</span>을
-            선지급해 드립니다.
+          <DialogDescription className="text-zinc-400 leading-relaxed">
+            기다리게 해서 죄송합니다!<br/>
+            <span className="text-lime-400 font-black">룰렛 티켓 3장</span>을
+            미리 선물해 드릴게요!
           </DialogDescription>
         </DialogHeader>
 
@@ -165,17 +163,17 @@ export default function LatencyReportModal({
               <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-emerald-400" />
               </div>
-              <h3 className="text-lg font-semibold text-white">
-                신고가 접수되었습니다!
+              <h3 className="text-lg font-black text-white italic">
+                소중한 의견 감사합니다!
               </h3>
-              <p className="text-sm text-zinc-400">{result.message}</p>
+              <p className="text-sm text-zinc-400">정상적으로 접수되었어요. {result.message}</p>
             </div>
 
             {/* Reward Display */}
             <div className="bg-lime-500/10 border border-lime-500/30 rounded-lg p-4 flex items-center gap-3">
               <Gift className="w-6 h-6 text-lime-400" />
               <div>
-                <p className="text-sm font-medium text-lime-300">선지급 완료</p>
+                <p className="text-sm font-black text-lime-300">선물 지급 완료!</p>
                 <p className="text-xs text-zinc-400">
                   룰렛 티켓 {result.reward_granted?.ROULETTE_TICKET || 5}장
                 </p>
@@ -186,7 +184,7 @@ export default function LatencyReportModal({
               onClick={handleClose}
               className="w-full bg-zinc-700 hover:bg-zinc-600"
             >
-              확인
+              확인했습니다!
             </Button>
           </div>
         ) : (
@@ -261,7 +259,7 @@ export default function LatencyReportModal({
               <div className="flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-amber-200 space-y-1">
-                  <p className="font-medium">주의사항</p>
+                  <p className="font-black text-amber-200 italic">꼭 읽어주세요!</p>
                   <ul className="list-disc list-inside text-amber-300/80 space-y-0.5">
                     <li>선지급된 티켓이 우선 사용된 것으로 간주됩니다.</li>
                     <li>허위 신고 시 선지급 재화 + 당첨금 전액 회수</li>
@@ -282,7 +280,7 @@ export default function LatencyReportModal({
                 className="mt-1 rounded border-zinc-600 bg-zinc-800 text-lime-500 focus:ring-lime-500"
               />
               <span className="text-xs text-zinc-400">
-                위 주의사항을 확인하였으며, 허위 신고가 아님을 확인합니다.
+                위 내용을 모두 확인했으며, 허위 신고가 아님을 약속합니다.
               </span>
             </label>
 
