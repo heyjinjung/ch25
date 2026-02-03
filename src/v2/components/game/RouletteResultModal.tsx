@@ -183,7 +183,7 @@ export default function RouletteResultModal({
   if (!isOpen) return null;
 
   const renderIcon = () => {
-    const iconClass = "w-28 h-28 object-contain select-none drop-shadow-2xl";
+    const iconClass = "w-20 h-20 object-contain select-none drop-shadow-2xl";
     if (isBigWin) {
       if (rewardType === "POINT" || rewardType === "CC_POINT") {
         return (
@@ -265,7 +265,7 @@ export default function RouletteResultModal({
   };
 
   const cardStyle = cn(
-    "w-full max-w-[340px] rounded-[44px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.8)]",
+    "w-full max-w-[340px] rounded-[40px] p-8 flex flex-col items-center relative overflow-hidden backdrop-blur-3xl shadow-[0_50px_100px_rgba(0,0,0,0.8)]",
     "animate-shimmer",
     isBigWin &&
       "bg-gradient-to-br from-[#121214] via-[#3d1119] to-[#121214] border-red-500/30",
@@ -290,7 +290,7 @@ export default function RouletteResultModal({
           />
         )}
 
-        <div className="flex flex-col items-center gap-1.5 mb-8 z-20">
+        <div className="flex flex-col items-center gap-1.5 mb-6 z-20">
           <span
             className={cn(
               "text-[10px] font-black uppercase tracking-[0.45em]",
@@ -323,14 +323,14 @@ export default function RouletteResultModal({
           </h2>
         </div>
 
-        <div className="relative mb-8 z-20 flex justify-center items-center h-32">
+        <div className="relative mb-6 z-20 flex justify-center items-center h-24">
           {isBigWin && (
             <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 via-orange-600/20 to-pink-600/20 blur-[60px] animate-pulse rounded-full" />
           )}
           {renderIcon()}
         </div>
 
-        <div className="flex flex-col items-center z-20 w-full px-4 mb-9">
+        <div className="flex flex-col items-center z-20 w-full px-4 mb-7">
           <span
             className={cn(
               "text-[10px] font-bold uppercase tracking-widest mb-1.5",
@@ -384,7 +384,7 @@ export default function RouletteResultModal({
               onClose();
             }}
             className={cn(
-              "w-full h-16 rounded-[28px] font-black text-xl transition-all active:scale-[0.97] flex items-center justify-center gap-2.5 group shadow-xl",
+              "w-full h-14 rounded-2xl font-black text-lg transition-all active:scale-[0.97] flex items-center justify-center gap-2.5 group shadow-xl",
               isBigWin
                 ? "bg-white text-red-600 hover:scale-105"
                 : isNormal
@@ -394,7 +394,7 @@ export default function RouletteResultModal({
           >
             {isFail ? "다시 하기" : isBigWin ? "확인" : "보상 받기"}
             <ArrowRight
-              size={22}
+              size={20}
               className="group-hover:translate-x-1.5 transition-transform"
             />
           </button>
@@ -402,7 +402,7 @@ export default function RouletteResultModal({
           <button
             onClick={onClose}
             className={cn(
-              "w-full h-12 rounded-2xl font-bold text-sm transition-all",
+              "w-full h-11 rounded-2xl font-bold text-sm transition-all",
               isBigWin
                 ? "bg-white/20 text-white hover:bg-white/30"
                 : "bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10",
