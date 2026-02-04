@@ -4,9 +4,14 @@ os.environ["ENV"] = "dev"
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.main import app  # FastAPI 앱
 from app.db.base_class import Base  # SQLAlchemy Base
-from app.api.deps import get_db  # DB 세션 의존성
+
+try:
+    from app.main import app  # FastAPI 앱
+    from app.api.deps import get_db  # DB 세션 의존성
+except ModuleNotFoundError:
+    app = None
+    get_db = None
 
 # 테스트용 DB URL (환경에 맞게 수정)
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///./test.db")
@@ -46,6 +51,9 @@ def db(test_db_session):
 # FastAPI 의존성 오버라이드 (테스트 세션 사용)
 @pytest.fixture(scope="function", autouse=True)
 def override_get_db(test_db_session):
+    if app is None or get_db is None:
+        yield
+        return
     app.dependency_overrides[get_db] = lambda: test_db_session
     yield
     app.dependency_overrides.clear()
