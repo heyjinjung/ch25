@@ -80,6 +80,7 @@ from app.v2.api.level_xp_routes import router as level_xp_router
 from app.v2.api.user_link_routes import router as user_link_router
 from app.v2.api.user_latency_routes import router as user_latency_router
 from app.v2.api.survey_routes import router as survey_router
+from app.v2.api.viral_routes import router as viral_router
 
 
 router.include_router(admin_router)
