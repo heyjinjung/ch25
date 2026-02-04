@@ -256,6 +256,10 @@ export default function ProspectLinkingPage() {
     "prospects" | "linked" | "pending-sync"
   >("prospects");
 
+  const [viewStatus, setViewStatus] = useState<
+    "ALL" | "PENDING" | "IGNORED" | "LINKED"
+  >("PENDING");
+
   const [segmentFilter, setSegmentFilter] = useState<string>("ALL");
   const [includeIgnored, setIncludeIgnored] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -381,6 +385,14 @@ export default function ProspectLinkingPage() {
 
     let filtered = [...prospectsData.prospects];
 
+    // 상태 필터 (viewStatus)
+    if (viewStatus === "PENDING") {
+      filtered = filtered.filter((p) => !p.ignored);
+    } else if (viewStatus === "IGNORED") {
+      filtered = filtered.filter((p) => p.ignored);
+    }
+    // ALL인 경우 모두 포함 (API에서 이미 includeIgnored=true로 가져온 상태여야 함)
+
     // 닉네임 검색
     if (nicknameSearch.trim()) {
       const search = nicknameSearch.toLowerCase().trim();
@@ -448,6 +460,8 @@ export default function ProspectLinkingPage() {
       return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
     });
 
+
+
     return filtered;
   }, [
     prospectsData?.prospects,
@@ -458,6 +472,7 @@ export default function ProspectLinkingPage() {
     inactiveDaysMax,
     sortField,
     sortOrder,
+    viewStatus,
   ]);
 
   // 정렬 토글 함수
@@ -587,7 +602,20 @@ export default function ProspectLinkingPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card
+            className={`bg-zinc-900 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-600 ${
+              activeTab === "prospects" && viewStatus === "ALL"
+                ? "border-zinc-500"
+                : ""
+            }`}
+            onClick={() => {
+              setActiveTab("prospects");
+              setViewStatus("ALL");
+              setIncludeIgnored(true); // 전체 보기 위해 무시된 것도 포함해서 가져옴
+              setNicknameSearch("");
+              setSegmentFilter("ALL");
+            }}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-zinc-400">전체</CardTitle>
             </CardHeader>
@@ -597,7 +625,15 @@ export default function ProspectLinkingPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card
+            className={`bg-zinc-900 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-600 ${
+              activeTab === "linked" ? "border-emerald-500/50" : ""
+            }`}
+            onClick={() => {
+              setActiveTab("linked");
+              setViewStatus("LINKED");
+            }}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-zinc-400">연결됨</CardTitle>
             </CardHeader>
@@ -607,7 +643,18 @@ export default function ProspectLinkingPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card
+            className={`bg-zinc-900 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-600 ${
+              activeTab === "prospects" && viewStatus === "PENDING"
+                ? "border-amber-500/50"
+                : ""
+            }`}
+            onClick={() => {
+              setActiveTab("prospects");
+              setViewStatus("PENDING");
+              setIncludeIgnored(false); // 대기중만 보기 위해 무시된 것 제외
+            }}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-zinc-400">대기중</CardTitle>
             </CardHeader>
@@ -617,7 +664,18 @@ export default function ProspectLinkingPage() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-zinc-900 border-zinc-800">
+          <Card
+            className={`bg-zinc-900 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-600 ${
+              activeTab === "prospects" && viewStatus === "IGNORED"
+                ? "border-zinc-500"
+                : ""
+            }`}
+            onClick={() => {
+              setActiveTab("prospects");
+              setViewStatus("IGNORED");
+              setIncludeIgnored(true); // 무시된 것도 가져와야 클라이언트 필터링 가능
+            }}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-zinc-400">무시됨</CardTitle>
             </CardHeader>
@@ -732,7 +790,16 @@ export default function ProspectLinkingPage() {
                   <input
                     type="checkbox"
                     checked={includeIgnored}
-                    onChange={(e) => setIncludeIgnored(e.target.checked)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setIncludeIgnored(checked);
+                      // 체크박스 수동 조작 시 viewStatus도 적절히 변경
+                      if (checked) {
+                        setViewStatus("ALL"); // 무시된 것 포함하면 일단 ALL로
+                      } else {
+                        setViewStatus("PENDING"); // 무시된 것 끄면 PENDING으로
+                      }
+                    }}
                     className="rounded border-zinc-700 bg-zinc-900"
                   />
                   무시된 항목

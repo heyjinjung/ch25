@@ -73,7 +73,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
-| AUTH | [W06_AUTH_troubleshooting.md](./W06_AUTH_troubleshooting.md) | 0 |
+| AUTH | [W06_AUTH_troubleshooting.md](./W06_AUTH_troubleshooting.md) | **1** |
 | VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **5** |
 | GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
@@ -94,6 +94,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 6 | DB | baseline_charge_amount 마이그레이션 체인 오류 | ✅ 해결 |
 | 7 | INVENTORY | 어드민 회수 로그가 USE로 표시됨 | ✅ 해결 |
 | 8 | VAULT | 금고 보상 적립 로그 누락 | ✅ 해결 |
+| 9 | AUTH | 텔레그램 로그인 시 last_login_at 미업데이트 | ✅ 해결 |
 
 ---
 

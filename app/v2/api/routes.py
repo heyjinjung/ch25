@@ -76,9 +76,11 @@ from app.v2.api.exchange_routes import router as exchange_router
 from app.v2.api.telegram_routes import router as telegram_router
 from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
+from app.v2.api.level_xp_routes import router as level_xp_router
 from app.v2.api.user_link_routes import router as user_link_router
 from app.v2.api.user_latency_routes import router as user_latency_router
 from app.v2.api.survey_routes import router as survey_router
+from app.v2.api.viral_routes import router as viral_router
 
 
 router.include_router(admin_router)
@@ -88,9 +90,11 @@ router.include_router(auth_router)
 router.include_router(exchange_router)
 router.include_router(user_router)
 router.include_router(vault_router)
+router.include_router(level_xp_router)
 router.include_router(user_link_router, prefix="/user", tags=["v2-user-linking"])
 router.include_router(user_latency_router, prefix="/user/economy", tags=["v2-user-latency"])
 router.include_router(survey_router, prefix="/surveys", tags=["v2-surveys"])
+router.include_router(viral_router)
 
 
 class V2InventoryUseRequest(BaseModel):

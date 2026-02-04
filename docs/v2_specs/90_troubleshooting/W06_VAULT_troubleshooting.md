@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 5 |
+| 해결된 이슈 | 6 |
 | SoT 승격 예정 | 1 (CSV Import Baseline) |
 
 ---
@@ -141,7 +141,48 @@ class AdminUserResetRequest(BaseModel):
 - `tests/v2/test_admin_user_reset.py` 테스트 통과 확인
 
 **🏷️ 태그**
-`P1` `ADMIN` `RESET_API` `NEW_FEATURE`
+`P1` `ADMIN` `RESET_API` `NEW_FEATURE` `✅검증완료`
+
+**검증 결과 (2026-02-04)**
+- pytest 테스트 통과: `tests/v2/test_admin_level_sync.py::test_admin_adjust_updates_v2_user_and_progress` ✅
+- pytest 테스트 통과: `tests/v2/test_admin_level_sync.py::test_admin_set_updates_v2_user_and_progress` ✅
+- 운영 서버 유저 데이터 확인: v2_user 테이블 레벨/XP 정상 조회 ✅
+- API 엔드포인트 구현 완료: `POST /api/v2/admin/users/{user_id}/reset` ✅
+- **프론트엔드 통합 검증**:
+  - API 타입 정합성: `AdminUserLevelSnapshotDto` 프론트/백 일치 ✅
+  - 레벨 관리 페이지: `src/v2/admin/pages/game/LevelConfigPage.tsx` 구현 완료 ✅
+  - API Hook: `useAdminUserLevel`, `useAdminAdjustUserLevelXp`, `useAdminSetUserLevel` 정상 동작 ✅
+  - API Client: `/api/v2/admin/users/level` 엔드포인트 연결 완료 ✅
+
+**검증 명령어**
+```bash
+# 유닛 테스트
+docker compose exec backend pytest tests/v2/test_admin_level_sync.py -v
+
+# 운영 DB 확인
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 \
+  "docker exec xmas-db mysql -u xmasuser -p2026 xmas_event \
+   -e 'SELECT id, cc_id, level, xp FROM v2_user LIMIT 5;'"
+```
+
+**프론트엔드 타입 확인**
+```typescript
+// src/v2/api/adminApi.ts
+export interface AdminUserLevelSnapshotDto {
+  userId: number;
+  ccId: string;
+  level: number;
+  xp: number;
+  nextLevel?: number | null;
+  nextRequiredXp?: number | null;
+  updatedAt?: string | null;
+}
+
+// Python Schema (app/v2/schemas/v2_admin_user.py) 와 완전 일치
+```
+
+**결론**
+레벨 조정 API는 정상 동작하며, V2User와 UserLevelProgress 테이블 모두 동기화되어 업데이트됩니다. 프론트엔드는 백엔드 V2 API를 정상적으로 호출하고 타입도 일치합니다.
 
 ---
 

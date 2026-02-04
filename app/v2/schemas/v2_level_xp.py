@@ -26,6 +26,7 @@ class LevelXPStatusResponse(BaseModel):
     next_level: Optional[int] = None
     next_required_xp: Optional[int] = None
     xp_to_next: Optional[int] = None
+    levels: list[dict[str, Any]]
     rewards: list[LevelRewardLog]
 
 

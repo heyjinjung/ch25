@@ -100,7 +100,7 @@ def calculate_similarity(str1: str, str2: str) -> float:
 **경로**: `/admin/prospect/linking`
 
 기능:
-- 통계 카드 (전체/연결/대기/무시/연결률)
+- 통계 카드 (전체/연결/대기/무시/연결률) - **클릭 시 상태별 상세 리스트 필터링**
 - 세그먼트 필터 (ALL/VIP/WHALE/AT_RISK)
 - 무시 항목 포함 토글
 - 잠재유저 목록 + 유사도 추천 배지

@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 4 |
+| 해결된 이슈 | 5 |
 | SoT 승격 예정 | 1 (중복 호출 방지 로직) |
 
 ---
@@ -23,6 +23,63 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-04 - MISSION/CRITICAL: 신규유저 텔레그램 채널 가입 미션 진행 안 됨 (404 에러) 🔴
+
+**에러 트리아지 체크리스트 적용**
+- 기준 문서: [docs/v2_specs/90_troubleshooting/archive/20260130_error_triage_checklist.md](./archive/20260130_error_triage_checklist.md)
+- 분류 결과: **404 Not Found - 엔드포인트 누락**
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 신규유저 텔레그램 채널 가입 미션 (NEW_USER_TELEGRAM_JOIN) |
+| HTTP Status | 404 Not Found |
+| 영향 범위 | 전체 신규유저 |
+| 재현 빈도 | 항상 |
+
+**운영 서버 증거**
+```
+INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
+INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
+INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
+```
+
+**DB 상태 확인**
+- 최근 유저(16, 17, 18, 20)에 `NEW_USER_TELEGRAM_JOIN` 미션 진행 기록 없음
+- `NEW_USER_FIRST_LOGIN`만 기록됨
+
+**근본 원인 (RCA)**
+1. 프론트엔드가 `/api/viral/verify/channel` 엔드포인트 호출
+2. 백엔드에 해당 라우트 **미구현** → 404 반환
+3. 미션 진행 트리거 실패
+
+**수정 내용 (2026-02-04)**
+1. `app/v2/api/viral_routes.py` 신규 생성
+   - `POST /api/viral/verify/channel` - 텔레그램 채널 구독 확인 및 미션 진행
+   - `POST /api/viral/action` - 바이럴 액션 기록
+2. `app/v2/api/routes.py`에 viral_router 등록
+
+**핵심 코드**
+```python
+# viral_routes.py
+@router.post("/verify/channel")
+def verify_channel_subscription(payload, db, user_id):
+    service = V2MissionService(db)
+    # JOIN_TELEGRAM_CHANNEL 액션으로 미션 진행
+    updated = service.update_progress(user_id, "JOIN_TELEGRAM_CHANNEL", delta=1)
+    mission_completed = any(p.is_completed for p in updated)
+    return VerifyChannelResponse(success=True, mission_completed=mission_completed)
+```
+
+**검증 방법**
+- 배포 후 신규 유저로 텔레그램 채널 가입 버튼 클릭
+- `/api/viral/verify/channel` 200 응답 확인
+- DB에서 `NEW_USER_TELEGRAM_JOIN` 미션 진행 기록 확인
+
+**상태**: ✅ 코드 완료 (배포 필요)
+
+---
 
 ### 02-03 - MISSION/CRITICAL: V1/V2 중복 호출로 인한 주간 미션 초과 달성 버그 🔴
 
@@ -274,5 +331,36 @@ def _get_streak_reward_rules(self) -> List[Dict[str, Any]]:
 
 ---
 
+### 02-04 - MISSION/INFO: 연속 스트릭 클레임 불가 상태 설명
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 연속 스트릭 보상 클레임 |
+| HTTP Status | 해당 없음 (정상 동작) |
+| 영향 범위 | 테스트 유저 |
+| 재현 빈도 | 항상 |
+
+**현재 상태**
+- 현재 최대 `play_streak=2` (user_id=1, 10)
+- 스트릭 마일스톤: Day 3, Day 7
+- **마일스톤 미도달로 클레임 불가 (정상)**
+
+**스트릭 메커니즘 설명**
+```
+게임 플레이 (PLAY_GAME)
+    ↓
+sync_play_streak() 호출
+    ↓
+last_play_date 갱신 + play_streak 증가
+    ↓
+Day 3 도달 시 → 클레임 가능
+```
+
+**결론**: 버그 아님, 게임 플레이를 더 해서 Day 3 도달 필요
+
+---
+
 ## 📝 관리 가이드
 - 일일 미션, 신규 유저 미션, 스트릭 보상 지급 확인
+- viral 미션(채널 가입, 스토리 공유 등)은 `/api/viral/*` 엔드포인트 사용

@@ -24,6 +24,58 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-04 - FRONTEND/BACKEND: 레벨 화면 미노출 (level-xp 404) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 유저 레벨 화면(Level Tower) |
+| HTTP Status | 404 (Not Found) |
+| 영향 범위 | 운영 유저 전체 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 운영 로그에 `GET /api/level-xp/status` 404 반복 발생.
+- 프론트가 레거시 경로를 호출하고 있었고, V2 마이그레이션 정책상 `/api/v2`만 운영 중.
+
+**해결 방법**
+- 프론트 호출 경로를 `/api/v2/level-xp/status`로 전환.
+- 레거시 별칭(`/api/level-xp/status`) 라우팅 제거.
+- 관련 파일: [src/v2/api/missionApi.ts](../../../src/v2/api/missionApi.ts), [app/v2/api/level_xp_routes.py](../../../app/v2/api/level_xp_routes.py), [app/v2/api/routes.py](../../../app/v2/api/routes.py), [app/main.py](../../../app/main.py)
+
+**검증 방법**
+- 운영에서 `GET /api/v2/level-xp/status` 200 응답 확인.
+- 텔레그램 인앱 레벨 화면 정상 노출 확인.
+
+### 02-04 - FRONTEND/UX: 잠재 유저 매칭 페이지 통계 카드 필터링 기능 추가 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | Admin 잠재 유저 매칭 통계 카드 (전체/연결됨/대기중/무시됨) |
+| HTTP Status | N/A (UI 개선) |
+| 영향 범위 | 어드민 운영자 |
+| 재현 빈도 | 항상 |
+
+**요구사항**
+- 상단 통계 카드 클릭 시 해당 상태에 맞는 목록으로 필터링되어 상세 내역이 표시되어야 함.
+- 현재는 단순 통계 수치만 보여주고 있음.
+
+**해결 방법**
+- `viewStatus` 상태 도입 (`ALL` \| `PENDING` \| `IGNORED` \| `LINKED`).
+- 통계 카드 클릭 핸들러 구현:
+  - **전체**: `prospects` 탭 + `includeIgnored=true` + `viewStatus='ALL'`
+  - **연결됨**: `linked` 탭으로 전환 + `viewStatus='LINKED'`
+  - **대기중**: `prospects` 탭 + `includeIgnored=false` + `viewStatus='PENDING'`
+  - **무시됨**: `prospects` 탭 + `includeIgnored=true` + `viewStatus='IGNORED'` (클라이언트 필터링)
+- 관련 파일: [src/v2/admin/pages/prospect/ProspectLinkingPage.tsx](../../../src/v2/admin/pages/prospect/ProspectLinkingPage.tsx)
+
+**검증 방법**
+- 각 통계 카드 클릭 시 하단 리스트가 올바르게 필터링되는지 확인.
+- "무시됨" 클릭 시 무시된 항목만 리스트에 뜨는지 확인.
+
+---
+
 ### 02-04 - FRONTEND/AUTH: DEV 로그인 엔드포인트 404 (v2Client response error) ✅
 
 **증상 정의**

@@ -325,7 +325,7 @@ export const claimV2SeasonPassReward = async (
 export const getV2LevelXPStatus = async (): Promise<LevelXPStatusResponse> => {
   try {
     const response = await v2Client.get<LevelXPStatusResponse>(
-      "/api/level-xp/status",
+      "/api/v2/level-xp/status",
     );
     return response.data;
   } catch (error) {
