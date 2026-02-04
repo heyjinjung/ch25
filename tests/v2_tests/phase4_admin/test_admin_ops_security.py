@@ -52,13 +52,14 @@ def setup_user(db_session):
     db_session.add(user)
     db_session.flush()
     
-    # Create V2User (mirrored)
-    # Note: V2User uses `cc_id` instead of `external_id`
+    # Create V2User (mirrored) with level/xp initialized
     v2_user = V2User(
         id=user.id,
         cc_id=user.external_id,
         nickname=user.nickname,
-        vault_locked_balance=user.vault_locked_balance
+        vault_locked_balance=user.vault_locked_balance,
+        level=1,  # V2 SoT: Primary level
+        xp=0  # V2 SoT: Primary xp
     )
     db_session.add(v2_user)
     db_session.commit()
@@ -68,7 +69,11 @@ def setup_user(db_session):
 # --- TESTS ---
 
 def test_admin_level_xp_adjustment(db_session, setup_user):
-    """4-3. Admin User Management: Manual Level/XP Adjustment."""
+    """4-3. Admin User Management: Manual Level/XP Adjustment.
+    
+    최신 SoT: v2_user.level, v2_user.xp가 Primary Source
+    레거시 user_level_progress는 동기화됨
+    """
     from app.schemas.admin_user import AdminUserUpdate
     from app.models.season_pass import SeasonPassConfig
     user = setup_user
@@ -90,12 +95,20 @@ def test_admin_level_xp_adjustment(db_session, setup_user):
     # Execute update
     updated_user = AdminUserService.update_user(db_session, user.id, payload)
     
-    # The service might derive level from XP if season is active.
-    # Level 5 and XP 1500.
+    # V2 SoT: v2_user.level, v2_user.xp가 Primary
     assert updated_user.xp == 1500
     
-    db_user = db_session.get(User, user.id)
-    assert db_user.xp == 1500
+    # V2User 확인 (Primary SoT)
+    v2_user = db_session.get(V2User, user.id)
+    assert v2_user is not None
+    assert v2_user.xp == 1500
+    assert v2_user.level == 5
+    
+    # 레거시 user_level_progress도 동기화 확인
+    progress = db_session.get(UserLevelProgress, user.id)
+    if progress:
+        assert progress.xp == 1500
+        assert progress.level == 5
 
 def test_admin_wallet_adjustment_vault(db_session, setup_user):
     """4-3. Admin User Management: Wallet Adjustment."""

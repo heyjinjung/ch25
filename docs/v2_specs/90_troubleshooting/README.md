@@ -123,6 +123,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 - [CSV Import Pipeline](./v2_csv_import_pipeline_guide_ko.md) - 외부 카지노 로그 통합
 - [Golden 실시간 모니터링](./v2_golden_realtime_monitoring_guide_ko.md) - WebSocket 스트리밍, 인터벤션 로그
 - [에러 대응 체크리스트](./20260130_error_triage_checklist.md) - 이슈 분류 및 대응 절차
+- [운영 서버 DB 백업 및 공간 확보 (02-04)](./20260204_production_backup_and_cleanup_report.md) - DB 백업 및 6.3GB 공간 확보 리포트
+- [프론트엔드 빌드 에러 및 도커 정리 (02-04)](./20260204_frontend_build_fix_and_docker_cleanup.md) - TS6133 수정 및 로컬 환경 최적화
 - [V2 도메인 FK 전수 감사 (01-31)](./W05_DB_troubleshooting.md#01-31---db-v2-도메인-전수-fk-정합성-감사) - 데이터 무결성 점검 결과
 - [HQ 마진 분석 심층 가이드 (최대 토큰)](./learned_hq_margin_max_token_analysis.md) - CSV 임포트 로직 및 세그먼트 분석 상세
 

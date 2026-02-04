@@ -88,27 +88,38 @@ class TestUserResetAPI:
     """POST /users/{user_id}/reset API 테스트."""
 
     def test_reset_level_resets_both_tables(self):
-        """reset_level=True일 때 V2User.level과 user_level_progress 모두 초기화."""
-        # Given: V2User.level = 16, user_level_progress.level = 16, xp = 2960
+        """reset_level=True일 때 V2User.level/xp과 user_level_progress 모두 초기화.
+        
+        최신 SoT (2026-02-04):
+        - Primary: v2_user.level, v2_user.xp
+        - Legacy (synced): user_level_progress.level, user_level_progress.xp
+        """
+        # Given: V2User.level = 16, V2User.xp = 2960
+        #        user_level_progress.level = 16, xp = 2960 (synced)
         # Request: reset_level = True
         
         # When: API 호출
         # Then: 
-        #   - V2User.level = 0
-        #   - user_level_progress.level = 0, xp = 0
+        #   - V2User.level = 0, V2User.xp = 0 (Primary SoT)
+        #   - user_level_progress.level = 0, xp = 0 (Legacy sync)
         
         v2_user_level = 16
+        v2_user_xp = 2960
         progress_level = 16
         progress_xp = 2960
         
         reset_level = True
         
         if reset_level:
+            # Primary SoT 초기화
             v2_user_level = 0
+            v2_user_xp = 0
+            # Legacy sync
             progress_level = 0
             progress_xp = 0
         
         assert v2_user_level == 0
+        assert v2_user_xp == 0
         assert progress_level == 0
         assert progress_xp == 0
 
@@ -221,33 +232,43 @@ class TestUserResetAPI:
 
 
 class TestUserLevelDualStorage:
-    """V2User.level과 user_level_progress 이중 저장 문제 테스트."""
+    """V2User(Primary SoT)와 user_level_progress(Legacy) 동기화 테스트.
+    
+    최신 SoT (2026-02-04):
+    - Primary: v2_user.level, v2_user.xp
+    - Legacy: user_level_progress.level, user_level_progress.xp (동기화됨)
+    """
 
     def test_both_tables_must_be_synced(self):
-        """두 테이블의 레벨이 항상 동기화되어야 함."""
-        # 시나리오: V2User.level = 0이지만 user_level_progress.level = 16
-        # 결과: 어드민 패널에서 Lv.16으로 표시됨 (user_level_progress 참조)
+        """V2User(Primary)와 user_level_progress(Legacy)가 항상 동기화되어야 함."""
+        # 시나리오: v2_user.level = 0이지만 user_level_progress.level = 16
+        # 문제: Primary SoT와 Legacy가 불일치
+        # 해결: 모든 레벨/XP 변경은 v2_user를 먼저 업데이트하고 user_level_progress를 동기화
         
-        v2_user_level = 0
-        progress_level = 16
+        v2_user_level = 0  # Primary SoT
+        v2_user_xp = 0
+        progress_level = 16  # Legacy (out of sync!)
+        progress_xp = 2960
         
         # 동기화 확인
-        is_synced = v2_user_level == progress_level
+        is_synced = (v2_user_level == progress_level) and (v2_user_xp == progress_xp)
         assert not is_synced  # 이게 문제!
 
     def test_reset_api_syncs_both(self):
-        """reset API는 두 테이블을 모두 초기화해야 함."""
-        # Before
-        v2_user_level = 16
-        progress_level = 16
+        """reset API는 Primary SoT(v2_user)와 Legacy(user_level_progress) 모두 초기화."""
+        # Before: Primary와 Legacy 모두 16
+        v2_user_level = 16  # Primary SoT
+        v2_user_xp = 2960
+        progress_level = 16  # Legacy (synced)
         progress_xp = 2960
         
-        # Reset 실행
+        # Reset 실행: Primary → Legacy 순서로 동기화
         v2_user_level = 0
+        v2_user_xp = 0
         progress_level = 0
         progress_xp = 0
         
-        # After: 둘 다 0
+        # After: 둘 다 0으로 동기화됨
         assert v2_user_level == 0
         assert progress_level == 0
         assert progress_xp == 0

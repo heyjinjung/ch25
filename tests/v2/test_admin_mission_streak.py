@@ -408,7 +408,7 @@ class TestDistributionLogic:
         segments = [
             {"user_id": 1, "segment": "VIP"},
             {"user_id": 2, "segment": "VIP"},
-            {"user_id": 3, "segment": "NORMAL"},
+            {"user_id": 3, "segment": "COMMON"},
         ]
 
         vip_users = [s["user_id"] for s in segments if s["segment"] == "VIP"]

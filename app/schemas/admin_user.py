@@ -42,7 +42,6 @@ class AdminUserUpdate(BaseModel):
     xp: Optional[int] = Field(None, ge=0)
     status: Optional[str] = Field(None, max_length=20)
     password: Optional[str] = Field(None, min_length=4)
-    xp: Optional[int] = Field(None, ge=0)
     season_level: Optional[int] = Field(None, ge=1)
     
     # Telegram Integration

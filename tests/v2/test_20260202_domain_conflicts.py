@@ -348,13 +348,13 @@ class TestGoldenInterventionConflicts:
         assert expected_key == "golden:v2:cooldown:TRG_LOSE_5:12345"
     
     def test_segment_priority_order(self):
-        """Segment 우선순위 문서화: VIP > WHALE > AT_RISK"""
+        """Segment 우선순위 문서화: VIP > WHALE > AT_RISK > COMMON > NEW"""
         segment_priority = {
             "VIP": 1,
             "WHALE": 2,
             "AT_RISK": 3,
-            "REGULAR": 4,
-            "DORMANT": 5
+            "COMMON": 4,
+            "NEW": 5
         }
         
         # VIP가 최우선

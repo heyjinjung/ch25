@@ -77,25 +77,41 @@ def test_diamond_migration_shop_consume(db_session, test_user):
     assert wallet.balance == 470 # 500 - 30
 
 def test_dynamic_level_xp_logic(db_session, test_user):
-    """Level up should follow V2LevelRewardTable values."""
+    """Level up should follow V2LevelRewardTable values.
+    
+    최신 SoT: v2_user.level, v2_user.xp가 Primary Source
+    LevelXPService는 v2_user를 업데이트하고 user_level_progress를 동기화함
+    """
+    from app.v2.models.user import V2User
+    
     # Seed custom level requirements
     db_session.add(V2LevelRewardTable(level=1, required_xp=0, reward_type="NONE", reward_amount=0))
     db_session.add(V2LevelRewardTable(level=2, required_xp=77, reward_type="NONE", reward_amount=0)) # Custom threshold
     db_session.commit()
     
-    xp_service = LevelXPService()
-    progress = db_session.query(UserLevelProgress).get(test_user.id)
-    if not progress:
-        progress = UserLevelProgress(user_id=test_user.id, level=1, xp=0)
-        db_session.add(progress)
+    # V2User 초기화 (Primary SoT)
+    v2_user = db_session.get(V2User, test_user.id)
+    if not v2_user:
+        v2_user = V2User(
+            user_id=test_user.id,
+            external_id=test_user.external_id,
+            nickname=test_user.nickname,
+            level=1,
+            xp=0
+        )
+        db_session.add(v2_user)
         db_session.commit()
+    
+    xp_service = LevelXPService()
     
     # 1. Gain enough XP for Lv 1 but not Lv 2
     xp_service.add_xp(db_session, user_id=test_user.id, delta=50, source="TEST")
-    db_session.refresh(progress)
-    assert progress.level == 1
+    db_session.refresh(v2_user)
+    assert v2_user.level == 1
+    assert v2_user.xp == 50
     
-    # 2. Gain remaining XP for Lv 2
+    # 2. Gain remaining XP for Lv 2 (77 required, already have 50)
     xp_service.add_xp(db_session, user_id=test_user.id, delta=27, source="TEST")
-    db_session.refresh(progress)
-    assert progress.level == 2
+    db_session.refresh(v2_user)
+    assert v2_user.level == 2
+    assert v2_user.xp == 77

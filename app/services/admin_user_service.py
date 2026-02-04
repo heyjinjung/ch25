@@ -254,6 +254,19 @@ class AdminUserService:
             user.level = update_data["level"]
         if "xp" in update_data:
             user.xp = update_data["xp"]
+        
+        # V2 SoT (2026-02-04): v2_user.level/xp → user_level_progress 동기화
+        if "level" in update_data or "xp" in update_data:
+            from app.models.level_xp import UserLevelProgress
+            progress = db.get(UserLevelProgress, user_id)
+            if not progress:
+                progress = UserLevelProgress(user_id=user_id)
+                db.add(progress)
+            if "level" in update_data:
+                progress.level = update_data["level"]
+            if "xp" in update_data:
+                progress.xp = update_data["xp"]
+        
         if "status" in update_data:
             user.status = update_data["status"]
         if "password" in update_data and update_data["password"]:
@@ -296,7 +309,10 @@ class AdminUserService:
             user.admin_profile.telegram_id = str(user.telegram_id) if user.telegram_id is not None else None
 
         # Handle XP/Season Level update (XP is the source of truth; level auto-derived)
-        if "xp" in update_data or "season_level" in update_data:
+        # V2 SoT (2026-02-04): level이 명시적으로 설정되면 SeasonPass 자동 계산을 건너뜀
+        manual_level_override = "level" in update_data
+        
+        if ("xp" in update_data or "season_level" in update_data) and not manual_level_override:
             today = date.today()
             active_season = AdminUserService._get_active_season(db, today)
 
