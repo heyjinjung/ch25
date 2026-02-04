@@ -13,6 +13,7 @@ import {
   adjustUserWallet,
   adjustUserInventory,
   updateUserNickname,
+  updateUserSegment,
   AdminUserDetailDto,
   AdminWithdrawalDto,
   OpsDashboardResponse,
@@ -20,6 +21,7 @@ import {
   AdminWalletAdjustmentRequest,
   AdminInventoryAdjustmentRequest,
   NicknameUpdateRequest,
+  SegmentUpdateRequest,
   getAdminUserList,
   UserSearchParams,
   UserListResponse,
@@ -443,6 +445,30 @@ export function useUpdateUserNickname() {
       });
       queryClient.invalidateQueries({
         queryKey: ["admin", "users", "list"],
+      });
+    },
+  });
+}
+
+export function useUpdateUserSegment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      request,
+    }: {
+      userId: number;
+      request: SegmentUpdateRequest;
+    }) => updateUserSegment(userId, request),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_KEYS.userDetail(variables.userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "users", "list"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_KEYS.segmentStats,
       });
     },
   });

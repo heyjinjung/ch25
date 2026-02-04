@@ -278,3 +278,11 @@ docker compose exec backend alembic current
 
 ## 📝 관리 가이드
 - Alembic 마이그레이션, FK 제약조건, 데이터 정합성 확인
+
+---
+
+## 변경 이력
+| 날짜 | 작업자 | 내용 |
+|---|---|---|
+| 2026-02-04 | Copilot | W06 문서 최초 작성 (hq_daily_deposit_log 테이블, import 오류, Decimal/float 오류, Alembic chain 등 6건) |
+| 2026-02-04 | Copilot | 회원관리 페이지 세그먼트 표시/편집 기능 추가 (신규 기능) |

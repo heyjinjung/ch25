@@ -86,7 +86,7 @@ DEFAULT_SEGMENT_RULE_SEEDS: list[dict] = [
 
 
 class V2SegmentService:
-    ALLOWED_SEGMENTS = {"NEW", "COMMON", "VIP", "WHALE", "AT_RISK"}
+    ALLOWED_SEGMENTS = {"NEW", "COMMON", "VIP", "WHALE", "AT_RISK", "WINNER"}
 
     @staticmethod
     def normalize_segment(segment: str | None) -> str:

@@ -281,6 +281,7 @@ export interface AdminUserListDto {
   total_deposit: number;
   last_active: string;
   createdAt: string;
+  segment: string | null; // NEW, COMMON, VIP, WHALE, AT_RISK
 }
 
 export interface UserSearchParams {
@@ -718,6 +719,29 @@ export const updateUserNickname = async (
 ): Promise<NicknameUpdateResponse> => {
   const response = await v2Client.patch<NicknameUpdateResponse>(
     `/api/v2/admin/users/${userId}/nickname`,
+    request,
+  );
+  return response.data;
+};
+
+export interface SegmentUpdateRequest {
+  segment: string; // NEW, COMMON, VIP, WHALE, AT_RISK
+}
+
+export interface SegmentUpdateResponse {
+  success: boolean;
+  userId: number;
+  oldSegment: string | null;
+  newSegment: string;
+  message: string;
+}
+
+export const updateUserSegment = async (
+  userId: number,
+  request: SegmentUpdateRequest,
+): Promise<SegmentUpdateResponse> => {
+  const response = await v2Client.patch<SegmentUpdateResponse>(
+    `/api/v2/admin/users/${userId}/segment`,
     request,
   );
   return response.data;

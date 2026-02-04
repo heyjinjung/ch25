@@ -15,6 +15,7 @@ from app.v2.models import ApprovalStatus, Mission, UserMissionProgress
 from app.v2.models.user import V2User, V2UserStatus, V2UserRole
 from app.v2.models import UserRetentionState
 from app.v2.models import UserSegment
+from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models import UserLevelProgress, UserXpEventLog
 from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
@@ -162,6 +163,14 @@ def get_admin_users_list(
         )
 
     user_list = []
+    
+    # 유저 ID 목록 추출하여 세그먼트 일괄 조회
+    user_ids = [u.id for u in users]
+    segment_map = {}
+    if user_ids:
+        segments = db.query(V2UserSegment).filter(V2UserSegment.user_id.in_(user_ids)).all()
+        segment_map = {s.user_id: s.segment for s in segments}
+    
     for user in users:
         vault_balance = int(user.vault_locked_balance or 0)
 
@@ -170,6 +179,9 @@ def get_admin_users_list(
         level = level_progress.level if level_progress else 1
 
         tier = "COMMON"  # V2에서는 tier 개념 간소화
+        
+        # 세그먼트 조회
+        segment = segment_map.get(user.id, "COMMON")
 
         status_str = user.status.value if hasattr(user.status, 'value') else str(user.status)
         last_active = user.updated_at.strftime("%Y-%m-%d %H:%M") if user.updated_at else "-"
@@ -186,6 +198,7 @@ def get_admin_users_list(
                 vaultBalance=vault_balance,
                 last_active=last_active,
                 status=status_str,
+                segment=segment,
             )
         )
 
@@ -341,6 +354,65 @@ def update_user_nickname(
         newNickname=new_nickname,
         message="닉네임이 성공적으로 수정되었습니다.",
     )
+
+
+ALLOWED_SEGMENTS = {"NEW", "COMMON", "VIP", "WHALE", "AT_RISK", "WINNER"}
+
+
+@router.patch("/users/{user_id}/segment")
+def update_user_segment(
+    user_id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """유저 세그먼트 수정 API (어드민 전용)."""
+    admin_id, admin_role = admin_info
+
+    segment = payload.get("segment", "").strip().upper()
+    if segment not in ALLOWED_SEGMENTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"INVALID_SEGMENT. Allowed: {', '.join(ALLOWED_SEGMENTS)}",
+        )
+
+    user = db.query(V2User).filter(V2User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+
+    # V2UserSegment 조회 또는 생성
+    user_segment = db.query(V2UserSegment).filter(V2UserSegment.user_id == user_id).first()
+    old_segment = user_segment.segment if user_segment else None
+
+    if user_segment:
+        user_segment.segment = segment
+        user_segment.updated_at = datetime.utcnow()
+    else:
+        user_segment = V2UserSegment(user_id=user_id, segment=segment)
+        db.add(user_segment)
+
+    db.commit()
+
+    # 감사 로그 기록
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "UPDATE_SEGMENT",
+        target_type="USER",
+        target_id=str(user_id),
+        before={"segment": old_segment},
+        after={"segment": segment},
+    )
+
+    logger.info(f"[ADMIN] Segment updated: user_id={user_id}, '{old_segment}' -> '{segment}' by admin={admin_id}")
+
+    return {
+        "success": True,
+        "userId": user_id,
+        "oldSegment": old_segment,
+        "newSegment": segment,
+        "message": "세그먼트가 성공적으로 수정되었습니다.",
+    }
 
 
 @router.get("/users/level", response_model=AdminUserLevelSnapshotDto)

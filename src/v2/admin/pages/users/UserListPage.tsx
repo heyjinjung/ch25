@@ -37,6 +37,7 @@ import { UserDetailDrawer } from "./UserDetailDrawer";
 import {
   useAdminUserList,
   useCreateAdminUser,
+  useUpdateUserSegment,
 } from "../../../hooks/useV2Admin";
 import { AdminUserListDto, UserSearchParams } from "../../../api/adminApi";
 import {
@@ -68,6 +69,45 @@ const Checkbox = ({
     )}
   />
 );
+
+// 세그먼트 설정
+const SEGMENTS = [
+  {
+    value: "NEW",
+    label: "신규",
+    color: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+  },
+  {
+    value: "COMMON",
+    label: "일반",
+    color: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
+  },
+  {
+    value: "VIP",
+    label: "VIP",
+    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+  },
+  {
+    value: "WHALE",
+    label: "고액",
+    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  },
+  {
+    value: "WINNER",
+    label: "승자",
+    color: "bg-green-500/20 text-green-400 border-green-500/30",
+  },
+  {
+    value: "AT_RISK",
+    label: "이탈위험",
+    color: "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  },
+];
+
+const getSegmentStyle = (segment: string | null) => {
+  const found = SEGMENTS.find((s) => s.value === segment);
+  return found || SEGMENTS[1]; // default COMMON
+};
 
 export default function UserListPage({
   initialUserId,
@@ -128,9 +168,18 @@ export default function UserListPage({
 
   const { data: userListData, isLoading } = useAdminUserList(searchParams);
   const createUserMutation = useCreateAdminUser();
+  const updateSegmentMutation = useUpdateUserSegment();
   const users = userListData?.users || [];
   const total = userListData?.total || 0;
   const totalPages = Math.ceil(total / limit);
+
+  // 세그먼트 변경 핸들러
+  const handleSegmentChange = (userId: number, newSegment: string) => {
+    updateSegmentMutation.mutate({
+      userId,
+      request: { segment: newSegment },
+    });
+  };
 
   const handleSort = (
     field:
@@ -376,6 +425,9 @@ export default function UserListPage({
                     <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </TableHead>
+                <TableHead className="text-zinc-400 w-[110px]">
+                  세그먼트
+                </TableHead>
                 <TableHead className="text-zinc-400">
                   <button
                     className="flex items-center gap-1 hover:text-white transition-colors"
@@ -431,6 +483,38 @@ export default function UserListPage({
                   </TableCell>
                   <TableCell className="text-zinc-300">
                     Lv.{user.level}
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={user.segment || "COMMON"}
+                      onValueChange={(value) =>
+                        handleSegmentChange(user.id, value)
+                      }
+                    >
+                      <SelectTrigger
+                        className={cn(
+                          "h-7 w-[100px] text-xs border",
+                          getSegmentStyle(user.segment)?.color ||
+                            "bg-zinc-500/20 text-zinc-400",
+                        )}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-zinc-800">
+                        {SEGMENTS.map((seg) => (
+                          <SelectItem
+                            key={seg.value}
+                            value={seg.value}
+                            className={cn(
+                              "text-xs",
+                              seg.color?.split(" ")[1] || "",
+                            )}
+                          >
+                            {seg.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="text-zinc-300">
                     ₩{(user.vaultBalance || 0).toLocaleString()}

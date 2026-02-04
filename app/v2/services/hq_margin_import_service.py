@@ -409,22 +409,23 @@ class HQMarginImportService:
 
         우선순위:
         1. CSV에 명시적 세그먼트가 있으면 우선 사용
-        2. 마진 100만원+ → VIP
-        3. 미접속 7일+ & 마진 양수 → AT_RISK
-        4. 충전 금액 500만원+ → WHALE
-        5. 기본 → COMMON
+        2. 마진 음수 (회사 손해, 유저가 이김) → WINNER
+        3. 마진 100만원+ → VIP
+        4. 미접속 7일+ & 마진 양수 → AT_RISK
+        5. 충전 금액 500만원+ → WHALE
+        6. 기본 → COMMON
 
         Args:
             row: Dict (CSV 한 행)
 
         Returns:
-            세그먼트 코드 (VIP/WHALE/AT_RISK/COMMON)
+            세그먼트 코드 (WINNER/VIP/WHALE/AT_RISK/COMMON)
         """
         # CSV에 세그먼트가 명시되어 있으면 우선 사용
         segment_val = row.get('세그먼트')
         if segment_val and str(segment_val).strip():
             explicit_segment = str(segment_val).strip().upper()
-            if explicit_segment in {'VIP', 'WHALE', 'AT_RISK', 'COMMON'}:
+            if explicit_segment in {'VIP', 'WHALE', 'AT_RISK', 'COMMON', 'WINNER'}:
                 return explicit_segment
 
         # 자동 분류
@@ -433,12 +434,19 @@ class HQMarginImportService:
         charge_amount = HQMarginImportService._parse_int(row.get('누적 충전 금액', 0))
 
         # 분류 로직
-        if margin > 1_000_000:
+        # 1. 마진 음수 (유저가 회사를 이기고 있음) → WINNER
+        if margin < 0:
+            return 'WINNER'
+        # 2. 마진 100만원+ → VIP (회사 우량 고객)
+        elif margin > 1_000_000:
             return 'VIP'
+        # 3. 미접속 7일+ & 마진 양수 → AT_RISK
         elif inactive_days > 7 and margin > 0:
             return 'AT_RISK'
+        # 4. 충전 금액 500만원+ → WHALE
         elif charge_amount > 5_000_000:
             return 'WHALE'
+        # 5. 기본
         else:
             return 'COMMON'
 

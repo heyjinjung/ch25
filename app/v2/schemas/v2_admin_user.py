@@ -162,6 +162,7 @@ class AdminUserListDto(BaseModel):
     vaultBalance: int = 0
     last_active: str
     status: str = "Active"
+    segment: Optional[str] = None  # NEW, COMMON, VIP, WHALE, AT_RISK
 
 
 class UserSearchParams(BaseModel):

@@ -73,7 +73,7 @@ def get_segment_stats(
             "color": "text-blue-400",
             "bg": "bg-blue-500/10",
             "border": "border-blue-500/20",
-            "desc": "최근 7일 입금 50만+",
+            "desc": "마진 100만원 이상",
         },
         {
             "name": "WHALE",
@@ -82,7 +82,16 @@ def get_segment_stats(
             "color": "text-purple-400",
             "bg": "bg-purple-500/10",
             "border": "border-purple-500/20",
-            "desc": "최근 7일 입금 300만+",
+            "desc": "누적 충전 500만원 이상",
+        },
+        {
+            "name": "WINNER",
+            "label": "승자(Winner)",
+            "count": segment_data.get("WINNER", 0),
+            "color": "text-green-400",
+            "bg": "bg-green-500/10",
+            "border": "border-green-500/20",
+            "desc": "마진 음수 (회사 손해)",
         },
         {
             "name": "AT_RISK",
@@ -91,7 +100,7 @@ def get_segment_stats(
             "color": "text-amber-400",
             "bg": "bg-amber-500/10",
             "border": "border-amber-500/20",
-            "desc": "최근 활동 7일 이상",
+            "desc": "미접속 7일 이상",
         },
     ]
 
