@@ -59,7 +59,7 @@ class V2Survey(Base):
     
     # In V2, we might want to track who created it (admin). 
     # The existing schema points to "user.id".
-    created_by = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    created_by = Column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -161,7 +161,8 @@ class V2SurveyResponse(Base):
     
     # DB FK points to 'user.id' (Legacy).
     # In V2, we assume user.id and v2_user.id are synchronized.
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    # DB FK points to 'v2_user.id' (Pure V2 Native).
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     
     trigger_rule_id = Column(Integer, ForeignKey("survey_trigger_rule.id", ondelete="SET NULL"), nullable=True)
     status = Column(SAEnum(SurveyResponseStatus), nullable=False, default=SurveyResponseStatus.PENDING)
@@ -182,8 +183,8 @@ class V2SurveyResponse(Base):
     # V2 Relation linking to V2User
     user = relationship(
         "V2User", 
-        primaryjoin="foreign(V2SurveyResponse.user_id) == V2User.id", 
-        viewonly=True, # Safety since FK is to 'user'
+        foreign_keys=[user_id],
+        viewonly=True, # Safety since FK is to 'v2_user'
         uselist=False
     )
 

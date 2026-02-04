@@ -20,7 +20,7 @@ V2 유저 세그먼트 저장 테이블 스키마를 정의한다.
 | segment | VARCHAR(50) | NOT NULL | 세그먼트 키 |
 | updated_at | DATETIME | NOT NULL | 갱신 시각 |
 
-> 기본값: `COMMON` (표준 세그먼트: NEW/COMMON/VIP/WHALE/AT_RISK)
+> 기본값: `COMMON` (표준 세그먼트: NEW/COMMON/VIP/WHALE/AT_RISK/WINNER)
 
 ## 4. 인덱스 (Indexes)
 - `ix_v2_user_segment_segment` (segment)
@@ -32,3 +32,4 @@ V2 유저 세그먼트 저장 테이블 스키마를 정의한다.
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
 - v1.1 (2026-02-02, GitHub Copilot): 기본 세그먼트/표준 키 명시
 - v1.2 (2026-02-02, GitHub Copilot): NEW 세그먼트 키 추가
+- v1.3 (2026-02-04, GitHub Copilot): WINNER 세그먼트 키 추가

@@ -156,11 +156,11 @@ target_segment = Column(String(50), nullable=True, index=True)
 
 ### 2.1 정책 SoT 문서
 **파일**: `docs/v2_specs/01_core/v2_user_segment_policy_sot_ko.md`  
-**버전**: v1.2 (2026-02-02)
+**버전**: v1.3 (2026-02-04 WINNER 추가)
 
 ```markdown
 ## 4. SoT: 세그먼트 분류 규칙
-- 표준 세그먼트 키: `NEW`, `COMMON`, `VIP`, `WHALE`, `AT_RISK`
+- 표준 세그먼트 키: `NEW`, `COMMON`, `VIP`, `WHALE`, `AT_RISK`, `WINNER`
 ```
 
 | 세그먼트 | SoT 정의 | 비고 |
@@ -170,21 +170,21 @@ target_segment = Column(String(50), nullable=True, index=True)
 | VIP | 마진 100만원 이상 (7일 입금 300만+) | ✅ |
 | WHALE | 누적 충전 500만원 이상 | ✅ |
 | AT_RISK | 미접속 7일+ & 마진 양수 | ✅ |
-| **WINNER** | ❌ **미정의** | 코드에만 존재 |
-| **CHERRY_PICKER** | 📝 별도 설계문서만 | 미구현 |
+| **WINNER** | 마진 < 0 (회사 손해, 유저가 이김) | ✅ (2026-02-04 추가) |
+| ~~CHERRY_PICKER~~ | - | 폐기 결정 |
 
 ### 2.2 DB 스키마 SoT 문서
 **파일**: `docs/v2_specs/04_db/v2_db_user_segment_ko.md`  
-**버전**: v1.2 (2026-02-02)
+**버전**: v1.3 (2026-02-04 WINNER 추가)
 
 ```markdown
 | segment | VARCHAR(50) | NOT NULL | 세그먼트 키 |
-> 기본값: `COMMON` (표준 세그먼트: NEW/COMMON/VIP/WHALE/AT_RISK)
+> 기본값: `COMMON` (표준 세그먼트: NEW/COMMON/VIP/WHALE/AT_RISK/WINNER)
 ```
 
-### 2.3 CHERRY_PICKER 설계 문서 (초안) - 폐기 / 더이상 복잡해지는 거 싫음 
+### ~~2.3 CHERRY_PICKER 설계 문서~~ - 폐기
 **파일**: `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260204_cherry_picker_segment_design.md`  
-**상태**: 초안 검토 중 - 폐기결정
+**상태**: 폐기 결정 (2026-02-04) - 복잡도 증가 대비 실익 불분명
 
 ---
 

@@ -38,80 +38,68 @@ http://localhost:8501/ - 엑셀 누적 데이터!
 =======
 
 
- 중복/혼동 이슈:
+ 문서에서 발견된 문제점들을 정리해드리겠습니다.
 
-V2UserSegment.segment와 V2User.hq_segment가 동일 정보 이중 저장
-V2UserRetentionState의 세그먼트는 완전히 다른 키 사용 (HIGH_ROLLER vs VIP)
+🔴 발견된 문제점 전체 목록
+1. V1/V2 세그먼트 시스템 혼용 (심각)
+서비스	사용 시스템	문제
+룰렛게임 roulette_service.py	UserSegment(V1)	V2 유저인데 V1 세그먼트 조회
+다이스게임 dice_service.py	UserSegment(V1)	V2 유저인데 V1 세그먼트 조회
+나머지	V2UserSegment	정상
+→ V2 유저의 세그먼트가 게임에 반영 안 될 수 있음
 
+2. 금고(Vault) 세그먼트 분리 문제
+서비스	세그먼트 시스템	사용 키
+vault_service.py	V2SegmentService	NEW, AT_RISK
+vault2_service.py	V2UserSegment	COMMON (기본값만)
+→ 두 서비스 간 세그먼트 기준 불일치 가능
+→ VIP/WHALE 금고 혜택이 제대로 적용되는지 확인 필요
 
-2. 각 세그먼트가 영향을 끼치는 도메인
-세그먼트	영향 도메인	코드 위치
-VIP/WHALE	골든아워 후보 선정	golden_scheduler_service.py:78
-AT_RISK	리텐션 재관여 메시지 대기열	retention_intervention_service.py:130
-VIP/WHALE/COMMON/NEW/AT_RISK/WINNER	리텐션 보상 계산 (base_rate)	retention_intervention_service.py:31
-NEW/COMMON/AT_RISK	어드민 UI 필터/통계	segment_routes.py
-세그먼트 전체	이벤트 타겟팅	segment_rule 조건
-3. HQ 마진 Import시 모든 세그먼트가 분류되는가?
-_classify_segment() 로직 (hq_margin_import_service.py:406):
+3. WINNER 세그먼트 비즈니스 로직 없음
+✅ HQ Import에서 분류됨 (마진 < 0)
+✅ 리텐션 보상률 3% 설정됨
+🔴 그 외 비즈니스 로직 0개
+금고 조건 없음
+게임 배수 없음
+골든아워 후보 아님
+→ 분류만 하고 실제 혜택/제한 없음
 
-세그먼트	HQ Import 자동분류	실제 분류 여부
-NEW	❌ 없음	배치 규칙에서만 분류
-COMMON	✅ 기본값	✅
-VIP	✅ margin > 100만	✅
-WHALE	✅ charge > 500만	✅
-AT_RISK	✅ 미접속 7일+	✅
-WINNER	✅ margin < 0	⚠️ 코드만 구현 (실제 61명 미분류)
-CHERRY_PICKER	❌ 없음	설계문서만 존재
-🔴 문제: 운영 DB에서 마진 음수 유저 61명이 WINNER가 아닌 COMMON으로 분류됨
-→ HQ Import 전에 이미 COMMON으로 저장된 데이터 (재분류 미실행)
+4. 세그먼트 규칙 엔진 제한
+admin_segment_rule_service.py에서 NEW, VIP, AT_RISK만 규칙 존재
 
-4. 입금 반영시 세그먼트 기준이 바뀌는가?
-아니오. 입금 반영은 세그먼트와 분리됨:
+세그먼트	자동 분류 규칙
+NEW	✅
+VIP	✅
+AT_RISK	✅
+WHALE	❓ HQ Import만?
+WINNER	❓ HQ Import만?
+COMMON	기본값
+→ WHALE/WINNER 배치 재분류 누락 가능
 
-프로세스	세그먼트 변경	비고
-CC Deposit 입금	❌	금고/레벨만 반영
-HQ Margin CSV Import	✅	마진 기반 자동 분류
-어드민 수동 변경	✅	PATCH API
-배치 실행	✅	segment_rule 기반
-5. 어드민에서 세그먼트 CRUD가 가능한가?
-기능	가능 여부	API/UI
-C(생성)	✅	HQ Import 시 자동 생성
-R(조회)	✅	GET /segments/stats, 유저 목록
-U(수정)	✅	PATCH /users/{id}/segment
-D(삭제)	⚠️ 미구현	세그먼트 삭제 API 없음
-세그먼트 규칙 CRUD:
+5. hq_segment 중복 사용
+prospect_linking_service.py에서:
 
-POST /segments/rules - 규칙 생성 ✅
-PUT /segments/rules/{id} - 규칙 수정 ✅
-DELETE /segments/rules/{id} - 규칙 삭제 ✅
-POST /segments/batch/run - 배치 실행 ✅
-6. 현재까지 정리/확보된 문서
-문서	위치	상태
-SoT 정책	v2_user_segment_policy_sot_ko.md	⚠️ WINNER 미정의
-DB 스키마	v2_db_user_segment_ko.md	⚠️ WINNER 미정의
-세그먼트 통일	learned_/segment/20260202_segment_unification_common_vip_whale_at_risk.md	✅
-NEW 유저 규칙	learned_/segment/20260202_segment_new_user_window_rule.md	✅
-CHERRY_PICKER 설계	learned_/golden/20260204_cherry_picker_segment_design.md	📝 초안
-감사 문서	20260204_segment_mapping_audit.md	✅ 방금 생성
-🔴 핵심 문제 요약
-WINNER 세그먼트: 코드 구현됨, SoT 문서 미정의, 운영 DB 미반영 (61명)
-세그먼트 이중 저장: V2UserSegment.segment vs V2User.hq_segment
-✅ 리텐션 세그먼트 통합 완료: CRM 키(NEW/COMMON/VIP/WHALE/AT_RISK/WINNER) 사용 (2026-02-04)
-DB 제약조건 없음: varchar(50) 아무 값 저장 가능
-DEFAULT 불일치: DB는 'NEW', SoT는 'COMMON'
+V2UserSegment.segment 사용
+V2User.hq_segment 사용
+→ 두 값이 다르면 어느 것이 정확한지 불명확
 
+6. 세그먼트 미적용 도메인
+도메인	상태	영향
+보상(Reward)	❌ 미적용	세그먼트별 차등 보상 불가
+레벨(Level)	❌ 미적용	세그먼트별 XP 배수 불가
+미션	⚠️ 카테고리만	세그먼트 기반 미션 타겟팅 불가
+7. 금고 출금조건 세그먼트 영향 (4.2 테이블 기준)
+세그먼트	play_target	spend_target	비고
+WHALE	0	0	조건 면제 (3백만+ 입금)
+VIP	15	5,000	완화
+COMMON	?	?	기본값 확인 필요
+NEW	100	30,000	강화
+AT_RISK	100	30,000	강화
+WINNER	❓	❓	정의 안됨
+→ WINNER/COMMON의 금고 출금조건이 명확하지 않음
 
-
-
-구분	시스템	용도
-CRM 세그먼트 (7개)		
-1	V2UserSegment	V2 CRM 메인 (HQ Import)
-2	V2User.hq_segment	HQ 연동 캐시 (중복)
-3	UserSegment (V1)	레거시 -는 그대로 유지하다가 폐기처분하면 됨 
-4	HQProspectiveUser.segment	미가입 잠재유저 - 여기서도 세그먼트가 세분화되서 나뉘어???? 
-5	V2UserRetentionState.user_segment_tag	리텐션 개입용 (다른 키) - 이건 또 어디에 쓰이는데 ?? 
-6	UserRetentionState (V1)	레거시 리텐션 - 는 그대로 유지하다가 폐기처분하면 됨
-7	V2SegmentRule.segment	규칙 엔진 출력 - 이건 또 어디에 쓰이는데 ??
-
-12	EventConfig.target_segment	이벤트 타겟팅
-13	Survey.target_segment_json	설문 타겟팅
+📋 즉시 확인 필요 항목
+ vault_service.py L559-576 - 세그먼트별 출금조건 전체 확인
+ roulette_service.py / dice_service.py - V1→V2 세그먼트 전환 필요
+ WINNER 세그먼트 비즈니스 로직 정의 필요
+ WHALE 배치 분류 규칙 확인
