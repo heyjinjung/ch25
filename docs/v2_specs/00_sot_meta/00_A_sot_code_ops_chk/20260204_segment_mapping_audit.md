@@ -196,13 +196,71 @@ target_segment = Column(String(50), nullable=True, index=True)
 |--------|-------------|----------------|-----------------|------|
 | **금고(Vault)** | `vault_service.py` | V2SegmentService | NEW, AT_RISK | L559-576 |
 | **금고(Vault)** | `vault2_service.py` | V2UserSegment | COMMON (기본값) | L246-254 |
+이거 금고 서비스 레거시 / V2 두개있는데 둘다 쓰는거야? 
+둘 다 쓰는거면 지금 통일된 세그먼트로 동일키로 분류되어 작동되는거야? 
+금고 출금조건 관련 세그먼트 사용현황 왜 없어? 반영해 
+확인해서 체크박스 이모지 표기할것 
+
+
+
 | **입금매칭** | `unmatched_deposit_log_service.py` | V2UserSegment | 세그먼트 조회 | L303-305 |
 | **입금HQ** | `hq_margin_import_service.py` | V2UserSegment | VIP,WHALE,WINNER,COMMON | L209-218, L521-528 |
+통일된 세그먼트로 동일키로 분류되어 작동되는거야? 확인해서 체크박스 이모지 표기할것 
+
+
+
+
+
 | **룰렛게임** | `roulette_service.py` | UserSegment(V1) | VIP,WHALE,COMMON | L300-320 |
+
+핵심 규정 (Line 27):
+
+룰렛 접근 조건: grade 기반 접근 제한 폐기됨. 모든 유저가 티켓만 있으면 해당 룰렛 이용 가능.
+
+변경 이력 (Line 137):
+
+v1.9 (2026-01-25, GitHub Copilot): 룰렛 grade 기반 접근 제한 폐기, ticket_type만으로 구분. 세그먼트 8개(0~7)로 확장.
+
+✅ 결론
+네, SoT에 명시되어 있습니다:
+
+항목	내용
+정책	grade(= VIP/WHALE 세그먼트) 기반 접근 제한 폐기
+신규 규칙	티켓(ticket_type)만 있으면 누구나 해당 룰렛 이용 가능
+시행일	2026-01-25
+즉, roulette_service.py:300의 V1 UserSegment 기반 VIP/WHALE 접근 분기 로직은 SoT 위반입니다. 티켓만 있으면 골드키/다이아몬드 룰렛 모두 접근 가능해야 합니다.
+
+그렇다면 지금 V1세그먼트에 연결되어있는것들 다 제거하고 SOT에 맞게 정리해야해 
+정리하고 나서 문서 수정 
+확인해서 체크박스 이모지 표기할것 
+
+
+
 | **다이스게임** | `dice_service.py` | UserSegment(V1) | VIP,WHALE,COMMON | L255-290 |
+여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
+V1다이스서비스 파일도 폐기대기/주석처리해 
+
+
+
 | **이벤트** | `event_service.py` | EventConfig.target_segment | COMMON + CRM세그먼트 | L171-198 |
+여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
+V1서비스 파일도 폐기대기/주석처리해 
+
+
+
+
 | **골든아워** | `golden_scheduler_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L50-52 |
+여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
+V1서비스 파일도 폐기대기/주석처리해 
+
 | **리텐션** | `retention_intervention_service.py` | user_segment_tag | AT_RISK (✅ CRM 키 통합) | L124-125 |
+여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
+V1서비스 파일도 폐기대기/주석처리해 
+ V2에서 사용하는거면 언제/어떻게/어디서 활용하는건지 확인해 
+
+
+
+
 | **게임분석** | `game_log_analytics_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L361-439 |
 | **HQ통계** | `hq_margin_stats_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L31-48 |
 | **메시지발송** | `admin_message_service.py` | V2UserSegment | 동적 타겟팅 | L47 |

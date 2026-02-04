@@ -288,34 +288,9 @@ class RouletteService:
                     headers={"X-Reason": "DEPOSIT_REQUIRED"}
                 )
 
-        # [Phase 1] Segment Access Control (P0)
-        # GOLD_KEY/GOLD_KEY_TICKET: WHALE/VIP Only (VIP limit 3)
-        # DIAMOND_KEY/DIAMOND_TICKET: WHALE/VIP Only (VIP limit 1)
-
-        # Support both V2 standard and legacy aliases
-        is_gold = ticket_type in ("GOLD_KEY", "GOLD_KEY_TICKET")
-        is_diamond = ticket_type in ("DIAMOND_KEY", "DIAMOND_TICKET")
-
-        if is_gold or is_diamond:
-            segment_row = db.query(UserSegment).filter(UserSegment.user_id == user_id).first()
-            user_segment = segment_row.segment if segment_row else "COMMON"
-
-            # 1. Allowlist: Only VIP and WHALE can access Premium Roulette
-            if user_segment not in ["VIP", "WHALE"]:
-                 raise ForbiddenError("Premium Roulette is restricted to VIP/WHALE users.")
-
-            # 2. Daily Limits for VIP (WHALE is unlimited)
-            if user_segment == "VIP":
-                current_daily_plays = self._get_daily_ticket_play_count(db, user_id, today, ticket_type)
-
-                if is_gold:
-                    # Limit 3
-                    if current_daily_plays >= 3:
-                        raise TooManyRequestsError("VIP users are limited to 3 Gold Roulette spins per day.")
-                elif is_diamond:
-                    # Limit 1
-                    if current_daily_plays >= 1:
-                        raise TooManyRequestsError("VIP users are limited to 1 Diamond Roulette spin per day.")
+        # [DEPRECATED 2026-01-25] Segment Access Control 폐기됨
+        # SoT: v2_game_engine_sot_ko.md - "grade 기반 접근 제한 폐기됨. 모든 유저가 티켓만 있으면 해당 룰렛 이용 가능."
+        # 기존 VIP/WHALE 전용 접근 제한 로직 제거 완료 (2026-02-04)
 
         segments = None
         for attempt in range(3):
