@@ -1,4 +1,4 @@
-"""
+﻿"""
 V2 Telegram Mini App 인증 API (순수 V2 구현)
 
 텔레그램 initData 기반 인증 엔드포인트

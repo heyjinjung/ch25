@@ -1,4 +1,4 @@
-"""User-facing survey endpoints (V2)."""
+﻿"""User-facing survey endpoints (V2)."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends

@@ -1,4 +1,4 @@
-"""V2 API routes (web verification + admin ops)."""
+﻿"""V2 API routes (web verification + admin ops)."""
 from datetime import date, datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
@@ -17,10 +17,10 @@ from app.v2.models import GameTokenType
 from app.v2.models import MissionCategory
 from app.v2.models import UserInventoryItem
 from app.v2.models.user import V2User
-from app.schemas.dice import DicePlayResponse, DiceStatusResponse, DicePlayRequest
-from app.schemas.lottery import LotteryPlayResponse, LotteryStatusResponse
+from app.v2.schemas.shared.dice import DicePlayResponse, DiceStatusResponse, DicePlayRequest
+from app.v2.schemas.shared.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.v2.schemas.v2_mission import MissionListResponse
-from app.schemas.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
+from app.v2.schemas.shared.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
 from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService

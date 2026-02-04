@@ -1,4 +1,4 @@
-"""V2 Activity Ingestion Routes."""
+﻿"""V2 Activity Ingestion Routes."""
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException

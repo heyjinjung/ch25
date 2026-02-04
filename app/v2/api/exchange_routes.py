@@ -1,4 +1,4 @@
-"""V2 Exchange API Routes - Puzzle Collection → Gold Key Craft
+﻿"""V2 Exchange API Routes - Puzzle Collection → Gold Key Craft
 
 SoT: docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260131_puzzle_collection_gold_key_craft.md
 """

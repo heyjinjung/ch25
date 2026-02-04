@@ -1,4 +1,4 @@
-"""V2 User routes."""
+﻿"""V2 User routes."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends

@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
 from app.v2.models.user import V2User
-from app.schemas.cc_deposit import CCDepositCreate, CCDepositEntry, CCDepositListResponse, CCDepositUpdate
+from app.v2.schemas.shared.cc_deposit import CCDepositCreate, CCDepositEntry, CCDepositListResponse, CCDepositUpdate
 from app.v2.services import V2AdminAuditService, V2AdminCCDepositService, V2AdminUserService
 
 router = APIRouter(prefix="/admin/api/external-ranking", tags=["Admin (CC Deposit)"])

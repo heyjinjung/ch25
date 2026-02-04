@@ -1,4 +1,4 @@
-"""Public events status endpoints.
+﻿"""Public events status endpoints.
 
 V2 location (Source of Truth). Legacy import paths should re-export this router.
 

@@ -1,4 +1,4 @@
-"""Web-first dev login endpoint (no Telegram initData required)."""
+﻿"""Web-first dev login endpoint (no Telegram initData required)."""
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request

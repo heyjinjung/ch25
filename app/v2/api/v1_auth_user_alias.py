@@ -1,4 +1,4 @@
-"""V2 Auth/User alias routes.
+﻿"""V2 Auth/User alias routes.
 
 Purpose:
 - Provide /api/v2/* endpoints that behave exactly like existing V1 endpoints.

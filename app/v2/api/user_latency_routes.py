@@ -1,4 +1,4 @@
-"""V2 User Latency Survival Routes - 지연 입금 신고 API."""
+﻿"""V2 User Latency Survival Routes - 지연 입금 신고 API."""
 from typing import Optional
 from datetime import datetime
 

@@ -1,4 +1,4 @@
-"""V2 API dependencies."""
+﻿"""V2 API dependencies."""
 from __future__ import annotations
 
 from fastapi import Depends, HTTPException, status
