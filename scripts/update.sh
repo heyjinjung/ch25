@@ -40,24 +40,24 @@ until ${DC} ps backend --format '{{.State}}' 2>/dev/null | grep -q "running"; do
 done
 echo "✅ Backend container is running"
 
-echo "Restarting Nginx (to refresh DNS cache)..."
+echo "[NGINX] Restarting nginx to refresh DNS cache (prevent 502)..."
 docker restart xmas-nginx
 sleep 2
 
-echo "Running migrations (if any)..."
+echo "[MIGRATION] Running alembic upgrade head..."
 mig_try=0
 until ${DC} exec -T backend alembic upgrade head; do
   mig_try=$((mig_try+1))
-  if [ "$mig_try" -ge 5 ]; then
-    echo "❌ Migration failed after 5 attempts"
+  if [ "$mig_try" -ge 2 ]; then
+    echo "❌ [MIGRATION] Failed after 2 attempts - check migration files!"
     ${DC} exec -T backend alembic current || true
     exit 1
   fi
-  echo "  Migration retry (${mig_try}/5)..."
-  sleep $((5 + mig_try * 2))
+  echo "  [MIGRATION] retrying (${mig_try}/2)..."
+  sleep 3
 done
 
-echo "Verifying health..."
+echo "[HEALTH] Verifying backend health..."
 if curl -s -o /dev/null -w '%{http_code}' http://localhost:8000/api/v2/health | grep -q "200"; then
     echo "✅ Backend health check passed!"
 else
