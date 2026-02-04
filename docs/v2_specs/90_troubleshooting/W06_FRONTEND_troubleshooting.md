@@ -24,6 +24,27 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-04 - FRONTEND/BUILD: CSVImportPage 타입 불일치로 빌드 실패 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | Admin CSV Import 페이지 빌드 |
+| HTTP Status | N/A (빌드 에러) |
+| 영향 범위 | 프론트 빌드 전체 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- `CSVImportPage.tsx`에서 `processed_count`, `total_amount`, `unique_users`, `not_found_count`, `unmatched_details` 사용
+- `CSVImportResult` 타입 정의에 해당 필드가 누락되어 TS2339/TS2551 발생
+
+**해결 방법**
+- `CSVImportResult`에 HQ_DAILY 응답 필드 추가
+- 관련 파일: [src/v2/api/adminApi.ts](../../../src/v2/api/adminApi.ts)
+
+**검증 방법**
+- `npm run build` 통과 확인
+
 ### 02-03 - FRONTEND/UX: 신규 가입 CC 닉네임 입력 필드 대비 부족 ✅
 
 **증상 정의**

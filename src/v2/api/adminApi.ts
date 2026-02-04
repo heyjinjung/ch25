@@ -2529,6 +2529,25 @@ export interface CSVImportResult {
   loss_count?: number;
   jackpot_count?: number;
   unique_user_count?: number;
+  // HQ_DAILY type
+  processed_count?: number;
+  duplicate_count?: number;
+  not_found_count?: number;
+  ambiguous_count?: number;
+  total_amount?: number;
+  unique_users?: number;
+  matched_details?: Array<{
+    row: number;
+    nickname: string;
+    amount: number;
+    reason: string;
+  }>;
+  unmatched_details?: Array<{
+    row: number;
+    nickname: string;
+    amount: number;
+    reason: string;
+  }>;
   // HQ_MARGIN type
   updated_count?: number;
   created_count?: number;
