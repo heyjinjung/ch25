@@ -984,6 +984,21 @@ class VaultService:
 
         db.add(user)
 
+        # === VaultLedger 기록 (게임 금고 변동을 Admin 페이지에서 볼 수 있도록) ===
+        try:
+            db.add(
+                VaultLedger(
+                    user_id=int(user.id),
+                    amount=int(amount),
+                    balance_after=int(user.vault_locked_balance or 0),
+                    reason=f"GAME_{game_type_upper}",
+                    ref_type="GAME_PLAY",
+                    created_at=now_dt,
+                )
+            )
+        except Exception:
+            pass
+
         # Audit trail: record vault accrual in cash ledger without mutating cash_balance.
         try:
             db.add(

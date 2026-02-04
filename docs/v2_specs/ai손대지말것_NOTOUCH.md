@@ -22,6 +22,10 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
 
  ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
 
+예시 
+
+PS C:\Users\JAVIS\ch\ch25> ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker exec xmas-db mysql -u xmasuser -p2026 xmas_event -e 'SELECT id, user_id, deposit_delta, kst_date, updated_at FROM external_ranking_daily_deposit_delta ORDER BY updated_at DESC LIMIT 20;'"
+id      user_id deposit_delta   kst_date        updated_at
 
 
 
@@ -35,4 +39,4 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 ---------
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
-=======
+

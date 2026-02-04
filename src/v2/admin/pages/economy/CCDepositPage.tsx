@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Search,
@@ -112,15 +112,6 @@ export default function CCDepositPage() {
     }
     setResolveStatusByKey(initialResolve);
   }, [logs]);
-
-  const totalByUserId = useMemo(() => {
-    const map = new Map<number, number>();
-    for (const row of rows) {
-      if (!row.userId) continue;
-      map.set(row.userId, (map.get(row.userId) ?? 0) + (row.amount || 0));
-    }
-    return map;
-  }, [rows]);
 
   const sortedRows = [...rows].sort((a, b) => {
     if (!sortConfig.key || !sortConfig.direction) return 0;
@@ -396,7 +387,6 @@ export default function CCDepositPage() {
                   유저 {getSortIcon("nickname")}
                 </div>
               </TableHead>
-              <TableHead className="text-zinc-400">누적</TableHead>
               <TableHead
                 className="text-zinc-400 cursor-pointer hover:text-white transition-colors"
                 onClick={() => handleSort("amount")}
@@ -429,7 +419,7 @@ export default function CCDepositPage() {
             {sortedRows.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="text-center py-20 text-zinc-500"
                 >
                   {isLoading ? "불러오는 중.." : "입금 내역이 없습니다."}
@@ -471,14 +461,6 @@ export default function CCDepositPage() {
                           UID: {row.userId ?? "-"} / {row.nickname ?? "미확인"}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="py-[5px]">
-                      <span className="font-mono text-zinc-300">
-                        ₩{" "}
-                        {(
-                          totalByUserId.get(row.userId ?? 0) || 0
-                        ).toLocaleString()}
-                      </span>
                     </TableCell>
                     <TableCell className="font-bold text-emerald-400 font-mono py-[5px]">
                       <Input
