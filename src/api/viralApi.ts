@@ -8,7 +8,7 @@ export interface ViralActionPayload {
 }
 
 export const recordViralAction = async (payload: ViralActionPayload) => {
-    const response = await apiClient.post('/api/viral/action', payload);
+    const response = await apiClient.post('/api/v2/viral/action', payload);
     return response.data;
 };
 
@@ -48,7 +48,7 @@ export const setCloudItem = (key: string, value: string): Promise<boolean> => {
 };
 
 export const verifyChannelSubscription = async (missionId: number, channelUsername?: string) => {
-    const response = await apiClient.post('/api/viral/verify/channel', {
+    const response = await apiClient.post('/api/v2/viral/verify/channel', {
         mission_id: missionId,
         channel_username: channelUsername,
     });

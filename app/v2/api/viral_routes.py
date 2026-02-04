@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 from app.v2.api.deps import get_current_user_id, get_db
 from app.v2.services.mission_service import V2MissionService
 
-router = APIRouter(prefix="/api/viral", tags=["v2-viral"])
+router = APIRouter(prefix="/viral", tags=["v2-viral"])
 
 
 class VerifyChannelRequest(BaseModel):
