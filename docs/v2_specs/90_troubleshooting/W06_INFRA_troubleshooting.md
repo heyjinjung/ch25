@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 4 |
+| 해결된 이슈 | 5 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -137,6 +137,33 @@
 docker compose exec backend python -c "from app.main import app; routes = [(r.methods, r.path) for r in app.routes if 'paste-import' in str(r.path)]; print(routes)"
 # 결과: ({'POST'}, '/api/v2/admin/csv-import/paste-import'), ({'POST'}, '/api/v2/admin/csv-import/paste-import/preview')
 ```
+
+---
+
+### 02-05 - INFRA: 백엔드 헬스체크 실패 (ModuleNotFoundError: app.schemas) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | GET /api/v2/health (컨테이너 헬스체크) |
+| HTTP Status | 500 (Internal Server Error) |
+| 영향 범위 | 백엔드 컨테이너 기동/헬스체크 실패 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- Stack Trace: `ModuleNotFoundError: No module named 'app.schemas'`
+- `app/core/kst_response.py`가 `app.schemas.base`를 import
+- 실제 코드베이스에 `app/schemas/` 패키지가 존재하지 않음
+
+**해결 방법**
+- `app/core/kst_response.py`의 import 경로를 V2 스키마 유틸로 변경
+- 관련 파일:
+  - [app/core/kst_response.py](../../../app/core/kst_response.py)
+  - [app/v2/schemas/base.py](../../../app/v2/schemas/base.py)
+
+**검증 방법**
+- 백엔드 컨테이너 재기동 후 `/api/v2/health` 200 OK 확인
+- `docker compose logs backend --tail=50`에서 ModuleNotFoundError 미발생 확인
 
 ---
 

@@ -78,7 +78,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
 | DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
-| INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | 0 |
+| INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | **1** |
 | FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | 0 |
 | FRONTEND | [W06_FRONTEND_prospect_pagination.md](./W06_FRONTEND_prospect_pagination.md) | **1** |
 

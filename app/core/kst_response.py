@@ -8,7 +8,7 @@ from typing import Any
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from app.schemas.base import to_kst_iso
+from app.v2.schemas.base import to_kst_iso
 
 
 class KstJSONResponse(JSONResponse):

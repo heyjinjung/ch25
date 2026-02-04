@@ -8,8 +8,8 @@ from app.db.base_class import Base  # SQLAlchemy Base
 
 try:
     from app.main import app  # FastAPI 앱
-    from app.api.deps import get_db  # DB 세션 의존성
-except ModuleNotFoundError:
+    from app.v2.api.deps import get_db  # V2 DB 세션 의존성
+except (ModuleNotFoundError, ImportError):
     app = None
     get_db = None
 
