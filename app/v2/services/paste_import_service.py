@@ -206,11 +206,13 @@ class PasteImportService:
         db: Session,
         text: str,
         admin_id: str,
+        selected_indices: Optional[List[int]] = None,
     ) -> Dict:
         """데일리 입금 Import (붙여넣기)
         
         - 기존 기록된 최신 시간 이후의 입금만 처리
         - 중복 방지 (dedup_key)
+        - selected_indices가 지정되면 해당 인덱스의 행만 처리
         """
         import hashlib
         import uuid
@@ -222,6 +224,12 @@ class PasteImportService:
                 "error": "파싱된 데이터가 없습니다. 형식을 확인하세요.",
                 "parsed_count": 0,
             }
+        
+        # selected_indices가 지정된 경우, 해당 인덱스만 필터링
+        if selected_indices is not None:
+            valid_indices = set(selected_indices)
+            parsed = [item for idx, item in enumerate(parsed) if idx in valid_indices]
+            logger.info(f"[PasteImport] Selected {len(parsed)} items from indices: {selected_indices[:10]}...")
         
         batch_id = str(uuid.uuid4())[:8]
         

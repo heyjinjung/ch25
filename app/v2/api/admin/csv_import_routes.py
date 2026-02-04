@@ -214,12 +214,14 @@ def estimate_import_time(
 # ============================================================
 
 from pydantic import BaseModel
+from typing import List, Optional
 
 
 class PasteImportRequest(BaseModel):
     """붙여넣기 Import 요청"""
     text: str
     import_type: str  # "DAILY_DEPOSIT" or "GAME_LOG"
+    selected_indices: Optional[List[int]] = None  # 선택된 행 인덱스 (None이면 전체)
 
 
 @router.post("/csv-import/paste-import", response_model=dict[str, Any])
@@ -236,6 +238,7 @@ def paste_import(
     - GAME_LOG: 게임 로그 (번호/이름/닉네임/타입/베팅일시/게임종류/금액)
     
     기존 기록된 시간 이후의 데이터만 처리됩니다.
+    selected_indices를 지정하면 해당 인덱스의 행만 처리합니다.
     """
     admin_id, admin_role = admin_info
     
@@ -249,6 +252,7 @@ def paste_import(
             db=db,
             text=request.text,
             admin_id=str(admin_id),
+            selected_indices=request.selected_indices,
         )
     elif request.import_type == "GAME_LOG":
         result = PasteImportService.import_game_logs(
@@ -272,8 +276,15 @@ def preview_paste_import(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     """
-    붙여넣기 Import 미리보기 (실제 저장 없이 파싱 결과만 반환).
+    붙여넣기 Import 미리보기 (실제 저장 없이 파싱 결과 + 상태 반환).
+    
+    각 행의 상태:
+    - MATCHED: 유저 매칭됨 (Import 가능)
+    - NOT_FOUND: 유저 없음 (외부 닉네임으로 미등록)
+    - DUPLICATE: 이미 Import된 기록
+    - SKIPPED_OLD: 기존 기록 이전 데이터
     """
+    import hashlib
     admin_id, admin_role = admin_info
     
     if admin_role != "ADMIN":
@@ -282,44 +293,89 @@ def preview_paste_import(
     from app.v2.services.paste_import_service import PasteImportService
     from sqlalchemy import func
     from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
-    from app.v2.models import V2GameLog
+    from app.v2.models import V2GameLog, V2User
     
     if request.import_type == "DAILY_DEPOSIT":
         parsed = PasteImportService.parse_daily_deposit(request.text)
-        latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
         
-        # 기존 기록 이후 건수 계산
-        # 시간 정보가 00:00:00인 경우(시간 없이 날짜만 입력된 경우) 날짜만 비교
+        # 시간 정보가 있는 기록만 대상 (00:00:00 제외)
+        latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).filter(
+            func.hour(HQDailyDepositLog.deposit_at) != 0
+        ).scalar()
+        if not latest_deposit_at:
+            latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
+        
+        # 기존 dedup_key 조회
+        existing_keys = set(row[0] for row in db.query(HQDailyDepositLog.dedup_key).all())
+        
+        # 각 행 상세 상태 계산
+        preview_items = []
         new_count = 0
-        if latest_deposit_at:
-            latest_date = latest_deposit_at.date()
-            for item in parsed:
-                if item.deposit_at:
-                    # 시간 정보가 없는 경우 (00:00:00) 날짜 비교
-                    if item.deposit_at.hour == 0 and item.deposit_at.minute == 0 and item.deposit_at.second == 0:
-                        # 같은 날짜이거나 이후 날짜면 신규로 처리
-                        if item.deposit_at.date() >= latest_date:
-                            new_count += 1
-                    elif item.deposit_at > latest_deposit_at:
+        
+        for idx, item in enumerate(parsed):
+            # 상태 판정
+            status = "MATCHED"
+            user_id = None
+            
+            # 1) 기존 기록 이전 체크
+            is_old = False
+            if latest_deposit_at and item.deposit_at:
+                is_no_time = (item.deposit_at.hour == 0 and item.deposit_at.minute == 0 and item.deposit_at.second == 0)
+                if is_no_time:
+                    if item.deposit_at.date() < latest_deposit_at.date():
+                        is_old = True
+                else:
+                    if item.deposit_at <= latest_deposit_at:
+                        is_old = True
+            
+            if is_old:
+                status = "SKIPPED_OLD"
+            else:
+                # 2) 중복 체크
+                dt_str = item.deposit_at.strftime("%Y%m%d%H%M") if item.deposit_at else "no_time"
+                raw_key = f"{item.nickname.lower().strip()}|{item.amount}|{dt_str}"
+                dedup_key = hashlib.md5(raw_key.encode()).hexdigest()[:16]
+                
+                if dedup_key in existing_keys:
+                    status = "DUPLICATE"
+                else:
+                    # 3) 유저 매칭
+                    user = db.query(V2User).filter(
+                        func.lower(V2User.nickname) == item.nickname.lower()
+                    ).first()
+                    if not user:
+                        user = db.query(V2User).filter(
+                            func.lower(V2User.external_nickname) == item.nickname.lower()
+                        ).first()
+                    
+                    if user:
+                        status = "MATCHED"
+                        user_id = user.id
                         new_count += 1
-        else:
-            new_count = len(parsed)
+                    else:
+                        status = "NOT_FOUND"
+            
+            preview_items.append({
+                "index": idx,
+                "nickname": item.nickname,
+                "amount": item.amount,
+                "deposit_at": item.deposit_at.isoformat() if item.deposit_at else None,
+                "depositor": item.depositor_name,
+                "status": status,
+                "user_id": user_id,
+            })
         
         return {
             "success": True,
             "import_type": "DAILY_DEPOSIT",
             "total_parsed": len(parsed),
             "new_records_count": new_count,
+            "matched_count": sum(1 for p in preview_items if p["status"] == "MATCHED"),
+            "not_found_count": sum(1 for p in preview_items if p["status"] == "NOT_FOUND"),
+            "duplicate_count": sum(1 for p in preview_items if p["status"] == "DUPLICATE"),
+            "skipped_old_count": sum(1 for p in preview_items if p["status"] == "SKIPPED_OLD"),
             "latest_in_db": latest_deposit_at.isoformat() if latest_deposit_at else None,
-            "preview": [
-                {
-                    "nickname": p.nickname,
-                    "amount": p.amount,
-                    "deposit_at": p.deposit_at.isoformat() if p.deposit_at else None,
-                    "depositor": p.depositor_name,
-                }
-                for p in parsed[:10]
-            ],
+            "preview": preview_items,  # 전체 반환 (체크박스 선택용)
         }
     
     elif request.import_type == "GAME_LOG":

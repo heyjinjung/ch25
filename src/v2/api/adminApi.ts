@@ -2636,6 +2636,27 @@ export const getCSVImportEstimate = async (
 export interface PasteImportRequest {
   text: string;
   import_type: "DAILY_DEPOSIT" | "GAME_LOG";
+  selected_indices?: number[] | null; // 선택된 행 인덱스 (null이면 전체)
+}
+
+export type DepositStatus =
+  | "MATCHED"
+  | "NOT_FOUND"
+  | "DUPLICATE"
+  | "SKIPPED_OLD";
+
+export interface PreviewItem {
+  index: number;
+  nickname?: string;
+  amount?: number;
+  deposit_at?: string | null;
+  depositor?: string;
+  cc_id?: string;
+  log_type?: string;
+  bet_at?: string | null;
+  game_type?: string;
+  status: DepositStatus;
+  user_id?: number | null;
 }
 
 export interface PasteImportPreviewResponse {
@@ -2643,17 +2664,12 @@ export interface PasteImportPreviewResponse {
   import_type: string;
   total_parsed: number;
   new_records_count: number;
+  matched_count?: number;
+  not_found_count?: number;
+  duplicate_count?: number;
+  skipped_old_count?: number;
   latest_in_db: string | null;
-  preview: Array<{
-    nickname?: string;
-    amount?: number;
-    deposit_at?: string | null;
-    depositor?: string;
-    cc_id?: string;
-    log_type?: string;
-    bet_at?: string | null;
-    game_type?: string;
-  }>;
+  preview: PreviewItem[];
 }
 
 export interface PasteImportResult {

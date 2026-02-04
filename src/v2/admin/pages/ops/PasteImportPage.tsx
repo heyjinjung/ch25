@@ -3,10 +3,11 @@
  *
  * 게임 로그와 데일리 입금 로그를 클립보드에서 직접 붙여넣기로 Import합니다.
  * CSV 파일 업로드 없이 간편하게 데이터를 반입할 수 있습니다.
+ * 미리보기에서 각 행을 선택적으로 Import할 수 있습니다.
  *
  * 작성일: 2026-02-04
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ClipboardPaste,
   Eye,
@@ -17,6 +18,9 @@ import {
   DollarSign,
   Info,
   RefreshCw,
+  CheckSquare,
+  Square,
+  Filter,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
@@ -33,10 +37,13 @@ import {
   executePasteImport,
   PasteImportPreviewResponse,
   PasteImportResult,
+  PreviewItem,
+  DepositStatus,
 } from "../../../api/adminApi";
 
 type ImportType = "DAILY_DEPOSIT" | "GAME_LOG";
 type Step = "INPUT" | "PREVIEW" | "RESULT";
+type StatusFilter = "ALL" | DepositStatus;
 
 export default function PasteImportPage() {
   const [step, setStep] = useState<Step>("INPUT");
@@ -47,6 +54,26 @@ export default function PasteImportPage() {
   const [previewData, setPreviewData] =
     useState<PasteImportPreviewResponse | null>(null);
   const [resultData, setResultData] = useState<PasteImportResult | null>(null);
+
+  // 체크박스 선택 상태
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
+    new Set(),
+  );
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+
+  // 필터링된 항목
+  const filteredPreview = useMemo(() => {
+    if (!previewData?.preview) return [];
+    if (statusFilter === "ALL") return previewData.preview;
+    return previewData.preview.filter((item) => item.status === statusFilter);
+  }, [previewData?.preview, statusFilter]);
+
+  // 선택 가능한 항목 (MATCHED만)
+  const selectableItems = useMemo(() => {
+    return (
+      previewData?.preview.filter((item) => item.status === "MATCHED") ?? []
+    );
+  }, [previewData?.preview]);
 
   const handlePreview = async () => {
     if (!pasteText.trim()) {
@@ -63,6 +90,13 @@ export default function PasteImportPage() {
         import_type: importType,
       });
       setPreviewData(result);
+      // 기본적으로 MATCHED 상태인 항목 모두 선택
+      const matchedIndices = new Set(
+        result.preview
+          .filter((item: PreviewItem) => item.status === "MATCHED")
+          .map((item: PreviewItem) => item.index),
+      );
+      setSelectedIndices(matchedIndices);
       setStep("PREVIEW");
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : "알 수 없는 오류";
@@ -72,7 +106,31 @@ export default function PasteImportPage() {
     }
   };
 
+  const handleToggleSelect = (index: number) => {
+    const newSelected = new Set(selectedIndices);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedIndices(newSelected);
+  };
+
+  const handleSelectAll = () => {
+    const allMatchedIndices = selectableItems.map((item) => item.index);
+    setSelectedIndices(new Set(allMatchedIndices));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIndices(new Set());
+  };
+
   const handleImport = async () => {
+    if (selectedIndices.size === 0) {
+      setError("선택된 항목이 없습니다.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -80,6 +138,7 @@ export default function PasteImportPage() {
       const result = await executePasteImport({
         text: pasteText,
         import_type: importType,
+        selected_indices: Array.from(selectedIndices),
       });
       setResultData(result);
       setStep("RESULT");
@@ -97,6 +156,26 @@ export default function PasteImportPage() {
     setPreviewData(null);
     setResultData(null);
     setError(null);
+    setSelectedIndices(new Set());
+    setStatusFilter("ALL");
+  };
+
+  const getStatusBadge = (status: DepositStatus) => {
+    const config = {
+      MATCHED: {
+        color: "border-emerald-500/50 text-emerald-400",
+        label: "매칭됨",
+      },
+      NOT_FOUND: { color: "border-red-500/50 text-red-400", label: "미등록" },
+      DUPLICATE: { color: "border-amber-500/50 text-amber-400", label: "중복" },
+      SKIPPED_OLD: { color: "border-zinc-500/50 text-zinc-400", label: "기존" },
+    };
+    const { color, label } = config[status];
+    return (
+      <Badge variant="outline" className={color}>
+        {label}
+      </Badge>
+    );
   };
 
   const getPlaceholder = () => {
@@ -245,7 +324,7 @@ export default function PasteImportPage() {
       {step === "PREVIEW" && previewData && (
         <div className="space-y-4">
           {/* Preview Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Card className="bg-obsidian-card border-obsidian-border">
               <CardContent className="p-4">
                 <div className="text-sm text-zinc-400">총 파싱</div>
@@ -256,20 +335,96 @@ export default function PasteImportPage() {
             </Card>
             <Card className="bg-obsidian-card border-obsidian-border">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">신규 레코드</div>
+                <div className="text-sm text-zinc-400">매칭됨</div>
                 <div className="text-2xl font-bold text-emerald-400">
-                  {previewData.new_records_count.toLocaleString()}
+                  {(
+                    previewData.matched_count ?? previewData.new_records_count
+                  ).toLocaleString()}
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-obsidian-card border-obsidian-border">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">DB 최신 기록</div>
-                <div className="text-sm font-medium text-zinc-300">
-                  {previewData.latest_in_db ?? "없음"}
+                <div className="text-sm text-zinc-400">미등록</div>
+                <div className="text-2xl font-bold text-red-400">
+                  {(previewData.not_found_count ?? 0).toLocaleString()}
                 </div>
               </CardContent>
             </Card>
+            <Card className="bg-obsidian-card border-obsidian-border">
+              <CardContent className="p-4">
+                <div className="text-sm text-zinc-400">중복</div>
+                <div className="text-2xl font-bold text-amber-400">
+                  {(previewData.duplicate_count ?? 0).toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-obsidian-card border-obsidian-border">
+              <CardContent className="p-4">
+                <div className="text-sm text-zinc-400">선택됨</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {selectedIndices.size.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filter & Select Controls */}
+          <div className="flex flex-wrap items-center gap-4 p-3 bg-obsidian-surface rounded-lg">
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-zinc-400" />
+              <span className="text-sm text-zinc-400">필터:</span>
+              {(
+                [
+                  "ALL",
+                  "MATCHED",
+                  "NOT_FOUND",
+                  "DUPLICATE",
+                  "SKIPPED_OLD",
+                ] as const
+              ).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setStatusFilter(filter)}
+                  className={cn(
+                    "px-2 py-1 text-xs rounded",
+                    statusFilter === filter
+                      ? "bg-obsidian-accent text-black"
+                      : "bg-obsidian-card text-zinc-300 hover:bg-obsidian-border",
+                  )}
+                >
+                  {filter === "ALL"
+                    ? "전체"
+                    : filter === "MATCHED"
+                      ? "매칭"
+                      : filter === "NOT_FOUND"
+                        ? "미등록"
+                        : filter === "DUPLICATE"
+                          ? "중복"
+                          : "기존"}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAll}
+                className="gap-1"
+              >
+                <CheckSquare size={14} />
+                전체선택
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeselectAll}
+                className="gap-1"
+              >
+                <Square size={14} />
+                전체해제
+              </Button>
+            </div>
           </div>
 
           {/* Preview Data */}
@@ -277,14 +432,15 @@ export default function PasteImportPage() {
             <CardHeader>
               <CardTitle className="text-lg text-white flex items-center gap-2">
                 <Eye size={18} />
-                미리보기 (처음 10건)
+                미리보기 ({filteredPreview.length}건)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="sticky top-0 bg-obsidian-card">
                     <tr className="border-b border-obsidian-border">
+                      <th className="w-10 py-2 px-2"></th>
                       {importType === "DAILY_DEPOSIT" ? (
                         <>
                           <th className="text-left py-2 px-3 text-zinc-400">
@@ -298,6 +454,9 @@ export default function PasteImportPage() {
                           </th>
                           <th className="text-left py-2 px-3 text-zinc-400">
                             입금자
+                          </th>
+                          <th className="text-center py-2 px-3 text-zinc-400">
+                            상태
                           </th>
                         </>
                       ) : (
@@ -317,16 +476,42 @@ export default function PasteImportPage() {
                           <th className="text-right py-2 px-3 text-zinc-400">
                             금액
                           </th>
+                          <th className="text-center py-2 px-3 text-zinc-400">
+                            상태
+                          </th>
                         </>
                       )}
                     </tr>
                   </thead>
                   <tbody>
-                    {previewData.preview.map((item, idx) => (
+                    {filteredPreview.map((item) => (
                       <tr
-                        key={idx}
-                        className="border-b border-obsidian-border/50 hover:bg-obsidian-surface/50"
+                        key={item.index}
+                        className={cn(
+                          "border-b border-obsidian-border/50 hover:bg-obsidian-surface/50",
+                          selectedIndices.has(item.index) &&
+                            "bg-obsidian-accent/10",
+                        )}
                       >
+                        <td className="py-2 px-2">
+                          {item.status === "MATCHED" ? (
+                            <button
+                              onClick={() => handleToggleSelect(item.index)}
+                              className="text-zinc-400 hover:text-white"
+                            >
+                              {selectedIndices.has(item.index) ? (
+                                <CheckSquare
+                                  size={16}
+                                  className="text-emerald-400"
+                                />
+                              ) : (
+                                <Square size={16} />
+                              )}
+                            </button>
+                          ) : (
+                            <span className="text-zinc-600">-</span>
+                          )}
+                        </td>
                         {importType === "DAILY_DEPOSIT" ? (
                           <>
                             <td className="py-2 px-3 text-white">
@@ -340,6 +525,9 @@ export default function PasteImportPage() {
                             </td>
                             <td className="py-2 px-3 text-zinc-300">
                               {item.depositor ?? "-"}
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              {getStatusBadge(item.status)}
                             </td>
                           </>
                         ) : (
@@ -368,6 +556,9 @@ export default function PasteImportPage() {
                             <td className="py-2 px-3 text-right text-white">
                               ₩{(item.amount ?? 0).toLocaleString()}
                             </td>
+                            <td className="py-2 px-3 text-center">
+                              {getStatusBadge(item.status)}
+                            </td>
                           </>
                         )}
                       </tr>
@@ -389,7 +580,7 @@ export default function PasteImportPage() {
             </Button>
             <Button
               onClick={handleImport}
-              disabled={previewData.new_records_count === 0 || isLoading}
+              disabled={selectedIndices.size === 0 || isLoading}
               className="flex-1 gap-2"
             >
               {isLoading ? (
@@ -397,7 +588,7 @@ export default function PasteImportPage() {
               ) : (
                 <Upload size={16} />
               )}
-              {previewData.new_records_count}건 Import 실행
+              선택된 {selectedIndices.size}건 Import 실행
             </Button>
           </div>
         </div>
