@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.database import Base
+from app.db.base_class import Base
 
 
 class HQDailyDepositLog(Base):
