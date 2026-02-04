@@ -331,33 +331,49 @@ def _get_streak_reward_rules(self) -> List[Dict[str, Any]]:
 
 ---
 
-### 02-04 - MISSION/INFO: 연속 스트릭 클레임 불가 상태 설명
+### 02-04 - MISSION/INVESTIGATION: 연속 스트릭 클레임 미동작 조사
 
 **증상 정의**
 | 항목 | 내용 |
 |---|---|
 | 대상 기능 | 연속 스트릭 보상 클레임 |
-| HTTP Status | 해당 없음 (정상 동작) |
+| HTTP Status | 조사 중 |
 | 영향 범위 | 테스트 유저 |
 | 재현 빈도 | 항상 |
 
-**현재 상태**
-- 현재 최대 `play_streak=2` (user_id=1, 10)
-- 스트릭 마일스톤: Day 3, Day 7
-- **마일스톤 미도달로 클레임 불가 (정상)**
-
-**스트릭 메커니즘 설명**
+**어드민 설정 확인 (정상)**
+```json
+// app_ui_config.key = "streak_reward_rules"
+{
+  "rules": [
+    {"day": 1, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "DICE_TICKET"}], "enabled": true},
+    {"day": 2, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "DICE_TICKET"}], "enabled": true},
+    {"day": 3, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "ROULETTE_TICKET"}], "enabled": true},
+    {"day": 4, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "LOTTERY_TICKET"}], "enabled": true},
+    {"day": 5, "grants": [{"kind": "WALLET", "amount": 2, "token_type": "DICE_TICKET"}], "enabled": true},
+    {"day": 6, "grants": [{"kind": "WALLET", "amount": 3, "token_type": "DICE_TICKET"}], "enabled": true},
+    {"day": 7, "grants": [{"kind": "WALLET", "amount": 2, "token_type": "ROULETTE_TICKET"}], "enabled": true}
+  ]
+}
 ```
-게임 플레이 (PLAY_GAME)
-    ↓
-sync_play_streak() 호출
-    ↓
-last_play_date 갱신 + play_streak 증가
-    ↓
-Day 3 도달 시 → 클레임 가능
-```
 
-**결론**: 버그 아님, 게임 플레이를 더 해서 Day 3 도달 필요
+**백엔드 로직 검증 (정상)**
+- `get_pending_streak_milestone()`: Day 1~7 모두 지원
+- `_get_streak_reward_rules()`: DB에서 설정 정상 조회
+- user_id=1 (Admin): play_streak=2, Day 1/2 클레임 가능 상태
+
+**이벤트 로그 확인**
+- user_id=1: 스트릭 이벤트 **없음** → Day 2 클레임 가능
+- user_id=10: Day 1만 클레임됨 → Day 2 클레임 가능
+- `/api/v2/mission/streak/claim` 호출 기록 **없음** (프론트 미호출)
+
+**추정 원인**
+1. 프론트엔드에서 `claimable_rewards` 감지 후 클레임 버튼 미표시
+2. 또는 클레임 모달이 이미 표시된 것으로 처리됨 (localStorage)
+
+**다음 액션**
+- [ ] 프론트엔드 `V2StreakModalContainer` 클레임 버튼 표시 조건 확인
+- [ ] localStorage에서 `v2_streak_claim_shown_*` 키 확인
 
 ---
 

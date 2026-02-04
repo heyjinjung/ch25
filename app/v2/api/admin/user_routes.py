@@ -108,6 +108,57 @@ def _get_or_create_level_progress(
     return progress
 
 
+def _resolve_v2_user_by_identifier(db: Session, identifier: str | None) -> V2User | None:
+    if not identifier or not identifier.strip():
+        return None
+
+    raw = identifier.strip()
+    normalized = raw.lstrip("@").strip()
+    candidates = [raw] if normalized == raw else [raw, normalized]
+
+    for cand in candidates:
+        if cand.isdigit():
+            numeric = int(cand)
+            user = db.query(V2User).filter(V2User.id == numeric).first()
+            if user:
+                return user
+            user = db.query(V2User).filter(V2User.telegram_id == numeric).first()
+            if user:
+                return user
+
+    for cand in candidates:
+        user = db.query(V2User).filter(V2User.cc_id == cand).first()
+        if user:
+            return user
+
+    for cand in candidates:
+        user = (
+            db.query(V2User)
+            .filter(
+                (V2User.nickname == cand) |
+                (V2User.telegram_username == cand)
+            )
+            .first()
+        )
+        if user:
+            return user
+
+    for cand in candidates:
+        lower = cand.lower()
+        user = (
+            db.query(V2User)
+            .filter(
+                (func.lower(V2User.nickname) == lower) |
+                (func.lower(V2User.telegram_username) == lower)
+            )
+            .first()
+        )
+        if user:
+            return user
+
+    return None
+
+
 @router.get("/users", response_model=UserListResponse)
 def get_admin_users_list(
     search: str = None,
@@ -436,16 +487,9 @@ def get_admin_user_level_by_cc_id(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     _admin_id, _admin_role = admin_info
-    # cc_id 또는 닉네임으로 검색
-    user = (
-        db.query(V2User)
-        .filter(
-            (V2User.cc_id == cc_id) |
-            (V2User.nickname == cc_id) |
-            (V2User.telegram_username == cc_id)
-        )
-        .first()
-    )
+    user = _resolve_v2_user_by_identifier(db, cc_id)
+    if not cc_id or not cc_id.strip():
+        raise HTTPException(status_code=400, detail="CC_ID_REQUIRED")
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
@@ -472,7 +516,9 @@ def adjust_admin_user_level_xp(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _admin_role = admin_info
-    user = db.query(V2User).filter(V2User.cc_id == payload.ccId).first()
+    user = _resolve_v2_user_by_identifier(db, payload.ccId)
+    if not payload.ccId or not payload.ccId.strip():
+        raise HTTPException(status_code=400, detail="CC_ID_REQUIRED")
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     if payload.deltaXp == 0:
@@ -532,7 +578,9 @@ def set_admin_user_level(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _admin_role = admin_info
-    user = db.query(V2User).filter(V2User.cc_id == payload.ccId).first()
+    user = _resolve_v2_user_by_identifier(db, payload.ccId)
+    if not payload.ccId or not payload.ccId.strip():
+        raise HTTPException(status_code=400, detail="CC_ID_REQUIRED")
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
     if payload.level is None and payload.xp is None:
