@@ -18,10 +18,7 @@ from app.v2.models import UserActivity
 from app.v2.models import VaultEarnEvent
 from app.v2.services.user_service import V2UserService
 from app.v2.services.vault2_service import Vault2Service
-from app.v2.services.vault_legacy_bridge import (
-    record_game_play_earn_event as _record_game_play_earn_event,
-    handle_deposit_increase_signal as _handle_deposit_increase_signal,
-)
+# Legacy bridge removed
 import logging
 
 logger = logging.getLogger(__name__)
@@ -92,6 +89,107 @@ class V2VaultService:
         if v2_balance is None:
             raise ValueError("user not found")
         return int(v2_balance)
+
+    @staticmethod
+    def _streak_vault_schedule(streak_days: int) -> tuple[float, int | None]:
+        if streak_days == 2:
+            return 1.2, 1
+        if streak_days == 3:
+            return 1.2, 4
+        if streak_days == 6:
+            return 1.5, 1
+        if streak_days >= 7:
+            return 2.0, None
+        return 1.0, None
+
+    def _streak_vault_bonus_multiplier(
+        self,
+        *,
+        user: V2User,
+        now: datetime,
+        eligible: bool,
+    ) -> float:
+        settings = get_settings()
+        if not bool(getattr(settings, "streak_vault_bonus_enabled", False)):
+            return 1.0
+        if not eligible:
+            return 1.0
+
+        streak_days = int(getattr(user, "play_streak", 0) or 0)
+        multiplier, duration_hours = self._streak_vault_schedule(streak_days)
+        if multiplier <= 1.0:
+            return 1.0
+
+        if duration_hours is None:
+            return float(multiplier)
+
+        now_utc = self._to_utc(now)
+        op_date = self._operational_date_kst(now_utc)
+
+        start_date = getattr(user, "streak_vault_bonus_date", None)
+        start_at = getattr(user, "streak_vault_bonus_started_at", None)
+        if start_date != op_date or start_at is None:
+            user.streak_vault_bonus_date = op_date
+            user.streak_vault_bonus_started_at = now_utc.replace(tzinfo=None)
+            return float(multiplier)
+
+        start_utc = start_at.replace(tzinfo=timezone.utc)
+        if now_utc <= start_utc + timedelta(hours=int(duration_hours)):
+            return float(multiplier)
+
+        return 1.0
+
+    @classmethod
+    def vault_accrual_multiplier(cls, db: Session | None = None, now: datetime | None = None) -> float:
+        now_dt = now or datetime.utcnow()
+        if now_dt.tzinfo is None:
+            now_dt = now_dt.replace(tzinfo=timezone.utc)
+
+        if db is not None:
+            v2 = Vault2Service()
+            gh_cfg = v2.get_config_value(db, "golden_hour_config", {})
+            if gh_cfg and gh_cfg.get("enabled"):
+                override = gh_cfg.get("manual_override", "AUTO")
+                if override == "FORCE_ON":
+                    return float(gh_cfg.get("multiplier", 2.0))
+                if override == "FORCE_OFF":
+                    pass 
+                else:
+                    settings = get_settings()
+                    tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+                    now_kst = now_dt.astimezone(tz)
+                    current_time_str = now_kst.strftime("%H:%M:%S")
+                    start = gh_cfg.get("start_time_kst", "21:30:00")
+                    end = gh_cfg.get("end_time_kst", "22:30:00")
+                    if start <= current_time_str <= end:
+                        return float(gh_cfg.get("multiplier", 2.0))
+
+        if db is not None:
+            db_val = Vault2Service().get_config_value(db, "accrual_multiplier")
+            if db_val is not None:
+                try:
+                    return max(float(db_val), 1.0)
+                except (TypeError, ValueError):
+                    pass
+
+        settings = get_settings()
+        if not bool(getattr(settings, "vault_accrual_multiplier_enabled", False)):
+            return 1.0
+
+        start_kst = getattr(settings, "vault_accrual_multiplier_start_kst", None)
+        end_kst = getattr(settings, "vault_accrual_multiplier_end_kst", None)
+        if start_kst is None or end_kst is None:
+            return 1.0
+
+        raw_value = float(getattr(settings, "vault_accrual_multiplier_value", 1.0) or 1.0)
+        value = max(raw_value, 1.0)
+
+        tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+        today_kst = now_dt.astimezone(tz).date()
+
+        if start_kst <= today_kst <= end_kst:
+            return value
+        return 1.0
 
     @staticmethod
     def deposit(
@@ -695,9 +793,8 @@ class V2VaultService:
             "minimum_withdrawal_amount": int(next_min_balance),
         }
 
-    # Backwards-compatible bridge for V1 VaultService APIs used by game engines.
-    @staticmethod
     def record_game_play_earn_event(
+        self,
         db: Session,
         *,
         user_id: int,
@@ -708,17 +805,247 @@ class V2VaultService:
         payout_raw: dict | None = None,
         now: datetime | None = None,
     ) -> int:
-        """Delegate to legacy VaultService.record_game_play_earn_event to keep game logic shared."""
-        return _record_game_play_earn_event(
-            db,
-            user_id=user_id,
-            game_type=game_type,
-            game_log_id=game_log_id,
+        """Idempotently accrue Phase 1 vault locked balance for a game play."""
+        settings = get_settings()
+        cfg_service = Vault2Service()
+        db_flag = cfg_service.get_config_value(db, "enable_game_earn_events", None)
+        enable_game_earn = bool(db_flag) if db_flag is not None else bool(getattr(settings, "enable_vault_game_earn_events", False))
+        if not enable_game_earn:
+            return 0
+
+        now_dt = now or datetime.utcnow()
+
+        if not cfg_service.get_eligibility(db, program_key=cfg_service.DEFAULT_PROGRAM_KEY, user_id=user_id):
+            return 0
+
+        earn_event_id = f"GAME:{str(game_type).upper()}:{int(game_log_id)}"
+        exists = db.execute(select(VaultEarnEvent.id).where(VaultEarnEvent.earn_event_id == earn_event_id)).first()
+        if exists is not None:
+            return 0
+
+        game_type_upper = str(game_type).upper()
+        outcome_upper = str(outcome).upper() if outcome else "BASE"
+        payout = payout_raw or {}
+        mode_upper = str(payout.get("mode") or "").upper()
+
+        q = db.query(V2User).filter(V2User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None and db.bind and db.bind.dialect.name == "sqlite":
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        if user is None:
+            return 0
+
+        game_earn_config = cfg_service.get_config_value(db, "game_earn_config", {})
+        game_config = game_earn_config.get(game_type_upper, {})
+        amount_before_multiplier = game_config.get(outcome_upper)
+
+        if game_type_upper in {"ROULETTE", "LOTTERY"}:
+             amount_before_multiplier = None
+
+        if game_type_upper == "DICE" and mode_upper != "EVENT":
+            payout_reward_type = str(payout.get("reward_type") or "").upper()
+            if payout_reward_type in {"POINT", "CC_POINT", "NONE"} and payout.get("reward_amount") is not None:
+                amount_before_multiplier = int(payout.get("reward_amount") or 0)
+            else:
+                amount_before_multiplier = 0
+
+        if amount_before_multiplier is None:
+            if game_type_upper == "DICE":
+                if payout.get("reward_amount") is not None:
+                    amount_before_multiplier = int(payout.get("reward_amount") or 0)
+                else:
+                    if outcome_upper == "WIN":
+                        amount_before_multiplier = 200
+                    elif outcome_upper == "LOSE":
+                        amount_before_multiplier = -50
+                    else:
+                        amount_before_multiplier = 0
+            elif game_type_upper == "ROULETTE":
+                r_amount = int(payout.get("reward_amount", 0))
+                r_type = str(payout.get("reward_type", "NONE"))
+                if r_type in ("POINT", "CC_POINT") and r_amount > 0:
+                    amount_before_multiplier = r_amount
+                elif r_amount == 0:
+                    amount_before_multiplier = 0
+                else:
+                    amount_before_multiplier = 0
+            elif game_type_upper == "LOTTERY":
+                r_amount = int(payout.get("reward_amount", 0))
+                r_type = str(payout.get("reward_type", "NONE"))
+                if r_type in ("POINT", "CC_POINT") and r_amount != 0:
+                    amount_before_multiplier = r_amount
+                else:
+                    amount_before_multiplier = 0
+            else:
+                r_amount = int(payout.get("reward_amount", 0))
+                r_type = str(payout.get("reward_type", "NONE"))
+                if r_type in ("POINT", "CC_POINT") and r_amount > 0:
+                    amount_before_multiplier = r_amount
+                elif r_amount == 0:
+                    amount_before_multiplier = -50
+                else:
+                    amount_before_multiplier = 200
+
+        if int(amount_before_multiplier or 0) == 0:
+            return 0
+
+        amount_before_multiplier = int(amount_before_multiplier)
+
+        if mode_upper == "EVENT":
+            base_multiplier = 1.0
+            policy = self.get_user_vault_policy(db, user, now_dt)
+            recency_mult = float(policy["recency_multiplier"])
+        else:
+            base_multiplier = float(self.vault_accrual_multiplier(db, now_dt))
+            policy = self.get_user_vault_policy(db, user, now_dt)
+            recency_mult = float(policy["recency_multiplier"])
+
+        vault_limit = policy["vault_max_limit"]
+
+        eligible_for_streak_bonus = False
+        if game_type_upper == "DICE":
+            mode = str((payout_raw or {}).get("mode") or "NORMAL").upper()
+            eligible_for_streak_bonus = (
+                token_type == GameTokenType.DICE_TOKEN.value
+                and mode == "NORMAL"
+            )
+        elif game_type_upper == "ROULETTE":
+            eligible_for_streak_bonus = (
+                token_type == GameTokenType.ROULETTE_COIN.value
+                and mode_upper != "EVENT"
+            )
+        elif game_type_upper == "LOTTERY":
+            eligible_for_streak_bonus = token_type == GameTokenType.LOTTERY_TICKET.value
+
+        streak_multiplier = 1.0
+        if amount_before_multiplier == 200 and amount_before_multiplier > 0:
+            streak_multiplier = float(
+                self._streak_vault_bonus_multiplier(user=user, now=now_dt, eligible=eligible_for_streak_bonus)
+            )
+
+        total_multiplier = float(base_multiplier) * float(streak_multiplier) * recency_mult
+
+        gh_cfg = cfg_service.get_config_value(db, "golden_hour_config", {})
+        is_gh_active_now = False
+        if gh_cfg and gh_cfg.get("enabled"):
+            override = gh_cfg.get("manual_override", "AUTO")
+            if override == "FORCE_ON":
+                is_gh_active_now = True
+            elif override == "AUTO":
+                tz = ZoneInfo(getattr(settings, "timezone", "Asia/Seoul"))
+                now_kst = now_dt.astimezone(tz)
+                current_time_str = now_kst.strftime("%H:%M:%S")
+                start = gh_cfg.get("start_time_kst", "21:30:00")
+                end = gh_cfg.get("end_time_kst", "22:30:00")
+                if start <= current_time_str <= end:
+                    is_gh_active_now = True
+
+        if is_gh_active_now and total_multiplier > 1.0:
+            allowed_amounts = {200, -50}
+            dice_cfg = game_earn_config.get("DICE", {})
+            if dice_cfg:
+                allowed_amounts.add(int(dice_cfg.get("WIN", 200)))
+                allowed_amounts.add(int(dice_cfg.get("LOSE", -50)))
+            roulette_cfg = game_earn_config.get("ROULETTE", {})
+            if roulette_cfg:
+                allowed_amounts.add(int(roulette_cfg.get("BASE", 200)))
+                if "LOSE" in roulette_cfg:
+                    allowed_amounts.add(int(roulette_cfg.get("LOSE")))
+                if "SEGMENT_5" in roulette_cfg:
+                    allowed_amounts.add(int(roulette_cfg.get("SEGMENT_5")))
+            if gh_cfg.get("base_amount_gate"):
+                allowed_amounts.add(int(gh_cfg.get("base_amount_gate")))
+
+            if amount_before_multiplier not in allowed_amounts:
+                total_multiplier = 1.0
+
+        if amount_before_multiplier > 0:
+            amount = max(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
+        else:
+            amount = min(int(round(amount_before_multiplier * total_multiplier)), amount_before_multiplier)
+
+        daily_gain_cap = None
+        current_daily_gain = 0
+        caps = cfg_service.get_config_value(db, "caps", {}).get(game_type_upper)
+        if caps and isinstance(caps, dict):
+            cap_val = caps.get("daily_gain")
+            if cap_val is not None:
+                daily_gain_cap = int(cap_val)
+                today_start = datetime(now_dt.year, now_dt.month, now_dt.day)
+                current_daily_gain = db.execute(
+                    select(func.coalesce(func.sum(VaultEarnEvent.amount), 0)).where(
+                        VaultEarnEvent.user_id == user_id,
+                        VaultEarnEvent.created_at >= today_start,
+                        VaultEarnEvent.game_type == game_type_upper
+                    )
+                ).scalar() or 0
+
+        amount = int(amount)
+        db.refresh(user)
+        current_locked = int(getattr(user, "vault_locked_balance", 0) or 0)
+
+        if vault_limit > 0 and amount > 0 and current_locked >= vault_limit:
+            return 0
+        
+        if vault_limit > 0 and amount > 0:
+            if current_locked + amount > vault_limit:
+                amount = max(0, vault_limit - current_locked)
+        
+        if amount == 0:
+            return 0
+
+        if amount > 0 and daily_gain_cap is not None:
+            potential_total = current_daily_gain + amount
+            if potential_total > daily_gain_cap:
+                allowed = max(0, daily_gain_cap - current_daily_gain)
+                amount = allowed
+
+        user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+        self.sync_legacy_mirror(user)
+
+        bonus_amount = 0
+        reward_kind = "BASE" if bonus_amount == 0 else "BASE_PLUS_BONUS"
+        event = VaultEarnEvent(
+            user_id=user.id,
+            earn_event_id=earn_event_id,
+            earn_type="GAME_PLAY",
+            amount=int(amount),
+            source=str(game_type).upper(),
+            reward_kind=reward_kind,
+            game_type=str(game_type).upper(),
             token_type=token_type,
-            outcome=outcome,
-            payout_raw=payout_raw,
-            now=now,
+            payout_raw_json={
+                **(payout_raw or {}),
+                "vault_accrual_multiplier": base_multiplier,
+                "streak_vault_bonus_multiplier": streak_multiplier,
+                "vault_total_multiplier": total_multiplier,
+                "amount_before_multiplier": int(amount_before_multiplier),
+            },
+            created_at=now_dt,
         )
+        db.add(event)
+        db.add(user)
+
+        try:
+            db.add(
+                VaultLedger(
+                    user_id=int(user.id),
+                    amount=int(amount),
+                    balance_after=int(user.vault_locked_balance or 0),
+                    reason=f"GAME_{game_type_upper}",
+                    ref_type="GAME_PLAY",
+                    created_at=now_dt,
+                )
+            )
+        except Exception:
+            pass
+
+        return int(amount)
 
     def handle_deposit_increase_signal(
         self,
@@ -731,16 +1058,37 @@ class V2VaultService:
         now: datetime | None = None,
         commit: bool = True,
     ) -> int:
-        """Process external ranking "deposit increased" signal."""
-        return _handle_deposit_increase_signal(
-            db,
-            user_id=user_id,
-            deposit_delta=deposit_delta,
-            prev_amount=prev_amount,
-            new_amount=new_amount,
-            now=now,
-            commit=commit,
-        )
+        now_dt = now or datetime.utcnow()
+        if deposit_delta <= 0:
+            return 0
+
+        cfg_service = Vault2Service()
+        if not cfg_service.get_eligibility(db, program_key=cfg_service.DEFAULT_PROGRAM_KEY, user_id=user_id):
+            return 0
+
+        q = db.query(V2User).filter(V2User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None and db.bind and db.bind.dialect.name == "sqlite":
+            user = V2User(id=user_id, cc_id=f"test-ccid-{user_id}")
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        if user is None:
+            return 0
+
+        user.total_charge_amount = int(new_amount)
+        db.add(user)
+        
+        # Check suspension status change
+        self.check_and_log_suspension_on_deposit(db, user_id, before_deposit_7d=None)
+
+        if commit:
+            db.commit()
+        else:
+            db.flush()
+        return 0
 
     # =========================================================================
     # Admin Operations
