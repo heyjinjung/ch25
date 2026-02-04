@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.services.prospect_linking_service import ProspectLinkingService
 
 router = APIRouter()

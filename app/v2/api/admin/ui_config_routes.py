@@ -7,7 +7,7 @@ streak_reward_rules 등 V2 전용 설정 저장/조회에 사용.
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_admin_id
+from app.v2.api.deps import get_db, get_current_admin_id
 from app.v2.services.ui_config_service import UiConfigService
 from pydantic import BaseModel
 from datetime import datetime

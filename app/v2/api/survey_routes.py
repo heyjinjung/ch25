@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
-from app.schemas.survey import (
+from app.v2.schemas.v2_survey import (
     SurveyCompleteRequest,
     SurveyCompleteResponse,
     SurveyListResponse,

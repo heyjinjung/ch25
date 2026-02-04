@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user_id
+from app.v2.api.deps import get_db, get_current_user_id
 from app.v2.schemas.v2_auth import AuthTokenRequest, AuthTokenResponse, AuthUser
 from app.v2.services.auth_service import V2AuthService, log_auth_event
 from app.v2.services.user_service import V2UserService

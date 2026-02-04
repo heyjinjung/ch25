@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user
+from app.v2.api.deps import get_db, get_current_user
 from app.core.exceptions import NotEnoughTokensError
 from app.v2.models.user import V2User
 from app.v2.services.v2_exchange_service import V2ExchangeService

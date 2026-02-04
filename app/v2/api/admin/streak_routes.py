@@ -7,11 +7,11 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_admin_info
+from app.v2.api.deps import get_db, get_current_admin_info
 from app.v2.models import UserEventLog
 from app.v2.models.user import V2User
 from app.v2.models import UserSegment
-from app.schemas.admin_streak_rewards import (
+from app.v2.schemas.v2_admin_streak_rewards import (
     StreakRewardDailyCountsResponse,
     StreakRewardUserEventsResponse,
     StreakRewardUserEvent,

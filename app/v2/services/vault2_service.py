@@ -27,7 +27,8 @@ from sqlalchemy import func, select
 from app.v2.services.audit_service import AuditService
 
 # [V2] Circuit breaker for payout safety
-from app.services.circuit_breaker import check_payout_safe, record_payout
+from app.v2.services.circuit_breaker_service import CircuitBreakerService
+from app.v2.core.exceptions import CircuitBreakerError
 
 logger = logging.getLogger(__name__)
 
@@ -458,13 +459,14 @@ class Vault2Service:
         """
         # [V2] Circuit breaker check
         if not skip_circuit_breaker and unlock_amount > 0:
-            allowed, reason = check_payout_safe(unlock_amount, db)
-            if not allowed:
+            try:
+                CircuitBreakerService.check_and_incr(db, "VAULT", unlock_amount, user_id)
+            except CircuitBreakerError as e:
                 logger.warning(
                     f"Circuit breaker blocked unlock: user_id={user_id}, "
-                    f"amount={unlock_amount}, trigger={trigger}, reason={reason}"
+                    f"amount={unlock_amount}, trigger={trigger}, reason={str(e)}"
                 )
-                raise ValueError(f"PAYOUT_BLOCKED: {reason}")
+                raise ValueError(f"PAYOUT_BLOCKED: {str(e)}") from e
         
         now_dt = now or datetime.utcnow()
         program = self._ensure_default_program(db)
@@ -482,7 +484,9 @@ class Vault2Service:
         
         # [V2] Record payout for circuit breaker tracking
         if unlock_amount > 0:
-            record_payout(unlock_amount, source=f"UNLOCK:{trigger}", user_id=user_id)
+            # CircuitBreakerService.check_and_incr already recorded it if it didn't raise.
+            # So we don't need a separate record_payout call here.
+            pass
         
         db.add(status)
         if commit:

@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.services.unmatched_deposit_log_service import UnmatchedDepositLogService
 from app.v2.schemas.v2_unmatched_deposit import (
     UnmatchedDepositListParams,

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.v2.api.deps import get_current_user
 from app.v2.models.user import V2User
 from app.v2.services.latency_survival_service import V2LatencySurvivalService

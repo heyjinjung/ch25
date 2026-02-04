@@ -5,7 +5,7 @@ import logging
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models import (
     Survey,
     SurveyOption,
@@ -16,7 +16,7 @@ from app.v2.models import (
     SurveyResponseStatus,
     SurveyStatus,
 )
-from app.schemas.survey import SurveyDetailResponse, SurveyUpsertRequest
+from app.v2.schemas.v2_survey import SurveyDetailResponse, SurveyUpsertRequest
 from app.v2.models.v2_admin_message import V2AdminMessage
 from app.v2.schemas.v2_admin_marketing import (
     V2AdminSurveyDto,
@@ -128,7 +128,7 @@ def _map_survey_question_type(question_type: SurveyQuestionType) -> str:
 
 
 def _serialize_survey_detail(survey: Survey) -> SurveyDetailResponse:
-    from app.schemas.survey import SurveyOptionSchema, SurveyQuestionSchema
+    from app.v2.schemas.v2_survey import SurveyOptionSchema, SurveyQuestionSchema
 
     return SurveyDetailResponse(
         id=survey.id,

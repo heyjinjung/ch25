@@ -6,7 +6,7 @@ from pydantic import AliasChoices, BaseModel, Field
 from typing import Annotated
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.core.config import get_settings
 from app.core.security import create_access_token
 from app.v2.models.user import V2User

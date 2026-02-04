@@ -23,7 +23,7 @@ from app.v2.models.v2_survey import (
     SurveyResponseStatus,
     SurveyStatus,
 )
-from app.schemas.survey import (
+from app.v2.schemas.v2_survey import (
     SurveyAnswerPayload,
     SurveyDetailResponse,
     SurveyOptionSchema,

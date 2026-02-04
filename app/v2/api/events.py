@@ -10,10 +10,10 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.v2.api.deps import get_current_user_id
 from app.v2.services.segment_service import V2SegmentService
-from app.schemas.event import ActiveEventOut, EventStatusResponse, GoldenHourStatus
+from app.v2.schemas.v2_event import ActiveEventOut, EventStatusResponse, GoldenHourStatus
 from app.v2.services.event_service import V2EventService
 
 router = APIRouter(prefix="/api/events", tags=["events"])

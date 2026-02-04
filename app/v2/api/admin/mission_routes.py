@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models import Mission, MissionRewardType, UserMissionProgress, UserStreak
 from app.v2.models.user import V2User
 

@@ -34,7 +34,7 @@ def record_game_play_earn_event(
 
     # V2 Native Sync: Sync absolute balance from legacy User to V2User
     from app.v2.models.user import V2User
-    from app.models.user import User
+    from app.v2.models import User
     v2_user = db.get(V2User, user_id)
     if v2_user:
         user = db.get(User, user_id)
@@ -71,7 +71,7 @@ def handle_deposit_increase_signal(
 
     # V2 Native Sync: Sync absolute balance from legacy User to V2User
     from app.v2.models.user import V2User
-    from app.models.user import User
+    from app.v2.models import User
     v2_user = db.get(V2User, user_id)
     if v2_user:
         user = db.get(User, user_id)

@@ -10,7 +10,7 @@ from sqlalchemy import func, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models.user import V2User
 from app.v2.models import UserRetentionState
 from app.v2.models import ExternalRankingDailyDepositDelta

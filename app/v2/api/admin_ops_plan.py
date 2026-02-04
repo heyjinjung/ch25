@@ -13,12 +13,12 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_id, get_db
+from app.v2.api.deps import get_current_admin_id, get_db
 from app.v2.models import OpsPlanTask
 from app.v2.models import OpsTargetList
 from app.v2.models import OpsEvalMetric
-from app.schemas.ops_target import OpsTargetListOut
-from app.schemas.ops_plan import (
+from app.v2.schemas.v2_ops_target import OpsTargetListOut
+from app.v2.schemas.v2_ops_plan import (
     OpsCampaignCreate,
     OpsCampaignOut,
     OpsCampaignUpdate,

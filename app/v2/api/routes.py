@@ -10,9 +10,8 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
-from app.v2.api.deps import get_current_user_id
-from app.v2.models import AdminMessageInbox
+from app.v2.api.deps import get_current_admin_info, get_db, get_current_user_id
+from app.v2.models import User, AdminMessageInbox
 from app.v2.models import GameTokenType
 from app.v2.models import MissionCategory
 from app.v2.models import UserInventoryItem
@@ -21,7 +20,7 @@ from app.v2.schemas.shared.dice import DicePlayResponse, DiceStatusResponse, Dic
 from app.v2.schemas.shared.lottery import LotteryPlayResponse, LotteryStatusResponse
 from app.v2.schemas.v2_mission import MissionListResponse
 from app.v2.schemas.shared.roulette import RoulettePlayRequest, RoulettePlayResponse, RouletteStatusResponse
-from app.schemas.survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
+from app.v2.schemas.v2_survey import SurveyCompleteRequest, SurveyListResponse, SurveyResponseUpdateRequest
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.feature_service import FeatureService

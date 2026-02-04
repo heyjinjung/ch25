@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api import deps
+from app.v2.api import deps
 from app.v2.core import telegram as v2_telegram
 from app.v2.models.auth_event import AuthEventType
 from app.v2.models.user import V2User

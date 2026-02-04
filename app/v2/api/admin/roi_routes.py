@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.services.roi_analysis_service import V2RoiAnalysisService
 
 router = APIRouter(prefix="/roi", tags=["admin-roi"])
