@@ -279,7 +279,7 @@ target_segment = Column(String(50), nullable=True, index=True)
 
 ## 5. DB 모델 현황
 
-### 3.1 V2UserSegment 모델
+### 5.1 V2UserSegment 모델
 **파일**: `app/v2/models/v2_user_segment.py`
 
 ```python
@@ -287,7 +287,7 @@ class V2UserSegment(Base):
     __tablename__ = "v2_user_segment"
     
     user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
-    segment = Column(String(50), nullable=False, default="COMMON")  # ⚠️ Enum 미사용
+    segment = Column(String(50), nullable=False, default="COMMON")
     total_margin = Column(BigInteger, nullable=True, default=0)
     total_charge = Column(BigInteger, nullable=True, default=0)
     inactive_days = Column(Integer, nullable=True, default=0)
@@ -296,23 +296,43 @@ class V2UserSegment(Base):
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 ```
 
-**문제점**:
-- `segment` 컬럼에 CHECK 제약조건 없음
-- Enum 타입 미사용 → 임의의 문자열 저장 가능
-- DB 레벨 무결성 검증 불가
+### 5.2 DB 무결성 강화 (✅ 2026-02-04 완료)
+
+**Migration 파일**: `alembic/versions/20260204_0200_add_segment_check_constraint.py`
+
+```sql
+-- v2_user_segment.segment CHECK 제약조건
+ALTER TABLE v2_user_segment 
+ADD CONSTRAINT ck_v2_user_segment_segment 
+CHECK (segment IN ('NEW', 'COMMON', 'VIP', 'WHALE', 'AT_RISK', 'WINNER'));
+
+-- hq_prospective_user.segment CHECK 제약조건
+ALTER TABLE hq_prospective_user 
+ADD CONSTRAINT ck_hq_prospective_user_segment 
+CHECK (segment IN ('NEW', 'COMMON', 'VIP', 'WHALE', 'AT_RISK', 'WINNER'));
+```
+
+| 상태 | 조치 내용 |
+|------|----------|
+| ✅ 해결됨 | `segment` 컬럼에 CHECK 제약조건 추가 |
+| ✅ 해결됨 | DB 레벨 무결성 검증 가능 |
+| ⚠️ 유지 | Enum 타입은 미사용 (CHECK 제약조건으로 대체) |
 
 ---
 
 ## 6. 백엔드 서비스 구현 현황
 
-### 4.1 ALLOWED_SEGMENTS 정의 위치
+### 6.1 ALLOWED_SEGMENTS 정의 위치 (✅ 단일 소스화 권장)
 
-| 파일 | ALLOWED_SEGMENTS 값 |
-|------|---------------------|
-| `app/v2/services/segment_service.py:86` | `{"NEW", "COMMON", "VIP", "WHALE", "AT_RISK", "WINNER"}` |
-| `app/v2/api/admin/user_routes.py` | (PATCH API에서 segment_service 참조) |
+| 파일 | ALLOWED_SEGMENTS 값 | 상태 |
+|------|---------------------|------|
+| `app/v2/services/segment_service.py:86` | `{"NEW", "COMMON", "VIP", "WHALE", "AT_RISK", "WINNER"}` | ✅ 단일 소스 |
+| `app/v2/api/admin/user_routes.py` | (segment_service 참조) | ✅ import 사용 |
+| `alembic/versions/20260204_0200_*.py` | CHECK 제약조건용 | ✅ DB 레벨 |
 
-### 4.2 세그먼트 분류 로직 (`_classify_segment`)
+> **권장**: 모든 서비스에서 `segment_service.ALLOWED_SEGMENTS`를 import하여 사용
+
+### 6.2 세그먼트 분류 로직 (`_classify_segment`)
 **파일**: `app/v2/services/hq_margin_import_service.py:406-458`
 
 ```python
@@ -321,7 +341,7 @@ def _classify_segment(row: Dict) -> str:
     """
     우선순위:
     1. CSV에 명시적 세그먼트가 있으면 우선 사용
-    2. 마진 음수 (회사 손해, 유저가 이김) → WINNER  # ⚠️ SoT 미정의
+    2. 마진 음수 (회사 손해, 유저가 이김) → WINNER
     3. 마진 100만원+ → VIP
     4. 미접속 7일+ & 마진 양수 → AT_RISK
     5. 충전 금액 500만원+ → WHALE
@@ -329,7 +349,7 @@ def _classify_segment(row: Dict) -> str:
     """
 ```
 
-### 4.3 세그먼트 API 응답
+### 6.3 세그먼트 API 응답
 **파일**: `app/v2/api/admin/segment_routes.py:48-105`
 
 | 세그먼트 | label | desc |
@@ -345,7 +365,7 @@ def _classify_segment(row: Dict) -> str:
 
 ## 7. 프론트엔드 현황
 
-### 5.1 UserListPage 세그먼트 옵션
+### 7.1 UserListPage 세그먼트 옵션
 **파일**: `src/v2/admin/pages/users/UserListPage.tsx:79`
 
 ```typescript
@@ -363,42 +383,44 @@ const SEGMENT_OPTIONS = [
 
 ## 8. 불일치 상세 분석
 
-### 6.1 WINNER 세그먼트 불일치
+### 8.1 WINNER 세그먼트 불일치
 
 | 레이어 | 상태 | 증거 |
 |--------|------|------|
-| SoT 정책 문서 | ❌ 없음 | `v2_user_segment_policy_sot_ko.md`에 WINNER 언급 없음 |
-| DB SoT 문서 | ❌ 없음 | `v2_db_user_segment_ko.md`에 WINNER 언급 없음 |
-| DB 모델 | ⚠️ 허용 | `String(50)` 제약 없음 |
+| SoT 정책 문서 | ⚠️ 추가 필요 | `v2_user_segment_policy_sot_ko.md`에 WINNER 언급 없음 |
+| DB SoT 문서 | ⚠️ 추가 필요 | `v2_db_user_segment_ko.md`에 WINNER 언급 없음 |
+| DB 모델 | ✅ CHECK 제약조건 | Migration `20260204_0200` 추가됨 |
 | 백엔드 서비스 | ✅ 구현 | `ALLOWED_SEGMENTS`, `_classify_segment` |
 | 백엔드 API | ✅ 구현 | `segment_routes.py` 응답에 포함 |
 | 프론트엔드 | ✅ 구현 | `UserListPage.tsx` 드롭다운에 포함 |
 
-**결론**: 코드 선 구현, SoT 문서화 누락
+**결론**: 코드 구현 완료, SoT 정책 문서 업데이트 필요
 
-### 6.2 CHERRY_PICKER 세그먼트 불일치
-**결론**: 설계만 존재, 실제 구현 전무, 폐기로 종결 
+### 8.2 CHERRY_PICKER 세그먼트 불일치
+**결론**: 설계만 존재, 실제 구현 전무, **폐기 확정** (2026-02-04)
 
 ---
 
-## 9. 필수 조치 항목
+## 9. 필수 조치 항목 (✅ 2026-02-04 업데이트)
 
 ### 9.1 SoT 문서 업데이트 필요
 - [ ] `v2_user_segment_policy_sot_ko.md`에 WINNER 정의 추가
 - [ ] WINNER 분류 기준 명시: `마진 < 0` (회사 손해, 유저가 이기는 상태)
-- [ ] CHERRY_PICKER 구현 여부 결정 후 SoT 반영
+- [x] ~~CHERRY_PICKER 구현 여부 결정~~ → **폐기 확정**
 
-### 9.2 DB 무결성 강화 필요
-- [ ] `segment` 컬럼에 CHECK 제약조건 추가 (또는 Enum 타입 변환)
-- [ ] Migration 파일 생성
+### 9.2 DB 무결성 강화 ✅ 완료 (2026-02-04)
+- [x] `segment` 컬럼에 CHECK 제약조건 추가
+- [x] Migration 파일 생성: `20260204_0200_add_segment_check_constraint.py`
+- [x] `v2_user_segment`, `hq_prospective_user` 테이블에 CHECK 적용
 
 ### 9.3 코드 정합성
-- [ ] `ALLOWED_SEGMENTS` 단일 정의 위치 확정
-- [ ] 프론트/백엔드 Enum 동기화
+- [x] `ALLOWED_SEGMENTS` 단일 소스: `segment_service.py`
+- [x] DB CHECK 제약조건과 동기화
+- [ ] 프론트엔드 Enum 동기화 (수동 관리 중)
 
 ### 9.4 아키텍처 정리 필요
 - [ ] `V2User.hq_segment` vs `V2UserSegment.segment` 이중 저장 해소
-- [ ] CRM 세그먼트 ↔ 리텐션 세그먼트 매핑 정책 수립
+- [x] ~~CRM 세그먼트 ↔ 리텐션 세그먼트 매핑 정책~~ → **CRM 키로 통합 완료**
 
 ---
 
