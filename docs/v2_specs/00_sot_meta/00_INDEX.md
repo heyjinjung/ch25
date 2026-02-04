@@ -21,6 +21,7 @@
   - 게임 로그: V2GameLog → Analytics → 위기 감지
   - 시간 기반 필터링: DB 최신 기록 이후만 처리
 - **세그먼트 시스템 감사**: CRM 세그먼트 키 통일 (NEW/COMMON/VIP/WHALE/AT_RISK/WINNER)
+- **어드민 회수 로그 분류 개선**: 티켓/인벤토리 회수 로그를 REVOKE로 분류 (ADMIN 라벨/related_id 기반)
 - **문서**:
   - [V2 SoT 통합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)
   - [세그먼트 감사](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)

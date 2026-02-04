@@ -77,6 +77,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **4** |
 | GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
+| INVENTORY | [W06_INVENTORY_troubleshooting.md](./W06_INVENTORY_troubleshooting.md) | **1** |
 | DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
 | INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | **1** |
 | FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | 0 |
@@ -91,6 +92,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 4 | VAULT | 유저 Reset API 신규 구현 | ✅ 완료 |
 | 5 | VAULT | CSV Import Baseline 델타 계산 로직 | ✅ 해결 |
 | 6 | DB | baseline_charge_amount 마이그레이션 체인 오류 | ✅ 해결 |
+| 7 | INVENTORY | 어드민 회수 로그가 USE로 표시됨 | ✅ 해결 |
 
 ---
 

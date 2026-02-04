@@ -82,11 +82,27 @@ def _resolve_next_level(level_rows: list[V2LevelRewardTable], xp: int) -> tuple[
     return None, None
 
 
-def _get_or_create_level_progress(db: Session, user_id: int) -> UserLevelProgress:
+def _get_or_create_level_progress(
+    db: Session,
+    user_id: int,
+    user: V2User | None = None,
+) -> UserLevelProgress:
+    if user is None:
+        user = db.get(V2User, user_id)
+
     progress = db.get(UserLevelProgress, user_id)
     if progress:
+        if user is not None:
+            target_level = int(user.level or 1)
+            target_xp = int(user.xp or 0)
+            if progress.level != target_level or progress.xp != target_xp:
+                progress.level = target_level
+                progress.xp = target_xp
         return progress
-    progress = UserLevelProgress(user_id=user_id, level=1, xp=0)
+
+    initial_level = int(user.level or 1) if user is not None else 1
+    initial_xp = int(user.xp or 0) if user is not None else 0
+    progress = UserLevelProgress(user_id=user_id, level=initial_level, xp=initial_xp)
     db.add(progress)
     db.flush()
     return progress
@@ -174,9 +190,7 @@ def get_admin_users_list(
     for user in users:
         vault_balance = int(user.vault_locked_balance or 0)
 
-        # Level은 user_level_progress에서 조회
-        level_progress = db.get(UserLevelProgress, user.id)
-        level = level_progress.level if level_progress else 1
+        level = int(user.level or 1)
 
         tier = "COMMON"  # V2에서는 tier 개념 간소화
         
@@ -435,15 +449,16 @@ def get_admin_user_level_by_cc_id(
     if not user:
         raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
 
-    progress = _get_or_create_level_progress(db, user.id)
+    progress = _get_or_create_level_progress(db, user.id, user=user)
     level_rows = _get_level_rows(db)
-    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+    current_xp = int(user.xp or progress.xp or 0)
+    next_level, next_required_xp = _resolve_next_level(level_rows, current_xp)
 
     return AdminUserLevelSnapshotDto(
         userId=user.id,
         ccId=str(user.cc_id),
-        level=int(progress.level or 1),
-        xp=int(progress.xp or 0),
+        level=int(user.level or progress.level or 1),
+        xp=current_xp,
         nextLevel=next_level,
         nextRequiredXp=next_required_xp,
         updatedAt=progress.updated_at,
@@ -463,13 +478,17 @@ def adjust_admin_user_level_xp(
     if payload.deltaXp == 0:
         raise HTTPException(status_code=400, detail="DELTA_XP_REQUIRED")
 
-    progress = _get_or_create_level_progress(db, user.id)
-    progress.xp = int(progress.xp or 0) + int(payload.deltaXp)
-    if progress.xp < 0:
-        progress.xp = 0
+    progress = _get_or_create_level_progress(db, user.id, user=user)
+    before_xp = int(user.xp or 0)
+    new_xp = before_xp + int(payload.deltaXp)
+    if new_xp < 0:
+        new_xp = 0
+
+    user.xp = new_xp
+    progress.xp = new_xp
 
     level_rows = _get_level_rows(db)
-    progress.level = _resolve_level_by_xp(level_rows, int(progress.xp or 0))
+    progress.level = _resolve_level_by_xp(level_rows, int(user.xp or 0))
     user.level = int(progress.level or 1)
 
     db.add(
@@ -487,19 +506,19 @@ def adjust_admin_user_level_xp(
         "USER_LEVEL_XP_ADJUST",
         "USER_LEVEL",
         str(user.id),
-        before={"xp": int(progress.xp or 0) - int(payload.deltaXp)},
-        after={"xp": int(progress.xp or 0), "level": int(progress.level or 1)},
+        before={"xp": before_xp},
+        after={"xp": int(user.xp or 0), "level": int(progress.level or 1)},
     )
 
     db.commit()
     db.refresh(progress)
 
-    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+    next_level, next_required_xp = _resolve_next_level(level_rows, int(user.xp or 0))
     return AdminUserLevelSnapshotDto(
         userId=user.id,
         ccId=str(user.cc_id),
         level=int(progress.level or 1),
-        xp=int(progress.xp or 0),
+        xp=int(user.xp or 0),
         nextLevel=next_level,
         nextRequiredXp=next_required_xp,
         updatedAt=progress.updated_at,
@@ -519,19 +538,20 @@ def set_admin_user_level(
     if payload.level is None and payload.xp is None:
         raise HTTPException(status_code=400, detail="LEVEL_OR_XP_REQUIRED")
 
-    progress = _get_or_create_level_progress(db, user.id)
-    before_xp = int(progress.xp or 0)
-    before_level = int(progress.level or 1)
+    progress = _get_or_create_level_progress(db, user.id, user=user)
+    before_xp = int(user.xp or 0)
+    before_level = int(user.level or 1)
 
     if payload.xp is not None:
         progress.xp = int(payload.xp)
+        user.xp = int(payload.xp)
     if payload.level is not None:
         progress.level = int(payload.level)
+        user.level = int(payload.level)
     elif payload.xp is not None:
         level_rows = _get_level_rows(db)
-        progress.level = _resolve_level_by_xp(level_rows, int(progress.xp or 0))
-
-    user.level = int(progress.level or 1)
+        progress.level = _resolve_level_by_xp(level_rows, int(user.xp or 0))
+        user.level = int(progress.level or 1)
 
     V2AdminAuditService.log(
         db,
@@ -540,19 +560,19 @@ def set_admin_user_level(
         "USER_LEVEL",
         str(user.id),
         before={"level": before_level, "xp": before_xp},
-        after={"level": int(progress.level or 1), "xp": int(progress.xp or 0)},
+        after={"level": int(progress.level or 1), "xp": int(user.xp or 0)},
     )
 
     db.commit()
     db.refresh(progress)
 
     level_rows = _get_level_rows(db)
-    next_level, next_required_xp = _resolve_next_level(level_rows, int(progress.xp or 0))
+    next_level, next_required_xp = _resolve_next_level(level_rows, int(user.xp or 0))
     return AdminUserLevelSnapshotDto(
         userId=user.id,
         ccId=str(user.cc_id),
         level=int(progress.level or 1),
-        xp=int(progress.xp or 0),
+        xp=int(user.xp or 0),
         nextLevel=next_level,
         nextRequiredXp=next_required_xp,
         updatedAt=progress.updated_at,
@@ -590,8 +610,11 @@ def reset_user_data(
     if payload.reset_level:
         # V2User.level
         before_state["v2_user_level"] = user.level
+        before_state["v2_user_xp"] = user.xp
         user.level = 0
+        user.xp = 0
         after_state["v2_user_level"] = 0
+        after_state["v2_user_xp"] = 0
         
         # user_level_progress 테이블
         progress = db.get(UserLevelProgress, user_id)

@@ -217,9 +217,9 @@ date | total_sent | replies | clicks | joins | reply_rate | click_rate | best_te
 | 컬럼         | 설명                 | 일자   | 일자  | 일자  | 일자  | 일자  | 일자  | 일자  |
 | ---------- | ------------------ | ---- | --- | --- | --- | --- | --- | --- |
 | date       | 날짜                 | 0204 |     |     |     |     |     |     |
-| total_sent | 총 DM수              | 10   |     |     |     |     |     |     |
-| replies    | 답장한 사람 수           | 5    |     |     |     |     |     |     |
-| joins      | 가입 수               | 3    |     |     |     |     |     |     |
+| total_sent | 총 DM수              | 11   |     |     |     |     |     |     |
+| replies    | 답장한 사람 수           | 6    |     |     |     |     |     |     |
+| joins      | 가입 수               | 5    |     |     |     |     |     |     |
 | reply_rate | replies/total_sent |      |     |     |     |     |     |     |
 | click_rate | clicks/total_sent  |      |     |     |     |     |     |     |
 | best       | 오늘 인기              |      |     |     |     |     |     |     |

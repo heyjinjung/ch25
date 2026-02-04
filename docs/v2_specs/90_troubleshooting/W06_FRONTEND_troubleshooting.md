@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 2 |
+| 해결된 이슈 | 4 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,29 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-04 - FRONTEND/AUTH: DEV 로그인 엔드포인트 404 (v2Client response error) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | V2 유저 로그인(개발용 DEV 로그인 버튼) |
+| HTTP Status | 404 (Not Found) |
+| 영향 범위 | DEV 로그인 버튼/테스트 계정 생성 시도 사용자 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 프론트는 DEV 로그인 요청을 `/api/v2/dev/login`으로 전송함.
+- V2 라우터 등록 목록에 `dev_login` 라우터가 포함되지 않아 404가 반환됨.
+- 관련 파일: [src/v2/pages/auth/V2UserLoginPage.tsx](../../../src/v2/pages/auth/V2UserLoginPage.tsx#L57), [app/v2/api/routes.py](../../../app/v2/api/routes.py#L84-L93), [app/v2/api/dev_login.py](../../../app/v2/api/dev_login.py#L1)
+
+**해결 방법**
+- 운영 환경에서는 DEV 로그인 기능을 사용하지 않음(정상 동작).
+- DEV 기능이 필요하면 dev 전용으로 라우터를 포함하거나, 프론트에서 DEV 버튼 노출을 환경변수로 제한.
+
+**검증 방법**
+- DEV 버튼 미노출/비활성화 시 콘솔 404 로그가 발생하지 않는지 확인.
+- DEV 라우터 포함 시 `/api/v2/dev/login` 응답이 200/403(DEV_LOGIN_DISABLED)로 반환되는지 확인.
 
 ### 02-04 - FRONTEND/BUILD: CSVImportPage 타입 불일치로 빌드 실패 ✅
 

@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 6 |
+| 해결된 이슈 | 7 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -22,6 +22,37 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-04] - DB/LEVEL: 어드민 레벨/XP 조정 반영 실패 (SoT 불일치)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 유저 레벨/XP 조정 |
+| HTTP Status | 200 (Logic Error) |
+| 영향 범위 | 레벨 조정 대상 유저 |
+| 재현 빈도 | 항상 |
+
+**증상**
+- 어드민에서 레벨/XP 조정 후에도 유저 레벨이 실제 서비스에 반영되지 않음
+- 콘솔/로그에는 성공 응답이나 유저 레벨이 그대로 유지됨
+
+**근본 원인 (증거 기반)**
+- 2026-02-04 SoT 통합으로 레벨/XP의 **Primary SoT가 `v2_user`로 이동**함
+- 어드민 레벨 조정 로직이 `user_level_progress`만 갱신하거나 `V2User.xp`를 갱신하지 않아 SoT 불일치 발생
+- 관련 파일: [app/v2/api/admin/user_routes.py](../../../app/v2/api/admin/user_routes.py#L85), [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)
+
+**해결 방법**
+- 어드민 레벨 조정/설정/조회 시 `V2User.xp`/`V2User.level`을 우선 갱신하고 `user_level_progress`를 동기화
+- 리셋 시 `V2User.xp`도 함께 0으로 초기화
+
+**검증 방법**
+1. 어드민에서 레벨/XP 조정
+2. `/api/v2/admin/users/level` 조회 시 레벨/XP가 즉시 반영되는지 확인
+3. 유저 게임/미션 진입 시 레벨이 일치하는지 확인
+
+**🏷️ 태그**
+`P1` `LEVEL` `SOT` `ADMIN` `DATA_SYNC`
 
 ### [02-04] - DB/MIGRATION: hq_daily_deposit_log 테이블 미존재 (CSV Import 500)
 

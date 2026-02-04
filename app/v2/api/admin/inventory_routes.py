@@ -91,6 +91,18 @@ def get_inventory_logs(
 
     clamped_limit = max(1, min(limit, 1000))
 
+    def is_admin_label(value: str | None) -> bool:
+        if not value:
+            return False
+        upper = value.upper()
+        return upper.startswith("ADMIN")
+
+    def is_admin_related(value: str | None) -> bool:
+        if not value:
+            return False
+        lower = value.lower()
+        return lower.startswith("admin_") or lower.startswith("admin:")
+
     wallet_query = db.query(UserGameWalletLedger, V2User).outerjoin(
         V2User, UserGameWalletLedger.user_id == V2User.id
     )
@@ -134,12 +146,16 @@ def get_inventory_logs(
 
     combined = []
     for log, user in wallet_results:
+        if log.delta < 0:
+            log_type = "REVOKE" if is_admin_label(log.label) else "USE"
+        else:
+            log_type = "GRANT"
         combined.append(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
                 nickname=(user.nickname if user else "") or "",
-                type="GRANT" if log.delta > 0 else "USE",
+                type=log_type,
                 itemType=log.token_type.value if hasattr(log.token_type, "value") else str(log.token_type),
                 amount=abs(log.delta),
                 balanceAfter=log.balance_after,
@@ -150,12 +166,16 @@ def get_inventory_logs(
         )
 
     for log, user in inventory_results:
+        if log.change_amount < 0:
+            log_type = "REVOKE" if is_admin_related(log.related_id) else "USE"
+        else:
+            log_type = "GRANT"
         combined.append(
             TicketLogDto(
                 id=log.id,
                 userId=log.user_id,
                 nickname=(user.nickname if user else "") or "",
-                type="GRANT" if log.change_amount > 0 else "USE",
+                type=log_type,
                 itemType=log.item_type,
                 amount=abs(log.change_amount),
                 balanceAfter=log.balance_after,
