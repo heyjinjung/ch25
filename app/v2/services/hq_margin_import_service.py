@@ -234,15 +234,25 @@ class HQMarginImportService:
                         elif total_charge > baseline:
                             # 이후 Import: baseline 이후 신규 충전액만 반영
                             effective_charge = total_charge - baseline
+                            
+                            # FIX: upsert_many는 절대값으로 덮어쓰기하므로
+                            # 기존 deposit_amount + effective_charge를 전달해야 함
+                            existing_erd = db.query(ExternalRankingData).filter(
+                                ExternalRankingData.user_id == v2_user.id
+                            ).first()
+                            current_deposit = existing_erd.deposit_amount if existing_erd else 0
+                            new_deposit_total = current_deposit + effective_charge
+                            
                             cc_deposit_payloads.append(CCDepositCreate(
                                 user_id=v2_user.id,
-                                deposit_amount=effective_charge,
-                                play_count=0,  # HQ CSV에 플레이 카운트 없음
+                                deposit_amount=new_deposit_total,  # 누적 총액으로 전달
+                                play_count=existing_erd.play_count if existing_erd else 0,
                             ))
                             cc_deposit_count += 1
                             logger.info(
                                 f"[CSV Import] Effective charge for user_id={v2_user.id}: "
-                                f"CSV={total_charge}, baseline={baseline}, effective={effective_charge}"
+                                f"CSV={total_charge}, baseline={baseline}, effective={effective_charge}, "
+                                f"prev_deposit={current_deposit}, new_total={new_deposit_total}"
                             )
                         else:
                             # 충전액 변동 없음 (baseline 이하)
@@ -562,13 +572,38 @@ class HQMarginImportService:
                     last_synced_at=now
                 ))
             
-            # 6. CC Deposit 반영 (델타 계산 포함) - 충전 금액이 있을 때만
+            # 6. CC Deposit 반영 - baseline 기반 delta 계산 + 기존 deposit 누적
             if prospect.total_charge and prospect.total_charge > 0:
-                cc_deposit_payloads.append(CCDepositCreate(
-                    user_id=user.id,
-                    deposit_amount=prospect.total_charge,
-                    play_count=0
-                ))
+                # baseline 설정 or delta 계산
+                baseline = int(user.baseline_charge_amount or 0)
+                
+                if baseline == 0:
+                    # 최초 연결: baseline 설정만, CC Deposit 반영 안함
+                    user.baseline_charge_amount = prospect.total_charge
+                    logger.info(
+                        f"[ReSync] Set baseline for user {user.id}: {prospect.total_charge}"
+                    )
+                elif prospect.total_charge > baseline:
+                    # 이후: baseline 초과분만 반영
+                    effective_charge = prospect.total_charge - baseline
+                    
+                    # 기존 deposit_amount 조회 후 누적
+                    existing_erd = db.query(ExternalRankingData).filter(
+                        ExternalRankingData.user_id == user.id
+                    ).first()
+                    current_deposit = existing_erd.deposit_amount if existing_erd else 0
+                    new_deposit_total = current_deposit + effective_charge
+                    
+                    cc_deposit_payloads.append(CCDepositCreate(
+                        user_id=user.id,
+                        deposit_amount=new_deposit_total,  # 누적 총액
+                        play_count=existing_erd.play_count if existing_erd else 0
+                    ))
+                    logger.info(
+                        f"[ReSync] CC Deposit for user {user.id}: "
+                        f"HQ_total={prospect.total_charge}, baseline={baseline}, "
+                        f"effective={effective_charge}, prev={current_deposit}, new_total={new_deposit_total}"
+                    )
             
             synced_count += 1
             details.append({
