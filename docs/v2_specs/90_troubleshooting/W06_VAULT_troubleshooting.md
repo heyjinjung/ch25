@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 7 |
+| 해결된 이슈 | 8 |
 | SoT 승격 예정 | 2 (CSV Import Baseline, VaultLedger Bypass Fix) |
 
 ---
@@ -22,6 +22,94 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-05 17:30] - VAULT/GAME: 주사위 게임 금고 적립 완전 실패 - sync_legacy_mirror 메서드 누락 (CRITICAL)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 주사위 게임 플레이 후 금고 적립 (POST /api/v2/dice/play) |
+| HTTP Status | 500 Internal Server Error |
+| 영향 범위 | 전체 게임(Dice/Roulette/Lottery) 보상 적립 시스템 마비 |
+| 재현 빈도 | 항상 (모든 게임 플레이) |
+
+**증거 기반 RCA**
+```python
+# 에러 로그
+AttributeError: 'V2VaultService' object has no attribute 'sync_legacy_mirror'
+
+# 발생 위치: vault_service.py:1009
+user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+self.sync_legacy_mirror(user)  # ← 존재하지 않는 메서드 호출
+```
+
+**Stack Trace**:
+```
+File "/app/app/v2/services/v2_dice_game_service.py", line 340, in play
+    total_earn = self.vault_service.record_game_play_earn_event(...)
+File "/app/app/v2/services/vault_service.py", line 1009, in record_game_play_earn_event
+    self.sync_legacy_mirror(user)
+AttributeError: 'V2VaultService' object has no attribute 'sync_legacy_mirror'
+```
+
+**DB 증거**:
+```sql
+-- 주사위 플레이 로그: 정상 기록됨
+SELECT COUNT(*) FROM v2_dice_log WHERE user_id=20;
+-- Result: 5 plays
+
+-- 금고 적립 이벤트: 0건 (적립 실패)
+SELECT COUNT(*) FROM vault_earn_event WHERE user_id=20;
+-- Result: 0
+
+-- 금고 원장: 게임 기록 없음
+SELECT COUNT(*) FROM vault_ledger WHERE user_id=20 AND ref_type='GAME_PLAY';
+-- Result: 0
+```
+
+**Root Cause**:
+- `record_game_play_earn_event()` 함수 내에서 `self.sync_legacy_mirror(user)` 호출
+- 해당 메서드가 `V2VaultService` 클래스에 정의되어 있지 않음
+- 이전 리팩토링 과정에서 메서드 삭제/이동 후 호출 코드 미제거
+- Legacy User 테이블 동기화는 `deposit()/withdraw()` 메서드 내부에서 이미 처리 중
+
+**해결 방법**
+불필요한 `sync_legacy_mirror()` 호출 제거:
+
+```python
+# BEFORE (vault_service.py line 1009)
+user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+self.sync_legacy_mirror(user)  # ← 에러 발생
+
+# AFTER
+user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
+# Legacy 동기화는 deposit()/withdraw() 내부에서만 처리
+```
+
+**수정 파일**
+- `app/v2/services/vault_service.py:1009` (sync_legacy_mirror 호출 제거)
+
+**검증 방법**
+1. 백엔드 재시작 후 에러 로그 확인
+2. 주사위 게임 1회 플레이
+3. `SELECT * FROM vault_earn_event WHERE user_id=X ORDER BY id DESC LIMIT 1` → 기록 확인
+4. `SELECT * FROM vault_ledger WHERE user_id=X AND ref_type='GAME_PLAY' ORDER BY id DESC LIMIT 1` → 기록 확인
+5. 금고 잔액 증가 확인
+
+**운영 영향**
+- **기간**: 2026-02-04 14:36 ~ 2026-02-05 17:30 (약 27시간)
+- **영향 받은 유저**: 게임 플레이한 모든 유저
+- **손실 보상**: 게임 로그(`v2_dice_log` 등)는 정상 기록되어 있으므로, 필요 시 배치 스크립트로 소급 적립 가능
+
+**시스템적 교훈**
+- ❌ 메서드 삭제/이동 시 모든 호출 지점 검증 필수
+- ✅ 500 에러는 즉시 알림 설정 (게임 핵심 기능)
+- 🔍 게임 플레이 후 vault_earn_event 기록 여부 모니터링 추가
+
+**🏷️ 태그**
+`P0` `VAULT` `GAME` `500ERROR` `HOTFIX`
+
+---
 
 ### [02-04 18:00] - VAULT/ADMIN: 금고 로그 완전 누락 - 4개 경로 VaultLedger 우회 (CRITICAL)
 

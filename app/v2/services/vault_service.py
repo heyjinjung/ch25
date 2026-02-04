@@ -1006,7 +1006,6 @@ class V2VaultService:
                 amount = allowed
 
         user.vault_locked_balance = int(user.vault_locked_balance or 0) + int(amount)
-        self.sync_legacy_mirror(user)
 
         bonus_amount = 0
         reward_kind = "BASE" if bonus_amount == 0 else "BASE_PLUS_BONUS"
