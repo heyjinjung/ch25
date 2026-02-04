@@ -1,3 +1,49 @@
+## [2026-02-04 구현 완료 항목]
+
+### [2026-02-04] V2 SoT 통합 (레벨/XP/입금) ✅
+- **문제 해결**: 이중 저장으로 인한 롤백 시 데이터 불일치 문제
+- **변경 내용**:
+  - `v2_user.xp` 컬럼 신규 추가 (마이그레이션: `20260204_0400_add_xp_to_v2_user.py`)
+  - V2 SoT: `v2_user.level`, `v2_user.xp`, `v2_user.total_charge_amount`
+  - 레거시 동기화: `user_level_progress`, `external_ranking_data`
+- **수정 파일**:
+  - `app/v2/models/user.py` - xp 컬럼 추가
+  - `app/services/level_xp_service.py` - V2 SoT 우선 업데이트 + 레거시 동기화
+  - `app/v2/services/admin_cc_deposit_service.py` - V2 SoT 함께 업데이트
+- **문서**: `learned_/level/20260204_v2_sot_consolidation.md`
+
+### [2026-02-04] 붙여넣기 Import (게임 로그/데일리 입금) ✅
+- **문제 해결**: CSV 파일 업로드 없이 간편한 데이터 Import 필요
+- **구현 내용**:
+  - `app/v2/services/paste_import_service.py` - 클립보드 파싱 및 Import 서비스
+  - `app/v2/api/admin/csv_import_routes.py` - `/paste-import`, `/paste-import/preview` API
+  - `src/v2/admin/pages/ops/PasteImportPage.tsx` - 프론트엔드 UI
+  - `src/v2/admin/pages/ops/SystemSecurityPage.tsx` - "붙여넣기" 탭 추가
+- **지원 형식**:
+  - `DAILY_DEPOSIT`: 번호/소속/이름/닉네임/신청날짜/충전금액/입금자명/충전날짜/상태
+  - `GAME_LOG`: 번호/이름/닉네임/타입/베팅일시/게임종류/금액
+- **시간 기반 필터링**: DB 기록된 최신 시간 이후의 데이터만 처리
+- **문서**: `learned_/level/20260204_v2_sot_consolidation.md` (섹션 5)
+
+### [2026-02-04] 세그먼트 시스템 전체 감사 ✅
+- **감사 범위**: V2UserSegment, HQProspectiveUser, V2UserRetentionState, 게임 세그먼트
+- **CRM 세그먼트 키 확정**: NEW, COMMON, VIP, WHALE, AT_RISK, WINNER
+- **리텐션 세그먼트 통합**: HIGH_ROLLER→VIP/WHALE, CASUAL_LOYAL→COMMON 등
+- **제거 대상**: `V2User.hq_segment` (중복)
+- **혼동 주의**: V2RouletteSegment (게임 슬롯 0~7, CRM 아님)
+- **문서**: `00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md`
+
+### [2026-02-04] Cherry Picker 세그먼트 설계 ✅
+- **목적**: 체리피커(무료 혜택만 노리는 유저) 자동 식별
+- **분류 기준**:
+  - 총 충전 < 10,000원
+  - 플레이 횟수 < 5회
+  - 메모에 "꽁머니", "작업", "테스트" 등 키워드
+- **상태**: 초안 검토 중 (구현 미착수)
+- **문서**: `learned_/golden/20260204_cherry_picker_segment_design.md`
+
+---
+
 ## [2026-02-02 구현 완료 항목]
 
 ### [2026-02-02] 연속 스트릭 미션 어드민 설정값 지급 검증 ✅

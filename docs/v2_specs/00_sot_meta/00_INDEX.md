@@ -3,6 +3,21 @@
 ## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
 
 ---
+### [2026-02-04 V2 SoT 통합 및 붙여넣기 Import]
+- **V2 SoT 통합 완료**: 레벨/XP/입금 데이터를 `v2_user` 테이블로 단일화
+  - `v2_user.level`, `v2_user.xp` (신규), `v2_user.total_charge_amount` → **V2 SoT**
+  - `user_level_progress`, `external_ranking_data` → **레거시 동기화 (읽기 전용)**
+  - 마이그레이션: `20260204_0400_add_xp_to_v2_user.py`
+- **붙여넣기 Import**: CSV 업로드 없이 클립보드 붙여넣기로 데이터 반입
+  - 데일리 입금 로그: 입금 → 레벨 → 보상 → 세그먼트 순서 처리
+  - 게임 로그: V2GameLog → Analytics → 위기 감지
+  - 시간 기반 필터링: DB 최신 기록 이후만 처리
+- **세그먼트 시스템 감사**: CRM 세그먼트 키 통일 (NEW/COMMON/VIP/WHALE/AT_RISK/WINNER)
+- **문서**:
+  - [V2 SoT 통합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)
+  - [세그먼트 감사](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)
+  - [Cherry Picker 설계](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260204_cherry_picker_segment_design.md)
+
 ### [2026-01-30 운영 서버 검증 결과]
 - **검증 시간**: 2026-01-30 17:45~17:51 KST
 - **검증 방법**: SSH `root@149.28.135.147` 접속 후 docker/curl 명령 실행
@@ -41,14 +56,16 @@
 각 diff의 적용일자/핫픽스/테스트 결과를 SoT 변경 이력에 기록함
 - **통합 컨텍스트**: [learned_/00_con.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
 - **도메인별 최신 Learned SoT**:
-  - **Auth/User**: [auth.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/auth.md) | [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md) | [잠재유저 매칭](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/20260202_prospect_linking_implementation.md)
+  - **Auth/User**: [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md) | [잠재유저 매칭](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/20260202_prospect_linking_implementation.md)
+  - **Level**: [07.level.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/07.level.md) | **[V2 SoT 통합 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)**
   - **Admin**: [01.admin.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.admin.md) | [Admin 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.adminguide.md)
-  - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md) | [복권 UI/BE 싱크](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260205_lottery_ui_backend_tier_sync.md)
+  - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md)
   - **Inventory**: [05.inventory.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory.md) | [인벤 패치 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory_patch_guide.md)
-  - **Mission**: [09.mission.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md) | [빌더 규칙](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_admin_builder_rules_update.md) | [자동 LogicKey](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_builder_auto_logickey_update.md)
+  - **Mission**: [09.mission.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md) | [빌더 규칙](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_admin_builder_rules_update.md)
   - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md)
-  - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [플레이 횟수 업데이트](docs/v2_specs/00_sot_meta/vault/20260127_vault_play_count_update.md) | [주사위 차감 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260127_dice_vault_deduction_fix.md)
-  - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md) | [닉네임 조회 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/20260126_team_battle_nickname_lookup_update.md)
+  - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [금고 동기화](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260128_vault_balance_sync_update.md)
+  - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md)
+  - **Golden/Import**: [HQ Margin 종합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md) | **[세그먼트 감사 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)**
   - **Ops/Growth**: [W1/W2 운영 자동화·트래킹](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260203_ops_marketing_w1_w2_automation_tracking.md)
 
 ## 1. 도메인별 기본 SoT (Legacy/Standard)
@@ -187,6 +204,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.19 (2026-02-04, GitHub Copilot): V2 SoT 통합(레벨/XP/입금 v2_user 단일화), 붙여넣기 Import(게임 로그/데일리 입금), 세그먼트 시스템 전체 감사, Cherry Picker 세그먼트 설계
 - v2.18 (2026-02-03, GitHub Copilot): W1/W2 마케팅 플랜 기반 Ops/Growth(메시지 가드레일·자동화·트래킹) learned_ 문서 추가 및 메시지 정책 SoT 보강
 - v2.17 (2026-02-03, GitHub Copilot): HQ Margin → CC 입금 자동 반영 상세 설계 문서 추가
 - v2.16 (2026-02-02, Antigravity Agent): W05 트러블슈팅 결과 기반 Core SoT 승격 및 주간 문서 아카이브 전략 적용
