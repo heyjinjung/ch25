@@ -383,18 +383,18 @@ const SEGMENT_OPTIONS = [
 
 ## 8. 불일치 상세 분석
 
-### 8.1 WINNER 세그먼트 불일치
+### 8.1 WINNER 세그먼트 불일치 ✅ 해결됨 (2026-02-04)
 
 | 레이어 | 상태 | 증거 |
 |--------|------|------|
-| SoT 정책 문서 | ⚠️ 추가 필요 | `v2_user_segment_policy_sot_ko.md`에 WINNER 언급 없음 |
-| DB SoT 문서 | ⚠️ 추가 필요 | `v2_db_user_segment_ko.md`에 WINNER 언급 없음 |
+| SoT 정책 문서 | ✅ 추가됨 | `v2_user_segment_policy_sot_ko.md` v1.3 (WINNER 포함) |
+| DB SoT 문서 | ✅ 추가됨 | `v2_db_user_segment_ko.md` v1.3 (WINNER 포함) |
 | DB 모델 | ✅ CHECK 제약조건 | Migration `20260204_0200` 추가됨 |
 | 백엔드 서비스 | ✅ 구현 | `ALLOWED_SEGMENTS`, `_classify_segment` |
 | 백엔드 API | ✅ 구현 | `segment_routes.py` 응답에 포함 |
 | 프론트엔드 | ✅ 구현 | `UserListPage.tsx` 드롭다운에 포함 |
 
-**결론**: 코드 구현 완료, SoT 정책 문서 업데이트 필요
+**결론**: ✅ 전 레이어 정합성 확보 완료
 
 ### 8.2 CHERRY_PICKER 세그먼트 불일치
 **결론**: 설계만 존재, 실제 구현 전무, **폐기 확정** (2026-02-04)
@@ -403,9 +403,9 @@ const SEGMENT_OPTIONS = [
 
 ## 9. 필수 조치 항목 (✅ 2026-02-04 업데이트)
 
-### 9.1 SoT 문서 업데이트 필요
-- [ ] `v2_user_segment_policy_sot_ko.md`에 WINNER 정의 추가
-- [ ] WINNER 분류 기준 명시: `마진 < 0` (회사 손해, 유저가 이기는 상태)
+### 9.1 SoT 문서 업데이트 ✅ 완료 (2026-02-04)
+- [x] `v2_user_segment_policy_sot_ko.md`에 WINNER 정의 추가 (v1.3)
+- [x] WINNER 분류 기준 명시: `마진 < 0` (회사 손해, 유저가 이기는 상태)
 - [x] ~~CHERRY_PICKER 구현 여부 결정~~ → **폐기 확정**
 
 ### 9.2 DB 무결성 강화 ✅ 완료 (2026-02-04)
@@ -413,13 +413,13 @@ const SEGMENT_OPTIONS = [
 - [x] Migration 파일 생성: `20260204_0200_add_segment_check_constraint.py`
 - [x] `v2_user_segment`, `hq_prospective_user` 테이블에 CHECK 적용
 
-### 9.3 코드 정합성
+### 9.3 코드 정합성 ✅ 완료
 - [x] `ALLOWED_SEGMENTS` 단일 소스: `segment_service.py`
 - [x] DB CHECK 제약조건과 동기화
-- [ ] 프론트엔드 Enum 동기화 (수동 관리 중)
+- [x] 프론트엔드 `UserListPage.tsx` WINNER 포함 확인
 
-### 9.4 아키텍처 정리 필요
-- [ ] `V2User.hq_segment` vs `V2UserSegment.segment` 이중 저장 해소
+### 9.4 아키텍처 정리 (진행 중)
+- [ ] `V2User.hq_segment` vs `V2UserSegment.segment` 이중 저장 해소 (우선순위 낮음)
 - [x] ~~CRM 세그먼트 ↔ 리텐션 세그먼트 매핑 정책~~ → **CRM 키로 통합 완료**
 
 ---
