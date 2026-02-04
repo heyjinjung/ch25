@@ -54,7 +54,7 @@ class PasteImportService:
         """금액 파싱 (콤마, 공백, '원' 제거)"""
         if not value:
             return 0
-        cleaned = value.replace(',', '').replace(' ', '').replace('원', '').strip()
+        cleaned = value.replace(',', '').replace(' ', '').replace('원', '').replace('₩', '').strip()
         if not cleaned or cleaned == '-':
             return 0
         try:
@@ -74,6 +74,7 @@ class PasteImportService:
             "%Y/%m/%d %H:%M",     # 2026/02/04 11:10
             "%y/%m/%d %H:%M",     # 26/02/04 16:00
             "%y/%m/%d",           # 26/02/04
+            "%Y-%m-%dT%H:%M:%S",  # 2026-02-04T00:00:00
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%d %H:%M",
             "%Y-%m-%d",
@@ -102,6 +103,7 @@ class PasteImportService:
         """데일리 입금 로그 파싱
         
         형식: 번호\t소속\t이름(아이디)\t닉네임\t신청날짜\t충전금액\t입금자명\t충전날짜\t상태
+        또는: 네임\t금액\t입금일시\t입금자 (붙여넣기 4열)
         """
         results = []
         lines = text.strip().split('\n')
@@ -109,22 +111,31 @@ class PasteImportService:
         for line in lines:
             if not line.strip():
                 continue
-            
-            parts = line.split('\t')
+
+            parts = line.split('\t') if '\t' in line else re.split(r"\s{2,}|\t+", line.strip())
             if len(parts) < 6:
-                continue
+                if len(parts) < 4:
+                    continue
             
             # 헤더 스킵
-            if '번호' in parts[0] or '닉네임' in parts[0]:
+            if '번호' in parts[0] or '닉네임' in parts[0] or '네임' in parts[0]:
                 continue
             
             try:
-                # 번호, 소속, 이름(아이디), 닉네임, 신청날짜, 충전금액, 입금자명, 충전날짜, 상태
-                nickname = parts[3].strip() if len(parts) > 3 else ''
-                amount = PasteImportService._parse_amount(parts[5]) if len(parts) > 5 else 0
-                depositor = parts[6].strip() if len(parts) > 6 else ''
-                deposit_date_str = parts[7].strip() if len(parts) > 7 else parts[4].strip()
-                deposit_at = PasteImportService._parse_datetime(deposit_date_str)
+                if len(parts) >= 8:
+                    # 번호, 소속, 이름(아이디), 닉네임, 신청날짜, 충전금액, 입금자명, 충전날짜, 상태
+                    nickname = parts[3].strip() if len(parts) > 3 else ''
+                    amount = PasteImportService._parse_amount(parts[5]) if len(parts) > 5 else 0
+                    depositor = parts[6].strip() if len(parts) > 6 else ''
+                    deposit_date_str = parts[7].strip() if len(parts) > 7 else parts[4].strip()
+                    deposit_at = PasteImportService._parse_datetime(deposit_date_str)
+                else:
+                    # 네임, 금액, 입금일시, 입금자
+                    nickname = parts[0].strip() if len(parts) > 0 else ''
+                    amount = PasteImportService._parse_amount(parts[1]) if len(parts) > 1 else 0
+                    deposit_date_str = parts[2].strip() if len(parts) > 2 else ''
+                    depositor = parts[3].strip() if len(parts) > 3 else ''
+                    deposit_at = PasteImportService._parse_datetime(deposit_date_str)
                 
                 if nickname and amount > 0:
                     results.append(ParsedDeposit(

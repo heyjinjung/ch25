@@ -4,159 +4,106 @@
 커버리지 대상: segment_service.py, segment_rules_engine.py
 SoT 문서: v2_grade_segment_sot_ko.md
 """
+from datetime import datetime, timezone
+
 import pytest
 
-
-class TestUserSegments:
-    """유저 세그먼트 테스트."""
-
-    SEGMENTS = ["NEW", "COMMON", "VIP", "WHALE", "AT_RISK"]
-
-    def test_all_segments_defined(self):
-        """모든 세그먼트 정의."""
-        assert len(self.SEGMENTS) == 5
-
-    @pytest.mark.parametrize("segment", ["NEW", "COMMON", "VIP", "WHALE", "AT_RISK"])
-    def test_each_segment_exists(self, segment):
-        """각 세그먼트 존재."""
-        assert segment in self.SEGMENTS
+from app.v2.services.segment_rules_engine import SegmentContext, matches_condition
 
 
-class TestSegmentAssignment:
-    """세그먼트 할당 테스트."""
-
-    def test_new_user_segment(self):
-        """신규 유저 세그먼트 할당."""
-        days_since_join = 3
-        segment = "NEW" if days_since_join <= 7 else "COMMON"
-        assert segment == "NEW"
-
-    def test_common_user_segment(self):
-        """일반 유저 세그먼트."""
-        days_since_join = 30
-        total_deposit = 50000
-        
-        if days_since_join <= 7:
-            segment = "NEW"
-        elif total_deposit >= 500000:
-            segment = "WHALE"
-        elif total_deposit >= 100000:
-            segment = "VIP"
-        else:
-            segment = "COMMON"
-        
-        assert segment == "COMMON"
-
-    def test_vip_user_segment(self):
-        """VIP 유저 세그먼트."""
-        total_deposit = 200000
-        
-        if total_deposit >= 500000:
-            segment = "WHALE"
-        elif total_deposit >= 100000:
-            segment = "VIP"
-        else:
-            segment = "COMMON"
-        
-        assert segment == "VIP"
-
-    def test_whale_user_segment(self):
-        """WHALE 유저 세그먼트."""
-        total_deposit = 1000000
-        
-        if total_deposit >= 500000:
-            segment = "WHALE"
-        else:
-            segment = "VIP"
-        
-        assert segment == "WHALE"
+def _base_ctx(**overrides) -> SegmentContext:
+    defaults = dict(
+        last_login_at=None,
+        last_charge_at=None,
+        last_play_at=None,
+        last_active_at=None,
+        days_since_last_login=5,
+        days_since_last_charge=2,
+        days_since_last_play=1,
+        days_since_last_active=3,
+        deposit_amount=150000,
+        roulette_plays=10,
+        dice_plays=5,
+        lottery_plays=3,
+        total_play_duration=120,
+        level=5,
+        xp=200,
+        cash_balance=0.0,
+        vault_balance=10000.0,
+        login_streak=3,
+        account_age_days=30,
+        is_telegram_linked=True,
+        has_charge_history=True,
+    )
+    defaults.update(overrides)
+    return SegmentContext(**defaults)
 
 
-class TestSegmentRulesEngine:
-    """세그먼트 규칙 엔진 테스트."""
+class TestSegmentRulesEngineReal:
+    def test_matches_simple_comparison(self):
+        ctx = _base_ctx(deposit_amount=200000)
+        condition = {"field": "deposit_amount", "op": ">=", "value": 100000}
+        assert matches_condition(condition, ctx) is True
 
-    def test_greater_than_operator(self):
-        """GT 연산자."""
-        value = 100
-        threshold = 50
-        result = value > threshold
-        assert result is True
-
-    def test_less_than_operator(self):
-        """LT 연산자."""
-        value = 30
-        threshold = 50
-        result = value < threshold
-        assert result is True
-
-    def test_equals_operator(self):
-        """EQ 연산자."""
-        value = "VIP"
-        target = "VIP"
-        result = value == target
-        assert result is True
-
-    def test_in_operator(self):
-        """IN 연산자."""
-        value = "ROULETTE"
-        allowed = ["ROULETTE", "DICE", "LOTTERY"]
-        result = value in allowed
-        assert result is True
-
-
-class TestSegmentContext:
-    """세그먼트 컨텍스트 테스트."""
-
-    def test_context_has_user_data(self):
-        """컨텍스트에 유저 데이터."""
-        context = {
-            "user_id": 1,
-            "total_deposit": 150000,
-            "play_count_3d": 25,
-            "days_since_join": 45,
-            "last_deposit_days_ago": 2,
+    def test_matches_any_all(self):
+        ctx = _base_ctx(roulette_plays=0, dice_plays=10)
+        condition = {
+            "all": [
+                {"field": "dice_plays", "op": ">=", "value": 5},
+                {"any": [
+                    {"field": "roulette_plays", "op": ">=", "value": 1},
+                    {"field": "lottery_plays", "op": ">=", "value": 1},
+                ]},
+            ]
         }
-        
-        assert "user_id" in context
-        assert "total_deposit" in context
+        assert matches_condition(condition, ctx) is True
 
-    def test_context_used_for_evaluation(self):
-        """컨텍스트로 규칙 평가."""
-        context = {
-            "total_deposit": 150000,
-            "play_count_3d": 25,
+    def test_invalid_field_raises(self):
+        ctx = _base_ctx()
+        with pytest.raises(ValueError):
+            matches_condition({"field": "unknown", "op": ">", "value": 1}, ctx)
+
+    def test_datetime_compare_rejected(self):
+        ctx = _base_ctx(last_login_at=datetime.now(timezone.utc))
+        with pytest.raises(ValueError):
+            matches_condition({"field": "last_login_at", "op": ">", "value": 1}, ctx)
+
+    def test_new_segment_rule_requires_telegram_and_no_charge(self):
+        ctx = _base_ctx(
+            account_age_days=5,
+            is_telegram_linked=True,
+            has_charge_history=False,
+        )
+        condition = {
+            "all": [
+                {"field": "account_age_days", "op": "<=", "value": 7},
+                {"field": "is_telegram_linked", "op": "==", "value": True},
+                {"field": "has_charge_history", "op": "==", "value": False},
+            ]
         }
-        
-        rule = {"field": "total_deposit", "operator": ">=", "value": 100000}
-        
-        matches = context[rule["field"]] >= rule["value"]
-        assert matches is True
+        assert matches_condition(condition, ctx) is True
 
-
-class TestAtRiskSegment:
-    """AT_RISK 세그먼트 테스트."""
-
-    def test_at_risk_criteria(self):
-        """위험 유저 기준."""
-        # 장기 미입금 + 잦은 출금 시도
-        last_deposit_days_ago = 10
-        withdrawal_attempts_7d = 5
-        
-        is_at_risk = (
-            last_deposit_days_ago >= 7 and 
-            withdrawal_attempts_7d >= 3
+    def test_new_segment_rule_rejected_with_charge_history(self):
+        ctx = _base_ctx(
+            account_age_days=5,
+            is_telegram_linked=True,
+            has_charge_history=True,
         )
-        
-        assert is_at_risk is True
+        condition = {
+            "all": [
+                {"field": "account_age_days", "op": "<=", "value": 7},
+                {"field": "is_telegram_linked", "op": "==", "value": True},
+                {"field": "has_charge_history", "op": "==", "value": False},
+            ]
+        }
+        assert matches_condition(condition, ctx) is False
 
-    def test_not_at_risk_with_recent_deposit(self):
-        """최근 입금 시 위험군 아님."""
-        last_deposit_days_ago = 2
-        withdrawal_attempts_7d = 5
-        
-        is_at_risk = (
-            last_deposit_days_ago >= 7 and 
-            withdrawal_attempts_7d >= 3
-        )
-        
-        assert is_at_risk is False
+    def test_vip_whale_thresholds_updated(self):
+        vip_ctx = _base_ctx(deposit_amount=3_000_000)
+        whale_ctx = _base_ctx(deposit_amount=5_000_000)
+
+        vip_condition = {"field": "deposit_amount", "op": ">=", "value": 3_000_000}
+        whale_condition = {"field": "deposit_amount", "op": ">=", "value": 5_000_000}
+
+        assert matches_condition(vip_condition, vip_ctx) is True
+        assert matches_condition(whale_condition, whale_ctx) is True
