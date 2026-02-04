@@ -222,7 +222,7 @@ class PasteImportRequest(BaseModel):
     import_type: str  # "DAILY_DEPOSIT" or "GAME_LOG"
 
 
-@router.post("/paste-import", response_model=dict[str, Any])
+@router.post("/csv-import/paste-import", response_model=dict[str, Any])
 def paste_import(
     request: PasteImportRequest,
     db: Session = Depends(get_db),
@@ -265,7 +265,7 @@ def paste_import(
     return result
 
 
-@router.post("/paste-import/preview", response_model=dict[str, Any])
+@router.post("/csv-import/paste-import/preview", response_model=dict[str, Any])
 def preview_paste_import(
     request: PasteImportRequest,
     db: Session = Depends(get_db),

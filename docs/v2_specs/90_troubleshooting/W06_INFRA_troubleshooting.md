@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 3 |
+| 해결된 이슈 | 4 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -107,6 +107,36 @@
 **상태 업데이트 (02-02)**
 - 운영 Redis `XINFO GROUPS stream:raw_logs`에서 `group:retention_workers` 확인
 - 운영 로그 재확인 결과 NOGROUP 미발생
+
+---
+
+### 02-04 - API: Paste Import Preview 404 Not Found ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | POST /api/v2/admin/csv-import/paste-import/preview |
+| HTTP Status | 404 (Not Found) |
+| 영향 범위 | 관리자 붙여넣기 Import 미리보기 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 프론트엔드(`adminApi.ts`): `/api/v2/admin/csv-import/paste-import/preview` 호출
+- 백엔드(`csv_import_routes.py`): `@router.post("/paste-import/preview")` → 실제 경로 `/api/v2/admin/paste-import/preview`
+- **경로 프리픽스 불일치**: 프론트엔드는 `/csv-import/` 하위 경로를 기대, 백엔드는 `/paste-import/`로 직접 등록
+
+**해결 방법**
+- `csv_import_routes.py`에서 라우터 경로 수정:
+  - `@router.post("/paste-import")` → `@router.post("/csv-import/paste-import")`
+  - `@router.post("/paste-import/preview")` → `@router.post("/csv-import/paste-import/preview")`
+- 관련 파일: [app/v2/api/admin/csv_import_routes.py](../../../app/v2/api/admin/csv_import_routes.py#L225-L268)
+
+**검증 방법**
+```bash
+# 로컬 백엔드 라우트 확인
+docker compose exec backend python -c "from app.main import app; routes = [(r.methods, r.path) for r in app.routes if 'paste-import' in str(r.path)]; print(routes)"
+# 결과: ({'POST'}, '/api/v2/admin/csv-import/paste-import'), ({'POST'}, '/api/v2/admin/csv-import/paste-import/preview')
+```
 
 ---
 
