@@ -9,13 +9,7 @@ import {
 } from "../../../hooks/useAdminGame";
 import { type AdminLevelDto } from "../../../api/adminApi";
 import { REWARD_ITEMS } from "../../../constants/rewardItems";
-import {
-  RefreshCw,
-  Search,
-  AlertCircle,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { RefreshCw, Search, AlertCircle, Loader2, Save } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import {
@@ -103,9 +97,9 @@ export default function LevelConfigPage() {
   const [isBulkSaving, setIsBulkSaving] = useState(false);
 
   useEffect(() => {
-    if (levels.length > 0) {
-      const maxLvl = Math.max(...levels.map((l) => l.level));
-      const maxXP = Math.max(...levels.map((l) => l.requiredXp));
+    if (levels?.length > 0) {
+      const maxLvl = Math.max(...levels.map((l) => l.level ?? 1));
+      const maxXP = Math.max(...levels.map((l) => l.requiredXp ?? 0));
       setGlobalConfig({
         maxLevel: maxLvl,
         maxXp: maxXP,
@@ -114,6 +108,7 @@ export default function LevelConfigPage() {
   }, [levels]);
 
   const filteredLevels = useMemo(() => {
+    if (!levels || levels.length === 0) return [];
     return levels.filter((l) => String(l.level).includes(searchTerm));
   }, [levels, searchTerm]);
 
@@ -336,9 +331,17 @@ export default function LevelConfigPage() {
                         <AlertCircle className="w-3.5 h-3.5" />
                         주의사항
                       </p>
-                      <p>• 레벨 구간 설정 변경은 전체 게임 경제에 즉시 영향을 미칩니다.</p>
-                      <p>• 레벨업 보상은 우편함 또는 인벤토리로 즉시 지급됩니다.</p>
-                      <p>• 경험치 요구량은 다음 레벨로 가기 위한 누적 경험치입니다.</p>
+                      <p>
+                        • 레벨 구간 설정 변경은 전체 게임 경제에 즉시 영향을
+                        미칩니다.
+                      </p>
+                      <p>
+                        • 레벨업 보상은 우편함 또는 인벤토리로 즉시 지급됩니다.
+                      </p>
+                      <p>
+                        • 경험치 요구량은 다음 레벨로 가기 위한 누적
+                        경험치입니다.
+                      </p>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -370,7 +373,9 @@ export default function LevelConfigPage() {
                 </div>
                 <Button
                   size="sm"
-                  disabled={Object.keys(editingLevels).length === 0 || isBulkSaving}
+                  disabled={
+                    Object.keys(editingLevels).length === 0 || isBulkSaving
+                  }
                   className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                   onClick={handleBulkSave}
                 >
@@ -393,15 +398,11 @@ export default function LevelConfigPage() {
               <Table>
                 <TableHeader className="bg-white/5 sticky top-0 z-10">
                   <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400 w-28">
-                      Level
-                    </TableHead>
+                    <TableHead className="text-zinc-400 w-28">Level</TableHead>
                     <TableHead className="text-zinc-400 w-[240px]">
                       요구 경험치 (XP)
                     </TableHead>
-                    <TableHead className="text-zinc-400">
-                      보상 종류
-                    </TableHead>
+                    <TableHead className="text-zinc-400">보상 종류</TableHead>
                     <TableHead className="text-zinc-400 w-[240px]">
                       보상 수량
                     </TableHead>
@@ -469,10 +470,7 @@ export default function LevelConfigPage() {
                             </SelectTrigger>
                             <SelectContent className="bg-zinc-800 border-zinc-700">
                               {REWARD_ITEMS.map((item) => (
-                                <SelectItem
-                                  key={item.value}
-                                  value={item.value}
-                                >
+                                <SelectItem key={item.value} value={item.value}>
                                   {item.label}
                                 </SelectItem>
                               ))}

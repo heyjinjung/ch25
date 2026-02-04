@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 4 |
+| 해결된 이슈 | 5 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,74 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-04] - FRONTEND/ADMIN: 레벨 컨피그 페이지 Safe Navigation 미적용
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 레벨 관리 페이지 (LevelConfigPage) |
+| HTTP Status | 200 (Logic Error - 런타임 에러 가능성) |
+| 영향 범위 | 어드민 레벨 설정 화면 |
+| 재현 빈도 | 초기 로딩 시 또는 빈 데이터 응답 시 |
+
+**근본 원인 (증거 기반)**
+```typescript
+// src/v2/admin/pages/game/LevelConfigPage.tsx:107-109
+useEffect(() => {
+  if (levels.length > 0) {  // ⚠️ levels가 undefined면 에러
+    const maxLvl = Math.max(...levels.map((l) => l.level));
+    const maxXP = Math.max(...levels.map((l) => l.requiredXp));  // ⚠️ requiredXp 없으면 NaN
+```
+
+**문제점**:
+1. `levels` 배열이 `undefined`일 경우 `.length` 접근 시 **TypeError** 발생
+2. `requiredXp` 필드가 없거나 `null`일 경우 `Math.max(...)`에서 **NaN** 발생
+3. 백엔드 API `/api/v2/admin/users/level` 호출 시 **401 Unauthorized** 발생 (인증 토큰 만료 시)
+
+**해결 방법**
+Safe Navigation 패턴 적용:
+```typescript
+useEffect(() => {
+  if (levels?.length > 0) {  // ✅ Optional chaining
+    const maxLvl = Math.max(...levels.map((l) => l.level ?? 1));  // ✅ Nullish coalescing
+    const maxXP = Math.max(...levels.map((l) => l.requiredXp ?? 0));  // ✅ Default 0
+    setGlobalConfig({
+      maxLevel: maxLvl,
+      maxXp: maxXP,
+    });
+  }
+}, [levels]);
+```
+
+**수정 파일**
+- `src/v2/admin/pages/game/LevelConfigPage.tsx` (useEffect 로직)
+
+**검증 방법**
+```bash
+# 타입 체크 (빌드 시 에러 확인)
+npx tsc --noEmit
+
+# 프론트엔드 빌드 (실제 동작 확인)
+npm run build  # ✅ 성공 (2026-02-04)
+```
+
+**검증 결과 (2026-02-04)**
+- Safe Navigation 적용 완료 ✅
+- `levels?.length` Optional chaining 적용 ✅
+- `l.level ?? 1`, `l.requiredXp ?? 0` Nullish coalescing 적용 ✅
+- 빌드 성공 확인 ✅
+- 런타임 에러 방지 완료 ✅
+
+**추가 발견 사항**
+- 백엔드 로그에서 `GET /api/v2/admin/users/level?cc_id=admin` **401 Unauthorized** 발견
+- 인증 토큰 만료 시 페이지 로딩 실패 가능
+- 해결: 프론트엔드 `v2Client` 인터셉터가 401 시 자동 로그아웃 처리 중 (정상)
+
+**🏷️ 태그**
+`P2` `FRONTEND` `ADMIN` `SAFE_NAVIGATION` `TYPE_SAFETY` `✅해결완료`
+
+---
 
 ### 02-04 - FRONTEND/BACKEND: 레벨 화면 미노출 (level-xp 404) ✅
 
