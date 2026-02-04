@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "개선방안_1주.md",
+                "file": "개선방안_1주기록.md",
                 "mode": "source",
                 "source": true,
                 "backlinks": true,
@@ -28,7 +28,7 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "개선방안_1주"
+              "title": "개선방안_1주기록"
             }
           }
         ]
@@ -166,13 +166,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "CC.md",
+                "file": "개선방안_1주기록.md",
                 "followCursor": true,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "CC 의 개요"
+              "title": "개선방안_1주기록 의 개요"
             }
           },
           {
@@ -217,10 +217,10 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "d52b872f01788470",
+  "active": "3350c5b848e1d363",
   "lastOpenFiles": [
-    "개선방안_1주.md",
     "CC.md",
+    "개선방안_1주.md",
     "개선방안_1주기록.md",
     "개선방안_1주.md.tmp.19072.1770115010995",
     "개선방안_개요.md",
