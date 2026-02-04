@@ -25,6 +25,8 @@ __all__ = [
 	"V2AdminUserService",
 	"V2AdminCCDepositService",
 	"V2RewardService",
+	"V2SeasonPassService",
+	"V2LevelXPService",
 ]
 
 
@@ -55,6 +57,8 @@ def __getattr__(name: str):
 		"V2AdminUserService": ("app.v2.services.admin_user_service", "V2AdminUserService"),
 		"V2AdminCCDepositService": ("app.v2.services.admin_cc_deposit_service", "V2AdminCCDepositService"),
 		"V2RewardService": ("app.v2.services.reward_service", "V2RewardService"),
+		"V2SeasonPassService": ("app.v2.services.season_pass_service", "V2SeasonPassService"),
+		"V2LevelXPService": ("app.v2.services.level_xp_service", "V2LevelXPService"),
 	}
 	if name not in mapping:
 		raise AttributeError(f"module 'app.v2.services' has no attribute '{name}'")

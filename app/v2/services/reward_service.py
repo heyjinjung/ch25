@@ -1,145 +1,235 @@
-﻿"""V2 reward delivery service (minimized V1 dependencies)."""
-from __future__ import annotations
+"""V2 Reward service for coupons, points, and game tickets.
 
+This service is decoupled from V1 and uses V2 models and services.
+"""
+from datetime import datetime
 from typing import Any
-import random
 
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import InvalidConfigError
-from app.v2.models import GameTokenType
-from app.v2.services.admin_inventory_service import V2AdminInventoryService
-from app.v2.services.vault_service import V2VaultService
+from app.v2.models import GameTokenType, V2User, UserCashLedger, User
+from app.v2.services.inventory_service import V2InventoryService
 
 
 class V2RewardService:
-    """Deliver rewards using V2 services and legacy storage models."""
+    """Centralize reward delivery (points, coupons, game tickets)."""
 
-    def _grant_ticket(
+    def __init__(self) -> None:
+        self.inventory_service = V2InventoryService()
+
+    def grant_point(
         self,
         db: Session,
-        *,
         user_id: int,
-        token_type: GameTokenType,
         amount: int,
-        meta: dict[str, Any] | None,
-        commit: bool,
+        reason: str | None = None,
+        label: str | None = None,
+        meta: dict[str, Any] | None = None,
+        commit: bool = True,
     ) -> None:
-        V2AdminInventoryService.grant_tokens(
-            db,
+        """Grant points to a user by updating cash_balance and writing a ledger entry."""
+
+        if amount == 0:
+            return
+        if amount < 0:
+            raise InvalidConfigError("INVALID_POINT_AMOUNT")
+
+        q = db.query(V2User).filter(V2User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+
+        if user is None:
+            raise InvalidConfigError("USER_NOT_FOUND")
+
+        user.cash_balance = (user.cash_balance or 0) + amount
+        entry = UserCashLedger(
             user_id=user_id,
+            delta=amount,
+            balance_after=user.cash_balance,
+            reason=reason or "GRANT",
+            label=label,
+            meta_json=meta or {},
+        )
+        db.add(user)
+        db.add(entry)
+
+        if commit:
+            db.commit()
+            db.refresh(user)
+            db.refresh(entry)
+        else:
+            db.flush()
+
+    def _grant_vault_locked(
+        self,
+        db: Session,
+        user_id: int,
+        amount: int,
+        reason: str | None = None,
+        label: str | None = None,
+        meta: dict[str, Any] | None = None,
+        commit: bool = True,
+    ) -> None:
+        if amount == 0:
+            return
+        if amount < 0:
+            raise InvalidConfigError("INVALID_POINT_AMOUNT")
+
+        # Local import to avoid circular dependencies.
+        from app.v2.services.vault_service import V2VaultService  # pylint: disable=import-outside-toplevel
+
+        # V2 native: we use V2User for vault balances. 
+        # V1 User is mirrored automatically via sync_legacy_mirror if still needed.
+        q = db.query(V2User).filter(V2User.id == user_id)
+        if db.bind and db.bind.dialect.name != "sqlite":
+            q = q.with_for_update()
+        user = q.one_or_none()
+        if user is None:
+            raise InvalidConfigError("USER_NOT_FOUND")
+
+        user.vault_locked_balance = (user.vault_locked_balance or 0) + amount
+
+        # Mirror back to legacy User if exists (Phase 1/2 requirement)
+        v1_user = db.get(User, user_id)
+        if v1_user:
+            v1_user.vault_locked_balance = user.vault_locked_balance
+            db.add(v1_user)
+
+        db.add(user)
+
+        if commit:
+            db.commit()
+            db.refresh(user)
+        else:
+            db.flush()
+
+    def grant_coupon(self, db: Session, user_id: int, coupon_type: str, meta: dict[str, Any] | None = None) -> None:
+        """Grant a coupon to a user (DEPRECATED/REMOVED)."""
+        pass
+
+    def grant_ticket(self, db: Session, user_id: int, token_type: GameTokenType | str, amount: int, meta: dict[str, Any] | None = None, commit: bool = True) -> None:
+        """Grant game tickets or DIAMOND to the user via V2 Inventory Service."""
+
+        if isinstance(token_type, str):
+            token_type = GameTokenType(token_type)
+
+        self.inventory_service.grant_wallet_tokens(
+            db,
+            v2_user_id=user_id,
             token_type=token_type,
             amount=amount,
             reason=(meta or {}).get("reason") or "REWARD",
             label=(meta or {}).get("label") or "AUTO_GRANT",
-            auto_commit=commit,
+            meta=meta,
+            auto_commit=commit
         )
 
-    def _grant_item(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        item_type: str,
-        amount: int,
-        meta: dict[str, Any] | None,
-        commit: bool,
-    ) -> None:
-        related_id = (meta or {}).get("related_id")
-        if not related_id and (meta or {}).get("prize_id") is not None:
-            related_id = f"prize:{(meta or {}).get('prize_id')}"
-
-        V2AdminInventoryService.grant_item(
-            db,
-            user_id=user_id,
-            item_type=item_type,
-            amount=max(1, int(amount)),
-            reason=(meta or {}).get("reason") or "REWARD",
-            related_id=related_id,
-            auto_commit=commit,
-        )
-
-    def deliver(
-        self,
-        db: Session,
-        *,
-        user_id: int,
-        reward_type: str,
-        reward_amount: int,
-        meta: dict[str, Any] | None = None,
-        commit: bool = True,
-    ) -> None:
-        # NOTE: Storage SoT (2026-01-30 FK Migration)
-        # - Wallet/Inventory FK가 v2_user.id를 참조하도록 마이그레이션됨
-        # - V2User.id를 직접 사용
-        storage_user_id = user_id
+    def deliver(self, db: Session, user_id: int, reward_type: str, reward_amount: int, meta: dict[str, Any] | None = None, commit: bool = True) -> None:
+        """Dispatch reward based on reward_type; no-op for NONE/zero."""
 
         if reward_amount == 0 or reward_type in {"NONE", "", None}:
             return
 
+        # 1) GAME_XP: Season Level XP
         if reward_type == "GAME_XP":
-            from app.v2.services.season_pass_service import V2SeasonPassService
+            from app.v2.services.season_pass_service import V2SeasonPassService  # pylint: disable=import-outside-toplevel
 
             xp_amount = int(reward_amount)
             if xp_amount > 0:
                 V2SeasonPassService().add_bonus_xp(db, user_id=user_id, xp_amount=xp_amount, commit=commit)
             return
 
-        if reward_type in {"POINT", "CC_POINT"}:
-            V2VaultService.deposit(db, user_id=storage_user_id, amount=int(reward_amount), reason="MISSION_REWARD", ref_type="REWARD")
-            if commit:
-                db.commit()
-            else:
-                db.flush()
+        # 2) POINT: context-aware routing
+        if reward_type == "POINT":
+            settings = get_settings()
+            reason = (meta or {}).get("reason") if meta else None
+            source = (meta or {}).get("source") if meta else None
+            label = (meta or {}).get("label") if meta else None
+
+            is_game_point = str(reason or "").lower() == "dice_play" or (meta or {}).get("game_xp") is not None
+            if is_game_point:
+                if bool(getattr(settings, "xp_from_game_reward", False)):
+                    from app.v2.services.season_pass_service import V2SeasonPassService  # pylint: disable=import-outside-toplevel
+                    bonus = int((meta or {}).get("game_xp") or 0)
+                    V2SeasonPassService().add_bonus_xp(
+                        db,
+                        user_id=user_id,
+                        xp_amount=int(reward_amount) + bonus,
+                        commit=commit,
+                    )
+                return
+
+            is_season_pass_point = "SEASON_PASS" in str(source or "").upper() or "SEASON_PASS" in str(reason or "").upper()
+            if is_season_pass_point:
+                self._grant_vault_locked(
+                    db,
+                    user_id=user_id,
+                    amount=reward_amount,
+                    reason=reason or "SEASON_PASS_POINT",
+                    label=label,
+                    meta=meta,
+                    commit=commit,
+                )
+                return
+
+            self._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=reward_amount,
+                reason=reason or "POINT",
+                label=label,
+                meta=meta,
+                commit=commit,
+            )
             return
 
+        # 2b) CC_POINT: always vault_locked_balance
+        if reward_type == "CC_POINT":
+            reason = (meta or {}).get("reason") if meta else None
+            label = (meta or {}).get("label") if meta else None
+            self._grant_vault_locked(
+                db,
+                user_id=user_id,
+                amount=reward_amount,
+                reason=reason or "CC_POINT",
+                label=label,
+                meta=meta,
+                commit=commit,
+            )
+            return
+
+        # 3) BUNDLE: Multi-reward packages
         if reward_type in {"BUNDLE", "TICKET_BUNDLE"}:
-            bundle_items: list[tuple[GameTokenType, int]] = []
+            bundle_items = []
             if reward_amount == 3:
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 1),
-                    (GameTokenType.DICE_TOKEN, 1),
-                    (GameTokenType.LOTTERY_TICKET, 1),
-                ]
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 1), (GameTokenType.DICE_TICKET, 1), (GameTokenType.LOTTERY_TICKET, 1)]
             elif reward_amount == 6:
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 3),
-                    (GameTokenType.DICE_TOKEN, 3),
-                ]
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 3), (GameTokenType.DICE_TICKET, 3)]
             elif reward_amount == 7:
-                V2VaultService.deposit(db, user_id=user_id, amount=10000, reason="BUNDLE_REWARD", ref_type="REWARD")
-                bundle_items = [(GameTokenType.GOLD_KEY, 1)]
+                self._grant_vault_locked(db, user_id=user_id, amount=10000, reason="LEVEL_BUNDLE_7", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.GOLD_KEY_TICKET, 1)]
             elif reward_amount == 12:
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 5),
-                    (GameTokenType.DICE_TOKEN, 5),
-                    (GameTokenType.LOTTERY_TICKET, 2),
-                ]
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 5), (GameTokenType.DICE_TICKET, 5), (GameTokenType.LOTTERY_TICKET, 2)]
             elif reward_amount == 15:
-                V2VaultService.deposit(db, user_id=user_id, amount=100000, reason="BUNDLE_REWARD", ref_type="REWARD")
-                bundle_items = [(GameTokenType.GOLD_KEY, 2)]
+                self._grant_vault_locked(db, user_id=user_id, amount=100000, reason="LEVEL_BUNDLE_15", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.GOLD_KEY_TICKET, 2)]
             elif reward_amount == 30:
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 10),
-                    (GameTokenType.DICE_TOKEN, 10),
-                    (GameTokenType.LOTTERY_TICKET, 10),
-                ]
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 10), (GameTokenType.DICE_TICKET, 10), (GameTokenType.LOTTERY_TICKET, 10)]
             elif reward_amount == 20:
-                V2VaultService.deposit(db, user_id=user_id, amount=300000, reason="BUNDLE_REWARD", ref_type="REWARD")
-                bundle_items = [(GameTokenType.DIAMOND_KEY, 3)]
+                self._grant_vault_locked(db, user_id=user_id, amount=300000, reason="LEVEL_BUNDLE_20", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.DIAMOND_TICKET, 3)]
             elif reward_amount == 4:
-                bundle_items = [
-                    (GameTokenType.ROULETTE_COIN, 2),
-                    (GameTokenType.DICE_TOKEN, 2),
-                ]
-
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 2), (GameTokenType.DICE_TICKET, 2)]
+            
             for token_type, amount in bundle_items:
-                self._grant_ticket(db, user_id=storage_user_id, token_type=token_type, amount=amount, meta=meta, commit=commit)
+                self.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta, commit=commit)
             return
-
+        
         if reward_type == "DIAMOND":
-            self._grant_ticket(db, user_id=storage_user_id, token_type=GameTokenType.DIAMOND, amount=reward_amount, meta=meta, commit=commit)
+            self.grant_ticket(db, user_id=user_id, token_type=GameTokenType.DIAMOND, amount=reward_amount, meta=meta, commit=commit)
             return
 
         if reward_type == "GIFTICON_BAEMIN":
@@ -147,7 +237,7 @@ class V2RewardService:
             if int(reward_amount) not in allowed:
                 raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
             item_type = f"BAEMIN_GIFTICON_{int(reward_amount)}"
-            self._grant_item(db, user_id=storage_user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
+            self.inventory_service.grant_item(db, user_id, item_type, 1, reason=(meta or {}).get("reason") or "GIFTICON_REWARD", auto_commit=commit)
             return
 
         if reward_type == "GIFTICON_COMPOSE":
@@ -155,20 +245,21 @@ class V2RewardService:
             if int(reward_amount) not in allowed:
                 raise InvalidConfigError("INVALID_GIFTICON_AMOUNT")
             item_type = f"COMPOSE_AMERICANO_GIFTICON_{int(reward_amount)}"
-            self._grant_item(db, user_id=storage_user_id, item_type=item_type, amount=1, meta=meta, commit=commit)
+            self.inventory_service.grant_item(db, user_id, item_type, 1, reason=(meta or {}).get("reason") or "GIFTICON_REWARD", auto_commit=commit)
             return
 
         if reward_type in {"CC_COIN", "CC_COIN_GIFTICON"}:
-            self._grant_item(db, user_id=storage_user_id, item_type="CC_COIN_GIFTICON", amount=1, meta=meta, commit=commit)
+            self.inventory_service.grant_item(db, user_id, "CC_COIN_GIFTICON", 1, reason=(meta or {}).get("reason") or "CC_COIN_GIFTICON", auto_commit=commit)
             return
 
         if reward_type == "PUZZLE_C":
+            import random
             outcome = random.choice([GameTokenType.PUZZLE_C1, GameTokenType.PUZZLE_C2])
-            self._grant_ticket(db, user_id=storage_user_id, token_type=outcome, amount=reward_amount, meta=meta, commit=commit)
+            self.grant_ticket(db, user_id=user_id, token_type=outcome, amount=reward_amount, meta=meta, commit=commit)
             return
 
-        if "GIFTICON" in str(reward_type):
-            self._grant_item(db, user_id=storage_user_id, item_type=str(reward_type), amount=reward_amount, meta=meta, commit=commit)
+        if "GIFTICON" in reward_type:
+            self.inventory_service.grant_item(db, user_id, reward_type, max(1, int(reward_amount)), reason=(meta or {}).get("reason") or "GIFTICON_REWARD", auto_commit=commit)
             return
 
         ticket_map = {
@@ -176,34 +267,22 @@ class V2RewardService:
             "PUZZLE_M": GameTokenType.PUZZLE_M,
             "PUZZLE_C1": GameTokenType.PUZZLE_C1,
             "PUZZLE_C2": GameTokenType.PUZZLE_C2,
-            # V2 Standard Names
+            "TICKET_ROULETTE": GameTokenType.ROULETTE_TICKET,
             "ROULETTE_TICKET": GameTokenType.ROULETTE_TICKET,
+            "TICKET_DICE": GameTokenType.DICE_TICKET,
             "DICE_TICKET": GameTokenType.DICE_TICKET,
+            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
             "LOTTERY_TICKET": GameTokenType.LOTTERY_TICKET,
             "GOLD_KEY_TICKET": GameTokenType.GOLD_KEY_TICKET,
             "DIAMOND_TICKET": GameTokenType.DIAMOND_TICKET,
-            # V1 Legacy Names (for backward compatibility)
-            "TICKET_ROULETTE": GameTokenType.ROULETTE_TICKET,
-            "ROULETTE_COIN": GameTokenType.ROULETTE_TICKET,
-            "TICKET_DICE": GameTokenType.DICE_TICKET,
-            "DICE_TOKEN": GameTokenType.DICE_TICKET,
-            "TICKET_LOTTERY": GameTokenType.LOTTERY_TICKET,
-            "GOLD_KEY": GameTokenType.GOLD_KEY,
-            "DIAMOND_KEY": GameTokenType.DIAMOND_KEY,
             "GOLD_KEY_FRAGMENT": GameTokenType.GOLD_KEY_FRAGMENT,
             "DIAMOND_FRAGMENT": GameTokenType.DIAMOND_FRAGMENT,
-            "TRIAL_TICKET": GameTokenType.TRIAL_TICKET,
+            "ROULETTE_COIN": GameTokenType.ROULETTE_TICKET,
+            "DICE_TOKEN": GameTokenType.DICE_TICKET,
+            "GOLD_KEY": GameTokenType.GOLD_KEY_TICKET,
+            "DIAMOND_KEY": GameTokenType.DIAMOND_TICKET,
         }
-
         if reward_type in ticket_map:
-            self._grant_ticket(
-                db,
-                user_id=storage_user_id,
-                token_type=ticket_map[reward_type],
-                amount=reward_amount,
-                meta=meta,
-                commit=commit,
-            )
+            token_type = ticket_map[reward_type]
+            self.grant_ticket(db, user_id=user_id, token_type=token_type, amount=reward_amount, meta=meta, commit=commit)
             return
-
-        _ = (db, user_id, reward_type, reward_amount, meta, commit)
