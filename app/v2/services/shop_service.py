@@ -1,4 +1,4 @@
-"""V2 shop service (Vault SoT: locked balance)."""
+﻿"""V2 shop service (Vault SoT: locked balance)."""
 from __future__ import annotations
 
 import logging

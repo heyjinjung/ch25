@@ -1,4 +1,4 @@
-"""V2 dice gameplay service (router-independent).
+﻿"""V2 dice gameplay service (router-independent).
 
 This service intentionally does NOT get wired to any API router yet.
 Dice outcome is decided by config probabilities (frontend uses a single die UI).
@@ -17,7 +17,7 @@ from app.core.config import get_settings
 from app.core.exceptions import ForbiddenError, InvalidConfigError
 from app.v2.models import FeatureType
 from app.v2.models import GameTokenType
-from app.schemas.dice import DiceGameData, DicePlayResponse, DiceRewardConfig, DiceStatusResponse
+from app.v2.schemas.shared.dice import DiceGameData, DicePlayResponse, DiceRewardConfig, DiceStatusResponse
 from app.v2.services.feature_service import FeatureService
 from app.v2.services.game_common import GamePlayContext, log_game_play
 from app.v2.services.inventory_service import V2InventoryService

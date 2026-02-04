@@ -1,4 +1,4 @@
-"""Inventory models for Item and Ledger."""
+﻿"""Inventory models for Item and Ledger."""
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UniqueConstraint

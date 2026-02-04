@@ -1,4 +1,4 @@
-"""V2 Centralized Constants and Type Definitions.
+﻿"""V2 Centralized Constants and Type Definitions.
 
 SoT for all Literal types used across V2 schemas.
 Import from here to ensure consistency.

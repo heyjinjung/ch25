@@ -1,4 +1,4 @@
-"""V2 `game_common` shim that delegates to V1 implementation.
+﻿"""V2 `game_common` shim that delegates to V1 implementation.
 
 This module exposes `GamePlayContext` and `log_game_play` under
 `app.v2.services.game_common` by delegating to the legacy

@@ -1,11 +1,11 @@
-"""V2 schemas for vault (Phase 1 + compatibility) APIs."""
+﻿"""V2 schemas for vault (Phase 1 + compatibility) APIs."""
 
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class VaultStatusResponse(BaseModel):

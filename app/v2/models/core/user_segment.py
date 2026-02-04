@@ -1,4 +1,4 @@
-"""User segmentation table for personalization."""
+﻿"""User segmentation table for personalization."""
 
 from datetime import datetime
 

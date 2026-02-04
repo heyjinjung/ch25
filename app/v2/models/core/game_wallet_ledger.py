@@ -1,11 +1,11 @@
-"""Ledger for game token balance changes with metadata/label."""
+﻿"""Ledger for game token balance changes with metadata/label."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Enum as SAEnum, ForeignKey, Integer, String, JSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.game_wallet import GameTokenType
+from app.v2.models.core.game_wallet import GameTokenType
 
 
 class UserGameWalletLedger(Base):

@@ -1,10 +1,10 @@
-"""V2 Pydantic schemas for global level/XP APIs."""
+﻿"""V2 Pydantic schemas for global level/XP APIs."""
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Optional
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class LevelRewardLog(BaseModel):

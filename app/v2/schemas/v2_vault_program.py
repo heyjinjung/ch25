@@ -1,4 +1,4 @@
-"""V2 Vault 2.0 scaffold schemas.
+﻿"""V2 Vault 2.0 scaffold schemas.
 
 These are read-only outputs for safe incremental rollout.
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class VaultProgramResponse(BaseModel):

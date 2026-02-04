@@ -1,4 +1,4 @@
-"""Unmatched Deposit Log Service - HQ CSV 미매칭 입금 로그 관리.
+﻿"""Unmatched Deposit Log Service - HQ CSV 미매칭 입금 로그 관리.
 
 설계 문서: v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 섹션 4, 7, 8 구현

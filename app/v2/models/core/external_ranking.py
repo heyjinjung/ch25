@@ -1,4 +1,4 @@
-"""External ranking data captured from other platforms and payout logs."""
+﻿"""External ranking data captured from other platforms and payout logs."""
 from datetime import datetime
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint

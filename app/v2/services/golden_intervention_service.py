@@ -1,4 +1,4 @@
-"""Golden V2 intervention service - Real-time trigger detection and action execution."""
+﻿"""Golden V2 intervention service - Real-time trigger detection and action execution."""
 from __future__ import annotations
 
 import logging

@@ -1,4 +1,4 @@
-"""V2 feed configuration schema."""
+﻿"""V2 feed configuration schema."""
 
 from __future__ import annotations
 

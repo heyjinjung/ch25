@@ -1,10 +1,10 @@
-"""V2 Admin Ranking Schema."""
+﻿"""V2 Admin Ranking Schema."""
 from datetime import date
 from typing import List, Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminRankingEntryBase(BaseModel):

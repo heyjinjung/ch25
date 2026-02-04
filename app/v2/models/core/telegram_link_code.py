@@ -1,4 +1,4 @@
-"""Telegram Link Code model for short start_param mapping."""
+﻿"""Telegram Link Code model for short start_param mapping."""
 
 from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text

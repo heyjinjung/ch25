@@ -1,4 +1,4 @@
-"""V2 Auth/User schemas."""
+﻿"""V2 Auth/User schemas."""
 from __future__ import annotations
 
 from typing import Optional

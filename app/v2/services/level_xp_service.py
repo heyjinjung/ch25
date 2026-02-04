@@ -1,4 +1,4 @@
-"""V2 level XP wrapper (v2 import surface)."""
+﻿"""V2 level XP wrapper (v2 import surface)."""
 from __future__ import annotations
 
 from typing import Any

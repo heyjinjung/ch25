@@ -1,8 +1,8 @@
-"""V2 schema for today's active feature response."""
+﻿"""V2 schema for today's active feature response."""
 
 from __future__ import annotations
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class TodayFeatureResponse(BaseModel):

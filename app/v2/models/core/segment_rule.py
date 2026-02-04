@@ -1,4 +1,4 @@
-"""Segmentation rules stored in DB for dynamic operations."""
+﻿"""Segmentation rules stored in DB for dynamic operations."""
 
 from __future__ import annotations
 

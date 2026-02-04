@@ -1,4 +1,4 @@
-"""Ops log models for admin operations."""
+﻿"""Ops log models for admin operations."""
 from datetime import datetime, date
 from sqlalchemy import Boolean, Column, Date, DateTime, ForeignKey, Integer, JSON, String, Index
 from sqlalchemy.dialects.mysql import JSON as MySQLJSON

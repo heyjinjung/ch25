@@ -1,4 +1,4 @@
-"""Ops plan (playbook) models for admin operations.
+﻿"""Ops plan (playbook) models for admin operations.
 
 This module is intentionally separate from ops_log models:
 - ops_plan/* are mutable planning entities (campaign/plan/tasks)

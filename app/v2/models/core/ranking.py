@@ -1,4 +1,4 @@
-"""Ranking daily snapshot model."""
+﻿"""Ranking daily snapshot model."""
 from datetime import datetime
 
 from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint

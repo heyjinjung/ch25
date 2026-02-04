@@ -1,4 +1,4 @@
-from datetime import date, datetime
+﻿from datetime import date, datetime
 import hashlib
 import logging
 import re
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.core.security import hash_password
 from app.v2.models import AdminUserProfile
-from app.schemas.admin_user import AdminUserCreate
+from app.v2.schemas.shared.admin_user import AdminUserCreate
 from app.v2.models.user import V2User
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary
 from app.v2.services.admin_audit_service import V2AdminAuditService

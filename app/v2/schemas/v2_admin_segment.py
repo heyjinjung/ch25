@@ -1,11 +1,11 @@
-"""V2 Admin Segment Schema."""
+﻿"""V2 Admin Segment Schema."""
 from __future__ import annotations
 
 from datetime import datetime
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminUserSegmentResponse(BaseModel):

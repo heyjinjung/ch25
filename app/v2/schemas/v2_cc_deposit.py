@@ -1,4 +1,4 @@
-"""Pydantic schemas for CC deposit (external ranking) admin APIs.
+﻿"""Pydantic schemas for CC deposit (external ranking) admin APIs.
 
 V2 location (Source of Truth). Legacy import paths should re-export from here.
 """
@@ -8,8 +8,8 @@ from typing import Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
-from app.schemas.admin_user_summary import AdminUserSummary
+from app.v2.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.shared.admin_user_summary import AdminUserSummary
 
 
 class CCDepositBase(BaseModel):

@@ -1,4 +1,4 @@
-"""Golden V2 intervention worker (consume game events -> publish intervention events)."""
+﻿"""Golden V2 intervention worker (consume game events -> publish intervention events)."""
 from __future__ import annotations
 
 import asyncio

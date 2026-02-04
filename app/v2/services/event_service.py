@@ -1,4 +1,4 @@
-"""V2 event service (v2-only).
+﻿"""V2 event service (v2-only).
 
 Implements the logic needed by V2 event status endpoints without importing
 legacy (v1) service modules.

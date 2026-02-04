@@ -1,4 +1,4 @@
-"""Backward-compatible shim for renamed/moved CC deposit schemas.
+﻿"""Backward-compatible shim for renamed/moved CC deposit schemas.
 
 SoT lives in `app.v2.schemas.v2_cc_deposit`.
 """

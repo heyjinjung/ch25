@@ -1,4 +1,4 @@
-"""Core level/XP schema for global rewards."""
+﻿"""Core level/XP schema for global rewards."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, UniqueConstraint, func

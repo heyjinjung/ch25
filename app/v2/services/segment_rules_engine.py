@@ -1,4 +1,4 @@
-"""V2 segment rule engine (copied from legacy for v2-only usage)."""
+﻿"""V2 segment rule engine (copied from legacy for v2-only usage)."""
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for ops target list and member APIs.
+﻿"""V2 Pydantic schemas for ops target list and member APIs.
 
 Based on spec: docs/06_ops/202601/20260113_ops_crisis_scenarios_spec.md
 """
@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import ConfigDict
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 # OpsTargetList Schemas

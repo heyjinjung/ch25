@@ -1,4 +1,4 @@
-"""
+﻿"""
 User Segmentation Celery Tasks
 """
 import logging

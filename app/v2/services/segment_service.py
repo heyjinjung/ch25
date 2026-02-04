@@ -1,4 +1,4 @@
-"""V2 segmentation batch service."""
+﻿"""V2 segmentation batch service."""
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,4 +1,4 @@
-"""V2 Admin Roulette Schema."""
+﻿"""V2 Admin Roulette Schema."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -7,7 +7,7 @@ from typing import List, Optional
 from pydantic import ConfigDict, Field, field_validator
 
 from app.v2.models import GameTokenType
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 ALLOWED_ROULETTE_TICKET_TYPES = {

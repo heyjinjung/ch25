@@ -1,4 +1,4 @@
-"""V2 admin marketing (message/survey) schemas.
+﻿"""V2 admin marketing (message/survey) schemas.
 
 - Purpose: Minimal DTOs for V2 Admin UI marketing pages.
 - Note: All datetime values are serialized in KST via KstBaseModel.
@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 SurveyQuestionUiType = Literal["SINGLE", "MULTIPLE", "TEXT"]

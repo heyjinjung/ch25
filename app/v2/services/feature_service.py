@@ -1,4 +1,4 @@
-"""V2 FeatureService no-op shim.
+﻿"""V2 FeatureService no-op shim.
 
 This file provides a minimal, always-allow `FeatureService` implementation for v2
 so that game engines no longer import the V1 `app.services.feature_service`.

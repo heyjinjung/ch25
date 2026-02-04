@@ -1,9 +1,9 @@
-"""V2 level reward table schemas."""
+﻿"""V2 level reward table schemas."""
 from __future__ import annotations
 
 from typing import Optional
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class V2LevelRewardRow(BaseModel):

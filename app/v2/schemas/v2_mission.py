@@ -1,4 +1,4 @@
-"""V2 schemas for mission APIs."""
+﻿"""V2 schemas for mission APIs."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class MissionSchema(BaseModel):

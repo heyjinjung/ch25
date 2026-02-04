@@ -1,4 +1,4 @@
-"""V2 admin message fan-out service."""
+﻿"""V2 admin message fan-out service."""
 from __future__ import annotations
 
 from typing import Iterable

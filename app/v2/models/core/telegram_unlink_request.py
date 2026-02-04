@@ -1,4 +1,4 @@
-"""Telegram Unlink Request model for 409 conflict resolution."""
+﻿"""Telegram Unlink Request model for 409 conflict resolution."""
 
 from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text

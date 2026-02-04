@@ -1,4 +1,4 @@
-"""V2 Admin schemas for segment_rule CRUD."""
+﻿"""V2 Admin schemas for segment_rule CRUD."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminSegmentRuleResponse(BaseModel):

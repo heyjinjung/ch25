@@ -1,4 +1,4 @@
-"""V2 reward delivery service (minimized V1 dependencies)."""
+﻿"""V2 reward delivery service (minimized V1 dependencies)."""
 from __future__ import annotations
 
 from typing import Any

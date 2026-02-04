@@ -1,4 +1,4 @@
-"""Golden V2 event worker (bridge ch25_events -> golden:v2 channels)."""
+﻿"""Golden V2 event worker (bridge ch25_events -> golden:v2 channels)."""
 from __future__ import annotations
 
 import asyncio

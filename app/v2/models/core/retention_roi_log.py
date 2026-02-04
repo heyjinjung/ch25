@@ -1,4 +1,4 @@
-"""Retention ROI log model for Golden."""
+﻿"""Retention ROI log model for Golden."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String

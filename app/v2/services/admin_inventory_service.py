@@ -1,4 +1,4 @@
-"""V2 admin-specific inventory and wallet management service."""
+﻿"""V2 admin-specific inventory and wallet management service."""
 from __future__ import annotations
 from typing import Any, List, Optional
 from sqlalchemy.orm import Session

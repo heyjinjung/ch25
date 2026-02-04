@@ -1,4 +1,4 @@
-"""
+﻿"""
 HQ Margin Stats Service.
 
 This service aggregates specific statistics related to HQ Margin data 

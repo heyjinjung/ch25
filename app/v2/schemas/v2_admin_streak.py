@@ -1,9 +1,9 @@
-"""V2 Admin Streak Schema."""
+﻿"""V2 Admin Streak Schema."""
 from datetime import date, datetime
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class StreakDailyMetric(BaseModel):

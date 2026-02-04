@@ -1,4 +1,4 @@
-from datetime import datetime, time
+﻿from datetime import datetime, time
 from enum import Enum
 from typing import Optional
 

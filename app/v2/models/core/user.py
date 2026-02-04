@@ -1,4 +1,4 @@
-"""User model definition."""
+﻿"""User model definition."""
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, Column, Date, DateTime, Integer, String

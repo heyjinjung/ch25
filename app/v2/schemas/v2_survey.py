@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for survey feature."""
+﻿"""V2 Pydantic schemas for survey feature."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class SurveyStatus(str, Enum):

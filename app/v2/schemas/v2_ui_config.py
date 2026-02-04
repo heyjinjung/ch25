@@ -1,4 +1,4 @@
-"""V2 schemas for public/admin UI configuration."""
+﻿"""V2 schemas for public/admin UI configuration."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class UiConfigResponse(BaseModel):

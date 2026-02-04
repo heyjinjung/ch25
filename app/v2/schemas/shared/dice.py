@@ -1,4 +1,4 @@
-"""Pydantic schemas for dice APIs (V2 aligned)."""
+﻿"""Pydantic schemas for dice APIs (V2 aligned)."""
 from __future__ import annotations
 
 from typing import Literal, Optional
@@ -6,7 +6,7 @@ from typing import Literal, Optional
 from app.v2.schemas.base import KstBaseModel as BaseModel
 
 from app.models.feature import FeatureType
-from app.schemas.mission import StreakInfoSchema
+from app.v2.schemas.shared.mission import StreakInfoSchema
 
 GameResult = Literal["WIN", "LOSE", "DRAW"]
 DiceResult = GameResult

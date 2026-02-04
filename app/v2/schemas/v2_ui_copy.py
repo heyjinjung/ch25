@@ -1,4 +1,4 @@
-"""V2 schemas for admin-configurable UI copy wrappers.
+﻿"""V2 schemas for admin-configurable UI copy wrappers.
 
 This intentionally reuses the existing app_ui_config storage.
 """
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class Ticket0ResolutionCopy(BaseModel):

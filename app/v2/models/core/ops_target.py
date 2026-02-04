@@ -1,4 +1,4 @@
-"""Ops target list models for grouping users in operational plans.
+﻿"""Ops target list models for grouping users in operational plans.
 
 Based on spec: docs/06_ops/202601/20260113_ops_crisis_scenarios_spec.md
 """

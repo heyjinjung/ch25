@@ -1,4 +1,4 @@
-"""V2 UiConfig service (v2-only import surface)."""
+﻿"""V2 UiConfig service (v2-only import surface)."""
 from __future__ import annotations
 
 from typing import Any, Optional

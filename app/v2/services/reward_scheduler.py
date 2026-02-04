@@ -1,4 +1,4 @@
-"""V2 reward scheduling utilities."""
+﻿"""V2 reward scheduling utilities."""
 from __future__ import annotations
 
 import math

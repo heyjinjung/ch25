@@ -1,5 +1,5 @@
-"""V2 Exchange Schema."""
-from app.schemas.base import KstBaseModel as BaseModel
+﻿"""V2 Exchange Schema."""
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.models import GameTokenType
 
 class CraftRequest(BaseModel):

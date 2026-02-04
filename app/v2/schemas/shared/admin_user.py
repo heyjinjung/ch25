@@ -1,4 +1,4 @@
-"""Admin user CRUD schemas."""
+﻿"""Admin user CRUD schemas."""
 from datetime import datetime
 from typing import Optional, List, Annotated
 
@@ -78,4 +78,4 @@ class AdminUserResponse(AdminUserBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-from app.schemas.admin_user_summary import AdminUserSummary  # noqa: E402
+from app.v2.schemas.shared.admin_user_summary import AdminUserSummary  # noqa: E402

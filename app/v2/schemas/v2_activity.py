@@ -1,4 +1,4 @@
-"""V2 Activity Ingestion Schema."""
+﻿"""V2 Activity Ingestion Schema."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -8,7 +8,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class ActivityEventType(str, Enum):

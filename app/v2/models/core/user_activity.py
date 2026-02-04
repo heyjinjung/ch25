@@ -1,4 +1,4 @@
-"""User activity aggregation table for personalization/segmentation."""
+﻿"""User activity aggregation table for personalization/segmentation."""
 
 from datetime import datetime
 

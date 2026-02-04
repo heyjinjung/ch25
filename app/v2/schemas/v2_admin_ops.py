@@ -1,4 +1,4 @@
-"""V2 admin ops schemas."""
+﻿"""V2 admin ops schemas."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 SystemStatus = Literal["OK", "DEGRADED", "ERROR"]
 

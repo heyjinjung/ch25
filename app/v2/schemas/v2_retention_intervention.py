@@ -1,10 +1,10 @@
-"""V2 schemas for retention intervention API."""
+﻿"""V2 schemas for retention intervention API."""
 
 from __future__ import annotations
 
 from typing import Any, Optional
 
-from app.schemas.base import KstBaseModel
+from app.v2.schemas.base import KstBaseModel
 
 
 class RetentionInterventionRequest(KstBaseModel):

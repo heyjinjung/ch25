@@ -1,4 +1,4 @@
-"""CSV import service for external casino logs."""
+﻿"""CSV import service for external casino logs."""
 from __future__ import annotations
 
 import csv

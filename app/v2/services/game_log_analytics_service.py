@@ -1,4 +1,4 @@
-"""Game Log Analytics Service for CSV-based revenue and risk analysis.
+﻿"""Game Log Analytics Service for CSV-based revenue and risk analysis.
 
 This service provides real-time analytics based on imported game log CSV data:
 - Revenue/expense tracking (today, weekly)

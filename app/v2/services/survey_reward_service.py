@@ -1,4 +1,4 @@
-"""V2 survey reward orchestration.
+﻿"""V2 survey reward orchestration.
 
 Note: This is a V2 wrapper that keeps reward delivery behavior identical to V1,
 while allowing V2 routes to avoid importing V1 survey services.

@@ -1,11 +1,11 @@
-"""V2 ops execution result schemas."""
+﻿"""V2 ops execution result schemas."""
 from __future__ import annotations
 
 from typing import List, Literal, Optional
 
 from pydantic import ConfigDict
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class OpsExecutionError(BaseModel):

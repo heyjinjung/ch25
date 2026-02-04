@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for Telegram Mini App authentication."""
+﻿"""V2 Pydantic schemas for Telegram Mini App authentication."""
 
 from __future__ import annotations
 

@@ -1,12 +1,12 @@
-"""V2 game action schemas."""
+﻿"""V2 game action schemas."""
 from __future__ import annotations
 
 from typing import Literal, Optional
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
-from app.schemas.mission import StreakInfoSchema
+from app.v2.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.shared.mission import StreakInfoSchema
 
 RewardType = Literal[
     "POINT",

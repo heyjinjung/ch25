@@ -1,4 +1,4 @@
-"""CSV-to-Redis event transformation service."""
+﻿"""CSV-to-Redis event transformation service."""
 from __future__ import annotations
 
 import json

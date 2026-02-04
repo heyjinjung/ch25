@@ -1,4 +1,4 @@
-# /workspace/ch25/app/models/season_pass.py
+﻿# /workspace/ch25/app/models/season_pass.py
 from sqlalchemy import (
     Boolean,
     CheckConstraint,

@@ -1,4 +1,4 @@
-"""V2 roulette gameplay service (router-independent).
+﻿"""V2 roulette gameplay service (router-independent).
 
 This service intentionally does NOT get wired to any API router yet.
 It exists as a V2-native engine that uses V2 config/log tables.
@@ -18,7 +18,7 @@ from app.core.config import get_settings
 from app.core.exceptions import ForbiddenError, InvalidConfigError, DailyLimitReachedError
 from app.v2.models import FeatureType
 from app.v2.models import GameTokenType
-from app.schemas.roulette import (
+from app.v2.schemas.shared.roulette import (
     RoulettePlayResponse,
     RouletteSegmentSchema,
     RouletteStatusResponse,

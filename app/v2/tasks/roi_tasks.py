@@ -1,4 +1,4 @@
-"""
+﻿"""
 ROI Analysis Celery Tasks
 """
 import logging

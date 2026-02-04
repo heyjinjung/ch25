@@ -1,4 +1,4 @@
-"""V2 Team Battle service (v2-only).
+﻿"""V2 Team Battle service (v2-only).
 
 This service mirrors the subset of behavior needed by V2 routes without importing
 legacy (v1) services.

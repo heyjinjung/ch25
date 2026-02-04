@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for Shop product overrides / custom products.
+﻿"""V2 Pydantic schemas for Shop product overrides / custom products.
 
 These schemas provide strict validation for admin-driven runtime changes
 to shop products without code deploys.
@@ -12,7 +12,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from app.schemas.base import KstBaseModel
+from app.v2.schemas.base import KstBaseModel
 from app.v2.models import GameTokenType
 
 

@@ -1,4 +1,4 @@
-"""V2 admin economy schemas."""
+﻿"""V2 admin economy schemas."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 WithdrawalStatus = Literal["PENDING", "APPROVED", "REJECTED"]
 DepositStatus = Literal["PENDING", "APPROVED", "REJECTED"]

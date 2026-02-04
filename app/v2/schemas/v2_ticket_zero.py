@@ -1,4 +1,4 @@
-"""V2 ticket zero schemas."""
+﻿"""V2 ticket zero schemas."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.schemas.v2_admin_game_config import TicketType
 
 

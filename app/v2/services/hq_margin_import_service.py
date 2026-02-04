@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import logging
 import chardet
 from datetime import datetime

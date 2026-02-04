@@ -1,4 +1,4 @@
-"""Vault earn event log (idempotent).
+﻿"""Vault earn event log (idempotent).
 
 This table records accrual events that add to the Phase 1 vault locked balance.
 """

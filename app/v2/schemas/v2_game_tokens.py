@@ -1,7 +1,7 @@
-"""V2 Schemas for game token grants and wallet balances."""
+﻿"""V2 Schemas for game token grants and wallet balances."""
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.schemas.v2_admin_user_summary import AdminUserSummary
 
 from app.v2.models import GameTokenType

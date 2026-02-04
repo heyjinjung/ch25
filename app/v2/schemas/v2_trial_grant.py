@@ -1,8 +1,8 @@
-"""V2 schemas for trial ticket grants."""
+﻿"""V2 schemas for trial ticket grants."""
 
 from __future__ import annotations
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.models import GameTokenType
 
 

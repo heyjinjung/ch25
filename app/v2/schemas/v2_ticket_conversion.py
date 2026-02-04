@@ -1,11 +1,11 @@
-"""V2 ticket conversion policy schemas."""
+﻿"""V2 ticket conversion policy schemas."""
 from __future__ import annotations
 
 from datetime import datetime
 
 from pydantic import ConfigDict, Field, field_validator
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.schemas.v2_admin_game_config import TicketType
 
 

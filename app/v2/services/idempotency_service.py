@@ -1,4 +1,4 @@
-"""V2 Idempotency helpers for write operations."""
+﻿"""V2 Idempotency helpers for write operations."""
 from __future__ import annotations
 
 import hashlib

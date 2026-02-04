@@ -1,10 +1,10 @@
-"""V2 Admin User CRUD Schema."""
+﻿"""V2 Admin User CRUD Schema."""
 from datetime import datetime
 from typing import Optional, List, Annotated
 
 from pydantic import ConfigDict, Field, AliasChoices
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminUserProfileSchema(BaseModel):

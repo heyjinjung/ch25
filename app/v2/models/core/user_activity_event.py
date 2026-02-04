@@ -1,4 +1,4 @@
-"""Idempotency log for /api/activity/record events."""
+﻿"""Idempotency log for /api/activity/record events."""
 
 from __future__ import annotations
 

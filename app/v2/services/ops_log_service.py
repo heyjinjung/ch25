@@ -1,4 +1,4 @@
-"""V2 ops log service (minimal, v2-only import surface)."""
+﻿"""V2 ops log service (minimal, v2-only import surface)."""
 from __future__ import annotations
 
 from datetime import date, datetime

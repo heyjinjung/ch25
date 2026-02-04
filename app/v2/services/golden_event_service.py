@@ -1,4 +1,4 @@
-"""Golden V2 event publisher (Redis Pub/Sub)."""
+﻿"""Golden V2 event publisher (Redis Pub/Sub)."""
 from __future__ import annotations
 
 import json

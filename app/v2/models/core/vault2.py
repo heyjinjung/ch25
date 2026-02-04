@@ -1,4 +1,4 @@
-"""Vault 2.0 scaffold models.
+﻿"""Vault 2.0 scaffold models.
 
 IMPORTANT: These tables are not yet wired into gameplay.
 They exist to support a future Vault state machine rollout.

@@ -1,4 +1,4 @@
-"""Paste Import Service - 클립보드 붙여넣기로 데이터 Import
+﻿"""Paste Import Service - 클립보드 붙여넣기로 데이터 Import
 
 두 가지 형식 지원:
 1. 게임 로그: 번호/이름/닉네임/타입/베팅일시/게임종류/금액

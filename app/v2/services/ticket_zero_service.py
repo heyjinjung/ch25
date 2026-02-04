@@ -1,4 +1,4 @@
-"""V2 Ticket Zero eligibility service."""
+﻿"""V2 Ticket Zero eligibility service."""
 from __future__ import annotations
 
 from dataclasses import dataclass

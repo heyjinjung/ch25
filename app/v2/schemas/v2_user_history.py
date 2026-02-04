@@ -1,4 +1,4 @@
-"""V2 schemas for user identity history."""
+﻿"""V2 schemas for user identity history."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Optional
 
 from pydantic import ConfigDict
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class UserIdentityHistoryResponse(BaseModel):

@@ -1,4 +1,4 @@
-"""V2 Service layer for admin ops logging."""
+﻿"""V2 Service layer for admin ops logging."""
 from __future__ import annotations
 
 import json

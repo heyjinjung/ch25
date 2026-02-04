@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for season pass APIs."""
+﻿"""V2 Pydantic schemas for season pass APIs."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Optional
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class SeasonInfo(BaseModel):

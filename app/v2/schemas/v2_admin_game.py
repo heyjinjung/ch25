@@ -1,4 +1,4 @@
-"""V2 admin game configuration schemas."""
+﻿"""V2 admin game configuration schemas."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 RouletteGrade = Literal["COMMON", "VIP", "WHALE", "AT_RISK"]
 # V2 SoT RewardType 확장 + 운영 호환(LEGACY 포함)

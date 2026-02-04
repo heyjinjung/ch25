@@ -1,4 +1,4 @@
-"""Vault 2.0 scaffold service.
+﻿"""Vault 2.0 scaffold service.
 
 Phase 2/3-stage rollout prep:
 - Adds optional state transition helpers (locked→available→expired).

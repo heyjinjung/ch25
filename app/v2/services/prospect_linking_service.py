@@ -1,4 +1,4 @@
-"""Prospect Linking Service - Admin 수동 매칭 + 유저 자체 연동 지원."""
+﻿"""Prospect Linking Service - Admin 수동 매칭 + 유저 자체 연동 지원."""
 from __future__ import annotations
 
 import logging

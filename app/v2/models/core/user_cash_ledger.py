@@ -1,4 +1,4 @@
-"""Ledger for cash balance changes with metadata/label."""
+﻿"""Ledger for cash balance changes with metadata/label."""
 
 from datetime import datetime
 

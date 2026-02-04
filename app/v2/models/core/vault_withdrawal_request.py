@@ -1,4 +1,4 @@
-"""Vault withdrawal request model."""
+﻿"""Vault withdrawal request model."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String

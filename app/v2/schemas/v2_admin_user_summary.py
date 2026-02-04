@@ -1,11 +1,11 @@
-"""V2 Admin User Summary Schema."""
+﻿"""V2 Admin User Summary Schema."""
 from __future__ import annotations
 
 from typing import Optional, List, Annotated
 
 from pydantic import ConfigDict, Field, AliasChoices
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminUserSummary(BaseModel):

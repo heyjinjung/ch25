@@ -1,7 +1,7 @@
-"""Schemas for Golden V2 intervention endpoints."""
+﻿"""Schemas for Golden V2 intervention endpoints."""
 from typing import Any, Optional
 
-from app.schemas.base import KstBaseModel
+from app.v2.schemas.base import KstBaseModel
 
 
 class V2RetentionInterventionRequest(KstBaseModel):

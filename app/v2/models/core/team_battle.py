@@ -1,4 +1,4 @@
-"""Team battle core models (season, team, membership, scores, logs)."""
+﻿"""Team battle core models (season, team, membership, scores, logs)."""
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, UniqueConstraint, Index

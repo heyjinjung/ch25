@@ -1,11 +1,11 @@
-"""V2 admin game config schemas."""
+﻿"""V2 admin game config schemas."""
 from __future__ import annotations
 
 from typing import List, Literal, Optional
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 TicketType = Literal[
     "ROULETTE_TICKET",

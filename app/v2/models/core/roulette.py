@@ -1,4 +1,4 @@
-"""Roulette configuration and logs."""
+﻿"""Roulette configuration and logs."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint

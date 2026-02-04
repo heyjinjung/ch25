@@ -1,4 +1,4 @@
-"""V2 CSV import schemas for external casino log integration."""
+﻿"""V2 CSV import schemas for external casino log integration."""
 from __future__ import annotations
 
 from datetime import datetime

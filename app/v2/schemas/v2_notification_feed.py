@@ -1,11 +1,11 @@
-"""V2 notification feed schemas."""
+﻿"""V2 notification feed schemas."""
 from __future__ import annotations
 
 from typing import Literal, Optional, Union
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 FeedType = Literal[
     "JACKPOT_WIN",

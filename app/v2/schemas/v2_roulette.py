@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for roulette APIs."""
+﻿"""V2 Pydantic schemas for roulette APIs."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from typing import Optional
 
 from pydantic import ConfigDict
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 from app.v2.models import FeatureType
-from app.schemas.mission import StreakInfoSchema
+from app.v2.schemas.shared.mission import StreakInfoSchema
 
 
 class RouletteSegmentSchema(BaseModel):

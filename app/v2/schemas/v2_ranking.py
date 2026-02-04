@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for ranking API."""
+﻿"""V2 Pydantic schemas for ranking API."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 from app.v2.models import FeatureType
 

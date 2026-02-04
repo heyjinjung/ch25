@@ -1,4 +1,4 @@
-"""V2 Admin Dashboard Schema."""
+﻿"""V2 Admin Dashboard Schema."""
 from datetime import datetime
 from typing import Dict, List, Optional
 

@@ -1,4 +1,4 @@
-"""V2 Team Battle Admin Service.
+﻿"""V2 Team Battle Admin Service.
 
 어드민 전용 팀배틀 관리 기능:
 - 시즌 생성/수정/종료

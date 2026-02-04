@@ -1,4 +1,4 @@
-"""V2 Pydantic schemas for ops log APIs."""
+﻿"""V2 Pydantic schemas for ops log APIs."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class OpsLogCreate(BaseModel):

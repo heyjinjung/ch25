@@ -1,9 +1,9 @@
-"""V2 game status schemas."""
+﻿"""V2 game status schemas."""
 from __future__ import annotations
 
 from typing import Optional
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.schemas.v2_game_action import LotteryPrizeV2, RouletteSegmentV2
 
 

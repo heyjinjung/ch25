@@ -1,11 +1,11 @@
-"""V2 Pydantic schemas for lottery APIs."""
+﻿"""V2 Pydantic schemas for lottery APIs."""
 from pydantic import ConfigDict
 from typing import Optional
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 from app.v2.models import FeatureType
-from app.schemas.mission import StreakInfoSchema
+from app.v2.schemas.shared.mission import StreakInfoSchema
 
 
 class LotteryPrizeSchema(BaseModel):

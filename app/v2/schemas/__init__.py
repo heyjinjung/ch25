@@ -1,4 +1,4 @@
-"""V2 schema exports."""
+﻿"""V2 schema exports."""
 from app.v2.schemas.v2_level_reward import V2LevelRewardRow, V2LevelRewardTableResponse
 from app.v2.schemas.v2_progression import V2LevelRewardLog, V2LevelStatusResponse
 from app.v2.schemas.v2_game_action import (

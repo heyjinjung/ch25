@@ -1,10 +1,10 @@
-"""V2 Admin Feature Schedule Schema."""
+﻿"""V2 Admin Feature Schedule Schema."""
 from datetime import date
 from typing import Optional
 
 from pydantic import ConfigDict
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 from app.v2.models import FeatureType
 
 

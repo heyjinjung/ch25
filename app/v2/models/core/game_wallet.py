@@ -1,4 +1,4 @@
-"""Game token wallet per user and token type."""
+﻿"""Game token wallet per user and token type."""
 from datetime import datetime
 from enum import Enum
 

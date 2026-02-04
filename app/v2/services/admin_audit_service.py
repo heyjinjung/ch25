@@ -1,4 +1,4 @@
-from typing import Any, Optional
+﻿from typing import Any, Optional
 from sqlalchemy.orm import Session
 from app.v2.models import AdminAuditLog
 

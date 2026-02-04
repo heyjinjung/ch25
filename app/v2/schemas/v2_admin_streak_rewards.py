@@ -1,9 +1,9 @@
-"""V2 Admin Streak Rewards Schema."""
+﻿"""V2 Admin Streak Rewards Schema."""
 from __future__ import annotations
 
 from datetime import date, datetime
 
-from app.schemas.base import KstBaseModel
+from app.v2.schemas.base import KstBaseModel
 
 
 class StreakRewardDailyCountsResponse(KstBaseModel):

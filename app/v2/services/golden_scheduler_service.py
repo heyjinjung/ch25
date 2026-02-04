@@ -1,4 +1,4 @@
-"""
+﻿"""
 [DEPRECATED 2026-02-04] Golden Scheduler Service - 폐기됨
 
 ⚠️ 이 서비스는 더 이상 사용하지 않습니다.

@@ -1,4 +1,4 @@
-"""V2 auth service."""
+﻿"""V2 auth service."""
 from __future__ import annotations
 
 import uuid

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unmatched Deposit Log Cleanup Celery Tasks
 
 설계 문서: v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md

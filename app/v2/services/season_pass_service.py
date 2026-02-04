@@ -1,4 +1,4 @@
-"""V2 season pass wrapper (v2 import surface)."""
+﻿"""V2 season pass wrapper (v2 import surface)."""
 from __future__ import annotations
 
 from datetime import date, datetime

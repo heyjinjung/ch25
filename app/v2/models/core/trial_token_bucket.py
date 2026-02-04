@@ -1,4 +1,4 @@
-"""Tracks how many game tokens a user currently has that originated from TRIAL_GRANT.
+﻿"""Tracks how many game tokens a user currently has that originated from TRIAL_GRANT.
 
 This enables reliable routing of trial-play rewards into Vault without heuristics.
 """
@@ -9,7 +9,7 @@ from sqlalchemy import Column, DateTime, Enum as SAEnum, ForeignKey, Integer, Un
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.game_wallet import GameTokenType
+from app.v2.models.core.game_wallet import GameTokenType
 
 
 class TrialTokenBucket(Base):

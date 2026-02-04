@@ -1,4 +1,4 @@
-"""Pydantic schemas for unmatched deposit log APIs.
+﻿"""Pydantic schemas for unmatched deposit log APIs.
 
 설계 문서: v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 섹션 8. API 계약 (미매칭 입금 로그)
@@ -9,7 +9,7 @@ from typing import Optional
 
 from pydantic import ConfigDict, Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 # =============================================================================

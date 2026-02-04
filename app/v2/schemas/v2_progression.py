@@ -1,4 +1,4 @@
-"""V2 progression (level point) schemas."""
+﻿"""V2 progression (level point) schemas."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from pydantic import Field
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class V2LevelRewardLog(BaseModel):

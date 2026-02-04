@@ -1,4 +1,4 @@
-"""Legacy VaultService bridge for v2 surface area."""
+﻿"""Legacy VaultService bridge for v2 surface area."""
 from __future__ import annotations
 
 from datetime import datetime

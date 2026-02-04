@@ -1,10 +1,10 @@
-"""V2 Admin Season Schema."""
+﻿"""V2 Admin Season Schema."""
 from datetime import date, datetime
 from typing import List, Optional
 
 from pydantic import ConfigDict, Field, field_validator
 
-from app.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.base import KstBaseModel as BaseModel
 
 
 class AdminSeasonBase(BaseModel):
