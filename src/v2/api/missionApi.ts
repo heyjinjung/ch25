@@ -81,6 +81,7 @@ export interface StreakInfoDto {
   readonly current_streak: number;
   readonly today_completed: boolean;
   readonly last_completed_date: string | null;
+  readonly claimable_day?: number | null;
   readonly claimable_rewards: number[];
 }
 
@@ -192,6 +193,7 @@ const mapBackendStreakInfo = (
     current_streak: currentStreak,
     today_completed: false,
     last_completed_date: null,
+    claimable_day: claimableDay,
     claimable_rewards: claimableRewards,
   };
 };

@@ -105,7 +105,7 @@ export default function MissionsPage() {
   };
 
   const { missions = [], streak_info } = data || {};
-  const claimableDay = streak_info?.claimable_rewards?.[0] ?? null;
+  const claimableDay = streak_info?.claimable_day ?? null;
 
   return (
     <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]">
