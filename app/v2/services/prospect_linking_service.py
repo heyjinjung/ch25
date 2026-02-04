@@ -182,6 +182,11 @@ class ProspectLinkingService:
         """
         Admin이 잠재 유저를 V2User와 수동 연결.
         
+        신규 유저 정책 (2026-02-04):
+        - 연결 시 세그먼트는 NEW 유지 (신규 유저 미션 진행을 위해)
+        - 원래 세그먼트(VIP, WHALE 등)는 pending_segment에 저장
+        - 가입일 기준 7일 후 오전 9시(KST)에 자동 전환
+        
         Returns:
             {"success": bool, "message": str, "prospect": dict, "user": dict}
         """
@@ -209,19 +214,29 @@ class ProspectLinkingService:
         # V2User 업데이트
         user.external_nickname = prospect.nickname
         user.external_linked_at = now
-        user.hq_segment = prospect.segment
+        user.hq_segment = prospect.segment  # 참조용으로 원본 세그먼트 저장
         
-        # V2UserSegment도 업데이트 (존재하면)
+        # V2UserSegment 업데이트 - NEW 유지, pending_segment에 원래 세그먼트 저장
         segment = self.db.query(V2UserSegment).filter_by(user_id=user_id).first()
         if segment:
-            segment.segment = prospect.segment
+            # 현재 세그먼트가 NEW면 유지, 아니면 NEW로 설정
+            if segment.segment != "NEW":
+                segment.pending_segment = prospect.segment  # 원래 세그먼트 보관
+                segment.segment = "NEW"  # 7일간 NEW 유지
+            else:
+                segment.pending_segment = prospect.segment  # 원래 세그먼트 보관
+            segment.total_margin = prospect.total_margin or 0
+            segment.total_charge = prospect.total_charge or 0
             segment.is_synced_from_hq = True
             segment.last_synced_at = now
         else:
-            # 새로 생성
+            # 새로 생성 - NEW로 시작, pending_segment에 원래 세그먼트 저장
             new_segment = V2UserSegment(
                 user_id=user_id,
-                segment=prospect.segment,
+                segment="NEW",  # 7일간 NEW 유지
+                pending_segment=prospect.segment,  # 원래 세그먼트 보관
+                total_margin=prospect.total_margin or 0,
+                total_charge=prospect.total_charge or 0,
                 is_synced_from_hq=True,
                 last_synced_at=now
             )
@@ -229,11 +244,11 @@ class ProspectLinkingService:
         
         self.db.commit()
         
-        logger.info(f"[ProspectLink] Admin {admin_id} linked prospect {prospect_id} ({prospect.nickname}) to user {user_id}")
+        logger.info(f"[ProspectLink] Admin {admin_id} linked prospect {prospect_id} ({prospect.nickname}) to user {user_id}. Segment: NEW (pending: {prospect.segment})")
         
         return {
             "success": True,
-            "message": f"'{prospect.nickname}'이(가) 유저 #{user_id}와 연결되었습니다. 세그먼트: {prospect.segment}",
+            "message": f"'{prospect.nickname}'이(가) 유저 #{user_id}와 연결되었습니다. 현재: NEW (7일 후 {prospect.segment} 적용 예정)",
             "prospect": {
                 "id": prospect.id,
                 "nickname": prospect.nickname,
@@ -243,7 +258,9 @@ class ProspectLinkingService:
                 "id": user.id,
                 "nickname": user.nickname,
                 "external_nickname": user.external_nickname,
-                "hq_segment": user.hq_segment
+                "hq_segment": user.hq_segment,
+                "current_segment": "NEW",
+                "pending_segment": prospect.segment
             }
         }
     
@@ -333,16 +350,26 @@ class ProspectLinkingService:
             user.external_linked_at = now
             user.hq_segment = prospect.segment
             
-            # V2UserSegment 업데이트
+            # V2UserSegment 업데이트 - NEW 유지, pending_segment에 원래 세그먼트 저장
             segment = self.db.query(V2UserSegment).filter_by(user_id=user_id).first()
             if segment:
-                segment.segment = prospect.segment
+                # 현재 세그먼트가 NEW면 유지, 아니면 NEW로 설정
+                if segment.segment != "NEW":
+                    segment.pending_segment = prospect.segment  # 원래 세그먼트 보관
+                    segment.segment = "NEW"  # 7일간 NEW 유지
+                else:
+                    segment.pending_segment = prospect.segment  # 원래 세그먼트 보관
+                segment.total_margin = prospect.total_margin or 0
+                segment.total_charge = prospect.total_charge or 0
                 segment.is_synced_from_hq = True
                 segment.last_synced_at = now
             else:
                 new_segment = V2UserSegment(
                     user_id=user_id,
-                    segment=prospect.segment,
+                    segment="NEW",  # 7일간 NEW 유지
+                    pending_segment=prospect.segment,  # 원래 세그먼트 보관
+                    total_margin=prospect.total_margin or 0,
+                    total_charge=prospect.total_charge or 0,
                     is_synced_from_hq=True,
                     last_synced_at=now
                 )
@@ -350,19 +377,20 @@ class ProspectLinkingService:
             
             self.db.commit()
             
-            logger.info(f"[SelfLink] User {user_id} linked to prospect {prospect.id} ({prospect.nickname}), segment: {prospect.segment}")
+            logger.info(f"[SelfLink] User {user_id} linked to prospect {prospect.id} ({prospect.nickname}), segment: NEW (pending: {prospect.segment})")
             
-            # 세그먼트별 메시지
-            segment_benefits = {
-                "VIP": "🎉 VIP 회원으로 등록되었습니다! 일일 보너스 2배, 전용 이벤트 참여 자격이 부여됩니다.",
-                "WHALE": "🐋 WHALE(큰손) 회원으로 등록되었습니다! 최고 등급 혜택이 적용됩니다.",
-                "AT_RISK": "계정이 연동되었습니다. 특별 복귀 보너스를 확인해보세요!",
+            # 세그먼트 예고 메시지 (실제 적용은 7일 후)
+            segment_preview = {
+                "VIP": "🎉 VIP 회원으로 확인되었습니다! 신규 회원 이벤트 참여 후(7일) VIP 혜택이 적용됩니다.",
+                "WHALE": "🐋 WHALE(큰손) 회원으로 확인되었습니다! 신규 회원 이벤트 참여 후(7일) 최고 등급 혜택이 적용됩니다.",
+                "AT_RISK": "계정이 연동되었습니다. 신규 회원 이벤트 종료 후 특별 복귀 보너스를 확인해보세요!",
             }
             
             return {
                 "success": True,
-                "message": segment_benefits.get(prospect.segment, "계정이 성공적으로 연동되었습니다!"),
-                "segment": prospect.segment,
+                "message": segment_preview.get(prospect.segment, "계정이 성공적으로 연동되었습니다! 신규 회원 이벤트(7일)가 먼저 적용됩니다."),
+                "current_segment": "NEW",
+                "pending_segment": prospect.segment,
                 "total_margin": prospect.total_margin,
                 "total_charge": prospect.total_charge
             }

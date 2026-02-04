@@ -480,7 +480,7 @@ const SEGMENT_OPTIONS = [
 ├─────────────────────────────────────────────────────────────────────┤
 │  금고(Vault)      ✅ NEW/AT_RISK → 출금조건 강화 (입금 기반 면제도 있음) │
 │  입금(Deposit)    ✅ HQ Import → 세그먼트 자동분류                   │
-│  게임(Game)       ✅ 룰렛 접근제한 폐기됨 (SoT: 티켓만 있으면 접근 가능) │
+│  게임(Game)       🗑️ 접근제한 폐기됨 (SoT: 티켓만 있으면 접근 가능) │
 │  이벤트(Event)    ✅ target_segment → 이벤트 타겟팅                  │
 │  골든아워         🗑️ 자동 후보 선정 폐기됨 (복잡도 대비 실익 불분명)   │
 │  리텐션           ✅ AT_RISK → 개입대상 (CRM 키 통합 완료)            │
@@ -583,11 +583,83 @@ Remove-Item "alembic/versions/20260204_1500_18e1aca5529f_refactor_survey_fk_to_v
 | 8 | DB CHECK 제약조건 Migration 적용 | ✅ 완료 |
 | 9 | 잘못된 Survey Migration 삭제 | ✅ 완료 |
 | 10 | Survey FK V2User 연결 확인 | ✅ 정상 |
+| 11 | 신규 유저 7일 보호 기능 구현 | ✅ 완료 |
 
-### 📋 현재 Alembic 상태
+---
+
+## 15. 신규 유저 7일 보호 정책 (2026-02-04 신규)
+
+### 15.1 문제 상황
+- HQ 잠재유저(Prospect) 연결 시 즉시 VIP/WHALE 등으로 세그먼트 변경
+- 신규 유저 미션(NEW_USER 카테고리) 진행 불가 문제 발생
+
+### 15.2 해결 방안
+
+**정책**:
+- 모든 신규 가입자는 **가입일 기준 7일간 NEW 세그먼트 유지**
+- HQ에서 가져온 원래 세그먼트는 `pending_segment` 컬럼에 저장
+- **가입 후 7일 + 오전 9시(KST)** 에 `pending_segment` 자동 적용
+
+### 15.3 변경 내역
+
+#### 1) 모델 변경 (`v2_user_segment.py`)
+```python
+pending_segment = Column(String(50), nullable=True, 
+                         comment="7일 후 적용할 세그먼트 (NEW 보호 기간용)")
+```
+
+#### 2) Migration 추가
+- 파일: `20260204_0300_add_pending_segment.py`
+- 변경: `v2_user_segment` 테이블에 `pending_segment` 컬럼 추가
+
+#### 3) Prospect 연결 로직 변경 (`prospect_linking_service.py`)
+
+| 변경 전 | 변경 후 |
+|---------|---------|
+| `segment = prospect.segment` | `segment = "NEW"` |
+| - | `pending_segment = prospect.segment` |
+
+#### 4) 세그먼트 서비스 추가 (`segment_service.py`)
+
+| 함수 | 용도 |
+|------|------|
+| `_is_new_protection_expired()` | 7일 보호 기간 종료 여부 확인 |
+| `apply_pending_segments()` | 보호 기간 종료 유저 일괄 전환 |
+| `get_user_segment_with_pending()` | 유저별 pending 정보 조회 |
+
+#### 5) Admin API 추가 (`segment_routes.py`)
+
+| 엔드포인트 | 용도 |
+|-----------|------|
+| `POST /segments/batch/apply-pending` | pending_segment 일괄 적용 (스케줄러/수동) |
+| `GET /segments/user/{user_id}/pending` | 유저별 보호 상태 조회 |
+
+### 15.4 운영 가이드
+
+**매일 오전 9시(KST) 이후** 아래 API 호출로 보호 기간 종료 유저 일괄 전환:
+```bash
+curl -X POST https://api.example.com/admin/segments/batch/apply-pending
+```
+
+**응답 예시**:
+```json
+{
+  "processed": 15,
+  "changed": 3,
+  "errors": 0,
+  "details": [
+    {"user_id": 123, "old_segment": "NEW", "new_segment": "VIP"},
+    {"user_id": 456, "old_segment": "NEW", "new_segment": "WHALE"}
+  ]
+}
+```
+
+---
+
+## 16. 현재 Alembic 상태
 
 ```
-현재 HEAD: 20260204_0200_add_segment_check_constraint
+현재 HEAD: 20260204_0300_add_pending_segment
 상태: 정상 (모든 migration 적용됨)
 ```
 
@@ -596,4 +668,5 @@ Remove-Item "alembic/versions/20260204_1500_18e1aca5529f_refactor_survey_fk_to_v
 - [ ] `V2User.hq_segment` vs `V2UserSegment.segment` 이중 저장 해소
 - [ ] WINNER 세그먼트 비즈니스 로직 정의
 - [ ] 보상/레벨 세그먼트 차등 적용 검토
+- [ ] apply-pending API 스케줄러 자동화
 

@@ -11,6 +11,10 @@ class V2UserSegment(Base):
     
     HQ Margin CSV 연동 시 자동 업데이트되며,
     잠재 유저 매칭 시에도 세그먼트 정보가 동기화됩니다.
+    
+    신규 유저 정책 (2026-02-04):
+    - 가입 후 7일간은 NEW 세그먼트 강제 유지
+    - 7일 후 오전 9시(KST) 이후에 pending_segment로 자동 전환
     """
 
     __tablename__ = "v2_user_segment"
@@ -20,6 +24,9 @@ class V2UserSegment(Base):
 
     user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
     segment = Column(String(50), nullable=False, default="COMMON")
+    
+    # 신규 유저 보호 기간 종료 후 적용할 세그먼트 (HQ에서 가져온 원래 세그먼트)
+    pending_segment = Column(String(50), nullable=True, comment="7일 후 적용할 세그먼트 (NEW 보호 기간용)")
     
     # HQ Margin CSV 연동 데이터
     total_margin = Column(BigInteger, nullable=True, default=0, comment="총 운영 마진 (충전 - 환전)")

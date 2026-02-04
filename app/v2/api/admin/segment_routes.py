@@ -38,6 +38,57 @@ def run_segment_batch(
     return result
 
 
+@router.post("/segments/batch/apply-pending")
+def apply_pending_segments(
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    7일 보호 기간이 종료된 유저들의 pending_segment를 적용.
+    
+    - 현재 segment가 NEW이고
+    - pending_segment가 있고
+    - 가입일 + 7일 + 오전 9시(KST)가 지났으면 세그먼트 전환
+    
+    매일 오전 9시(KST) 이후 스케줄러 또는 수동으로 실행.
+    """
+    admin_id, _ = admin_info
+    result = V2SegmentService.apply_pending_segments(db)
+    
+    # 감사 로그
+    log_admin_action(
+        db,
+        admin_id=admin_id,
+        action="SEGMENT_APPLY_PENDING",
+        target_type="segment",
+        after={
+            "processed": result.get("processed"),
+            "changed": result.get("changed"),
+            "errors": result.get("errors"),
+        },
+    )
+    
+    return result
+
+
+@router.get("/segments/user/{user_id}/pending")
+def get_user_segment_pending_info(
+    user_id: int,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    특정 유저의 세그먼트 정보와 보호 기간 상태 조회.
+    
+    Returns:
+        - segment: 현재 세그먼트
+        - pending_segment: 7일 후 적용될 세그먼트 (없으면 null)
+        - is_protected: NEW 보호 기간 중인지
+        - protection_ends_at: 보호 기간 종료 시점 (KST, ISO format)
+    """
+    return V2SegmentService.get_user_segment_with_pending(db, user_id)
+
+
 @router.get("/segments/stats")
 def get_segment_stats(
     db: Session = Depends(get_db),

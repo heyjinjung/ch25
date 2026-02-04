@@ -426,3 +426,162 @@ class V2SegmentService:
                 "AT_RISK": db.execute(select(func.count(V2UserSegment.user_id)).where(V2UserSegment.segment == "AT_RISK")).scalar() or 0,
             }
         }
+
+    # ========================================================================
+    # 신규 유저(NEW) 7일 보호 정책
+    # 2026-02-04 추가
+    # - 모든 신규 가입자는 7일간 NEW 세그먼트 유지
+    # - HQ 연동 시 원래 세그먼트는 pending_segment에 저장
+    # - 가입 후 7일(오전 9시 KST 이후)에 pending_segment로 자동 전환
+    # ========================================================================
+
+    @staticmethod
+    def _is_new_protection_expired(user: V2User, now_kst: datetime) -> bool:
+        """
+        신규 유저 보호 기간(7일)이 종료되었는지 확인.
+        
+        정책:
+        - 가입일 + 7일의 오전 9시(KST) 이후면 True
+        - 예: 1월 1일 가입 → 1월 8일 09:00 KST 이후 세그먼트 전환
+        """
+        created_at = getattr(user, "created_at", None)
+        if created_at is None:
+            return True  # 생성일 없으면 보호 기간 만료로 처리
+        
+        # UTC → KST 변환
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        created_kst = created_at.astimezone(ZoneInfo("Asia/Seoul"))
+        
+        # 가입일 + 7일의 오전 9시
+        protection_end = (created_kst + timedelta(days=7)).replace(
+            hour=9, minute=0, second=0, microsecond=0
+        )
+        
+        return now_kst >= protection_end
+
+    @staticmethod
+    def apply_pending_segments(db: Session) -> dict[str, Any]:
+        """
+        7일 보호 기간이 종료된 유저들의 pending_segment를 적용.
+        
+        스케줄러 또는 배치에서 호출.
+        - 현재 segment가 NEW이고
+        - pending_segment가 있고
+        - 가입일 + 7일 + 오전 9시(KST)가 지났으면 세그먼트 전환
+        
+        Returns:
+            {"processed": int, "changed": int, "errors": int, "details": list}
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+        now_kst = now_utc.astimezone(ZoneInfo("Asia/Seoul"))
+        
+        # NEW이고 pending_segment가 있는 유저 조회
+        pending_users = db.execute(
+            select(V2UserSegment)
+            .where(
+                V2UserSegment.segment == "NEW",
+                V2UserSegment.pending_segment.isnot(None)
+            )
+        ).scalars().all()
+        
+        processed = 0
+        changed = 0
+        errors = 0
+        details = []
+        
+        for segment_row in pending_users:
+            processed += 1
+            try:
+                user = db.get(V2User, segment_row.user_id)
+                if user is None:
+                    errors += 1
+                    continue
+                
+                if V2SegmentService._is_new_protection_expired(user, now_kst):
+                    old_segment = segment_row.segment
+                    new_segment = V2SegmentService.normalize_segment(segment_row.pending_segment)
+                    
+                    segment_row.segment = new_segment
+                    segment_row.pending_segment = None  # 적용 후 클리어
+                    
+                    changed += 1
+                    details.append({
+                        "user_id": segment_row.user_id,
+                        "old_segment": old_segment,
+                        "new_segment": new_segment
+                    })
+                    logger.info(
+                        f"[SegmentPromotion] User {segment_row.user_id}: "
+                        f"NEW -> {new_segment} (7일 보호 기간 종료)"
+                    )
+            except Exception as e:
+                errors += 1
+                logger.error(f"[SegmentPromotion] Error for user {segment_row.user_id}: {e}")
+        
+        db.commit()
+        
+        logger.info(
+            f"[SegmentPromotion] Batch complete: processed={processed}, "
+            f"changed={changed}, errors={errors}"
+        )
+        
+        return {
+            "processed": processed,
+            "changed": changed,
+            "errors": errors,
+            "details": details
+        }
+
+    @staticmethod
+    def get_user_segment_with_pending(db: Session, user_id: int) -> dict[str, Any]:
+        """
+        유저의 현재 세그먼트와 pending_segment 정보 조회.
+        
+        Returns:
+            {
+                "user_id": int,
+                "segment": str,
+                "pending_segment": str | None,
+                "is_protected": bool,  # NEW 보호 기간 중인지
+                "protection_ends_at": datetime | None  # 보호 기간 종료 시점 (KST)
+            }
+        """
+        segment_row = db.get(V2UserSegment, user_id)
+        user = db.get(V2User, user_id)
+        
+        if segment_row is None:
+            return {
+                "user_id": user_id,
+                "segment": "COMMON",
+                "pending_segment": None,
+                "is_protected": False,
+                "protection_ends_at": None
+            }
+        
+        protection_ends_at = None
+        is_protected = False
+        
+        if segment_row.segment == "NEW" and user is not None:
+            created_at = getattr(user, "created_at", None)
+            if created_at is not None:
+                if created_at.tzinfo is None:
+                    created_at = created_at.replace(tzinfo=timezone.utc)
+                created_kst = created_at.astimezone(ZoneInfo("Asia/Seoul"))
+                protection_ends_at = (created_kst + timedelta(days=7)).replace(
+                    hour=9, minute=0, second=0, microsecond=0
+                )
+                
+                now_kst = datetime.utcnow().replace(tzinfo=timezone.utc).astimezone(ZoneInfo("Asia/Seoul"))
+                is_protected = now_kst < protection_ends_at
+        
+        return {
+            "user_id": user_id,
+            "segment": segment_row.segment,
+            "pending_segment": segment_row.pending_segment,
+            "is_protected": is_protected,
+            "protection_ends_at": protection_ends_at.isoformat() if protection_ends_at else None
+        }
