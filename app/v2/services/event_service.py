@@ -235,3 +235,52 @@ class V2EventService:
                 )
 
         return events
+
+    def log_participation(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        event_type: str,
+        event_id: int | None = None,
+        reward_type: str | None = None,
+        reward_amount: int | None = None,
+        meta: dict | None = None,
+    ) -> None:
+        """Persist event participation log (fail-open)."""
+        log = EventParticipationLog(
+            user_id=user_id,
+            event_id=event_id,
+            event_type=event_type,
+            reward_type=reward_type,
+            reward_amount=reward_amount,
+            meta_json=meta or {},
+        )
+        db.add(log)
+        db.flush()
+
+    def safe_log_participation(
+        self,
+        db: Session,
+        *,
+        user_id: int,
+        event_type: str,
+        event_id: int | None = None,
+        reward_type: str | None = None,
+        reward_amount: int | None = None,
+        meta: dict | None = None,
+    ) -> None:
+        """Fail-open wrapper for logging participation."""
+        try:
+            self.log_participation(
+                db,
+                user_id=user_id,
+                event_type=event_type,
+                event_id=event_id,
+                reward_type=reward_type,
+                reward_amount=reward_amount,
+                meta=meta,
+            )
+        except Exception:
+            # Do not break game flow due to logging.
+            return
