@@ -131,6 +131,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 
 ### 🔧 개발 환경
 - [Alembic Legacy Migration](./v2_troubleshooting_20260120_alembic_legacy_ko.md) - DB 마이그레이션 오류
+- [V2 Legacy Purge 및 서비스 마이그레이션 완료 (02-04)](./20260204_legacy_purge_and_v2_migration_completion.md) - Vault/Event 서비스 V2 완전 전환 리포트
 
 ---
 

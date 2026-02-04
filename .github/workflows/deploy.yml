@@ -315,8 +315,8 @@ jobs:
               sleep 2
             done
 
-            # Gate(3.9 최소 자동화): /admin/api가 HTML로 빠지지 않는지 확인
-            ADMIN_URL="http://127.0.0.1/admin/api/ui-config/streak_reward_rules"
+            # Gate(3.9 최소 자동화): V2 Admin API JSON 응답 확인
+            ADMIN_URL="http://127.0.0.1/api/v2/admin/ui-config/streak_reward_rules"
             ADMIN_CODE=$(curl -sS -D /tmp/admin_headers.txt -o /tmp/admin_body.txt -w "%{http_code}" "$ADMIN_URL" || true)
             # NOTE: admin ui-config는 PUT만 인증 필요. GET은 현재 public이지만,
             #       nginx/라우팅이 깨지면 HTML(index.html)로 떨어지는 사고를 잡는 목적이므로
@@ -335,7 +335,7 @@ jobs:
             fi
             if [ "$ADMIN_CODE" = "401" ] && ! grep -q 'AUTH_REQUIRED' /tmp/admin_body.txt >/dev/null 2>&1; then
               echo "[ADMIN] Smoke failed: unexpected 401 body" >&2
-              head -n 30 /tmp/admin_body.txt || true
+              head -n 30 /tmp/admin_body.txt ||true
               exit 1
             fi
 

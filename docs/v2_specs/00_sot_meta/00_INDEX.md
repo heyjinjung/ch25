@@ -3,6 +3,14 @@
 ## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
 
 ---
+### [2026-02-04 V2 Legacy Purge & Migration 완료]
+- **Legacy Purge**: `app/api`, `models`, `services`, `schemas`, `utils` 등 레거시 폴더 의존성 완전 제거 (Isolated)
+- **Service Migration**:
+  - `VaultService`: `record_game_play_earn_event` 등 핵심 로직 V2 이식, Bridge 제거
+  - `Ch25EventService`: V2 Native 구현, `ch25_event_worker` 리팩토링 (`V2User` 사용)
+- **Core Update**: `main.py` 레거시 라우터/미들웨어 제거, Pure V2 모드 전환
+- **문서**: [V2 Legacy Purge 리포트](docs/v2_specs/90_troubleshooting/20260204_legacy_purge_and_v2_migration_completion.md)
+
 ### [2026-02-04 V2 SoT 통합 및 붙여넣기 Import]
 - **V2 SoT 통합 완료**: 레벨/XP/입금 데이터를 `v2_user` 테이블로 단일화
   - `v2_user.level`, `v2_user.xp` (신규), `v2_user.total_charge_amount` → **V2 SoT**
