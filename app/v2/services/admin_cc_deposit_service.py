@@ -222,6 +222,12 @@ class V2AdminCCDepositService:
                 )
                 db.add(row)
                 existing_by_user[user_id] = row
+            
+            # V2 SoT: v2_user.total_charge_amount도 함께 업데이트
+            v2_user = db.get(V2User, user_id)
+            if v2_user:
+                v2_user.total_charge_amount = payload.deposit_amount
+            
             results.append(row)
 
         db.commit()

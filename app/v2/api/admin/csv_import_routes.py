@@ -207,3 +207,143 @@ def estimate_import_time(
     estimate = service.estimate_import_time(file_path)
 
     return estimate
+
+
+# ============================================================
+# 붙여넣기 Import API (클립보드에서 직접 붙여넣기)
+# ============================================================
+
+from pydantic import BaseModel
+
+
+class PasteImportRequest(BaseModel):
+    """붙여넣기 Import 요청"""
+    text: str
+    import_type: str  # "DAILY_DEPOSIT" or "GAME_LOG"
+
+
+@router.post("/paste-import", response_model=dict[str, Any])
+def paste_import(
+    request: PasteImportRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    클립보드 붙여넣기로 데이터 Import.
+    
+    지원 형식:
+    - DAILY_DEPOSIT: 데일리 입금 로그 (번호/소속/이름/닉네임/신청날짜/충전금액/입금자명/충전날짜/상태)
+    - GAME_LOG: 게임 로그 (번호/이름/닉네임/타입/베팅일시/게임종류/금액)
+    
+    기존 기록된 시간 이후의 데이터만 처리됩니다.
+    """
+    admin_id, admin_role = admin_info
+    
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
+    
+    from app.v2.services.paste_import_service import PasteImportService
+    
+    if request.import_type == "DAILY_DEPOSIT":
+        result = PasteImportService.import_daily_deposits(
+            db=db,
+            text=request.text,
+            admin_id=str(admin_id),
+        )
+    elif request.import_type == "GAME_LOG":
+        result = PasteImportService.import_game_logs(
+            db=db,
+            text=request.text,
+            admin_id=str(admin_id),
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported import type: {request.import_type}. Use DAILY_DEPOSIT or GAME_LOG"
+        )
+    
+    return result
+
+
+@router.post("/paste-import/preview", response_model=dict[str, Any])
+def preview_paste_import(
+    request: PasteImportRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """
+    붙여넣기 Import 미리보기 (실제 저장 없이 파싱 결과만 반환).
+    """
+    admin_id, admin_role = admin_info
+    
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
+    
+    from app.v2.services.paste_import_service import PasteImportService
+    from sqlalchemy import func
+    from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
+    from app.v2.models import V2GameLog
+    
+    if request.import_type == "DAILY_DEPOSIT":
+        parsed = PasteImportService.parse_daily_deposit(request.text)
+        latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
+        
+        # 기존 기록 이후 건수 계산
+        new_count = 0
+        if latest_deposit_at:
+            for item in parsed:
+                if item.deposit_at and item.deposit_at > latest_deposit_at:
+                    new_count += 1
+        else:
+            new_count = len(parsed)
+        
+        return {
+            "success": True,
+            "import_type": "DAILY_DEPOSIT",
+            "total_parsed": len(parsed),
+            "new_records_count": new_count,
+            "latest_in_db": latest_deposit_at.isoformat() if latest_deposit_at else None,
+            "preview": [
+                {
+                    "nickname": p.nickname,
+                    "amount": p.amount,
+                    "deposit_at": p.deposit_at.isoformat() if p.deposit_at else None,
+                    "depositor": p.depositor_name,
+                }
+                for p in parsed[:10]
+            ],
+        }
+    
+    elif request.import_type == "GAME_LOG":
+        parsed = PasteImportService.parse_game_log(request.text)
+        latest_bet_at = db.query(func.max(V2GameLog.played_at)).scalar()
+        
+        new_count = 0
+        if latest_bet_at:
+            for item in parsed:
+                if item.bet_at and item.bet_at > latest_bet_at:
+                    new_count += 1
+        else:
+            new_count = len(parsed)
+        
+        return {
+            "success": True,
+            "import_type": "GAME_LOG",
+            "total_parsed": len(parsed),
+            "new_records_count": new_count,
+            "latest_in_db": latest_bet_at.isoformat() if latest_bet_at else None,
+            "preview": [
+                {
+                    "cc_id": p.cc_id,
+                    "nickname": p.nickname,
+                    "log_type": p.log_type,
+                    "bet_at": p.bet_at.isoformat() if p.bet_at else None,
+                    "game_type": p.game_type,
+                    "amount": p.amount,
+                }
+                for p in parsed[:10]
+            ],
+        }
+    
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported import type")

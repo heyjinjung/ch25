@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.models.ops_plan import OpsPlan
 from app.models.ops_target import OpsTargetList, OpsTargetMember
 from app.v2.models.user import V2User
+from app.models.level_xp import UserLevelProgress
 from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
 from app.models.external_ranking import ExternalRankingData
 from app.models.feature import UserEventLog
@@ -283,11 +284,13 @@ class OpsTargetService:
     def _count_scenario_07(self, db: Session) -> int:
         """Scenario 7: Stuck Climber - mid-level, no progress 48h."""
         cutoff = self.now() - timedelta(hours=48)
+        # SoT: user_level_progress.level (V2User.level은 캐시)
         query = (
             select(func.count(V2User.id))
             .select_from(V2User)
+            .join(UserLevelProgress, UserLevelProgress.user_id == V2User.id, isouter=True)
             .where(
-                V2User.level.between(4, 5),
+                UserLevelProgress.level.between(4, 5),
                 V2User.last_play_date.isnot(None),
                 V2User.last_play_date < cutoff.date(),
                 V2User.last_login_at.isnot(None),
@@ -623,11 +626,13 @@ class OpsTargetService:
     def _get_scenario_07_users(self, db: Session, limit: int) -> List[Dict[str, Any]]:
         """Get Scenario 7 users (Stuck Climber)."""
         cutoff = self.now() - timedelta(hours=48)
+        # SoT: user_level_progress.level (V2User.level은 캐시)
         query = (
-            select(V2User.id, V2User.nickname, V2User.level)
+            select(V2User.id, V2User.nickname, UserLevelProgress.level.label("level"))
             .select_from(V2User)
+            .join(UserLevelProgress, UserLevelProgress.user_id == V2User.id, isouter=True)
             .where(
-                V2User.level.between(4, 5),
+                UserLevelProgress.level.between(4, 5),
                 V2User.last_play_date.isnot(None),
                 V2User.last_play_date < cutoff.date(),
                 V2User.last_login_at.isnot(None),
@@ -640,7 +645,7 @@ class OpsTargetService:
             {
                 "user_id": r.id,
                 "nickname": r.nickname,
-                "data": {"level": r.level},
+                "data": {"level": r.level or 1},
             }
             for r in results
         ]

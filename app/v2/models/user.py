@@ -38,11 +38,13 @@ class V2User(Base):
     telegram_username = Column(String(100), nullable=True, index=True)
     vault_locked_balance = Column(Integer, nullable=False, default=0)
     vault_available_balance = Column(Integer, nullable=False, default=0)
-    # Inherited from legacy User for single SoT
+    # V2 SoT: 레벨/XP (user_level_progress에서 이관됨)
     level = Column(Integer, nullable=False, default=1)
+    xp = Column(Integer, nullable=False, default=0)
     vault_spent_total = Column(Integer, nullable=False, default=0)
     vault_spent_today = Column(Integer, nullable=False, default=0)
     vault_spent_reset_date = Column(String(10), nullable=True)  # YYYY-MM-DD
+    # V2 SoT: 입금 누적 (external_ranking_data에서 이관됨)
     total_charge_amount = Column(Integer, nullable=False, default=0)
     # V2 가입 시점 기준 누적 충전액 (CSV Import 시 차액 계산용)
     baseline_charge_amount = Column(Integer, nullable=False, default=0)

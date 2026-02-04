@@ -225,11 +225,19 @@ class HQDailyDepositImportService:
                 row[0] for row in db.query(HQDailyDepositLog.dedup_key).all()
             )
             logger.info(f"[HQ Daily Import] Existing dedup keys: {len(existing_keys)}")
+            
+            # 4-1. 서버에 기록된 최신 deposit_at 조회 (이 시간 이후만 처리)
+            latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
+            if latest_deposit_at:
+                logger.info(f"[HQ Daily Import] Latest deposit_at in DB: {latest_deposit_at}")
+            else:
+                logger.info("[HQ Daily Import] No existing deposits, processing all")
 
             # 5. 통계 초기화
             total_rows = 0
             processed_count = 0
             skipped_count = 0
+            skipped_old_count = 0  # 기존 시간 이전 건 스킵
             duplicate_count = 0
             not_found_count = 0
             ambiguous_count = 0
@@ -262,6 +270,12 @@ class HQDailyDepositImportService:
                         warnings.append(f"Row {idx+2}: 금액 0 이하 ({nickname})")
                         skipped_count += 1
                         continue
+                    
+                    # ★ 핵심: 기존 기록된 최신 시간 이후의 것만 처리
+                    if latest_deposit_at and deposit_datetime:
+                        if deposit_datetime <= latest_deposit_at:
+                            skipped_old_count += 1
+                            continue  # 이미 처리된 시간대의 입금은 무시
 
                     # 중복 체크
                     dedup_key = HQDailyDepositImportService._generate_dedup_key(
@@ -383,10 +397,12 @@ class HQDailyDepositImportService:
                     "category": "DEPOSIT",
                     "reason": "HQ daily deposit CSV import",
                     "batch_id": batch_id,
+                    "latest_deposit_at": latest_deposit_at.isoformat() if latest_deposit_at else None,
                     "stats": {
                         "total_rows": total_rows,
                         "processed": processed_count,
                         "skipped": skipped_count,
+                        "skipped_old": skipped_old_count,
                         "duplicate": duplicate_count,
                         "not_found": not_found_count,
                         "ambiguous": ambiguous_count,
@@ -398,7 +414,7 @@ class HQDailyDepositImportService:
 
             logger.info(
                 f"[HQ Daily Import] Completed: rows={total_rows}, processed={processed_count}, "
-                f"duplicate={duplicate_count}, amount={total_amount:,}, users={len(user_deposits)}"
+                f"skipped_old={skipped_old_count}, duplicate={duplicate_count}, amount={total_amount:,}, users={len(user_deposits)}"
             )
 
             return {
@@ -407,11 +423,13 @@ class HQDailyDepositImportService:
                 "total_rows": total_rows,
                 "processed_count": processed_count,
                 "skipped_count": skipped_count,
+                "skipped_old_count": skipped_old_count,
                 "duplicate_count": duplicate_count,
                 "not_found_count": not_found_count,
                 "ambiguous_count": ambiguous_count,
                 "total_amount": total_amount,
                 "unique_users": len(user_deposits),
+                "latest_deposit_at_in_db": latest_deposit_at.isoformat() if latest_deposit_at else None,
                 "matched_details": matched_details[:50],  # 상위 50건만
                 "unmatched_details": unmatched_details[:50],
                 "errors": errors[:20],

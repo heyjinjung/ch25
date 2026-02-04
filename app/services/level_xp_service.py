@@ -103,10 +103,19 @@ class LevelXPService:
         self.reward_service = RewardService()
 
     def _get_or_create_progress(self, db: Session, user_id: int) -> UserLevelProgress:
+        """레거시 호환용 - user_level_progress도 함께 유지.
+        
+        NOTE: V2 SoT는 v2_user.level/xp이지만, 레거시 호환을 위해
+        user_level_progress도 동기화 유지.
+        """
         progress = db.get(UserLevelProgress, user_id)
         if progress:
             return progress
-        progress = UserLevelProgress(user_id=user_id, level=1, xp=0)
+        # 신규 생성 시 v2_user 값으로 초기화
+        user = db.get(V2User, user_id)
+        initial_level = user.level if user else 1
+        initial_xp = user.xp if user else 0
+        progress = UserLevelProgress(user_id=user_id, level=initial_level, xp=initial_xp)
         db.add(progress)
         db.flush()
         return progress
@@ -117,6 +126,9 @@ class LevelXPService:
 
     def add_xp(self, db: Session, user_id: int, delta: int, source: str, meta: dict | None = None) -> dict:
         """Increment XP, log event, and emit reward logs for newly reached levels.
+        
+        V2 SoT: v2_user.level/xp를 기준으로 업데이트하고,
+        레거시 호환을 위해 user_level_progress도 동기화.
 
         Returns a payload summarizing added XP and any new reward logs (does not commit).
         """
@@ -129,10 +141,18 @@ class LevelXPService:
              # Safety cap to prevent unintentional infinite level usage or exploit
              delta = MAX_SAFE_DELTA
 
+        # V2 SoT: v2_user에서 직접 레벨/XP 관리
+        user = db.get(V2User, user_id)
+        if not user:
+            return {"added_xp": 0, "new_rewards": [], "error": "USER_NOT_FOUND"}
+        
+        # 레거시 호환: user_level_progress도 함께 유지
         progress = self._get_or_create_progress(db, user_id)
         self._log_event(db, user_id=user_id, source=source, delta=delta, meta=meta)
 
-        progress.xp += delta
+        # V2 SoT 업데이트
+        user.xp = (user.xp or 0) + delta
+        progress.xp = user.xp  # 레거시 동기화
         progress.updated_at = datetime.utcnow()
 
         # Determine newly achieved levels
@@ -220,15 +240,11 @@ class LevelXPService:
                 except Exception:
                     # Delivery errors should not break XP accrual; rely on logs for retries.
                     pass
-        progress.level = current_level
+        # V2 SoT 레벨 업데이트
+        user.level = current_level
+        progress.level = current_level  # 레거시 동기화
 
-        # User.level 동기화 (어드민 회원조회 API에서 User.level 사용)
-        user = db.get(V2User, user_id)
-        if user and user.level != current_level:
-            user.level = current_level
-            db.add(user)
-
-        return {"added_xp": delta, "new_rewards": achieved, "level": progress.level, "xp": progress.xp}
+        return {"added_xp": delta, "new_rewards": achieved, "level": user.level, "xp": user.xp}
 
     def _get_reward_label(self, reward_type: str, amount: int) -> str:
         """Helper to generate consistent Korean reward labels."""
