@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.v2.models import GameTokenType, UserGameWallet
 from app.v2.api.deps import get_current_user_id
 from app.v2.services.vault_service import V2VaultService

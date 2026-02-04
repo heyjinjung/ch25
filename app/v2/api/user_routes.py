@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.v2.api.deps import get_db
 from app.v2.api.deps import get_current_user
 from app.v2.schemas.v2_auth import UserMeResponse, UserBalanceResponse
 from app.v2.models.user import V2User
