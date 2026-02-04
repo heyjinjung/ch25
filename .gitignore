@@ -316,11 +316,11 @@ alembic/versions/*.pyc
 # Local development
 QUICK_FIX.md
 .env.backup
-docs/06_ops/202601/exports/\[20260110]_운영일지.md
-docs/06_ops/202601/exports/\[20260110]_운영일지.md
-docs/06_ops/202601/exports/\[20260111]_운영일지.md
-docs/06_ops/202601/exports/\[20260110]_운영일지.md
-docs/06_ops/202601/exports/\[20260110]_운영일지.md
+docs/06_ops/202601/exports/\[20260110]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260110]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260111]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260110]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260110]_?�영?��?.md
 
 cloudflared.exe
 dist.zip
@@ -329,55 +329,55 @@ scripts/cleanup_user_103.py
 user_log_103.txt
 scripts/manual_purge_target_113.py
 
-# Temporary backups / dumps (로컬 백업 및 임시 덤프)
+# Temporary backups / dumps (로컬 백업 �??�시 ?�프)
 *.sql
 *_dump.json
 *_backup*.sql
 *_output.txt
-docs/06_ops/202601/도파민2차_체류시간증대_전략_v1.0.md
-docs/06_ops/202601/도파민2차_체류시간증대_전략_v1.0.md
+docs/06_ops/202601/?�파�?�?체류?�간증�?_?�략_v1.0.md
+docs/06_ops/202601/?�파�?�?체류?�간증�?_?�략_v1.0.md
 docs/06_ops/202601/exports/CC260117.CSV
 docs/06_ops/202601/exports/segments/1_Registered_Active_Depositors.csv
 docs/06_ops/202601/exports/segments/2_Registered_NonDepositors_Fuel.csv
 docs/06_ops/202601/exports/segments/3_Unregistered_Potential_Whales.csv
 docs/06_ops/202601/exports/segments/4_Unregistered_NPCs.csv
-docs/06_ops/202601/exports/segments/CC0109임시.CSV
-docs/06_ops/202601/exports/\[20260117]_운영일지_리텐션분석.md
-docs/06_ops/202601/exports/\[20260117]_운영일지_DailyFocused_16.md
-docs/06_ops/202601/exports/\[20260117]_운영일지_DailyFocused.md
-docs/06_ops/202601/exports/데일리_운영일지_템플릿.md
+docs/06_ops/202601/exports/segments/CC0109?�시.CSV
+docs/06_ops/202601/exports/\[20260117]_?�영?��?_리텐?�분??md
+docs/06_ops/202601/exports/\[20260117]_?�영?��?_DailyFocused_16.md
+docs/06_ops/202601/exports/\[20260117]_?�영?��?_DailyFocused.md
+docs/06_ops/202601/exports/?�일�??�영?��?_?�플�?md
 docs/06_ops/202601/exports/segments/CC0109_Updated.csv
-docs/06_ops/202601/exports/26.01.15 지민코드 회원현황 (3).CSV
+docs/06_ops/202601/exports/26.01.15 지민코???�원?�황 (3).CSV
 docs/06_ops/202601/exports/20260117_slot_logs_raw_1.CSV
 docs/06_ops/202601/exports/20260117_casino_logs_raw.md
 docs/06_ops/202601/exports/20260117_slot_logs_raw_2.CSV
 docs/06_ops/202601/exports/20260117_slot_logs_raw_3.CSV
 docs/06_ops/202601/exports/20260117_sports_logs_raw.md
 docs/08_changelog/20260117_ops_report_fix.md
-docs/06_ops/202601/exports/\[20260110]_운영일지.md
-docs/06_ops/202601/exports/\[20260116]_운영일지.md
-docs/06_ops/202601/exports/\[20260117]_운영일지_리텐션분석.md
-docs/06_ops/202601/exports/운영일지_템플릿.md
-docs/06_ops/202601/exports/CC0106_0107-0108_업데이트.CSV
+docs/06_ops/202601/exports/\[20260110]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260116]_?�영?��?.md
+docs/06_ops/202601/exports/\[20260117]_?�영?��?_리텐?�분??md
+docs/06_ops/202601/exports/?�영?��?_?�플�?md
+docs/06_ops/202601/exports/CC0106_0107-0108_?�데?�트.CSV
 docs/06_ops/202601/exports/rawdata/20260117_casino_logs_raw.md
 docs/06_ops/202601/exports/rawdata/20260117_slot_logs_raw_1.CSV
 docs/06_ops/202601/exports/rawdata/20260117_slot_logs_raw_2.CSV
 docs/06_ops/202601/exports/rawdata/20260117_slot_logs_raw_3.CSV
 docs/06_ops/202601/exports/rawdata/20260117_sports_logs_raw.md
-docs/06_ops/202601/exports/도파민/\[20260110]_운영일지.md
-docs/06_ops/202601/exports/도파민/\[20260111]_운영일지.md
-docs/06_ops/202601/exports/도파민/\[20260116]_운영일지.md
-docs/06_ops/202601/exports/도파민/\[20260117]_운영일지_DailyFocused_Fixed_v4.md
-docs/06_ops/202601/exports/도파민/\[20260117]_운영일지.md
-docs/06_ops/202601/exports/도파민/\[20260118]_운영_아이디어_제안.md
-docs/06_ops/202601/exports/도파민/\[20260118]_텔레그램_공지_템플릿.md
-docs/06_ops/202601/exports/도파민/26.01.15 지민코드 회원현황 (3).CSV
-docs/06_ops/202601/exports/도파민/데일리_운영일지_템플릿.md
-docs/06_ops/202601/exports/도파민/운영일지_템플릿.md
-docs/06_ops/202601/exports/도파민/CC0106_RAW.CSV
-docs/06_ops/202601/exports/도파민/CC260117.CSV
-docs/06_ops/202601/exports/도파민/전체회원.CSV
-docs/06_ops/202601/exports/도파민/CC0118_RAW.CSV
+docs/06_ops/202601/exports/?�파�?\[20260110]_?�영?��?.md
+docs/06_ops/202601/exports/?�파�?\[20260111]_?�영?��?.md
+docs/06_ops/202601/exports/?�파�?\[20260116]_?�영?��?.md
+docs/06_ops/202601/exports/?�파�?\[20260117]_?�영?��?_DailyFocused_Fixed_v4.md
+docs/06_ops/202601/exports/?�파�?\[20260117]_?�영?��?.md
+docs/06_ops/202601/exports/?�파�?\[20260118]_?�영_?�이?�어_?�안.md
+docs/06_ops/202601/exports/?�파�?\[20260118]_?�레그램_공�?_?�플�?md
+docs/06_ops/202601/exports/?�파�?26.01.15 지민코???�원?�황 (3).CSV
+docs/06_ops/202601/exports/?�파�??�일�??�영?��?_?�플�?md
+docs/06_ops/202601/exports/?�파�??�영?��?_?�플�?md
+docs/06_ops/202601/exports/?�파�?CC0106_RAW.CSV
+docs/06_ops/202601/exports/?�파�?CC260117.CSV
+docs/06_ops/202601/exports/?�파�??�체?�원.CSV
+docs/06_ops/202601/exports/?�파�?CC0118_RAW.CSV
 docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_1.CSV
 docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_2.CSV
 docs/06_ops/202601/exterior/rawdata/20260117_slot_logs_raw_3.CSV
@@ -385,14 +385,14 @@ docs/06_ops/202601/exterior/segments/1_Registered_Active_Depositors.csv
 docs/06_ops/202601/exterior/segments/2_Registered_NonDepositors_Fuel.csv
 docs/06_ops/202601/exterior/segments/3_Unregistered_Potential_Whales.csv
 docs/06_ops/202601/exterior/segments/4_Unregistered_NPCs.csv
-docs/06_ops/202601/exterior/도파민/전체회원.CSV
-docs/06_ops/202601/exterior/도파민/CC0118_RAW.CSV
-docs/06_ops/202601/exterior/도파민/CC260117.CSV
+docs/06_ops/202601/exterior/?�파�??�체?�원.CSV
+docs/06_ops/202601/exterior/?�파�?CC0118_RAW.CSV
+docs/06_ops/202601/exterior/?�파�?CC260117.CSV
 docs/06_ops/202601/exterior/rawdata/20260117_casino_logs_raw.md
 docs/06_ops/202601/exterior/rawdata/20260117_sports_logs_raw.md
 docs/06_ops/202601/response_templates/result.json
 docs/06_ops/202601/response_templates/telegram_report_pro_report.csv
-docs/09_marketing/golden/이해.md
+docs/09_marketing/golden/?�해.md
 scripts/analyze_telegram_retention.py
 scripts/parse_telegram_json.py
 docs/06_ops/202601/response_templates/telegram_report_Blacklist_Risks.csv
@@ -400,9 +400,9 @@ docs/06_ops/202601/response_templates/telegram_report_CherryPickers.csv
 docs/06_ops/202601/response_templates/telegram_report_Depositors.csv
 docs/06_ops/202601/response_templates/telegram_report_General_Users.csv
 docs/06_ops/202601/response_templates/telegram_report_VIP_Customers.csv
-docs/06_ops/202601/exports/20260118_운영일지_DailyFocused.md
-docs/06_ops/202601/exports/20260119_운영일지_DailyFocused.md
-docs/06_ops/202601/exterior/도파민엑셀/260120입급업로드.CSV
+docs/06_ops/202601/exports/20260118_?�영?��?_DailyFocused.md
+docs/06_ops/202601/exports/20260119_?�영?��?_DailyFocused.md
+docs/06_ops/202601/exterior/?�파민엑?�/260120?�급?�로??CSV
 scripts/upload_external_deposit_csv.py
 
 # Ignore verification and temp docs created during local testing
@@ -410,7 +410,7 @@ docs/flow_feature_mapping_v1_v2.md
 docs/v2_verification_checklist_ko.md
 docs/v2_specs/00_sot_meta/v2_verification_test_logs_20260124.md
 docs/v2_specs/00_sot_meta/v2_backend_test_master_flowchart_v2.md
-docs/06_ops/202601/exterior/도파민엑셀/260121입급업로드.CSV
+docs/06_ops/202601/exterior/?�파민엑?�/260121?�급?�로??CSV
 
 # Windows reserved filenames (Git indexing issue)
 nul
@@ -419,7 +419,7 @@ CON
 AUX
 NUL
 
-# 운영 환경 변수 (민감한 정보 - 절대 커밋 금지)
+# ?�영 ?�경 변??(민감???�보 - ?��? 커밋 금�?)
 .env.production
 .env.server
 .env.*.vite
@@ -435,6 +435,8 @@ uploads/csv_imports/casino_log_20260203_001339_test_file.CSV
 pytest.ini
 uploads/csv_imports/casino_log_20260203_002223_test_file.CSV
 uploads/csv_imports/casino_log_20260203_002757_test_file.CSV
-* _ a n a l y s i s . c s v  
- m a r k e t i n g _ a n a l y s i s _ r e s u l t s /  
+marketing_analysis.csv
+ 
+ m a r k e t i n g _ a n a l y s i s _ r e s u l t s / 
+ 
  

@@ -27,6 +27,8 @@ from app.schemas.survey import (
     SurveyResponseInfo,
     CommonQueryParams,
     SurveyUpsertRequest,
+    SurveyAdminListResponse,
+    SurveyAdminResponse,
 )
 from app.v2.models.user import V2User
 
@@ -159,12 +161,12 @@ def _replace_questions(db: Session, survey: V2Survey, payload: SurveyUpsertReque
     db.commit()
 
 
-@router.get("/", response_model=list[SurveyDetailResponse], summary="List surveys")
+@router.get("/", response_model=SurveyAdminListResponse, summary="List surveys")
 def list_surveys(
     db: Session = Depends(get_db),
     params: CommonQueryParams = Depends(),
     _: int = Depends(get_current_admin_id),
-) -> list[SurveyDetailResponse]:
+) -> SurveyAdminListResponse:
     stmt = (
         select(V2Survey)
         .order_by(V2Survey.id.desc())
@@ -172,7 +174,21 @@ def list_surveys(
         .limit(params.limit)
     )
     surveys = db.execute(stmt).scalars().all()
-    return [_serialize_detail(s) for s in surveys]
+    
+    items = []
+    for s in surveys:
+        items.append(
+            SurveyAdminResponse(
+                id=s.id,
+                title=s.title,
+                status=s.status,
+                channel=s.channel,
+                created_at=s.created_at,
+                updated_at=s.updated_at,
+                question_count=len(s.questions),
+            )
+        )
+    return SurveyAdminListResponse(items=items)
 
 
 @router.post("/", response_model=SurveyDetailResponse, status_code=status.HTTP_201_CREATED)

@@ -47,8 +47,8 @@ V2UserRetentionState의 세그먼트는 완전히 다른 키 사용 (HIGH_ROLLER
 2. 각 세그먼트가 영향을 끼치는 도메인
 세그먼트	영향 도메인	코드 위치
 VIP/WHALE	골든아워 후보 선정	golden_scheduler_service.py:78
-CHURN_RISK	리텐션 재관여 메시지 대기열	retention_intervention_service.py:130
-HIGH_ROLLER 등	리텐션 보상 계산 (base_rate)	retention_intervention_service.py:31
+AT_RISK	리텐션 재관여 메시지 대기열	retention_intervention_service.py:130
+VIP/WHALE/COMMON/NEW/AT_RISK/WINNER	리텐션 보상 계산 (base_rate)	retention_intervention_service.py:31
 NEW/COMMON/AT_RISK	어드민 UI 필터/통계	segment_routes.py
 세그먼트 전체	이벤트 타겟팅	segment_rule 조건
 3. HQ 마진 Import시 모든 세그먼트가 분류되는가?
@@ -96,7 +96,7 @@ CHERRY_PICKER 설계	learned_/golden/20260204_cherry_picker_segment_design.md	�
 🔴 핵심 문제 요약
 WINNER 세그먼트: 코드 구현됨, SoT 문서 미정의, 운영 DB 미반영 (61명)
 세그먼트 이중 저장: V2UserSegment.segment vs V2User.hq_segment
-리텐션 세그먼트 불일치: CRM(VIP) vs Retention(HIGH_ROLLER) 다른 키 사용
+✅ 리텐션 세그먼트 통합 완료: CRM 키(NEW/COMMON/VIP/WHALE/AT_RISK/WINNER) 사용 (2026-02-04)
 DB 제약조건 없음: varchar(50) 아무 값 저장 가능
 DEFAULT 불일치: DB는 'NEW', SoT는 'COMMON'
 
