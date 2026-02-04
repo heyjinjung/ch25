@@ -376,7 +376,7 @@ class PasteImportService:
             }
         
         # 기존 기록된 최신 시간 조회
-        latest_bet_at = db.query(func.max(V2GameLog.played_at)).scalar()
+        latest_bet_at = db.query(func.max(V2GameLog.recorded_at)).scalar()
         logger.info(f"[PasteImport] Latest bet_at: {latest_bet_at}")
         
         total_parsed = len(parsed)
@@ -423,9 +423,9 @@ class PasteImportService:
                 user_id=user.id,
                 game_type=game_type,
                 bet_amount=item.amount if item.log_type == "베팅" else 0,
-                win_amount=item.amount if item.log_type == "결과" else 0,
+                payout_amount=item.amount if item.log_type == "결과" else 0,
                 result="WIN" if is_win else "LOSE" if item.log_type == "결과" else "BET",
-                played_at=item.bet_at,
+                recorded_at=item.bet_at,
             ))
             processed_count += 1
         

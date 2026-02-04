@@ -8,8 +8,15 @@ import {
 import CircuitBreakerPage from "../economy/CircuitBreakerPage";
 import LatencySurvivalPage from "../economy/LatencySurvivalPage";
 import CSVImportPage from "./CSVImportPage";
+import PasteImportPage from "./PasteImportPage";
 import AuditLogPage from "./AuditLogPage";
-import { ShieldAlert, Clock, FileUp, Shield } from "lucide-react";
+import {
+  ShieldAlert,
+  Clock,
+  FileUp,
+  Shield,
+  ClipboardPaste,
+} from "lucide-react";
 
 const SystemSecurityPage: React.FC = () => {
   return (
@@ -46,7 +53,14 @@ const SystemSecurityPage: React.FC = () => {
             className="flex items-center gap-2 px-6 py-2.5 data-[state=active]:bg-obsidian-accent/10 data-[state=active]:text-obsidian-accent"
           >
             <FileUp size={16} />
-            데이터 반입
+            CSV 반입
+          </TabsTrigger>
+          <TabsTrigger
+            value="paste"
+            className="flex items-center gap-2 px-6 py-2.5 data-[state=active]:bg-obsidian-accent/10 data-[state=active]:text-obsidian-accent"
+          >
+            <ClipboardPaste size={16} />
+            붙여넣기
           </TabsTrigger>
           <TabsTrigger
             value="audit"
@@ -58,16 +72,31 @@ const SystemSecurityPage: React.FC = () => {
         </TabsList>
 
         <div className="mt-6">
-          <TabsContent value="emergency" className="mt-0 focus-visible:outline-none">
+          <TabsContent
+            value="emergency"
+            className="mt-0 focus-visible:outline-none"
+          >
             <CircuitBreakerPage />
           </TabsContent>
-          <TabsContent value="latency" className="mt-0 focus-visible:outline-none">
+          <TabsContent
+            value="latency"
+            className="mt-0 focus-visible:outline-none"
+          >
             <LatencySurvivalPage />
           </TabsContent>
           <TabsContent value="csv" className="mt-0 focus-visible:outline-none">
             <CSVImportPage />
           </TabsContent>
-          <TabsContent value="audit" className="mt-0 focus-visible:outline-none">
+          <TabsContent
+            value="paste"
+            className="mt-0 focus-visible:outline-none"
+          >
+            <PasteImportPage />
+          </TabsContent>
+          <TabsContent
+            value="audit"
+            className="mt-0 focus-visible:outline-none"
+          >
             <AuditLogPage />
           </TabsContent>
         </div>

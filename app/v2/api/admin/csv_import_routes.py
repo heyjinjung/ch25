@@ -316,7 +316,7 @@ def preview_paste_import(
     
     elif request.import_type == "GAME_LOG":
         parsed = PasteImportService.parse_game_log(request.text)
-        latest_bet_at = db.query(func.max(V2GameLog.played_at)).scalar()
+        latest_bet_at = db.query(func.max(V2GameLog.recorded_at)).scalar()
         
         new_count = 0
         if latest_bet_at:

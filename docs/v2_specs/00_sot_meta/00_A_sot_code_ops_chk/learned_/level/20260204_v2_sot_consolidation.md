@@ -92,6 +92,41 @@ UPDATE external_ranking_data SET deposit_amount = 0 WHERE user_id = {user_id};
 
 ---
 
-## 5. 관련 문서
+## 5. 붙여넣기 Import 기능
+
+### 5.1 개요
+CSV 파일 업로드 대신 **클립보드 붙여넣기** 방식으로 데이터를 Import합니다.
+- HQ 마진: 기존 CSV Import 유지 (세그먼트용)
+- **게임 로그 + HQ 데일리**: 붙여넣기 방식
+
+### 5.2 지원 형식
+
+#### 게임 로그
+```
+번호	이름	닉네임	타입	베팅일시	게임종류	금액
+1	홍길동	hongkd	베팅	2026-02-04 10:30:00	슬롯	50000
+```
+
+#### 데일리 입금 로그
+```
+번호	소속	이름(아이디)	닉네임	신청날짜	충전금액	입금자명	충전날짜	상태
+1	VIP	홍길동(hong123)	hongkd	2026-02-04	100000	홍길동	2026-02-04 10:00:00	완료
+```
+
+### 5.3 시간 기반 필터링
+- DB에 기록된 **최신 시간 이후의 데이터만** 처리
+- 중복 Import 방지
+
+### 5.4 API 엔드포인트
+- `POST /api/v2/admin/csv-import/paste-import`: 실제 Import
+- `POST /api/v2/admin/csv-import/paste-import/preview`: 미리보기
+
+### 5.5 관련 파일
+- `app/v2/services/paste_import_service.py`: 파싱 및 Import 로직
+- `app/v2/api/admin/csv_import_routes.py`: API 엔드포인트
+
+---
+
+## 6. 관련 문서
 - [07.level.md](./07.level.md) - 레벨 정책
 - [08.vault.md](../vault/08.vault.md) - 금고 정책

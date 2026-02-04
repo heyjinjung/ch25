@@ -2630,6 +2630,74 @@ export const getCSVImportEstimate = async (
 };
 
 // ============================================================================
+// Paste Import API (클립보드 붙여넣기 Import)
+// ============================================================================
+
+export interface PasteImportRequest {
+  text: string;
+  import_type: "DAILY_DEPOSIT" | "GAME_LOG";
+}
+
+export interface PasteImportPreviewResponse {
+  success: boolean;
+  import_type: string;
+  total_parsed: number;
+  new_records_count: number;
+  latest_in_db: string | null;
+  preview: Array<{
+    nickname?: string;
+    amount?: number;
+    deposit_at?: string | null;
+    depositor?: string;
+    cc_id?: string;
+    log_type?: string;
+    bet_at?: string | null;
+    game_type?: string;
+  }>;
+}
+
+export interface PasteImportResult {
+  success: boolean;
+  batch_id?: string;
+  total_parsed: number;
+  processed_count: number;
+  skipped_old_count: number;
+  duplicate_count?: number;
+  not_found_count: number;
+  total_amount?: number;
+  unique_users?: number;
+  latest_deposit_at_in_db?: string | null;
+  latest_bet_at_in_db?: string | null;
+  matched_details?: Array<{
+    nickname: string;
+    user_id: number;
+    amount: number;
+    deposit_at?: string | null;
+  }>;
+  error?: string;
+}
+
+export const previewPasteImport = async (
+  request: PasteImportRequest,
+): Promise<PasteImportPreviewResponse> => {
+  const response = await v2Client.post<PasteImportPreviewResponse>(
+    "/api/v2/admin/csv-import/paste-import/preview",
+    request,
+  );
+  return response.data;
+};
+
+export const executePasteImport = async (
+  request: PasteImportRequest,
+): Promise<PasteImportResult> => {
+  const response = await v2Client.post<PasteImportResult>(
+    "/api/v2/admin/csv-import/paste-import",
+    request,
+  );
+  return response.data;
+};
+
+// ============================================================================
 // Admin Streak & Milestone API
 // ============================================================================
 
