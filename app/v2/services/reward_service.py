@@ -81,28 +81,20 @@ class V2RewardService:
         # Local import to avoid circular dependencies.
         from app.v2.services.vault_service import V2VaultService  # pylint: disable=import-outside-toplevel
 
-        # V2 native: we use V2User for vault balances. 
-        # V1 User is mirrored automatically via sync_legacy_mirror if still needed.
-        q = db.query(V2User).filter(V2User.id == user_id)
-        if db.bind and db.bind.dialect.name != "sqlite":
-            q = q.with_for_update()
-        user = q.one_or_none()
-        if user is None:
-            raise InvalidConfigError("USER_NOT_FOUND")
+        ref_type = (meta or {}).get("ref_type") or "REWARD"
+        reason_final = reason or (meta or {}).get("reason") or "REWARD"
 
-        user.vault_locked_balance = (user.vault_locked_balance or 0) + amount
-
-        # Mirror back to legacy User if exists (Phase 1/2 requirement)
-        v1_user = db.get(User, user_id)
-        if v1_user:
-            v1_user.vault_locked_balance = user.vault_locked_balance
-            db.add(v1_user)
-
-        db.add(user)
+        # VaultLedger에 기록되는 경로로 통일
+        V2VaultService.deposit(
+            db,
+            user_id=user_id,
+            amount=amount,
+            reason=reason_final,
+            ref_type=ref_type,
+        )
 
         if commit:
             db.commit()
-            db.refresh(user)
         else:
             db.flush()
 

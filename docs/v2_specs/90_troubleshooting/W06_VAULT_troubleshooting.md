@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 4 |
+| 해결된 이슈 | 5 |
 | SoT 승격 예정 | 1 (CSV Import Baseline) |
 
 ---
@@ -22,6 +22,45 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-04] - VAULT/ADMIN: 금고 보상 적립 로그 누락 (VaultLedger 미기록)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 금고 내역 (GET /api/v2/admin/vault/users/{user_id}/ledger) |
+| HTTP Status | 200 (Logic Error - 보상/게임/상점 유입 로그 누락) |
+| 영향 범위 | 금고 내역/정합성/운영 추적 |
+| 재현 빈도 | 항상 |
+
+**증거 기반 RCA**
+- 보상 적립 경로(`V2RewardService._grant_vault_locked`)에서 **VaultLedger 기록 없이** 잔액만 변경
+- 어드민 화면은 VaultLedger 기반이므로 **ADMIN 수동 로그만 표시**
+
+**해결 방법**
+- 보상 적립 경로를 `V2VaultService.deposit`로 통일하여 **VaultLedger 기록**
+- `ref_type=REWARD`, `reason` 유지
+
+```python
+# app/v2/services/reward_service.py
+V2VaultService.deposit(
+    db,
+    user_id=user_id,
+    amount=amount,
+    reason=reason_final,
+    ref_type=ref_type,
+)
+```
+
+**수정 파일**
+- `app/v2/services/reward_service.py`
+- `docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260204_vault_ledger_reward_alignment.md`
+
+**검증 방법**
+- 보상 지급 후 `/api/v2/admin/vault/users/{user_id}/ledger`에서 `ref_type=REWARD` 확인
+
+**🏷️ 태그**
+`P1` `VAULT` `LEDGER` `REWARD`
 
 ### [02-03] - VAULT/ADMIN: wallet/adjust API 잔액 부족 시 차감 불가 (force 옵션 추가)
 

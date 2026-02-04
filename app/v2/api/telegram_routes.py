@@ -151,6 +151,8 @@ def _create_v2_user(
     start_param: str,
 ) -> tuple[V2User, bool]:
     """순수 V2User 생성 (V1 User 미사용)"""
+    from datetime import datetime
+    
     # cc_id 생성
     unique_suffix = uuid.uuid4().hex[:8]
     cc_id = f"tg_{tg_id}_{unique_suffix}"
@@ -162,6 +164,7 @@ def _create_v2_user(
         telegram_id=tg_id,
         telegram_username=tg_username,
         vault_locked_balance=0,  # 초기 0원 (미션으로 지급)
+        last_login_at=datetime.utcnow(),  # 최초 로그인 시각
     )
     db.add(v2_user)
     db.flush()
@@ -188,7 +191,10 @@ def _update_v2_user(
     tg_nickname: str,
 ) -> None:
     """기존 V2User 정보 업데이트"""
+    from datetime import datetime
+    
     v2_user.telegram_username = tg_username
+    v2_user.last_login_at = datetime.utcnow()  # 로그인 시각 업데이트
 
     # 닉네임 업데이트 (기본 닉네임인 경우만)
     if v2_user.nickname and (
