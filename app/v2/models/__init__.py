@@ -1,4 +1,4 @@
-from .auth_event import V2UserAuthEvent, AuthEventType
+﻿from .auth_event import V2UserAuthEvent, AuthEventType
 from .refresh_token import V2UserRefreshToken
 from .user import V2User
 from .v2_user_deposit_evidence import V2UserDepositEvidence, EvidenceStatus

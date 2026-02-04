@@ -1,4 +1,4 @@
-"""V2 Admin Team Battle Routes.
+﻿"""V2 Admin Team Battle Routes.
 
 어드민 전용 팀배틀 관리 API:
 - /seasons: 시즌 CRUD

@@ -1,4 +1,4 @@
-"""V2 ops execution result model."""
+﻿"""V2 ops execution result model."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Integer, JSON, String

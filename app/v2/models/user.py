@@ -1,4 +1,4 @@
-"""V2 user model (Vault SoT: vault_locked_balance)."""
+﻿"""V2 user model (Vault SoT: vault_locked_balance)."""
 from datetime import datetime
 from enum import Enum as PyEnum
 from zoneinfo import ZoneInfo

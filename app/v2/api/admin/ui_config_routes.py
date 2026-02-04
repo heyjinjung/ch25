@@ -1,4 +1,4 @@
-"""V2 Admin UI Config routes - SoT 기반 설정 관리 API.
+﻿"""V2 Admin UI Config routes - SoT 기반 설정 관리 API.
 
 V2 어드민 전용 UI 설정 관리 엔드포인트.
 streak_reward_rules 등 V2 전용 설정 저장/조회에 사용.

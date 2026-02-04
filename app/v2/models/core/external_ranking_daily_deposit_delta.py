@@ -1,4 +1,4 @@
-"""Daily delta logs for external ranking deposit metrics (KST date).
+﻿"""Daily delta logs for external ranking deposit metrics (KST date).
 
 This table enables accurate today/last-7d deposit delta KPI.
 """

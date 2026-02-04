@@ -1,4 +1,4 @@
-"""Admin User Profile model for CRM.
+﻿"""Admin User Profile model for CRM.
 
 Stores sensitive/external management data (Real Name, Phone, Telegram, Memo, Tags).
 Synced typically via Excel/CSV upload.

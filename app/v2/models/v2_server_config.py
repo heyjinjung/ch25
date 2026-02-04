@@ -1,4 +1,4 @@
-"""V2 server configuration model."""
+﻿"""V2 server configuration model."""
 from datetime import datetime
 from typing import Any
 

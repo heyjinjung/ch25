@@ -1,4 +1,4 @@
-"""Admin Messaging models.
+﻿"""Admin Messaging models.
 
 Stores sent messages (history) and user inbox state.
 """

@@ -1,4 +1,4 @@
-"""V2 ticket conversion policy model."""
+﻿"""V2 ticket conversion policy model."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String

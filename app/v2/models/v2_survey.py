@@ -1,4 +1,4 @@
-"""V2 Survey models (SOT: survey tables).
+﻿"""V2 Survey models (SOT: survey tables).
 
 These models map to the existing 'survey', 'survey_question', etc. tables
 but are integrated with the V2User architecture.

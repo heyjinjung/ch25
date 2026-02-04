@@ -1,4 +1,4 @@
-"""Event config and participation log models."""
+﻿"""Event config and participation log models."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, JSON, String, Time

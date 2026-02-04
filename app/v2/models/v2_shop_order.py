@@ -1,4 +1,4 @@
-"""V2 shop order log model."""
+﻿"""V2 shop order log model."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Integer, String

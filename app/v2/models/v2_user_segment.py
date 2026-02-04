@@ -1,4 +1,4 @@
-"""V2 user segment assignment table."""
+﻿"""V2 user segment assignment table."""
 from datetime import datetime
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, String, Index

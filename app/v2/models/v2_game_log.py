@@ -1,4 +1,4 @@
-"""V2 Game Log Model for external casino game log imports.
+﻿"""V2 Game Log Model for external casino game log imports.
 
 This model stores game log data imported from external CSV files,
 enabling real-time revenue analysis, streak detection, and risk assessment.

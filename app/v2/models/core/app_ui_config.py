@@ -1,4 +1,4 @@
-"""App-level UI configuration (admin-editable)."""
+﻿"""App-level UI configuration (admin-editable)."""
 
 from datetime import datetime
 

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Compatibility shim for legacy import path.
 
 Some deployments import `app.v2.models.v2_admin_audit_log` while the

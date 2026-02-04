@@ -1,4 +1,4 @@
-"""V2 Admin Streak Routes."""
+﻿"""V2 Admin Streak Routes."""
 import logging
 from datetime import date
 from typing import Optional, List

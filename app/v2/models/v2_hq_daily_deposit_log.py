@@ -1,4 +1,4 @@
-"""HQ Daily Deposit Log Model
+﻿"""HQ Daily Deposit Log Model
 
 중복 입금 방지를 위한 처리 로그 테이블.
 (닉네임, 금액, 입금시각) 조합으로 중복 체크.

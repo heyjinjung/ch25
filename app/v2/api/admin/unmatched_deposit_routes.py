@@ -1,4 +1,4 @@
-"""Admin API routes for unmatched deposit log management.
+﻿"""Admin API routes for unmatched deposit log management.
 
 설계 문서: v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 섹션 8. API 계약 (미매칭 입금 로그)

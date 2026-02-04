@@ -1,4 +1,4 @@
-"""HQ Prospective User model for tracking unjoined high-value users."""
+﻿"""HQ Prospective User model for tracking unjoined high-value users."""
 from datetime import datetime
 from sqlalchemy import Column, DateTime, Integer, String, BigInteger, Boolean, Index, UniqueConstraint, ForeignKey
 

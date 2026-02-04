@@ -1,4 +1,4 @@
-"""V2 Golden intervention log model for ops tracking."""
+﻿"""V2 Golden intervention log model for ops tracking."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text

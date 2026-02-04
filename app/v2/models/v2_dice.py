@@ -1,4 +1,4 @@
-"""V2 dice configuration and play logs."""
+﻿"""V2 dice configuration and play logs."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Index, Integer, String

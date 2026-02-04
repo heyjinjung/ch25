@@ -1,4 +1,4 @@
-"""Admin audit log for configuration changes."""
+﻿"""Admin audit log for configuration changes."""
 
 from datetime import datetime
 from sqlalchemy import JSON, Column, DateTime, Integer, String

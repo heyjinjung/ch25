@@ -1,4 +1,4 @@
-"""V2 level reward table model."""
+﻿"""V2 level reward table model."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Integer, JSON, String

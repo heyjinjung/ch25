@@ -1,4 +1,4 @@
-"""V2 user retention state model for Golden."""
+﻿"""V2 user retention state model for Golden."""
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Enum, Float, ForeignKey, Integer

@@ -1,4 +1,4 @@
-"""
+﻿"""
 V2 Telegram Mini App initData 검증 모듈
 
 Telegram 공식 문서 기반 HMAC-SHA256 서명 검증

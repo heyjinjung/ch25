@@ -1,4 +1,4 @@
-"""V2 Latency Survival - User Deposit Evidence Model."""
+﻿"""V2 Latency Survival - User Deposit Evidence Model."""
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any

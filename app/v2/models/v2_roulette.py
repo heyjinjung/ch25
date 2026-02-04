@@ -1,4 +1,4 @@
-"""V2 roulette configuration and logs."""
+﻿"""V2 roulette configuration and logs."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, ForeignKey, Index, Integer, String, UniqueConstraint

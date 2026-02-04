@@ -1,4 +1,4 @@
-"""V2 admin messaging tables."""
+﻿"""V2 admin messaging tables."""
 from datetime import datetime
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, Index

@@ -1,4 +1,4 @@
-"""V2 External Deposit Unmatched model for tracking HQ CSV unmatched deposits.
+﻿"""V2 External Deposit Unmatched model for tracking HQ CSV unmatched deposits.
 
 설계 문서: v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 섹션 7.2 신규 테이블 (미매칭 로그)
