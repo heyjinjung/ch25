@@ -731,6 +731,9 @@ class TestApprovalWorkflow:
         mission.requires_approval = True
         db_session.commit()
 
+        service = V2MissionService(db_session)
+        reset_date = service._get_reset_date_str(mission.category)
+
         progress = UserMissionProgress(
             user_id=user.id,
             mission_id=mission.id,
@@ -738,11 +741,11 @@ class TestApprovalWorkflow:
             is_completed=True,
             is_claimed=False,
             approval_status=ApprovalStatus.PENDING,
+            reset_date=reset_date,
         )
         db_session.add(progress)
         db_session.commit()
 
-        service = V2MissionService(db_session)
         success, message, _ = service.claim_reward(user.id, mission.id)
 
         assert success is False
@@ -755,6 +758,9 @@ class TestApprovalWorkflow:
         mission.requires_approval = True
         db_session.commit()
 
+        service = V2MissionService(db_session)
+        reset_date = service._get_reset_date_str(mission.category)
+
         progress = UserMissionProgress(
             user_id=user.id,
             mission_id=mission.id,
@@ -762,13 +768,13 @@ class TestApprovalWorkflow:
             is_completed=True,
             is_claimed=False,
             approval_status=ApprovalStatus.APPROVED,
+            reset_date=reset_date,
         )
         db_session.add(progress)
         db_session.commit()
 
         with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
             mock.return_value = (False, None)
-            service = V2MissionService(db_session)
             success, message, _ = service.claim_reward(user.id, mission.id)
 
         assert success is True

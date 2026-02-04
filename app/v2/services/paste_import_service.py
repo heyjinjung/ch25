@@ -225,8 +225,16 @@ class PasteImportService:
         
         batch_id = str(uuid.uuid4())[:8]
         
-        # 기존 기록된 최신 시간 조회
-        latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
+        # 기존 기록된 최신 시간 조회 (시간 정보가 있는 기록만 대상)
+        # 00:00:00 기록은 시간 정보 없이 잘못 저장된 것이므로 제외
+        latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).filter(
+            func.hour(HQDailyDepositLog.deposit_at) != 0
+        ).scalar()
+        
+        # 시간 정보 있는 기록이 없으면 00:00:00 포함 전체에서 조회
+        if not latest_deposit_at:
+            latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
+        
         logger.info(f"[PasteImport] Latest deposit_at: {latest_deposit_at}")
         
         # 기존 dedup_key 조회
