@@ -40,9 +40,9 @@ export default function CSVImportPage() {
   const [isHistorical, setIsHistorical] = useState(false);
   const [emitToRedis] = useState(true);
   const [saveToDb, setSaveToDb] = useState(true);
-  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN" | "HQ_DAILY">(
-    "HQ_DAILY",
-  );
+  const [importType, setImportType] = useState<
+    "GAME_LOG" | "HQ_MARGIN" | "HQ_DAILY"
+  >("HQ_DAILY");
 
   const validateMutation = useValidateCSV();
   const uploadMutation = useUploadCSV();
@@ -189,7 +189,10 @@ export default function CSVImportPage() {
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
                         � 본사 마진 (누적)
-                        <Badge variant="outline" className="text-[10px] text-zinc-500">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-zinc-500"
+                        >
                           세그먼트용
                         </Badge>
                       </div>
@@ -210,9 +213,7 @@ export default function CSVImportPage() {
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
                         💰 일별 입금 내역
-                        <Badge className="text-[10px] bg-green-600">
-                          추천
-                        </Badge>
+                        <Badge className="text-[10px] bg-green-600">추천</Badge>
                       </div>
                       <div className="text-[10px] text-zinc-500 text-left">
                         닉네임, 충전금액, 충전날짜 → CC 입금 자동 반영
@@ -330,9 +331,7 @@ export default function CSVImportPage() {
                             <input
                               type="checkbox"
                               checked={saveToDb}
-                              onChange={(e) =>
-                                setSaveToDb(e.target.checked)
-                              }
+                              onChange={(e) => setSaveToDb(e.target.checked)}
                               className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-600 focus:ring-emerald-500"
                             />
                             <span className="text-sm">
@@ -403,10 +402,17 @@ export default function CSVImportPage() {
               </div>
               {validateMutation.data?.total_rows && (
                 <div className="text-xs text-zinc-500 space-y-1">
-                  <p>총 처리 예정: {validateMutation.data.total_rows.toLocaleString()}개 행</p>
-                  <p>예상 소요 시간: 약 {validateMutation.data.estimated_minutes}분</p>
+                  <p>
+                    총 처리 예정:{" "}
+                    {validateMutation.data.total_rows.toLocaleString()}개 행
+                  </p>
+                  <p>
+                    예상 소요 시간: 약 {validateMutation.data.estimated_minutes}
+                    분
+                  </p>
                   <p className="text-amber-400 mt-2">
-                    💡 진행 중인 작업을 중단하지 마세요. 데이터 손실이 발생할 수 있습니다.
+                    💡 진행 중인 작업을 중단하지 마세요. 데이터 손실이 발생할 수
+                    있습니다.
                   </p>
                 </div>
               )}
@@ -541,12 +547,29 @@ export default function CSVImportPage() {
                       ⚠️ 매칭 실패: {importMutation.data.not_found_count}건
                     </p>
                     <div className="max-h-40 overflow-y-auto text-sm text-zinc-400">
-                      {importMutation.data.unmatched_details?.map((item: {row: number; nickname: string; amount: number; reason: string}, i: number) => (
-                        <div key={i} className="flex justify-between py-1 border-b border-white/5">
-                          <span>Row {item.row}: {item.nickname}</span>
-                          <span>₩{item.amount?.toLocaleString()} - {item.reason}</span>
-                        </div>
-                      ))}
+                      {importMutation.data.unmatched_details?.map(
+                        (
+                          item: {
+                            row: number;
+                            nickname: string;
+                            amount: number;
+                            reason: string;
+                          },
+                          i: number,
+                        ) => (
+                          <div
+                            key={i}
+                            className="flex justify-between py-1 border-b border-white/5"
+                          >
+                            <span>
+                              Row {item.row}: {item.nickname}
+                            </span>
+                            <span>
+                              ₩{item.amount?.toLocaleString()} - {item.reason}
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
