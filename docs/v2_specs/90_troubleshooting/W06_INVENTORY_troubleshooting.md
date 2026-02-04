@@ -51,6 +51,7 @@ else:
 
 **수정 파일**
 - `app/v2/api/admin/inventory_routes.py`
+- `app/v2/api/admin/economy_routes.py`
 
 **검증 방법**
 - 어드민 회수 실행 후 `/api/v2/admin/inventory/logs`에서 type=REVOKE 확인

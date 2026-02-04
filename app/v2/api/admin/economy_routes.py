@@ -1138,6 +1138,17 @@ def get_ticket_logs(
     end_date: str | None = None,
     db: Session = Depends(get_db)
 ):
+    def is_admin_label(value: str | None) -> bool:
+        if not value:
+            return False
+        return value.upper().startswith("ADMIN")
+
+    def is_admin_related(value: str | None) -> bool:
+        if not value:
+            return False
+        lower = value.lower()
+        return lower.startswith("admin_") or lower.startswith("admin:")
+
     # Fetch Wallet Logs
     w_query = db.query(UserGameWalletLedger, V2User).outerjoin(
         V2User, UserGameWalletLedger.user_id == V2User.id
@@ -1176,7 +1187,10 @@ def get_ticket_logs(
     # Merge
     combined = []
     for l, user in w_logs:
-        l_type = "GRANT" if l.delta > 0 else "USE"
+        if l.delta < 0:
+            l_type = "REVOKE" if is_admin_label(l.label) else "USE"
+        else:
+            l_type = "GRANT"
         combined.append(TicketLogDto(
             id=l.id,
             userId=l.user_id,
@@ -1190,7 +1204,10 @@ def get_ticket_logs(
         ))
         
     for l, user in i_logs:
-        l_type = "GRANT" if l.change_amount > 0 else "USE"
+        if l.change_amount < 0:
+            l_type = "REVOKE" if is_admin_related(l.related_id) else "USE"
+        else:
+            l_type = "GRANT"
         combined.append(TicketLogDto(
             id=l.id,
             userId=l.user_id,
