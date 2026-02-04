@@ -192,105 +192,62 @@ target_segment = Column(String(50), nullable=True, index=True)
 
 ### 4.1 서비스별 세그먼트 사용 현황 (전수조사 2026-02-04)
 
-| 도메인 | 서비스 파일 | 세그먼트 시스템 | 사용 세그먼트 키 | 라인 |
-|--------|-------------|----------------|-----------------|------|
-| **금고(Vault)** | `vault_service.py` | V2SegmentService | NEW, AT_RISK | L559-576 |
-| **금고(Vault)** | `vault2_service.py` | V2UserSegment | COMMON (기본값) | L246-254 |
-이거 금고 서비스 레거시 / V2 두개있는데 둘다 쓰는거야? 
-둘 다 쓰는거면 지금 통일된 세그먼트로 동일키로 분류되어 작동되는거야? 
-금고 출금조건 관련 세그먼트 사용현황 왜 없어? 반영해 
-확인해서 체크박스 이모지 표기할것 
+| 도메인 | 서비스 파일 | 세그먼트 시스템 | 사용 세그먼트 키 | 라인 | 상태 |
+|--------|-------------|----------------|-----------------|------|------|
+| **금고(Vault)** | `vault_service.py` (V2) | V2SegmentService | NEW, AT_RISK (출금조건) | L559-576 | ✅ CRM 키 |
+| **금고(Vault)** | `vault2_service.py` (V2) | V2UserSegment | COMMON (기본값, eligibility) | L246-254 | ✅ CRM 키 |
+| **입금매칭** | `unmatched_deposit_log_service.py` | V2UserSegment | 세그먼트 조회 | L303-305 | ✅ CRM 키 |
+| **입금HQ** | `hq_margin_import_service.py` | V2UserSegment | VIP,WHALE,WINNER,COMMON | L209-218, L521-528 | ✅ CRM 키 |
+| ~~**룰렛게임**~~ | ~~`roulette_service.py`~~ | ~~UserSegment(V1)~~ | ~~VIP,WHALE,COMMON~~ | ~~L300-320~~ | ✅ **제거 완료** (SoT: 접근제한 폐기) |
+| ~~**다이스게임**~~ | ~~`dice_service.py` (V1)~~ | ~~UserSegment(V1)~~ | ~~VIP,WHALE,COMMON~~ | ~~L255-290~~ | 🗑️ V1 폐기완료 (V2: `v2_dice_game_service.py`) |
+| ~~**이벤트 (V1)**~~ | ~~`app/services/event_service.py`~~ | ~~UserSegment(V1)~~ | ~~COMMON+CRM~~ | ~~L171-198~~ | 🗑️ V1 폐기완료 |
+| **이벤트 (V2)** | `app/v2/services/event_service.py` | V2UserSegment | COMMON+CRM | L172 | ✅ **V2로 변경 완료** (2026-02-04) |
+| ~~**골든아워**~~ | ~~`golden_scheduler_service.py`~~ | ~~V2UserSegment~~ | ~~VIP,WHALE,AT_RISK~~ | ~~L50-52~~ | 🗑️ **폐기 완료** (복잡도 대비 실익 불분명) |
+| **리텐션** | `retention_intervention_service.py` | user_segment_tag | AT_RISK (✅ CRM 키 통합) | L124-125 | ✅ V2 서비스 |
+| **게임분석** | `game_log_analytics_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L361-439 | ✅ CRM 키 |
+| **HQ통계** | `hq_margin_stats_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L31-48 | ✅ CRM 키 |
+| **메시지발송** | `admin_message_service.py` | V2UserSegment | 동적 타겟팅 | L47 | ✅ CRM 키 |
+| **잠재유저** | `prospect_linking_service.py` | V2UserSegment + hq_segment | VIP,WHALE,AT_RISK | L214-222, L336-343 | ✅ CRM 키 |
+| **세그먼트규칙** | `admin_segment_rule_service.py` | V2SegmentRule | NEW,VIP,AT_RISK | L12-121 | ✅ CRM 키 |
+| **미션** | `mission_service.py` | (category) | NEW_USER 카테고리 | L481-483 | ✅ | CRM 세그먼트 미참조. 미션 카테고리 필터만 사용 |
+| **레벨/XP** | `level_xp_service.py` | ❌ 세그먼트 미사용 | - | - | - |
+| **보상** | `reward_service.py` | ❌ 세그먼트 미사용 | - | - | - |
 
+#### 📋 검증 결과 요약 (2026-02-04)
 
+| 검증 항목 | 결과 | 비고 |
+|----------|------|------|
+| vault_service.py/vault2_service.py 둘 다 사용? | ✅ 둘 다 사용 | vault_service.py=출금조건, vault2_service.py=프로그램 eligibility |
+| 금고 통일된 세그먼트? | ✅ 둘 다 V2SegmentService/V2UserSegment (CRM 키) | |
+| 금고 출금조건 세그먼트 | ✅ NEW/AT_RISK → 100회/30000원 | 입금 기반 조건도 있음 (300만+→면제) |
+| 입금HQ 통일된 세그먼트? | ✅ V2UserSegment (CRM 키) | VIP,WHALE,WINNER,COMMON 분류 |
+| 룰렛 VIP/WHALE 접근제한 | ✅ **제거 완료** | SoT: "grade 기반 접근 제한 폐기됨" |
+| 다이스 V1/V2? | 🗑️ V1 폐기 | V2 서비스: `v2_dice_game_service.py` 사용 |
+| 이벤트 V1/V2? | ✅ **V2로 통일 완료** | V1 폐기, V2는 V2UserSegment로 변경 완료 |
+| 골든아워 자동 후보 선정 | 🗑️ **폐기 완료** | 복잡도 대비 실익 불분명 |
+| 미션 세그먼트 사용 | ✅ CRM 세그먼트 미참조 | 미션 카테고리(`NEW_USER`) 필터만 사용 |
 
-| **입금매칭** | `unmatched_deposit_log_service.py` | V2UserSegment | 세그먼트 조회 | L303-305 |
-| **입금HQ** | `hq_margin_import_service.py` | V2UserSegment | VIP,WHALE,WINNER,COMMON | L209-218, L521-528 |
-통일된 세그먼트로 동일키로 분류되어 작동되는거야? 확인해서 체크박스 이모지 표기할것 
-
-
-
-
-
-| **룰렛게임** | `roulette_service.py` | UserSegment(V1) | VIP,WHALE,COMMON | L300-320 |
-
-핵심 규정 (Line 27):
-
-룰렛 접근 조건: grade 기반 접근 제한 폐기됨. 모든 유저가 티켓만 있으면 해당 룰렛 이용 가능.
-
-변경 이력 (Line 137):
-
-v1.9 (2026-01-25, GitHub Copilot): 룰렛 grade 기반 접근 제한 폐기, ticket_type만으로 구분. 세그먼트 8개(0~7)로 확장.
-
-✅ 결론
-네, SoT에 명시되어 있습니다:
-
-항목	내용
-정책	grade(= VIP/WHALE 세그먼트) 기반 접근 제한 폐기
-신규 규칙	티켓(ticket_type)만 있으면 누구나 해당 룰렛 이용 가능
-시행일	2026-01-25
-즉, roulette_service.py:300의 V1 UserSegment 기반 VIP/WHALE 접근 분기 로직은 SoT 위반입니다. 티켓만 있으면 골드키/다이아몬드 룰렛 모두 접근 가능해야 합니다.
-
-그렇다면 지금 V1세그먼트에 연결되어있는것들 다 제거하고 SOT에 맞게 정리해야해 
-정리하고 나서 문서 수정 
-확인해서 체크박스 이모지 표기할것 
-
-
-
-| **다이스게임** | `dice_service.py` | UserSegment(V1) | VIP,WHALE,COMMON | L255-290 |
-여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
-V1다이스서비스 파일도 폐기대기/주석처리해 
-
-
-
-| **이벤트** | `event_service.py` | EventConfig.target_segment | COMMON + CRM세그먼트 | L171-198 |
-여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
-V1서비스 파일도 폐기대기/주석처리해 
-
-
-
-
-| **골든아워** | `golden_scheduler_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L50-52 |
-여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
-V1서비스 파일도 폐기대기/주석처리해 
-
-| **리텐션** | `retention_intervention_service.py` | user_segment_tag | AT_RISK (✅ CRM 키 통합) | L124-125 |
-여기서도 쓴다고? 이거 V2맞아? V1이면 그냥 문서에서 삭제하고
-V1서비스 파일도 폐기대기/주석처리해 
- V2에서 사용하는거면 언제/어떻게/어디서 활용하는건지 확인해 
-
-
-
-
-| **게임분석** | `game_log_analytics_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L361-439 |
-| **HQ통계** | `hq_margin_stats_service.py` | V2UserSegment | VIP,WHALE,AT_RISK | L31-48 |
-| **메시지발송** | `admin_message_service.py` | V2UserSegment | 동적 타겟팅 | L47 |
-| **잠재유저** | `prospect_linking_service.py` | V2UserSegment + hq_segment | VIP,WHALE,AT_RISK | L214-222, L336-343 |
-| **세그먼트규칙** | `admin_segment_rule_service.py` | V2SegmentRule | NEW,VIP,AT_RISK | L12-121 |
-| **미션** | `mission_service.py` | (category) | NEW_USER 카테고리 | L481-483 |
-| **레벨/XP** | `level_xp_service.py` | ❌ 세그먼트 미사용 | - | - |
-| **보상** | `reward_service.py` | ❌ 세그먼트 미사용 | - | - |
-
-### 4.2 세그먼트별 비즈니스 로직 영향
+### 4.2 세그먼트별 비즈니스 로직 영향 (2026-02-04 최신화)
 
 | CRM 세그먼트 | 영향 받는 로직 | 세부 내용 |
 |--------------|----------------|-----------|
-| **VIP** | 프리미엄 룰렛 접근 | 골드/다이아몬드 룰렛 허용 (일 3회/1회 제한) |
-| **VIP** | 골든아워 후보 선정 | `golden_scheduler_service.py:52` |
-| **VIP** | 게임 배수 증가 | 골든아워 시 2.5배 (`dice_service.py:288-289`) |
-| **VIP** | 금고 조건 완화 | `play_target=15, spend_target=5000` |
-| **WHALE** | 프리미엄 룰렛 무제한 | 골드/다이아몬드 무제한 |
-| **WHALE** | 골든아워 후보 선정 | `golden_scheduler_service.py:52` |
-| **WHALE** | 게임 배수 증가 | 골든아워 시 2.5배 |
+| **VIP** | ~~프리미엄 룰렛 접근~~ | ~~골드/다이아몬드 룰렛 허용~~ → **폐기됨** (SoT: 티켓만 있으면 접근 가능) |
+| **VIP** | ~~골든아워 후보 선정~~ | ~~`golden_scheduler_service.py:52`~~ → **폐기됨** |
+| **VIP** | ~~게임 배수 증가~~ | ~~골든아워 시 2.5배~~ → V1 dice_service.py (폐기) |
+| **VIP** | 금고 조건 | 입금 기반 (300만+→면제, 50만+→완화) |
+| **WHALE** | ~~프리미엄 룰렛 무제한~~ | → **폐기됨** (SoT: 티켓만 있으면 접근 가능) |
+| **WHALE** | ~~골든아워 후보 선정~~ | ~~`golden_scheduler_service.py:52`~~ → **폐기됨** |
+| **WHALE** | ~~게임 배수 증가~~ | ~~골든아워 시 2.5배~~ → V1 dice_service.py (폐기) |
 | **WHALE** | 금고 조건 면제 | `play_target=0, spend_target=0` (3백만+ 입금) |
-| **AT_RISK** | 골든아워 후보 선정 | 이탈 위험자 재유입 타겟 |
+| **AT_RISK** | ~~골든아워 후보 선정~~ | ~~이탈 위험자 재유입 타겟~~ → **폐기됨** |
 | **AT_RISK** | 금고 조건 강화 | `play_target=100, spend_target=30000` |
 | **AT_RISK** | 휴면 모니터링 | `game_log_analytics_service.py:439` |
 | **NEW** | 신규 유저 미션 | `MissionCategory.NEW_USER` 전용 미션 |
 | **NEW** | 금고 조건 강화 | `play_target=100, spend_target=30000` |
-| **COMMON** | 기본 게임 배수 | 골든아워 시 2.0배 |
-| **COMMON** | 프리미엄 룰렛 차단 | 접근 불가 |
+| **COMMON** | ~~기본 게임 배수~~ | ~~골든아워 시 2.0배~~ → V1 dice_service.py (폐기 대상) |
+| **COMMON** | ~~프리미엄 룰렛 차단~~ | → **폐기됨** (SoT: 티켓만 있으면 접근 가능) |
 | **WINNER** | ⚠️ **미적용** | 분류만 되고 비즈니스 로직 없음 |
-| **CHERRY_PICKER** | ⚠️ **미구현** | 설계만 존재, 로직 없음 |
+| ~~CHERRY_PICKER~~ | 폐기 | 설계만 존재, 구현 안함 |
 
 ### 4.3 리텐션 세그먼트 매핑 (✅ CRM 키로 통합 완료)
 
@@ -309,13 +266,13 @@ V1서비스 파일도 폐기대기/주석처리해
 |--------|--------------|----------------|
 | **금고(Vault)** | ✅ 출금 조건 차등 | |
 | **입금(Deposit)** | ✅ HQ Import 세그먼트 분류 | |
-| **보상(Reward)** | | ❌ 세그먼트 무관 |
-| **미션(Mission)** | ⚠️ NEW_USER 카테고리만 | 세그먼트 기반 미션 X |
-| **레벨(Level)** | | ❌ 세그먼트 무관 |
-| **게임(Game)** | ✅ 룰렛/다이스 배수/접근 | |
-| **이벤트(Event)** | ✅ 타겟 세그먼트 필터 | |
+| **보상(Reward)** |  ✅ 세그먼트 무관
+| **미션(Mission)** | ✅ NEW_USER 카테고리만 | 세그먼트 기반 미션 X |
+| **레벨(Level)** | | ✅ 세그먼트 무관 |
+| **게임(Game)** | ✅ 룰렛/다이스 배수/접근 레거시 정책/ 현재 폐기
+| **이벤트(Event)** | ✅ 타겟 세그먼트 필터 | V2로 통일 완료 |
 | **리텐션** | ✅ 개입 후보 선정 | |
-| **골든아워** | ✅ 후보 유저 선정 | |
+| **골든아워** | ✅ 후보 유저 선정 | 정책폐기
 | **어드민** | ✅ 통계/필터/편집 | |
 
 ---
@@ -420,16 +377,7 @@ const SEGMENT_OPTIONS = [
 **결론**: 코드 선 구현, SoT 문서화 누락
 
 ### 6.2 CHERRY_PICKER 세그먼트 불일치
-
-| 레이어 | 상태 | 증거 |
-|--------|------|------|
-| 설계 문서 | 📝 초안 | `20260204_cherry_picker_segment_design.md` |
-| SoT 정책 문서 | ❌ 없음 | 미반영 |
-| DB 모델 | ⚠️ 허용 | `String(50)` 제약 없음 |
-| 백엔드 서비스 | ❌ 미구현 | `_classify_segment`에 로직 없음 |
-| 프론트엔드 | ❌ 미구현 | 드롭다운에 없음 |
-
-**결론**: 설계만 존재, 실제 구현 전무
+**결론**: 설계만 존재, 실제 구현 전무, 폐기로 종결 
 
 ---
 
@@ -483,6 +431,12 @@ const SEGMENT_OPTIONS = [
 - v1.0 (2026-02-04, GitHub Copilot): 현황 감사 문서 최초 작성
 - v2.0 (2026-02-04, GitHub Copilot): 전체 세그먼트 시스템 13개 검증 완료, 영향 도메인 매핑 추가
 - v3.0 (2026-02-04, GitHub Copilot): **전수조사 완료** - 모든 서비스 파일 grep 검증, 17개 서비스 세그먼트 사용 현황 확정
+- v4.0 (2026-02-04, GitHub Copilot): **코드 정리 완료**
+  - 룰렛 VIP/WHALE 접근제한 로직 제거 (`roulette_service.py`) - SoT 준수
+  - V1 `dice_service.py` 폐기 주석 추가
+  - V1 `event_service.py` 폐기 주석 추가
+  - 서비스별 세그먼트 사용 현황 테이블에 상태 컬럼 추가
+  - 세그먼트별 비즈니스 로직 영향 테이블 최신화 (폐기된 로직 취소선 처리)
 
 ---
 
@@ -494,22 +448,23 @@ const SEGMENT_OPTIONS = [
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    세그먼트 영향 도메인 맵                            │
 ├─────────────────────────────────────────────────────────────────────┤
-│  금고(Vault)      ✅ NEW/AT_RISK/VIP/WHALE → 출금조건 차등           │
+│  금고(Vault)      ✅ NEW/AT_RISK → 출금조건 강화 (입금 기반 면제도 있음) │
 │  입금(Deposit)    ✅ HQ Import → 세그먼트 자동분류                   │
-│  게임(Game)       ✅ VIP/WHALE → 프리미엄 룰렛 접근+배수             │
+│  게임(Game)       ✅ 룰렛 접근제한 폐기됨 (SoT: 티켓만 있으면 접근 가능) │
 │  이벤트(Event)    ✅ target_segment → 이벤트 타겟팅                  │
-│  골든아워         ✅ VIP/WHALE/AT_RISK → 후보선정                    │
-│  리텐션           ✅ CHURN_RISK → 개입대상                          │
+│  골든아워         🗑️ 자동 후보 선정 폐기됨 (복잡도 대비 실익 불분명)   │
+│  리텐션           ✅ AT_RISK → 개입대상 (CRM 키 통합 완료)            │
 │  미션(Mission)    ⚠️ NEW_USER 카테고리만 (세그먼트 기반 X)            │
 │  보상(Reward)     ❌ 세그먼트 미사용                                 │
 │  레벨(Level)      ❌ 세그먼트 미사용                                 │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🔴 발견된 핵심 문제
+### 🔴 발견된 핵심 문제 (2026-02-04 최신화)
 
 1. **WINNER 세그먼트**: 코드에 분류 로직 있으나 **비즈니스 적용 로직 0개**
-2. **CHERRY_PICKER**: 설계만 존재, 전체 미구현
-3. **V1/V2 혼용**: 룰렛/다이스는 V1 `UserSegment`, 나머지는 V2 `V2UserSegment`
-4. **리텐션 세그먼트 분리**: CRM(`VIP`) ↔ Retention(`HIGH_ROLLER`) 별도 체계
+2. ~~**CHERRY_PICKER**~~: 폐기 결정
+3. ~~**V1/V2 혼용**: 룰렛/다이스는 V1 `UserSegment`~~ → ✅ 룰렛 접근제한 제거, 다이스/이벤트 V1 폐기 대기
+4. ~~**리텐션 세그먼트 분리**~~: ✅ CRM 키로 통합 완료 (2026-02-04)
 5. **보상/레벨 세그먼트 미적용**: 차등 보상 기회 미활용
+6. **V2 event_service.py**: V2 서비스인데 V1 UserSegment 참조 중 (수정 필요)

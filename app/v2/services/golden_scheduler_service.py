@@ -1,8 +1,21 @@
 """
-Golden Scheduler Service for V2.
+[DEPRECATED 2026-02-04] Golden Scheduler Service - 폐기됨
 
-This service aligns HQ Margin data (Segments) with Golden Project interventions.
-It runs periodically to identify opportunities or risks based on HQ data and user activity.
+⚠️ 이 서비스는 더 이상 사용하지 않습니다.
+
+폐기 사유:
+- 복잡도 증가 대비 실익 불분명
+- VIP/WHALE/AT_RISK 세그먼트 기반 자동 개입 로직 불필요
+
+기존 기능:
+- HQ 마진 데이터(세그먼트)를 기반으로 골든아워 개입 후보 자동 선정
+- 24시간 중복 방지 로직
+
+대체 방안:
+- 어드민이 수동으로 골든아워 대상 유저 지정
+- 또는 골든아워 기능 자체를 단순화
+
+TODO: 이 파일 참조하는 코드 제거 후 파일 삭제
 """
 from datetime import datetime, timedelta
 import logging
@@ -21,79 +34,16 @@ class GoldenSchedulerService:
     @staticmethod
     def run_golden_hour_check(db: Session) -> dict:
         """
-        Run periodic check for Golden Hour opportunities.
+        [DEPRECATED] 골든아워 자동 후보 선정 - 폐기됨 (2026-02-04)
         
-        Logic:
-        1. Find "Active" VIP/WHALE users (active in last 24h).
-        2. Check if they have pending interventions or are in cooldown.
-        3. If eligble, create a 'CANDIDATE_GOLDEN_HOUR' intervention log (Pending Approval).
-        
-        Returns:
-            dict: Stats of the run (processed, triggered, etc.)
+        이 메서드는 더 이상 사용하지 않습니다.
+        항상 빈 결과를 반환합니다.
         """
-        now = datetime.utcnow()
-        last_24h = now - timedelta(hours=24)
-        
-        # 1. Select Active VIP/WHALE users
-        # Join V2User for last_active check (if model has it, or use log proxy? 
-        # V2User usually has updated_at or we rely on segment Last Active logic.
-        # But V2UserSegment doesn't have last_active. V2User usually does ??
-        # Let's assume V2User has NO last_active column based on previous reads, 
-        # but SegmentService calculates it. 
-        # For efficiency, let's look at recent Login/Game logs? 
-        # Or just trust V2UserSegment if it's updated frequently as 'ACTIVE'?
-        # Actually V2UserSegment stores 'VIP', 'WHALE', not 'ACTIVE' state combined. 
-        # But 'AT_RISK' is a state.
-        
-        # Let's use V2UserSegment filter for VIP/WHALE/AT_RISK.
-        targets = db.execute(
-            select(V2UserSegment.user_id, V2UserSegment.segment)
-            .where(
-                V2UserSegment.segment.in_(["VIP", "WHALE", "AT_RISK"])
-            )
-        ).all()
-        
-        triggered_count = 0
-        skipped_count = 0
-        
-        for user_id, segment in targets:
-            # Check recent intervention to avoid spam
-            existing_log = db.execute(
-                select(V2GoldenInterventionLog)
-                .where(
-                    V2GoldenInterventionLog.user_id == user_id,
-                    V2GoldenInterventionLog.created_at > now - timedelta(hours=24)
-                )
-            ).first()
-            
-            if existing_log:
-                skipped_count += 1
-                continue
-            
-            # TRIGGER CONDITION:
-            # VIP/WHALE -> Check if they need "Care" (Golden Hour)?
-            # AT_RISK -> Check if they need "Save" (Retention)?
-            
-            trigger_id = "TRG_HQ_ALIGN_" + segment
-            action_taken = "CANDIDATE_GOLDEN_HOUR" if segment in ["VIP", "WHALE"] else "CANDIDATE_RETENTION"
-            
-            # Create Log (Pending Approval)
-            log = V2GoldenInterventionLog(
-                user_id=user_id,
-                trigger_id=trigger_id,
-                trigger_condition=f"HQ Segment {segment} Detected",
-                action_taken=action_taken,
-                status="PENDING_APPROVAL", # Admin must approve
-                created_at=now
-            )
-            db.add(log)
-            triggered_count += 1
-            
-        db.commit()
-        
-        logger.info(f"GoldenScheduler Run: Triggered {triggered_count}, Skipped {skipped_count}")
+        logger.warning("GoldenSchedulerService.run_golden_hour_check() is DEPRECATED and does nothing.")
         return {
-            "processed": len(targets),
-            "triggered": triggered_count,
-            "skipped": skipped_count
+            "processed": 0,
+            "triggered": 0,
+            "skipped": 0,
+            "deprecated": True,
+            "message": "This feature is deprecated since 2026-02-04"
         }

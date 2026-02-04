@@ -1,3 +1,16 @@
+"""
+[DEPRECATED 2026-02-04] V1 Dice Service - 폐기 예정
+
+⚠️ 이 파일은 V1 레거시 서비스입니다.
+V2 서비스: app/v2/services/v2_dice_game_service.py
+
+폐기 사유:
+- V1 UserSegment 모델 사용 (V2 시스템과 불일치)
+- 세그먼트 기반 골든아워 배수 로직이 V1 모델에 의존
+
+TODO: V2 완전 전환 후 이 파일 삭제
+"""
+
 """Dice service implementing status and play flows."""
 import logging
 from datetime import date, datetime

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.v2.models import EventConfig
-from app.v2.models import UserSegment
+from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models.user import V2User
 from app.v2.services.vault2_service import Vault2Service
 
@@ -169,7 +169,7 @@ class V2EventService:
         if not user:
             return []
 
-        segment = db.query(UserSegment.segment).filter(UserSegment.user_id == user_id).scalar() or "COMMON"
+        segment = db.query(V2UserSegment.segment).filter(V2UserSegment.user_id == user_id).scalar() or "COMMON"
         segment_cfg = (
             db.query(EventConfig)
             .filter(

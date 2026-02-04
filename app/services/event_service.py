@@ -1,3 +1,16 @@
+"""
+[DEPRECATED 2026-02-04] V1 Event Service - 폐기 예정
+
+⚠️ 이 파일은 V1 레거시 서비스입니다.
+V2 서비스: app/v2/services/event_service.py
+
+폐기 사유:
+- V1 UserSegment 모델 사용 (V2 시스템과 불일치)
+- V2 event_service.py도 V1 UserSegment 참조 중 (별도 수정 필요)
+
+TODO: V2 완전 전환 후 이 파일 삭제
+"""
+
 from datetime import datetime, time, timedelta
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
