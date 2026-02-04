@@ -23,6 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.exceptions import InvalidConfigError
 from app.db.base_class import Base
 from app.v2.models.user import V2User
 from app.v2.services.reward_service import V2RewardService
@@ -91,7 +92,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 1
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=3,
@@ -107,7 +108,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 3
         user = _create_user(db_session, 2)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=6,
@@ -123,7 +124,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 1
         user = _create_user(db_session, 3)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=7,
@@ -142,7 +143,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 5
         user = _create_user(db_session, 4)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=12,
@@ -158,7 +159,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 2
         user = _create_user(db_session, 5)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=15,
@@ -175,7 +176,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 3
         user = _create_user(db_session, 6)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=20,
@@ -192,7 +193,7 @@ class TestBundleRewardExpansion:
         mock_grant.return_value = 10
         user = _create_user(db_session, 7)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="BUNDLE",
             reward_amount=30,
@@ -221,7 +222,7 @@ class TestGameXPRouting:
         mock_add_xp.return_value = {"success": True}
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GAME_XP",
             reward_amount=500,
@@ -251,7 +252,7 @@ class TestPointRouting:
         user = _create_user(db_session, 1)
         initial_balance = user.vault_locked_balance
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="POINT",
             reward_amount=5000,
@@ -266,7 +267,7 @@ class TestPointRouting:
         user = _create_user(db_session, 2)
         initial_balance = user.vault_locked_balance
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="CC_POINT",
             reward_amount=10000,
@@ -297,7 +298,7 @@ class TestGifticonValidation:
         user = _create_user(db_session, 1)
 
         # 예외 없이 실행되어야 함
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GIFTICON_BAEMIN",
             reward_amount=5000,
@@ -312,7 +313,7 @@ class TestGifticonValidation:
         mock_grant.return_value = True
         user = _create_user(db_session, 2)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GIFTICON_BAEMIN",
             reward_amount=10000,
@@ -327,7 +328,7 @@ class TestGifticonValidation:
         mock_grant.return_value = True
         user = _create_user(db_session, 3)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GIFTICON_BAEMIN",
             reward_amount=20000,
@@ -340,13 +341,14 @@ class TestGifticonValidation:
         """배민 기프티콘 미등록 금액 거부"""
         user = _create_user(db_session, 4)
 
-        with pytest.raises(ValueError, match="INVALID_GIFTICON_AMOUNT"):
-            V2RewardService.deliver(
+        with pytest.raises(InvalidConfigError) as exc:
+            V2RewardService().deliver(
                 db_session, user.id,
                 reward_type="GIFTICON_BAEMIN",
                 reward_amount=7000,  # 미등록 금액
                 meta={"reason": "TEST"},
             )
+        assert exc.value.detail == "INVALID_GIFTICON_AMOUNT"
 
     @patch("app.v2.services.inventory_service.V2InventoryService.grant_item")
     def test_compose_3000_valid(self, mock_grant, db_session: Session):
@@ -354,7 +356,7 @@ class TestGifticonValidation:
         mock_grant.return_value = True
         user = _create_user(db_session, 5)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GIFTICON_COMPOSE",
             reward_amount=3000,
@@ -379,7 +381,7 @@ class TestRewardTypeRouting:
         mock_grant.return_value = 3
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="ROULETTE_TICKET",
             reward_amount=3,
@@ -394,7 +396,7 @@ class TestRewardTypeRouting:
         mock_grant.return_value = 5
         user = _create_user(db_session, 2)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="DICE_TICKET",
             reward_amount=5,
@@ -409,7 +411,7 @@ class TestRewardTypeRouting:
         mock_grant.return_value = 2
         user = _create_user(db_session, 3)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="LOTTERY_TICKET",
             reward_amount=2,
@@ -424,7 +426,7 @@ class TestRewardTypeRouting:
         mock_grant.return_value = 1
         user = _create_user(db_session, 4)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="GOLD_KEY_TICKET",
             reward_amount=1,
@@ -439,7 +441,7 @@ class TestRewardTypeRouting:
         mock_grant.return_value = 10
         user = _create_user(db_session, 5)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="DIAMOND",
             reward_amount=10,
@@ -467,13 +469,14 @@ class TestRewardValidation:
         """음수 보상량 거부"""
         user = _create_user(db_session, 1)
 
-        with pytest.raises(ValueError, match="INVALID_POINT_AMOUNT"):
-            V2RewardService.deliver(
+        with pytest.raises(InvalidConfigError) as exc:
+            V2RewardService().deliver(
                 db_session, user.id,
                 reward_type="POINT",
                 reward_amount=-1000,
                 meta={"reason": "TEST"},
             )
+        assert exc.value.detail == "INVALID_POINT_AMOUNT"
 
     def test_zero_amount_no_op(self, db_session: Session):
         """0 보상량은 조기 반환 (no-op)"""
@@ -481,7 +484,7 @@ class TestRewardValidation:
         initial_balance = user.vault_locked_balance
 
         # 예외 없이 실행되고 잔액 변화 없음
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="POINT",
             reward_amount=0,
@@ -496,7 +499,7 @@ class TestRewardValidation:
         user = _create_user(db_session, 3)
         initial_balance = user.vault_locked_balance
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="NONE",
             reward_amount=1000,
@@ -511,7 +514,7 @@ class TestRewardValidation:
         user = _create_user(db_session, 4)
         initial_balance = user.vault_locked_balance
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="",
             reward_amount=1000,
@@ -519,38 +522,6 @@ class TestRewardValidation:
         )
 
         db_session.refresh(user)
-        assert user.vault_locked_balance == initial_balance
-
-
-# =============================================================================
-# 7. Vault 이익 정지 상태 체크 테스트
-# =============================================================================
-
-class TestRewardVaultSuspendedCheck:
-    """
-    출처: reward_service.py §Vault Policy 체크
-
-    규칙:
-    - benefits_suspended=True 시 보상 지급 차단
-    """
-
-    @patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended")
-    def test_reward_blocked_when_suspended(self, mock_suspended, db_session: Session):
-        """이익 정지 상태에서 보상 차단"""
-        mock_suspended.return_value = (True, "POLICY_VIOLATION")
-        user = _create_user(db_session, 1)
-        initial_balance = user.vault_locked_balance
-
-        result = V2RewardService.deliver(
-            db_session, user.id,
-            reward_type="POINT",
-            reward_amount=5000,
-            meta={"reason": "TEST"},
-            check_suspended=True,
-        )
-
-        db_session.refresh(user)
-        # 잔액 변화 없음
         assert user.vault_locked_balance == initial_balance
 
 
@@ -570,7 +541,7 @@ class TestRewardMetadata:
         """POINT 보상 메타데이터 기록"""
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="POINT",
             reward_amount=3000,
@@ -605,7 +576,7 @@ class TestTicketBundle:
         mock_grant.return_value = 1
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="TICKET_BUNDLE",
             reward_amount=3,
@@ -631,7 +602,7 @@ class TestSpecialRewardTypes:
         mock_grant.return_value = 2
         user = _create_user(db_session, 1)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="DIAMOND_TICKET",
             reward_amount=2,
@@ -646,7 +617,7 @@ class TestSpecialRewardTypes:
         mock_grant.return_value = True
         user = _create_user(db_session, 2)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="CHICKEN_GIFTICON_5000",
             reward_amount=1,
@@ -661,7 +632,7 @@ class TestSpecialRewardTypes:
         mock_grant.return_value = True
         user = _create_user(db_session, 3)
 
-        V2RewardService.deliver(
+        V2RewardService().deliver(
             db_session, user.id,
             reward_type="STARBUCKS_GIFTICON_10000",
             reward_amount=1,

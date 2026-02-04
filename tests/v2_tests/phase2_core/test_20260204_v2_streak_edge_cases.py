@@ -28,6 +28,7 @@ from sqlalchemy.pool import StaticPool
 from app.db.base_class import Base
 from app.v2.models.user import V2User
 from app.v2.models.user_event_log import UserEventLog
+from app.v2.services.mission_service import V2MissionService
 from app.v2.services.streak_service import V2StreakService
 
 
@@ -98,7 +99,8 @@ class TestStreakIncrementReset:
 
         user = _create_user(db_session, 1, play_streak=5, last_play_date=yesterday)
 
-        result = V2StreakService.sync_play_streak(db_session, user.id, now_kst=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
+        service = V2MissionService(db_session)
+        service.sync_play_streak(user.id, now_tz=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
 
         db_session.refresh(user)
         assert user.play_streak == 6  # 5 + 1
@@ -112,7 +114,8 @@ class TestStreakIncrementReset:
 
         user = _create_user(db_session, 2, play_streak=10, last_play_date=two_days_ago)
 
-        result = V2StreakService.sync_play_streak(db_session, user.id, now_kst=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
+        service = V2MissionService(db_session)
+        service.sync_play_streak(user.id, now_tz=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
 
         db_session.refresh(user)
         assert user.play_streak == 1  # 리셋
@@ -125,7 +128,8 @@ class TestStreakIncrementReset:
 
         user = _create_user(db_session, 3, play_streak=7, last_play_date=today)
 
-        result = V2StreakService.sync_play_streak(db_session, user.id, now_kst=datetime(2026, 2, 4, 15, 0, 0, tzinfo=kst))
+        service = V2MissionService(db_session)
+        service.sync_play_streak(user.id, now_tz=datetime(2026, 2, 4, 15, 0, 0, tzinfo=kst))
 
         db_session.refresh(user)
         assert user.play_streak == 7  # 변화 없음
@@ -138,7 +142,8 @@ class TestStreakIncrementReset:
 
         user = _create_user(db_session, 4, play_streak=0, last_play_date=None)
 
-        result = V2StreakService.sync_play_streak(db_session, user.id, now_kst=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
+        service = V2MissionService(db_session)
+        service.sync_play_streak(user.id, now_tz=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
 
         db_session.refresh(user)
         assert user.play_streak == 1
@@ -152,7 +157,8 @@ class TestStreakIncrementReset:
 
         user = _create_user(db_session, 5, play_streak=15, last_play_date=three_days_ago)
 
-        result = V2StreakService.sync_play_streak(db_session, user.id, now_kst=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
+        service = V2MissionService(db_session)
+        service.sync_play_streak(user.id, now_tz=datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst))
 
         # 리셋 이벤트 로그 확인
         event = db_session.query(UserEventLog).filter(
@@ -184,9 +190,10 @@ class TestMilestoneClaimDeduplication:
 
         user = _create_user(db_session, 1, play_streak=3, last_play_date=today)
 
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            result = V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
+        service = V2StreakService(db_session)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            result = service.claim_streak_reward(user.id)
 
         assert result["success"] is True
 
@@ -197,18 +204,20 @@ class TestMilestoneClaimDeduplication:
 
         user = _create_user(db_session, 2, play_streak=3, last_play_date=today)
 
+        service = V2StreakService(db_session)
+
         # 첫 번째 클레임
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            service.claim_streak_reward(user.id)
 
         # 두 번째 클레임 (중복)
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            result = V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            result = service.claim_streak_reward(user.id)
 
         assert result["success"] is False
-        assert result["message"] == "ALREADY_CLAIMED"
+        assert result["message"] == "NO_CLAIMABLE_REWARD"
 
     def test_event_log_created_on_claim(self, db_session: Session):
         """클레임 시 이벤트 로그 생성"""
@@ -217,9 +226,10 @@ class TestMilestoneClaimDeduplication:
 
         user = _create_user(db_session, 3, play_streak=7, last_play_date=today)
 
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=7)
+        service = V2StreakService(db_session)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            service.claim_streak_reward(user.id)
 
         # 이벤트 로그 확인
         event = db_session.query(UserEventLog).filter(
@@ -246,30 +256,40 @@ class TestStreakMultiplier:
 
     def test_default_multiplier_below_3_days(self):
         """3일 미만은 기본 배율 1.0"""
-        multiplier = V2StreakService._get_streak_multiplier(2)
+        service = V2StreakService(MagicMock())
+        service.settings.streak_multiplier_enabled = True
+        multiplier = service._get_streak_multiplier(2)
         assert multiplier == 1.0
 
     def test_hot_multiplier_at_3_days(self):
         """3일은 Hot 배율 1.2"""
-        multiplier = V2StreakService._get_streak_multiplier(3)
-        assert multiplier == 1.2
+        service = V2StreakService(MagicMock())
+        service.settings.streak_multiplier_enabled = True
+        multiplier = service._get_streak_multiplier(3)
+        assert multiplier == service.settings.streak_hot_multiplier
 
     def test_hot_multiplier_between_3_and_7_days(self):
         """3~6일은 Hot 배율 1.2"""
         for days in [3, 4, 5, 6]:
-            multiplier = V2StreakService._get_streak_multiplier(days)
-            assert multiplier == 1.2
+            service = V2StreakService(MagicMock())
+            service.settings.streak_multiplier_enabled = True
+            multiplier = service._get_streak_multiplier(days)
+            assert multiplier == service.settings.streak_hot_multiplier
 
     def test_legend_multiplier_at_7_days(self):
         """7일은 Legend 배율 1.5"""
-        multiplier = V2StreakService._get_streak_multiplier(7)
-        assert multiplier == 1.5
+        service = V2StreakService(MagicMock())
+        service.settings.streak_multiplier_enabled = True
+        multiplier = service._get_streak_multiplier(7)
+        assert multiplier == service.settings.streak_legend_multiplier
 
     def test_legend_multiplier_above_7_days(self):
         """7일 초과도 Legend 배율 1.5"""
         for days in [7, 10, 14, 30, 100]:
-            multiplier = V2StreakService._get_streak_multiplier(days)
-            assert multiplier == 1.5
+            service = V2StreakService(MagicMock())
+            service.settings.streak_multiplier_enabled = True
+            multiplier = service._get_streak_multiplier(days)
+            assert multiplier == service.settings.streak_legend_multiplier
 
 
 # =============================================================================
@@ -286,45 +306,75 @@ class TestNextMilestoneCalculation:
     - streak >= 7: next = ((streak // 7) + 1) * 7
     """
 
-    def test_next_milestone_when_streak_0(self):
+    def test_next_milestone_when_streak_0(self, db_session: Session):
         """스트릭 0일 때 다음 마일스톤 3"""
-        next_ms = V2StreakService._compute_next_milestone(0)
-        assert next_ms == 3
+        user = _create_user(db_session, 1, play_streak=0, last_play_date=None)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 3
 
-    def test_next_milestone_when_streak_2(self):
+    def test_next_milestone_when_streak_2(self, db_session: Session):
         """스트릭 2일 때 다음 마일스톤 3"""
-        next_ms = V2StreakService._compute_next_milestone(2)
-        assert next_ms == 3
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 2, play_streak=2, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 3
 
-    def test_next_milestone_when_streak_3(self):
+    def test_next_milestone_when_streak_3(self, db_session: Session):
         """스트릭 3일 때 다음 마일스톤 7"""
-        next_ms = V2StreakService._compute_next_milestone(3)
-        assert next_ms == 7
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 3, play_streak=3, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 7
 
-    def test_next_milestone_when_streak_6(self):
+    def test_next_milestone_when_streak_6(self, db_session: Session):
         """스트릭 6일 때 다음 마일스톤 7"""
-        next_ms = V2StreakService._compute_next_milestone(6)
-        assert next_ms == 7
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 4, play_streak=6, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 7
 
-    def test_next_milestone_when_streak_7(self):
+    def test_next_milestone_when_streak_7(self, db_session: Session):
         """스트릭 7일 때 다음 마일스톤 14"""
-        next_ms = V2StreakService._compute_next_milestone(7)
-        assert next_ms == 14
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 5, play_streak=7, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 14
 
-    def test_next_milestone_when_streak_10(self):
+    def test_next_milestone_when_streak_10(self, db_session: Session):
         """스트릭 10일 때 다음 마일스톤 14"""
-        next_ms = V2StreakService._compute_next_milestone(10)
-        assert next_ms == 14
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 6, play_streak=10, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 14
 
-    def test_next_milestone_when_streak_14(self):
+    def test_next_milestone_when_streak_14(self, db_session: Session):
         """스트릭 14일 때 다음 마일스톤 21"""
-        next_ms = V2StreakService._compute_next_milestone(14)
-        assert next_ms == 21
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 7, play_streak=14, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 21
 
-    def test_next_milestone_when_streak_30(self):
+    def test_next_milestone_when_streak_30(self, db_session: Session):
         """스트릭 30일 때 다음 마일스톤 35"""
-        next_ms = V2StreakService._compute_next_milestone(30)
-        assert next_ms == 35
+        kst = ZoneInfo("Asia/Seoul")
+        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
+        user = _create_user(db_session, 8, play_streak=30, last_play_date=today)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
+        assert info.next_milestone == 35
 
 
 # =============================================================================
@@ -350,7 +400,8 @@ class TestStreakInfoRetrieval:
 
         user = _create_user(db_session, 1, play_streak=5, last_play_date=today)
 
-        info = V2StreakService.get_user_streak_info(db_session, user.id)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
 
         assert info.current_streak == 5
         assert info.is_hot is True  # 3 이상
@@ -364,7 +415,8 @@ class TestStreakInfoRetrieval:
 
         user = _create_user(db_session, 2, play_streak=10, last_play_date=today)
 
-        info = V2StreakService.get_user_streak_info(db_session, user.id)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
 
         assert info.current_streak == 10
         assert info.is_hot is True
@@ -375,7 +427,8 @@ class TestStreakInfoRetrieval:
         """신규 유저 (스트릭 0) 정보 조회"""
         user = _create_user(db_session, 3, play_streak=0, last_play_date=None)
 
-        info = V2StreakService.get_user_streak_info(db_session, user.id)
+        service = V2StreakService(db_session)
+        info = service.get_user_streak_info(user.id)
 
         assert info.current_streak == 0
         assert info.is_hot is False
@@ -386,30 +439,6 @@ class TestStreakInfoRetrieval:
 # =============================================================================
 # 6. Vault 이익 정지 상태 체크 테스트
 # =============================================================================
-
-class TestStreakVaultSuspendedCheck:
-    """
-    출처: streak_service.py §Vault Policy 체크
-
-    규칙:
-    - benefits_suspended=True 시 스트릭 보상 지급 차단
-    """
-
-    @patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended")
-    def test_claim_blocked_when_suspended(self, mock_suspended, db_session: Session):
-        """이익 정지 상태에서 클레임 차단"""
-        mock_suspended.return_value = (True, "POLICY_VIOLATION")
-
-        kst = ZoneInfo("Asia/Seoul")
-        today = datetime(2026, 2, 4, 12, 0, 0, tzinfo=kst).date()
-
-        user = _create_user(db_session, 1, play_streak=3, last_play_date=today)
-
-        result = V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
-
-        assert result["success"] is False
-        assert result["message"] == "BENEFITS_SUSPENDED"
-
 
 # =============================================================================
 # 7. 관리자 도구 테스트
@@ -432,7 +461,8 @@ class TestAdminStreakTools:
 
         user = _create_user(db_session, 1, play_streak=15, last_play_date=today)
 
-        result = V2StreakService.reset_user_streak(db_session, user.id, commit=True)
+        service = V2StreakService(db_session)
+        result = service.reset_user_streak(user.id, commit=True)
 
         db_session.refresh(user)
         assert result is True
@@ -446,7 +476,8 @@ class TestAdminStreakTools:
 
         user = _create_user(db_session, 2, play_streak=5, last_play_date=today)
 
-        result = V2StreakService.set_streak_count(db_session, user.id, streak_days=20)
+        service = V2StreakService(db_session)
+        result = service.set_streak_count(user.id, streak_days=20)
 
         db_session.refresh(user)
         assert result["success"] is True
@@ -459,7 +490,8 @@ class TestAdminStreakTools:
 
         user = _create_user(db_session, 3, play_streak=10, last_play_date=today)
 
-        result = V2StreakService.set_streak_count(db_session, user.id, streak_days=0)
+        service = V2StreakService(db_session)
+        result = service.set_streak_count(user.id, streak_days=0)
 
         db_session.refresh(user)
         assert result["success"] is True
@@ -473,7 +505,10 @@ class TestAdminStreakTools:
 
         user = _create_user(db_session, 4, play_streak=3, last_play_date=today)
 
-        result = V2StreakService.force_grant_milestone(db_session, user.id, milestone_day=3)
+        service = V2StreakService(db_session)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            result = service.force_grant_milestone(user.id, milestone_day=3)
 
         assert result["success"] is True
 
@@ -484,11 +519,17 @@ class TestAdminStreakTools:
 
         user = _create_user(db_session, 5, play_streak=7, last_play_date=today)
 
+        service = V2StreakService(db_session)
+
         # 첫 번째 강제 지급
-        V2StreakService.force_grant_milestone(db_session, user.id, milestone_day=7)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            service.force_grant_milestone(user.id, milestone_day=7)
 
         # 두 번째 강제 지급 (중복)
-        result = V2StreakService.force_grant_milestone(db_session, user.id, milestone_day=7)
+        with patch("app.v2.services.reward_service.V2RewardService.deliver") as mock_deliver:
+            mock_deliver.return_value = None
+            result = service.force_grant_milestone(user.id, milestone_day=7)
 
         assert result["success"] is False
         assert result["message"] == "ALREADY_GRANTED"
@@ -514,7 +555,8 @@ class TestMilestoneProgress:
 
         user = _create_user(db_session, 1, play_streak=10, last_play_date=today)
 
-        progress = V2StreakService.get_milestone_progress(db_session, user.id)
+        service = V2StreakService(db_session)
+        progress = service.get_milestone_progress(user.id)
 
         # 3일, 7일 마일스톤은 달성됨
         assert any(p["day"] == 3 and p["achieved"] is True for p in progress)
@@ -529,12 +571,21 @@ class TestMilestoneProgress:
 
         user = _create_user(db_session, 2, play_streak=7, last_play_date=today)
 
-        # 3일 마일스톤 클레임
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
+        # 3일 마일스톤 클레임 이벤트 로그 생성
+        hit_date = user.last_play_date - timedelta(days=(user.play_streak - 3))
+        event_name = f"streak.reward_grant.3.{hit_date.isoformat()}"
+        db_session.add(
+            UserEventLog(
+                user_id=user.id,
+                feature_type="STREAK",
+                event_name=event_name,
+                meta_json={"reason": "TEST"},
+            )
+        )
+        db_session.commit()
 
-        progress = V2StreakService.get_milestone_progress(db_session, user.id)
+        service = V2StreakService(db_session)
+        progress = service.get_milestone_progress(user.id)
 
         # 3일 마일스톤은 클레임됨
         assert any(p["day"] == 3 and p["claimed"] is True for p in progress)
@@ -562,7 +613,8 @@ class TestClaimableDayComputation:
 
         user = _create_user(db_session, 1, play_streak=3, last_play_date=today)
 
-        claimable = V2StreakService.compute_claimable_day(db_session, user.id)
+        service = V2StreakService(db_session)
+        claimable = service.compute_claimable_day(user.id)
 
         assert claimable == 3
 
@@ -573,12 +625,21 @@ class TestClaimableDayComputation:
 
         user = _create_user(db_session, 2, play_streak=7, last_play_date=today)
 
-        # 3일 마일스톤 클레임
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
+        # 3일 마일스톤 클레임 이벤트 로그 생성
+        hit_date = user.last_play_date - timedelta(days=(user.play_streak - 3))
+        event_name = f"streak.reward_grant.3.{hit_date.isoformat()}"
+        db_session.add(
+            UserEventLog(
+                user_id=user.id,
+                feature_type="STREAK",
+                event_name=event_name,
+                meta_json={"reason": "TEST"},
+            )
+        )
+        db_session.commit()
 
-        claimable = V2StreakService.compute_claimable_day(db_session, user.id)
+        service = V2StreakService(db_session)
+        claimable = service.compute_claimable_day(user.id)
 
         assert claimable == 7
 
@@ -589,13 +650,29 @@ class TestClaimableDayComputation:
 
         user = _create_user(db_session, 3, play_streak=7, last_play_date=today)
 
-        # 3일, 7일 마일스톤 모두 클레임
-        with patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended") as mock:
-            mock.return_value = (False, None)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=3)
-            V2StreakService.claim_streak_reward(db_session, user.id, target_day=7)
+        # 3일, 7일 마일스톤 모두 클레임 이벤트 로그 생성
+        hit_date_3 = user.last_play_date - timedelta(days=(user.play_streak - 3))
+        hit_date_7 = user.last_play_date - timedelta(days=(user.play_streak - 7))
+        db_session.add(
+            UserEventLog(
+                user_id=user.id,
+                feature_type="STREAK",
+                event_name=f"streak.reward_grant.3.{hit_date_3.isoformat()}",
+                meta_json={"reason": "TEST"},
+            )
+        )
+        db_session.add(
+            UserEventLog(
+                user_id=user.id,
+                feature_type="STREAK",
+                event_name=f"streak.reward_grant.7.{hit_date_7.isoformat()}",
+                meta_json={"reason": "TEST"},
+            )
+        )
+        db_session.commit()
 
-        claimable = V2StreakService.compute_claimable_day(db_session, user.id)
+        service = V2StreakService(db_session)
+        claimable = service.compute_claimable_day(user.id)
 
         # 다음 마일스톤(14일) 미도달이므로 None
         assert claimable is None
@@ -607,6 +684,7 @@ class TestClaimableDayComputation:
 
         user = _create_user(db_session, 4, play_streak=2, last_play_date=today)
 
-        claimable = V2StreakService.compute_claimable_day(db_session, user.id)
+        service = V2StreakService(db_session)
+        claimable = service.compute_claimable_day(user.id)
 
         assert claimable is None

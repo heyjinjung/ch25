@@ -66,16 +66,18 @@ class TestCCDepositService:
     def test_cc_deposit_basic(self, db: Session, test_user: V2User):
         """기본 CC Deposit 테스트"""
         # Given
+        from app.v2.schemas.shared.cc_deposit import CCDepositCreate
         service = V2AdminCCDepositService()
         
-        # When: 100,000원 입금
-        service.record_deposit(
-            db,
+        # When: 100,000원 입금 (upsert_many 사용)
+        deposit_data = CCDepositCreate(
             user_id=test_user.id,
-            amount=100000,
-            source="test_deposit"
+            cc_id=test_user.cc_id,
+            deposit_amount=100000,
+            play_count=0,
+            memo="test_deposit"
         )
-        db.commit()
+        service.upsert_many(db, [deposit_data])
 
         # Then: V2User 업데이트 확인
         db.refresh(test_user)
@@ -84,16 +86,18 @@ class TestCCDepositService:
     def test_cc_deposit_xp_integration(self, db: Session, test_user: V2User):
         """CC Deposit 시 XP 자동 적립 검증"""
         # Given
+        from app.v2.schemas.shared.cc_deposit import CCDepositCreate
         service = V2AdminCCDepositService()
         
         # When: 100,000원 입금
-        service.record_deposit(
-            db,
+        deposit_data = CCDepositCreate(
             user_id=test_user.id,
-            amount=100000,
-            source="test_xp"
+            cc_id=test_user.cc_id,
+            deposit_amount=100000,
+            play_count=0,
+            memo="test_xp"
         )
-        db.commit()
+        service.upsert_many(db, [deposit_data])
 
         # Then: XP 적립 확인 (10만원당 20XP)
         db.refresh(test_user)
@@ -127,16 +131,18 @@ def test_xp_accumulation(db: Session, test_user: V2User, xp_amount: int, expecte
 def test_cc_deposit_xp_calculation(db: Session, test_user: V2User, deposit_amount: int, expected_xp: int):
     """CC Deposit XP 계산 규칙 검증: 10만원당 20XP"""
     # Given
+    from app.v2.schemas.shared.cc_deposit import CCDepositCreate
     service = V2AdminCCDepositService()
     
     # When
-    service.record_deposit(
-        db,
+    deposit_data = CCDepositCreate(
         user_id=test_user.id,
-        amount=deposit_amount,
-        source=f"test_{deposit_amount}"
+        cc_id=test_user.cc_id,
+        deposit_amount=deposit_amount,
+        play_count=0,
+        memo=f"test_{deposit_amount}"
     )
-    db.commit()
+    service.upsert_many(db, [deposit_data])
     
     # Then
     db.refresh(test_user)

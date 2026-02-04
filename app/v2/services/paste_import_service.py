@@ -127,7 +127,11 @@ class PasteImportService:
                     nickname = parts[3].strip() if len(parts) > 3 else ''
                     amount = PasteImportService._parse_amount(parts[5]) if len(parts) > 5 else 0
                     depositor = parts[6].strip() if len(parts) > 6 else ''
-                    deposit_date_str = parts[7].strip() if len(parts) > 7 else parts[4].strip()
+                    # 신청날짜(parts[4])에 시분 정보가 있으면 우선 사용, 없으면 충전날짜(parts[7]) 사용
+                    request_date_str = parts[4].strip() if len(parts) > 4 else ''
+                    charge_date_str = parts[7].strip() if len(parts) > 7 else ''
+                    # 신청날짜에 시간 정보가 있으면 (콜론 포함) 우선 사용
+                    deposit_date_str = request_date_str if ':' in request_date_str else charge_date_str
                     deposit_at = PasteImportService._parse_datetime(deposit_date_str)
                 else:
                     # 네임, 금액, 입금일시, 입금자
