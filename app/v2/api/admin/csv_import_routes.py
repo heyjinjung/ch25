@@ -47,6 +47,9 @@ def validate_csv_file(
         if import_type == "HQ_MARGIN":
             from app.v2.services.hq_margin_import_service import HQMarginImportService
             is_valid, error_msg = HQMarginImportService.validate_hq_margin_csv(str(tmp_path))
+        elif import_type == "HQ_DAILY":
+            from app.v2.services.hq_daily_deposit_import_service import HQDailyDepositImportService
+            is_valid, error_msg = HQDailyDepositImportService.validate_hq_daily_csv(str(tmp_path))
         else:
             service = CSVImportService(db)
             # Validate file
@@ -122,9 +125,10 @@ async def import_csv_file(
     """
     Import CSV file into Golden V2 system.
 
-    Supports two import types:
+    Supports import types:
     - GAME_LOG (default): External casino game logs
-    - HQ_MARGIN: HQ margin data for segment targeting
+    - HQ_MARGIN: HQ margin data for segment targeting (누적 데이터)
+    - HQ_DAILY: HQ daily deposit data (일별 개별 입금)
 
     Processes CSV records and emits events to Redis (for GAME_LOG).
     """
@@ -143,10 +147,20 @@ async def import_csv_file(
     # Route based on import type
     try:
         if request.import_type == "HQ_MARGIN":
-            # HQ Margin import
+            # HQ Margin import (누적 데이터)
             from app.v2.services.hq_margin_import_service import HQMarginImportService
 
             result = await HQMarginImportService.import_hq_margin_csv(
+                db=db,
+                file_path=str(file_path),
+                admin_id=str(admin_id),
+            )
+            return result
+        elif request.import_type == "HQ_DAILY":
+            # HQ Daily Deposit import (일별 개별 입금)
+            from app.v2.services.hq_daily_deposit_import_service import HQDailyDepositImportService
+
+            result = await HQDailyDepositImportService.import_hq_daily_deposit_csv(
                 db=db,
                 file_path=str(file_path),
                 admin_id=str(admin_id),

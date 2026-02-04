@@ -40,8 +40,8 @@ export default function CSVImportPage() {
   const [isHistorical, setIsHistorical] = useState(false);
   const [emitToRedis] = useState(true);
   const [saveToDb, setSaveToDb] = useState(true);
-  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN">(
-    "GAME_LOG",
+  const [importType, setImportType] = useState<"GAME_LOG" | "HQ_MARGIN" | "HQ_DAILY">(
+    "HQ_DAILY",
   );
 
   const validateMutation = useValidateCSV();
@@ -188,13 +188,34 @@ export default function CSVImportPage() {
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
-                        💰 본사 입금액 대조 (Margin)
-                        <Badge variant="outline" className="text-[10px]">
-                          NEW
+                        � 본사 마진 (누적)
+                        <Badge variant="outline" className="text-[10px] text-zinc-500">
+                          세그먼트용
                         </Badge>
                       </div>
                       <div className="text-[10px] text-zinc-500 text-left">
-                        충/환전, 본사마진, 정밀 세그먼트 분석용
+                        누적 충전/환전, 세그먼트 분류용 (baseline 적용)
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/30">
+                    <input
+                      type="radio"
+                      name="importType"
+                      value="HQ_DAILY"
+                      checked={importType === "HQ_DAILY"}
+                      onChange={() => setImportType("HQ_DAILY")}
+                      className="w-4 h-4 text-green-600"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-white flex items-center gap-2">
+                        💰 일별 입금 내역
+                        <Badge className="text-[10px] bg-green-600">
+                          추천
+                        </Badge>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 text-left">
+                        닉네임, 충전금액, 충전날짜 → CC 입금 자동 반영
                       </div>
                     </div>
                   </label>
@@ -478,6 +499,57 @@ export default function CSVImportPage() {
                     subtext="매칭 안된 잠재 유저"
                   />
                 </div>
+              </>
+            ) : importType === "HQ_DAILY" ? (
+              <>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2 mt-8">
+                  <DollarSign className="w-5 h-5 text-green-400" /> 일별 입금
+                  임포트 결과
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <AnalyticsCard
+                    label="총 처리 행"
+                    value={`${(importMutation.data.total_rows ?? 0).toLocaleString()} 행`}
+                    icon={FileText}
+                    subtext="CSV 파일의 총 데이터 행 수"
+                  />
+                  <AnalyticsCard
+                    label="입금 반영"
+                    value={`${(importMutation.data.processed_count ?? 0).toLocaleString()} 건`}
+                    color="text-emerald-400"
+                    icon={CheckCircle2}
+                    subtext="성공적으로 반영된 입금"
+                  />
+                  <AnalyticsCard
+                    label="총 입금액"
+                    value={`₩ ${(importMutation.data.total_amount ?? 0).toLocaleString()}`}
+                    icon={DollarSign}
+                    color="text-green-400"
+                    subtext="이번 import 총 입금액"
+                  />
+                  <AnalyticsCard
+                    label="매칭된 유저"
+                    value={`${(importMutation.data.unique_users ?? 0).toLocaleString()} 명`}
+                    icon={Users}
+                    subtext="입금 반영된 고유 유저 수"
+                  />
+                </div>
+                {/* 미매칭 상세 */}
+                {(importMutation.data.not_found_count ?? 0) > 0 && (
+                  <div className="mt-4 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                    <p className="text-amber-400 font-semibold mb-2">
+                      ⚠️ 매칭 실패: {importMutation.data.not_found_count}건
+                    </p>
+                    <div className="max-h-40 overflow-y-auto text-sm text-zinc-400">
+                      {importMutation.data.unmatched_details?.map((item: {row: number; nickname: string; amount: number; reason: string}, i: number) => (
+                        <div key={i} className="flex justify-between py-1 border-b border-white/5">
+                          <span>Row {item.row}: {item.nickname}</span>
+                          <span>₩{item.amount?.toLocaleString()} - {item.reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <>

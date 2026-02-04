@@ -23,6 +23,7 @@ from .v2_user_segment import V2UserSegment
 from .hq_prospective_user import HQProspectiveUser
 from .v2_game_log import V2GameLog
 from .v2_external_deposit_unmatched import V2ExternalDepositUnmatched, UnmatchedStatus, UnmatchedReason
+from .v2_hq_daily_deposit_log import HQDailyDepositLog
 
 # V1 Compatibility Exports (Shim)
 # These models are still V1 (app.models) but must be imported via app.v2.models

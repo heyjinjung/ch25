@@ -14,7 +14,7 @@
               "type": "markdown",
               "state": {
                 "file": "개선방안_1주.md",
-                "mode": "preview",
+                "mode": "source",
                 "source": true,
                 "backlinks": true,
                 "backlinkOpts": {
@@ -157,7 +157,7 @@
                 "searchQuery": ""
               },
               "icon": "lucide-archive",
-              "title": "All properties"
+              "title": "모든 속성"
             }
           },
           {
@@ -166,17 +166,41 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "개선방안_1주.md",
-                "followCursor": false,
+                "file": "CC.md",
+                "followCursor": true,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "개선방안_1주 의 개요"
+              "title": "CC 의 개요"
+            }
+          },
+          {
+            "id": "d52b872f01788470",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "CC.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": false,
+                  "extraContext": true,
+                  "sortOrder": "alphabetical",
+                  "showSearch": false,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "CC"
             }
           }
         ],
-        "currentTab": 4
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
@@ -193,11 +217,12 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "3350c5b848e1d363",
+  "active": "d52b872f01788470",
   "lastOpenFiles": [
+    "개선방안_1주.md",
+    "CC.md",
     "개선방안_1주기록.md",
     "개선방안_1주.md.tmp.19072.1770115010995",
-    "개선방안_1주.md",
     "개선방안_개요.md",
     "개선방안1주_2주플레이북.md",
     "실패리포트.md",

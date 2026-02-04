@@ -8,18 +8,19 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.v2.models import V2User, V2UserSegment, HQProspectiveUser, ExternalRankingData
+from app.v2.models import V2User, V2UserSegment, HQProspectiveUser
 from app.v2.services import V2AdminAuditService
-from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
 from app.v2.services.unmatched_deposit_log_service import UnmatchedDepositLogService
-from app.v2.schemas.v2_cc_deposit import CCDepositCreate
 from app.v2.models.v2_external_deposit_unmatched import UnmatchedStatus, UnmatchedReason
 
 logger = logging.getLogger(__name__)
 
 
 class HQMarginImportService:
-    """본사 충전/환전 마진 데이터를 V2 세그먼트로 임포트 + CC Deposit 자동 반영"""
+    """본사 마진 데이터를 V2 세그먼트로 임포트 (세그먼트 전용)
+    
+    NOTE: CC Deposit 반영 로직은 HQ Daily Import로 이관됨 (2026-02-04)
+    """
 
     @staticmethod
     def _match_v2_user(
@@ -200,7 +201,8 @@ class HQMarginImportService:
                     total_charge = HQMarginImportService._parse_int(classifier_row.get('누적 충전 금액', 0))
 
                     if match_status == "MATCHED" and v2_user:
-                        # ========== 매칭 성공: CC Deposit 반영 ==========
+                        # ========== 매칭 성공: 세그먼트만 업데이트 ==========
+                        # NOTE: CC Deposit 반영 로직은 HQ Daily Import로 이관됨 (2026-02-04)
                         segment = HQMarginImportService._classify_segment(classifier_row)
                         
                         # 세그먼트 업데이트
@@ -217,46 +219,8 @@ class HQMarginImportService:
                             db.add(user_segment)
                             created_count += 1
                         
-                        # ========== V2 가입일 기준 충전액 계산 (baseline 차액) ==========
-                        # baseline_charge_amount: V2 가입 시점의 기준 누적액
-                        # - 최초 Import: baseline = 0 → 현재 CSV 누적액을 baseline으로 설정
-                        # - 이후 Import: 유효 충전액 = CSV 누적액 - baseline
-                        baseline = int(v2_user.baseline_charge_amount or 0)
-                        
-                        if baseline == 0 and total_charge > 0:
-                            # 최초 Import: baseline 설정 (기존 충전 내역은 무시)
-                            v2_user.baseline_charge_amount = total_charge
-                            logger.info(
-                                f"[CSV Import] Set baseline for user_id={v2_user.id}: {total_charge}"
-                            )
-                            # 최초 Import는 CC Deposit 반영하지 않음 (baseline 설정만)
-                            skipped_count += 1
-                        elif total_charge > baseline:
-                            # 이후 Import: baseline 이후 신규 충전액만 반영
-                            effective_charge = total_charge - baseline
-                            
-                            # FIX: upsert_many는 절대값으로 덮어쓰기하므로
-                            # 기존 deposit_amount + effective_charge를 전달해야 함
-                            existing_erd = db.query(ExternalRankingData).filter(
-                                ExternalRankingData.user_id == v2_user.id
-                            ).first()
-                            current_deposit = existing_erd.deposit_amount if existing_erd else 0
-                            new_deposit_total = current_deposit + effective_charge
-                            
-                            cc_deposit_payloads.append(CCDepositCreate(
-                                user_id=v2_user.id,
-                                deposit_amount=new_deposit_total,  # 누적 총액으로 전달
-                                play_count=existing_erd.play_count if existing_erd else 0,
-                            ))
-                            cc_deposit_count += 1
-                            logger.info(
-                                f"[CSV Import] Effective charge for user_id={v2_user.id}: "
-                                f"CSV={total_charge}, baseline={baseline}, effective={effective_charge}, "
-                                f"prev_deposit={current_deposit}, new_total={new_deposit_total}"
-                            )
-                        else:
-                            # 충전액 변동 없음 (baseline 이하)
-                            skipped_count += 1
+                        # CC Deposit은 HQ Daily Import에서 처리
+                        # (baseline 로직 및 입금 반영 로직 제거됨)
                     
                     elif match_status == "AMBIGUOUS":
                         # ========== 동명이인: 미매칭 로그 저장 ==========
@@ -316,20 +280,12 @@ class HQMarginImportService:
                 except Exception as e:
                     errors.append(f"Row {idx+2}: {str(e)}")
 
-            # CC Deposit 일괄 처리 (청크 단위)
-            if cc_deposit_payloads:
-                CHUNK_SIZE = 250
-                for i in range(0, len(cc_deposit_payloads), CHUNK_SIZE):
-                    chunk = cc_deposit_payloads[i:i + CHUNK_SIZE]
-                    try:
-                        V2AdminCCDepositService.upsert_many(db, chunk)
-                        logger.info(f"CC Deposit chunk processed: {len(chunk)} items")
-                    except Exception as e:
-                        logger.error(f"CC Deposit chunk failed: {e}")
-                        errors.append(f"CC Deposit batch error: {str(e)}")
+            # NOTE: CC Deposit 일괄 처리 로직 제거 (2026-02-04)
+            # CC Deposit은 HQ Daily Import에서 처리
 
             # ========== 미매칭 유저 자동 재동기화 (방안 1) ==========
             # external_nickname은 있지만 hq_segment 없는 유저들을 HQ 데이터와 재매칭
+            # NOTE: CC Deposit 반영 없이 세그먼트만 동기화
             try:
                 resync_result = HQMarginImportService.sync_pending_external_users(db)
                 logger.info(f"[ReSync] Auto-sync result: {resync_result}")
@@ -348,14 +304,12 @@ class HQMarginImportService:
                 target_id=None,
                 after={
                     "category": "GOLDEN",
-                    "reason": "HQ margin CSV import with CC Deposit auto-reflection",
+                    "reason": "HQ margin CSV import - 세그먼트 전용 (CC Deposit 제거됨)",
                     "stats": {
                         "total_rows": total_rows,
                         "updated": updated_count,
                         "created": created_count,
                         "prospective": prospective_count,
-                        "skipped": skipped_count,
-                        "cc_deposit_reflected": cc_deposit_count,
                         "unmatched_logged": unmatched_count,
                         "resync_synced": resync_result.get("synced", 0),
                         "resync_skipped": resync_result.get("skipped", 0),
@@ -365,9 +319,9 @@ class HQMarginImportService:
 
             logger.info(
                 "HQ Margin CSV import completed: total=%d, updated=%d, created=%d, "
-                "prospective=%d, cc_deposit=%d, unmatched=%d, resync_synced=%d",
+                "prospective=%d, unmatched=%d, resync_synced=%d",
                 total_rows, updated_count, created_count, 
-                prospective_count, cc_deposit_count, unmatched_count,
+                prospective_count, unmatched_count,
                 resync_result.get("synced", 0)
             )
 
@@ -377,8 +331,6 @@ class HQMarginImportService:
                 "updated_count": updated_count,
                 "created_count": created_count,
                 "prospective_count": prospective_count,
-                "skipped_count": skipped_count,
-                "cc_deposit_count": cc_deposit_count,
                 "unmatched_count": unmatched_count,
                 "resync_result": resync_result,
                 "errors": errors[:50],
@@ -572,38 +524,9 @@ class HQMarginImportService:
                     last_synced_at=now
                 ))
             
-            # 6. CC Deposit 반영 - baseline 기반 delta 계산 + 기존 deposit 누적
-            if prospect.total_charge and prospect.total_charge > 0:
-                # baseline 설정 or delta 계산
-                baseline = int(user.baseline_charge_amount or 0)
-                
-                if baseline == 0:
-                    # 최초 연결: baseline 설정만, CC Deposit 반영 안함
-                    user.baseline_charge_amount = prospect.total_charge
-                    logger.info(
-                        f"[ReSync] Set baseline for user {user.id}: {prospect.total_charge}"
-                    )
-                elif prospect.total_charge > baseline:
-                    # 이후: baseline 초과분만 반영
-                    effective_charge = prospect.total_charge - baseline
-                    
-                    # 기존 deposit_amount 조회 후 누적
-                    existing_erd = db.query(ExternalRankingData).filter(
-                        ExternalRankingData.user_id == user.id
-                    ).first()
-                    current_deposit = existing_erd.deposit_amount if existing_erd else 0
-                    new_deposit_total = current_deposit + effective_charge
-                    
-                    cc_deposit_payloads.append(CCDepositCreate(
-                        user_id=user.id,
-                        deposit_amount=new_deposit_total,  # 누적 총액
-                        play_count=existing_erd.play_count if existing_erd else 0
-                    ))
-                    logger.info(
-                        f"[ReSync] CC Deposit for user {user.id}: "
-                        f"HQ_total={prospect.total_charge}, baseline={baseline}, "
-                        f"effective={effective_charge}, prev={current_deposit}, new_total={new_deposit_total}"
-                    )
+            # NOTE: CC Deposit 반영 로직 제거 (2026-02-04)
+            # CC Deposit은 HQ Daily Import에서 처리
+            # 여기서는 세그먼트 동기화만 수행
             
             synced_count += 1
             details.append({
@@ -616,17 +539,6 @@ class HQMarginImportService:
                 f"[ReSync] Auto-linked user {user.id} ({user.external_nickname}) "
                 f"to prospect {prospect.id}, segment={prospect.segment}"
             )
-        
-        # 7. CC Deposit 일괄 처리 (청크 단위)
-        if cc_deposit_payloads:
-            CHUNK_SIZE = 250
-            for i in range(0, len(cc_deposit_payloads), CHUNK_SIZE):
-                chunk = cc_deposit_payloads[i:i + CHUNK_SIZE]
-                try:
-                    V2AdminCCDepositService.upsert_many(db, chunk)
-                    logger.info(f"[ReSync] CC Deposit chunk processed: {len(chunk)} items")
-                except Exception as e:
-                    logger.error(f"[ReSync] CC Deposit chunk failed: {e}")
         
         db.commit()
         
