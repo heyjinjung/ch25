@@ -8,7 +8,7 @@ from sqlalchemy import func, case
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_info, get_db
+from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models import ExternalRankingDailyDepositDelta
 from app.v2.models.user import V2User
 from app.v2.models import VaultWithdrawalRequest

@@ -18,7 +18,7 @@ from app.v2.api.deps import get_current_user_id, get_db
 
 from app.v2.api import activity_routes as v1_activity
 from app.v2.api import auth_routes as v1_auth
-from app.v2.api import new_user_onboarding as v1_new_user # wait, new_user_onboarding might be in app/api/routes
+from app.v2.api import new_user_onboarding as v1_new_user
 from app.v2.api import telegram_routes as v1_telegram
 
 router = APIRouter(tags=["v2-auth-user-alias"])
