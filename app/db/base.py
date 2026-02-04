@@ -2,7 +2,7 @@
 from app.db.base_class import Base
 
 # Import models here so Alembic can discover them.
-from app.models import (  # noqa: F401
+from app.v2.models import (  # noqa: F401
     DiceConfig,
     DiceLog,
     FeatureConfig,
@@ -20,8 +20,6 @@ from app.models import (  # noqa: F401
     RouletteConfig,
     RouletteLog,
     RouletteSegment,
-    SeasonPassConfig,
-    SeasonPassLevel,
     SeasonPassProgress,
     SeasonPassRewardLog,
     SeasonPassStampLog,
@@ -36,12 +34,12 @@ from app.models import (  # noqa: F401
     User,
     UserCashLedger,
     UserGameWallet,
-    V2Survey,
-    V2SurveyQuestion,
-    V2SurveyOption,
-    V2SurveyTriggerRule,
-    V2SurveyResponse,
-    V2SurveyResponseAnswer,
+    Survey,
+    SurveyQuestion,
+    SurveyOption,
+    SurveyTriggerRule,
+    SurveyResponse,
+    SurveyResponseAnswer,
     UserActivity,
     UserActivityEvent,
     UserSegment,
@@ -65,10 +63,12 @@ from app.models import (  # noqa: F401
     EventConfig,
     EventParticipationLog,
     VaultLedger,
+    VaultWithdrawalRequest,
+    AdminUserProfile,
+    AdminMessage,
+    AdminMessageInbox,
 )
-from app.models.admin_user_profile import AdminUserProfile
-from app.models.admin_message import AdminMessage, AdminMessageInbox
-from app.models.user_history import UserIdentityHistory
+from app.v2.models.core.user_history import UserIdentityHistory
 from app.v2.models import (
     V2User, 
     V2UserDepositEvidence,

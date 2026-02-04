@@ -26,31 +26,30 @@ from .v2_external_deposit_unmatched import V2ExternalDepositUnmatched, Unmatched
 from .v2_hq_daily_deposit_log import HQDailyDepositLog
 
 # V1 Compatibility Exports (Shim)
-# These models are still V1 (app.models) but must be imported via app.v2.models
-# to pass the "Pure V2 Native" SOT compliance check.
-from app.models.game_wallet import UserGameWallet, GameTokenType
-from app.models.game_wallet_ledger import UserGameWalletLedger
-from app.models.user import User
-from app.models.user_activity import UserActivity
-from app.models.user_segment import UserSegment
-from app.models.segment_rule import SegmentRule
-from app.models.external_ranking import ExternalRankingData, ExternalRankingRewardLog
-from app.models.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
-from app.models.vault_earn_event import VaultEarnEvent
-from app.models.vault_ledger import VaultLedger
-from app.models.vault_withdrawal_request import VaultWithdrawalRequest
-from app.models.inventory import UserInventoryItem, UserInventoryLedger
-from app.models.mission import Mission, UserMissionProgress, MissionCategory, ApprovalStatus, MissionRewardType, UserStreak
-from app.models.feature import FeatureConfig, FeatureSchedule, FeatureType, UserEventLog
-from app.models.admin_user_profile import AdminUserProfile
-from app.models.admin_message import AdminMessage, AdminMessageInbox
-from app.models.admin_audit_log import AdminAuditLog
-from app.models.ops_log import OpsDailyLog, OpsLogEntry
+# These models are now physically located in app/v2/models/core/
+from .core.game_wallet import UserGameWallet, GameTokenType
+from .core.game_wallet_ledger import UserGameWalletLedger
+from .core.user import User
+from .core.user_activity import UserActivity
+from .core.user_segment import UserSegment
+from .core.segment_rule import SegmentRule
+from .core.external_ranking import ExternalRankingData, ExternalRankingRewardLog
+from .core.external_ranking_daily_deposit_delta import ExternalRankingDailyDepositDelta
+from .core.vault_earn_event import VaultEarnEvent
+from .core.vault_ledger import VaultLedger
+from .core.vault_withdrawal_request import VaultWithdrawalRequest
+from .core.inventory import UserInventoryItem, UserInventoryLedger
+from .core.mission import Mission, UserMissionProgress, MissionCategory, ApprovalStatus, MissionRewardType, UserStreak
+from .core.feature import FeatureConfig, FeatureSchedule, FeatureType, UserEventLog
+from .core.admin_user_profile import AdminUserProfile
+from .core.admin_message import AdminMessage, AdminMessageInbox
+from .core.admin_audit_log import AdminAuditLog
+from .core.ops_log import OpsDailyLog, OpsLogEntry
 
-from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
-from app.models.ops_eval_metric import OpsEvalMetric
-from app.models.ops_target import OpsTargetList, OpsTargetMember
-from app.models.event import EventConfig, EventParticipationLog
+from .core.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
+from .core.ops_eval_metric import OpsEvalMetric
+from .core.ops_target import OpsTargetList, OpsTargetMember
+from .core.event import EventConfig, EventParticipationLog
 from app.v2.models.v2_survey import (
     V2Survey as Survey,
     V2SurveyQuestion as SurveyQuestion,
@@ -65,20 +64,20 @@ from app.v2.models.v2_survey import (
     SurveyResponseStatus,
     SurveyRewardStatus,
 )
-from app.models.app_ui_config import AppUiConfig
-from app.models.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
-from app.models.dice import DiceConfig, DiceLog
-from app.models.roulette import RouletteConfig, RouletteLog, RouletteSegment
-from app.models.lottery import LotteryConfig, LotteryLog, LotteryPrize
-from app.models.user_cash_ledger import UserCashLedger
-from app.models.user_retention_state import UserRetentionState
-from app.models.idempotency import UserIdempotencyKey
-from app.models.trial_token_bucket import TrialTokenBucket
-from app.models.telegram_link_code import TelegramLinkCode
-from app.models.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
-from app.models.vault2 import VaultProgram, VaultStatus
-from app.models.ranking import RankingDaily
-from app.models.user_activity_event import UserActivityEvent
-from app.models.season_pass import SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
+from .core.app_ui_config import AppUiConfig
+from .core.team_battle import TeamSeason, Team, TeamMember, TeamScore, TeamEventLog
+from .core.dice import DiceConfig, DiceLog
+from .core.roulette import RouletteConfig, RouletteLog, RouletteSegment
+from .core.lottery import LotteryConfig, LotteryLog, LotteryPrize
+from .core.user_cash_ledger import UserCashLedger
+from .core.user_retention_state import UserRetentionState
+from .core.idempotency import UserIdempotencyKey
+from .core.trial_token_bucket import TrialTokenBucket
+from .core.telegram_link_code import TelegramLinkCode
+from .core.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
+from .core.vault2 import VaultProgram, VaultStatus
+from .core.ranking import RankingDaily
+from .core.user_activity_event import UserActivityEvent
+from .core.season_pass import SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
 
 

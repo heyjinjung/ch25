@@ -1,4 +1,4 @@
-"""Shared schema utilities.
+"""Shared schema utilities for V2.
 
 Policy: All API JSON datetime values are serialized in Asia/Seoul (KST, +09:00).
 """

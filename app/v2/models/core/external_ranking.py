@@ -1,0 +1,45 @@
+"""External ranking data captured from other platforms and payout logs."""
+from datetime import datetime
+
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
+
+
+class ExternalRankingData(Base):
+    """Per-user external ranking inputs (deposit amount, play count)."""
+
+    __tablename__ = "external_ranking_data"
+    __table_args__ = (UniqueConstraint("user_id", name="uq_external_ranking_user"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    deposit_amount = Column(Integer, nullable=False, default=0)
+    play_count = Column(Integer, nullable=False, default=0)
+    deposit_remainder = Column(Integer, nullable=False, default=0)
+    daily_base_deposit = Column(Integer, nullable=False, default=0)
+    daily_base_play = Column(Integer, nullable=False, default=0)
+    last_daily_reset = Column(Date, nullable=True)
+    memo = Column(String(255), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    reward_logs = relationship("ExternalRankingRewardLog", back_populates="data")
+
+
+class ExternalRankingRewardLog(Base):
+    """Audit log for rewards granted based on external ranking."""
+
+    __tablename__ = "external_ranking_reward_log"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    reward_type = Column(String(50), nullable=False)
+    reward_amount = Column(Integer, nullable=False)
+    reason = Column(String(100), nullable=False)
+    season_name = Column(String(50), nullable=False)
+    data_id = Column(Integer, ForeignKey("external_ranking_data.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    data = relationship("ExternalRankingData", back_populates="reward_logs")

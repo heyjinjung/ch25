@@ -42,7 +42,7 @@ export default function CSVImportPage() {
   const [saveToDb, setSaveToDb] = useState(true);
   const [importType, setImportType] = useState<
     "GAME_LOG" | "HQ_MARGIN" | "HQ_DAILY"
-  >("HQ_DAILY");
+  >("HQ_MARGIN");
 
   const validateMutation = useValidateCSV();
   const uploadMutation = useUploadCSV();
@@ -159,25 +159,7 @@ export default function CSVImportPage() {
                   어떤 데이터를 가져올까요?
                 </div>
                 <div className="flex flex-col gap-3">
-                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-black/20 hover:bg-black/40 transition-colors border border-white/5">
-                    <input
-                      type="radio"
-                      name="importType"
-                      value="GAME_LOG"
-                      checked={importType === "GAME_LOG"}
-                      onChange={() => setImportType("GAME_LOG")}
-                      className="w-4 h-4 text-indigo-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-white text-left">
-                        게임 이용 기록 (기본)
-                      </div>
-                      <div className="text-[10px] text-zinc-500 text-left">
-                        시간, 유저ID, 게임종류, 결과, 베팅액 등
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-black/20 hover:bg-black/40 transition-colors border border-white/5">
+                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-amber-500/10 hover:bg-amber-500/20 transition-colors border border-amber-500/30">
                     <input
                       type="radio"
                       name="importType"
@@ -188,35 +170,13 @@ export default function CSVImportPage() {
                     />
                     <div className="flex-1">
                       <div className="text-sm font-medium text-white flex items-center gap-2">
-                        � 본사 마진 (누적)
-                        <Badge
-                          variant="outline"
-                          className="text-[10px] text-zinc-500"
-                        >
+                        💎 본사 마진 (누적)
+                        <Badge className="text-[10px] bg-amber-600">
                           세그먼트용
                         </Badge>
                       </div>
                       <div className="text-[10px] text-zinc-500 text-left">
                         누적 충전/환전, 세그먼트 분류용 (baseline 적용)
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 cursor-pointer p-3 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/30">
-                    <input
-                      type="radio"
-                      name="importType"
-                      value="HQ_DAILY"
-                      checked={importType === "HQ_DAILY"}
-                      onChange={() => setImportType("HQ_DAILY")}
-                      className="w-4 h-4 text-green-600"
-                    />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-white flex items-center gap-2">
-                        💰 일별 입금 내역
-                        <Badge className="text-[10px] bg-green-600">추천</Badge>
-                      </div>
-                      <div className="text-[10px] text-zinc-500 text-left">
-                        닉네임, 충전금액, 충전날짜 → CC 입금 자동 반영
                       </div>
                     </div>
                   </label>
