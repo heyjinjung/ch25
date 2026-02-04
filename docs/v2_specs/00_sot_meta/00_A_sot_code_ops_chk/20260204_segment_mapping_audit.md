@@ -445,7 +445,7 @@ const SEGMENT_OPTIONS = [
 | WHALE | 10 |
 | **WINNER** | 0 |
 
-**🔴 문제**: 마진 음수 유저 61명이 WINNER가 아닌 COMMON으로 분류됨 (재분류 필요)
+**🔴 문제**: 마진 음수 유저 61명이 WINNER가 아닌 COMMON으로 분류됨 (재분류 필요 - 향후 HQ Import 시 자동 적용)
 
 ---
 
@@ -456,6 +456,14 @@ const SEGMENT_OPTIONS = [
 - v4.0 (2026-02-04, GitHub Copilot): **코드 정리 완료**
   - 룰렛 VIP/WHALE 접근제한 로직 제거 (`roulette_service.py`) - SoT 준수
   - V1 `dice_service.py` 폐기 주석 추가
+  - V1 `event_service.py` 폐기 주석 추가
+  - 서비스별 세그먼트 사용 현황 테이블에 상태 컬럼 추가
+  - 세그먼트별 비즈니스 로직 영향 테이블 최신화 (폐기된 로직 취소선 처리)
+- v5.0 (2026-02-04, GitHub Copilot): **DB 무결성 강화 및 트러블슈팅 종결**
+  - DB CHECK 제약조건 Migration 적용 (`20260204_0200`)
+  - 잘못된 Survey Migration 삭제 (`18e1aca5529f`)
+  - Survey FK V2User 연결 확인 완료
+  - 트러블슈팅 이력 및 종결 상태 문서화
   - V1 `event_service.py` 폐기 주석 추가
   - 서비스별 세그먼트 사용 현황 테이블에 상태 컬럼 추가
   - 세그먼트별 비즈니스 로직 영향 테이블 최신화 (폐기된 로직 취소선 처리)
@@ -484,9 +492,108 @@ const SEGMENT_OPTIONS = [
 
 ### 🔴 발견된 핵심 문제 (2026-02-04 최신화)
 
-1. **WINNER 세그먼트**: 코드에 분류 로직 있으나 **비즈니스 적용 로직 0개**
+1. ~~**WINNER 세그먼트**: 코드에 분류 로직 있으나 비즈니스 적용 로직 0개~~ → 향후 정책 결정 대기
 2. ~~**CHERRY_PICKER**~~: 폐기 결정
-3. ~~**V1/V2 혼용**: 룰렛/다이스는 V1 `UserSegment`~~ → ✅ 룰렛 접근제한 제거, 다이스/이벤트 V1 폐기 대기
+3. ~~**V1/V2 혼용**: 룰렛/다이스는 V1 `UserSegment`~~ → ✅ 룰렛 접근제한 제거, 다이스/이벤트 V1 폐기 완료
 4. ~~**리텐션 세그먼트 분리**~~: ✅ CRM 키로 통합 완료 (2026-02-04)
-5. **보상/레벨 세그먼트 미적용**: 차등 보상 기회 미활용
-6. **V2 event_service.py**: V2 서비스인데 V1 UserSegment 참조 중 (수정 필요)
+5. **보상/레벨 세그먼트 미적용**: 차등 보상 기회 미활용 (향후 검토)
+6. ~~**V2 event_service.py**: V2 서비스인데 V1 UserSegment 참조 중~~ → ✅ V2UserSegment로 수정 완료
+
+---
+
+## 13. 트러블슈팅 이력 (2026-02-04)
+
+### 13.1 세그먼트 CHECK 제약조건 Migration
+
+| 항목 | 내용 |
+|------|------|
+| **문제** | `v2_user_segment.segment` 컬럼에 CHECK 제약조건 없음 → 임의의 문자열 저장 가능 |
+| **증상** | DB 레벨 무결성 검증 불가, 잘못된 세그먼트 값 저장 위험 |
+| **해결** | Migration `20260204_0200_add_segment_check_constraint.py` 생성 및 적용 |
+| **적용 테이블** | `v2_user_segment`, `hq_prospective_user` |
+| **허용 값** | `NEW`, `COMMON`, `VIP`, `WHALE`, `AT_RISK`, `WINNER` |
+| **상태** | ✅ 완료 |
+
+```bash
+# 적용 명령어
+docker compose exec backend alembic upgrade head
+# 결과: Running upgrade 20260204_0100 -> 20260204_0200
+```
+
+### 13.2 잘못된 Survey Migration 삭제
+
+| 항목 | 내용 |
+|------|------|
+| **문제** | `18e1aca5529f` migration이 autogenerate로 잘못 생성됨 |
+| **증상** | V2User FK를 V1 User로 되돌리려는 역방향 migration |
+| **에러** | `IntegrityError: Cannot add or update a child row: foreign key constraint fails` |
+| **원인** | `external_ranking_data`에 V2User ID가 저장되어 있는데, V1 User 테이블에는 해당 ID 없음 |
+| **해결** | 잘못된 migration 파일 삭제 |
+| **상태** | ✅ 완료 |
+
+```bash
+# 삭제 명령어
+Remove-Item "alembic/versions/20260204_1500_18e1aca5529f_refactor_survey_fk_to_v2user.py" -Force
+```
+
+### 13.3 Survey V2User FK 연결 확인
+
+| 항목 | 내용 |
+|------|------|
+| **확인 대상** | Survey 테이블의 FK가 V2User로 연결되어 있는지 |
+| **결과** | ✅ 이미 V2User로 정상 연결됨 |
+| **증거** | `survey_response_fk_v2_user` → `v2_user.id` |
+| **상태** | ✅ 정상 (추가 작업 불필요) |
+
+```python
+# DB FK 확인 결과
+{'name': 'survey_response_fk_v2_user', 
+ 'constrained_columns': ['user_id'], 
+ 'referred_table': 'v2_user', 
+ 'referred_columns': ['id'], 
+ 'options': {'ondelete': 'CASCADE'}}
+```
+
+### 13.4 Survey 아키텍처 정리
+
+| 구분 | 모델 클래스 | DB 테이블명 | FK 연결 | 상태 |
+|------|-------------|-------------|---------|------|
+| Survey | `V2Survey` | `survey` | - | ✅ |
+| Response | `V2SurveyResponse` | `survey_response` | `v2_user.id` | ✅ |
+| Question | `V2SurveyQuestion` | `survey_question` | - | ✅ |
+| Answer | `V2SurveyResponseAnswer` | `survey_response_answer` | - | ✅ |
+
+> **참고**: V2 모델 클래스가 기존 V1 테이블명을 재사용하는 구조 (테이블 마이그레이션 없이 FK만 V2User로 변경)
+
+---
+
+## 14. 종결 상태 (2026-02-04)
+
+### ✅ 완료된 작업
+
+| # | 작업 | 결과 |
+|---|------|------|
+| 1 | 세그먼트 시스템 전수조사 (13개) | ✅ 완료 |
+| 2 | V1/V2 서비스 세그먼트 사용 현황 매핑 | ✅ 완료 |
+| 3 | 룰렛 VIP/WHALE 접근제한 제거 (SoT 준수) | ✅ 완료 |
+| 4 | V1 dice_service.py 폐기 주석 | ✅ 완료 |
+| 5 | V1 event_service.py 폐기 주석 | ✅ 완료 |
+| 6 | V2 event_service.py V2UserSegment 변경 | ✅ 완료 |
+| 7 | 골든아워 자동 후보 선정 폐기 | ✅ 완료 |
+| 8 | DB CHECK 제약조건 Migration 적용 | ✅ 완료 |
+| 9 | 잘못된 Survey Migration 삭제 | ✅ 완료 |
+| 10 | Survey FK V2User 연결 확인 | ✅ 정상 |
+
+### 📋 현재 Alembic 상태
+
+```
+현재 HEAD: 20260204_0200_add_segment_check_constraint
+상태: 정상 (모든 migration 적용됨)
+```
+
+### 🔜 향후 검토 사항 (우선순위 낮음)
+
+- [ ] `V2User.hq_segment` vs `V2UserSegment.segment` 이중 저장 해소
+- [ ] WINNER 세그먼트 비즈니스 로직 정의
+- [ ] 보상/레벨 세그먼트 차등 적용 검토
+
