@@ -363,3 +363,7 @@ class V2TeamBattleService:
                 raise
 
         raise last_error or HTTPException(status_code=status.HTTP_409_CONFLICT, detail="NO_JOINABLE_TEAM")
+
+
+# Backward-compatible alias for internal callers
+TeamBattleService = V2TeamBattleService

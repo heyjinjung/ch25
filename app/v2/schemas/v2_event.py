@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any, Dict, List, Optional, Literal
 
 from pydantic import ConfigDict
@@ -24,8 +25,6 @@ class GoldenHourOverride(str, Enum):
     FORCE_ON = "FORCE_ON"
     FORCE_OFF = "FORCE_OFF"
 
-
-from enum import Enum
 
 class EventStatusResponse(BaseModel):
     is_golden_hour: bool
