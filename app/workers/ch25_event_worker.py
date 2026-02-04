@@ -242,11 +242,11 @@ async def _resolve_user_id(external_id: str, cache: dict[str, int | None]) -> Op
 
     def _lookup() -> Optional[int]:
         from app.db.session import SessionLocal
-        from app.models.user import User
+        from app.v2.models import V2User
 
         db = SessionLocal()
         try:
-            user = db.query(User).filter(User.external_id == external_id).first()
+            user = db.query(V2User).filter(V2User.cc_id == external_id).first()
             return user.id if user else None
         finally:
             db.close()
@@ -272,7 +272,7 @@ async def _record_amount_window(client, key: str, event_ts: int, amount: int, wi
 
 
 async def _publish_event(event_type: str, data: dict[str, Any]) -> None:
-    from app.services.ch25_event_service import Ch25EventService
+    from app.v2.services.ch25_event_service import Ch25EventService
 
     service = Ch25EventService()
     service.publish_event(event_type, data)
@@ -663,7 +663,7 @@ async def run_ch25_event_worker(stop_event: Optional[asyncio.Event] = None) -> N
                             await client.xack(STREAM_KEY, GROUP_NAME, message_id)
                         except Exception as exc:  # noqa: BLE001
                             logger.error("ch25_event_worker_message_failed", exc_info=exc)
-                            from app.services.ch25_event_service import normalize_stream_payload
+                            from app.v2.services.ch25_event_service import normalize_stream_payload
                             payload = {"source": "ch25_event_worker", "payload": json.dumps(fields, ensure_ascii=False)}
                             normalized = normalize_stream_payload(payload)
                             logger.info("Normalized payload for dead_letters xadd", extra={"payload_types": {k: type(v).__name__ for k, v in normalized.items()}})
