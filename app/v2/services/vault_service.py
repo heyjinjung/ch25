@@ -564,8 +564,8 @@ class V2VaultService:
         play_target = 30
         spend_target = 10000
         if "NEW" in segments:
-            play_target = 100
-            spend_target = 30000
+            play_target = 15
+            spend_target = 5000
         elif "AT_RISK" in segments:
             play_target = 100
             spend_target = 30000
