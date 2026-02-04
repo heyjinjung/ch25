@@ -6,7 +6,7 @@
  *
  * 작성일: 2026-02-04
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   ClipboardPaste,
   Eye,
