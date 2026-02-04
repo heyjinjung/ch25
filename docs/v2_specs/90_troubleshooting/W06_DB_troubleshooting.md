@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 3 |
+| 해결된 이슈 | 6 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -22,6 +22,90 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-04] - DB/MIGRATION: hq_daily_deposit_log 테이블 미존재 (CSV Import 500)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | HQ_DAILY CSV Import |
+| HTTP Status | 500 |
+| 영향 범위 | CSV Import 기능 |
+| 재현 빈도 | 항상 |
+
+**증상**
+- `POST /api/v2/admin/csv-import/import` 500 응답
+- 에러: `(pymysql.err.ProgrammingError) (1146, "Table 'xmas_event.hq_daily_deposit_log' doesn't exist")`
+
+**근본 원인**
+- `HQDailyDepositLog` 모델은 존재하나, Alembic 마이그레이션 파일이 없어 테이블 미생성
+
+**해결 방법**
+- 마이그레이션 파일 추가: `20260204_0100_add_hq_daily_deposit_log.py`
+- 배포 시 `alembic upgrade head` 자동 실행
+
+**🏷️ 태그**
+`P1` `MIGRATION` `CSV_IMPORT` `DB`
+
+---
+
+### [02-04] - DB/OPS: HQDailyDepositLog 모델 잘못된 import 경로 (ModuleNotFoundError)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | Alembic 마이그레이션 / 백엔드 전체 |
+| HTTP Status | 컨테이너 시작 실패 |
+| 영향 범위 | 전체 서비스 |
+| 재현 빈도 | 항상 |
+
+**증상**
+- 배포 시 `ModuleNotFoundError: No module named 'app.core.database'`
+- 컨테이너 재시작 루프
+
+**근본 원인**
+- `v2_hq_daily_deposit_log.py`에서 `from app.core.database import Base` 사용 (존재하지 않는 모듈)
+- 다른 모든 V2 모델은 `from app.db.base_class import Base` 사용
+
+**해결 방법**
+- import 경로 수정: `from app.db.base_class import Base`
+- 수정 파일: [app/v2/models/v2_hq_daily_deposit_log.py](../../../app/v2/models/v2_hq_daily_deposit_log.py)
+
+**🏷️ 태그**
+`P0` `MIGRATION` `IMPORT` `MODEL`
+
+---
+
+### [02-04] - DB/OPS: Decimal/float 연산 TypeError (ops/status 500)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 Ops 대시보드 상태 조회 |
+| HTTP Status | 500 |
+| 영향 범위 | 어드민 전체 |
+| 재현 빈도 | 항상 |
+
+**증상**
+- `GET /api/v2/admin/ops/status` 500 응답
+- 에러: `TypeError: unsupported operand type(s) for -: 'decimal.Decimal' and 'float'`
+
+**근본 원인**
+- `game_log_analytics_service.py:608` - `get_hq_weekly_growth_rate()`
+- SQLAlchemy가 `func.count()`, `func.sum()` 결과를 `decimal.Decimal`로 반환
+- `active_ratio - 0.5` 연산 시 타입 불일치
+
+**해결 방법**
+- DB 반환값을 `float()`로 명시적 변환
+- 수정 파일: [app/v2/services/game_log_analytics_service.py](../../../app/v2/services/game_log_analytics_service.py)
+
+**검증 방법**
+1. 배포 후 `/api/v2/admin/ops/status` 호출 시 정상 응답 확인
+
+**🏷️ 태그**
+`P1` `OPS` `DB` `ANALYTICS` `TYPE`
+
+---
 
 ### [02-04] - DB/OPS: /api/v2/admin/ops/status 500 (HQ/Analytics 쿼리 예외)
 

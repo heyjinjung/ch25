@@ -604,7 +604,10 @@ class GameLogAnalyticsService:
             return 0.0
         
         # 활성 비율 기반 성장률 (활성 비율 50% 초과 시 양수 성장으로 간주)
-        active_ratio = (totals.active or 0) / totals.total
+        # Decimal → float 변환 (DB 반환값이 Decimal일 수 있음)
+        active_count = float(totals.active or 0)
+        total_count = float(totals.total)
+        active_ratio = active_count / total_count
         estimated_growth = (active_ratio - 0.5) * 100 * 2  # -100% ~ +100% 스케일
         
         return round(estimated_growth, 2)
