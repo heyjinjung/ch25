@@ -23,8 +23,8 @@ const V2AppHeader: React.FC = () => {
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
 
   const streakInfo = missionsData?.streak_info;
-  const claimableDay = streakInfo?.claimable_rewards?.[0] ?? null;
-  const hasClaimable = (streakInfo?.claimable_rewards?.length ?? 0) > 0;
+  const claimableDay = streakInfo?.claimable_day ?? null;
+  const hasClaimable = claimableDay !== null;
 
   const showModalOverride = vault?.showModalOverride ?? null;
   const streakModalKey = useMemo(() => {
