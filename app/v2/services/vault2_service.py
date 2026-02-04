@@ -824,7 +824,7 @@ class Vault2Service:
 
         # Log to UserCashLedger for visibility (Unified Economy)
         if locked_delta != 0:
-            from app.v2.models import UserCashLedger
+            from app.v2.models import UserCashLedger, VaultLedger
             ledger = UserCashLedger(
                 user_id=user_id,
                 delta=int(locked_delta),
@@ -838,6 +838,17 @@ class Vault2Service:
                 }
             )
             db.add(ledger)
+            
+            # Log to VaultLedger for vault-specific tracking
+            vault_ledger = VaultLedger(
+                user_id=user_id,
+                amount=int(locked_delta),
+                balance_after=new_locked,
+                reason=reason or "ADMIN_ADJUST",
+                ref_type="ADMIN",
+                created_at=now_dt
+            )
+            db.add(vault_ledger)
 
         status.locked_amount = new_locked
         status.available_amount = new_avail
@@ -920,7 +931,7 @@ class Vault2Service:
         # Log to UserCashLedger if locked balance changed
         locked_delta = next_locked - prev_locked
         if locked_delta != 0:
-            from app.v2.models import UserCashLedger
+            from app.v2.models import UserCashLedger, VaultLedger
             ledger = UserCashLedger(
                 user_id=user_id,
                 delta=int(locked_delta),
@@ -934,6 +945,17 @@ class Vault2Service:
                 }
             )
             db.add(ledger)
+            
+            # Log to VaultLedger for vault-specific tracking
+            vault_ledger = VaultLedger(
+                user_id=user_id,
+                amount=int(locked_delta),
+                balance_after=next_locked,
+                reason=reason or "ADMIN_SET_BALANCE",
+                ref_type="ADMIN",
+                created_at=now_dt
+            )
+            db.add(vault_ledger)
 
         status.locked_amount = int(next_locked)
         status.available_amount = int(next_available)

@@ -127,9 +127,22 @@ class V2RollbackService:
             if admin_id:
                 admin_memo += f":admin_{admin_id}"
 
-            # VaultService를 통해 차감
-            # 실제 구현 시 VaultService.consume() 사용
+            # VaultService를 통해 차감 + VaultLedger 기록
+            from app.v2.models import VaultLedger
+            from datetime import datetime
+            
             user.vault_locked_balance = current_balance - recoverable
+            
+            # VaultLedger 기록 추가
+            vault_ledger = VaultLedger(
+                user_id=user_id,
+                amount=-recoverable,
+                balance_after=current_balance - recoverable,
+                reason=admin_memo,
+                ref_type="ROLLBACK",
+                created_at=datetime.utcnow()
+            )
+            db.add(vault_ledger)
             db.commit()
 
             is_full_recovery = recoverable == amount

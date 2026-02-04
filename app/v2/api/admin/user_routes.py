@@ -694,6 +694,22 @@ def reset_user_data(
         before_state["vault_locked"] = user.vault_locked_balance
         before_state["vault_available"] = user.vault_available_balance
         
+        # VaultLedger 기록 추가
+        from app.v2.models import VaultLedger
+        from datetime import datetime
+        
+        locked_delta = -int(user.vault_locked_balance or 0)
+        if locked_delta != 0:
+            vault_ledger = VaultLedger(
+                user_id=user_id,
+                amount=locked_delta,
+                balance_after=0,
+                reason=f"ADMIN_RESET:admin_{admin_id}",
+                ref_type="ADMIN",
+                created_at=datetime.utcnow()
+            )
+            db.add(vault_ledger)
+        
         user.vault_locked_balance = 0
         user.vault_available_balance = 0
         

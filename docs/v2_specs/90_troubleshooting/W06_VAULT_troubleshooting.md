@@ -9,8 +9,8 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 6 |
-| SoT 승격 예정 | 1 (CSV Import Baseline) |
+| 해결된 이슈 | 7 |
+| SoT 승격 예정 | 2 (CSV Import Baseline, VaultLedger Bypass Fix) |
 
 ---
 
@@ -23,7 +23,103 @@
 
 ## 🔍 주간 이슈 내역
 
-### [02-04] - VAULT/ADMIN: 금고 보상 적립 로그 누락 (VaultLedger 미기록)
+### [02-04 18:00] - VAULT/ADMIN: 금고 로그 완전 누락 - 4개 경로 VaultLedger 우회 (CRITICAL)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 금고 내역 (GET /api/v2/admin/vault/users/{user_id}/ledger) |
+| HTTP Status | 200 (Logic Error - 수동 조정/롤백/리셋 로그 미기록) |
+| 영향 범위 | 전체 금고 내역 추적/감사 체계 붕괴 (27 records only) |
+| 재현 빈도 | 항상 (vault2_service, rollback_service, user_routes 직접 수정 시) |
+
+**증거 기반 RCA**
+```sql
+-- Production DB: 27 records only (should be thousands)
+SELECT COUNT(*) FROM vault_ledger;
+-- Result: 27
+```
+
+**4개 우회 경로 발견**:
+1. **vault2_service.py:866** - `update_balance()`: 관리자 수동 조정 시 UserCashLedger만 기록
+2. **vault2_service.py:958** - `set_balance()`: 강제 설정 시 VaultLedger 누락
+3. **rollback_service.py:132** - `recover_from_oversend()`: 롤백 시 직접 차감, 주석만 존재
+4. **user_routes.py:697** - 유저 리셋 API: 금고 초기화 시 로그 없음
+
+**코드 증거**:
+```python
+# BEFORE (vault2_service.py line 866)
+user.vault_locked_balance = new_locked  # Direct modification
+# No VaultLedger.add()
+
+# BEFORE (rollback_service.py line 132)
+# VaultService를 통해 차감  ← 주석만 있고 미구현
+user.vault_locked_balance = current_balance - recoverable
+```
+
+**해결 방법**
+모든 vault_locked_balance 직접 수정 경로에 VaultLedger 기록 추가:
+
+```python
+# vault2_service.py update_balance() & set_balance()
+from app.v2.models import VaultLedger
+vault_ledger = VaultLedger(
+    user_id=user_id,
+    amount=int(locked_delta),
+    balance_after=new_locked,
+    reason=reason or "ADMIN_ADJUST",
+    ref_type="ADMIN",
+    created_at=now_dt
+)
+db.add(vault_ledger)
+
+# rollback_service.py recover_from_oversend()
+vault_ledger = VaultLedger(
+    user_id=user_id,
+    amount=-recoverable,
+    balance_after=current_balance - recoverable,
+    reason=admin_memo,
+    ref_type="ROLLBACK",
+    created_at=datetime.utcnow()
+)
+db.add(vault_ledger)
+
+# user_routes.py reset_user()
+if payload.reset_vault:
+    locked_delta = -int(user.vault_locked_balance or 0)
+    vault_ledger = VaultLedger(
+        user_id=user_id,
+        amount=locked_delta,
+        balance_after=0,
+        reason=f"ADMIN_RESET:admin_{admin_id}",
+        ref_type="ADMIN",
+        created_at=datetime.utcnow()
+    )
+    db.add(vault_ledger)
+```
+
+**수정 파일**
+- `app/v2/services/vault2_service.py` (2개 메서드: update_balance, set_balance)
+- `app/v2/services/rollback_service.py` (recover_from_oversend)
+- `app/v2/api/admin/user_routes.py` (reset_user endpoint)
+
+**검증 방법**
+1. 어드민에서 금고 수동 조정 → VaultLedger에 `ref_type=ADMIN` 기록 확인
+2. 롤백 작업 → VaultLedger에 `ref_type=ROLLBACK` 기록 확인
+3. 유저 리셋 → VaultLedger에 `ADMIN_RESET` 기록 확인
+4. `SELECT COUNT(*) FROM vault_ledger` → 레코드 수 증가 확인
+
+**시스템적 교훈**
+- ❌ `user.vault_locked_balance = X` 직접 수정 금지
+- ✅ 반드시 `V2VaultService.deposit/withdraw` 또는 `VaultLedger.add()` 사용
+- 🔍 모든 vault 수정 경로는 감사 로그 필수
+
+**🏷️ 태그**
+`P0` `VAULT` `LEDGER` `AUDIT` `SYSTEMIC`
+
+---
+
+### [02-04 14:00] - VAULT/ADMIN: 금고 보상 적립 로그 누락 (VaultLedger 미기록)
 
 **증상 정의**
 | 항목 | 내용 |
@@ -58,6 +154,8 @@ V2VaultService.deposit(
 
 **검증 방법**
 - 보상 지급 후 `/api/v2/admin/vault/users/{user_id}/ledger`에서 `ref_type=REWARD` 확인
+
+**상태**: ✅ 해결됨 (14:00) → 18:00에 추가 경로 발견하여 재작업
 
 **🏷️ 태그**
 `P1` `VAULT` `LEDGER` `REWARD`
