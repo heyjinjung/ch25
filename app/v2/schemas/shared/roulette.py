@@ -4,7 +4,7 @@ from typing import Optional
 
 from app.v2.schemas.base import KstBaseModel as BaseModel
 
-from app.models.feature import FeatureType
+from app.v2.models.core.feature import FeatureType
 from app.v2.schemas.shared.mission import StreakInfoSchema
 
 
