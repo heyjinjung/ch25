@@ -752,7 +752,7 @@ class V2VaultService:
         V2 정책: 09:00 KST 리셋 기준으로 통계 집계.
         """
         # V2: 9AM KST 기준으로 통계 집계 (자정 기준에서 변경)
-        from app.utils.timezone import business_day_start, business_day_end
+        from app.v2.utils.timezone import business_day_start, business_day_end
         
         KST = ZoneInfo("Asia/Seoul")
         now_kst = datetime.now(KST)

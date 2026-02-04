@@ -19,7 +19,7 @@ from app.v2.models.v2_user_segment import V2UserSegment
 from app.v2.models import UserLevelProgress, UserXpEventLog
 from app.v2.services import V2AdminAuditService, V2AdminInventoryService, V2AdminUserService
 from app.core.exceptions import NotEnoughTokensError
-from app.utils.timezone import utc_to_kst
+from app.v2.utils.timezone import utc_to_kst
 from app.v2.schemas.v2_admin_user import (
     AdminUserCreate,
     AdminUserDetailDto,

@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.v2.models import UserActivity
 from app.v2.models.v2_retention_roi_log import V2RetentionRoiLog
-from app.utils.timezone import business_day_start
+from app.v2.utils.timezone import business_day_start
 
 
 class RoiConfig:

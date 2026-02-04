@@ -42,7 +42,7 @@ from app.v2.schemas.v2_admin_economy import (
 from app.v2.models import UserGameWallet, GameTokenType
 from app.v2.models import UserGameWalletLedger
 from app.v2.models import UserInventoryItem, UserInventoryLedger
-from app.utils.timezone import utc_to_kst_iso
+from app.v2.utils.timezone import utc_to_kst_iso
 from sqlalchemy import desc, text
 
 router = APIRouter()

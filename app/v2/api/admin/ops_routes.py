@@ -123,7 +123,7 @@ def get_ops_dashboard_status(
     online_now = db.query(V2User).filter(V2User.last_login_at >= online_since).count()
 
     # Business day 기준 개입 건수
-    from app.utils.timezone import business_day_start, KST
+    from app.v2.utils.timezone import business_day_start, KST
 
     business_start_utc = business_day_start().replace(tzinfo=None)
     interventions_today = db.query(func.count(V2GoldenInterventionLog.id)).filter(

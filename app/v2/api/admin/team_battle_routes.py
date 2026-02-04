@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_admin_info, get_db
 from app.v2.services.team_battle_admin_service import TeamBattleAdminService
 from app.v2.models.user import V2User
-from app.utils.timezone import utc_to_kst_iso
+from app.v2.utils.timezone import utc_to_kst_iso
 
 router = APIRouter()
 logger = logging.getLogger("uvicorn.error")

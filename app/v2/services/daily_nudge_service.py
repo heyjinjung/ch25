@@ -18,7 +18,7 @@ from app.v2.models.user import V2User
 from app.v2.models import UserActivity, GameTokenType
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
-from app.utils.timezone import business_day_start
+from app.v2.utils.timezone import business_day_start
 
 
 class DailyNudgeService:
