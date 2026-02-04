@@ -152,7 +152,7 @@ const fetchProspects = async (
   const params = new URLSearchParams();
   if (segment && segment !== "ALL") params.append("segment", segment);
   if (includeIgnored) params.append("include_ignored", "true");
-  params.append("limit", "100");
+  params.append("limit", "1000");
 
   const response = await v2Client.get<ProspectListResponse>(
     `/api/v2/admin/prospect/prospects?${params}`,
@@ -197,7 +197,7 @@ const fetchLinkedUsers = async (
 ): Promise<LinkedUsersResponse> => {
   const params = new URLSearchParams();
   if (search) params.append("search", search);
-  params.append("limit", "100");
+  params.append("limit", "1000");
 
   const response = await v2Client.get<LinkedUsersResponse>(
     `/api/v2/admin/prospect/linked-users?${params}`,

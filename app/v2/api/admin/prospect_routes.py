@@ -34,7 +34,7 @@ class UserSearchRequest(BaseModel):
 def list_unlinked_prospects(
     segment: Optional[str] = Query(None, description="세그먼트 필터 (VIP, WHALE, AT_RISK)"),
     include_ignored: bool = Query(False, description="무시된 항목 포함 여부"),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
@@ -211,7 +211,7 @@ def search_users_for_linking(
 def list_linked_users(
     q: Optional[str] = Query(None, description="닉네임 검색"),
     segment: Optional[str] = Query(None, description="세그먼트 필터"),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(50, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),

@@ -80,6 +80,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
 | INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | 0 |
 | FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | 0 |
+| FRONTEND | [W06_FRONTEND_prospect_pagination.md](./W06_FRONTEND_prospect_pagination.md) | **1** |
 
 ### W06 주요 이슈 요약 (02-03)
 | # | 도메인 | 이슈 | 상태 |
