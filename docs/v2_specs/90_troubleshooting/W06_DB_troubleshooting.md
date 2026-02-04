@@ -23,6 +23,39 @@
 
 ## 🔍 주간 이슈 내역
 
+### [02-04] - DB/OPS: /api/v2/admin/ops/status 500 (HQ/Analytics 쿼리 예외)
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 Ops 대시보드 상태 조회 |
+| HTTP Status | 500 |
+| 영향 범위 | 어드민 전체 |
+| 재현 빈도 | 항상 |
+
+**증상**
+- `GET /api/v2/admin/ops/status` 500 응답
+
+**근거**
+- 클라이언트 콘솔에서 `GET https://cc-jm.com/api/v2/admin/ops/status 500` 확인
+- 운영 로그 조회 시 워커 노이즈로 해당 스택트레이스 필터링 실패 (Redis NOGROUP 반복)
+
+**근본 원인 (코드 근거)**
+- `ops_routes.py` 내부에서 `HQMarginStatsService.get_hq_margin_stats()`와 `GameLogAnalyticsService`를 호출하며,
+  관련 테이블(`hq_prospective_user`, `v2_game_log`) 미생성/스키마 불일치 시 `SQLAlchemyError`가 발생할 수 있음.
+- 예외가 처리되지 않아 전체 응답이 500으로 실패.
+
+**해결 방법**
+- 예외 처리 추가로 쿼리 실패 시 기본값 반환 및 500 방지.
+- 수정 파일: [app/v2/api/admin/ops_routes.py](../../../app/v2/api/admin/ops_routes.py)
+
+**검증 방법**
+1. `/api/v2/admin/ops/status` 호출 시 500이 아닌 정상 응답 확인
+2. `hqStats`, `revenueStats`, `riskUsers`, `opportunityUsers`가 기본값/빈 배열로 내려오는지 확인
+
+**🏷️ 태그**
+`P1` `OPS` `DB` `ADMIN` `SQLAlchemy`
+
 ### [02-02] - DB: V2GameLog FK 테이블명 오타로 인한 전체 API 500 에러
 
 #### ❌ 현상

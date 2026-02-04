@@ -2,10 +2,12 @@ from datetime import datetime, date, timedelta
 from typing import List, Optional
 import json
 import asyncio
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
 from sqlalchemy import func, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_admin_info, get_db
@@ -37,6 +39,8 @@ from app.v2.schemas.v2_admin_ops import (
 )
 from app.v2.schemas.v2_admin_streak import StreakDailyMetric, StreakMetricsResponse
 from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotConfig
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -159,51 +163,63 @@ def get_ops_dashboard_status(
 
     # [Phase 2] HQ Margin Stats
     from app.v2.services.hq_margin_stats_service import HQMarginStatsService
-    hq_stats = HQMarginStatsService.get_hq_margin_stats(db)
+    try:
+        hq_stats = HQMarginStatsService.get_hq_margin_stats(db)
+    except SQLAlchemyError as exc:
+        db.rollback()
+        logger.exception("ops/status hq_stats query failed", exc_info=exc)
+        hq_stats = OpsHQMarginStatsDto()
 
     # [Phase 3] CSV 데이터 기반 확장 - GameLogAnalyticsService
     from app.v2.services.game_log_analytics_service import GameLogAnalyticsService
-    
-    game_analytics = GameLogAnalyticsService(db)
-    revenue_stats_data = game_analytics.get_revenue_summary()
-    risk_users_data = game_analytics.get_risk_users(limit=10)
-    opportunity_users_data = game_analytics.get_opportunity_users(limit=10)
-    
-    # DTO 변환
-    revenue_stats = RevenueStatsDto(
-        today_revenue=revenue_stats_data.get("today_revenue", 0),
-        today_expenses=revenue_stats_data.get("today_expenses", 0),
-        net_income=revenue_stats_data.get("net_income", 0),
-        deposit_count=revenue_stats_data.get("deposit_count", 0),
-        weekly_growth_rate=revenue_stats_data.get("weekly_growth_rate", 0.0),
-        total_charge=revenue_stats_data.get("total_charge", 0),
-        data_source=revenue_stats_data.get("data_source", "GAME_LOG"),
-    ) if revenue_stats_data else None
-    
-    detailed_risk_users = [
-        DetailedRiskUserDto(
-            user_id=r["user_id"],
-            nickname=r.get("nickname", ""),
-            risk_type=r.get("risk_type", "UNKNOWN"),
-            risk_level=r.get("risk_level", "MEDIUM"),
-            risk_score=r.get("risk_score", 0.0),
-            details=r.get("details", {}),
-            last_activity_at=r.get("last_activity_at"),
-        )
-        for r in risk_users_data
-    ]
-    
-    opportunity_user_list = [
-        OpportunityUserDto(
-            user_id=o["user_id"],
-            nickname=o.get("nickname", ""),
-            segment=o.get("segment", "VIP"),
-            total_margin=o.get("total_margin", 0),
-            total_charge=o.get("total_charge", 0),
-            last_activity_at=o.get("last_activity_at"),
-        )
-        for o in opportunity_users_data
-    ]
+
+    try:
+        game_analytics = GameLogAnalyticsService(db)
+        revenue_stats_data = game_analytics.get_revenue_summary()
+        risk_users_data = game_analytics.get_risk_users(limit=10)
+        opportunity_users_data = game_analytics.get_opportunity_users(limit=10)
+
+        # DTO 변환
+        revenue_stats = RevenueStatsDto(
+            today_revenue=revenue_stats_data.get("today_revenue", 0),
+            today_expenses=revenue_stats_data.get("today_expenses", 0),
+            net_income=revenue_stats_data.get("net_income", 0),
+            deposit_count=revenue_stats_data.get("deposit_count", 0),
+            weekly_growth_rate=revenue_stats_data.get("weekly_growth_rate", 0.0),
+            total_charge=revenue_stats_data.get("total_charge", 0),
+            data_source=revenue_stats_data.get("data_source", "GAME_LOG"),
+        ) if revenue_stats_data else None
+
+        detailed_risk_users = [
+            DetailedRiskUserDto(
+                user_id=r["user_id"],
+                nickname=r.get("nickname", ""),
+                risk_type=r.get("risk_type", "UNKNOWN"),
+                risk_level=r.get("risk_level", "MEDIUM"),
+                risk_score=r.get("risk_score", 0.0),
+                details=r.get("details", {}),
+                last_activity_at=r.get("last_activity_at"),
+            )
+            for r in risk_users_data
+        ]
+
+        opportunity_user_list = [
+            OpportunityUserDto(
+                user_id=o["user_id"],
+                nickname=o.get("nickname", ""),
+                segment=o.get("segment", "VIP"),
+                total_margin=o.get("total_margin", 0),
+                total_charge=o.get("total_charge", 0),
+                last_activity_at=o.get("last_activity_at"),
+            )
+            for o in opportunity_users_data
+        ]
+    except SQLAlchemyError as exc:
+        db.rollback()
+        logger.exception("ops/status game analytics query failed", exc_info=exc)
+        revenue_stats = RevenueStatsDto()
+        detailed_risk_users = []
+        opportunity_user_list = []
 
     return OpsDashboardResponse(
         system=system_status, 
