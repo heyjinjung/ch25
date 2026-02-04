@@ -1,16 +1,27 @@
 ﻿"""V2 API dependencies."""
 from __future__ import annotations
+from typing import Generator
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
 from app.core.config import get_settings
 from app.core.security import decode_access_token
-from app.v2.models.user import V2User
+from app.db.session import SessionLocal
+from app.v2.models.user import V2User, V2UserRole, V2UserStatus
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_db() -> Generator[Session, None, None]:
+    """Provide a transactional database session for request handling."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def get_current_user_id(
@@ -53,3 +64,51 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+def get_current_admin_info(
+    request: Request,
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> tuple[int, str]:
+    """Return (admin_id, role) for admin APIs.
+
+    V2-only: JWT의 role 클레임 또는 V2User.role 필드에서 권한 확인.
+    """
+
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="AUTH_REQUIRED")
+
+    admin_id = get_current_user_id(db=db, credentials=credentials)
+
+    payload = decode_access_token(credentials.credentials)
+    role = payload.get("role")
+    roles = payload.get("roles")
+    if isinstance(roles, list) and roles:
+        role = roles[0]
+    if isinstance(role, list) and role:
+        role = role[0]
+
+    role_str = str(role).upper() if role else None
+
+    # V2-only: JWT에 role이 없으면 V2User.role에서 확인
+    if not role_str:
+        v2_user = db.execute(select(V2User).where(V2User.id == admin_id)).scalar_one_or_none()
+        if v2_user and v2_user.role:
+            role_str = v2_user.role.value if hasattr(v2_user.role, 'value') else str(v2_user.role).upper()
+
+    if not role_str or role_str == V2UserRole.USER.value:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ADMIN_REQUIRED")
+
+    # Backward compatibility: treat SUPER_ADMIN as ADMIN.
+    if role_str == "SUPER_ADMIN":
+        role_str = "ADMIN"
+
+    return admin_id, role_str
+
+
+def get_current_admin_id(
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+) -> int:
+    return get_current_user_id(db=db, credentials=credentials)
