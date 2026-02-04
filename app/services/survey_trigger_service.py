@@ -7,7 +7,7 @@ from typing import Any, Iterable
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
-from app.models.survey import Survey, SurveyResponse, SurveyResponseStatus, SurveyTriggerRule, SurveyTriggerType
+from app.v2.models.v2_survey import V2Survey, V2SurveyResponse, SurveyResponseStatus, V2SurveyTriggerRule, SurveyTriggerType
 from app.v2.models.user import V2User
 
 
@@ -17,34 +17,34 @@ class SurveyTriggerService:
     def __init__(self) -> None:
         self.now = datetime.utcnow
 
-    def _eligible_rules(self, db: Session, trigger_type: SurveyTriggerType) -> list[SurveyTriggerRule]:
-        stmt = select(SurveyTriggerRule).join(Survey).where(
-            SurveyTriggerRule.trigger_type == trigger_type,
-            SurveyTriggerRule.is_active == True,  # noqa: E712
-            Survey.status == "ACTIVE",
+    def _eligible_rules(self, db: Session, trigger_type: SurveyTriggerType) -> list[V2SurveyTriggerRule]:
+        stmt = select(V2SurveyTriggerRule).join(V2Survey).where(
+            V2SurveyTriggerRule.trigger_type == trigger_type,
+            V2SurveyTriggerRule.is_active == True,  # noqa: E712
+            V2Survey.status == "ACTIVE",
         )
         return db.execute(stmt).scalars().all()
 
-    def _passes_cooldown(self, db: Session, user_id: int, rule: SurveyTriggerRule) -> bool:
+    def _passes_cooldown(self, db: Session, user_id: int, rule: V2SurveyTriggerRule) -> bool:
         if rule.cooldown_hours <= 0 and rule.max_per_user <= 0:
             return True
         recent_stmt = (
-            select(SurveyResponse)
+            select(V2SurveyResponse)
             .where(
-                SurveyResponse.user_id == user_id,
-                SurveyResponse.survey_id == rule.survey_id,
-                SurveyResponse.trigger_rule_id == rule.id,
+                V2SurveyResponse.user_id == user_id,
+                V2SurveyResponse.survey_id == rule.survey_id,
+                V2SurveyResponse.trigger_rule_id == rule.id,
             )
-            .order_by(SurveyResponse.id.desc())
+            .order_by(V2SurveyResponse.id.desc())
         )
         recent = db.execute(recent_stmt).scalars().first()
         if not recent:
             return True
         if rule.max_per_user > 0:
-            count_stmt = select(func.count()).select_from(SurveyResponse).where(
-                SurveyResponse.user_id == user_id,
-                SurveyResponse.survey_id == rule.survey_id,
-                SurveyResponse.trigger_rule_id == rule.id,
+            count_stmt = select(func.count()).select_from(V2SurveyResponse).where(
+                V2SurveyResponse.user_id == user_id,
+                V2SurveyResponse.survey_id == rule.survey_id,
+                V2SurveyResponse.trigger_rule_id == rule.id,
             )
             total = db.execute(count_stmt).scalar_one()
             if total >= rule.max_per_user:
@@ -55,8 +55,8 @@ class SurveyTriggerService:
                 return False
         return True
 
-    def _create_pending(self, db: Session, user_id: int, rule: SurveyTriggerRule) -> SurveyResponse:
-        response = SurveyResponse(
+    def _create_pending(self, db: Session, user_id: int, rule: V2SurveyTriggerRule) -> V2SurveyResponse:
+        response = V2SurveyResponse(
             survey_id=rule.survey_id,
             user_id=user_id,
             trigger_rule_id=rule.id,

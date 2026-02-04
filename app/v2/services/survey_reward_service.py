@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
-from app.v2.models import Survey, SurveyResponse, SurveyRewardStatus
+from app.v2.models.v2_survey import V2Survey, V2SurveyResponse, SurveyRewardStatus
 from app.v2.services.reward_service import V2RewardService
 
 
@@ -16,7 +16,7 @@ class V2SurveyRewardService:
     def __init__(self) -> None:
         self.reward_service = V2RewardService()
 
-    def apply_reward(self, db: Session, survey: Survey, response: SurveyResponse) -> tuple[bool, str | None]:
+    def apply_reward(self, db: Session, survey: V2Survey, response: V2SurveyResponse) -> tuple[bool, str | None]:
         reward_cfg = survey.reward_json or {}
         reward_type = (
             reward_cfg.get("reward_type")

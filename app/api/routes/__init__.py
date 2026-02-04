@@ -19,7 +19,8 @@ from app.api.routes import (
 	season_pass,
 	today_feature,
 	team_battle,
-	survey,
+
+	# survey (legacy deprecated)
 	viral,
 	vault,
 	ui_config,
@@ -70,7 +71,8 @@ api_router.include_router(mission.router)
 api_router.include_router(events.router)
 api_router.include_router(ranking.router)
 api_router.include_router(team_battle.router)
-api_router.include_router(survey.router)
+
+# api_router.include_router(survey.router)
 api_router.include_router(vault.router)
 api_router.include_router(ui_config.router)
 api_router.include_router(ui_copy.router)

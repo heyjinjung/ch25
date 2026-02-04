@@ -13,12 +13,13 @@ from fastapi import HTTPException, status
 from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
-from app.v2.models import (
-    Survey,
-    SurveyOption,
-    SurveyQuestion,
-    SurveyResponse,
-    SurveyResponseAnswer,
+
+from app.v2.models.v2_survey import (
+    V2Survey,
+    V2SurveyOption,
+    V2SurveyQuestion,
+    V2SurveyResponse,
+    V2SurveyResponseAnswer,
     SurveyResponseStatus,
     SurveyStatus,
 )
@@ -41,7 +42,7 @@ class V2SurveyService:
         self._now = datetime.utcnow
         self.reward_service = V2SurveyRewardService()
 
-    def _serialize_question(self, question: SurveyQuestion) -> SurveyQuestionSchema:
+    def _serialize_question(self, question: V2SurveyQuestion) -> SurveyQuestionSchema:
         return SurveyQuestionSchema(
             id=question.id,
             order_index=question.order_index,
@@ -63,7 +64,7 @@ class V2SurveyService:
             ],
         )
 
-    def _serialize_survey(self, survey: Survey) -> SurveyDetailResponse:
+    def _serialize_survey(self, survey: V2Survey) -> SurveyDetailResponse:
         return SurveyDetailResponse(
             id=survey.id,
             title=survey.title,
@@ -74,18 +75,18 @@ class V2SurveyService:
             questions=[self._serialize_question(q) for q in sorted(survey.questions, key=lambda q: q.order_index)],
         )
 
-    def get_active_surveys(self, db: Session, user_id: int) -> list[Survey]:
+    def get_active_surveys(self, db: Session, user_id: int) -> list[V2Survey]:
         now = self._now()
         window_filter = or_(
-            and_(Survey.start_at == None, Survey.end_at == None),
-            and_(Survey.start_at <= now, Survey.end_at == None),
-            and_(Survey.start_at == None, Survey.end_at >= now),
-            and_(Survey.start_at <= now, Survey.end_at >= now),
+            and_(V2Survey.start_at == None, V2Survey.end_at == None),
+            and_(V2Survey.start_at <= now, V2Survey.end_at == None),
+            and_(V2Survey.start_at == None, V2Survey.end_at >= now),
+            and_(V2Survey.start_at <= now, V2Survey.end_at >= now),
         )
-        stmt = select(Survey).where(Survey.status == SurveyStatus.ACTIVE, window_filter)
+        stmt = select(V2Survey).where(V2Survey.status == SurveyStatus.ACTIVE, window_filter)
         return db.execute(stmt).scalars().all()
 
-    def serialize_active(self, surveys: list[Survey], responses: dict[int, SurveyResponse | None]) -> list[SurveyDetailResponse]:
+    def serialize_active(self, surveys: list[V2Survey], responses: dict[int, V2SurveyResponse | None]) -> list[SurveyDetailResponse]:
         items: list[SurveyDetailResponse] = []
         for survey in surveys:
             item = self._serialize_survey(survey)
@@ -95,15 +96,15 @@ class V2SurveyService:
             items.append(item)
         return items
 
-    def get_or_create_response(self, db: Session, survey_id: int, user_id: int) -> SurveyResponse:
+    def get_or_create_response(self, db: Session, survey_id: int, user_id: int) -> V2SurveyResponse:
         response = db.execute(
-            select(SurveyResponse)
-            .where(SurveyResponse.survey_id == survey_id, SurveyResponse.user_id == user_id)
-            .order_by(SurveyResponse.id.desc())
+            select(V2SurveyResponse)
+            .where(V2SurveyResponse.survey_id == survey_id, V2SurveyResponse.user_id == user_id)
+            .order_by(V2SurveyResponse.id.desc())
         ).scalar_one_or_none()
         if response:
             return response
-        response = SurveyResponse(
+        response = V2SurveyResponse(
             survey_id=survey_id,
             user_id=user_id,
             status=SurveyResponseStatus.PENDING,
@@ -115,12 +116,12 @@ class V2SurveyService:
         return response
 
     def get_survey_session(self, db: Session, survey_id: int, user_id: int) -> SurveySessionResponse:
-        survey = db.get(Survey, survey_id)
+        survey = db.get(V2Survey, survey_id)
         if not survey:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SURVEY_NOT_FOUND")
         response = self.get_or_create_response(db, survey_id=survey_id, user_id=user_id)
         answers = db.execute(
-            select(SurveyResponseAnswer).where(SurveyResponseAnswer.response_id == response.id)
+            select(V2SurveyResponseAnswer).where(V2SurveyResponseAnswer.response_id == response.id)
         ).scalars().all()
         response_info = SurveyResponseInfo(
             id=response.id,
@@ -153,8 +154,8 @@ class V2SurveyService:
         user_id: int,
         payload: Iterable[SurveyAnswerPayload],
         last_question_id: int | None,
-    ) -> SurveyResponse:
-        response = db.get(SurveyResponse, response_id)
+    ) -> V2SurveyResponse:
+        response = db.get(V2SurveyResponse, response_id)
         if not response or response.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="RESPONSE_NOT_FOUND")
         if response.status == SurveyResponseStatus.COMPLETED:
@@ -168,7 +169,7 @@ class V2SurveyService:
         existing_answers = {
             ans.question_id: ans
             for ans in db.execute(
-                select(SurveyResponseAnswer).where(SurveyResponseAnswer.response_id == response.id)
+                select(V2SurveyResponseAnswer).where(V2SurveyResponseAnswer.response_id == response.id)
             ).scalars()
         }
 
@@ -182,7 +183,7 @@ class V2SurveyService:
                 answer.answered_at = now
             else:
                 db.add(
-                    SurveyResponseAnswer(
+                    V2SurveyResponseAnswer(
                         response_id=response.id,
                         question_id=item.question_id,
                         option_id=item.option_id,
@@ -197,21 +198,21 @@ class V2SurveyService:
         db.refresh(response)
         return response
 
-    def complete_response(self, db: Session, response_id: int, user_id: int, force_submit: bool = False) -> SurveyResponse:
-        response = db.get(SurveyResponse, response_id)
+    def complete_response(self, db: Session, response_id: int, user_id: int, force_submit: bool = False) -> V2SurveyResponse:
+        response = db.get(V2SurveyResponse, response_id)
         if not response or response.user_id != user_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="RESPONSE_NOT_FOUND")
         if response.status == SurveyResponseStatus.COMPLETED:
             return response
 
-        survey = db.get(Survey, response.survey_id)
+        survey = db.get(V2Survey, response.survey_id)
         if not survey:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SURVEY_NOT_FOUND")
 
         answers = {
             ans.question_id: ans
             for ans in db.execute(
-                select(SurveyResponseAnswer).where(SurveyResponseAnswer.response_id == response.id)
+                select(V2SurveyResponseAnswer).where(V2SurveyResponseAnswer.response_id == response.id)
             ).scalars()
         }
         missing_required = []
@@ -240,7 +241,7 @@ class V2SurveyService:
         force_submit: bool = False,
     ) -> SurveyCompleteResponse:
         response = self.complete_response(db=db, response_id=response_id, user_id=user_id, force_submit=force_submit)
-        survey = db.get(Survey, response.survey_id)
+        survey = db.get(V2Survey, response.survey_id)
         if not survey:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="SURVEY_NOT_FOUND")
         applied, toast = self.reward_service.apply_reward(db=db, survey=survey, response=response)
@@ -256,7 +257,7 @@ class V2SurveyService:
         return SurveyCompleteResponse(response=resp_info, reward_applied=applied, toast_message=toast)
 
     @staticmethod
-    def _has_answer(answer: SurveyResponseAnswer, question: SurveyQuestion | None = None) -> bool:
+    def _has_answer(answer: V2SurveyResponseAnswer, question: V2SurveyQuestion | None = None) -> bool:
         if answer.option_id is not None:
             return True
         if question and question.question_type == "MULTI_CHOICE" and answer.meta_json:

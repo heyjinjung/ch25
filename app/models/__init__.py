@@ -41,13 +41,13 @@ from app.models.ops_plan import OpsCampaign, OpsPlan, OpsPlanTask
 from app.models.ops_eval_metric import OpsEvalMetric
 from app.models.ops_target import OpsTargetList, OpsTargetMember
 from app.models.event import EventConfig, EventParticipationLog
-from app.models.survey import (
-    Survey,
-    SurveyQuestion,
-    SurveyOption,
-    SurveyTriggerRule,
-    SurveyResponse,
-    SurveyResponseAnswer,
+from app.v2.models.v2_survey import (
+    V2Survey,
+    V2SurveyQuestion,
+    V2SurveyOption,
+    V2SurveyTriggerRule,
+    V2SurveyResponse,
+    V2SurveyResponseAnswer,
 )
 from app.models.user_history import UserIdentityHistory
 
@@ -90,12 +90,12 @@ __all__ = [
     "GameTokenType",
     "UserGameWalletLedger",
     "UserCashLedger",
-    "Survey",
-    "SurveyQuestion",
-    "SurveyOption",
-    "SurveyTriggerRule",
-    "SurveyResponse",
-    "SurveyResponseAnswer",
+    "V2Survey",
+    "V2SurveyQuestion",
+    "V2SurveyOption",
+    "V2SurveyTriggerRule",
+    "V2SurveyResponse",
+    "V2SurveyResponseAnswer",
     "UserActivity",
     "UserActivityEvent",
     "UserSegment",

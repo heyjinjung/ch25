@@ -79,6 +79,7 @@ from app.v2.api.user_routes import router as user_router
 from app.v2.api.vault_routes import router as vault_router
 from app.v2.api.user_link_routes import router as user_link_router
 from app.v2.api.user_latency_routes import router as user_latency_router
+from app.v2.api.survey_routes import router as survey_router
 
 
 router.include_router(admin_router)
@@ -90,6 +91,7 @@ router.include_router(user_router)
 router.include_router(vault_router)
 router.include_router(user_link_router, prefix="/user", tags=["v2-user-linking"])
 router.include_router(user_latency_router, prefix="/user/economy", tags=["v2-user-latency"])
+router.include_router(survey_router, prefix="/surveys", tags=["v2-surveys"])
 
 
 class V2InventoryUseRequest(BaseModel):

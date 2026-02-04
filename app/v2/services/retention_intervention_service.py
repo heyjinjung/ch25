@@ -27,11 +27,14 @@ class V2RetentionInterventionService:
     BETA = 0.10
     TARGET_ROI_RATIO = 3
 
+    # 2026-02-04: CRM 세그먼트 키로 통합
     SEGMENT_BASE_RATE: dict[str, float] = {
-        "HIGH_ROLLER": 0.04,
-        "CASUAL_LOYAL": 0.02,
-        "NEW_USER": 0.02,
-        "CHURN_RISK": 0.03,
+        "VIP": 0.04,       # 기존 HIGH_ROLLER
+        "WHALE": 0.04,     # 기존 HIGH_ROLLER
+        "COMMON": 0.02,    # 기존 CASUAL_LOYAL
+        "NEW": 0.02,       # 기존 NEW_USER
+        "AT_RISK": 0.03,   # 기존 CHURN_RISK
+        "WINNER": 0.03,    # 신규
     }
 
     EVENT_BASE_REWARD: dict[str, int] = {
@@ -64,7 +67,7 @@ class V2RetentionInterventionService:
         state = db.query(V2UserRetentionState).filter(V2UserRetentionState.user_id == user_id).first()
         churn_prob = float(getattr(state, "churn_probability_score", 0) or 0)
         churn_prob = min(max(churn_prob, 0.0), 1.0)
-        segment = str(getattr(state, "user_segment_tag", "NEW_USER") or "NEW_USER")
+        segment = str(getattr(state, "user_segment_tag", "COMMON") or "COMMON")
         predicted_ltv = float(getattr(state, "predicted_ltv", 0) or 0)
         last_intervention_at = getattr(state, "last_intervention_at", None)
 
@@ -119,9 +122,9 @@ class V2RetentionInterventionService:
     def enqueue_reengagement(self, db: Session, *, user_id: int, reason: str | None, channel: str) -> dict[str, Any]:
         state = db.query(V2UserRetentionState).filter(V2UserRetentionState.user_id == user_id).first()
         churn_prob = float(getattr(state, "churn_probability_score", 0) or 0)
-        segment = str(getattr(state, "user_segment_tag", "NEW_USER") or "NEW_USER")
+        segment = str(getattr(state, "user_segment_tag", "COMMON") or "COMMON")
 
-        is_candidate = churn_prob >= 0.7 or segment == "CHURN_RISK"
+        is_candidate = churn_prob >= 0.7 or segment == "AT_RISK"  # CHURN_RISK → AT_RISK
         if not is_candidate:
             return {
                 "queued": False,

@@ -23,10 +23,11 @@ class V2UserRetentionState(Base):
         nullable=False,
         default="IN_FLOW",
     )
+    # 2026-02-04: CRM 세그먼트 키로 통합 (기존: HIGH_ROLLER/CASUAL_LOYAL/NEW_USER/CHURN_RISK)
     user_segment_tag = Column(
-        Enum("HIGH_ROLLER", "CASUAL_LOYAL", "NEW_USER", "CHURN_RISK", name="v2_retention_segment_tag"),
+        Enum("NEW", "COMMON", "VIP", "WHALE", "AT_RISK", "WINNER", name="v2_retention_segment_tag_v2"),
         nullable=False,
-        default="NEW_USER",
+        default="COMMON",
     )
     last_intervention_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -46,15 +46,15 @@ class SurveySummary(BaseModel):
 
 
 class SurveyOptionSchema(BaseModel):
-    id: int
+    id: int | None = None
     value: str
     label: str
-    order_index: int
-    weight: int
+    order_index: int | None = None
+    weight: int = 1
 
 
 class SurveyQuestionSchema(BaseModel):
-    id: int
+    id: int | None = None
     order_index: int
     randomize_group: str | None = None
     question_type: SurveyQuestionType
@@ -72,7 +72,11 @@ class SurveyDetailResponse(BaseModel):
     channel: SurveyChannel
     status: SurveyStatus
     reward_json: dict[str, Any] | None = None
-    questions: list[SurveyQuestionSchema]
+    target_segment_json: dict[str, Any] | None = None
+    auto_launch: bool = False
+    start_at: datetime | None = None
+    end_at: datetime | None = None
+    questions: list[SurveyQuestionSchema] = Field(default_factory=list)
 
 
 class SurveyListResponse(BaseModel):
@@ -120,6 +124,7 @@ class SurveyCompleteResponse(BaseModel):
 
 # Admin schemas
 class SurveyQuestionInput(BaseModel):
+    id: int | None = None
     title: str
     question_type: SurveyQuestionType
     order_index: int
@@ -127,7 +132,7 @@ class SurveyQuestionInput(BaseModel):
     helper_text: str | None = None
     randomize_group: str | None = None
     config_json: dict[str, Any] | None = None
-    options: list[dict[str, Any]] = Field(default_factory=list)
+    options: list[SurveyOptionSchema] = Field(default_factory=list)
 
 
 class SurveyUpsertRequest(BaseModel):
@@ -157,8 +162,9 @@ class SurveyAdminListResponse(BaseModel):
     items: list[SurveyAdminResponse]
 
 
-class SurveyTriggerRuleSchema(BaseModel):
+class SurveyTriggerSchema(BaseModel):
     id: int
+    survey_id: int
     trigger_type: str
     trigger_config_json: dict[str, Any] | None = None
     priority: int
@@ -167,7 +173,8 @@ class SurveyTriggerRuleSchema(BaseModel):
     is_active: bool
 
 
-class SurveyTriggerUpsertRequest(BaseModel):
+class SurveyTriggerCUDRequest(BaseModel):
+    id: int | None = None
     trigger_type: str
     trigger_config_json: dict[str, Any] | None = None
     priority: int = 100
@@ -177,7 +184,19 @@ class SurveyTriggerUpsertRequest(BaseModel):
 
 
 class SurveyTriggerListResponse(BaseModel):
-    items: list[SurveyTriggerRuleSchema]
+    items: list[SurveyTriggerSchema]
+
+
+class CommonQueryParams(BaseModel):
+    limit: int = 20
+    offset: int = 0
+
+
+class SurveyStatsResponse(BaseModel):
+    total_responses: int
+    completed_count: int
+    average_duration_seconds: float = 0
+    option_distribution: dict[str, Any] = Field(default_factory=dict)
 
 
 __all__ = [
@@ -198,7 +217,9 @@ __all__ = [
     "SurveyUpsertRequest",
     "SurveyAdminResponse",
     "SurveyAdminListResponse",
-    "SurveyTriggerRuleSchema",
-    "SurveyTriggerUpsertRequest",
+    "SurveyTriggerSchema",
+    "SurveyTriggerCUDRequest",
     "SurveyTriggerListResponse",
+    "CommonQueryParams",
+    "SurveyStatsResponse",
 ]
