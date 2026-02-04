@@ -289,11 +289,19 @@ def preview_paste_import(
         latest_deposit_at = db.query(func.max(HQDailyDepositLog.deposit_at)).scalar()
         
         # 기존 기록 이후 건수 계산
+        # 시간 정보가 00:00:00인 경우(시간 없이 날짜만 입력된 경우) 날짜만 비교
         new_count = 0
         if latest_deposit_at:
+            latest_date = latest_deposit_at.date()
             for item in parsed:
-                if item.deposit_at and item.deposit_at > latest_deposit_at:
-                    new_count += 1
+                if item.deposit_at:
+                    # 시간 정보가 없는 경우 (00:00:00) 날짜 비교
+                    if item.deposit_at.hour == 0 and item.deposit_at.minute == 0 and item.deposit_at.second == 0:
+                        # 같은 날짜이거나 이후 날짜면 신규로 처리
+                        if item.deposit_at.date() >= latest_date:
+                            new_count += 1
+                    elif item.deposit_at > latest_deposit_at:
+                        new_count += 1
         else:
             new_count = len(parsed)
         

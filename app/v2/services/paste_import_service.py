@@ -234,10 +234,18 @@ class PasteImportService:
         
         for item in parsed:
             # 최신 기록 이후만 처리
+            # 시간 정보가 없는 경우 (00:00:00) 날짜 비교로 처리
             if latest_deposit_at and item.deposit_at:
-                if item.deposit_at <= latest_deposit_at:
-                    skipped_old_count += 1
-                    continue
+                is_no_time = (item.deposit_at.hour == 0 and item.deposit_at.minute == 0 and item.deposit_at.second == 0)
+                if is_no_time:
+                    # 같은 날짜는 허용, 이전 날짜만 스킵
+                    if item.deposit_at.date() < latest_deposit_at.date():
+                        skipped_old_count += 1
+                        continue
+                else:
+                    if item.deposit_at <= latest_deposit_at:
+                        skipped_old_count += 1
+                        continue
             
             # 중복 체크
             dt_str = item.deposit_at.strftime("%Y%m%d%H%M") if item.deposit_at else "no_time"
