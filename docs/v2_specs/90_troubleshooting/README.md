@@ -33,6 +33,7 @@ V2 시스템 운영 중 발생하는 문제를 **도메인별 주간 문서**로
 | `AUTH` | 인증/보안 | 로그인, JWT, Telegram Auth, RBAC |
 | `GAME` | 게임 | Dice, Roulette, Lottery, Golden Hour |
 | `MISSION` | 미션/스트릭 | 일일/주간/이벤트 미션, 연속 출석 |
+| `LEVEL` | 레벨/XP | 레벨, 레벨 XP, 레벨 보상 |
 | `VAULT` | 금고/경제 | Vault, 포인트, 재화, 출금 |
 | `INVENTORY` | 인벤토리/상점 | 아이템, 티켓, 상점 주문 |
 | `DB` | DB/마이그레이션 | Alembic, FK, 스키마, 데이터 정합성 |
@@ -77,6 +78,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **5** |
 | GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
+| LEVEL | [W06_LEVEL_troubleshooting.md](./W06_LEVEL_troubleshooting.md) | **1** |
 | INVENTORY | [W06_INVENTORY_troubleshooting.md](./W06_INVENTORY_troubleshooting.md) | **1** |
 | DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
 | INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | **2** |
@@ -95,6 +97,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 7 | INVENTORY | 어드민 회수 로그가 USE로 표시됨 | ✅ 해결 |
 | 8 | VAULT | 금고 보상 적립 로그 누락 | ✅ 해결 |
 | 9 | AUTH | 텔레그램 로그인 시 last_login_at 미업데이트 | ✅ 해결 |
+| 10 | LEVEL | 레벨 화면 미노출 (level-xp 404) | ✅ 해결 |
 
 ---
 
