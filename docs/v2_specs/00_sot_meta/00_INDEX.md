@@ -72,7 +72,7 @@
   - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md)
   - **Inventory**: [05.inventory.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory.md) | [인벤 패치 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory_patch_guide.md)
   - **Mission**: [09.mission.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md) | [빌더 규칙](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_admin_builder_rules_update.md)
-  - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md)
+  - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md) | **[CostType 확장 (2026-02-05)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260205_shop_cost_type_expansion.md)**
   - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [금고 동기화](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260128_vault_balance_sync_update.md)
   - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md)
   - **Golden/Import**: [HQ Margin 종합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md) | **[세그먼트 감사 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)**
@@ -82,6 +82,13 @@
   - **Spending Ledger**: v2_spending_ledger + HQ 환전 로그 추가
   - **Import**: 붙여넣기 환전 Import + 지출 기록 연동
   - **문서**: [지출 원장/환전 Import 구현 기록](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260205_spending_ledger_withdrawal_import_impl.md)
+
+### [2026-02-05 상점 결제재화(CostType) 확장]
+  - **CostType 확장**: VAULT/DIAMOND 외 모든 게임 토큰으로 결제 가능
+  - **지원 타입**: DIAMOND, ROULETTE_TICKET, DICE_TICKET, LOTTERY_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, TRIAL_TICKET, GOLD_KEY_FRAGMENT, DIAMOND_FRAGMENT, PUZZLE_C1~M
+  - **제외**: 기프티콘 (최종 상품으로만 사용)
+  - **수정 파일**: `v2_constants.py`, `shop_service.py`, `v2_shop_exchange.py`
+  - **문서**: [CostType 확장 구현](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260205_shop_cost_type_expansion.md)
 
 ## 1. 도메인별 기본 SoT (Legacy/Standard)
 - 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
@@ -219,6 +226,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.20 (2026-02-05, Claude Opus): 상점 결제재화(CostType) 확장 - 모든 게임 토큰으로 결제 가능 (VAULT/DIAMOND → +13개 토큰)
 - v2.19 (2026-02-04, GitHub Copilot): V2 SoT 통합(레벨/XP/입금 v2_user 단일화), 붙여넣기 Import(게임 로그/데일리 입금), 세그먼트 시스템 전체 감사, Cherry Picker 세그먼트 설계
 - v2.18 (2026-02-03, GitHub Copilot): W1/W2 마케팅 플랜 기반 Ops/Growth(메시지 가드레일·자동화·트래킹) learned_ 문서 추가 및 메시지 정책 SoT 보강
 - v2.17 (2026-02-03, GitHub Copilot): HQ Margin → CC 입금 자동 반영 상세 설계 문서 추가

@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
-
 from pydantic import ConfigDict, Field
 
 from app.v2.schemas.base import KstBaseModel as BaseModel
+from app.v2.schemas.v2_constants import CostType
 
 
 class V2ShopOrderBase(BaseModel):
     user_id: int
     sku: str
     name: str
-    cost_type: Literal["VAULT"]
+    cost_type: CostType
     cost_amount: int = Field(ge=0)
     reward_type: str
     reward_amount: int = Field(ge=0)

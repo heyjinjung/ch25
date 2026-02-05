@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.v2.models import GameTokenType
 from app.v2.models.v2_shop_order import V2ShopOrder
+from app.v2.schemas.v2_constants import GAME_TOKEN_COST_TYPES
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.spending_logger_service import SpendingLoggerService
@@ -56,7 +57,7 @@ class V2ShopService:
         normalized_cost = (cost_type or "VAULT").strip().upper()
         if normalized_cost in {"POINT", "CC_POINT", "VAULT"}:
             normalized_cost = "VAULT"
-        if normalized_cost not in {"VAULT", "DIAMOND"}:
+        if normalized_cost != "VAULT" and normalized_cost not in GAME_TOKEN_COST_TYPES:
             raise ValueError("INVALID_COST_TYPE")
 
         if normalized_cost == "VAULT":
@@ -71,11 +72,12 @@ class V2ShopService:
                 if "insufficient" in str(exc).lower():
                     raise ValueError("INSUFFICIENT_BALANCE") from exc
                 raise
-        else:
+        elif normalized_cost in GAME_TOKEN_COST_TYPES:
+            token_type = GameTokenType(normalized_cost)
             V2InventoryService.consume_wallet_tokens(
                 db,
                 user_id,
-                GameTokenType.DIAMOND,
+                token_type,
                 int(cost_amount),
                 reason="V2_SHOP_PURCHASE",
                 auto_commit=False,
