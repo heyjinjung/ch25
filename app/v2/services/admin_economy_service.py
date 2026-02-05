@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from app.v2.services.ui_config_service import UiConfigService
+from app.v2.services.spending_logger_service import SpendingLoggerService
 from app.v2.models import VaultWithdrawalRequest
 
 class V2AdminEconomyService:
@@ -32,6 +33,17 @@ class V2AdminEconomyService:
         withdrawal.approved_by = admin_id
         db.add(withdrawal)
         db.flush()
+
+        SpendingLoggerService.log_vault_withdrawal(
+            db=db,
+            user_id=withdrawal.user_id,
+            amount=withdrawal.amount,
+            request_id=withdrawal.id,
+            metadata={
+                "admin_id": admin_id,
+                "approved_at": datetime.utcnow().isoformat(),
+            },
+        )
         return withdrawal
 
     @staticmethod

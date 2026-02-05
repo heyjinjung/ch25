@@ -8,6 +8,7 @@ from app.v2.models import GameTokenType
 from app.v2.models.v2_shop_order import V2ShopOrder
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
+from app.v2.services.spending_logger_service import SpendingLoggerService
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +92,24 @@ class V2ShopService:
         )
         db.add(order)
         db.flush()
+
+        currency_type = (
+            SpendingLoggerService.CURRENCY_POINT
+            if normalized_cost == "VAULT"
+            else SpendingLoggerService.CURRENCY_GW
+        )
+        SpendingLoggerService.log_shop_purchase(
+            db=db,
+            user_id=user_id,
+            amount=int(cost_amount),
+            order_id=order.id,
+            currency_type=currency_type,
+            metadata={
+                "sku": sku,
+                "product_name": name,
+                "cost_type": normalized_cost,
+            },
+        )
         return order
 
     @staticmethod

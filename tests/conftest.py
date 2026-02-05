@@ -1,5 +1,6 @@
 import os
 os.environ["ENV"] = "dev"
+os.environ["CIRCUIT_LIMIT_VAULT"] = "1000000000"
 
 import pytest
 from sqlalchemy import create_engine

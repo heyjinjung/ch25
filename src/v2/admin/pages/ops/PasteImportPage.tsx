@@ -35,15 +35,19 @@ import { cn } from "../../../lib/utils";
 import {
   previewPasteImport,
   executePasteImport,
+  previewWithdrawalImport,
+  executeWithdrawalImport,
   PasteImportPreviewResponse,
   PasteImportResult,
+  WithdrawalImportResponse,
   PreviewItem,
   DepositStatus,
 } from "../../../api/adminApi";
 
-type ImportType = "DAILY_DEPOSIT" | "GAME_LOG";
+type ImportType = "DAILY_DEPOSIT" | "GAME_LOG" | "WITHDRAWAL";
 type Step = "INPUT" | "PREVIEW" | "RESULT";
 type StatusFilter = "ALL" | DepositStatus;
+type ResultData = PasteImportResult | WithdrawalImportResponse;
 
 export default function PasteImportPage() {
   const [step, setStep] = useState<Step>("INPUT");
@@ -53,7 +57,7 @@ export default function PasteImportPage() {
   const [error, setError] = useState<string | null>(null);
   const [previewData, setPreviewData] =
     useState<PasteImportPreviewResponse | null>(null);
-  const [resultData, setResultData] = useState<PasteImportResult | null>(null);
+  const [resultData, setResultData] = useState<ResultData | null>(null);
 
   // 체크박스 선택 상태
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(
@@ -68,12 +72,16 @@ export default function PasteImportPage() {
     return previewData.preview.filter((item) => item.status === statusFilter);
   }, [previewData?.preview, statusFilter]);
 
-  // 선택 가능한 항목 (MATCHED만)
+  // 선택 가능한 항목
   const selectableItems = useMemo(() => {
-    return (
-      previewData?.preview.filter((item) => item.status === "MATCHED") ?? []
-    );
-  }, [previewData?.preview]);
+    if (!previewData?.preview) return [];
+    if (importType === "WITHDRAWAL") {
+      return previewData.preview.filter(
+        (item) => item.status === "MATCHED" || item.status === "NOT_FOUND",
+      );
+    }
+    return previewData.preview.filter((item) => item.status === "MATCHED");
+  }, [previewData?.preview, importType]);
 
   const handlePreview = async () => {
     if (!pasteText.trim()) {
@@ -85,15 +93,24 @@ export default function PasteImportPage() {
     setError(null);
 
     try {
-      const result = await previewPasteImport({
-        text: pasteText,
-        import_type: importType,
-      });
+      const result =
+        importType === "WITHDRAWAL"
+          ? await previewWithdrawalImport({
+              text: pasteText,
+            })
+          : await previewPasteImport({
+              text: pasteText,
+              import_type: importType,
+            });
       setPreviewData(result);
       // 기본적으로 MATCHED 상태인 항목 모두 선택
       const matchedIndices = new Set(
         result.preview
-          .filter((item: PreviewItem) => item.status === "MATCHED")
+          .filter((item: PreviewItem) =>
+            importType === "WITHDRAWAL"
+              ? item.status === "MATCHED" || item.status === "NOT_FOUND"
+              : item.status === "MATCHED",
+          )
           .map((item: PreviewItem) => item.index),
       );
       setSelectedIndices(matchedIndices);
@@ -135,11 +152,17 @@ export default function PasteImportPage() {
     setError(null);
 
     try {
-      const result = await executePasteImport({
-        text: pasteText,
-        import_type: importType,
-        selected_indices: Array.from(selectedIndices),
-      });
+      const result =
+        importType === "WITHDRAWAL"
+          ? await executeWithdrawalImport({
+              text: pasteText,
+              selected_indices: Array.from(selectedIndices),
+            })
+          : await executePasteImport({
+              text: pasteText,
+              import_type: importType,
+              selected_indices: Array.from(selectedIndices),
+            });
       setResultData(result);
       setStep("RESULT");
     } catch (err: unknown) {
@@ -164,11 +187,17 @@ export default function PasteImportPage() {
     const config = {
       MATCHED: {
         color: "border-emerald-500/50 text-emerald-400",
-        label: "매칭됨",
+        label: importType === "WITHDRAWAL" ? "처리" : "매칭됨",
       },
-      NOT_FOUND: { color: "border-red-500/50 text-red-400", label: "미등록" },
+      NOT_FOUND: {
+        color: "border-red-500/50 text-red-400",
+        label: importType === "WITHDRAWAL" ? "미매칭" : "미등록",
+      },
       DUPLICATE: { color: "border-amber-500/50 text-amber-400", label: "중복" },
-      SKIPPED_OLD: { color: "border-zinc-500/50 text-zinc-400", label: "기존" },
+      SKIPPED_OLD: {
+        color: "border-zinc-500/50 text-zinc-400",
+        label: importType === "WITHDRAWAL" ? "스킵" : "기존",
+      },
     };
     const { color, label } = config[status];
     return (
@@ -182,6 +211,10 @@ export default function PasteImportPage() {
     if (importType === "DAILY_DEPOSIT") {
       return `번호\t소속\t이름(아이디)\t닉네임\t신청날짜\t충전금액\t입금자명\t충전날짜\t상태
 1\tVIP\t홍길동(hong123)\thongkd\t2026-02-04\t100000\t홍길동\t2026-02-04 10:00:00\t완료`;
+    }
+    if (importType === "WITHDRAWAL") {
+      return `번호\t소속\t이름(아이디)\t닉네임\t신청 날짜\t환전 금액\t계좌번호\t예금주\t환전 날짜\t배팅금\t상태
+1\tHJ\t박관종(hjer5429)\t꽁돌이\t26/02/04 16:00\t50,000\t110-***-******\t박**\t26/02/04 16:05\t150,000\t정상`;
     }
     return `번호\t이름\t닉네임\t타입\t베팅일시\t게임종류\t금액
 1\t홍길동\thongkd\t베팅\t2026-02-04 10:30:00\t슬롯\t50000`;
@@ -227,7 +260,7 @@ export default function PasteImportPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Import Type Selection */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <button
                 type="button"
                 onClick={() => setImportType("DAILY_DEPOSIT")}
@@ -254,6 +287,32 @@ export default function PasteImportPage() {
                 <p className="text-sm text-zinc-400">
                   HQ 일별 입금 내역을 Import합니다. 입금 → 레벨 → 보상 순서로
                   처리됩니다.
+                </p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setImportType("WITHDRAWAL")}
+                className={cn(
+                  "p-4 rounded-lg border-2 transition-all text-left",
+                  importType === "WITHDRAWAL"
+                    ? "border-obsidian-accent bg-obsidian-accent/10"
+                    : "border-obsidian-border bg-obsidian-surface hover:border-obsidian-accent/50",
+                )}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <DollarSign
+                    className={cn(
+                      importType === "WITHDRAWAL"
+                        ? "text-obsidian-accent"
+                        : "text-zinc-400",
+                    )}
+                    size={24}
+                  />
+                  <span className="font-semibold text-white">환전 로그</span>
+                </div>
+                <p className="text-sm text-zinc-400">
+                  HQ 환전 내역을 Import합니다. 정상 상태만 지출로 기록됩니다.
                 </p>
               </button>
 
@@ -396,12 +455,18 @@ export default function PasteImportPage() {
                   {filter === "ALL"
                     ? "전체"
                     : filter === "MATCHED"
-                      ? "매칭"
+                      ? importType === "WITHDRAWAL"
+                        ? "처리"
+                        : "매칭"
                       : filter === "NOT_FOUND"
-                        ? "미등록"
+                        ? importType === "WITHDRAWAL"
+                          ? "미매칭"
+                          : "미등록"
                         : filter === "DUPLICATE"
                           ? "중복"
-                          : "기존"}
+                          : importType === "WITHDRAWAL"
+                            ? "스킵"
+                            : "기존"}
                 </button>
               ))}
             </div>
@@ -457,6 +522,27 @@ export default function PasteImportPage() {
                           </th>
                           <th className="text-center py-2 px-3 text-zinc-400">
                             상태
+                          </th>
+                        </>
+                      ) : importType === "WITHDRAWAL" ? (
+                        <>
+                          <th className="text-left py-2 px-3 text-zinc-400">
+                            CC ID
+                          </th>
+                          <th className="text-left py-2 px-3 text-zinc-400">
+                            닉네임
+                          </th>
+                          <th className="text-right py-2 px-3 text-zinc-400">
+                            환전 금액
+                          </th>
+                          <th className="text-left py-2 px-3 text-zinc-400">
+                            환전일시
+                          </th>
+                          <th className="text-left py-2 px-3 text-zinc-400">
+                            상태
+                          </th>
+                          <th className="text-center py-2 px-3 text-zinc-400">
+                            처리
                           </th>
                         </>
                       ) : (
@@ -525,6 +611,27 @@ export default function PasteImportPage() {
                             </td>
                             <td className="py-2 px-3 text-zinc-300">
                               {item.depositor ?? "-"}
+                            </td>
+                            <td className="py-2 px-3 text-center">
+                              {getStatusBadge(item.status)}
+                            </td>
+                          </>
+                        ) : importType === "WITHDRAWAL" ? (
+                          <>
+                            <td className="py-2 px-3 text-white">
+                              {item.cc_id}
+                            </td>
+                            <td className="py-2 px-3 text-white">
+                              {item.nickname}
+                            </td>
+                            <td className="py-2 px-3 text-right text-emerald-400">
+                              ₩{(item.amount ?? 0).toLocaleString()}
+                            </td>
+                            <td className="py-2 px-3 text-zinc-300">
+                              {item.withdrawal_at ?? "-"}
+                            </td>
+                            <td className="py-2 px-3 text-zinc-300">
+                              {item.hq_status ?? "-"}
                             </td>
                             <td className="py-2 px-3 text-center">
                               {getStatusBadge(item.status)}
@@ -623,9 +730,17 @@ export default function PasteImportPage() {
                 </div>
               </div>
               <div className="p-3 bg-obsidian-surface rounded-lg">
-                <div className="text-xs text-zinc-400">기존 스킵</div>
+                <div className="text-xs text-zinc-400">중복/스킵</div>
                 <div className="text-lg font-bold text-amber-400">
-                  {resultData.skipped_old_count.toLocaleString()}
+                  {(
+                    (resultData.duplicate_count ?? 0) +
+                    ("skipped_old_count" in resultData
+                      ? (resultData.skipped_old_count ?? 0)
+                      : 0) +
+                    ("skipped_status_count" in resultData
+                      ? (resultData.skipped_status_count ?? 0)
+                      : 0)
+                  ).toLocaleString()}
                 </div>
               </div>
               <div className="p-3 bg-obsidian-surface rounded-lg">
@@ -650,6 +765,24 @@ export default function PasteImportPage() {
                     <div className="text-xs text-blue-400">고유 유저</div>
                     <div className="text-lg font-bold text-blue-400">
                       {(resultData.unique_users ?? 0).toLocaleString()}명
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {importType === "WITHDRAWAL" &&
+              "spending_recorded_count" in resultData && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                    <div className="text-xs text-emerald-400">총 환전 금액</div>
+                    <div className="text-lg font-bold text-emerald-400">
+                      ₩{(resultData.total_amount ?? 0).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <div className="text-xs text-blue-400">지출 기록</div>
+                    <div className="text-lg font-bold text-blue-400">
+                      {resultData.spending_recorded_count.toLocaleString()}건
                     </div>
                   </div>
                 </div>

@@ -15,25 +15,25 @@
 - 저가 AI 모델도 이 문서만 보고 구현 가능한 수준의 상세 명세 제공
 
 ### 0.2. 구현 순서 (반드시 이 순서대로)
-1. DB 마이그레이션 생성 및 실행
-2. SQLAlchemy 모델 생성
-3. 서비스 레이어 구현
-4. API 라우터 구현
-5. 프론트엔드 연동
+1. DB 마이그레이션 생성 및 실행 (완료)
+2. SQLAlchemy 모델 생성 (완료)
+3. 서비스 레이어 구현 (완료)
+4. API 라우터 구현 (완료)
+5. 프론트엔드 연동 (완료)
 
 ### 0.3. 구현 상태 체크리스트
 
 | # | 구성요소 | 파일 경로 | 상태 |
 |---|---------|----------|------|
-| 1 | DB Migration (spending_ledger) | `alembic/versions/20260205_0100_add_v2_spending_ledger.py` | ❌ |
-| 2 | DB Migration (withdrawal_log) | `alembic/versions/20260205_0200_add_v2_hq_withdrawal_log.py` | ❌ |
-| 3 | Model (spending_ledger) | `app/v2/models/v2_spending_ledger.py` | ❌ |
-| 4 | Model (withdrawal_log) | `app/v2/models/v2_hq_daily_withdrawal_log.py` | ❌ |
-| 5 | Model __init__ export | `app/v2/models/__init__.py` | ❌ |
-| 6 | SpendingLogger Service | `app/v2/services/spending_logger_service.py` | ❌ |
-| 7 | PasteImportService 확장 | `app/v2/services/paste_import_service.py` | ❌ |
-| 8 | API Route | `app/v2/api/admin/csv_import_routes.py` | ❌ |
-| 9 | Frontend | `src/v2/admin/pages/ops/PasteImportPage.tsx` | ❌ |
+| 1 | DB Migration (spending_ledger) | `alembic/versions/20260205_0100_add_v2_spending_ledger.py` | ✅ |
+| 2 | DB Migration (withdrawal_log) | `alembic/versions/20260205_0200_add_v2_hq_withdrawal_log.py` | ✅ |
+| 3 | Model (spending_ledger) | `app/v2/models/v2_spending_ledger.py` | ✅ |
+| 4 | Model (withdrawal_log) | `app/v2/models/v2_hq_daily_withdrawal_log.py` | ✅ |
+| 5 | Model __init__ export | `app/v2/models/__init__.py` | ✅ |
+| 6 | SpendingLogger Service | `app/v2/services/spending_logger_service.py` | ✅ |
+| 7 | PasteImportService 확장 | `app/v2/services/paste_import_service.py` | ✅ |
+| 8 | API Route | `app/v2/api/admin/csv_import_routes.py` | ✅ |
+| 9 | Frontend | `src/v2/admin/pages/ops/PasteImportPage.tsx` | ✅ |
 
 ---
 

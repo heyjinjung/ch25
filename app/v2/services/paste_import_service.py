@@ -8,6 +8,8 @@
 """
 import logging
 import re
+import hashlib
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Set
 from dataclasses import dataclass
@@ -17,8 +19,10 @@ from sqlalchemy import func
 
 from app.v2.models import V2User, ExternalRankingData
 from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
+from app.v2.models.v2_hq_daily_withdrawal_log import V2HQDailyWithdrawalLog
 from app.v2.services import V2AdminAuditService
 from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
+from app.v2.services.spending_logger_service import SpendingLoggerService
 from app.v2.schemas.v2_cc_deposit import CCDepositCreate
 
 logger = logging.getLogger(__name__)
@@ -43,6 +47,20 @@ class ParsedGameLog:
     bet_at: datetime
     game_type: str
     amount: int
+    raw_line: str
+
+
+@dataclass
+class ParsedWithdrawal:
+    """파싱된 환전 건"""
+    nickname: str
+    cc_id: str
+    amount: int
+    bet_amount: int
+    request_at: Optional[datetime]
+    withdrawal_at: datetime
+    referrer_code: str
+    hq_status: str
     raw_line: str
 
 
@@ -202,6 +220,80 @@ class PasteImportService:
         return results
 
     @staticmethod
+    def parse_daily_withdrawal(text: str) -> List[ParsedWithdrawal]:
+        """HQ 환전 내역 파싱
+
+        형식: 번호\t소속(추천인)\t이름(아이디)\t닉네임\t신청날짜\t환전금액\t계좌번호\t예금주\t환전날짜\t배팅금\t상태
+        """
+        results = []
+        lines = text.strip().split("\n")
+
+        for line_num, line in enumerate(lines, start=1):
+            if not line.strip():
+                continue
+
+            parts = line.split("\t")
+            if len(parts) < 11:
+                logger.debug(
+                    "[PasteImport] Line %s: Insufficient columns (%s), skipping",
+                    line_num,
+                    len(parts),
+                )
+                continue
+
+            if "번호" in parts[0] or "닉네임" in parts[3] or "상태" in parts[10]:
+                logger.debug("[PasteImport] Line %s: Header row, skipping", line_num)
+                continue
+
+            try:
+                cc_id, _ = PasteImportService._extract_cc_id(parts[2].strip())
+                nickname = parts[3].strip()
+                amount = PasteImportService._parse_amount(parts[5])
+                bet_amount = PasteImportService._parse_amount(parts[9])
+                request_at = PasteImportService._parse_datetime(parts[4])
+                withdrawal_at = PasteImportService._parse_datetime(parts[8])
+                referrer_code = parts[1].strip() if parts[1].strip() != "-" else ""
+                hq_status = parts[10].strip()
+
+                if not nickname:
+                    logger.debug("[PasteImport] Line %s: Empty nickname, skipping", line_num)
+                    continue
+
+                if withdrawal_at is None:
+                    logger.debug("[PasteImport] Line %s: Invalid withdrawal_at, skipping", line_num)
+                    continue
+
+                results.append(
+                    ParsedWithdrawal(
+                        nickname=nickname,
+                        cc_id=cc_id,
+                        amount=amount,
+                        bet_amount=bet_amount,
+                        request_at=request_at,
+                        withdrawal_at=withdrawal_at,
+                        referrer_code=referrer_code,
+                        hq_status=hq_status,
+                        raw_line=line,
+                    )
+                )
+            except Exception as e:
+                logger.warning("[PasteImport] Line %s: Parse error - %s", line_num, e)
+                continue
+
+        logger.info("[PasteImport] Parsed %s withdrawal records", len(results))
+        return results
+
+    @staticmethod
+    def _generate_withdrawal_dedup_key(nickname: str, amount: int, withdrawal_at: datetime) -> str:
+        """환전 중복 방지 키 생성"""
+        normalized_nickname = nickname.lower().strip()
+        amount_str = str(amount)
+        dt_str = withdrawal_at.strftime("%Y%m%d%H%M") if withdrawal_at else "no_time"
+
+        raw_key = f"{normalized_nickname}|{amount_str}|{dt_str}"
+        return hashlib.md5(raw_key.encode("utf-8")).hexdigest()[:16]
+
+    @staticmethod
     def import_daily_deposits(
         db: Session,
         text: str,
@@ -214,8 +306,6 @@ class PasteImportService:
         - 중복 방지 (dedup_key)
         - selected_indices가 지정되면 해당 인덱스의 행만 처리
         """
-        import hashlib
-        import uuid
         
         parsed = PasteImportService.parse_daily_deposit(text)
         if not parsed:
@@ -390,6 +480,160 @@ class PasteImportService:
             "total_amount": total_amount,
             "unique_users": len(user_deposits),
             "latest_deposit_at_in_db": latest_deposit_at.isoformat() if latest_deposit_at else None,
+            "matched_details": matched_details[:20],
+        }
+
+    @staticmethod
+    def import_daily_withdrawals(
+        db: Session,
+        text: str,
+        admin_id: str,
+        selected_indices: Optional[List[int]] = None,
+    ) -> Dict:
+        """HQ 환전 내역 Import (붙여넣기)
+
+        - '정상' 상태만 지출로 기록
+        - 중복 방지 (dedup_key)
+        - selected_indices가 지정되면 해당 인덱스의 행만 처리
+        """
+        parsed = PasteImportService.parse_daily_withdrawal(text)
+        if not parsed:
+            return {
+                "success": False,
+                "error": "파싱된 데이터가 없습니다. 형식을 확인하세요.",
+                "total_parsed": 0,
+            }
+
+        if selected_indices is not None:
+            valid_indices = set(selected_indices)
+            parsed = [item for idx, item in enumerate(parsed) if idx in valid_indices]
+            logger.info("[PasteImport] Selected %s items", len(parsed))
+
+        batch_id = str(uuid.uuid4())[:8]
+
+        existing_keys: Set[str] = set(
+            row[0] for row in db.query(V2HQDailyWithdrawalLog.dedup_key).all()
+        )
+
+        stats = {
+            "total_parsed": len(parsed),
+            "processed_count": 0,
+            "skipped_status_count": 0,
+            "duplicate_count": 0,
+            "not_found_count": 0,
+            "total_amount": 0,
+            "spending_recorded_count": 0,
+        }
+
+        logs_to_add = []
+        matched_details = []
+
+        for item in parsed:
+            if item.hq_status != "정상":
+                stats["skipped_status_count"] += 1
+                continue
+
+            if item.amount <= 0:
+                continue
+
+            dedup_key = PasteImportService._generate_withdrawal_dedup_key(
+                item.nickname,
+                item.amount,
+                item.withdrawal_at,
+            )
+
+            if dedup_key in existing_keys:
+                stats["duplicate_count"] += 1
+                continue
+
+            existing_keys.add(dedup_key)
+
+            user = db.query(V2User).filter(
+                func.lower(V2User.nickname) == item.nickname.lower()
+            ).first()
+
+            if not user and item.cc_id:
+                user = db.query(V2User).filter(
+                    func.lower(V2User.cc_id) == item.cc_id.lower()
+                ).first()
+
+            match_status = "MATCHED" if user else "NOT_FOUND"
+
+            log = V2HQDailyWithdrawalLog(
+                dedup_key=dedup_key,
+                nickname=item.nickname,
+                cc_id=item.cc_id,
+                amount=item.amount,
+                bet_amount=item.bet_amount,
+                request_at=item.request_at,
+                withdrawal_at=item.withdrawal_at,
+                referrer_code=item.referrer_code,
+                hq_status=item.hq_status,
+                user_id=user.id if user else None,
+                match_status=match_status,
+                import_batch_id=batch_id,
+            )
+            logs_to_add.append(log)
+
+            if user:
+                spending_id = SpendingLoggerService.log_hq_withdrawal(
+                    db=db,
+                    user_id=user.id,
+                    amount=item.amount,
+                    dedup_key=dedup_key,
+                    metadata={
+                        "nickname": item.nickname,
+                        "withdrawal_at": item.withdrawal_at.isoformat() if item.withdrawal_at else None,
+                        "bet_amount": item.bet_amount,
+                        "batch_id": batch_id,
+                    },
+                )
+
+                if spending_id > 0:
+                    stats["spending_recorded_count"] += 1
+
+                stats["total_amount"] += item.amount
+                stats["processed_count"] += 1
+
+                matched_details.append(
+                    {
+                        "nickname": item.nickname,
+                        "user_id": user.id,
+                        "amount": item.amount,
+                        "withdrawal_at": item.withdrawal_at.isoformat() if item.withdrawal_at else None,
+                    }
+                )
+            else:
+                stats["not_found_count"] += 1
+
+        if logs_to_add:
+            db.bulk_save_objects(logs_to_add)
+
+        db.commit()
+
+        V2AdminAuditService.log(
+            db,
+            admin_id=admin_id,
+            action="PASTE_WITHDRAWAL_IMPORT",
+            target_type="HQ_WITHDRAWAL",
+            target_id=None,
+            after={
+                "batch_id": batch_id,
+                **stats,
+            },
+        )
+
+        logger.info(
+            "[PasteImport] Withdrawals: total=%s, processed=%s, spending=%s",
+            stats["total_parsed"],
+            stats["processed_count"],
+            stats["spending_recorded_count"],
+        )
+
+        return {
+            "success": True,
+            "batch_id": batch_id,
+            **stats,
             "matched_details": matched_details[:20],
         }
 

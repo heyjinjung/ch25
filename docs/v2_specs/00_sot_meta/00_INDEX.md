@@ -78,6 +78,11 @@
   - **Golden/Import**: [HQ Margin 종합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md) | **[세그먼트 감사 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)**
   - **Ops/Growth**: [W1/W2 운영 자동화·트래킹](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260203_ops_marketing_w1_w2_automation_tracking.md)
 
+  ### [2026-02-05 지출 원장 + HQ 환전 붙여넣기 Import]
+  - **Spending Ledger**: v2_spending_ledger + HQ 환전 로그 추가
+  - **Import**: 붙여넣기 환전 Import + 지출 기록 연동
+  - **문서**: [지출 원장/환전 Import 구현 기록](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260205_spending_ledger_withdrawal_import_impl.md)
+
 ## 1. 도메인별 기본 SoT (Legacy/Standard)
 - 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
 - 티켓 Enum SoT: docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md

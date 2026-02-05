@@ -1,10 +1,13 @@
 ﻿"""Admin API routes for CSV import operations."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, List, Optional
+
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.schemas.v2_csv_import import (
@@ -14,6 +17,7 @@ from app.v2.schemas.v2_csv_import import (
 from app.v2.services.csv_import_service import CSVImportService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/csv-import/validate", response_model=dict[str, Any])
@@ -214,7 +218,6 @@ def estimate_import_time(
 # ============================================================
 
 from pydantic import BaseModel
-from typing import List, Optional
 
 
 class PasteImportRequest(BaseModel):
@@ -222,6 +225,26 @@ class PasteImportRequest(BaseModel):
     text: str
     import_type: str  # "DAILY_DEPOSIT" or "GAME_LOG"
     selected_indices: Optional[List[int]] = None  # 선택된 행 인덱스 (None이면 전체)
+
+
+class WithdrawalImportRequest(BaseModel):
+    """환전 Import 요청"""
+    text: str
+    selected_indices: Optional[List[int]] = None
+
+
+class WithdrawalImportResponse(BaseModel):
+    """환전 Import 응답"""
+    success: bool
+    batch_id: Optional[str] = None
+    total_parsed: int = 0
+    processed_count: int = 0
+    skipped_status_count: int = 0
+    duplicate_count: int = 0
+    not_found_count: int = 0
+    total_amount: int = 0
+    spending_recorded_count: int = 0
+    error: Optional[str] = None
 
 
 @router.post("/csv-import/paste-import", response_model=dict[str, Any])
@@ -408,6 +431,119 @@ def preview_paste_import(
                 for p in parsed[:10]
             ],
         }
-    
-    else:
-        raise HTTPException(status_code=400, detail="Unsupported import type")
+
+
+@router.post("/paste-import/withdrawal", response_model=WithdrawalImportResponse)
+def import_withdrawals(
+    request: WithdrawalImportRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """HQ 환전 내역 붙여넣기 Import"""
+    admin_id, admin_role = admin_info
+
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
+
+    from app.v2.services.paste_import_service import PasteImportService
+
+    try:
+        result = PasteImportService.import_daily_withdrawals(
+            db=db,
+            text=request.text,
+            admin_id=str(admin_id),
+            selected_indices=request.selected_indices,
+        )
+        return WithdrawalImportResponse(**result)
+    except Exception as e:  # noqa: BLE001
+        logger.exception("[API] Withdrawal import failed")
+        return WithdrawalImportResponse(success=False, error=str(e))
+
+
+@router.post("/paste-import/withdrawal/preview", response_model=dict[str, Any])
+def preview_withdrawals(
+    request: WithdrawalImportRequest,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """환전 내역 미리보기 (저장 없이 파싱 결과만 반환)"""
+    admin_id, admin_role = admin_info
+
+    if admin_role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Requires ADMIN role")
+
+    from app.v2.services.paste_import_service import PasteImportService
+    from app.v2.models.v2_hq_daily_withdrawal_log import V2HQDailyWithdrawalLog
+    from app.v2.models import V2User
+
+    parsed = PasteImportService.parse_daily_withdrawal(request.text)
+
+    existing_keys = set(
+        row[0] for row in db.query(V2HQDailyWithdrawalLog.dedup_key).all()
+    )
+
+    preview_items = []
+    matched_count = 0
+    not_found_count = 0
+    duplicate_count = 0
+    skipped_status_count = 0
+
+    for idx, item in enumerate(parsed):
+        status = "MATCHED"
+        user_id = None
+
+        if item.hq_status != "정상" or item.amount <= 0:
+            status = "SKIPPED_OLD"
+            skipped_status_count += 1
+        else:
+            dedup_key = PasteImportService._generate_withdrawal_dedup_key(
+                item.nickname,
+                item.amount,
+                item.withdrawal_at,
+            )
+            if dedup_key in existing_keys:
+                status = "DUPLICATE"
+                duplicate_count += 1
+            else:
+                user = db.query(V2User).filter(
+                    func.lower(V2User.nickname) == item.nickname.lower()
+                ).first()
+                if not user and item.cc_id:
+                    user = db.query(V2User).filter(
+                        func.lower(V2User.cc_id) == item.cc_id.lower()
+                    ).first()
+
+                if user:
+                    status = "MATCHED"
+                    user_id = user.id
+                    matched_count += 1
+                else:
+                    status = "NOT_FOUND"
+                    not_found_count += 1
+
+        preview_items.append(
+            {
+                "index": idx,
+                "nickname": item.nickname,
+                "cc_id": item.cc_id,
+                "amount": item.amount,
+                "bet_amount": item.bet_amount,
+                "withdrawal_at": item.withdrawal_at.isoformat() if item.withdrawal_at else None,
+                "hq_status": item.hq_status,
+                "status": status,
+                "user_id": user_id,
+            }
+        )
+
+    return {
+        "success": True,
+        "import_type": "WITHDRAWAL",
+        "total_parsed": len(parsed),
+        "new_records_count": matched_count + not_found_count,
+        "matched_count": matched_count,
+        "not_found_count": not_found_count,
+        "duplicate_count": duplicate_count,
+        "skipped_status_count": skipped_status_count,
+        "latest_in_db": None,
+        "preview": preview_items,
+    }

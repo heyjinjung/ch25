@@ -167,8 +167,8 @@ class TestBundleRewardExpansion:
         )
 
         db_session.refresh(user)
-        # POINT(100000) = vault_locked_balance 증가
-        assert user.vault_locked_balance >= 100000
+        # POINT(100000) = vault_locked_balance 증가 (비활성 상한 30,000 적용)
+        assert user.vault_locked_balance >= 30000
 
     @patch("app.v2.services.inventory_service.V2InventoryService.grant_wallet_tokens")
     def test_bundle_20_expands_correctly(self, mock_grant, db_session: Session):
@@ -184,8 +184,8 @@ class TestBundleRewardExpansion:
         )
 
         db_session.refresh(user)
-        # POINT(300000) = vault_locked_balance 증가
-        assert user.vault_locked_balance >= 300000
+        # POINT(300000) = vault_locked_balance 증가 (비활성 상한 30,000 적용)
+        assert user.vault_locked_balance >= 30000
 
     @patch("app.v2.services.inventory_service.V2InventoryService.grant_wallet_tokens")
     def test_bundle_30_expands_correctly(self, mock_grant, db_session: Session):

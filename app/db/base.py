@@ -82,4 +82,6 @@ from app.v2.models import (
     V2ShopOrder,
     V2SegmentRule,
     V2UserSegment,
+    V2SpendingLedger,
+    V2HQDailyWithdrawalLog,
 )

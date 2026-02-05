@@ -24,6 +24,8 @@ from .hq_prospective_user import HQProspectiveUser
 from .v2_game_log import V2GameLog
 from .v2_external_deposit_unmatched import V2ExternalDepositUnmatched, UnmatchedStatus, UnmatchedReason
 from .v2_hq_daily_deposit_log import HQDailyDepositLog
+from .v2_spending_ledger import V2SpendingLedger
+from .v2_hq_daily_withdrawal_log import V2HQDailyWithdrawalLog
 
 # V1 Compatibility Exports (Shim)
 # These models are now physically located in app/v2/models/core/

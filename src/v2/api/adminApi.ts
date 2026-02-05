@@ -2655,6 +2655,9 @@ export interface PreviewItem {
   log_type?: string;
   bet_at?: string | null;
   game_type?: string;
+  bet_amount?: number;
+  withdrawal_at?: string | null;
+  hq_status?: string;
   status: DepositStatus;
   user_id?: number | null;
 }
@@ -2668,6 +2671,7 @@ export interface PasteImportPreviewResponse {
   not_found_count?: number;
   duplicate_count?: number;
   skipped_old_count?: number;
+  skipped_status_count?: number;
   latest_in_db: string | null;
   preview: PreviewItem[];
 }
@@ -2708,6 +2712,48 @@ export const executePasteImport = async (
 ): Promise<PasteImportResult> => {
   const response = await v2Client.post<PasteImportResult>(
     "/api/v2/admin/csv-import/paste-import",
+    request,
+  );
+  return response.data;
+};
+
+// ============================================================================
+// Withdrawal Paste Import API (HQ 환전)
+// ============================================================================
+
+export interface WithdrawalImportRequest {
+  text: string;
+  selected_indices?: number[] | null;
+}
+
+export interface WithdrawalImportResponse {
+  success: boolean;
+  batch_id?: string;
+  total_parsed: number;
+  processed_count: number;
+  skipped_status_count: number;
+  duplicate_count: number;
+  not_found_count: number;
+  total_amount: number;
+  spending_recorded_count: number;
+  error?: string;
+}
+
+export const previewWithdrawalImport = async (
+  request: WithdrawalImportRequest,
+): Promise<PasteImportPreviewResponse> => {
+  const response = await v2Client.post<PasteImportPreviewResponse>(
+    "/api/v2/admin/paste-import/withdrawal/preview",
+    request,
+  );
+  return response.data;
+};
+
+export const executeWithdrawalImport = async (
+  request: WithdrawalImportRequest,
+): Promise<WithdrawalImportResponse> => {
+  const response = await v2Client.post<WithdrawalImportResponse>(
+    "/api/v2/admin/paste-import/withdrawal",
     request,
   );
   return response.data;
