@@ -23,6 +23,34 @@
 
 ## 🔍 주간 이슈 내역
 
+### [02-05] - VAULT/ADMIN: 환전 Import 지출이 수익/지출 분석에 미반영
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 수익/지출 분석 (Admin Analytics) |
+| HTTP Status | 200 (Logic Error - 지출 0 표시) |
+| 영향 범위 | 어드민 지표/인사이트 |
+| 재현 빈도 | 항상 (환전 Import 후에도 지출 미표시) |
+
+**근본 원인 (증거 기반)**
+- 환전 Import는 `v2_hq_daily_withdrawal_log`와 `v2_spending_ledger`에 기록됨.
+- 수익/지출 분석이 `VaultWithdrawalRequest`만 집계하여 HQ 환전/상점 지출이 누락됨.
+
+**해결 방법**
+- 수익/지출 분석 집계를 `v2_spending_ledger.converted_krw_amount` 기준으로 변경.
+- KST 09:00 운영일 기준 `kst_date`로 집계.
+
+**수정 파일**
+- [app/v2/api/admin/analytics_routes.py](../../../app/v2/api/admin/analytics_routes.py)
+
+**검증 방법**
+1) 환전 Import 실행 후 `v2_spending_ledger` 레코드 생성 확인
+2) 수익/지출 분석 화면에서 해당 날짜의 지출 합계 반영 확인
+
+**🏷️ 태그**
+`P1` `VAULT` `ADMIN` `ANALYTICS` `SPENDING_LEDGER` `✅해결완료`
+
 ### [02-05 17:30] - VAULT/GAME: 주사위 게임 금고 적립 완전 실패 - sync_legacy_mirror 메서드 누락 (CRITICAL)
 
 **증상 정의**

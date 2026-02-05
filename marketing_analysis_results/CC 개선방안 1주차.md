@@ -259,9 +259,9 @@ date | total_sent | replies | clicks | joins | reply_rate | click_rate | best_te
 | 컬럼         | 설명                 | 일자   | 일자   | 일자  | 일자  | 일자  | 일자  | 일자  |
 | ---------- | ------------------ | ---- | ---- | --- | --- | --- | --- | --- |
 | date       | 날짜                 | 0204 | 0205 |     |     |     |     |     |
-| total_sent | 총 DM수              | 11   | 6+15 |     |     |     |     |     |
-| replies    | 답장한 사람 수           | 6    | 3    |     |     |     |     |     |
-| joins      | 가입 수               | 5    | 2    |     |     |     |     |     |
+| total_sent | 총 DM수              | 11   | 6+17 |     |     |     |     |     |
+| replies    | 답장한 사람 수           | 6    | 4    |     |     |     |     |     |
+| joins      | 가입 수               | 5    | 3    |     |     |     |     |     |
 | reply_rate | replies/total_sent |      |      |     |     |     |     |     |
 | click_rate | clicks/total_sent  |      |      |     |     |     |     |     |
 | change     | 내일 수정              | 입금에러 |      |     |     |     |     |     |

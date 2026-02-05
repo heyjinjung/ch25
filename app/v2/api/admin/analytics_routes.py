@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
-from app.v2.models import VaultWithdrawalRequest
+from app.v2.models import VaultWithdrawalRequest, V2SpendingLedger
 from app.v2.services import V2AdminAuditService
 from app.v2.services.roi_analysis_service import V2RoiAnalysisService
 
@@ -407,13 +407,12 @@ def get_revenue_breakdown(
         deposit_count = int(deposit_stats.count or 0)
         active_depositors = int(deposit_stats.users or 0)
 
-        # 출금 (지출)
+        # 출금/지출 (지출 통합 원장 기준)
         withdrawal_stats = db.query(
-            func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0).label("total"),
-            func.count(VaultWithdrawalRequest.id).label("count"),
+            func.coalesce(func.sum(V2SpendingLedger.converted_krw_amount), 0).label("total"),
+            func.count(V2SpendingLedger.id).label("count"),
         ).filter(
-            func.date(VaultWithdrawalRequest.created_at) == current_date,
-            VaultWithdrawalRequest.status == "APPROVED",
+            V2SpendingLedger.kst_date == current_date,
         ).first()
 
         daily_withdrawals = int(withdrawal_stats.total or 0)
@@ -466,9 +465,8 @@ def get_revenue_summary(
         ExternalRankingDailyDepositDelta.deposit_delta > 0,
     ).scalar() or 0
 
-    today_withdrawals = db.query(func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0)).filter(
-        func.date(VaultWithdrawalRequest.created_at) == today,
-        VaultWithdrawalRequest.status == "APPROVED",
+    today_withdrawals = db.query(func.coalesce(func.sum(V2SpendingLedger.converted_krw_amount), 0)).filter(
+        V2SpendingLedger.kst_date == today,
     ).scalar() or 0
 
     # 이번 주(월요일 기준)
@@ -480,10 +478,9 @@ def get_revenue_summary(
         ExternalRankingDailyDepositDelta.deposit_delta > 0,
     ).scalar() or 0
 
-    week_withdrawals = db.query(func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0)).filter(
-        func.date(VaultWithdrawalRequest.created_at) >= week_start,
-        func.date(VaultWithdrawalRequest.created_at) <= today,
-        VaultWithdrawalRequest.status == "APPROVED",
+    week_withdrawals = db.query(func.coalesce(func.sum(V2SpendingLedger.converted_krw_amount), 0)).filter(
+        V2SpendingLedger.kst_date >= week_start,
+        V2SpendingLedger.kst_date <= today,
     ).scalar() or 0
 
     # 이번 달
@@ -495,10 +492,9 @@ def get_revenue_summary(
         ExternalRankingDailyDepositDelta.deposit_delta > 0,
     ).scalar() or 0
 
-    month_withdrawals = db.query(func.coalesce(func.sum(VaultWithdrawalRequest.amount), 0)).filter(
-        func.date(VaultWithdrawalRequest.created_at) >= month_start,
-        func.date(VaultWithdrawalRequest.created_at) <= today,
-        VaultWithdrawalRequest.status == "APPROVED",
+    month_withdrawals = db.query(func.coalesce(func.sum(V2SpendingLedger.converted_krw_amount), 0)).filter(
+        V2SpendingLedger.kst_date >= month_start,
+        V2SpendingLedger.kst_date <= today,
     ).scalar() or 0
 
     # 지난주 성장률
