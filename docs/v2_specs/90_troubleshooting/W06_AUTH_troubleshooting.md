@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 1 |
+| 해결된 이슈 | 2 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,51 @@
 
 ## 🔍 주간 이슈 내역
 
+### 02-05 - AUTH: 관리자 로그인 404 에러 (/api/auth/token → /api/v2/auth/token) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 관리자 로그인 (POST /api/auth/token) |
+| HTTP Status | 404 (Not Found) |
+| 영향 범위 | 모든 관리자 사용자 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- **서버 로그 증거**: 
+  ```
+  INFO: 144.48.39.124:0 - "POST /api/auth/token HTTP/1.1" 404 Not Found
+  ```
+- **코드 증거**:
+  - 백엔드: V2 전용 정책으로 `/api/v2/auth/token`만 존재
+  - 프론트엔드: `V2AdminLoginPage.tsx`에서 여전히 `/api/auth/token` 사용
+  - 프론트엔드: `authApi.ts`는 `/api/v2/auth/token`로 수정되었으나 관리자 페이지 미적용
+- **영향 파일**:
+  - `src/v2/admin/pages/auth/V2AdminLoginPage.tsx:36` - V1 경로 사용
+  - `src/admin/api/httpClient.ts:84` - 인터셉터 제외 조건 누락
+
+**해결 방법**
+1. `V2AdminLoginPage.tsx`: `/api/auth/token` → `/api/v2/auth/token`
+2. `admin/httpClient.ts`: 인터셉터 제외 조건에 `/api/v2/auth/token` 추가
+
+**변경 파일**
+- [src/v2/admin/pages/auth/V2AdminLoginPage.tsx](../../../src/v2/admin/pages/auth/V2AdminLoginPage.tsx#L36)
+- [src/admin/api/httpClient.ts](../../../src/admin/api/httpClient.ts#L84)
+
+**검증 방법**
+```bash
+# 프로덕션 배포 후 확인
+curl -X POST https://cc-jm.com/api/v2/auth/token \
+  -H "Content-Type: application/json" \
+  -d '{"cc_id":"admin","password":"test"}'
+# 예상: 401 Unauthorized (잘못된 비밀번호) 또는 200 OK (올바른 비밀번호)
+# 실패 시: 404 Not Found
+```
+
+**🏷️ 태그**
+`P1` `AUTH` `ADMIN` `API-MIGRATION` `V2-ONLY`
+
+---
 ### 02-04 - AUTH: 텔레그램 로그인 시 last_login_at 미업데이트로 활동 유저 카운트 오류 ✅
 
 **증상 정의**
