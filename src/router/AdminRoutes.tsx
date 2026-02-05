@@ -12,16 +12,15 @@ import MarketingTabPage from "../v2/admin/pages/marketing/MarketingTabPage";
 const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      
-
-          <Route path="economy/deposits" element={<CCDepositPage />} />
-          <Route path="economy/vault" element={<VaultControlPage />} />
-          <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
-          <Route path="game-token-logs" element={<Navigate to="/admin/game-tokens" replace />} />
-          <Route path="users" element={<UserManagementTabPage />} />
-          <Route path="marketing/messages" element={<MarketingTabPage />} />
-
-
+      <Route path="economy/deposits" element={<CCDepositPage />} />
+      <Route path="economy/vault" element={<VaultControlPage />} />
+      <Route path="inventory/tickets" element={<TicketInventoryTabPage />} />
+      <Route
+        path="game-token-logs"
+        element={<Navigate to="/admin/game-tokens" replace />}
+      />
+      <Route path="users" element={<UserManagementTabPage />} />
+      <Route path="marketing/messages" element={<MarketingTabPage />} />
     </Routes>
   );
 };
