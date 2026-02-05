@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 5 |
+| 해결된 이슈 | 6 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,39 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### [02-05] - FRONTEND/BACKEND: /api/auth/token, /api/events/status, /api/ui-config 404
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 로그인, 골든아워 상태, 모달 표시 설정 |
+| HTTP Status | 404 (Not Found) |
+| 영향 범위 | 유저/어드민 공통 화면 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 프론트 호출 경로가 V2 전용 백엔드와 불일치.
+- `/api/events/status` 라우터가 main에 미등록.
+- `/api/ui-config/*` 공개 라우트 부재.
+
+**해결 방법**
+- 프론트 로그인 경로를 `/api/v2/auth/token`으로 변경.
+- main에 `/api/events/*`, `/api/ui-config/*` 공개 라우터 등록.
+
+**수정 파일**
+- [src/api/authApi.ts](../../../src/api/authApi.ts)
+- [src/api/httpClient.ts](../../../src/api/httpClient.ts)
+- [app/main.py](../../../app/main.py)
+- [app/v2/api/ui_config_public_routes.py](../../../app/v2/api/ui_config_public_routes.py)
+
+**검증 방법**
+1) `/api/v2/auth/token` 200 응답 확인
+2) `/api/events/status` 200/401 응답 확인(라우터 등록 확인)
+3) `/api/ui-config/modal_visibility` 200 응답 확인
+
+**🏷️ 태그**
+`P1` `FRONTEND` `BACKEND` `ROUTING` `404` `✅해결완료`
 
 ### [02-05] - FRONTEND/ADMIN: 환전 붙여넣기 Import 실행 버튼 비활성
 

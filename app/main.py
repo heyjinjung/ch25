@@ -8,6 +8,8 @@ from starlette.requests import Request
 from starlette.types import ASGIApp
 
 from app.v2.api.routes import router as api_router
+from app.v2.api.events import router as events_router
+from app.v2.api.ui_config_public_routes import router as ui_config_public_router
 from app.core.config import get_settings
 from app.core.error_handlers import register_exception_handlers
 from app.core.kst_response import KstJSONResponse
@@ -222,6 +224,8 @@ async def shutdown_event():
     _golden_intervention_stop = None
 
 register_exception_handlers(app)
+app.include_router(events_router)
+app.include_router(ui_config_public_router)
 app.include_router(api_router, prefix="/api/v2")
 
 

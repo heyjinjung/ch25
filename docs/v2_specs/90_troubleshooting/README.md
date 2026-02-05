@@ -82,7 +82,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | INVENTORY | [W06_INVENTORY_troubleshooting.md](./W06_INVENTORY_troubleshooting.md) | **1** |
 | DB | [W06_DB_troubleshooting.md](./W06_DB_troubleshooting.md) | **3** |
 | INFRA | [W06_INFRA_troubleshooting.md](./W06_INFRA_troubleshooting.md) | **2** |
-| FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | 0 |
+| FRONTEND | [W06_FRONTEND_troubleshooting.md](./W06_FRONTEND_troubleshooting.md) | **1** |
 | FRONTEND | [W06_FRONTEND_prospect_pagination.md](./W06_FRONTEND_prospect_pagination.md) | **1** |
 
 ### W06 주요 이슈 요약 (02-03)
@@ -100,6 +100,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 10 | LEVEL | 레벨 화면 미노출 (level-xp 404) | ✅ 해결 |
 | 11 | LEVEL | 레벨 XP 가산/감산 미반영 (식별자 불일치) | ✅ 해결 |
 | 12 | LEVEL | 레벨 XP 가산/감산 404 (운영 배포 누락) | ✅ 해결 |
+| 13 | FRONTEND | /api/auth/token, /api/events/status, /api/ui-config 404 | ✅ 해결 |
 
 ---
 
