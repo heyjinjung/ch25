@@ -627,7 +627,7 @@ def get_channel_performance(
         # CAC 추정 (마케팅 비용 / 신규 유저)
         # 채널별 추정 비용 (정책 가능하도록 하드코딩)
         channel_cost_map = {
-            "telegram": 1000,  # 텔레그램 추정 1000원
+            "telegram": 10000,  # 텔레그램 추정 10000원
             "referral": 500,   # 추천 보상 추정 500원
             "organic": 0,      # 자연 유입 비용 없음
         }
