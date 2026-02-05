@@ -170,10 +170,12 @@ class TestBundleRewardExpansion:
         # POINT(100000) = vault_locked_balance 증가 (비활성 상한 30,000 적용)
         assert user.vault_locked_balance >= 30000
 
+    @patch("app.v2.services.circuit_breaker_service.CircuitBreakerService.check_and_incr")
     @patch("app.v2.services.inventory_service.V2InventoryService.grant_wallet_tokens")
-    def test_bundle_20_expands_correctly(self, mock_grant, db_session: Session):
+    def test_bundle_20_expands_correctly(self, mock_grant, mock_cb, db_session: Session):
         """번들(20): POINT(300000) + DIAMOND_TICKET(3)"""
         mock_grant.return_value = 3
+        mock_cb.return_value = None  # Circuit Breaker 비활성화
         user = _create_user(db_session, 6)
 
         V2RewardService().deliver(

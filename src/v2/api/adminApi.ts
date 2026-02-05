@@ -2735,7 +2735,9 @@ export interface WithdrawalImportResponse {
   duplicate_count: number;
   not_found_count: number;
   total_amount: number;
+  unique_users?: number;
   spending_recorded_count: number;
+  matched_details?: Array<{ nickname: string; amount: number }>;
   error?: string;
 }
 

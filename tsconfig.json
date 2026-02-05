@@ -13,9 +13,8 @@
         "incremental": true,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
-        "ignoreDeprecations": "5.0",
+        "ignoreDeprecations": "6.0",
         /* Bundler mode */
-        "baseUrl": ".",
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
@@ -35,16 +34,7 @@
             "vitest/importMeta",
             "@testing-library/jest-dom",
             "./src/types/telegram"
-        ],
-        /* Path mapping */
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ],
-            "@/v2/*": [
-                "./src/v2/*"
-            ]
-        }
+        ]
     },
     "include": [
         "src"

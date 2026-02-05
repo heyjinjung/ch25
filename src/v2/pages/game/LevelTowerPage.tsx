@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ChevronUp, Gamepad2, ExternalLink, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Gamepad2,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 import { cn } from "../../lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,29 +43,18 @@ const getRewardLabel = (type: string, amount: number) => {
 };
 
 const ParticleBackground: React.FC = () => {
-  const particles = useMemo(() => 
-    Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      duration: `${10 + Math.random() * 15}s`,
-      delay: `${Math.random() * 10}s`,
-      size: `${2 + Math.random() * 4}px`,
-    })), []);
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 15 }).map((_, i) => ({
+        id: i,
+      })),
+    [],
+  );
 
   return (
     <div className="level-tower-particles">
       {particles.map((p) => (
-        <div
-          key={p.id}
-          className="particle"
-          style={{
-            left: p.left,
-            width: p.size,
-            height: p.size,
-            "--duration": p.duration,
-            animationDelay: p.delay,
-          } as any}
-        />
+        <div key={p.id} className={`particle particle-${p.id + 1}`} />
       ))}
     </div>
   );
@@ -78,24 +73,29 @@ const towerContainerVariants = {
 
 const floorVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
+  visible: {
+    opacity: 1,
+    y: 0,
     scale: 1,
-    transition: { type: "spring", stiffness: 100, damping: 12 }
+    transition: { type: "spring", stiffness: 100, damping: 12 },
   },
 };
 
 const LevelTowerPage: React.FC = () => {
   const navigate = useNavigate();
   // Switch to V2 Native Level XP Status (Unified Level System)
-  const { data: levelStatus, isLoading, isError, refetch } = useV2LevelXPStatus() as {
+  const {
+    data: levelStatus,
+    isLoading,
+    isError,
+    refetch,
+  } = useV2LevelXPStatus() as {
     data: LevelXPStatusResponse | undefined;
     isLoading: boolean;
     isError: boolean;
     refetch: () => void;
   };
-  
+
   const [missionsOpen, setMissionsOpen] = useState(false);
   const hasTriggeredHaptic = useRef(false);
 
@@ -238,7 +238,10 @@ const LevelTowerPage: React.FC = () => {
                     layout
                     variants={floorVariants}
                     key={floor.level}
-                    whileHover={{ x: 5, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+                    whileHover={{
+                      x: 5,
+                      backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    }}
                     className={cn(
                       "relative px-4 py-4 border-b border-white/5 transition-all duration-500",
                       isCurrent && "tower-floor-current",
@@ -247,100 +250,107 @@ const LevelTowerPage: React.FC = () => {
                       isNext && "bg-amber-500/5",
                     )}
                   >
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden bg-black/40 relative",
-                          isCurrent
-                            ? "border-emerald-400 node-glow-pulse"
-                            : "border-white/10",
-                        )}
-                      >
-                        <motion.img
-                          animate={isCurrent ? {
-                            y: [0, -4, 0],
-                            rotate: [0, 5, -5, 0]
-                          } : {}}
-                          transition={{ 
-                            repeat: Infinity, 
-                            duration: 3,
-                            ease: "easeInOut"
-                          }}
-                          src={nodeIconSrc}
-                          alt={nodeIconAlt}
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
                           className={cn(
-                            "w-6 h-6 object-contain relative z-10",
-                            isCurrent || isNext ? "opacity-95" : "opacity-80",
-                          )}
-                          draggable={false}
-                        />
-                      </div>
-
-                      <div>
-                        <p
-                          className={cn(
-                            "font-black",
+                            "w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden bg-black/40 relative",
                             isCurrent
-                              ? "text-emerald-300 text-xl"
-                              : "text-white/80 text-base",
+                              ? "border-emerald-400 node-glow-pulse"
+                              : "border-white/10",
                           )}
                         >
-                          Lv.{floor.level}
-                        </p>
-                        <p
-                          className={cn(
-                            "text-xs font-bold",
-                            isCurrent ? "text-white" : "text-white/50",
-                          )}
-                        >
-                          {rewardText}
-                        </p>
+                          <motion.img
+                            animate={
+                              isCurrent
+                                ? {
+                                    y: [0, -4, 0],
+                                    rotate: [0, 5, -5, 0],
+                                  }
+                                : {}
+                            }
+                            transition={{
+                              repeat: Infinity,
+                              duration: 3,
+                              ease: "easeInOut",
+                            }}
+                            src={nodeIconSrc}
+                            alt={nodeIconAlt}
+                            className={cn(
+                              "w-6 h-6 object-contain relative z-10",
+                              isCurrent || isNext ? "opacity-95" : "opacity-80",
+                            )}
+                            draggable={false}
+                          />
+                        </div>
+
+                        <div>
+                          <p
+                            className={cn(
+                              "font-black",
+                              isCurrent
+                                ? "text-emerald-300 text-xl"
+                                : "text-white/80 text-base",
+                            )}
+                          >
+                            Lv.{floor.level}
+                          </p>
+                          <p
+                            className={cn(
+                              "text-xs font-bold",
+                              isCurrent ? "text-white" : "text-white/50",
+                            )}
+                          >
+                            {rewardText}
+                          </p>
+                        </div>
                       </div>
+
+                      {isCurrent ? (
+                        <div className="text-right">
+                          <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                            {view.remainingXp.toLocaleString()} XP 남음
+                          </p>
+                        </div>
+                      ) : (
+                        !isCompleted &&
+                        !isLocked &&
+                        floor.is_unlocked &&
+                        !floor.auto_grant && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              triggerHaptic("rigid");
+                              // Explicit manual claim not yet implemented in V2 Level Service
+                            }}
+                            className="h-8 py-0 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg"
+                          >
+                            받기
+                          </Button>
+                        )
+                      )}
                     </div>
 
-                    {isCurrent ? (
-                      <div className="text-right">
-                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
-                          {view.remainingXp.toLocaleString()} XP 남음
-                        </p>
+                    {isCurrent && (
+                      <div className="mt-3 relative z-10">
+                        <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 progress-liquid">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${view.progressPct}%` }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="h-full bg-emerald-500 rounded-full relative z-10"
+                          />
+                        </div>
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-[10px] text-white/40 font-mono">
+                            <AnimatedNumber value={Number(view.currentXp)} /> XP
+                          </span>
+                          <span className="text-[10px] text-emerald-400 font-bold">
+                            {view.progressPct}%
+                          </span>
+                        </div>
                       </div>
-                    ) : (
-                      !isCompleted && !isLocked && floor.is_unlocked && !floor.auto_grant && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            triggerHaptic("rigid");
-                            // Explicit manual claim not yet implemented in V2 Level Service
-                          }}
-                          className="h-8 py-0 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-lg"
-                        >
-                          받기
-                        </Button>
-                      )
                     )}
-                  </div>
-
-                  {isCurrent && (
-                    <div className="mt-3 relative z-10">
-                      <div className="h-1.5 bg-black/50 rounded-full overflow-hidden border border-white/10 progress-liquid">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${view.progressPct}%` }}
-                          transition={{ duration: 1.5, ease: "easeOut" }}
-                          className="h-full bg-emerald-500 rounded-full relative z-10"
-                        />
-                      </div>
-                      <div className="flex justify-between mt-1.5">
-                        <span className="text-[10px] text-white/40 font-mono">
-                          <AnimatedNumber value={Number(view.currentXp)} /> XP
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-bold">
-                          {view.progressPct}%
-                        </span>
-                      </div>
-                    </div>
-                  )}
                   </motion.div>
                 );
               })}

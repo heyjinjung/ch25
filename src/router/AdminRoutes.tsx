@@ -3,11 +3,11 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // V2 Imports
-import CCDepositPage from "@/v2/admin/pages/economy/CCDepositPage";
-import VaultControlPage from "@/v2/admin/pages/economy/VaultControlPage";
-import TicketInventoryTabPage from "@/v2/admin/pages/economy/TicketInventoryTabPage";
-import UserManagementTabPage from "@/v2/admin/pages/users/UserManagementTabPage";
-import MarketingTabPage from "@/v2/admin/pages/marketing/MarketingTabPage";
+import CCDepositPage from "../v2/admin/pages/economy/CCDepositPage";
+import VaultControlPage from "../v2/admin/pages/economy/VaultControlPage";
+import TicketInventoryTabPage from "../v2/admin/pages/economy/TicketInventoryTabPage";
+import UserManagementTabPage from "../v2/admin/pages/users/UserManagementTabPage";
+import MarketingTabPage from "../v2/admin/pages/marketing/MarketingTabPage";
 
 const AdminRoutes: React.FC = () => {
   return (
