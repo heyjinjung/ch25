@@ -33,7 +33,7 @@ const V2AdminLoginPage: FC = () => {
     setServerError(null);
 
     try {
-      const res = await v2Client.post("/api/auth/token", {
+      const res = await v2Client.post("/api/v2/auth/token", {
         cc_id: data.username,
         password: data.password,
       });
