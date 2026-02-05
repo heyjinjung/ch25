@@ -24,6 +24,36 @@
 
 ## 🔍 주간 이슈 내역
 
+### [02-05] - FRONTEND/ADMIN: 환전 붙여넣기 Import 실행 버튼 비활성
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 환전 붙여넣기 Import (PasteImportPage) |
+| HTTP Status | 200 (Logic Error - 실행 버튼 비활성) |
+| 영향 범위 | 어드민 환전 Import |
+| 재현 빈도 | 항상 (환전 상태가 "환전완료"인 데이터) |
+
+**근본 원인 (증거 기반)**
+- 환전 상태가 "환전완료"인 행이 `정상`으로 인정되지 않아 미리보기에서 `SKIPPED_OLD`로 분류됨.
+- 환전 미리보기 테이블에서 `NOT_FOUND` 행은 체크박스가 표시되지 않아 선택 불가.
+
+**해결 방법**
+- 환전 상태 허용값을 `정상/환전완료/완료`로 확장.
+- 환전 미리보기에서 `NOT_FOUND`도 선택 가능하도록 체크박스 허용.
+
+**수정 파일**
+- [app/v2/services/paste_import_service.py](../../../app/v2/services/paste_import_service.py)
+- [app/v2/api/admin/csv_import_routes.py](../../../app/v2/api/admin/csv_import_routes.py)
+- [src/v2/admin/pages/ops/PasteImportPage.tsx](../../../src/v2/admin/pages/ops/PasteImportPage.tsx)
+
+**검증 방법**
+1) 환전 상태가 "환전완료"인 데이터로 미리보기 실행
+2) 미리보기에서 선택 항목이 자동 선택되고 Import 버튼이 활성화되는지 확인
+
+**🏷️ 태그**
+`P1` `FRONTEND` `ADMIN` `PASTE_IMPORT` `WITHDRAWAL` `✅해결완료`
+
 ### [02-04] - FRONTEND/ADMIN: 레벨 컨피그 페이지 Safe Navigation 미적용
 
 **증상 정의**

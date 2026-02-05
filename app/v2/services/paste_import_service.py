@@ -528,8 +528,10 @@ class PasteImportService:
         logs_to_add = []
         matched_details = []
 
+        valid_statuses = {"정상", "환전완료", "완료"}
+
         for item in parsed:
-            if item.hq_status != "정상":
+            if item.hq_status not in valid_statuses:
                 stats["skipped_status_count"] += 1
                 continue
 

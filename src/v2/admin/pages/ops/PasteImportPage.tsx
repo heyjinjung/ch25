@@ -580,7 +580,11 @@ export default function PasteImportPage() {
                         )}
                       >
                         <td className="py-2 px-2">
-                          {item.status === "MATCHED" ? (
+                          {(importType === "WITHDRAWAL" &&
+                            (item.status === "MATCHED" ||
+                              item.status === "NOT_FOUND")) ||
+                          (importType !== "WITHDRAWAL" &&
+                            item.status === "MATCHED") ? (
                             <button
                               onClick={() => handleToggleSelect(item.index)}
                               className="text-zinc-400 hover:text-white"

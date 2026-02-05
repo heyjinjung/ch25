@@ -488,11 +488,13 @@ def preview_withdrawals(
     duplicate_count = 0
     skipped_status_count = 0
 
+    valid_statuses = {"정상", "환전완료", "완료"}
+
     for idx, item in enumerate(parsed):
         status = "MATCHED"
         user_id = None
 
-        if item.hq_status != "정상" or item.amount <= 0:
+        if item.hq_status not in valid_statuses or item.amount <= 0:
             status = "SKIPPED_OLD"
             skipped_status_count += 1
         else:
