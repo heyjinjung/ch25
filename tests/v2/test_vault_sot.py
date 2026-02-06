@@ -53,11 +53,11 @@ class TestWithdrawalEligibility:
     """출금 자격 조건 테스트 (SoT 3.1)."""
 
     SEGMENT_CONDITIONS = {
-        "NEW": {"min_plays_3d": 15, "min_spend_today": 5000},
-        "COMMON": {"min_plays_3d": 30, "min_spend_today": 10000},
-        "VIP": {"min_plays_3d": 15, "min_spend_today": 5000},
+        "NEW": {"min_plays_3d": 5, "min_spend_today": 0},
+        "COMMON": {"min_plays_3d": 15, "min_spend_today": 5000},
+        "VIP": {"min_plays_3d": 10, "min_spend_today": 0},
         "WHALE": {"min_plays_3d": 0, "min_spend_today": 0},
-        "AT_RISK": {"min_plays_3d": 100, "min_spend_today": 30000},
+        "AT_RISK": {"min_plays_3d": 30, "min_spend_today": 10000},
     }
 
     def test_segment_withdrawal_conditions_defined(self):

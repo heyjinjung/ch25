@@ -1,11 +1,13 @@
 """
 Admin Vault & Dashboard 테스트: SoT 준수 검증
 """
+from datetime import datetime
+
 import pytest
 from sqlalchemy.orm import Session
 
-from app.v2.models import V2User
-from app.v2.models.enums import V2UserRole, V2UserStatus
+from app.v2.models import V2User, VaultWithdrawalRequest
+from app.v2.models.user import V2UserRole, V2UserStatus
 from app.v2.services.vault_service import V2VaultService
 
 
@@ -47,57 +49,59 @@ class TestVaultService:
         """Vault SoT: locked_balance만 사용, available은 deprecated"""
         # Given
         normal_user.vault_locked_balance = 50000
-        normal_user.vault_available_balance = 0  # deprecated
         db.commit()
 
         # When: Vault 상태 조회
         service = V2VaultService()
-        status = service.get_status(db, normal_user.id)
+        info = service.get_vault_info(db, normal_user.id)
 
         # Then: locked만 반영
-        assert status["locked_balance"] == 50000
+        assert info["lockedBalance"] == 50000
+        assert info["vaultBalance"] == 50000
 
-    def test_vault_adjust_balance(self, db: Session, normal_user: V2User):
-        """Vault 잔액 조정 테스트"""
+    def test_vault_deposit_increments_locked_balance(self, db: Session, normal_user: V2User):
+        """deposit()로 locked_balance가 증가"""
         # Given
         service = V2VaultService()
         normal_user.vault_locked_balance = 10000
         db.commit()
 
-        # When: 5000원 추가
-        service.adjust_balance(
-            db,
-            user_id=normal_user.id,
-            amount=5000,
-            reason="test_add",
-            force=False
-        )
+        # When: 5000원 추가 입금
+        service.deposit(db, user_id=normal_user.id, amount=5000, reason="TEST", ref_type="TEST")
         db.commit()
 
         # Then
         db.refresh(normal_user)
         assert normal_user.vault_locked_balance == 15000
 
-    def test_vault_force_negative_balance(self, db: Session, normal_user: V2User):
-        """force=True 시 음수 잔액 허용"""
+    def test_vault_info_available_balance_accounts_reserved(self, db: Session, normal_user: V2User):
+        """get_vault_info(): reserved(PENDING)만큼 availableBalance 감소"""
         # Given
         service = V2VaultService()
         normal_user.vault_locked_balance = 10000
-        db.commit()
-
-        # When: force=True로 50000원 차감
-        service.adjust_balance(
-            db,
-            user_id=normal_user.id,
-            amount=-50000,
-            reason="test_force",
-            force=True
+        db.add(
+            VaultWithdrawalRequest(
+                user_id=normal_user.id,
+                amount=3000,
+                status="PENDING",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
         )
         db.commit()
 
-        # Then: 음수 허용
-        db.refresh(normal_user)
-        assert normal_user.vault_locked_balance == -40000
+        # When
+        info = service.get_vault_info(db, normal_user.id)
+
+        # Then
+        assert info["lockedBalance"] == 10000
+        assert info["availableBalance"] == 7000
+
+    def test_get_locked_balance_user_not_found_raises(self, db: Session):
+        """get_locked_balance(): 없는 유저면 ValueError"""
+        service = V2VaultService()
+        with pytest.raises(ValueError):
+            service.get_locked_balance(db, user_id=999999)
 
 
 class TestUserRoles:
@@ -135,8 +139,8 @@ class TestVaultStatus:
         service = V2VaultService()
         
         # When
-        status = service.get_status(db, normal_user.id)
+        eligible, user, _ = service.get_status(db, normal_user.id)
         
         # Then
-        assert "locked_balance" in status
-        assert status["locked_balance"] >= 0
+        assert isinstance(eligible, bool)
+        assert int(getattr(user, "vault_locked_balance", 0) or 0) >= 0

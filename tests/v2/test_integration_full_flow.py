@@ -1,11 +1,14 @@
 """
 통합 시나리오 테스트: Deposit → Level → Vault 전체 플로우
 """
+from datetime import datetime
+
 import pytest
 from sqlalchemy.orm import Session
 
-from app.v2.models import V2User
-from app.v2.services.admin_cc_deposit_service import AdminCCDepositService
+from app.v2.models import V2User, VaultWithdrawalRequest
+from app.v2.schemas.shared.cc_deposit import CCDepositCreate
+from app.v2.services.admin_cc_deposit_service import V2AdminCCDepositService
 from app.v2.services.level_xp_service import V2LevelXPService
 from app.v2.services.vault_service import V2VaultService
 
@@ -34,16 +37,21 @@ class TestDepositToLevelFlow:
     def test_deposit_triggers_xp(self, db: Session, integration_user: V2User):
         """입금 시 XP 자동 적립 확인"""
         # Given
-        deposit_service = AdminCCDepositService()
+        deposit_service = V2AdminCCDepositService()
         
-        # When: 500,000원 입금
-        deposit_service.record_deposit(
+        # When: 500,000원 입금 (총 누적액 형태로 upsert)
+        deposit_service.upsert_many(
             db,
-            user_id=integration_user.id,
-            amount=500000,
-            source="test_flow"
+            [
+                CCDepositCreate(
+                    user_id=integration_user.id,
+                    cc_id=None,
+                    deposit_amount=500000,
+                    play_count=0,
+                    memo="test_flow",
+                )
+            ],
         )
-        db.commit()
 
         # Then: total_charge_amount와 XP 업데이트
         db.refresh(integration_user)
@@ -55,33 +63,31 @@ class TestVaultCycle:
     """Vault 입출금 사이클 테스트"""
 
     def test_vault_deposit_withdraw_cycle(self, db: Session, integration_user: V2User):
-        """Vault 입금 → 출금 사이클"""
+        """Vault 입금 및 예약 출금(가용액 감소) 사이클"""
         # Given
         vault_service = V2VaultService()
         
         # When: 10,000원 적립
-        vault_service.adjust_balance(
-            db,
-            user_id=integration_user.id,
-            amount=10000,
-            reason="game_win",
-            force=False
-        )
+        vault_service.deposit(db, user_id=integration_user.id, amount=10000, reason="TEST", ref_type="TEST")
         db.commit()
         db.refresh(integration_user)
         assert integration_user.vault_locked_balance == 10000
-        
-        # Then: 5,000원 출금
-        vault_service.adjust_balance(
-            db,
-            user_id=integration_user.id,
-            amount=-5000,
-            reason="withdrawal",
-            force=False
+
+        # Then: 5,000원 예약 출금(PENDING) 생성 → available 감소
+        db.add(
+            VaultWithdrawalRequest(
+                user_id=integration_user.id,
+                amount=5000,
+                status="PENDING",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
         )
         db.commit()
-        db.refresh(integration_user)
-        assert integration_user.vault_locked_balance == 5000
+
+        info = vault_service.get_vault_info(db, integration_user.id)
+        assert info["lockedBalance"] == 10000
+        assert info["availableBalance"] == 5000
 
 
 class TestSOTIntegrity:
@@ -108,12 +114,11 @@ class TestSOTIntegrity:
         
         # When: 50,000원 설정
         integration_user.vault_locked_balance = 50000
-        integration_user.vault_available_balance = 0  # deprecated
         db.commit()
 
         # Then: locked만 유효
-        status = vault_service.get_status(db, integration_user.id)
-        assert status["locked_balance"] == 50000
+        info = vault_service.get_vault_info(db, integration_user.id)
+        assert info["lockedBalance"] == 50000
 
 
 @pytest.mark.parametrize("scenario", [
@@ -124,16 +129,21 @@ class TestSOTIntegrity:
 def test_deposit_xp_integration(db: Session, integration_user: V2User, scenario: dict):
     """입금 → XP 통합 시나리오 파라미터 테스트"""
     # Given
-    deposit_service = AdminCCDepositService()
+    deposit_service = V2AdminCCDepositService()
     
     # When
-    deposit_service.record_deposit(
+    deposit_service.upsert_many(
         db,
-        user_id=integration_user.id,
-        amount=scenario["deposit"],
-        source=f"test_{scenario['deposit']}"
+        [
+            CCDepositCreate(
+                user_id=integration_user.id,
+                cc_id=None,
+                deposit_amount=scenario["deposit"],
+                play_count=0,
+                memo=f"test_{scenario['deposit']}",
+            )
+        ],
     )
-    db.commit()
     
     # Then
     db.refresh(integration_user)

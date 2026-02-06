@@ -27,7 +27,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.base_class import Base
 from app.v2.models.user import V2User
-from app.v2.models.user_event_log import UserEventLog
+from app.v2.models import UserEventLog
 from app.v2.services.mission_service import V2MissionService
 from app.v2.services.streak_service import V2StreakService
 
@@ -561,8 +561,8 @@ class TestMilestoneProgress:
         # 3일, 7일 마일스톤은 달성됨
         assert any(p["day"] == 3 and p["achieved"] is True for p in progress)
         assert any(p["day"] == 7 and p["achieved"] is True for p in progress)
-        # 14일 마일스톤은 미달성
-        assert any(p["day"] == 14 and p["achieved"] is False for p in progress)
+        # 기본 규칙에는 14일 마일스톤이 없다
+        assert all(p["day"] != 14 for p in progress)
 
     def test_milestone_progress_shows_claimed(self, db_session: Session):
         """클레임한 마일스톤 표시"""

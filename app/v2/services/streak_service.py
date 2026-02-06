@@ -99,7 +99,7 @@ class V2StreakService:
         
         if not user:
             return StreakInfoSchema(
-                streak_days=0,
+                current_streak=0,
                 current_multiplier=1.0,
                 is_hot=False,
                 is_legend=False,
@@ -125,7 +125,7 @@ class V2StreakService:
         claimable_day = self.get_pending_streak_milestone(user_id)
         
         return StreakInfoSchema(
-            streak_days=streak_days,
+            current_streak=streak_days,
             current_multiplier=self._get_streak_multiplier(streak_days),
             is_hot=is_hot,
             is_legend=is_legend,

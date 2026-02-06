@@ -126,6 +126,7 @@ export function UserDetailDrawer({
   );
   const adjustWallet = useAdjustUserWallet();
   const adjustInventory = useAdjustUserInventory();
+  const suspendMutation = useSuspendUserBenefitsManual();
   const walletLogs = useMemo(
     () => ticketLogs.filter((log) => walletItemValues.has(log.itemType)),
     [ticketLogs, walletItemValues],
@@ -290,6 +291,23 @@ export function UserDetailDrawer({
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant={user.benefitsSuspendedManual ? "default" : "outline"}
+                    size="sm"
+                    className={user.benefitsSuspendedManual ? "bg-amber-600 hover:bg-amber-700" : "border-amber-500/30 text-amber-500 hover:bg-amber-500/10"}
+                    onClick={async () => {
+                      if (confirm(`정말 이 유저의 혜택을 ${user.benefitsSuspendedManual ? "해제" : "제재"}하시겠습니까?`)) {
+                        try {
+                          await suspendMutation.mutateAsync(userId);
+                        } catch (err: any) {
+                          alert(err?.response?.data?.detail || "처리에 실패했습니다.");
+                        }
+                      }
+                    }}
+                    disabled={suspendMutation.isPending}
+                  >
+                    {user.benefitsSuspendedManual ? "혜택 제재 중 (해제)" : "수동 혜택 제재"}
+                  </Button>
                   <Button
                     variant="destructive"
                     size="sm"

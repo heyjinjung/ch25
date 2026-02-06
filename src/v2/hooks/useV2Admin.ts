@@ -504,6 +504,18 @@ export function useUpdateUserSegment() {
   });
 }
 
+export function useSuspendUserBenefitsManual() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: number) => suspendUserBenefitsManual(userId),
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({
+        queryKey: ADMIN_KEYS.userDetail(userId),
+      });
+    },
+  });
+}
+
 export function useAdjustUserWallet() {
   const queryClient = useQueryClient();
   return useMutation({

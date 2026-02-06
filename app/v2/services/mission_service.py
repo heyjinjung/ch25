@@ -605,7 +605,23 @@ class V2MissionService:
             prev_streak_days=prev_streak_days,
             new_streak_days=new_streak_days,
         )
+
+        self.db.commit()
+        try:
+            self.db.refresh(user)
+        except Exception:
+            pass
         return user
+
+    def _maybe_grant_streak_day_tickets(self, *, user: V2User, play_day: date) -> None:
+        """(V2) 스트릭 일일 보상 자동 지급 훅.
+
+        현재 V2 스트릭 정책은 `V2StreakService`의 "수동 클레임" 흐름을 SoT로 삼는다.
+        따라서 MissionService의 스트릭 동기화는 streak 카운트/로그만 담당하고,
+        자동 지급은 비활성(no-op)로 둔다.
+        """
+
+        return
 
     def _maybe_grant_streak_milestone_rewards(
         self,

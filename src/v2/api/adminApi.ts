@@ -100,6 +100,7 @@ export interface AdminUserDetailDto {
   isActive: boolean;
   riskLevel: "LOW" | "MEDIUM" | "HIGH";
   riskReason: string | null;
+  benefitsSuspendedManual: number;
   playbook?: InterventionPlaybookDto;
 }
 
@@ -795,6 +796,17 @@ export const updateUserSegment = async (
     `/api/v2/admin/users/${userId}/segment`,
     request,
   );
+  return response.data;
+};
+
+export const suspendUserBenefitsManual = async (
+  userId: number,
+): Promise<{ success: boolean; message: string; benefits_suspended_manual: number }> => {
+  const response = await v2Client.post<{ 
+    success: boolean; 
+    message: string; 
+    benefits_suspended_manual: number 
+  }>(`/api/v2/admin/vault/users/${userId}/suspend-manual`);
   return response.data;
 };
 

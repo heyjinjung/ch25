@@ -75,7 +75,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
 | AUTH | [W06_AUTH_troubleshooting.md](./W06_AUTH_troubleshooting.md) | **1** |
-| VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **5** |
+| VAULT | [W06_VAULT_troubleshooting.md](./W06_VAULT_troubleshooting.md) | **7** |
 | GAME | [W06_GAME_troubleshooting.md](./W06_GAME_troubleshooting.md) | **2** |
 | MISSION | [W06_MISSION_troubleshooting.md](./W06_MISSION_troubleshooting.md) | 0 |
 | LEVEL | [W06_LEVEL_troubleshooting.md](./W06_LEVEL_troubleshooting.md) | **3** |
@@ -93,6 +93,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 3 | VAULT | wallet/adjust API force 옵션 추가 | ✅ 해결 |
 | 4 | VAULT | 유저 Reset API 신규 구현 | ✅ 완료 |
 | 5 | VAULT | CSV Import Baseline 델타 계산 로직 | ✅ 해결 |
+| 6 | VAULT | 금고 출금 조건 세그먼트별 차등화 | ✅ 완료 |
+| 7 | VAULT | 어드민 수동 혜택 제재 기능 구현 | ✅ 완료 |
 | 6 | DB | baseline_charge_amount 마이그레이션 체인 오류 | ✅ 해결 |
 | 7 | INVENTORY | 어드민 회수 로그가 USE로 표시됨 | ✅ 해결 |
 | 8 | VAULT | 금고 보상 적립 로그 누락 | ✅ 해결 |
