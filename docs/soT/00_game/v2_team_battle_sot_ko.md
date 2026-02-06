@@ -135,10 +135,11 @@ V2 팀배틀(Team Battle)의 **현행 구현(app/v2)** 및 **DB 마이그레이�
 - 실제 적용된 delta(`applied_delta`)를 로그(`team_event_log.delta`)에 기록
 - 감사 로그(`V2AdminAuditService`)를 남긴다.
 
-### 8.3 🔴 정책/구현 충돌: 게임 플레이 포인트 적립 경로
-- `app/v2/services/game_common.py`에서 팀배틀 포인트 적립을 위해 `ensure_current_season`, `add_points`, `POINTS_PER_PLAY`를 호출하는데,
-  현행 `V2TeamBattleService`에는 해당 멤버/상수가 존재하지 않는다.
-- 따라서 **자동 포인트 적립의 정식 경로는 아직 SoT로 확정할 수 없으며**, 운영상 점수 변경은 8.2의 어드민 조정 경로가 가장 안전한 기준이다.
+### 8.3 🟢 정합(수정 완료): 게임 플레이 포인트 적립 경로
+- `app/v2/services/game_common.py`의 `_log_team_battle_points`는
+  `V2TeamBattleService.ensure_current_season`, `add_points`, `POINTS_PER_PLAY`를 사용하여
+  게임 플레이 시 팀 점수 누적 및 `team_event_log` 기록(append-only)을 수행한다.
+- `POINTS_PER_PLAY`는 설정값 `team_battle_points_per_play`(기본 5)를 사용한다.
 
 ## 9. 시즌 운영
 ### 9.1 활성 시즌 판정
