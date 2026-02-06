@@ -93,22 +93,22 @@
 
 ## 1. 도메인별 기본 SoT (Legacy/Standard)
 - 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
-- 티켓 Enum SoT: docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md
-- 티켓 Enum 코드 정합 SoT: docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md
-- 레벨포인트 SoT: docs/v2_specs/01_core/v2_level_point_sot_ko.md
-- 레벨포인트 저장 필드 SoT: docs/v2_specs/01_core/v2_level_point_storage_sot_ko.md
-- Redis 키/채널 SoT: docs/v2_specs/01_core/v2_redis_keys_channels_sot_ko.md
-- 보상 매핑 SoT: docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md
-- RewardType 표준 SoT: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
-- 금고 용어 SoT: docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md
-- V2 User SoT: docs/v2_specs/01_core/v2_user_sot_ko.md
-- 레벨 보상표 SoT: docs/v2_specs/01_core/v2_level_reward_table_sot_ko.md
-- 기프티콘 네이밍 SoT: docs/v2_specs/01_core/v2_gifticon_naming_sot_ko.md
-- 만능티켓 변환 SoT: docs/v2_specs/01_core/v2_ticket_conversion_sot_ko.md
-- 레벨포인트 확장 SoT: docs/v2_specs/01_core/v2_level_point_extension_sot_ko.md
-- **아이템/인벤토리 SoT**: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
-- **상점/교환소 정책 SoT**: docs/v2_specs/01_core/v2_shop_exchange_policy_sot_ko.md
-- 상점/인벤토리 서비스 설계: docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md
+- 티켓 Enum SoT: docs/SOT/inventory/v2_ticket_enum_sot_ko.md
+- 티켓 Enum 코드 정합 SoT: docs/SOT/inventory/v2_ticket_enum_code_alignment_sot_ko.md
+- 레벨포인트 SoT: docs/SOT/level/v2_level_point_sot_ko.md
+- 레벨포인트 저장 필드 SoT: docs/SOT/level/v2_level_point_storage_sot_ko.md
+- Redis 키/채널 SoT: docs/SOT/ops/v2_redis_keys_channels_sot_ko.md
+- 보상 매핑 SoT: docs/SOT/inventory/v2_reward_mapping_sot_ko.md
+- RewardType 표준 SoT: docs/SOT/inventory/v2_reward_type_standard_sot_ko.md
+- 금고 용어 SoT: docs/SOT/vault/v2_vault_glossary_sot_ko.md
+- V2 User SoT: docs/SOT/user/v2_user_sot_ko.md
+- 레벨 보상표 SoT: docs/SOT/level/v2_level_reward_table_sot_ko.md
+- 기프티콘 네이밍 SoT: docs/SOT/inventory/v2_gifticon_naming_sot_ko.md
+- 만능티켓 변환 SoT: docs/SOT/inventory/v2_ticket_conversion_sot_ko.md
+- 레벨포인트 확장 SoT: docs/SOT/level/v2_level_point_extension_sot_ko.md
+- **아이템/인벤토리 SoT**: docs/SOT/inventory/v2_item_inventory_sot_ko.md
+- **상점/교환소 정책 SoT**: docs/SOT/shop/v2_shop_exchange_policy_sot_ko.md
+- 상점/인벤토리 서비스 설계: docs/SOT/shop/v2_shop_inventory_service_design_ko.md
 - 상점 상품 UI Config SoT: docs/v2_specs/05_ops/v2_shop_products_ui_config_sot_ko.md
 - **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
 - **V1->V2 상점 이관 검증 보고서**: docs/v2_specs/99_verification/sot_verification_report_shop.md
@@ -149,9 +149,9 @@
 - Ops Action 용어집 SoT: docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md
 - 운영 메시지 정책 SoT: docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md
 - Ops 실행 결과 API 계약: docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md
-- 강력한 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
-- 프로그레션/레벨 스키마 SoT: docs/v2_specs/01_core/v2_progression_schema_ko.md
-- **Golden System 정의서**: docs/v2_specs/07_golden/golden_v2_system_definition_ko.md
+- 강력한 금고 정책 SoT: docs/SOT/vault/v2_strict_vault_policy_sot_ko.md
+- 프로그레션/레벨 스키마 SoT: docs/SOT/level/v2_progression_schema_ko.md
+- **Golden System 정의서**: docs/SOT/golden/golden_v2_system_definition_ko.md
 - **Golden 개입 로직 SoT**: docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md
 - **Golden Ops 로직 SoT**: docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md
 - **골든아워 정책 SoT**: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
@@ -166,7 +166,7 @@
 - V2 DB 교환소 로그: docs/v2_specs/04_db/v2_db_exchange_log_ko.md
 - V2 DB 티켓 제로 로그: docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md
 - V2 DB Ops 실행 결과: docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md
-- **CC 입금/외부 랭킹 SoT**: docs/v2_specs/01_core/v2_cc_deposit_sot_ko.md
+- **CC 입금/외부 랭킹 SoT**: docs/SOT/vault/v2_cc_deposit_sot_ko.md
 - V2 DB 룰렛: docs/v2_specs/04_db/v2_db_roulette_ko.md
 - V2 DB 주사위: docs/v2_specs/04_db/v2_db_dice_ko.md
 - V2 DB 복권: docs/v2_specs/04_db/v2_db_lottery_ko.md

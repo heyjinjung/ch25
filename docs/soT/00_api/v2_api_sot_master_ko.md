@@ -21,6 +21,7 @@ Golden V2 API는 기존 v1 시스템의 의존성을 제거하고, `app.v2` 네�
 - **Single Source of Truth**: 모든 변경의 기준은 본 문서와 연동된 OpenAPI 명세입니다.
 - **Strict UUID**: 모든 외부 식별자 및 세션 키는 UUID 형식을 준수합니다.
 - **09:00 KST Reset**: 모든 비즈니스 로직(출석, 미션, 운영일)은 한국 시간 오전 9시를 기준으로 초기화됩니다.
+- **KST API Response**: 모든 datetime 응답은 KST(`Asia/Seoul`)로 변환하여 표기하며, ISO 8601 형식(`+09:00`)을 준수합니다.
 
 ### 1.2 서비스 범위 (Scope)
 - **Auth/User**: Telegram 기반 인증, 분리된 V2 유저 모델, RBAC 보안.
@@ -37,6 +38,7 @@ Golden V2 API는 기존 v1 시스템의 의존성을 제거하고, `app.v2` 네�
 ### 2.1 공통 통신 규칙
 - **Base URL**: `/api/v2/`
 - **Authentication**: `Authorization: Bearer <token>` (JWT 기반)
+- **Datetime Format**: ISO 8601 (KST 변환 처리), 예: `2026-02-06T19:00:00+09:00`
 - **Error Format**:
   ```json
   {
@@ -102,7 +104,8 @@ Golden V2 API는 기존 v1 시스템의 의존성을 제거하고, `app.v2` 네�
 
 ### 5.2 인프라 및 DB
 - [x] **Alembic Migration**: `upgrade head` 적용 상태 확인.
-- [x] **KST 타임존**: `Asia/Seoul` 전역 적용 및 09시 리셋 동기화.
+- [x] **KST 타임존**: DB(UTC 저장) vs API(KST 표기) 분리 적용 및 09시 리셋 동기화.
+- [x] **Datetime Mapping**: Pydantic/Serializer 수준에서 모든 datetime 필드 KST 변환 완료.
 - [x] **Redis**: Circuit Breaker 및 캐시 연결 정상.
 
 ---

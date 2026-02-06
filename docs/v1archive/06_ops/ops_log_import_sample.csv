@@ -1,6 +1,0 @@
-date,category,action_code,target_model,target_id,meta_data,ref_id,is_automated
-2026-01-18,ROUTINE,OPS_ROUTINE_CHECKED,ops_checklist,,"{""shift"":""AM"",""note"":""daily check""}",ops-20260118-001,false
-2026-01-18,EVENT,FEED_EVENT_PUBLISHED,live_feed,feed-1001,"{""headline"":""Golden Hour"",""channel"":""feed""}",ops-20260118-002,true
-2026-01-18,PAYOUT,USER_GRANT_SURVEY_REWARD,user,12345,"{""amount"":200,""policy"":""survey""}",ops-20260118-003,false
-2026-01-18,SYSTEM,SYS_GOLDEN_HOUR_TOGGLE,feature_flag,golden_hour,"{""enabled"":true}",ops-20260118-004,true
-2026-01-18,CS,CS_SURVEY_DM_SENT,user,77889,"{""channel"":""telegram"",""status"":""sent""}",ops-20260118-005,true

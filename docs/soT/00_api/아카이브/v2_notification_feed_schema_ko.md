@@ -39,7 +39,6 @@
 {
   "type": "JACKPOT_WIN",
   "payload": {
-    "nickname": "Us****23",
     "game_type": "ROULETTE",
     "reward_amount": 50000,
     "is_mega": true

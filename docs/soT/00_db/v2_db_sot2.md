@@ -6,7 +6,7 @@
 상태: SoT
 
 ## 1. 목적 (Purpose)
-본 문서는 docs/SOT/db 하위의 V2 DB 관련 SoT 문서(스키마/운영정책)를 “최상위 마스터 인덱스”로 통합하여,
+본 문서는 docs/SOT/00_db 하위의 V2 DB 관련 SoT 문서(스키마/운영정책)를 “최상위 마스터 인덱스”로 통합하여,
 - 테이블 역할/관계/무결성 규칙을 한 눈에 파악하고
 - 운영/개발 시 어떤 문서를 최종 기준으로 삼아야 하는지
 를 명확히 한다.
@@ -23,8 +23,9 @@
 
 ## 3. SoT 우선순위 및 공통 규칙
 ### 3.1 우선순위
-- 스키마/정책 판단의 1차 기준은 docs/SOT/db 내 각 도메인 SoT 문서이다.
+- 스키마/정책 판단의 1차 기준은 docs/SOT/00_db 내 각 도메인 SoT 문서이다.
 - 상위 정책/열거형(예: TicketType, 세그먼트 정책 등)은 docs/v2_specs/의 해당 SoT를 근거로 한다.
+- learned_ 최신 규칙/패치 내역과 충돌하는 경우 learned_를 우선한다(최신/핵심 규칙 우선 원칙).
 
 ### 3.2 공통 컬럼/타임존 관례
 - 본 문서 범위의 테이블들은 created_at/updated_at/granted_at 같은 시간 컬럼을 사용한다.
@@ -108,12 +109,27 @@
 - 핵심:
   - target_ticket_type + 1:1 비율(ratio_numerator=1, ratio_denominator=1)
   - 어드민 선택 즉시 반영
+  - 스키마(요약):
+    - id (PK)
+    - target_ticket_type VARCHAR(50) NOT NULL (TicketType SoT)
+    - ratio_numerator INT NOT NULL (기본 1)
+    - ratio_denominator INT NOT NULL (기본 1)
+    - is_active TINYINT(1) NOT NULL
+    - created_at/updated_at DATETIME NOT NULL
 
 ### 5.8 v2_ticket_zero_log (Ticket Zero Log)
 - 소스: [v2_db_ticket_zero_log_ko.md](v2_db_ticket_zero_log_ko.md)
 - 핵심:
   - 지급 사유 reason(기본 BAILOUT_GRANT)
   - 쿨다운(24시간) 검증 참고 로그
+  - 스키마(요약):
+    - id (PK)
+    - user_id INT NOT NULL
+    - ticket_type VARCHAR(50) NOT NULL
+    - ticket_amount INT NOT NULL (기본 1)
+    - reason VARCHAR(80) NOT NULL (기본 BAILOUT_GRANT)
+    - granted_at DATETIME NOT NULL
+    - created_at DATETIME NOT NULL
 
 ### 5.9 v2_ops_execution_result (Ops Execution Result)
 - 소스: [v2_db_ops_execution_result_ko.md](v2_db_ops_execution_result_ko.md)
@@ -133,6 +149,14 @@
   - 기준 리비전: V2 헤드 리비전 고정(예: 20260119_1400)
   - 배포 전, SoT 변경 누적 시에만 clean snapshot 재생성
   - 스냅샷 적용 후 alembic current가 기준 리비전과 일치해야 함
+  - 절차(요약):
+    1) v2 DB 초기화 또는 clean 스키마 확보
+    2) 기준 리비전까지 마이그레이션 적용
+    3) 스냅샷 파일 생성 및 04_db 문서 갱신
+    4) 스냅샷 적용 테스트 및 헤드 일치 확인
+  - 금지/주의:
+    - V1 DB에 스냅샷 적용 금지
+    - 스냅샷 적용 후 `alembic current`가 기준 리비전과 일치해야 함
 
 ## 8. 정합성 메모 (SoT 간 불일치 가능 지점)
 - 세그먼트 키:
@@ -142,4 +166,5 @@
     필요 시 v2_db_segment_rule_ko.md 문서의 표준 키 표기를 최신화한다.
 
 ## 9. 변경 이력
-- v1.0 (2026-02-06, GitHub Copilot): 첨부된 docs/SOT/db 스키마/정책 SoT를 최상위 인덱스로 통합(v2_db_sot2.md 생성)
+- v1.0 (2026-02-06, GitHub Copilot): 첨부된 docs/SOT/00_db 스키마/정책 SoT를 최상위 인덱스로 통합(v2_db_sot2.md 생성)
+- v1.1 (2026-02-06, GitHub Copilot): 티켓 변환 정책/티켓 제로 로그/스냅샷 재생성 정책 섹션을 첨부 SoT 기준으로 구체화하고, docs/SOT/00_db 경로 표기를 정정

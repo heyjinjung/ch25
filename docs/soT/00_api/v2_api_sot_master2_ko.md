@@ -17,6 +17,7 @@
 Admin에서의 변경 사항은 Redis Pub/Sub을 통해 실시간으로 시스템 전역에 전파됩니다.
 - **Global Channel (`golden:v2:feed:public`)**: 전체 공지, 잭팟, 게릴라 이벤트 브로드캐스트.
 - **User Channel (`golden:v2:feed:user:{id}`)**: 개인 자산 변동(입출금 승인), 티켓 지급 알림.
+- **Intervention Channel (`golden:v2:events:intervention`)**: 개입 액션 및 트리거 발행.
 - **Ops Channel (`golden:v2:ops:ws`)**: 운영 모니터링 및 결제 알림.
 
 ### 1.2 공통 연동 규격
@@ -77,6 +78,30 @@ Admin에서의 변경 사항은 Redis Pub/Sub을 통해 실시간으로 시스�
 - **Discrepancy 관리**: V1 `user_id`와 V2 `user_id` 매핑 로직 확인 필수.
 - **Cache Invalidation**: 상점 상품 및 설정 변경 시 연동된 캐시 무효화 트리거.
 - **ID 준수**: 모든 외부 연동 시 `cc_id` 또는 UUID 기반 식별자 사용.
+
+---
+
+## 5. Redis 인프라 및 실시간 명세
+
+### 5.1 Redis 키 표준 (Prefix: `golden:v2:`)
+| 용도 | 키 패턴 | TTL |
+| :--- | :--- | :--- |
+| 연패 카운트 | `golden:v2:user:{id}:loss_streak` | 1h |
+| 세션 시작 잔액 | `golden:v2:user:{id}:session_start_balance` | 24h |
+| 심리 상태 | `golden:v2:user:{id}:psych_state` | 24h |
+| OPS 결과 | `golden:v2:ops:result:{task_id}` | 1h |
+
+### 5.2 알림 메시지 규격 (Message Envelope)
+```json
+{
+  "type": "JACKPOT_WIN | GUERRILLA_DROP | SYSTEM_NOTICE",
+  "timestamp": 1705300000000,
+  "id": "uuid-v4",
+  "payload": { ... }
+}
+```
+- **Pub/Sub 연동**: `NotificationService` → Redis Publish → `UserFeedWorker` → WebSocket.
+- **시간대**: 알림 내 모든 타임스탬프는 UNIX Epoch (ms) 또는 KST ISO 8601 준수.
 
 ---
 *본 문서는 Golden V2의 기술적 통합 기준점이며, OpenAPI 변경 시 명세서와 함께 동기화되어야 합니다.*
