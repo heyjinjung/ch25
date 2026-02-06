@@ -1,4 +1,4 @@
-# Golden V2 Game Engagement & Team Battle Master SoT
+ # Golden V2 Game Engagement & Team Battle Master SoT
 
 **문서 정보**
 - **문서 타입**: 인게이지먼트 및 팀배틀 통합 마스터 SoT (Engagement & Team Battle Master)
