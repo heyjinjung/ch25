@@ -1,0 +1,4334 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+# [최종 검토일: 2026-01-30]
+# [정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Vault 응답에 `available` 계열 필드가 포함되어 단일 SoT(`vault_locked_balance`)와 표현 충돌 가능. Deprecated/별칭 여부를 문서/스키마로 명시 필요.
+openapi: 3.0.3
+info:
+  title: XMAS Event System V2 API
+  version: v2.0
+  description: |
+    V2 API 전체 스웨거(OpenAPI) 스펙.
+    최신 프론트엔드 구현 기준으로 업데이트됨.
+    근거: docs/v2_specs/03_api/*.md, src/v2/api/*.ts
+servers:
+  - url: /
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: System
+    description: 시스템 헬스 체크 및 기능 조회
+  - name: Auth
+    description: 인증 및 토큰 관리
+  - name: User
+    description: 유저 정보 조회
+  - name: Vault
+    description: 금고 (Vault) 관련 API
+  - name: Game
+    description: 룰렛, 주사위, 복권 게임 API
+  - name: Mission
+    description: 미션 및 스트릭 관련 API
+  - name: Inventory
+    description: 인벤토리 및 아이템 관리
+  - name: Shop
+    description: 상점 API
+  - name: TeamBattle
+    description: 팀 배틀 API
+  - name: Survey
+    description: 설문 API
+  - name: Feed
+    description: 피드 API
+  - name: Inbox
+    description: 인박스 메시지 API
+  - name: TicketZero
+    description: 티켓 제로 구제 API
+  - name: Golden
+    description: 골든 개입 및 리인게이지먼트 API
+  - name: Telegram
+    description: 텔레그램 연동 API
+  - name: NewUser
+    description: 신규 유저 관련 API
+  - name: Activity
+    description: 활동 기록 API
+  - name: UiConfig
+    description: UI 설정 API
+  - name: Dev
+    description: 개발 환경 전용 API
+  - name: Admin
+    description: 관리자 API
+  - name: AdminUsers
+    description: 관리자 - 유저 관리
+  - name: AdminEconomy
+    description: 관리자 - 경제 관리 (입금, 출금, 금고)
+  - name: AdminShop
+    description: 관리자 - 상점 관리
+  - name: AdminGame
+    description: 관리자 - 게임 설정
+  - name: AdminInventory
+    description: 관리자 - 인벤토리/티켓 관리
+  - name: AdminSegment
+    description: 관리자 - 세그먼트 관리
+  - name: AdminMarketing
+    description: 관리자 - 마케팅 (메시지, 설문)
+  - name: AdminOps
+    description: 관리자 - 운영 대시보드
+
+paths:
+  # ============================================================================
+  # System
+  # ============================================================================
+  /api/v2/health:
+    get:
+      tags: [System]
+      summary: 헬스 체크
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v2/health/db:
+    get:
+      tags: [System]
+      summary: DB 헬스 체크
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /api/v2/today-feature:
+    get:
+      tags: [System]
+      summary: 오늘의 기능
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodayFeatureResponse"
+
+  /api/v2/metrics:
+    get:
+      tags: [System]
+      summary: 메트릭
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Auth
+  # ============================================================================
+  /api/v2/auth/token:
+    post:
+      tags: [Auth]
+      summary: 토큰 발급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthTokenRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/login:
+    post:
+      tags: [Auth]
+      summary: 로그인 (alias)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthTokenRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: 토큰 갱신
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+
+  /api/v2/auth/logout:
+    post:
+      tags: [Auth]
+      summary: 로그아웃
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+
+  # ============================================================================
+  # User
+  # ============================================================================
+  /api/v2/user/me:
+    get:
+      tags: [User]
+      summary: 내 정보
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMeResponse"
+
+  /api/v2/user/balance:
+    get:
+      tags: [User]
+      summary: 내 잔액
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBalanceResponse"
+
+  # ============================================================================
+  # Vault
+  # ============================================================================
+  /api/v2/vault/status:
+    get:
+      tags: [Vault]
+      summary: 금고 상태 조회
+      description: |
+        금고 잔액, 출금 가능액, 골든아워 상태, 출금 조건 등을 조회합니다.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultStatusResponse"
+
+  /api/v2/vault/withdraw:
+    post:
+      tags: [Vault]
+      summary: 금고 출금 신청
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VaultWithdrawRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultWithdrawResponse"
+
+  # ============================================================================
+  # Game - Roulette
+  # ============================================================================
+  /api/v2/roulette/status:
+    get:
+      tags: [Game]
+      summary: 룰렛 상태 조회
+      parameters:
+        - in: query
+          name: ticket_type
+          schema:
+            type: string
+          description: 티켓 타입 (ROULETTE_TICKET, GOLD_KEY_TICKET 등)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouletteStatusResponse"
+
+  /api/v2/roulette/play:
+    post:
+      tags: [Game]
+      summary: 룰렛 플레이
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoulettePlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  # ============================================================================
+  # Game - Dice
+  # ============================================================================
+  /api/v2/dice/status:
+    get:
+      tags: [Game]
+      summary: 주사위 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceStatusResponse"
+
+  /api/v2/dice/play:
+    post:
+      tags: [Game]
+      summary: 주사위 플레이
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DicePlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  /api/v2/dice/double-up:
+    post:
+      tags: [Game]
+      summary: 주사위 더블업
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceDoubleUpRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceDoubleUpResponse"
+
+  # ============================================================================
+  # Game - Lottery
+  # ============================================================================
+  /api/v2/lottery/status:
+    get:
+      tags: [Game]
+      summary: 복권 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LotteryStatusResponse"
+
+  /api/v2/lottery/play:
+    post:
+      tags: [Game]
+      summary: 복권 플레이
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LotteryPlayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GamePlayResponse"
+
+  /api/v2/exchange/craft:
+    post:
+      tags: [Game]
+      summary: 퍼즐 합체 제작
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CraftRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CraftResponse"
+
+  # ============================================================================
+  # Mission
+  # ============================================================================
+  /api/v2/mission/:
+    get:
+      tags: [Mission]
+      summary: 미션 목록 및 진행도 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionListResponse"
+
+  /api/v2/mission/{mission_id}/claim:
+    post:
+      tags: [Mission]
+      summary: 미션 보상 수령
+      parameters:
+        - in: path
+          name: mission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimMissionResponse"
+
+  /api/v2/mission/daily-gift:
+    post:
+      tags: [Mission]
+      summary: 데일리 선물 수령
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimMissionResponse"
+
+  /api/v2/mission/streak/rules:
+    get:
+      tags: [Mission]
+      summary: 스트릭 규칙 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StreakRuleDto"
+
+  /api/v2/mission/streak/claim:
+    post:
+      tags: [Mission]
+      summary: 스트릭 보상 수령
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimStreakResponse"
+
+  /api/v2/streak/status:
+    get:
+      tags: [Mission]
+      summary: 스트릭 상태
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StreakInfoDto"
+
+  # ============================================================================
+  # Inventory
+  # ============================================================================
+  /api/v2/inventory:
+    get:
+      tags: [Inventory]
+      summary: 인벤토리 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryResponse"
+
+  /api/v2/inventory/items:
+    get:
+      tags: [Inventory]
+      summary: 인벤토리 아이템 목록
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InventoryResponse"
+
+  /api/v2/inventory/use:
+    post:
+      tags: [Inventory]
+      summary: 인벤토리 아이템 사용
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryUseRequest"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Shop
+  # ============================================================================
+  /api/v2/shop/products:
+    get:
+      tags: [Shop]
+      summary: 상점 상품 목록
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ShopProductDto"
+
+  /api/v2/shop/purchase:
+    post:
+      tags: [Shop]
+      summary: 상점 상품 구매
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShopPurchaseRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShopPurchaseResponse"
+
+  # ============================================================================
+  # TeamBattle
+  # ============================================================================
+  /api/v2/team-battle/seasons/active:
+    get:
+      tags: [TeamBattle]
+      summary: 현재 시즌 조회
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 목록
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/join:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 가입
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamJoinRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/leave:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 탈퇴
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/me:
+    get:
+      tags: [TeamBattle]
+      summary: 내 팀 정보
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/teams/leaderboard:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 리더보드
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/status:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 배틀 상태
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/rankings:
+    get:
+      tags: [TeamBattle]
+      summary: 팀 배틀 랭킹
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/team-battle/join:
+    post:
+      tags: [TeamBattle]
+      summary: 팀 배틀 가입 (alias)
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Survey
+  # ============================================================================
+  /api/v2/surveys/active:
+    get:
+      tags: [Survey]
+      summary: 활성 설문 조회
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/surveys/{survey_id}/responses:
+    post:
+      tags: [Survey]
+      summary: 설문 응답 생성
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/surveys/{survey_id}/responses/{response_id}:
+    patch:
+      tags: [Survey]
+      summary: 설문 응답 수정
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: response_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/surveys/{survey_id}/responses/{response_id}/complete:
+    post:
+      tags: [Survey]
+      summary: 설문 응답 완료
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: response_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Feed
+  # ============================================================================
+  /api/v2/feed/list:
+    get:
+      tags: [Feed]
+      summary: 피드 목록
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Inbox
+  # ============================================================================
+  /api/v2/inbox:
+    get:
+      tags: [Inbox]
+      summary: 인박스 조회
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxListResponse"
+
+  /api/v2/inbox/read:
+    patch:
+      tags: [Inbox]
+      summary: 인박스 읽음 처리
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InboxReadRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxReadResponse"
+
+  # ============================================================================
+  # TicketZero
+  # ============================================================================
+  /api/v2/ticket-zero/status:
+    get:
+      tags: [TicketZero]
+      summary: 티켓 제로 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketZeroStatusResponse"
+
+  /api/v2/ticket-zero/bailout:
+    post:
+      tags: [TicketZero]
+      summary: 티켓 제로 구조 요청
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketZeroBailoutResponse"
+
+  # ============================================================================
+  # Golden
+  # ============================================================================
+  /api/v2/golden/status:
+    get:
+      tags: [Golden]
+      summary: 골든 상태
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/golden/history:
+    get:
+      tags: [Golden]
+      summary: 골든 히스토리
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/golden/intervention/resolve:
+    post:
+      tags: [Golden]
+      summary: 개입 결정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoldenInterventionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoldenInterventionResponse"
+
+  /api/v2/golden/reengagement/queue:
+    post:
+      tags: [Golden]
+      summary: 재참여 큐
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoldenReengagementRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoldenReengagementResponse"
+
+  # ============================================================================
+  # Telegram
+  # ============================================================================
+  /api/v2/telegram/auth:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 연동
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramAuthRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramAuthResponse"
+
+  /api/v2/telegram/link-token:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 링크용 토큰 발급
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramLinkTokenResponse"
+
+  /api/v2/telegram/unlink-request:
+    post:
+      tags: [Telegram]
+      summary: 텔레그램 연결 해제 요청
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TelegramUnlinkRequest"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # NewUser
+  # ============================================================================
+  /api/v2/new-user/status:
+    get:
+      tags: [NewUser]
+      summary: 신규 유저 상태
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/new-user/claim-welcome:
+    post:
+      tags: [NewUser]
+      summary: 웰컴 보상 수령
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Activity
+  # ============================================================================
+  /api/v2/activity/record:
+    post:
+      tags: [Activity]
+      summary: 활동 기록
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActivityRecordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityRecordResponse"
+
+  # ============================================================================
+  # UI Config
+  # ============================================================================
+  /api/v2/ui-config/{key}:
+    get:
+      tags: [UiConfig]
+      summary: UI 설정 조회
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResponse"
+
+  # ============================================================================
+  # Dev
+  # ============================================================================
+  /api/v2/dev/login:
+    post:
+      tags: [Dev]
+      summary: DevLogin (개발환경)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DevLoginRequest"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Admin - Ops Dashboard
+  # ============================================================================
+  /api/v2/admin/ops/status:
+    get:
+      tags: [AdminOps]
+      summary: 운영 대시보드 상태 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpsDashboardResponse"
+
+  /api/v2/admin/ops/interventions:
+    get:
+      tags: [AdminOps]
+      summary: 개입 로그 조회
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InterventionLogDto"
+
+  # ============================================================================
+  # Admin - Users
+  # ============================================================================
+  /api/v2/admin/users:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 목록 조회
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: minLevel
+          schema:
+            type: integer
+        - in: query
+          name: maxLevel
+          schema:
+            type: integer
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+        - in: query
+          name: sortOrder
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+
+  /api/v2/admin/users/{user_id}:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 상세 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetailDto"
+
+  /api/v2/admin/users/{user_id}/segment:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 세그먼트 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/users/{user_id}/activity-logs:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 활동 로그 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserActivityLogDto"
+
+  /api/v2/admin/users/{user_id}/inventory:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 인벤토리 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/users/{user_id}/notes:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 메모 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserNoteDto"
+
+  /api/v2/admin/users/notes:
+    post:
+      tags: [AdminUsers]
+      summary: 유저 메모 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserNoteRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/users/{user_id}/missions:
+    get:
+      tags: [AdminUsers]
+      summary: 유저 미션 히스토리 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/users/{user_id}/missions/{mission_id}/complete:
+    post:
+      tags: [AdminUsers]
+      summary: 미션 강제 완료
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: mission_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/users/{user_id}/intervention/{action_id}:
+    post:
+      tags: [AdminUsers]
+      summary: 유저 개입 실행
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: action_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionExecutionResponse"
+
+  /api/v2/admin/users/{user_id}/wallet/adjust:
+    post:
+      tags: [AdminUsers]
+      summary: 유저 지갑 조정
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminWalletAdjustmentRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionExecutionResponse"
+
+  /api/v2/admin/users/{user_id}/inventory/adjust:
+    post:
+      tags: [AdminUsers]
+      summary: 유저 인벤토리 조정
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminInventoryAdjustmentRequest"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Admin - Economy (Deposits, Withdrawals, Vault)
+  # ============================================================================
+  /api/v2/admin/economy/deposits:
+    get:
+      tags: [AdminEconomy]
+      summary: 입금 로그 조회
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDepositLogDto"
+    post:
+      tags: [AdminEconomy]
+      summary: 입금 로그 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDepositCreateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDepositLogDto"
+
+  /api/v2/admin/economy/deposits/{id}:
+    put:
+      tags: [AdminEconomy]
+      summary: 입금 로그 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminDepositUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminEconomy]
+      summary: 입금 로그 삭제
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/economy/deposits/pending:
+    get:
+      tags: [AdminEconomy]
+      summary: 대기 중인 입금 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDepositDto"
+
+  /api/v2/admin/economy/transaction-types:
+    get:
+      tags: [AdminEconomy]
+      summary: 거래 유형 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WalletTransactionTypeDto"
+
+  /api/v2/admin/withdrawals:
+    get:
+      tags: [AdminEconomy]
+      summary: 출금 목록 조회
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminWithdrawalDto"
+
+  /api/v2/admin/withdrawals/{id}/approve:
+    post:
+      tags: [AdminEconomy]
+      summary: 출금 승인
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/withdrawals/{id}/reject:
+    post:
+      tags: [AdminEconomy]
+      summary: 출금 거부
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/vault/stats:
+    get:
+      tags: [AdminEconomy]
+      summary: 금고 통계 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultStatsDto"
+
+  /api/v2/admin/vault/users:
+    get:
+      tags: [AdminEconomy]
+      summary: 금고 유저 목록
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserVaultDto"
+
+  /api/v2/admin/vault/users/{user_id}/ledger:
+    get:
+      tags: [AdminEconomy]
+      summary: 유저 금고 원장 조회
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: offset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultLedgerResponseDto"
+
+  /api/v2/admin/vault/trend:
+    get:
+      tags: [AdminEconomy]
+      summary: 금고 트렌드 조회
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultDailyTrendDto"
+
+  /api/v2/admin/vault/force-edit:
+    post:
+      tags: [AdminEconomy]
+      summary: 금고 강제 수정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VaultForceEditRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/vault/withdrawals/{status}:
+    get:
+      tags: [AdminEconomy]
+      summary: 출금 상세 조회
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalDetailsResponse"
+
+  # ============================================================================
+  # Admin - Shop
+  # ============================================================================
+  /api/v2/admin/shop/products:
+    get:
+      tags: [AdminShop]
+      summary: 상품 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminProductDto"
+    post:
+      tags: [AdminShop]
+      summary: 상품 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminProductCreateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductDto"
+
+  /api/v2/admin/shop/products/{product_id}:
+    put:
+      tags: [AdminShop]
+      summary: 상품 수정
+      parameters:
+        - in: path
+          name: product_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminProductUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminShop]
+      summary: 상품 삭제
+      parameters:
+        - in: path
+          name: product_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/shop/products/{id}/status:
+    put:
+      tags: [AdminShop]
+      summary: 상품 상태 변경
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isVisible:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/shop/products/sync:
+    post:
+      tags: [AdminShop]
+      summary: 상품 동기화
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminProductDto"
+
+  # ============================================================================
+  # Admin - Game Config
+  # ============================================================================
+  /api/v2/admin/game/roulette/configs:
+    get:
+      tags: [AdminGame]
+      summary: 룰렛 설정 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminRouletteConfigDto"
+
+  /api/v2/admin/game/roulette/config/{id}:
+    put:
+      tags: [AdminGame]
+      summary: 룰렛 설정 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/dice/config:
+    get:
+      tags: [AdminGame]
+      summary: 주사위 설정 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDiceConfigDto"
+
+  /api/v2/admin/game/dice/config/{id}:
+    put:
+      tags: [AdminGame]
+      summary: 주사위 설정 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/lottery/configs:
+    get:
+      tags: [AdminGame]
+      summary: 복권 설정 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminLotteryConfigDto"
+
+  /api/v2/admin/game/lottery/config/{id}:
+    put:
+      tags: [AdminGame]
+      summary: 복권 설정 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/lottery/config/{config_id}/prize:
+    post:
+      tags: [AdminGame]
+      summary: 복권 상품 추가
+      parameters:
+        - in: path
+          name: config_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/lottery/config/{config_id}/prize/{prize_id}:
+    put:
+      tags: [AdminGame]
+      summary: 복권 상품 수정
+      parameters:
+        - in: path
+          name: config_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: prize_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminGame]
+      summary: 복권 상품 삭제
+      parameters:
+        - in: path
+          name: config_id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: prize_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/missions:
+    get:
+      tags: [AdminGame]
+      summary: 미션 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminMissionDto"
+    post:
+      tags: [AdminGame]
+      summary: 미션 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/missions/{id}:
+    put:
+      tags: [AdminGame]
+      summary: 미션 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminGame]
+      summary: 미션 삭제
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/levels:
+    get:
+      tags: [AdminGame]
+      summary: 레벨 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminLevelDto"
+
+  /api/v2/admin/game/levels/{level}:
+    put:
+      tags: [AdminGame]
+      summary: 레벨 수정
+      parameters:
+        - in: path
+          name: level
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/game/levels/config:
+    put:
+      tags: [AdminGame]
+      summary: 레벨 글로벌 설정 수정
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLevelGlobalConfig"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Admin - Inventory/Ticket
+  # ============================================================================
+  /api/v2/admin/inventory/grant:
+    post:
+      tags: [AdminInventory]
+      summary: 아이템 지급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GrantItemRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/inventory/revoke:
+    post:
+      tags: [AdminInventory]
+      summary: 아이템 회수
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GrantItemRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/inventory/logs:
+    get:
+      tags: [AdminInventory]
+      summary: 인벤토리 로그 조회
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: integer
+        - in: query
+          name: startDate
+          schema:
+            type: string
+        - in: query
+          name: endDate
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TicketLogDto"
+
+  /api/v2/admin/inventory/tickets/stats:
+    get:
+      tags: [AdminInventory]
+      summary: 티켓 통계 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TicketStatDto"
+
+  /api/v2/admin/inventory/tickets/users:
+    get:
+      tags: [AdminInventory]
+      summary: 유저 티켓 목록 조회
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: ticket_type
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserTicketDto"
+
+  /api/v2/admin/inventory/items/stats:
+    get:
+      tags: [AdminInventory]
+      summary: 인벤토리 아이템 통계 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InventoryStatDto"
+
+  /api/v2/admin/inventory/items/users:
+    get:
+      tags: [AdminInventory]
+      summary: 유저 인벤토리 아이템 목록 조회
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: item_type
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserInventoryDto"
+
+  /api/v2/admin/inventory/tickets:
+    post:
+      tags: [AdminInventory]
+      summary: 티켓 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketCreateRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/inventory/tickets/{id}:
+    put:
+      tags: [AdminInventory]
+      summary: 티켓 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminInventory]
+      summary: 티켓 삭제
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/inventory/items:
+    post:
+      tags: [AdminInventory]
+      summary: 인벤토리 아이템 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItemCreateRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/inventory/items/{id}:
+    put:
+      tags: [AdminInventory]
+      summary: 인벤토리 아이템 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryItemUpdateRequest"
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminInventory]
+      summary: 인벤토리 아이템 삭제
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/ticket/logs:
+    get:
+      tags: [AdminInventory]
+      summary: 티켓 로그 조회
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+        - in: query
+          name: end_date
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TicketLogDto"
+
+  # ============================================================================
+  # Admin - Segment
+  # ============================================================================
+  /api/v2/admin/segments/batch/run:
+    post:
+      tags: [AdminSegment]
+      summary: 세그먼트 배치 실행
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/segments/stats:
+    get:
+      tags: [AdminSegment]
+      summary: 세그먼트 통계 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SegmentStatsResponse"
+
+  /api/v2/admin/segments/rules:
+    get:
+      tags: [AdminSegment]
+      summary: 세그먼트 규칙 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SegmentRuleDto"
+    post:
+      tags: [AdminSegment]
+      summary: 세그먼트 규칙 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSegmentRuleRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/segments/rules/{id}:
+    put:
+      tags: [AdminSegment]
+      summary: 세그먼트 규칙 수정
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags: [AdminSegment]
+      summary: 세그먼트 규칙 삭제
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Admin - Marketing
+  # ============================================================================
+  /api/v2/admin/marketing/messages:
+    get:
+      tags: [AdminMarketing]
+      summary: 메시지 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminMessageDto"
+    post:
+      tags: [AdminMarketing]
+      summary: 메시지 전송
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageRequest"
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/marketing/surveys:
+    get:
+      tags: [AdminMarketing]
+      summary: 설문 목록 조회
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SurveyDto"
+
+  /api/v2/admin/marketing/surveys/{survey_id}/results:
+    get:
+      tags: [AdminMarketing]
+      summary: 설문 결과 조회
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SurveyResultDto"
+
+  /api/v2/admin/marketing/surveys/{survey_id}/toggle:
+    put:
+      tags: [AdminMarketing]
+      summary: 설문 활성화/비활성화 토글
+      parameters:
+        - in: path
+          name: survey_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_active:
+                  type: boolean
+      responses:
+        "200":
+          description: OK
+
+  /api/v2/admin/messages:
+    post:
+      tags: [AdminMarketing]
+      summary: 관리자 메시지 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMessageRequest"
+      responses:
+        "200":
+          description: OK
+
+  # ============================================================================
+  # Admin - UI Config
+  # ============================================================================
+  /api/v2/admin/ui-config/{key}:
+    get:
+      tags: [Admin]
+      summary: UI 설정 조회
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResponse"
+    put:
+      tags: [Admin]
+      summary: UI 설정 수정
+      parameters:
+        - in: path
+          name: key
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                value:
+                  type: object
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UiConfigResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ============================================================================
+    # Generic
+    # ============================================================================
+    GenericObject:
+      type: object
+      additionalProperties: true
+
+    # ============================================================================
+    # System
+    # ============================================================================
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+
+    TodayFeatureResponse:
+      type: object
+      properties:
+        feature_type:
+          type: string
+          nullable: true
+        user_id:
+          type: integer
+          nullable: true
+
+    # ============================================================================
+    # Auth
+    # ============================================================================
+    AuthTokenRequest:
+      type: object
+      required: [user_id]
+      properties:
+        user_id:
+          type: integer
+        external_id:
+          type: string
+        password:
+          type: string
+
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserSummary"
+
+    LogoutResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        external_id:
+          type: string
+        nickname:
+          type: string
+        status:
+          type: string
+        level:
+          type: integer
+        segment:
+          type: string
+        telegram_id:
+          type: integer
+        login_streak:
+          type: integer
+
+    DevLoginRequest:
+      type: object
+      properties:
+        external_id:
+          type: string
+        nickname:
+          type: string
+        create_if_missing:
+          type: boolean
+
+    # ============================================================================
+    # User
+    # ============================================================================
+    UserMeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+
+    UserBalanceResponse:
+      type: object
+      properties:
+        vault_locked:
+          type: integer
+        vault_available:
+          type: integer
+
+    # ============================================================================
+    # Vault
+    # ============================================================================
+    VaultStatusResponse:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        vaultBalance:
+          type: integer
+        lockedBalance:
+          type: integer
+        availableBalance:
+          type: integer
+        ticketCount:
+          type: integer
+        is_golden_hour_active:
+          type: boolean
+        golden_hour_multiplier:
+          type: number
+        golden_hour_remaining_seconds:
+          type: integer
+        showModalOverride:
+          type: string
+          nullable: true
+        segment:
+          type: string
+          nullable: true
+        daily_play_count:
+          type: integer
+        daily_play_target:
+          type: integer
+        daily_vault_spent:
+          type: integer
+        daily_vault_spent_target:
+          type: integer
+        daily_deposit_confirmed:
+          type: boolean
+        withdrawal_count:
+          type: integer
+        deposit_status:
+          type: string
+        vault_max_limit:
+          type: integer
+        benefits_suspended:
+          type: boolean
+
+    VaultWithdrawRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+        protocol_key:
+          type: string
+          nullable: true
+
+    VaultWithdrawResponse:
+      type: object
+      properties:
+        request_id:
+          type: integer
+        status:
+          type: string
+        amount:
+          type: integer
+        balance_after:
+          type: integer
+
+    # ============================================================================
+    # Game - Roulette
+    # ============================================================================
+    RouletteStatusResponse:
+      type: object
+      properties:
+        config_id:
+          type: integer
+        name:
+          type: string
+        max_daily_spins:
+          type: integer
+        today_spins:
+          type: integer
+        remaining_spins:
+          type: integer
+        token_type:
+          type: string
+        token_balance:
+          type: integer
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouletteSegment"
+        feature_type:
+          type: string
+
+    RouletteSegment:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        slot_index:
+          type: integer
+        is_fever_reward:
+          type: boolean
+
+    RoulettePlayRequest:
+      type: object
+      properties:
+        ticket_type:
+          type: string
+        bet_multiplier:
+          type: integer
+
+    # ============================================================================
+    # Game - Dice
+    # ============================================================================
+    DiceStatusResponse:
+      type: object
+      properties:
+        config_id:
+          type: integer
+        name:
+          type: string
+        max_daily_plays:
+          type: integer
+        today_plays:
+          type: integer
+        remaining_plays:
+          type: integer
+        token_type:
+          type: string
+        token_balance:
+          type: integer
+        feature_type:
+          type: string
+        event_active:
+          type: boolean
+        event_plays_done:
+          type: integer
+          nullable: true
+        event_plays_max:
+          type: integer
+          nullable: true
+        event_ineligible_reason:
+          type: string
+          nullable: true
+
+    DicePlayRequest:
+      type: object
+      properties:
+        bet_amount:
+          type: integer
+        prediction:
+          type: string
+
+    DiceDoubleUpRequest:
+      type: object
+      properties:
+        previous_game_id:
+          type: string
+        choice:
+          type: string
+
+    DiceDoubleUpResponse:
+      type: object
+      properties:
+        result:
+          type: string
+        final_amount:
+          type: integer
+        is_bust:
+          type: boolean
+
+    # ============================================================================
+    # Game - Lottery
+    # ============================================================================
+    LotteryStatusResponse:
+      type: object
+      properties:
+        config_id:
+          type: integer
+        name:
+          type: string
+        max_daily_tickets:
+          type: integer
+        today_tickets:
+          type: integer
+        remaining_tickets:
+          type: integer
+        token_type:
+          type: string
+        token_balance:
+          type: integer
+        prizes:
+          type: array
+          items:
+            $ref: "#/components/schemas/LotteryPrize"
+        feature_type:
+          type: string
+        collectionProgress:
+          type: object
+          additionalProperties:
+            type: integer
+
+    LotteryPrize:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        stock:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+        weight:
+          type: number
+
+    LotteryPlayRequest:
+      type: object
+      properties:
+        ticket_type:
+          type: string
+        selection_numbers:
+          type: array
+          items:
+            type: integer
+
+    CraftRequest:
+      type: object
+      properties:
+        target_token_type:
+          type: string
+
+    CraftResponse:
+      type: object
+      properties:
+        result:
+          type: string
+        reward_token:
+          type: string
+        reward_amount:
+          type: integer
+        used_token:
+          type: string
+        used_amount:
+          type: integer
+
+    # ============================================================================
+    # Game - Common
+    # ============================================================================
+    GamePlayResponse:
+      type: object
+      properties:
+        result:
+          type: string
+        game_data:
+          type: object
+          additionalProperties: true
+        vault_earn:
+          type: integer
+        season_pass:
+          type: object
+          nullable: true
+        streak_info:
+          type: object
+          nullable: true
+        fever_gauge:
+          type: object
+          nullable: true
+        next_action_available:
+          type: array
+          items:
+            type: string
+
+    # ============================================================================
+    # Mission
+    # ============================================================================
+    MissionDto:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        progress:
+          type: integer
+        target:
+          type: integer
+        is_completed:
+          type: boolean
+        is_claimed:
+          type: boolean
+
+    StreakInfoDto:
+      type: object
+      properties:
+        current_streak:
+          type: integer
+        today_completed:
+          type: boolean
+        last_completed_date:
+          type: string
+          nullable: true
+        claimable_rewards:
+          type: array
+          items:
+            type: integer
+
+    StreakRuleDto:
+      type: object
+      properties:
+        day:
+          type: integer
+        enabled:
+          type: boolean
+        grants:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+              token_type:
+                type: string
+              item_type:
+                type: string
+              amount:
+                type: integer
+
+    MissionListResponse:
+      type: object
+      properties:
+        missions:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissionDto"
+        streak_info:
+          $ref: "#/components/schemas/StreakInfoDto"
+
+    ClaimMissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        reward_type:
+          type: string
+        amount:
+          type: integer
+
+    ClaimStreakResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        streak_info:
+          $ref: "#/components/schemas/StreakInfoDto"
+        grants:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+              token_type:
+                type: string
+              item_type:
+                type: string
+              amount:
+                type: integer
+
+    # ============================================================================
+    # Inventory
+    # ============================================================================
+    InventoryResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              item_type:
+                type: string
+              quantity:
+                type: integer
+              created_at:
+                type: string
+                format: date-time
+        wallet:
+          type: object
+          additionalProperties: true
+
+    InventoryUseRequest:
+      type: object
+      properties:
+        item_type:
+          type: string
+        amount:
+          type: integer
+
+    # ============================================================================
+    # Shop
+    # ============================================================================
+    ShopProductDto:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        cost_type:
+          type: string
+          enum: [VAULT, DIAMOND]
+        cost_amount:
+          type: integer
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        is_active:
+          type: boolean
+        display_order:
+          type: integer
+
+    ShopPurchaseRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+
+    ShopPurchaseResponse:
+      type: object
+      properties:
+        order_id:
+          type: string
+        sku:
+          type: string
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+
+    # ============================================================================
+    # TeamBattle
+    # ============================================================================
+    TeamJoinRequest:
+      type: object
+      properties:
+        team_id:
+          type: integer
+
+    # ============================================================================
+    # Inbox
+    # ============================================================================
+    InboxListResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              message_id:
+                type: integer
+              title:
+                type: string
+              content:
+                type: string
+              is_read:
+                type: boolean
+              read_at:
+                type: string
+                format: date-time
+                nullable: true
+              created_at:
+                type: string
+                format: date-time
+        unread_count:
+          type: integer
+
+    InboxReadRequest:
+      type: object
+      properties:
+        inbox_ids:
+          type: array
+          items:
+            type: integer
+
+    InboxReadResponse:
+      type: object
+      properties:
+        marked_count:
+          type: integer
+        remaining_unread:
+          type: integer
+
+    # ============================================================================
+    # TicketZero
+    # ============================================================================
+    TicketZeroStatusResponse:
+      type: object
+      properties:
+        bailout_available:
+          type: boolean
+
+    TicketZeroBailoutResponse:
+      type: object
+      properties:
+        granted:
+          type: boolean
+        ticket_type:
+          type: string
+        ticket_amount:
+          type: integer
+
+    # ============================================================================
+    # Golden
+    # ============================================================================
+    GoldenInterventionRequest:
+      type: object
+      properties:
+        event_type:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+
+    GoldenInterventionResponse:
+      type: object
+      properties:
+        eligible:
+          type: boolean
+        experiment_group:
+          type: string
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        capped_amount:
+          type: integer
+        cmax:
+          type: integer
+        predicted_ltv:
+          type: integer
+        roi_percent:
+          type: number
+        meta:
+          type: object
+          additionalProperties: true
+
+    GoldenReengagementRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+        channel:
+          type: string
+
+    GoldenReengagementResponse:
+      type: object
+      properties:
+        queued:
+          type: boolean
+        created:
+          type: boolean
+        reason:
+          type: string
+        meta:
+          type: object
+          additionalProperties: true
+
+    # ============================================================================
+    # Telegram
+    # ============================================================================
+    TelegramAuthRequest:
+      type: object
+      properties:
+        init_data:
+          type: string
+        start_param:
+          type: string
+
+    TelegramAuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+        is_new_user:
+          type: boolean
+        linked_to_existing:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/UserSummary"
+
+    TelegramLinkTokenResponse:
+      type: object
+      properties:
+        expires_at_utc:
+          type: string
+          format: date-time
+        start_param:
+          type: string
+        open_url:
+          type: string
+
+    TelegramUnlinkRequest:
+      type: object
+      properties:
+        init_data:
+          type: string
+
+    # ============================================================================
+    # Activity
+    # ============================================================================
+    ActivityRecordRequest:
+      type: object
+      properties:
+        event_type:
+          type: string
+        event_id:
+          type: string
+        value:
+          type: integer
+        meta_json:
+          type: object
+          additionalProperties: true
+
+    ActivityRecordResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+
+    # ============================================================================
+    # UI Config
+    # ============================================================================
+    UiConfigResponse:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: object
+          nullable: true
+        updated_at:
+          type: string
+          nullable: true
+
+    # ============================================================================
+    # Admin - Ops
+    # ============================================================================
+    OpsDashboardResponse:
+      type: object
+      properties:
+        system:
+          type: object
+          properties:
+            db:
+              type: string
+              enum: [OK, DEGRADED, ERROR]
+            redis:
+              type: string
+              enum: [OK, DEGRADED, ERROR]
+            worker:
+              type: string
+              enum: [OK, DEGRADED, ERROR]
+        goldenRadar:
+          type: object
+          properties:
+            highRollers:
+              type: integer
+            churnRisks:
+              type: integer
+            onlineNow:
+              type: integer
+            riskUsers:
+              type: array
+              items:
+                $ref: "#/components/schemas/OpsRiskUserDto"
+        metrics:
+          type: object
+          properties:
+            todayRevenue:
+              type: integer
+            activeUsers24h:
+              type: integer
+
+    OpsRiskUserDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+        nickname:
+          type: string
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        riskReason:
+          type: string
+          nullable: true
+        churnScore:
+          type: number
+
+    InterventionLogDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        triggerId:
+          type: string
+        triggerCondition:
+          type: string
+          nullable: true
+        actionTaken:
+          type: string
+        userBalanceBefore:
+          type: integer
+          nullable: true
+        sessionBalanceDelta:
+          type: integer
+          nullable: true
+        recentResults:
+          type: string
+          nullable: true
+        cooldownExpiresAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+
+    InterventionExecutionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        action_id:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    SegmentsRunResponse:
+      type: object
+      properties:
+        processed:
+          type: integer
+        changed:
+          type: integer
+
+    # ============================================================================
+    # Admin - Users
+    # ============================================================================
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUserListDto"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminUserListDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cc_id:
+          type: integer
+        nickname:
+          type: string
+          nullable: true
+        telegram_id:
+          type: integer
+          nullable: true
+        telegram_username:
+          type: string
+          nullable: true
+        level:
+          type: integer
+        vaultBalance:
+          type: integer
+        status:
+          type: string
+          enum: [Active, Inactive, Suspended]
+        tier:
+          type: string
+        total_deposit:
+          type: integer
+        last_active:
+          type: string
+        createdAt:
+          type: string
+
+    AdminUserDetailDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+          nullable: true
+        telegramId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+        totalDeposit:
+          type: integer
+        currentAssets:
+          type: integer
+        vaultBalance:
+          type: integer
+        ticketBalance:
+          type: integer
+        level:
+          type: integer
+        vipLevel:
+          type: string
+        isActive:
+          type: boolean
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        riskReason:
+          type: string
+          nullable: true
+        playbook:
+          $ref: "#/components/schemas/InterventionPlaybookDto"
+
+    InterventionPlaybookDto:
+      type: object
+      properties:
+        riskLevel:
+          type: string
+        suggestedActions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterventionActionDto"
+
+    InterventionActionDto:
+      type: object
+      properties:
+        actionId:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+
+    UserActivityLogDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [GAME_PLAY, DEPOSIT, WITHDRAWAL, LOGIN, ITEM_USE]
+        description:
+          type: string
+        metadata:
+          type: object
+        timestamp:
+          type: string
+
+    UserNoteDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        adminId:
+          type: string
+        adminNickname:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    CreateUserNoteRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+        content:
+          type: string
+
+    AdminWalletAdjustmentRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+        token_type:
+          type: string
+        reason:
+          type: string
+
+    AdminInventoryAdjustmentRequest:
+      type: object
+      properties:
+        itemType:
+          type: string
+        delta:
+          type: integer
+        note:
+          type: string
+
+    # ============================================================================
+    # Admin - Economy
+    # ============================================================================
+    AdminWithdrawalDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        nickname:
+          type: string
+        amount:
+          type: integer
+        requestTime:
+          type: string
+        riskLevel:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+
+    AdminDepositDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        nickname:
+          type: string
+        amount:
+          type: integer
+        depositCount:
+          type: integer
+        bankOwner:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        requestedAt:
+          type: string
+        isNew:
+          type: boolean
+
+    AdminDepositLogDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        nickname:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+        kstDate:
+          type: string
+        createdAt:
+          type: string
+
+    AdminDepositCreateRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        amount:
+          type: integer
+        kst_date:
+          type: string
+
+    AdminDepositUpdateRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+        kst_date:
+          type: string
+
+    WalletTransactionTypeDto:
+      type: object
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+        group:
+          type: string
+
+    VaultStatsDto:
+      type: object
+      properties:
+        today_total_vault:
+          type: integer
+        today_withdrawal_pending:
+          type: integer
+        today_withdrawal_approved:
+          type: integer
+        today_withdrawal_rejected:
+          type: integer
+        total_pending_count:
+          type: integer
+
+    UserVaultDto:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        nickname:
+          type: string
+        telegram_username:
+          type: string
+          nullable: true
+        vault_balance:
+          type: integer
+        total_deposit:
+          type: integer
+        total_withdrawal:
+          type: integer
+        last_activity:
+          type: string
+          nullable: true
+        tier:
+          type: string
+
+    VaultDailyTrendDto:
+      type: object
+      properties:
+        date:
+          type: string
+        total_vault:
+          type: integer
+        deposit_count:
+          type: integer
+        withdrawal_count:
+          type: integer
+        deposit_amount:
+          type: integer
+        withdrawal_amount:
+          type: integer
+
+    VaultForceEditRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        amount:
+          type: integer
+        reason:
+          type: string
+
+    VaultLedgerItemDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        amount:
+          type: integer
+        balance_after:
+          type: integer
+        reason:
+          type: string
+          nullable: true
+        ref_type:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+
+    VaultLedgerResponseDto:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        nickname:
+          type: string
+        total_in:
+          type: integer
+        total_out:
+          type: integer
+        net_change:
+          type: integer
+        current_balance:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VaultLedgerItemDto"
+
+    WithdrawalDetailsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        count:
+          type: integer
+        total_amount:
+          type: integer
+        withdrawals:
+          type: array
+          items:
+            $ref: "#/components/schemas/WithdrawalDetailDto"
+
+    WithdrawalDetailDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        nickname:
+          type: string
+        telegram_username:
+          type: string
+          nullable: true
+        amount:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED]
+        created_at:
+          type: string
+        approved_at:
+          type: string
+          nullable: true
+        rejected_at:
+          type: string
+          nullable: true
+        rejection_reason:
+          type: string
+          nullable: true
+
+    # ============================================================================
+    # Admin - Shop
+    # ============================================================================
+    AdminProductDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        sku:
+          type: string
+        name:
+          type: string
+        price:
+          type: integer
+        costType:
+          type: string
+        costAmount:
+          type: integer
+        rewardType:
+          type: string
+        rewardAmount:
+          type: integer
+        isVisible:
+          type: boolean
+        category:
+          type: string
+        sortOrder:
+          type: integer
+        dailyLimit:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+
+    AdminProductCreateRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        cost_type:
+          type: string
+        cost_amount:
+          type: integer
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        is_visible:
+          type: boolean
+        sort_order:
+          type: integer
+        daily_limit:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+
+    AdminProductUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        cost_type:
+          type: string
+        cost_amount:
+          type: integer
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        is_visible:
+          type: boolean
+        sort_order:
+          type: integer
+        daily_limit:
+          type: integer
+          nullable: true
+        description:
+          type: string
+          nullable: true
+
+    # ============================================================================
+    # Admin - Game Config
+    # ============================================================================
+    AdminRouletteConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        gameType:
+          type: string
+        name:
+          type: string
+        grade:
+          type: string
+          enum: [COMMON, VIP, WHALE, AT_RISK]
+        ticketType:
+          type: string
+        maxDailySpins:
+          type: integer
+        isActive:
+          type: boolean
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminRouletteSegmentDto"
+
+    AdminRouletteSegmentDto:
+      type: object
+      properties:
+        slotIndex:
+          type: integer
+        label:
+          type: string
+        weight:
+          type: number
+        rewardType:
+          type: string
+        rewardAmount:
+          type: integer
+        isJackpot:
+          type: boolean
+        color:
+          type: string
+
+    AdminDiceConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        gameType:
+          type: string
+        name:
+          type: string
+        isActive:
+          type: boolean
+        maxDailyPlays:
+          type: integer
+        winProbability:
+          type: number
+        drawProbability:
+          type: number
+        loseProbability:
+          type: number
+        winRewardType:
+          type: string
+        winRewardAmount:
+          type: integer
+        drawRewardType:
+          type: string
+        drawRewardAmount:
+          type: integer
+        loseRewardType:
+          type: string
+        loseRewardAmount:
+          type: integer
+        dailyGainCap:
+          type: integer
+        enableGoldenHour:
+          type: boolean
+        goldenHourMultiplier:
+          type: number
+
+    AdminLotteryConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        maxDailyPlays:
+          type: integer
+        puzzlePieceProbability:
+          type: number
+        prizes:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLotteryPrizeDto"
+
+    AdminLotteryPrizeDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        weight:
+          type: number
+        stock:
+          type: integer
+        rewardType:
+          type: string
+        rewardAmount:
+          type: integer
+        isActive:
+          type: boolean
+        color:
+          type: string
+
+    AdminMissionDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+          enum: [DAILY, WEEKLY, NEW_USER, SPECIAL_EVENT]
+        title:
+          type: string
+        condition:
+          type: string
+        targetValue:
+          type: integer
+        logicKey:
+          type: string
+        rewardType:
+          type: string
+        rewardAmount:
+          type: integer
+        isActive:
+          type: boolean
+
+    AdminLevelDto:
+      type: object
+      properties:
+        level:
+          type: integer
+        requiredXp:
+          type: integer
+        rewardType:
+          type: string
+        rewardAmount:
+          type: integer
+
+    AdminLevelGlobalConfig:
+      type: object
+      properties:
+        maxLevel:
+          type: integer
+        maxXp:
+          type: integer
+
+    # ============================================================================
+    # Admin - Inventory/Ticket
+    # ============================================================================
+    TicketLogDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [GRANT, REVOKE, USE, EXPIRE]
+        itemType:
+          type: string
+        amount:
+          type: integer
+        balanceAfter:
+          type: integer
+        reason:
+          type: string
+        timestamp:
+          type: string
+        adminId:
+          type: string
+        nickname:
+          type: string
+
+    GrantItemRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+        itemType:
+          type: string
+        amount:
+          type: integer
+        reason:
+          type: string
+
+    TicketCreateRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        ticket_type:
+          type: string
+        amount:
+          type: integer
+        reason:
+          type: string
+
+    TicketUpdateRequest:
+      type: object
+      properties:
+        amount:
+          type: integer
+        reason:
+          type: string
+
+    InventoryItemCreateRequest:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        item_type:
+          type: string
+        item_name:
+          type: string
+        quantity:
+          type: integer
+        reason:
+          type: string
+        expires_at:
+          type: string
+          nullable: true
+
+    InventoryItemUpdateRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+        reason:
+          type: string
+        expires_at:
+          type: string
+          nullable: true
+
+    TicketStatDto:
+      type: object
+      properties:
+        ticketType:
+          type: string
+        totalIssued:
+          type: integer
+        totalUsed:
+          type: integer
+        currentBalance:
+          type: integer
+
+    UserTicketDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+        nickname:
+          type: string
+        telegramUsername:
+          type: string
+          nullable: true
+        ticketType:
+          type: string
+        currentBalance:
+          type: integer
+        totalUsed:
+          type: integer
+        lastUsedAt:
+          type: string
+          nullable: true
+        rewardItems:
+          type: array
+          items:
+            type: string
+
+    InventoryStatDto:
+      type: object
+      properties:
+        itemType:
+          type: string
+        totalIssued:
+          type: integer
+        totalUsed:
+          type: integer
+        currentBalance:
+          type: integer
+
+    UserInventoryDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+        nickname:
+          type: string
+        telegramUsername:
+          type: string
+          nullable: true
+        itemType:
+          type: string
+        itemName:
+          type: string
+        currentQuantity:
+          type: integer
+        totalUsed:
+          type: integer
+        lastUsedAt:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          nullable: true
+
+    # ============================================================================
+    # Admin - Segment
+    # ============================================================================
+    SegmentStatsResponse:
+      type: object
+      properties:
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserSegmentDto"
+        lastBatchTime:
+          type: string
+
+    UserSegmentDto:
+      type: object
+      properties:
+        name:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        color:
+          type: string
+        bg:
+          type: string
+        border:
+          type: string
+        desc:
+          type: string
+
+    SegmentRuleDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        rule:
+          type: string
+        targetSegment:
+          type: string
+        status:
+          type: string
+          enum: [Active, Inactive]
+        description:
+          type: string
+
+    CreateSegmentRuleRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        rule:
+          type: string
+        targetSegment:
+          type: string
+        description:
+          type: string
+
+    # ============================================================================
+    # Admin - Marketing
+    # ============================================================================
+    AdminMessageDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        targetSegment:
+          type: string
+        messageType:
+          type: string
+          enum: [PUSH, INBOX, BOTH]
+        sentCount:
+          type: integer
+        scheduledAt:
+          type: string
+        createdAt:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, SCHEDULED, SENT]
+
+    SendMessageRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        targetSegment:
+          type: string
+        scheduledAt:
+          type: string
+
+    CreateMessageRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        body:
+          type: string
+        targetSegment:
+          type: string
+
+    SurveyDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SurveyQuestion"
+        isActive:
+          type: boolean
+        responseCount:
+          type: integer
+        createdAt:
+          type: string
+
+    SurveyQuestion:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [SINGLE, MULTIPLE, TEXT]
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+
+    SurveyResultDto:
+      type: object
+      properties:
+        surveyId:
+          type: integer
+        questionId:
+          type: integer
+        question:
+          type: string
+        responses:
+          type: array
+          items:
+            type: object
+            properties:
+              option:
+                type: string
+              count:
+                type: integer
+              percentage:
+                type: number
+
+    # ============================================================================
+    # Legacy Admin Messages
+    # ============================================================================
+    AdminLegacyMessageRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        target_type:
+          type: string
+        target_value:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+
+    AdminLegacyMessageResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        sender_admin_id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        target_type:
+          type: string
+        target_value:
+          type: string
+          nullable: true
+        channels:
+          type: array
+          items:
+            type: string
+        recipient_count:
+          type: integer
+        read_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
