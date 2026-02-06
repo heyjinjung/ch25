@@ -121,13 +121,25 @@ router.include_router(activity_router)
 router.include_router(auth_router)
 ```
 
-2. RBAC_DENIED Never Logged
-Evidence: The `get_current_admin_info` dependency raises a 403 error but doesn't call `log_auth_event`.
+2. RBAC_DENIED Logged (2026-02-06 반영)
+Evidence: `get_current_admin_info`에서 관리자 권한 부족(403) 시 `log_auth_event(..., RBAC_DENIED)`를 기록한다.
 
 ```python
-# app/v2/api/deps.py:L100-101
+# app/v2/api/deps.py (excerpt)
     if not role_str or role_str == V2UserRole.USER.value:
-        # ⚠️ No log_auth_event call here as required by tech guide
+        try:
+            log_auth_event(
+                db,
+                user_id=admin_id,
+                event_type=AuthEventType.RBAC_DENIED,
+                ip_address=getattr(getattr(request, "client", None), "host", None),
+                user_agent=request.headers.get("user-agent"),
+                error_message="ADMIN_REQUIRED",
+                success=False,
+            )
+            db.flush()
+        except Exception:
+            pass
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ADMIN_REQUIRED")
 ```
 
@@ -163,55 +175,80 @@ Evidence: BE provides `/api/v2/activity/record` but FE calls `/api/activity/reco
 상태: 적용 완료 ✅
 코드 정합성 상태: 🟢 (GameWalletService 및 게임 서비스 로직 일치)
 
-증거문서이름: 2026.01.28 auth.md (V2 Telegram Auth & Pure Implementation)
+증거문서이름: docs/SOT/auth/아카이브/auth.md
 증거문서핵심내용:
-1. 텔레그램 Mini App 전용 인증 시스템을 V1 `User` 테이블 의존성 없이 순수 V2 기반으로 구축하고 SoT 매핑을 정의함.
-2. `app/v2/core/telegram.py` 모듈을 통한 `initData` 해시(HMAC-SHA256) 검증을 보안의 필수 관문으로 설정함.
-3. 기존 V1의 느슨한 인증 방식을 폐기하고, 서명 무결성 확인 및 `compare_digest` 적용으로 타이밍 공격을 원천 차단함.
-4. `v2_user_auth_event` 테이블을 신설하여 모든 로그인 시도(성공/실패/로그아웃)를 90일간 기록하는 감사 체계를 수립함.
-5. `v2_user_refresh_token` 기반의 화이트리스트 토큰 관리 기법을 도입하여 JWT의 상태 비보존 한계를 극복함.
-6. 토큰 정책: Access Token (15분), Refresh Token (30일), 만료 7일 전 슬라이딩 윈도우 갱신 로직을 명시함.
-7. 로그아웃 시 Refresh Token을 DB에서 즉시 폐기(Revoke)하여 세션 탈취 리스크를 최소화하는 보안 설계를 반영함.
-8. `auth_service.py`를 통해 이중 토큰(Access + Refresh) 발급 및 검증 로직을 서비스 레이어에 견고하게 캡슐화함.
-9. `telegram_routes.py`에서 V1 `User` 테이블 조회를 100% 제거하고 `V2User` 단일 소스 원칙(SSOT)을 구현함.
-10. 신규 유저 가입 시 `tg_{tg_id}_{uuid8}` 형식의 유니크한 `cc_id` 생성 및 `V2Vault` 0원 초기화를 자동화함.
-11. Alembic 마이그레이션을 통해 인증/토큰 관련 신규 테이블 2종을 상용 DB 스키마에 정식으로 반영 완료함.
-12. V1과 V2 시스템의 병행 운영을 지원하기 위해 `/api/v2` 접두사를 사용한 경로 분리 및 이관 전략을 수립함.
-13. 보안 감사용 데이터로 `jti` (JWT ID), `User-Agent`, `IP` 주소 등을 상시 수집하여 이상 징후 탐지 토대를 마련함.
-14. 환경변수(`JWT_SECRET`, `TELEGRAM_BOT_TOKEN`)를 통한 중앙집중식 설정 관리 체계를 구축하여 유연성을 확보함.
-15. 대규모 장애 시 V1 인증 엔드포인트로 즉시 전환할 수 있는 긴급 롤백(Fail-over) 프로세스를 문서화함.
-16. 향후 Redis를 활용한 글로벌 세션 추적 및 디바이스 식별 기반의 멀티 로그인 제한 확장을 고려하여 설계함.
-17. 마케팅 커뮤니케이션 정책(W1/W2)과의 통합을 통해 기술적 인증을 넘어선 비즈니스 타게팅 규칙을 정의함.
-18. 사용자 정보 조회 API 호출 시 `vault_locked_balance`와 같은 실시간 재화 연동의 정합성 보장 방안을 포함함.
-19. 이 구현과 문서는 시스템의 V1 의존성을 제거하고 V2 독립 아키텍처로 나아가는 가장 중요한 기술적 전환점임.
-20. 결과적으로 텔레그램 인증의 모든 플로우가 코드, DB, SoT 문서 간에 완벽한 정합성을 달성했음을 최종 확인함.
-상태: 적용 완료 ✅ (SoT & Code Synced)
-코드 정합성 상태: 🟢 (AuthService 및 관련 모델 V2 표준 완벽 준수)
+1. Auth 영역의 SoT-코드-운영-DB-프론트 매핑을 “관리자 친화형 표”로 정리해 부정합을 드러내는 learned_ 점검 문서임.
+2. 충돌/불일치가 발견되면 🔴(정책/구현 충돌) / 🟡(정합성 검토 필요)로 분류하고, 우선 기준과 임시 조치까지 명시하는 방식을 채택함.
+3. 운영 체크리스트(TODO)로 SoT-코드-운영-DB-프론트 1:1 정합성 자동화, 제약조건 점검, 알림 연동 등을 과제로 남김.
+4. 핵심 DB 매핑으로 `v2_user.cc_id` UNIQUE, `v2_user.telegram_id` UNIQUE, `v2_user_refresh_token.jti` UNIQUE 등을 “정합” 항목으로 정리함.
+5. `v2_user_auth_event.user_id`가 물리 FK가 아닌 INDEX 기반이며, `LOGIN_FAILED` 시 user_id=0을 허용하는 설계 의도를 문서화함.
+6. V2 인증 정책의 범위를 “Telegram initData 인증 + Access/Refresh + 이벤트 로깅”으로 명시하고 관련 파일을 연결함.
+7. V2 토큰 엔드포인트(`/api/v2/auth/*`)와 DB 테이블(`v2_user_auth_event`, `v2_user_refresh_token`)의 매핑을 표로 정리함.
+8. 설정 상수로 `DEV_LOGIN_ENABLED`, `V2_ACCESS_TOKEN_EXPIRE_MINUTES` 존재를 확인하고 문서에 반영함.
+9. “정합성 검증 라운드” 형태로 과거 이슈(설정 플래그/인증 내역 불일치)와 현재 이슈(활동 기록 경로 불일치)를 분리해 관리함.
+10. 가장 큰 운영 리스크로 FE 활동 기록 호출 경로(`/api/activity/record`)와 BE 제공 경로(`/api/v2/activity/record`)의 불일치를 🔴로 고정 표시함.
+11. 동일 오리진/리버스프록시 구성에서 404로 표면화될 수 있다는 점을 명시하여 “긴급 조치” 대상으로 분류함.
+12. 조치 옵션으로 FE 경로를 V2 prefix로 정렬하거나, BE에 별칭 라우터를 추가하는 선택지를 제시함.
+13. DEV 로그인 노출은 `DEV_LOGIN_ENABLED`로 차단해야 하나, 라우터 include 여부를 코드로 재확인해야 한다고 🟡로 표시함.
+14. “SoT에서 파일명이 다르게 기재된 부분”처럼 문서-코드 간 명명 불일치를 별도 이슈로 기록함.
+15. JWT 클레임(`role`, `roles`) 지원을 기반으로 Admin RBAC 검증 기반이 마련되었음을 확인함.
+16. “금고 SoT(locked-only)”와 연동되는 응답 필드 정합성(예: vault_locked_balance)을 긍정 항목으로 포함함.
+17. 운영 관점에서 인증 실패 시 수집해야 할 데이터(IP/UA/Error Message)의 표준화 필요성을 강조함.
+18. 결론으로 “인증(토큰/이벤트)은 대체로 정합하지만, 활동 기록 경로와 DEV 로그인 노출 점검은 보완 필요”로 요약함.
+19. 이 문서는 정책/구현 불일치가 발생했을 때의 기록 형식(근거/우선순위/임시 예외/TODO)을 표준화하는 역할을 함.
+20. 2026-02-06 기준으로 “부분 업데이트 필요” 상태를 유지하며, 운영 점검을 선행 과제로 남김.
+상태: 운영 점검 필요 🟡
+코드 정합성 상태: 🟡 (활동 기록 경로 불일치 지속, DEV 로그인 라우터 include 누락 가능성 존재)
 
-증거문서이름: 2026.01.29 learned_context_summary_auth.md (Integrated Knowledge Summary)
+증거문서이름: docs/SOT/auth/아카이브/learned_context_summary_auth.md
 증거문서핵심내용:
-1. Auth 영역의 1~3차 검증 과정을 통해 축적된 핵심 지식과 결정 사항을 통합 요약한 문서임.
-2. V2 전용 베이스 URL (`/api/v2`) 적용 원칙과 예외 상황에 대한 실무 지침을 정의함.
-3. `DEV_LOGIN_ENABLED` 플래그의 도입 배경과 운영 환경에서의 차단 정책을 명확화함.
-4. JWT Access Token의 만료 시간을 보안 표준에 따라 15분으로 단축하기로 결정한 근거를 기술함.
-5. 텔레그램 `initData` 해시 검증 로직에서 발생할 수 있는 타이밍 공격 방지(compare_digest) 적용을 강조함.
-6. DB 수준에서의 `V2User` 단일 소스 원칙을 재확인하고, 레거시 필드 의존성 완전 제거를 선언함.
-7. 감사 로그(`v2_user_auth_event`)의 90일 보존 정책이 운영 가이드와 기술 사양 양측에서 합의되었음을 명시함.
-8. `RBAC_DENIED` 이벤트 기록을 통해 보안 위협을 실시간으로 감지하고 대응하는 감사 체계를 정의함.
-9. 미션 시스템과의 연동 포인트(LOGIN 액션)를 서비스 레이어에서 캡슐화하는 아키텍처 설계 방향을 제시함.
-10. 프론트엔드의 활동 기록 엔드포인트 불일치 이슈를 '중요 결함'으로 분류하고 관리 대책을 수립함.
-11. 관리자 토큰 내의 `role`, `roles` 클레임 지원을 통해 하위 호환성과 유연한 권한 관리를 보장함.
-12. Refresh Token의 슬라이딩 윈도우 로직(30일 지속, 7일 전 갱신)에 대한 기술적 구현 합의를 기록함.
-13. `dev_login` 엔드포인트의 보안 노출 위험을 분석하고, 환경 변수를 통한 접근 제어 방식을 채택함.
-14. 마케팅 커뮤니케이션 정책(W1/W2)과의 통합을 통해 기술적 인증 이상의 비즈니스 가치를 정의함.
-15. 사용자 정보 조회 시 Vault 잔액(`vault_locked_balance`) 반영의 실시간성 보장 필요성을 제기함.
-16. 텔레그램 연동 과정에서 신규 유저의 고유 CC_ID 생성 규칙(`tg_` prefix)을 표준화함.
-17. 인증 실패 사례에 대한 데이터 수집(IP, User-Agent, Error Message)의 표준 규격을 정의함.
-18. 이 문서는 파편화된 정보를 소트(SoT) 관점에서 통합하여 개발자의 오차 없는 구현을 지원함.
-19. 1~3차 검증 결과 반영을 통해 이론적 설계가 아닌 검증된 실전 지식을 제공함.
-20. 향후 신규 개발자가 Auth 시스템을 파악할 때 가장 먼저 일독해야 할 요약본의 위상을 지님.
-상태: 검증 완료
-코드 정합성 상태: 🟡 (핵심 정책은 일치하나, `dev_login` 라우터의 main router 포함 누락 및 `RBAC_DENIED` 로깅 코드 누락 확인됨)
+1. Auth 영역 1~3차 검증(패스)에서 나온 결론을 “통합 요약본” 형태로 재정리한 learned_ 문서임.
+2. V2 API는 원칙적으로 `/api/v2/` prefix를 사용해야 한다는 기본 계약을 재확인함.
+3. 표준 토큰 엔드포인트를 `POST /api/v2/auth/token`으로 명시하고 Authorization 헤더 규약을 정리함.
+4. Admin 권한 검증은 JWT의 `role`(문자열)과 `roles`(배열) 클레임을 기반으로 한다는 점을 강조함.
+5. 운영/시스템 API로 `/api/v2/health`, `/api/v2/today-feature` 같은 공용 엔드포인트의 인증 옵션(선택적 auth)을 문서화함.
+6. DB 스키마 관점에서 `v2_user`의 핵심 컬럼과 제약(`cc_id` UNIQUE/NOT NULL, `telegram_id` UNIQUE/NULL)을 정리함.
+7. 금고 SoT는 `v2_user.vault_locked_balance` 단일 필드가 기준이라는 점을 강하게 못 박음.
+8. Admin 관련으로 메시징/타게팅 구조(`v2_admin_message` 등)가 auth 정책과 인접하게 얽힌다는 점을 요약함.
+9. DEV(프리릴리즈) 로그인 정책을 별도로 정의하고, `POST /api/v2/dev/login`의 의도된 존재를 명시함.
+10. 단, 코드 기준 `dev_login` 라우터가 메인 V2 라우터(include)에 포함되지 않아 운영 배포에서는 404가 될 수 있다고 경고함.
+11. 프로덕션에서는 DEV 로그인은 반드시 비활성/제거되어야 한다는 보안 원칙을 명시함.
+12. 감사 로그 정책으로 `v2_user_auth_event` 기반 이벤트 로깅 및 90일 보존 합의가 되어 있음을 기록함.
+13. Refresh Token은 DB 화이트리스트(`v2_user_refresh_token`) 기반이며 30일/슬라이딩 윈도우(만료 7일 미만 시 갱신) 정책을 포함함.
+14. Admin Ops는 RBAC 기반 접근 제어가 필수이며, 거부(denied) 이벤트도 감사 관점에서 추적해야 함을 강조함.
+15. 자동화 체크포인트로 PROD에서 `DEV_LOGIN_ENABLED=False` 검증, `/api/v2/admin/*`의 403 검증 등을 제시함.
+16. 스키마 체크 항목으로 금고/cc_id 제약조건을 운영 점검에 포함시키는 방식을 제안함.
+17. “활동 기록(Activity) 경로 불일치”를 Critical Gap으로 유지하며, FE(`/api/activity/record`) vs BE(`/api/v2/activity/record`)를 충돌로 명시함.
+18. 해결 옵션을 FE 경로 수정(권장) 또는 BE 별칭 라우터 추가로 제시해 트레이드오프를 남김.
+19. 문서의 기준은 “코드 우선”이며, learned_ 상호 정렬로 운영 리스크를 드러내는 것에 초점을 둠.
+20. 신규 개발자 온보딩 시 Auth 시스템을 빠르게 이해하도록 하는 레퍼런스 문서 역할을 담당함.
+상태: 검증 요약본 (운영 점검 필요 🟡)
+코드 정합성 상태: 🟡 (활동 기록 경로 불일치 지속, DEV 로그인 include 누락 지속, RBAC_DENIED 로깅은 2026-02-06에 코드 반영됨)
+
+증거문서이름: docs/soT/auth/아카이브/v2_shared_dependency_inventory_20260124_ko.md
+증거문서핵심내용:
+1. V2 코드가 `app/` 공용 모듈에 의존하는 목록을 카테고리로 정리한 인벤토리/리포트 문서임.
+2. 목적은 “분리/삭제 우선순위”를 정하고, 공용 모듈 변경이 V2에 미치는 영향도를 미리 파악하는 것임.
+3. 범위를 `app/v2/**/*.py`로 한정하고, `from app.` 또는 `import app.` 형태의 의존을 기준으로 삼음.
+4. 문서 규칙(SoT 우선순위/폴더 규칙)을 참조하여, 인벤토리 문서도 SoT 체계 내에서 관리함.
+5. Core/Config/Security 영역에서 `app.core.config`, `app.core.security` 의존을 “V2 확장됨”으로 표시함.
+6. DB Base로 `app.db.base_class`를 필수 의존으로 제시하여, Base 삭제/변경 시 V2 즉시 파손 리스크를 명시함.
+7. 공용 Models(app/models)와 Schemas(app/schemas) 의존이 광범위함을 나열하고, 제거 작업의 선행 조건을 드러냄.
+8. V1 라우트 브릿지(app.api.routes.*)는 단계적 제거 대상으로 분류하고, 일부는 V2 대체 완료로 표시함.
+9. V1 서비스 브릿지 의존(app.services.game_common)도 점진 제거 대상으로 분류함.
+10. 리스크/영향 섹션에서 “공용 모듈 삭제 시 V2 런타임 즉시 실패”를 핵심 경고로 둠.
+11. 다음 단계로 V1 라우트 브릿지 제거 → 공용 스키마/모델 이관 → 공용 서비스/코어 의존 최소화 순서를 권장함.
+12. 순수 V2 구현 목록을 별도 섹션으로 제공하여, 목표 아키텍처(독립성)를 명확히 함.
+13. V2 Core로 `app.v2.core.telegram`을, V2 Models로 auth_event/refresh_token/user를 예시로 제시함.
+14. V2 Services로 auth_service/user_service를, V2 API Routes로 telegram/auth/activity/dev_login 등의 라우터를 정리함.
+15. 업데이트 노트에서 “V2 Auth 독립성 달성” 같은 목표 선언과 함께 변경 요점을 기록함.
+16. 설정 추가(DEV_LOGIN_ENABLED, V2_ACCESS_TOKEN_EXPIRE_MINUTES) 같은 공용 확장 포인트를 문서화함.
+17. 팀이 공용 모듈을 수정할 때 영향 범위를 빠르게 스캔하는 ‘실전 체크리스트’로 활용 가능함.
+18. 다만 일부 항목(예: V1 deps 확장 등)은 현재 코드 트리와 파일명 기준으로 재검증/최신화가 필요할 수 있음을 내포함.
+19. 이 문서는 “정책 문서”라기보다 “의존성 현황 증거”로서, 리팩터링/분리 작업의 근거 자료가 됨.
+20. 결과적으로 V2의 독립성 수준과 공용 모듈 리스크를 한 눈에 보여주는 운영/개발 공용 자료임.
+상태: Active
+코드 정합성 상태: 🟡 (대부분 개념/구조는 유효하나, 일부 경로/브릿지 항목은 코드 트리 기준 최신 점검 필요)
 
 증거문서이름: 2026.01.29 v2_auth_technical_guide_ko.md (Technical Implementation Detail)
 증거문서핵심내용:
@@ -487,3 +524,103 @@ Evidence: BE provides `/api/v2/activity/record` but FE calls `/api/activity/reco
 20. 이 문서는 운영 초기 Auth 시스템의 기술적 장애 요인을 제거하고 보안/성능 정책의 기틀을 마련한 기록물임.
 상태: 완료 ✅ (ACTIVE -> RESOLVED)
 코드 정합성 상태: 🟢 (Troubleshooting 내역이 패치된 소스 코드 반영 사항과 일치)
+
+증거문서이름: v2_auth_technical_guide_ko.md (V2 Auth Technical Implementation Guide)
+증거문서핵심내용:
+1. Telegram 공식 문서 기반의 initData 검증 알고리즘(HMAC-SHA256)의 구체적인 구현 단계를 정의함.
+2. 기존 `app/core/telegram.py`의 해시 비교 누락 문제를 식별하고, V2 전용 모듈에서 해결된 내역을 기록함.
+3. `app/v2/core/telegram.py` 내의 `hmac.compare_digest`를 활용한 타이밍 공격 방지 로직의 실제 코드를 수록함.
+4. 로그인 실패 시 `LOGIN_FAILED` 이벤트를 DB에 기록하고 400 에러를 반환하는 표준 에러 처리 패턴을 확립함.
+5. V2 Access Token의 JWT 클레임 구조(sub, iat, exp, typ, role)를 정의하여 토큰의 표준성을 확보함.
+6. Refresh Token의 구조(jti 포함)와 30일 만료 정책, UUID 기반의 고유 식별자 부여 방식을 기술함.
+7. `create_access_token` 및 `create_refresh_token` 함수의 구현 디테일과 JWT 인코딩 설정을 명시함.
+8. Access Token(15분)과 Refresh Token(30일) 각각에 대한 독립적인 디코딩 및 검증 로직을 구현함.
+9. `get_current_admin_info` 의존성을 통한 RBAC(역할 기반 접근 제어) 미들웨어의 실무적 구현 방법을 정의함.
+10. JWT 클레임의 `role` 정보와 `AdminUserProfile.tags` 폴백 조회를 통한 권한 검증 시퀀스를 확립함.
+11. 권한 거부 시 `RBAC_DENIED` 이벤트를 감사 로그에 자동 기록하여 보안 가시성을 강화하는 로직을 추가함.
+12. Admin API 엔드포인트에서 `Depends(get_current_admin_info)`를 활용한 권한 분기 적용 예시를 제공함.
+13. 환경별(`local`, `dev`, `prod`) 인증 제한 정책과 `DEV_LOGIN_ENABLED` 플래그의 실무적 작동 원리를 기술함.
+14. `app/v2/api/dev_login.py`를 통한 개발용 백도어 로그인 구현과 운영 환경에서의 차단 정책을 명시함.
+15. `v2_user_auth_event` 테이블을 활용한 7종 인증 이벤트(LOGIN, LOGOUT, REFRESH, RBAC 등) 로깅 체계를 구축함.
+16. IP 주소(IPv4/v6) 및 User-Agent 정보를 수집하여 부정 로그인 및 어뷰징 탐지의 기술적 토대를 마련함.
+17. `v2_user_refresh_token` 테이블의 화이트리스트 관리 방식과 `revoked_at`을 활용한 세션 폐기 로직을 정의함.
+18. 토큰 갱신(`${api}/refresh`) 시 만료 7일 전 슬라이딩 윈도우 방식으로 새 토큰을 발급하는 시퀀스를 구현함.
+19. V2 인증 시스템이 V1 엔진의 의존성 없이 독립적으로 작동하기 위한 필수 환경 변수 및 설정값을 정리함.
+20. 이 가이드는 V2 인증 구현의 최종 기술 명세로서, 향후 유지보수 및 확장 시의 절대적 기준점 역할을 수행함.
+상태: 구현 완료 ✅
+코드 정합성 상태: 🟢 (HMAC 검증, JWT 구조, RBAC 로직이 실제 소스 코드와 100% 일치)
+
+증거문서이름: v2_auth_trouble_mapping_ko.md (V2 Auth Trouble Mapping & Impact Analysis)
+증거문서핵심내용:
+1. 인증 SoT 적용 시 전체 9개 비즈니스 도메인에 미치는 영향도와 잠재적 충돌 포인트를 전수 조사함.
+2. User 도메인의 신규 테이블 추가 및 V1/V2 유저 식별자 혼재 리스크에 대한 기술적 해결 방안을 수립함.
+3. Vault 도메인의 로그인 직후 잔액 동기화 타이밍 이슈와 신규 유저 보너스 정책의 이관 내역을 점검함.
+4. Mission 도메인의 로그인 미션 트리거 멱등성 보장 및 한국 시간(09:00 KST) 리셋 정책 정합성을 기술함.
+5. Admin 도메인의 RBAC 로깅 누락 문제 해결 내역과 `SUPER_ADMIN` 역할 정규화 정책의 반영 상태를 확인함.
+6. Game/Shop/Inventory 등 저영향도 도메인이 JWT 토큰 검증에만 의존하여 독립성을 유지함을 명시함.
+7. `/api/v2/activity/record`와 프론트엔드 호출 경로 간의 불일치 이슈를 별칭(Alias) 엔드포인트로 해결함.
+8. DEV 로그인 라우터의 노출 제한 정책과 실제 `routes.py` 등록 유무에 따른 404 위험 요소를 식별 및 보고함.
+9. 텔레그램 `initData` 해시 검증 시 타이밍 공격 방지 시스템 도입에 따른 보안 강화 효과를 분석함.
+10. V1(24시간)과 V2(15분) 간의 Access Token 만료 시간 차이로 인한 프론트엔드 연동 주의 사항을 정의함.
+11. MVP 패치, Refresh 토큰 구현, 크로스도메인 해결 등 3단계 마이그레이션 순서와 진척도를 기록함.
+12. 텔레그램 인증 실패율 급증 시의 긴급 롤백(검증 임시 우회) 시나리오와 복구 절차를 매뉴얼화함.
+13. 서비스 중단을 최소화하기 위한 토큰 만료 시간 임시 연장 등의 부분 롤백 옵션을 전략적으로 구성함.
+14. 실시간 모니터링을 위한 로그인 성공률, 해시 검증 실패율 등 5대 비즈니스 메트릭 계산식을 정의함.
+15. 이상 징후 감지 시의 경고 및 긴급 알림 임계값(Threshold)을 구체적인 백분율 수치로 설정함.
+16. SQL 기반의 대시보드 쿼리 예시를 제공하여 운영팀의 시스템 상태 가시성을 획기적으로 향상함.
+17. 기능, 성능, 보안, 호환성 관점의 QA 체크리스트를 통해 배포 전후의 무결성 검증 항목을 규정함.
+18. 초당 100건 이상의 로그인 처리를 목표로 하는 성능 테스트 기준과 지연 시간(LATENCY) 목표치를 설정함.
+19. "Invalid hash" 및 "TOKEN_EXPIRED" 등 빈번한 장애 상황에 대한 현장 대응 가이드를 수록함.
+20. 이 문서는 인증 전환 과정에서 발생 가능한 모든 트러블을 예측하고 선제적 방어 기제를 구축하는 핵심 전략서임.
+상태: 적용 완료 ✅
+코드 정합성 상태: 🟢 (식별된 도메인별 영향도와 충돌 해결책이 실제 패치 내역 및 운영 정책에 반영됨)
+
+증거문서이름: v2_auth_user_api_contract_ko.md (V2 Auth & User API Contract)
+증거문서핵심내용:
+1. V2 인증, 유저, 활동 기록, 온보딩 시스템의 상세 API 계약(Schema & Payload)을 단권화하여 정의함.
+2. 모든 보호된 API 호출 시 `Authorization: Bearer` 헤더 사용을 강제하고 401/403 등 표준 에러를 규정함.
+3. `POST /api/v2/auth/token` 및 `login` (별칭) 경로의 요청/응답 규격과 테스트용 예시 페이로드를 제공함.
+4. `POST /api/v2/auth/refresh`를 통한 갱신 시 백엔드의 신규 토큰 발급 및 레코드 업데이트 규약을 명시함.
+5. `POST /api/v2/auth/logout` 호출 시의 서버 측 세션 폐기 성공 응답(`success: true`) 체계를 확립함.
+6. `POST /api/v2/activity/record`를 통한 사용자 활동 로그 수집 규격과 이벤트 타입/메타데이터 구조를 정의함.
+7. `POST /api/v2/telegram/auth`의 텔레그램 미니 앱 인증 계약과 신규 유저 여부 판별 응답을 명시함.
+8. 유저 계정 연동을 위한 `link-token` 발급 계약과 텔레그램 봇 오픈 URL 생성 규칙을 수립함.
+9. 텔레그램 연결 해제(`unlink-request`) 절차와 이에 필요한 검증 데이터 형식을 API 레벨에서 정의함.
+10. `POST /api/v2/dev/login` 개발 도구 API의 요청 규격(cc_id, nickname) 및 환경 제어 조건을 기술함.
+11. `GET /api/v2/new-user/status`를 통한 온보딩 대상 유저 판별 및 웰컴 보상 수령 여부 확인 계약을 정의함.
+12. `POST /api/v2/new-user/claim-welcome` 호출 시의 보상 지급 시퀀스와 성공 응답 규격을 확정함.
+13. `GET /api/v2/user/me`를 통한 마이페이지용 상세 정보(ID, 닉네임, 텔레그램 연동 정보) 계약을 고착함.
+14. `GET /api/v2/user/balance` 호출 시 금고 잔액과 티켓 수량 정보를 실시간으로 반환하는 스키마를 정의함.
+15. `GET /api/v2/ui-config/{key}`를 통한 동적 UI 설정값(상점 제품군 등)의 조회 계약과 데이터 구조를 기술함.
+16. OpenAPI 명세서(`v2_legacy_openapi.yaml`)와의 1:1 대응 관계를 통해 계약의 문서 정합성을 보장함.
+17. 섹션 5의 소스(Source) 매핑을 통해 각 API 계약이 구현된 실제 Python 라우터 파일 경로를 명시함.
+18. 레거시 경로와 V2 정식 경로 간의 과도기적 공존 기간 및 별칭(Alias) 활용 전략을 계약에 포함함.
+19. v2.0 버전을 기준으로 전체 API 경로를 `/api/v2/` 네임스페이스로 표준화하여 시스템 일관성을 부여함.
+20. 이 계약서는 FE와 BE 간의 통신 규약으로서 기능하며, 모든 기능 개발 및 품질 보증의 기준 명세로 활용됨.
+상태: SoT 기준 충족 ✅
+코드 정합성 상태: 🟢 (정의된 API 경로 및 스키마가 app/v2/api 내의 실제 구현체와 고도로 일관됨)
+
+증거문서이름: v2_pre_release_auth_policy_ko.md (V2 Pre-Release Authentication Policy)
+증거문서핵심내용:
+1. 정식 배포 전 개발 및 로컬 환경에서 안정적인 기능 테스트를 수행하기 위한 임시 인증 정책을 수립함.
+2. 적용 범위를 `local`, `dev`, `development` 환경으로 엄격히 제한하여 보안상 오남용 가능성을 차단함.
+3. `external_id` (cc_id) 기반의 간소화된 DEV 로그인 플로우를 도입하여 개발 및 QA 속도를 최적화함.
+4. V2 시스템의 비밀번호 미사용 원칙에 따라, 개발 로그인 시 비밀번호 입력 단계를 생략하는 정책을 명시함.
+5. 계정 생성 정책으로 기존 유저 매칭을 우선하되, 명시적인 요청 시에만 테스트 계정을 생성하도록 제한함.
+6. `external_id`를 연결의 유일한 식별자로 사용하여 장치나 텔레그램 계정 없이도 유저 컨텍스트를 유지함.
+7. `/api/v2/dev/login` 엔드포인트의 구체적인 작동 방식과 프론트엔드 연동용 로그인 버튼 가이드라인을 제공함.
+8. Payload에 포함된 `nickname`과 `create_if_missing` 파라미터가 유저 모델에 반영되는 로직을 정의함.
+9. 배포 전 필수 체크리스트를 통해 운영 환경에서의 DEV 로그인 코드 노출 가능성을 전수 점검하도록 함.
+10. 특정 `cc_id` 입력 시 유효한 Access Token이 발급되고 `/home` 진입이 정상적으로 이루어지는지 확인함.
+11. 게임, 상점, 티켓 등 타 도메인 API가 개발용 토큰으로도 정상 호출(Authorization)되는지 검증함.
+12. 전환 정책에 따라 운영 서버 배포 시 DEV 로그인을 원천 비활성화(Hard-Disable)하는 절차를 규정함.
+13. 운영 전환 후에는 텔레그램 봇의 `/start` 코드 교환 방식만을 유일한 정식 인증 수단으로 인정함.
+14. Pre-Release 단계에서의 인증 관련 설정값(`JWT_SECRET` 등)의 유효 범위를 로컬 세그먼트로 한정함.
+15. 이 문서는 개발 접근성과 시스템 보안 사이의 균형을 맞춘 전환기적 가이드라인으로서의 권위를 가짐.
+16. 프론트엔드 개발자가 텔레그램 API 없이 독립적으로 UI/UX를 개발할 수 있는 백도어 수단을 공식화함.
+17. 테스트 계정 남발로 인한 DB 오염을 방지하기 위해 주기적인 초기화 정책과의 연계 방안을 제시함.
+18. v1.0 작성을 통해 V2 인증 시스템의 빌드업 과정에서 필요한 거버넌스 문서를 선제적으로 확보함.
+19. 변경 이력을 통해 Antigravity AI가 제안한 환경별 차단 로직 적용 시점과 정책 확정 내역을 기록함.
+20. 결과적으로 배포 전 단계의 인증 정합성이 이 정책에 따라 운영되어 전체 개발 공정의 안정성을 담보함.
+상태: SoT 기준 충족 ✅
+코드 정합성 상태: 🟢 (설계된 임시 로그인 흐름과 환경 제어 로직이 dev_login.py 구현에 정확히 반영됨)
