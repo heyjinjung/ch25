@@ -5,19 +5,16 @@
 ### 1. Reset-time Unification (09:00 KST 통일) ✅
 - **문제**: `AdminDashboardService`가 00:00 KST 기준 사용 vs V2 서비스들(mission, vault)이 09:00 KST 사용
 - **해결**:
-  - `app/utils/timezone.py` 신규 생성 - `business_day_start()`, `yesterday_business_day_range()` 헬퍼
-  - `app/services/admin_dashboard_service.py` 수정 - 00:00→09:00 KST 통일
+  - `app/v2/utils/timezone.py` 기준으로 `business_day_start()`, `yesterday_business_day_range()` 헬퍼 제공
+  - admin/ops 집계 로직은 위 헬퍼 기반으로 운영일 경계를 통일
 - **검증**: 모든 일간 집계가 09:00 KST ~ 익일 08:59:59 KST 기준으로 동작
 
 ### 2. Global Circuit Breaker (Payout Safety) ✅
 - **문제**: SoT 문서에만 존재하던 서킷 브레이커 코드 미구현
 - **해결**:
-  - `app/services/circuit_breaker.py` 신규 생성
-    - Redis 기반 일일 지급 추적
-    - CLOSED/OPEN/HALF_OPEN 상태 관리
-    - 50M 기본 한도, 80% 경고 임계값
-    - DB fallback 지원
-  - `app/v2/services/vault2_service.py` 수정 - `record_unlock_event()`에 서킷 브레이커 훅 추가
+  - `app/v2/services/circuit_breaker_service.py` 기반으로 지급 한도/상태 관리
+  - `app/v2/services/vault2_service.py`에서 unlock/payout 경로에 서킷 브레이커 체크 훅 적용
+  - 어드민 제어 API: `/api/v2/admin/economy/circuit-breaker/*` (status/reset/limits)
 - **검증**: `skip_circuit_breaker=True` 옵션으로 관리자 강제 지급 가능
 
 ### 3. V2 Team-Battle Admin ✅
@@ -71,8 +68,8 @@
 
 | 파일 | 용도 |
 |------|------|
-| `app/utils/timezone.py` | 비즈니스 일자 헬퍼 (09:00 KST 기준) |
-| `app/services/circuit_breaker.py` | 글로벌 지급 서킷 브레이커 |
+| `app/v2/utils/timezone.py` | 비즈니스 일자 헬퍼 (09:00 KST 기준) |
+| `app/v2/services/circuit_breaker_service.py` | 글로벌 지급 서킷 브레이커(서비스/설정 기반) |
 | `app/v2/services/team_battle_admin_service.py` | 팀배틀 어드민 서비스 |
 | `app/v2/api/admin/team_battle_routes.py` | 팀배틀 어드민 API 라우트 |
 | `app/v2/middleware/admin_audit.py` | 감사 로그 데코레이터/헬퍼 |
@@ -83,11 +80,21 @@
 
 | 파일 | 변경 내용 |
 |------|----------|
-| `app/services/admin_dashboard_service.py` | 00:00→09:00 KST 통일 |
+| `app/v2/api/admin/ops_routes.py` | 집계/통계 운영일 경계 09:00 KST 통일 |
 | `app/v2/services/vault2_service.py` | 서킷 브레이커 훅 추가 |
 | `app/v2/api/admin/__init__.py` | team_battle_routes 라우터 등록 |
 | `app/v2/api/admin/segment_routes.py` | 감사 로그 추가 |
 | `app/v2/api/admin/marketing_routes.py` | 감사 로그 추가 |
+
+---
+
+## [2026-01-29 추가 학습: V2 Admin 기능 확장 요약] ✅
+
+- **미션/스트릭/마일스톤 관리**: 유저 미션 조회/리셋, 스트릭 리셋/카운트 설정, 마일스톤 진행 조회/강제 지급/일괄 배포 등 어드민 API 및 테스트가 추가됨.
+- **금고/경제 모니터링**: 금고 집계/지출 한도 추적 및 요약, 출금/입금 관리 기능이 강화됨.
+- **상점/인벤토리 관리**: 재고 조정, 기프티콘 배송 추적, 재고 부족 알림 등 운영 기능 추가.
+- **Analytics (Retention/Revenue/Marketing)**: `/api/v2/admin/analytics/*` 하위로 보유율/수익/마케팅 효율 분석 API 제공.
+- **검증**: 관련 테스트 파일에서 정상/예외 흐름 케이스 통과로 정합 확인.
 
 ---
 (본 요약은 v2_db_admin_message_inbox_ko.md, v2_db_admin_message_ko.md, v2_admin_message_policy_sot_ko.md, v2_ops_action_glossary_sot_ko.md 등에서 Admin 관련 내용만 추출/정리한 1~3차 학습 결과입니다.)

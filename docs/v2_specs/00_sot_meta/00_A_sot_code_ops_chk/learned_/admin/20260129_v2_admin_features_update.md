@@ -51,133 +51,60 @@ V2 관리자 페이지의 완성도를 높이기 위해 미구현 상태였던 �
 ---
 > **Note**: 본 문서는 2026-01-29 V2 Admin 기능 최적화 작업의 최종 결과 보고서(SOT)로 활용됨.
 
+## 추가 구현 완료 요약 (운영/모니터링/애널리틱스/프론트) ✅
 
-구현 완료 요약
-8.4 Vault & Economy Monitoring (금고/경제 모니터링) ✅
-기능	엔드포인트	파일
-전체 금고 잔액 집계	GET /api/v2/admin/vault/aggregate	vault_routes.py:114
-지출 한도 추적	GET /api/v2/admin/vault/spend-limits	vault_routes.py:153
-지출 한도 요약	GET /api/v2/admin/vault/spend-limits/summary	vault_routes.py:193
-8.5 Shop & Inventory Administration (상점/인벤토리 관리) ✅
-기능	엔드포인트	파일
-재고 수량 조정	POST /api/v2/admin/inventory/adjust-stock	inventory_routes.py:756
-Gifticon 배송 추적	GET /api/v2/admin/inventory/gifticon/deliveries	inventory_routes.py:820
-재고 부족 알림	GET /api/v2/admin/inventory/stock-alerts	inventory_routes.py:890
-8.6 Mission & Streak Administration (미션/스트릭 관리) ✅
-기능	엔드포인트	파일
-로그인 미션 검증	GET /api/v2/admin/game/missions/login-verify	mission_routes.py:241
-미션 통계	GET /api/v2/admin/game/missions/stats	mission_routes.py:308
-새로 생성된 파일
-tests/v2/test_admin_monitoring.py - 28개 테스트 케이스
-수정된 파일
-파일	변경 내용
-vault_routes.py	+3 엔드포인트 (aggregate, spend-limits, summary)
-inventory_routes.py	+3 엔드포인트 (adjust-stock, gifticon/deliveries, stock-alerts)
-mission_routes.py	+2 엔드포인트 (login-verify, stats)
+> 정정: 본 문서에 표기된 모든 어드민 엔드포인트는 `app/v2/api/admin/__init__.py`에 의해 `/api/v2/admin/*` 하위로 노출된다.
 
-V2 Golden Admin 미구현 기능 구현이 완료되었습니다. 구현된 내용을 정리합니다:
+### A) Vault & Economy Monitoring ✅
+| 기능 | 엔드포인트 | 비고 |
+|---|---|---|
+| 전체 금고 잔액 집계 | `GET /api/v2/admin/vault/aggregate` | vault_routes.py |
+| 지출 한도 추적 | `GET /api/v2/admin/vault/spend-limits` | vault_routes.py |
+| 지출 한도 요약 | `GET /api/v2/admin/vault/spend-limits/summary` | vault_routes.py |
 
-구현 완료 요약
-1. 보유율(Retention) 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/retention	D1, D7, D30 보유율 분석 (코호트별)
-GET /admin/analytics/retention/trend	보유율 추이 그래프 데이터
-2. 수익/지출 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/revenue/breakdown	일일/주간/월간 매출/지출 추이
-GET /admin/analytics/revenue/summary	수익 요약 (대시보드용)
-3. 마케팅 효율성 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/marketing/channel-performance	채널별 ROI, 전환율, CAC
-구현된 스키마
-Retention: RetentionRateDto, RetentionSummaryDto, RetentionAnalysisResponse, RetentionTrendDto
-Revenue: DailyRevenueDto, RevenueBreakdownDto, RevenueSummaryDto
-Marketing: ChannelPerformanceDto, MarketingEfficiencyResponse
+### B) Shop & Inventory Administration ✅
+| 기능 | 엔드포인트 | 비고 |
+|---|---|---|
+| 재고 수량 조정 | `POST /api/v2/admin/inventory/adjust-stock` | inventory_routes.py |
+| Gifticon 배송 추적 | `GET /api/v2/admin/inventory/gifticon/deliveries` | inventory_routes.py |
+| 재고 부족 알림 | `GET /api/v2/admin/inventory/stock-alerts` | inventory_routes.py |
 
-구현 완료 요약
-1. 보유율(Retention) 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/retention	D1, D7, D30 보유율 분석 (코호트별)
-GET /admin/analytics/retention/trend	보유율 추이 그래프 데이터
-2. 수익/지출 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/revenue/breakdown	일일/주간/월간 매출/지출 추이
-GET /admin/analytics/revenue/summary	수익 요약 (대시보드용)
-3. 마케팅 효율성 분석 - analytics_routes.py
-엔드포인트	기능
-GET /admin/analytics/marketing/channel-performance	채널별 ROI, 전환율, CAC
-구현된 스키마
-Retention: RetentionRateDto, RetentionSummaryDto, RetentionAnalysisResponse, RetentionTrendDto
-Revenue: DailyRevenueDto, RevenueBreakdownDto, RevenueSummaryDto
-Marketing: ChannelPerformanceDto, MarketingEfficiencyResponse
-테스트
-test_admin_analytics.py - 37개 테스트 모두 통과
-API 등록
-init.py에 analytics_router 등록 완료
+### C) Mission & Streak Monitoring ✅
+| 기능 | 엔드포인트 | 비고 |
+|---|---|---|
+| 로그인 미션 검증 | `GET /api/v2/admin/game/missions/login-verify` | mission_routes.py |
+| 미션 통계 | `GET /api/v2/admin/game/missions/stats` | mission_routes.py |
 
-새로 추가된 어드민 기능
-1. 활성 유저 통계 - ops_routes.py
-엔드포인트	기능
-GET /admin/ops/active-users	DAU, WAU, MAU 통계 + 일별 추이
-2. 일간 수익/지출 계산 - ops_routes.py
-엔드포인트	기능
-GET /admin/ops/daily-revenue	일간 CC입금액 (총액, 건수, 유저수)
-GET /admin/ops/daily-spending	일간 지출 (승인된 출금, 대기 출금)
-GET /admin/ops/daily-finance	수익+지출 종합 (순수익 포함)
-3. 전체 금고 잔액 집계 - vault_routes.py (기존)
-엔드포인트	기능
-GET /admin/vault/aggregate	전체 유저 잔액 합계, 평균, 중간값, 최대값
-4. 지출 한도 추적 - vault_routes.py (기존)
-엔드포인트	기능
-GET /admin/vault/spend-limits	유저별 지출 현황
-GET /admin/vault/spend-limits/summary	한도 도달율 요약
-5. 미션 강제 리셋 - mission_routes.py
-엔드포인트	기능
-POST /admin/game/missions/reset-user/{user_id}	특정 유저 미션 초기화 (감시 로그 기록)
-6. 감시 로그 - ops_routes.py
-엔드포인트	기능
-GET /admin/ops/audit-logs	NUDGE_SEND, ROI_CALCULATE, ROLLBACK_EXECUTE 등 조회
-POST /admin/ops/log-action	어드민 액션 로그 기록
+### D) Admin Analytics (Retention/Revenue/Marketing) ✅
+- 라우터: `app/v2/api/admin/analytics_routes.py` (`/api/v2/admin/analytics/*`)
 
+| 엔드포인트 | 기능 |
+|---|---|
+| `GET /api/v2/admin/analytics/retention` | D1/D7/D30 보유율 분석 (코호트별) |
+| `GET /api/v2/admin/analytics/retention/trend` | 보유율 추이 그래프 데이터 |
+| `GET /api/v2/admin/analytics/revenue/breakdown` | 일/주/월 매출·지출 추이 |
+| `GET /api/v2/admin/analytics/revenue/summary` | 수익 요약(대시보드용) |
+| `GET /api/v2/admin/analytics/marketing/channel-performance` | 채널별 ROI/전환율/CAC |
 
-작업이 완료되었습니다. 다음은 구현한 내용 요약입니다:
+### E) Ops Stats & Audit Logs ✅
+| 기능 | 엔드포인트 | 비고 |
+|---|---|---|
+| 활성 유저 통계 | `GET /api/v2/admin/ops/active-users` | ops_routes.py |
+| 일간 수익/지출 계산 | `GET /api/v2/admin/ops/daily-revenue` | ops_routes.py |
+|  | `GET /api/v2/admin/ops/daily-spending` | ops_routes.py |
+|  | `GET /api/v2/admin/ops/daily-finance` | ops_routes.py |
+| 감사 로그 조회/기록 | `GET /api/v2/admin/ops/audit-logs` | ops_routes.py |
+|  | `POST /api/v2/admin/ops/log-action` | ops_routes.py |
 
-구현 완료 항목
-1. API 함수 추가 (adminApi.ts)
-Streak & Milestone API:
+### F) Frontend 연동 ✅
+- API 함수: `adminApi.ts`
+- React Hooks: `useAdminGame.ts`
+- UI: `MissionManagerPage.tsx`
 
-getAdminUserStreak(userId) - 유저 스트릭 조회
-resetAdminUserStreak(userId) - 유저 스트릭 리셋
-setAdminUserStreakCount(userId, payload) - 스트릭 일수 직접 설정
-getAdminUserMilestoneProgress(userId) - 마일스톤 진행 현황 조회
-forceGrantAdminMilestone(userId, payload) - 마일스톤 보상 강제 지급
-distributeAdminMilestoneReward(payload) - 다수 유저 마일스톤 보상 일괄 배포
-Mission Stats & Validation API:
-
-resetAdminUserMissions(userId, payload) - 유저 미션 강제 리셋
-verifyAdminLoginMissions(params) - 로그인 미션 검증
-getAdminMissionStats() - 미션 통계 조회
-Active User Stats API:
-
-getAdminActiveUserStats(days) - 활성 유저 통계 (DAU/WAU/MAU)
-2. React Hooks 추가 (useAdminGame.ts)
-useAdminUserStreak, useAdminResetUserStreak, useAdminSetUserStreakCount
-useAdminUserMilestoneProgress, useAdminForceGrantMilestone, useAdminDistributeMilestoneReward
-useAdminResetUserMissions, useAdminLoginMissionVerify, useAdminMissionStats
-useAdminActiveUserStats
-3. UI 구현 (MissionManagerPage.tsx)
-스트릭 & 마일스톤 관리 섹션:
-
-유저 스트릭 조회 (일수, HOT/LEGEND 상태, 다음 마일스톤, 배율)
-스트릭 일수 직접 설정
-스트릭 리셋
-마일스톤 진행 현황 표시 (달성/수령 상태)
-마일스톤 보상 강제 지급
-미션 통계 섹션:
-
-전체/활성 미션 수
-미션별 완료 수, 클레임 수, 완료율
-로그인 미션 검증 섹션:
+## 검증 결과
+- `tests/v2/test_admin_mission_streak.py` (37개 케이스)
+- `tests/v2/test_admin_monitoring.py` (28개 케이스)
+- `test_admin_analytics.py` (37개 케이스)
 
 오늘 로그인 유저 수, 완료/미완료 수, 완료율
 유저별 로그인 미션 완료 상태 목록
