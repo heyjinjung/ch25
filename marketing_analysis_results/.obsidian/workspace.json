@@ -13,15 +13,30 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "v2_integrated_marketing_ops_sot.md",
+                "file": "마케팅_전문가_관리자_리포트.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "v2_integrated_marketing_ops_sot"
+              "title": "마케팅_전문가_관리자_리포트"
+            }
+          },
+          {
+            "id": "44c25abe1e3b9b5c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "v2_CC개선방안1주차_피드백.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "v2_CC개선방안1주차_피드백"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -94,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "v2_integrated_marketing_ops_sot.md",
+                "file": "v2_CC개선방안1주차_피드백.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "v2_integrated_marketing_ops_sot 의 백링크"
+              "title": "v2_CC개선방안1주차_피드백 의 백링크"
             }
           },
           {
@@ -113,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "v2_integrated_marketing_ops_sot.md",
+                "file": "v2_CC개선방안1주차_피드백.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "v2_integrated_marketing_ops_sot 의 나가는 링크"
+              "title": "v2_CC개선방안1주차_피드백 의 나가는 링크"
             }
           },
           {
@@ -156,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "v2_integrated_marketing_ops_sot.md",
+                "file": "v2_CC개선방안1주차_피드백.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "v2_integrated_marketing_ops_sot 의 개요"
+              "title": "v2_CC개선방안1주차_피드백 의 개요"
             }
           }
         ]
@@ -183,22 +198,22 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "ed2b53619e2ff8dc",
+  "active": "44c25abe1e3b9b5c",
   "lastOpenFiles": [
+    "v2_CC개선방안1주차.md",
+    "v1 실패리포트.md",
+    "마케팅_전문가_관리자_리포트.md",
+    "v2_integrated_marketing_ops_sot.md",
     "마케팅_전문가_관리자_리포트 1.md",
     "개선방안_개요 1.md",
     "개선방안1주_2주플레이북 1.md",
     "v2_CC개선방안1주차_피드백.md",
     "v2_CC개선방안1주차_피드백 1.md",
     "v2_CC개선방안1주차 1.md",
-    "v1 실패리포트.md",
-    "v2_integrated_marketing_ops_sot.md",
-    "v2_CC개선방안1주차.md",
     "v2_funnel_since_20260204.md",
     "MARKETING_w4.md",
     "MARKETING_w3.md",
     "MARKETING_w2.md",
-    "마케팅_전문가_관리자_리포트.md",
     "개선방안1주_2주플레이북.md",
     "개선방안_개요.md",
     "무제 1.canvas"

@@ -39,6 +39,16 @@ from app.v2.schemas.v2_admin_ops import (
 )
 from app.v2.schemas.v2_admin_streak import StreakDailyMetric, StreakMetricsResponse
 from app.v2.schemas.v2_notification_feed import FeedConfigResponse, FeedJackpotConfig
+from app.v2.schemas.v2_ops_plan import (
+    OpsCampaignCreate,
+    OpsCampaignOut,
+    OpsCampaignUpdate,
+    OpsPlanCreate,
+    OpsPlanOut,
+)
+from app.v2.services.v2_admin_ops_plan_service import V2AdminOpsPlanService
+from app.v2.models import OpsCampaign, OpsPlan
+from app.v2.utils.timezone import business_day_start, KST
 
 logger = logging.getLogger(__name__)
 
@@ -241,19 +251,85 @@ def get_ops_dashboard_alias(
 
 
 @router.get("/ops/plans")
-def list_ops_plans_stub(
+def list_ops_plans(
+    days: int = Query(14, ge=1, le=90),
+    end_date: Optional[date] = Query(default=None),
+    campaign_id: Optional[int] = Query(default=None),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
-):
-    return []
+) -> list[OpsPlanOut]:
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    if end_date is None:
+        end_date = business_day_start().astimezone(KST).date()
+    start_date = end_date - timedelta(days=days - 1)
+
+    q = db.query(OpsPlan).filter(OpsPlan.plan_date >= start_date).filter(OpsPlan.plan_date <= end_date)
+    if campaign_id is not None:
+        q = q.filter(OpsPlan.campaign_id == campaign_id)
+
+    return q.order_by(OpsPlan.plan_date.desc(), OpsPlan.id.desc()).all()
 
 
 @router.post("/ops/plans")
-def create_ops_plan_stub(
+def create_ops_plan(
+    payload: OpsPlanCreate,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+) -> OpsPlanOut:
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    # ensure uniqueness by (campaign_id, plan_date)
+    plan = V2AdminOpsPlanService.ensure_plan(db, payload.campaign_id, payload.plan_date)
+    db.commit()
+    db.refresh(plan)
+    return plan
+
+
+@router.get("/ops/campaigns", response_model=list[OpsCampaignOut])
+def list_ops_campaigns(
+    status: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
-    return {"status": "created"}
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    return V2AdminOpsPlanService.list_campaigns(db, status_filter=status)
+
+
+@router.post("/ops/campaigns", response_model=OpsCampaignOut)
+def create_ops_campaign(
+    payload: OpsCampaignCreate,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    campaign = V2AdminOpsPlanService.create_campaign(db, payload=payload.model_dump())
+    db.commit()
+    db.refresh(campaign)
+    return campaign
+
+
+@router.patch("/ops/campaigns/{campaign_id}", response_model=OpsCampaignOut)
+def update_ops_campaign(
+    campaign_id: int,
+    payload: OpsCampaignUpdate,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    admin_id, admin_role = admin_info
+    check_admin_permission(admin_role)
+
+    patch = payload.model_dump(exclude_unset=True)
+    campaign = V2AdminOpsPlanService.update_campaign(db, campaign_id, patch)
+    db.commit()
+    db.refresh(campaign)
+    return campaign
 
 
 @router.get("/dashboard/metrics", response_model=DashboardMetricsResponse)

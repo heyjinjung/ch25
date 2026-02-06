@@ -57,8 +57,28 @@ from app.v2.models.v2_survey import (
     V2SurveyQuestion as SurveyQuestion,
     V2SurveyOption as SurveyOption,
     V2SurveyTriggerRule as SurveyTriggerRule,
+    # 2.1 출금 조건 (세그먼트별, 최근 3일 기준)
+    # | 세그먼트 | 최근 3일 게임 플레이 횟수 | 오늘 사용 금액(상점 이용) | 비고 |
+    # | :--- | :--- | :--- | :--- |
+    # | NEW | 5회 | 0원 | 신규 혜택 |
+    # | COMMON | 15회 | 5,000원 | 당일 1만↑ 입금 |
+    # | VIP | 10회 | 0원 | 당일 10만↑ 입금 |
+    # | WHALE | 0회 | 0원 | 당일 10만↑ 입금 |
+    # | AT_RISK | 30회 | 10,000원 | 완화됨 |
+    #
+    # - 기준 시간: Asia/Seoul, 오전 9시 리셋(Operational Day)
+    # - WHALE은 플레이/소비 조건 면제(0/0), **당일 실질 입금 조건(10만+)은 유지**
+    # - **어드민 관리**: `benefits_suspended` 상태는 어드민에서 유저별 수동 관리 기능을 제공함
     V2SurveyResponse as SurveyResponse,
     V2SurveyResponseAnswer as SurveyResponseAnswer,
+    # 4.1.1 세그먼트별 출금 조건 (최근 3일 기준)
+    # | 세그먼트 | 최근 3일 게임 플레이 횟수 | 오늘 사용 금액(상점 이용) | 비고 |
+    # | :--- | :--- | :--- | :--- |
+    # | NEW | 5회 | 0원 | 신규 혜택 |
+    # | COMMON | 15회 | 5,000원 | 당일 1만↑ 입금 |
+    # | VIP | 10회 | 0원 | 당일 10만↑ 입금 |
+    # | WHALE | 0회 | 0원 | 당일 10만↑ 입금 |
+    # | AT_RISK | 30회 | 10,000원 | 완화됨 |
     SurveyStatus,
     SurveyChannel,
     SurveyQuestionType,

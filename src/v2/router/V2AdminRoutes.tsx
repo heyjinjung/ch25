@@ -31,6 +31,7 @@ import V2AdminLoginPage from "../admin/pages/auth/V2AdminLoginPage";
 
 import ControlCenterPage from "../admin/pages/dashboard/ControlCenterPage";
 import SystemSecurityPage from "../admin/pages/ops/SystemSecurityPage";
+import OpsPlansPage from "../admin/pages/ops/OpsPlansPage";
 
 const V2AdminRoutes: React.FC = () => {
   return (
@@ -45,6 +46,7 @@ const V2AdminRoutes: React.FC = () => {
           <Route path="system" element={<SystemSecurityPage />} />
           <Route path="analytics" element={<AnalyticsDashboard />} />
           <Route path="analytics/roi" element={<RoiDashboardPage />} />
+          <Route path="ops" element={<OpsPlansPage />} />
 
           {/* Legacy Redirects for bookmarks */}
           <Route

@@ -681,6 +681,57 @@ export const getOpsDashboardStatus =
     return response.data;
   };
 
+// ============================================================================
+// Ops Plan (Campaign/Plan) API
+// ============================================================================
+
+export interface OpsCampaignOut {
+  id: number;
+  name: string;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  owner_admin_id: number | null;
+  goal_json: Record<string, any> | null;
+  notes_md: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OpsPlanOut {
+  id: number;
+  campaign_id: number;
+  plan_date: string;
+  theme_title: string | null;
+  key_message: string | null;
+  status: string;
+  closing_summary_md: string | null;
+  kpi_snapshot_json: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const getAdminOpsCampaigns = async (params?: {
+  status?: string;
+}): Promise<OpsCampaignOut[]> => {
+  const response = await v2Client.get<OpsCampaignOut[]>(
+    "/api/v2/admin/ops/campaigns",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminOpsPlans = async (params?: {
+  days?: number;
+  end_date?: string;
+  campaign_id?: number;
+}): Promise<OpsPlanOut[]> => {
+  const response = await v2Client.get<OpsPlanOut[]>("/api/v2/admin/ops/plans", {
+    params,
+  });
+  return response.data;
+};
+
 export const getDashboardMetrics = async (
   rangeHours: number = 24,
 ): Promise<DashboardMetricsResponse> => {
