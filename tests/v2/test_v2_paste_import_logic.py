@@ -79,8 +79,8 @@ AnotherUser\t10000\t2026/02/07 12:05\tAnotherMan
 
     def test_skip_header_rows(self):
         raw_text = """
-번호\t소속\t이름\t닉네임\t신청날짜\t충전금액
-1\tA\tB\tRealUser\t2026-02-07 10:00\t50000
+번호\t소속\t이름\t닉네임\t신청날짜\t충전금액\t입금자\t충전날짜
+1\tA\tB\tRealUser\t2026-02-07 10:00\t50000\tSelf\t2026-02-07 10:05
         """.strip()
         parsed = PasteImportService.parse_daily_deposit(raw_text)
         assert len(parsed) == 1
