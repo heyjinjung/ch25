@@ -1,0 +1,266 @@
+문서 타입: 리포트
+버전: v1.0
+작성일: 2026-02-06
+작성자: GitHub Copilot
+대상: BE/FE/기획/운영
+상태: ACTIVE
+
+## 1. 목적 (Purpose)
+문서에 표기된 API 경로/메서드가 현재 실행 중인 백엔드(OpenAPI)와 일치하는지 자동 점검한다.
+
+## 2. 기준 (Basis)
+- OpenAPI URL: `http://localhost:8000/openapi.json`
+- 판정은 ‘존재/메서드 일치’만 자동화한다(정책 의도/운영 예외의 의미적 최신성은 사람 검토 필요).
+
+## 3. 요약
+- 문서에서 추출된 엔드포인트 표기: 257개
+- OK(OpenAPI에 존재): 134개
+- MISSING(경로 자체가 없음): 123개
+- METHOD_MISMATCH(경로는 있으나 메서드 불일치): 0개
+
+## 4. 파일별 이슈(누락/불일치)
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md
+  - GET /api/v2/exchange/craft-status
+  - POST /api/v2/exchange/craft-puzzle
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.admin.md
+  - DELETE /api/v2/admin/users/{id}
+  - POST /api/v2/admin/users/{id}/purge
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.adminguide.md
+  - POST /api/v2/admin/ops/reset_circuit
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/auth/20260129_auth_mission_integration_test_update.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/auth/auth.md
+  - POST /api/activity/record
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/auth/learned_context_summary_auth.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/auth/v2_telegram_auth_sot_ko.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260131_puzzle_collection_gold_key_craft.md
+  - GET /api/v2/exchange/craft-status
+  - POST /api/v2/exchange/craft-puzzle
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/00_v2_golden_comprehensive_summary.md
+  - GET /api/v2/admin/ops/hq-margin-stats
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md
+  - GET /api/v2/admin/ops/hq-margin-stats
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/13.game_log_csv_import_spec.md
+  - GET /api/v2/admin/analytics/game-summary
+  - GET /api/v2/admin/game-logs
+  - POST /api/v2/admin/csv/import
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260131_hq_margin_dashboard_phase2_design.md
+  - GET /api/v2/admin/ops/hq-margin-stats
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/learned_context_summary_mission.md
+  - PUT /api/v2/admin/game/missions/{id}
+- docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/mission_channel_join.md
+  - GET /api/v2/admin/missions/progress
+  - POST /api/v2/admin/missions/progress/approve
+  - POST /api/v2/mission/17/claim
+  - POST /api/viral/verify/channel
+- docs/v2_specs/00_sot_meta/00_v2_migration_plan.md
+  - POST /api/retention/bailout
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/1차_2026_v2_final_deployment_master_checklist_ko.md
+  - GET /api/v2/admin/mission/users/{user_id}
+  - GET /api/v2/admin/vault/status
+  - GET /api/v2/streak/info
+  - POST /api/v2/admin/mission/reset/{user_id}
+  - POST /api/v2/admin/rollback/executions/{id}
+  - POST /api/v2/admin/streak/reset/{user_id}
+  - POST /api/v2/dev/login
+  - POST /api/v2/streak/claim/{milestone}
+- docs/v2_specs/00_sot_meta/1차_2026_v2_production_deployment_checklist_ko.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/artifacts/v2_game_failures_for_ai_20260124.md
+  - GET /api/v2/{dice,roulette,lottery}/status
+  - POST /api/v2/admin/game/lottery/config/1/prize
+  - PUT /api/v2/admin/game/dice/config/1
+- docs/v2_specs/00_sot_meta/v2_pre_release_auth_policy_ko.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/00_sot_meta/v2_shared_dependency_inventory_20260124_ko.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
+  - POST /api/inventory/use
+- docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md
+  - POST /api/v2/dice/double-up
+- docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md
+  - GET /api/new-user/status
+- docs/v2_specs/02_game/v2_team_battle_sot_ko.md
+  - GET /api/team-battle/seasons/active
+  - GET /api/team-battle/teams
+  - GET /api/team-battle/teams/leaderboard
+  - GET /api/team-battle/teams/me
+  - GET /api/team-battle/teams/{team_id}/contributors
+  - GET /api/team-battle/teams/{team_id}/contributors/me
+  - POST /api/team-battle/teams/auto-assign
+  - POST /api/team-battle/teams/join
+  - POST /api/team-battle/teams/leave
+- docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
+  - POST /api/retention/bailout
+- docs/v2_specs/03_api/v1/v1_legacy_api_list_ko.md
+  - DELETE /api/admin-mission/{mission_id}
+  - GET /api/admin-mission/
+  - GET /api/dev/test-auth
+  - GET /api/dice/status
+  - GET /api/health
+  - GET /api/inventory
+  - GET /api/lottery/status
+  - GET /api/mission/
+  - GET /api/mission/streak/rules
+  - GET /api/new-user/status
+  - GET /api/roulette/status
+  - GET /api/shop/products
+  - GET /api/team-battle/seasons/active
+  - GET /api/team-battle/teams
+  - GET /api/team-battle/teams/leaderboard
+  - GET /api/team-battle/teams/me
+  - GET /api/today-feature
+  - POST /api/activity/record
+  - POST /api/admin-mission/
+  - POST /api/auth/token
+  - POST /api/dev/ch25-events/publish
+  - POST /api/dev/create-test-user
+  - POST /api/dev/grant-game-tokens
+  - POST /api/dice/play
+  - POST /api/inventory/use
+  - POST /api/lottery/play
+  - POST /api/mission/daily-gift
+  - POST /api/mission/streak/claim
+  - POST /api/mission/{mission_id}/claim
+  - POST /api/new-user/claim-welcome
+  - POST /api/retention/intervention/resolve
+  - POST /api/retention/reengagement/queue
+  - POST /api/roulette/play
+  - POST /api/shop/purchase
+  - POST /api/team-battle/teams/join
+  - POST /api/team-battle/teams/leave
+  - POST /api/telegram/auth
+  - POST /api/telegram/link-token
+  - POST /api/telegram/unlink-request
+  - PUT /api/admin-mission/{mission_id}
+- docs/v2_specs/03_api/v2_admin_ops_api_contract_ko.md
+  - GET /api/v2/admin/ops/tasks/{task_id}/execution-result
+  - POST /api/v2/admin/ops/tasks/{task_id}/execution-result
+- docs/v2_specs/03_api/v2_api_contract_ko.md
+  - GET /api/v2/streak/info
+  - GET /api/v2/team-battle/seasons
+- docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
+  - GET /api/v2/new-user/status
+  - GET /api/v2/ui-config/{key}
+  - POST /api/v2/dev/login
+  - POST /api/v2/new-user/claim-welcome
+  - POST /api/v2/telegram/link-token
+  - POST /api/v2/telegram/unlink-request
+- docs/v2_specs/03_api/v2_game_api_contract_ko.md
+  - POST /api/v2/dice/double-up
+- docs/v2_specs/05_ops/deployment/v2_deployment_docker_compose_guide_ko.md
+  - GET /api/health
+- docs/v2_specs/06_design/V2_admin_pages_list.md
+  - PUT /api/v2/admin/game/missions/{id}
+- docs/v2_specs/06_design/v2_admin_master_plan_ko.md
+  - GET /api/v2/admin/deposits
+  - GET /api/v2/admin/game/roulette
+  - GET /api/v2/admin/missions
+  - GET /api/v2/admin/users/{id}
+  - POST /api/v2/admin/withdrawals/{id}/approve
+- docs/v2_specs/07_golden/00_golden_project_status_v2_ko copy.md
+  - POST /api/golden/intervention/resolve
+  - POST /api/golden/reengagement/queue
+- docs/v2_specs/07_golden/2026_01_28_golden_frontend_spec.md
+  - GET /api/v2/user/honor-report
+  - POST /api/v2/admin/crm/approve
+  - POST /api/v2/user/evidence
+- docs/v2_specs/07_golden/2026_01_29_golden_v2_circuit_breaker_impl_plan_ko.md
+  - POST /api/v2/admin/circuit/reset
+- docs/v2_specs/07_golden/2026_01_29_golden_v2_feature_routing_map_ko.md
+  - GET /api/v2/admin/daily-nudge/configs
+  - GET /api/v2/admin/ops/roi/campaign/{id}
+  - GET /api/v2/admin/ops/roi/summary
+  - POST /api/v2/admin/daily-nudge/run
+  - POST /api/v2/admin/ops/rollback/user
+  - POST /api/v2/admin/ops/rollback/{execution_id}
+- docs/v2_specs/07_golden/2026_01_29_golden_v2_remaining_implementation_guide_ko.md
+  - POST /api/v2/admin/ops/rollback/{execution_id}
+- docs/v2_specs/07_golden/2026_01_29_golden_v2_rollback_policy_impl_plan_ko.md
+  - POST /api/v2/admin/ops/executions/{id}/rollback
+- docs/v2_specs/07_golden/LLM/00_golden_project_status_v2_ko.md
+  - POST /api/golden/intervention/resolve
+  - POST /api/golden/reengagement/queue
+- docs/v2_specs/07_golden/integrated_working_tree.md
+  - POST /api/v2/admin/crm/approve
+  - POST /api/v2/user/evidence/submit
+- docs/v2_specs/07_golden/v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
+  - POST /api/v2/admin/deposits/unmatched/{id}/ignore
+  - POST /api/v2/admin/deposits/unmatched/{id}/link
+- docs/v2_specs/07_golden/v2_patch_execution_log_ko.md
+  - GET /api/v2/admin/prospects
+  - POST /api/v2/admin/prospects/{id}/link
+  - POST /api/v2/auth/check-prospect
+- docs/v2_specs/08_changelog/통합/v2_fullstack_integration_ground_sot_ko.md
+  - POST /api/v2/admin/economy/deposits/{id}/confirm
+  - POST /api/v2/admin/users/{id}/wallet/adjust
+  - POST /api/v2/admin/users/{id}/xp
+  - POST /api/v2/mission/{id}/claim
+  - POST /api/v2/surveys/{id}/responses/complete
+  - PUT /api/v2/admin/game/{game}/config
+- docs/v2_specs/08_changelog/통합/v2_fullstack_integration_test_logs_20260124.md
+  - POST /api/v2/dev/login
+  - POST /api/v2/mission/{id}/claim
+- docs/v2_specs/08_changelog/통합/v2_fullstack_integration_test_logs_admin_20260124.md
+  - POST /api/v2/admin/users/{id}/wallet/adjust
+  - PUT /api/v2/admin/game/lottery/config/{id}/prize/{prizeId}
+- docs/v2_specs/08_changelog/통합/v2_fullstack_integration_test_logs_auth_20260124.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/08_changelog/통합/v2_fullstack_integration_test_logs_mission_20260124.md
+  - POST /api/v2/mission/{id}/claim
+- docs/v2_specs/08_changelog/통합/v2_fullstack_observation_mapping_20260124.md
+  - POST /api/v2/admin/messages
+  - POST /api/v2/dev/login
+  - POST /api/v2/mission/{id}/claim
+- docs/v2_specs/90_troubleshooting/W05_FRONTEND_troubleshooting.md
+  - GET /api/v2/admin/users/{userId}/game-logs
+- docs/v2_specs/90_troubleshooting/W06_AUTH_troubleshooting.md
+  - POST /api/auth/token
+- docs/v2_specs/90_troubleshooting/W06_FRONTEND_troubleshooting.md
+  - GET /api/level-xp/status
+- docs/v2_specs/90_troubleshooting/W06_INFRA_troubleshooting.md
+  - PATCH /api/v2/admin/users/{id}/nickname
+- docs/v2_specs/90_troubleshooting/W06_LEVEL_troubleshooting.md
+  - GET /api/level-xp/status
+- docs/v2_specs/90_troubleshooting/W06_MISSION_troubleshooting.md
+  - POST /api/viral/action
+  - POST /api/viral/verify/channel
+  - PUT /api/v2/admin/ui-config/streak_reward_rules
+- docs/v2_specs/90_troubleshooting/archive/0125_v2_classification_and_resolved.md
+  - POST /api/v2/admin/game/lottery/config/1/prize
+  - PUT /api/v2/admin/game/dice/config/1
+- docs/v2_specs/90_troubleshooting/archive/20260127_admin_login_integrity_error_fix.md
+  - POST /api/auth/token
+- docs/v2_specs/90_troubleshooting/archive/20260130_deployment_verification_report.md
+  - POST /api/v2/dev/login
+- docs/v2_specs/90_troubleshooting/archive/20260130_error_triage_checklist.md
+  - GET /api/v2/admin/users/{id}/game-logs
+  - POST /api/v2/admin/users/{id}/purge
+- docs/v2_specs/90_troubleshooting/archive/2026_01_31_dice_golden_hour.md
+  - PUT /api/v2/admin/game/dice
+- docs/v2_specs/90_troubleshooting/archive/2026_01_31_multi_table_fk_fix.md
+  - GET /api/level-xp/status
+- docs/v2_specs/90_troubleshooting/archive/v2_troubleshooting_20260120_backend_runtime_ko.md
+  - GET /api/ws/events
+  - PUT /api/v2/admin/game/missions/{id}
+- docs/v2_specs/90_troubleshooting/archive/v2_troubleshooting_game_token_issues_ko.md
+  - POST /api/roulette/play
+- docs/v2_specs/90_troubleshooting/archive/weekly/W05_FRONTEND_troubleshooting.md
+  - GET /api/v2/admin/users/{userId}/game-logs
+- docs/v2_specs/90_troubleshooting/archive/weekly/W05_GAME_troubleshooting.md
+  - GET /api/v2/admin/users/1/game-logs
+  - PUT /api/v2/admin/game/dice/config/1
+  - PUT /api/v2/admin/game/roulette/config/{id}
+- docs/v2_specs/90_troubleshooting/archive/weekly/W05_INFRA_troubleshooting.md
+  - GET /api/v2/admin/users/3/game-logs
+- docs/v2_specs/90_troubleshooting/archive/weekly/W05_MISSION_troubleshooting.md
+  - PUT /api/v2/admin/game/missions/{id}
+- docs/v2_specs/90_troubleshooting/archive/weekly/W05_VAULT_troubleshooting.md
+  - GET /api/v2/admin/users/{user_id}/vault-logs
+- docs/v2_specs/99_verification/e2e/20260126_inbox_e2e.md
+  - POST /api/v2/admin/message
+- docs/v2_specs/99_verification/주사위 어드민 설정 풀스택 검증 완료.md
+  - PUT /api/v2/admin/game/dice
