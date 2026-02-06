@@ -12,6 +12,7 @@ import {
   getAdminOpsPlans,
   getDashboardMetrics,
   runInterventionAction,
+  suspendUserBenefitsManual,
   adjustUserWallet,
   adjustUserInventory,
   updateUserNickname,
