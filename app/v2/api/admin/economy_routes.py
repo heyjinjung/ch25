@@ -1246,7 +1246,45 @@ def verify_latency_evidence(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _ = admin_info
+
+    from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
+
+    evidence_before = db.get(V2UserDepositEvidence, id)
+    before = None
+    if evidence_before:
+        before = {
+            "status": evidence_before.status.value if hasattr(evidence_before.status, "value") else str(evidence_before.status),
+            "matched_log_id": evidence_before.matched_log_id,
+            "admin_memo": evidence_before.admin_memo,
+            "user_id": evidence_before.user_id,
+            "tx_id": evidence_before.tx_id,
+        }
+
     V2AdminEconomyService.verify_latency_evidence(db, id, payload.log_id, admin_id)
+    db.flush()
+
+    evidence_after = db.get(V2UserDepositEvidence, id)
+    after = None
+    if evidence_after:
+        after = {
+            "status": evidence_after.status.value if hasattr(evidence_after.status, "value") else str(evidence_after.status),
+            "matched_log_id": evidence_after.matched_log_id,
+            "admin_memo": evidence_after.admin_memo,
+            "user_id": evidence_after.user_id,
+            "tx_id": evidence_after.tx_id,
+            "log_id": payload.log_id,
+        }
+
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "LATENCY_EVIDENCE_VERIFY",
+        "ECONOMY",
+        str(id),
+        before=before,
+        after=after,
+        auto_commit=False,
+    )
     db.commit()
     return {"success": True}
 
@@ -1259,7 +1297,45 @@ def reject_latency_evidence(
     admin_info: tuple[int, str] = Depends(get_current_admin_info),
 ):
     admin_id, _ = admin_info
+
+    from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
+
+    evidence_before = db.get(V2UserDepositEvidence, id)
+    before = None
+    if evidence_before:
+        before = {
+            "status": evidence_before.status.value if hasattr(evidence_before.status, "value") else str(evidence_before.status),
+            "matched_log_id": evidence_before.matched_log_id,
+            "admin_memo": evidence_before.admin_memo,
+            "user_id": evidence_before.user_id,
+            "tx_id": evidence_before.tx_id,
+        }
+
     V2AdminEconomyService.reject_latency_evidence(db, id, payload.reason, admin_id)
+    db.flush()
+
+    evidence_after = db.get(V2UserDepositEvidence, id)
+    after = None
+    if evidence_after:
+        after = {
+            "status": evidence_after.status.value if hasattr(evidence_after.status, "value") else str(evidence_after.status),
+            "matched_log_id": evidence_after.matched_log_id,
+            "admin_memo": evidence_after.admin_memo,
+            "user_id": evidence_after.user_id,
+            "tx_id": evidence_after.tx_id,
+            "reason": payload.reason,
+        }
+
+    V2AdminAuditService.log(
+        db,
+        admin_id,
+        "LATENCY_EVIDENCE_REJECT",
+        "ECONOMY",
+        str(id),
+        before=before,
+        after=after,
+        auto_commit=False,
+    )
     db.commit()
     return {"success": True}
 

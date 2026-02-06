@@ -3,7 +3,7 @@
 - **작성일**: 2026-02-02
 - **도메인**: VAULT (금고/경제)
 - **상태**: ✅ 완료
-- **관련 SoT**: [15.latency_survival_spec.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/15.latency_survival_spec.md)
+- **관련 SoT**: [15.latency_survival_spec.md](../변경로그/15.latency_survival_spec.md)
 
 ---
 
@@ -31,7 +31,7 @@ Latency Survival 시스템의 백엔드/어드민은 구현 완료되었으나, 
 | GET | `/api/v2/user/economy/latency/policy` | 정책 안내 조회 |
 
 **SoT 준수**:
-- Provisional Reward: `ROULETTE_TICKET` x 5
+- Provisional Reward: `ROULETTE_TICKET` x 3
 - Rate Limit: MAX 3회/User/Hour
 - TX ID 자동 생성: `{amount}_{date}_{time}_{userId}`
 

@@ -311,6 +311,8 @@ def _log_team_battle_points(ctx: GamePlayContext, db: Session, result_payload: d
         if not member:
             return
         season = svc.get_active_season(db) or svc.ensure_current_season(db)
+        if not season:
+            return
         meta = {
             "feature_type": ctx.feature_type,
             "result": result_payload.get("result"),

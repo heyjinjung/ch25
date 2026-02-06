@@ -84,13 +84,13 @@ if sentry_dsn:
             max_breadcrumbs=100,  # 기본 100개
             attach_stacktrace=True,  # 모든 메시지에 스택트레이스 첨부
         )
-        print(f"✅ Sentry initialized (env={settings.env})", flush=True)
+        print(f"[SUCCESS] Sentry initialized (env={settings.env})", flush=True)
     except ImportError:
-        print("⚠️ Sentry SDK not installed. Run: pip install sentry-sdk", flush=True)
+        print("[WARNING] Sentry SDK not installed. Run: pip install sentry-sdk", flush=True)
     except Exception as e:
-        print(f"⚠️ Sentry initialization failed: {e}", flush=True)
+        print(f"[ERROR] Sentry initialization failed: {e}", flush=True)
 else:
-    print("ℹ️ Sentry DSN not configured. Skipping Sentry initialization.", flush=True)
+    print("[INFO] Sentry DSN not configured. Skipping Sentry initialization.", flush=True)
 
 app = FastAPI(title="XMAS 1Week Event System", default_response_class=KstJSONResponse)
 

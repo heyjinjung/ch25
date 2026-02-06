@@ -4,7 +4,6 @@ import {
   approveWithdrawal,
   rejectWithdrawal,
   getAdminDeposits,
-  confirmDeposit,
   getAdminProducts,
   updateProductStatus,
   updateProductPrice,
@@ -61,16 +60,6 @@ export function useAdminDeposits() {
   });
 }
 
-export function useAdminConfirmDeposit() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => confirmDeposit(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "deposits"] });
-    },
-  });
-}
-
 // ============================================================================
 // Shop Hooks
 // ============================================================================
@@ -120,7 +109,9 @@ export function useAdminVerifyLatencyEvidence() {
     mutationFn: ({ id, logId }: { id: number; logId: number }) =>
       verifyLatencyEvidence(id, logId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "latency-evidences"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "latency-evidences"],
+      });
     },
   });
 }
@@ -131,7 +122,9 @@ export function useAdminRejectLatencyEvidence() {
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       rejectLatencyEvidence(id, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "latency-evidences"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "latency-evidences"],
+      });
     },
   });
 }

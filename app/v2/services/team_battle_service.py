@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from typing import Optional, Sequence
+from typing import Any, Optional, Sequence
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
@@ -22,6 +22,14 @@ from app.v2.models import Team, TeamEventLog, TeamMember, TeamScore, TeamSeason
 class V2TeamBattleService:
     TEAM_SELECTION_WINDOW_HOURS = 48
     TEAM_MAX_MEMBERS = 7
+
+    @property
+    def POINTS_PER_PLAY(self) -> int:
+        settings = get_settings()
+        try:
+            return int(getattr(settings, "team_battle_points_per_play", 5) or 5)
+        except Exception:
+            return 5
 
     def _now_utc(self) -> datetime:
         return datetime.utcnow()
@@ -363,6 +371,83 @@ class V2TeamBattleService:
                 raise
 
         raise last_error or HTTPException(status_code=status.HTTP_409_CONFLICT, detail="NO_JOINABLE_TEAM")
+
+    def ensure_current_season(self, db: Session, now: datetime | None = None) -> TeamSeason | None:
+        """현재 활성 시즌을 반환.
+
+        운영 정책상 시즌은 어드민이 관리하므로, 활성 시즌이 없으면 자동 생성하지 않고 None을 반환한다.
+        """
+        return self.get_active_season(db, now, ignore_dates=True)
+
+    def add_points(
+        self,
+        db: Session,
+        *,
+        team_id: int,
+        delta: int,
+        action: str,
+        user_id: int | None,
+        season_id: int | None,
+        meta: dict[str, Any] | None = None,
+        enforce_usage: bool = True,
+    ) -> dict[str, Any]:
+        """팀 점수 누적 + 이벤트 로그 기록(append-only)."""
+        if delta == 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="DELTA_REQUIRED")
+
+        season = db.get(TeamSeason, season_id) if season_id else self.get_active_season(db, ignore_dates=True)
+        if not season:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="NO_ACTIVE_TEAM_SEASON")
+
+        team = db.get(Team, team_id)
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TEAM_NOT_FOUND")
+
+        score = (
+            db.execute(
+                select(TeamScore)
+                .where(
+                    TeamScore.team_id == team_id,
+                    TeamScore.season_id == season.id,
+                )
+                .with_for_update()
+            )
+            .scalars()
+            .first()
+        )
+        if not score:
+            score = TeamScore(team_id=team_id, season_id=season.id, points=0)
+            db.add(score)
+            db.flush()
+
+        before_points = int(score.points or 0)
+        after_points = max(0, before_points + int(delta))
+        applied_delta = after_points - before_points
+        if applied_delta == 0:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="NO_EFFECT")
+
+        score.points = after_points
+
+        log = TeamEventLog(
+            team_id=team_id,
+            user_id=user_id,
+            season_id=int(season.id),
+            action=str(action),
+            delta=int(applied_delta),
+            meta=meta or {},
+        )
+        db.add(log)
+
+        # enforce_usage는 legacy 호환 파라미터로 유지(현행 v2에서는 사용처가 제한적)
+        _ = enforce_usage
+
+        db.commit()
+        db.refresh(log)
+        return {
+            "log": log,
+            "team_points": after_points,
+            "applied_delta": applied_delta,
+        }
 
 
 # Backward-compatible alias for internal callers

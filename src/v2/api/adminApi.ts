@@ -801,11 +801,15 @@ export const updateUserSegment = async (
 
 export const suspendUserBenefitsManual = async (
   userId: number,
-): Promise<{ success: boolean; message: string; benefits_suspended_manual: number }> => {
-  const response = await v2Client.post<{ 
-    success: boolean; 
-    message: string; 
-    benefits_suspended_manual: number 
+): Promise<{
+  success: boolean;
+  message: string;
+  benefits_suspended_manual: number;
+}> => {
+  const response = await v2Client.post<{
+    success: boolean;
+    message: string;
+    benefits_suspended_manual: number;
   }>(`/api/v2/admin/vault/users/${userId}/suspend-manual`);
   return response.data;
 };
@@ -978,10 +982,6 @@ export const getAdminDeposits = async (): Promise<AdminDepositDto[]> => {
     "/api/v2/admin/economy/deposits/pending",
   );
   return response.data;
-};
-
-export const confirmDeposit = async (id: number): Promise<void> => {
-  await v2Client.post(`/api/v2/admin/economy/deposits/${id}/confirm`);
 };
 
 export interface AdminDepositLogDto {

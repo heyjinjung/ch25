@@ -1,6 +1,7 @@
 ﻿"""V2 User Latency Survival Routes - 지연 입금 신고 API."""
 from typing import Optional
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -33,7 +34,7 @@ class SubmitEvidenceResponse(BaseModel):
     success: bool
     message: str
     evidence_id: int
-    reward_granted: dict  # ex: {"ROULETTE_TICKET": 5}
+    reward_granted: dict  # ex: {"ROULETTE_TICKET": 3}
 
 
 class EvidenceStatusResponse(BaseModel):
@@ -59,7 +60,7 @@ def submit_latency_evidence(
     """
     지연 입금 신고 제출 (선지급 시스템).
     
-    - 입금 정보를 제출하면 즉시 룰렛 티켓 5장이 선지급됩니다.
+    - 입금 정보를 제출하면 즉시 룰렛 티켓 3장이 선지급됩니다.
     - 시간당 최대 3회까지 신고 가능합니다.
     - 허위 신고 시 선지급 재화 및 당첨금이 전액 회수됩니다.
     
@@ -81,10 +82,12 @@ def submit_latency_evidence(
             image_url=None  # 심플 폼이므로 이미지 없음
         )
         db.commit()
+
+        reward_amount = V2LatencySurvivalService.PROVISIONAL_REWARD_AMOUNT
         
         return SubmitEvidenceResponse(
             success=True,
-            message="신고가 접수되었습니다. 룰렛 티켓 5장이 선지급되었습니다.",
+            message=f"신고가 접수되었습니다. 룰렛 티켓 {reward_amount}장이 선지급되었습니다.",
             evidence_id=evidence.id,
             reward_granted=evidence.reward_json or {}
         )
@@ -119,7 +122,7 @@ def get_my_evidences(
     from datetime import timedelta
     from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
     
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = datetime.now(ZoneInfo("Asia/Seoul")) - timedelta(days=30)
     
     evidences = db.query(V2UserDepositEvidence).filter(
         V2UserDepositEvidence.user_id == current_user.id,

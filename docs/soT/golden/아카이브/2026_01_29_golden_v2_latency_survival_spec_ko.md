@@ -46,7 +46,7 @@
 - **해결**: 
     - **Clawback**: 반려 시 선지급 재화 즉시 차감. 잔액 부족 시 0으로 만들고 **부채(Debt)** 로그 기록.
     - **Trust Score**: 반복적인 반려 유저는 Latency Survival 기능 영구 차단.
-    - **선지급 한도**: 1회 제출 시 `ROULETTE_TICKET` 5장 등 소량으로 제한.
+    - **선지급 한도**: 1회 제출 시 `ROULETTE_TICKET` 3장 등 소량으로 제한.
 
 ### 2.5 [Ops] 어드민 업무 과부하 (Operational Overhead)
 - **충돌**: 다수의 증거 제출 시 수동 매칭 업무 가중.
@@ -71,7 +71,7 @@
 | `image_url` | String | (Optional) 업로드한 스크린샷 경로 |
 | `claimed_amount` | Integer | 유저 주장 입금액 |
 | `status` | Enum | `PENDING`, `PROVISIONAL`, `VERIFIED`, `REJECTED` |
-| `reward_json` | JSON | 선지급된 재화 내역 (`{"ROULETTE_TICKET": 5}`) - 회수용 |
+| `reward_json` | JSON | 선지급된 재화 내역 (`{"ROULETTE_TICKET": 3}`) - 회수용 |
 | `admin_memo` | String | 반려/승인 메모 |
 | `matched_log_id`| FK | `v2_cc_deposit_log.id` (Nullable - 승인 시 매핑) |
 | `created_at` | DateTime | 제출 시각 (TTL 기준) |
@@ -83,7 +83,7 @@
 
 ### 4.1 선지급 정책 (Provisional Grant Policy)
 - **대상**: 입금 확인이 지연되는 모든 유저 (제재 유저 포함).
-- **보상 내용**: `ROULETTE_TICKET` 5장 (Config로 조정 가능).
+- **보상 내용**: `ROULETTE_TICKET` 3장 (Config로 조정 가능).
 - **지급 시점**: `submit_evidence()` API 호출 시 즉시 지급 (Risk 유저는 어드민 확인 후 지급).
 - **회수(Clawback)**: `REJECTED` 처리 시 `InventoryService.consume_wallet_tokens`를 호출하여 강제 회수.
 

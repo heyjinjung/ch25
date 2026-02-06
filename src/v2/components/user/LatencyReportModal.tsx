@@ -180,7 +180,7 @@ export default function LatencyReportModal({
                   선물 지급 완료!
                 </p>
                 <p className="text-xs text-zinc-400">
-                  룰렛 티켓 {result.reward_granted?.ROULETTE_TICKET || 5}장
+                  룰렛 티켓 {result.reward_granted?.ROULETTE_TICKET ?? 3}장
                 </p>
               </div>
             </div>

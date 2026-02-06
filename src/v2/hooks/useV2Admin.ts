@@ -52,7 +52,6 @@ import {
   updateExchangeRate,
   ExchangeRateDto,
   getAdminDeposits,
-  confirmDeposit,
   getAdminProducts,
   syncAdminProducts,
   updateProductStatus,
@@ -681,16 +680,6 @@ export function useAdminDeposits() {
     queryKey: ["admin", "deposits"], // Simplified key
     queryFn: getAdminDeposits,
     staleTime: 1000 * 60,
-  });
-}
-
-export function useAdminConfirmDeposit() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: confirmDeposit,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "deposits"] });
-    },
   });
 }
 

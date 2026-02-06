@@ -1,0 +1,263 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.9, pytest-8.3.2, pluggy-1.6.0 -- C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\JAVIS\ch\ch25
+configfile: pytest.ini
+plugins: anyio-4.12.0, cov-4.1.0
+collecting ... collected 33 items
+
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty [INFO] Sentry DSN not configured. Skipping Sentry initialization.
+Loading CORS origins: ['http://127.0.0.1', 'http://127.0.0.1:5173', 'http://cc-jm.com', 'http://127.0.0.1:80', 'http://localhost', 'http://localhost:5173', 'http://localhost:80', 'https://www.cc-jm.com', 'http://149.28.135.147', 'https://cc-jm.com', 'http://localhost:3000', 'http://www.cc-jm.com']
+PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_with_progress PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_reward_success PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_reward_already_claimed PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_reward_not_eligible PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_streak_reward_success PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_reward_benefits_suspended PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_handle_log_in_event FAILED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_claim_streak_reward_benefits_suspended PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_update_progress_creates_new PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_update_progress_increments PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_normalize_action_type PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_streak_info PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_streak_multiplier PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_sync_play_streak_new_user PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_sync_play_streak_consecutive_day PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_sync_play_streak_reset PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_is_new_user_true PASSED
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_is_new_user_false PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_get_active_season PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_join_team_already_member PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_leave_team_not_member PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_add_points_no_membership PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_get_membership PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_leave_team PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_list_joinable_teams PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_leaderboard PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_add_points PASSED
+tests/v2/test_game_services_integration.py::TestTeamBattleServiceIntegration::test_constants PASSED
+tests/v2/test_game_services_integration.py::TestTicketZeroServiceExtended::test_cooldown_constant PASSED
+tests/v2/test_game_services_integration.py::TestTicketZeroServiceExtended::test_multiple_eligibility_checks PASSED
+tests/v2/test_game_services_integration.py::TestDiceGameServiceIntegration::test_play_dice_success PASSED
+tests/v2/test_game_services_integration.py::TestDiceGameServiceIntegration::test_play_dice_insufficient_tickets PASSED
+
+================================== FAILURES ===================================
+___________ TestMissionServiceIntegration.test_handle_log_in_event ____________
+
+self = <v2.test_game_services_integration.TestMissionServiceIntegration object at 0x0000022011D80410>
+test_db_session = <sqlalchemy.orm.session.Session object at 0x00000220165A4C90>
+base_user = <app.v2.models.user.V2User object at 0x00000220165A5B90>
+
+    def test_handle_log_in_event(self, test_db_session, base_user):
+        """Should handle login events with consecutive login logic."""
+        # Setup missions
+>       m1 = Mission(action_type="LOGIN", category=MissionCategory.DAILY, is_active=True, points=10, logic_key="L1")
+
+tests\v2\test_game_services_integration.py:189: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<string>:4: in __init__
+    ???
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:566: in _initialize_instance
+    with util.safe_reraise():
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\langhelpers.py:146: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\state.py:564: in _initialize_instance
+    manager.original_init(*mixed[1:], **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.v2.models.core.mission.Mission object at 0x00000220162367D0>
+kwargs = {'action_type': 'LOGIN', 'category': <MissionCategory.DAILY: 'DAILY'>, 'is_active': True, 'logic_key': 'L1', ...}
+cls_ = <class 'app.v2.models.core.mission.Mission'>, k = 'points'
+
+    def _declarative_constructor(self: Any, **kwargs: Any) -> None:
+        """A simple constructor that allows initialization from kwargs.
+    
+        Sets attributes on the constructed instance using the names and
+        values in ``kwargs``.
+    
+        Only keys that are present as
+        attributes of the instance's class are allowed. These could be,
+        for example, any mapped columns or relationships.
+        """
+        cls_ = type(self)
+        for k in kwargs:
+            if not hasattr(cls_, k):
+>               raise TypeError(
+                    "%r is an invalid keyword argument for %s" % (k, cls_.__name__)
+                )
+E               TypeError: 'points' is an invalid keyword argument for Mission
+
+..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\orm\decl_base.py:2142: TypeError
+============================== warnings summary ===============================
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty
+  C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\_internal\_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'validation_alias' attribute with value AliasChoices(choices=['cc_id', 'external_id']) was provided to the `Field()` function, which has no effect in the context it was used. 'validation_alias' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+    warnings.warn(
+
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty
+  C:\Users\JAVIS\ch\ch25\app\main.py:147: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty
+  C:\Users\JAVIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\applications.py:4495: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_get_user_missions_empty
+  C:\Users\JAVIS\ch\ch25\app\main.py:176: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+
+---------- coverage: platform win32, python 3.11.9-final-0 -----------
+Name                                                 Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------
+app\__init__.py                                          0      0 100.0%
+app\core\__init__.py                                     0      0 100.0%
+app\core\config.py                                      93      0 100.0%
+app\core\error_handlers.py                              55     29  47.3%   13, 60-63, 74-76, 83, 91-124, 129-141
+app\core\exceptions.py                                  25      8  68.0%   9, 16, 23, 30, 37, 44, 51, 58
+app\core\kst_response.py                                10      2  80.0%   18-19
+app\core\metrics.py                                      7      7   0.0%   1-33
+app\core\notifications.py                               55     55   0.0%   1-90
+app\core\redis.py                                        4      0 100.0%
+app\core\security.py                                    56     43  23.2%   18-31, 39-49, 53-59, 63-68, 72-75, 80, 85-97
+app\core\telegram.py                                    21     21   0.0%   1-42
+app\db\__init__.py                                       0      0 100.0%
+app\db\base.py                                           4      0 100.0%
+app\db\base_class.py                                     2      0 100.0%
+app\db\session.py                                        6      0 100.0%
+app\main.py                                            151    101  33.1%   25, 30-91, 120, 149-173, 180-228, 240, 246-253
+app\schemas\__init__.py                                  0      0 100.0%
+app\schemas\base.py                                     28     28   0.0%   6-59
+app\scripts\__init__.py                                  0      0 100.0%
+app\scripts\seed_test_user_v2_login.py                  19     19   0.0%   13-42
+app\v2\api\activity_routes.py                           14      2  85.7%   28, 46
+app\v2\api\admin\analytics_routes.py                   313    190  39.3%   155-158, 168-192, 196, 200-210, 223-236, 276-352, 370-410, 436-502, 524-579, 609-733, 767-774, 798-860
+app\v2\api\admin\csv_import_routes.py                  224    178  20.5%   35-75, 89-116, 139-180, 198-213, 266-292, 310-416, 443-460, 470-540
+app\v2\api\admin\daily_nudge_routes.py                  66     16  75.8%   93-97, 125-140, 161-185, 203-207, 234-240
+app\v2\api\admin\economy_routes.py                     551    451  18.1%   53-55, 67-88, 92-109, 128-181, 185, 189, 207, 244-282, 293-311, 330-375, 392-428, 444-470, 478-514, 522-547, 555-579, 589-603, 613-629, 643-676, 701-746, 756-800, 814-839, 854-879, 888-916, 920-954, 963-976, 985-995, 999-1004, 1013-1038, 1042-1075, 1084-1099, 1108-1118, 1122-1127, 1141-1225, 1238, 1248-1289, 1299-1340, 1355-1379, 1400, 1409-1416, 1425-1433
+app\v2\api\admin\game_config_routes.py                 319    276  13.5%   37-57, 61-68, 79-108, 114-140, 144-152, 156-165, 175-265, 274-316, 326-432, 440-445, 476-572, 601-637, 646-669, 689-756, 777-827, 845-882, 900-927
+app\v2\api\admin\inventory_routes.py                   405    290  28.4%   29-33, 83-189, 199-266, 276-327, 336-367, 376-430, 440-488, 497-523, 531-564, 576-627, 635-668, 680-730, 808-867, 893-950, 972-1001
+app\v2\api\admin\level_routes.py                        78     49  37.2%   37-39, 67-116, 125-165, 175-196
+app\v2\api\admin\marketing_routes.py                   158    122  22.8%   43-53, 62-118, 122-127, 131-133, 167-196, 206-248, 257-286, 295-299, 309-341, 350-369, 379-388, 397-464
+app\v2\api\admin\mission_routes.py                     225    127  43.6%   60-63, 67-80, 88-106, 115-148, 158-183, 192-201, 248-253, 258-259, 268-286, 310-396, 437-501, 519-555
+app\v2\api\admin\ops_routes.py                         416    290  30.3%   60-61, 69-234, 250, 261-272, 281-288, 297-300, 309-315, 325-332, 341-382, 399-450, 460-461, 470-473, 487-488, 505-506, 515-518, 537-547, 585-597, 629-666, 683-710, 727-814, 861-938, 994-1009, 1030-1058, 1079-1082, 1129-1142, 1176-1188
+app\v2\api\admin\prospect_routes.py                    145    110  24.1%   63-68, 89-103, 119-133, 159-164, 180-192, 223-243, 275-307, 331-362, 384-419, 447-482
+app\v2\api\admin\roi_routes.py                          29      4  86.2%   66-73, 95-102
+app\v2\api\admin\rollback_routes.py                     36      5  86.1%   76-90, 114-119
+app\v2\api\admin\segment_routes.py                      92     62  32.6%   26-38, 55-71, 89, 97-158, 169-189, 198-226, 236-261, 270-283, 295-329
+app\v2\api\admin\streak_routes.py                      134     98  26.9%   50-51, 69-97, 132-139, 165-191, 210-243, 258-265, 296-336, 361-441
+app\v2\api\admin\team_battle_routes.py                 264    100  62.1%   205-211, 221-224, 234-248, 259-276, 287-300, 310-314, 330-336, 346-349, 360-385, 402-425, 440-451, 462-477, 491-504, 518-535, 545-554, 565-586, 596-625
+app\v2\api\admin\ui_config_routes.py                    24      6  75.0%   48-51, 76-77
+app\v2\api\admin\unmatched_deposit_routes.py            51     33  35.3%   49-85, 109-136, 152-172, 183-188, 208-216
+app\v2\api\admin\user_routes.py                        660    545  17.4%   61, 69-75, 79-82, 90-108, 112-159, 176-272, 288-317, 330-356, 378-415, 435-474, 489-501, 518-563, 580-619, 647-751, 765-828, 853-881, 891-975, 988-996, 1019-1024, 1044-1134, 1148-1155, 1174-1185, 1194-1202, 1225-1252, 1262-1273, 1284-1305, 1315-1328, 1338-1351, 1365-1368, 1382-1388, 1403-1409, 1428-1471, 1494-1527, 1590-1661
+app\v2\api\admin\vault_routes.py                       127     66  48.0%   40, 51-52, 63, 72, 81-82, 91, 100-101, 111-112, 123-144, 197-235, 261-297, 314-349
+app\v2\api\admin_cc_deposit.py                          50     50   0.0%   8-175
+app\v2\api\admin_ops_plan.py                            94     94   0.0%   8-260
+app\v2\api\auth_routes.py                               54     31  42.6%   28-75, 96, 122-140, 168-186
+app\v2\api\dev_login.py                                 55     55   0.0%   2-80
+app\v2\api\events.py                                    26     15  42.3%   27-81
+app\v2\api\exchange_routes.py                           28      6  78.6%   42-46, 55
+app\v2\api\level_xp_routes.py                           12      3  75.0%   19-21
+app\v2\api\new_user_onboarding.py                      114    114   0.0%   8-257
+app\v2\api\routes.py                                   538    357  33.6%   114-123, 128, 133-134, 142-152, 157, 161-169, 173-181, 185-192, 201-209, 218-226, 234, 243-251, 259, 267-270, 278-280, 289-323, 336-346, 359-365, 375-395, 409-415, 423-427, 435-441, 460-465, 473-486, 497-514, 522-566, 578-658, 663-666, 677, 682-686, 691-692, 697, 702-703, 713, 726-795, 803-825, 839-870, 880-935, 949-991, 1001-1004, 1016-1026, 1038-1042, 1053, 1057, 1061, 1068-1109, 1132, 1145, 1149, 1157, 1165, 1172, 1179
+app\v2\api\survey_routes.py                             42     23  45.2%   26-70, 79, 94-101, 116-117
+app\v2\api\telegram_routes.py                           93     63  32.3%   73-130, 154-184, 194-210, 215-228
+app\v2\api\ui_config_public_routes.py                   18      4  77.8%   31-34
+app\v2\api\user_latency_routes.py                       57     22  61.4%   74-109, 122-132, 154
+app\v2\api\user_link_routes.py                          49     21  57.1%   57-87, 137-143, 157-171
+app\v2\api\user_routes.py                               14      2  85.7%   17, 33
+app\v2\api\v1_auth_user_alias.py                        42     42   0.0%   12-102
+app\v2\api\vault_routes.py                              27     10  63.0%   24-29, 37-41
+app\v2\api\viral_routes.py                              48     22  54.2%   57-77, 96-115
+app\v2\core\exceptions.py                                2      0 100.0%
+app\v2\core\telegram.py                                 43     35  18.6%   30-73, 89-96, 109-120
+app\v2\middleware\admin_audit.py                        43     33  23.3%   51-100, 125-137
+app\v2\services\admin_audit_service.py                  12      6  50.0%   18-31
+app\v2\services\admin_cc_deposit_service.py            229    188  17.9%   42-47, 57-62, 71-120, 127-137, 141, 145-152, 156-378, 382-401, 405-408, 412-449
+app\v2\services\admin_economy_service.py                85     58  31.8%   14-17, 21, 25-47, 51-62, 66-79, 83-84, 93-94, 103-126, 130-134
+app\v2\services\admin_inventory_service.py              90     69  23.3%   22-56, 68-100, 112-145, 157-188, 192, 198-204
+app\v2\services\admin_message_service.py                45     31  31.1%   27-38, 42-62, 73-86
+app\v2\services\admin_user_service.py                  219    182  16.9%   23-26, 30-39, 43-46, 52-76, 80-102, 106-107, 121-157, 161-167, 176-218, 226-399
+app\v2\services\audit_service.py                        23      2  91.3%   13, 15
+app\v2\services\auth_service.py                        130    104  20.0%   19-21, 50-61, 75-88, 104-122, 135-148, 164-179, 198-219, 240-295, 316-346
+app\v2\services\ch25_event_service.py                  128    128   0.0%   1-167
+app\v2\services\circuit_breaker_service.py             131     61  53.4%   44, 52-55, 69-72, 85, 96, 132-133, 136-154, 161-168, 176-182, 186-198, 206-208, 222-237, 241, 245
+app\v2\services\csv_import_service.py                  183    160  12.6%   35-40, 66-142, 155-190, 194-199, 214-360, 388-406
+app\v2\services\csv_to_redis_service.py                106     83  21.7%   26, 31-46, 63-91, 108-131, 148-157, 171-188, 202-215, 234-251, 255-260
+app\v2\services\daily_nudge_service.py                  75     56  25.3%   49-87, 112-150, 182-215, 242-269
+app\v2\services\event_service.py                       144    128  11.1%   23-47, 51-124, 142-165, 168-237, 251-260, 274-286
+app\v2\services\game_common.py                         218    102  53.2%   55, 90, 110-111, 117, 120-122, 130-137, 141-151, 158-159, 166-167, 175, 178, 182-183, 202-203, 210-211, 218-227, 231-243, 247-262, 266-280, 287-290, 294-295, 299-303, 313-333
+app\v2\services\game_config_service.py                  80     40  50.0%   27, 52-81, 101-102, 106-129, 144-177, 188, 196-211
+app\v2\services\game_log_analytics_service.py          138    138   0.0%   9-619
+app\v2\services\golden_event_service.py                 42     24  42.9%   22-34, 39, 43-45, 48-56
+app\v2\services\golden_intervention_service.py          62     62   0.0%   2-179
+app\v2\services\golden_scheduler_service.py             13     13   0.0%   20-43
+app\v2\services\hq_daily_deposit_import_service.py     217    217   0.0%   17-481
+app\v2\services\hq_margin_import_service.py            228    228   0.0%   1-555
+app\v2\services\hq_margin_stats_service.py              16     16   0.0%   8-57
+app\v2\services\idempotency_service.py                  56     39  30.4%   18, 22, 33-105, 109-112
+app\v2\services\inventory_service.py                   215    173  19.5%   23, 33-46, 56-69, 84-95, 99-104, 108-112, 127-152, 168-190, 205-257, 261-262, 278-304, 319-352, 364-378, 405-474
+app\v2\services\latency_survival_service.py             73     51  30.1%   28, 42-103, 115-131, 142-179
+app\v2\services\mission_service.py                     339     99  70.8%   40, 54, 63, 73, 77, 90-91, 144-148, 153, 171-175, 211, 251, 267, 290-296, 317, 320, 324, 342, 349, 356, 358, 360, 362, 364, 366, 368, 370, 373-395, 412, 426-427, 432-455, 474-475, 479, 483-484, 487, 513, 516-519, 527-528, 570, 584, 612-613, 653-695
+app\v2\services\ops_log_service.py                      29     18  37.9%   16-23, 39-61
+app\v2\services\paste_import_service.py                326    326   0.0%   9-741
+app\v2\services\prospect_linking_service.py            150    125  16.7%   30, 37-43, 51-53, 72-106, 135-169, 193-249, 278-290, 308-405, 416-443
+app\v2\services\retention_intervention_service.py      149    116  22.1%   47-120, 123-158, 166-194, 197-202, 205-219, 222-233, 236-248, 251-256, 259-278, 281-286, 290-302
+app\v2\services\reward_scheduler.py                     35     20  42.9%   19-21, 24-31, 34-35, 38-47
+app\v2\services\reward_service.py                      137    100  27.0%   34-64, 77, 79, 97, 103, 108-111, 130-135, 146-155, 159-168, 182-280
+app\v2\services\roi_analysis_service.py                 85     57  32.9%   47-54, 87-130, 163-177, 203-230, 257-272, 298-314
+app\v2\services\rollback_service.py                     77     53  31.2%   25-29, 33-35, 44-46, 55-57, 67, 103-160, 189-214, 248, 278-315, 337
+app\v2\services\segment_rules_engine.py                 85     54  36.5%   38-49, 53-55, 59-108
+app\v2\services\segment_service.py                     272    209  23.2%   93-98, 102-115, 120-147, 151-152, 162-172, 176-187, 191-195, 199-200, 212-222, 226-278, 304-313, 317-324, 332-354, 361-378, 382-394, 399-420, 447-461, 476-532, 553-581
+app\v2\services\shop_service.py                         59     44  25.4%   43-115, 125-149
+app\v2\services\spending_logger_service.py              75     47  37.3%   38-51, 56-64, 78-135, 146, 165, 185
+app\v2\services\streak_service.py                      189    159  15.9%   43-44, 52-53, 70-73, 77-78, 96-127, 139-145, 157-188, 192, 196-201, 227-301, 317-331, 352-379, 406-499, 515-558
+app\v2\services\survey_reward_service.py                39     31  20.5%   20-65
+app\v2\services\survey_service.py                      117     93  20.5%   46, 68, 79-87, 90-97, 100-116, 119-135, 158-199, 202-234, 243-257, 261-269
+app\v2\services\team_battle_admin_service.py           234    203  13.2%   42-45, 49, 63-92, 107-157, 172-213, 217-225, 239, 254-257, 261-275, 302-319, 332-361, 379-415, 422-438, 447-494, 510-544, 560-582, 596-665, 682-703, 714-732, 740-781
+app\v2\services\team_battle_service.py                 199     78  60.8%   28-32, 43, 46, 59, 69, 75, 78-81, 116, 122, 127, 132, 151, 159, 207-238, 251-303, 313-337, 340-373, 380, 396, 400, 404, 427
+app\v2\services\ticket_zero_service.py                  23      0 100.0%
+app\v2\services\ui_config_service.py                    29      5  82.8%   31-35
+app\v2\services\unmatched_deposit_log_service.py       133    107  19.5%   44, 51-55, 60, 90-112, 137-210, 214-234, 263-332, 353-376, 398-459, 477-498
+app\v2\services\user_service.py                         36     24  33.3%   12, 16, 20-28, 34-60
+app\v2\services\v2_admin_mission_service.py             47     25  46.8%   19, 23-26, 31-38, 42-50, 54-56, 60
+app\v2\services\v2_admin_ops_log_service.py             70     41  41.4%   95-100, 104-110, 114-121, 138-165, 170-189
+app\v2\services\v2_admin_ops_plan_service.py           116     74  36.2%   21-24, 28-32, 36-39, 43-48, 52-60, 64-67, 71-75, 79-84, 88-91, 95-96, 100-103, 107-114, 118-131, 135-137, 141-143
+app\v2\services\v2_dice_game_service.py                179     49  72.6%   49, 77, 91, 95-99, 105, 118, 127-201, 230-233, 241, 255-256, 266, 269, 282-283
+app\v2\services\v2_exchange_service.py                  27     18  33.3%   32-72, 83-90
+app\v2\services\v2_lottery_game_service.py             187    147  21.4%   46-53, 57-81, 85-88, 92-99, 108-182, 202-367
+app\v2\services\v2_roulette_game_service.py            168    128  23.8%   49-56, 60-67, 71-81, 90-91, 95-99, 109-188, 208-396
+app\v2\services\vault2_service.py                      451    361  20.0%   100, 106-108, 112-115, 144, 150, 157, 160-186, 189, 192-232, 237-240, 250-254, 257, 259, 262, 269-285, 288-304, 307-338, 342-348, 352-360, 363-397, 404-434, 461-497, 507-579, 582, 585-592, 596-651, 667-802, 806-886, 904-989, 992-1016
+app\v2\services\vault_service.py                       834    709  15.0%   30-32, 36-39, 44-79, 88-91, 95-103, 112-140, 144-192, 216, 224, 231-234, 279-318, 323-327, 344-377, 381-383, 387-396, 420-421, 428, 436-472, 494-522, 544-559, 566-576, 579-584, 588-802, 842, 847, 852, 861, 864-867, 869, 876, 883, 886-920, 925-1075, 1088-1118, 1130-1172, 1182-1218, 1222-1257, 1269-1336, 1346-1374, 1378-1422, 1431-1612
+app\v2\tasks\daily_nudge_tasks.py                       21     11  47.6%   39-67
+app\v2\utils\timezone.py                                51     36  29.4%   20, 25, 41-57, 69-71, 83-104, 112, 124-128, 140-141
+app\v2\workers\golden_event_worker.py                   52     42  19.2%   13-55, 59-64, 68-70, 76
+app\v2\workers\golden_intervention_worker.py           117     95  18.8%   22-25, 29-32, 36-60, 64-107, 111-132, 136-176, 180-185, 189-191, 197
+app\worker\__init__.py                                   2      0 100.0%
+app\worker\celery_app.py                                 8      1  87.5%   53
+app\workers\ch25_event_worker.py                       451    399  11.5%   48-60, 64-72, 76-85, 89-90, 94-104, 108-114, 118, 122-130, 134-137, 141-148, 152-157, 168-176, 189-214, 218-236, 240-256, 260-271, 275-278, 282, 286-300, 304-319, 331-682, 686-688, 694
+app\workers\ops_outbox_worker.py                        82     71  13.4%   17-29, 33, 44-111, 118-120, 126
+----------------------------------------------------------------------------------
+TOTAL                                                14954  10869  27.3%
+
+FAIL Required test coverage of 70% not reached. Total coverage: 27.32%
+=========================== short test summary info ===========================
+FAILED tests/v2/test_game_services_integration.py::TestMissionServiceIntegration::test_handle_log_in_event
+================== 1 failed, 32 passed, 5 warnings in 6.36s ===================

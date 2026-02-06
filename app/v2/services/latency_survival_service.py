@@ -1,5 +1,6 @@
 ﻿from datetime import datetime, timedelta
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
@@ -17,10 +18,14 @@ class V2LatencySurvivalService:
     """
     
     # Provisional Reward Config (Can be moved to DB Config later)
-    # Provisional Reward Config (Can be moved to DB Config later)
     PROVISIONAL_REWARD_TYPE = "ROULETTE_TICKET"
-    PROVISIONAL_REWARD_AMOUNT = 3
+    # SoT(v1.2): ROULETTE_TICKET 5장
+    PROVISIONAL_REWARD_AMOUNT = 5
     MAX_PROVISIONAL_PER_HOUR = 3  # Rate Limit per User
+
+    @staticmethod
+    def _kst_now() -> datetime:
+        return datetime.now(ZoneInfo("Asia/Seoul"))
     
     @classmethod
     def submit_evidence(
@@ -41,7 +46,7 @@ class V2LatencySurvivalService:
             raise HTTPException(status_code=400, detail="DUPLICATE_TX_ID")
             
         # 2. Rate Limit (Simple count check)
-        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        one_hour_ago = cls._kst_now() - timedelta(hours=1)
         recent_count = db.query(V2UserDepositEvidence).filter(
             V2UserDepositEvidence.user_id == user_id,
             V2UserDepositEvidence.created_at >= one_hour_ago
@@ -116,7 +121,7 @@ class V2LatencySurvivalService:
             
         evidence.status = EvidenceStatus.VERIFIED
         evidence.matched_log_id = matched_log_id
-        evidence.verified_at = datetime.utcnow() # Use UTC for internal logic, DB converts if needed
+        evidence.verified_at = cls._kst_now()
         evidence.admin_memo = memo
         
         db.add(evidence)
@@ -142,7 +147,7 @@ class V2LatencySurvivalService:
             raise HTTPException(status_code=400, detail="INVALID_STATUS")
             
         evidence.status = EvidenceStatus.REJECTED
-        evidence.verified_at = datetime.utcnow()
+        evidence.verified_at = cls._kst_now()
         evidence.admin_memo = reason
         
         # Clawback Logic

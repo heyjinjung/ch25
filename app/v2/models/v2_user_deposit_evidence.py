@@ -33,7 +33,7 @@ class V2UserDepositEvidence(Base):
     status = Column(Enum(EvidenceStatus), nullable=False, default=EvidenceStatus.PENDING, index=True)
     
     # Grant & Match Info
-    reward_json = Column(JSON, nullable=True)  # ex: {"ROULETTE_TICKET": 5}
+    reward_json = Column(JSON, nullable=True)  # ex: {"ROULETTE_TICKET": 3}
     matched_log_id = Column(Integer, nullable=True)  # Soft link to v2_cc_deposit_log
     admin_memo = Column(Text, nullable=True)
     

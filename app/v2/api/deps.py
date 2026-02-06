@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import decode_access_token
 from app.db.session import SessionLocal
+from app.v2.models.auth_event import AuthEventType
 from app.v2.models.user import V2User, V2UserRole, V2UserStatus
+from app.v2.services.auth_service import log_auth_event
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -98,6 +100,19 @@ def get_current_admin_info(
             role_str = v2_user.role.value if hasattr(v2_user.role, 'value') else str(v2_user.role).upper()
 
     if not role_str or role_str == V2UserRole.USER.value:
+        try:
+            log_auth_event(
+                db,
+                user_id=admin_id,
+                event_type=AuthEventType.RBAC_DENIED,
+                ip_address=getattr(getattr(request, "client", None), "host", None),
+                user_agent=request.headers.get("user-agent"),
+                error_message="ADMIN_REQUIRED",
+                success=False,
+            )
+            db.flush()
+        except Exception:
+            pass
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ADMIN_REQUIRED")
 
     # Backward compatibility: treat SUPER_ADMIN as ADMIN.

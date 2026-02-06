@@ -629,22 +629,24 @@ class Vault2Service:
             .scalar()
         ) or 0
 
-        # 5. Total Vault Balances (Locked, Available, Reserved)
+        # 5. Total Vault Balances (Strict SoT: locked only)
         from app.v2.models import ExternalRankingData
         from app.v2.models import VaultWithdrawalRequest
 
         total_assets = db.query(func.sum(ExternalRankingData.deposit_amount)).scalar() or 0
 
         # Breakdown of Vault states
+        # Strict Vault Policy SoT: balance is `vault_locked_balance` only. `vault_available_balance` must not be used.
         total_locked = db.query(func.sum(V2User.vault_locked_balance)).scalar() or 0
-        total_available = db.query(func.sum(V2User.vault_available_balance)).scalar() or 0
+        total_available = 0
 
         # Reserved: Sum of pending withdrawal requests
         total_reserved = db.query(func.sum(VaultWithdrawalRequest.amount))\
             .filter(VaultWithdrawalRequest.status == "PENDING")\
             .scalar() or 0
 
-        total_liabilities = total_locked + total_available + total_reserved
+        # Pending withdrawals are reserved from locked balance (do not add on top of locked to avoid double counting).
+        total_liabilities = total_locked
 
         return {
             "today_accrual": accrual_summary,
@@ -746,7 +748,7 @@ class Vault2Service:
                 })
 
         elif type == "liabilities":
-            # Per-user liabilities = locked + available (excluding reserved withdrawal amounts).
+            # Strict Vault Policy SoT: per-user balance/liability is locked only.
             rows = (
                 db.query(
                     V2User.id,
@@ -756,20 +758,19 @@ class Vault2Service:
                     V2User.vault_locked_balance,
                     V2User.vault_available_balance,
                 )
-                .order_by((V2User.vault_locked_balance + V2User.vault_available_balance).desc(), V2User.id.asc())
+                .order_by(func.coalesce(V2User.vault_locked_balance, 0).desc(), V2User.id.asc())
                 .limit(limit)
                 .all()
             )
             for (uid, external_id, nickname, telegram_username, locked, available) in rows:
                 locked_amt = int(locked or 0)
                 available_amt = int(available or 0)
-                total_amt = locked_amt + available_amt
                 results.append({
                     "user_id": uid,
                     "external_id": external_id,
                     "nickname": nickname,
                     "telegram_username": telegram_username,
-                    "amount": total_amt,
+                    "amount": locked_amt,
                     "count": 1,
                     "timestamp": None,  # V2User lacks single expiry column
                     "meta": {"locked": locked_amt, "available": available_amt, "type": "liabilities"},
