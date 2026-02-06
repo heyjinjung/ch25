@@ -32,7 +32,7 @@ V2 배포 시 Docker Compose 설정의 필수 항목과 검증 기준을 정의�
 - [ ] redis
 
 ## 5. 헬스 체크 기준
-- [ ] backend 컨테이너 내부 `GET /api/health` 200
+- [ ] backend 컨테이너 내부 `GET /api/v2/health` 200
 - [ ] nginx 경유 `GET /health` 200
 - [ ] nginx 경유 `GET /api/v2/health/db` 200
 

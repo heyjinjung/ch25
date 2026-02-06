@@ -71,7 +71,7 @@ Ops 실행 결과 저장/조회 API 계약과 어드민 연동 범위를 정의�
 - [ ] `execution_error` 표시/로그 확인
 
 ## 7. 근거 (Source)
-- Ops 실행 결과 스키마 SoT: [docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md](./v2_ops_plan_execution_schema_sot_ko.md#L1)
+- Ops 실행 결과 스키마 SoT: [docs/SOT/deployment/v2_ops_plan_execution_schema_sot_ko.md](./v2_ops_plan_execution_schema_sot_ko.md#L1)
 
 ## 8. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

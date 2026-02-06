@@ -1,177 +1,210 @@
-# V2 풀스택 배포 런북 (V2 Full-Stack Deployment Runbook)
 
-**문서 타입**: 배포 운영 절차서 (Operational Runbook)
-**작성일**: 2026-01-29
-**프로젝트**: Golden V2
+문서 타입: SoT / 배포 운영 런북
+버전: v1.1
+작성일: 2026-01-29
+최종 수정: 2026-02-06
+작성자: GitHub Copilot
+대상: DevOps/Backend/운영/QA
+상태: SoT
 
----
+# V2 배포 SoT 마스터 런북 (V2 Deployment SoT Master Runbook)
 
-## 🏗️ 1. 배포 전 점검 (Pre-Deployment Checklist)
+## 1. 목적 (Purpose)
+V2(Golden V2) 운영 서버 배포를 위한 **단일 기준(SoT) 런북**을 제공한다. 본 문서는 서버 셋업, 환경 변수, 배포 절차, 마이그레이션, 헬스 체크, 스모크 검증, 모니터링, 롤백, 트러블슈팅을 통합한다.
 
-배포 직전 로컬 또는 스테이징 환경에서 반드시 다음 항목을 통과해야 합니다.
+## 2. 범위 (Scope)
+- 배포 대상: backend/frontend/nginx/db/redis/telegram_bot/celery-worker/celery-beat
+- 인프라: Vultr(Seoul), Docker Compose, MySQL, Redis
+- 운영 정책: Asia/Seoul(KST) + **09:00 리셋(운영일)**
 
-- [x] **V1 코드 완전 제거**: 모든 API 라우트가 `app/v2` 네임스페이스를 참조하는지 확인.
-      0129_실제 서비스 코드(app/, src/) 내 v1 네임스페이스/라우트/핸들러/임포트 등은 모두 제거되어 있고,
-      legacy/v1 관련 주석/호환성 코드만 일부 남아 있습니다.
-      예시: Legacy redirect, LegacyTokenType, fallback to legacy, V1-style, v1 디자인, v1/v2 공용 등
-      일부 라우터/컴포넌트에서 legacy path 리다이렉트, v1 UX/디자인 유지 등 주석/설명
-- [x] **KST 09:00 정합성**: 모든 Scheduler 및 Task가 `Asia/Seoul` 타임존을 따르는지 확인.
-      tests/v2/test_daily_nudge_service.py에서 09:00 KST 경계, 운영일, 타임존 관련 테스트(운영일 시작, 00:00~09:00 KST  
-      경계, business_day_start, today/yesterday 계산 등) 모두 포함
-      총 31개 테스트 전부 통과(PASSED)
-- [x] **RBAC 보안**: `SUPERADMIN` 외에는 ROI 및 CSV 임포트 접근권한이 없는지 확인. ?? 
-      슈퍼어드민 개념 폐기!! 
-      “SUPERADMIN” 개념은 폐기(더 이상 별도의 슈퍼어드민 등급/권한 없음)
-      모든 운영/관리 권한은 “ADMIN” 등급(혹은 ADMINUserProfile의 tags 기반)으로 통합·정규화됨
-      RBAC 정책은 “ADMIN” 권한 이상만 ROI, CSV 임포트 등 민감 기능 접근 가능(별도 SUPERADMIN 예외 없음)
-      체크리스트/런북/문서에 남아있는 “SUPERADMIN” 언급은 과거 정책의 잔재로, 최신 learned_ 기준과 불일치
-- [x] **토큰 만료 정책**: Access(15m), Refresh(30d) 정책이 환경 변수에 설정됨.
-      Access(15m), Refresh(30d) 만료 정책은 실제 코드와 환경설정에 모두 구현되어 있음
-- [x] **Circuit Breaker 한도(SoT) 정합성**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 환경/코드/테스트/운영 정책에 일치하는지 확인.
----
+## 3. SoT 우선순위 및 핵심 원칙 (SoT Priority & Principles)
+1) 최신 learned_ 문서/핫픽스와 본 문서가 충돌할 경우 learned_를 우선한다.
+2) 모든 비즈니스 로직/운영일 계산은 `Asia/Seoul` 및 **09:00 리셋**을 따른다. (naive datetime 금지)
+3) 프로덕션에서 `DEV_LOGIN_ENABLED=false`, `TEST_MODE=false`는 필수다.
+4) RBAC은 “SUPERADMIN” 예외 없이 운영 정책에 맞게 정규화한다(과거 문서의 SUPERADMIN 언급은 잔재로 간주).
+5) Circuit Breaker 한도는 운영 SoT로 고정한다.
+   - `CIRCUIT_LIMIT_VAULT=100000` (시간당 금고 지급 한도, KRW)
+   - `CIRCUIT_LIMIT_TICKET=30` (시간당 티켓 지급 한도, 장)
 
-## 🧪 2. 최소 통합 테스트 세트 (Smoke Tests)
+## 4. 사전 준비 (Prerequisites)
+### 4.1 서버 사양
+- Provider: Vultr (Cloud Compute)
+- Location: Seoul (ICN)
+- OS: Ubuntu 22.04 LTS
+- 권장: 2 vCPU / 4GB RAM / 80GB SSD 이상
 
-배포 전 아래 테스트 스위트를 실행하여 핵심 비즈니스 로직의 결함을 차단합니다.
+### 4.2 도메인/SSL/CORS
+- 도메인: `cc-jm.com` (유저 & 어드민 통합)
+- SSL: HTTPS 필수(nginx 프록시에서 종료)
+- CORS 허용 예시: `https://cc-jm.com`, `https://www.cc-jm.com`, `http://149.28.135.147`
 
-### 2.1 백엔드 핵심 (pytest)
-Golden V2 배포 품질 보장을 위해 아래 모든 영역에 대해 테스트/검증이 필요합니다.
+### 4.3 텔레그램 봇
+- BotFather에서 `SetWebApp`으로 `https://cc-jm.com` 연결
+- 프로덕션 전용 Bot Token 사용(민감정보는 `.env.production`에서 로드)
 
-**[x]아키텍처/SoT 준수**: V1 코드 의존성 완전 제거, V2 네임스페이스 일관성
-      - pytest -v tests/v2_tests/phase1_env/test_v2_architecture_sot.py
-**[x]인증/권한(RBAC)**: Telegram Auth, RBAC, ADMIN 권한, 일반 유저 차단, SUPERADMIN 폐기
-      - pytest -v tests/v2/test_telegram_auth.py
-      - pytest -v tests/v2/test_admin_rbac.py
-**[x]Golden 핵심로직**: Circuit Breaker, ROI, Rollback, Daily Nudge 등
-      - pytest -v tests/v2/test_circuit_breaker.py
-      - pytest -v tests/v2/test_roi_rollback_service.py
-      - pytest -v tests/v2/test_daily_nudge_service.py
-      - pytest -v tests/v2/test_latency_survival.py
-**[x]Vault & Economy**: 금고 잔액 동기화, 출금/입금, VaultLedger, daily_vault_spent, CC Deposit 등
-      - pytest -v tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py
-      - pytest -v tests/v2_tests/phase2_core/test_cc_deposit_logic.py
-      - pytest -v tests/v2_tests/phase2_core/test_vault_limit_suspension.py
-**[x]Inventory & Shop**: 티켓/아이템 지급/차감, InventoryLog, Shop 구매/차감 등
-      - pytest -v tests/v2_tests/phase2_core/test_shop_inventory_logic.py
-      - pytest -v tests/v2_tests/phase4_admin/test_shop_crud.py
-**[x]보상(Rewards)**: 설문/보상 지급, 보상 로그/중복 지급 방지 등
-      - pytest -v tests/v2_tests/phase2_core/test_survey_reward_service_unit.py
-**[x]Mission & Streak**: 09:00 KST 리셋, 미션/스트릭 경계, 마일스톤 등
-      - pytest -v tests/v2_tests/phase2_core/test_v2_mission_service.py
-      - pytest -v tests/v2_tests/phase2_core/test_v2_mission_edge_cases.py
-      - pytest -v tests/test_streak_midnight_boundary.py
-**[x]Level & XP**: user_level_progress, XP 이벤트 로그, 레벨 보상표, Season Pass 폐기 등
-      - pytest -v tests/v2_tests/phase2_core/test_xp_cap.py
-      - pytest -v tests/test_enum_matches_sot.py (XP 및 레벨 Enum 정합성)
-**[x]Team Battle**: 시즌/팀 CRUD, 점수 조정, 멤버 관리, Admin API, FE 연동 등
-      tests/v2_tests/phase2_core/test_team_battle_admin_service_unit.py
-      tests/v2_tests/phase2_core/test_team_battle_edge.py
-      tests/v2_tests/phase5_public/test_team_battle_v2_routes_payload.py
-**[x]게임(Game)**: 게임 엔진 스모크, 게임 원장 분리, 어드민 주사위 연동 등
-      - pytest -v tests/v2_tests/phase3_game/test_game_engine_smoke.py
-      - pytest -v tests/v2_tests/phase3_game/test_game_ledger_separation.py
-      - pytest -v tests/v2_tests/phase3_game/test_dice_admin_integration.py
-**[x]Admin Dashboard**: 09:00 KST 리셋 통일, KPI 집계, Audit Log, 티켓/인벤토리 로그 KST 변환 등
-      tests/v2_tests/phase4_admin/test_admin_ops_routes_coverage.py
-      tests/v2_tests/phase4_admin/verify_admin_ops_v2.py
-      tests/v2/test_admin_api.py
-**[x]Golden Intervention**: Circuit Breaker, Daily Nudge, Latency Survival, ROI Calculator, Rollback Policy 등
-      tests/v2_tests/phase2_core/test_golden_intervention_service.py
-      tests/v2_tests/phase2_core/test_retention_intervention_service_unit.py
-      tests/v2_tests/phase5_public/test_golden_v2_integrated.py
-**[x]DB & Migration**: Alembic 마이그레이션, 필수 테이블/인덱스, DB 백업/복원 등
-      tests/v2_tests/phase1_env/test_environment_sanity.py (DB 구성 무결성)
-**[x]환경 변수/설정**: .env 값, JWT/Telegram/Redis/Sentry 등 필수 환경 변수, 보안 검증
-      tests/v2_tests/phase1_env/test_environment_sanity.py
-      tests/v2_tests/phase2_core/test_v2_imports_smoke.py
+## 5. 서버 환경 구축 (Server Setup)
+```bash
+apt-get update && apt-get install -y git docker.io docker-compose-plugin
+```
 
-**[]보안/품질**: Rate Limit, SQL Injection/XSS, CORS, DEV_LOGIN_ENABLED, TEST_MODE, JWT_SECRET 등
-      tests/v2_tests/phase4_admin/test_admin_ops_security.py
-      tests/v2/test_admin_rbac.py
-      tests/v2_tests/phase4_admin/test_api_coverage.py
+```bash
+git clone [Github_Url] /opt/ch25
+cd /opt/ch25
+```
 
-**테스트 커버리지**: pytest 전체, 커버리지 80% 이상, Enum 정합성, E2E 테스트 등
+## 6. 환경 변수(SoT) 설정 (.env)
+```bash
+cp .env.example .env
+nano .env
+```
 
-tests/test_enum_matches_sot.py  (Enum 정합성)
-tests/v2_tests/phase4_admin/test_api_coverage.py (API 커버리지)
-tests/v2_tests/phase5_public/verify_full_scenario_v2.py (전체 E2E 시나리오)
+### 6.1 필수 환경 변수
+```ini
+# Core
+ENV=production
+TEST_MODE=false
+DEV_LOGIN_ENABLED=false
+DOMAIN=cc-jm.com
 
+# Timezone (09:00 KST 리셋)
+TIMEZONE=Asia/Seoul
 
-### 2.2 프론트엔드 연동 (E2E)
-- [x] `GET /admin/ops/status`: 시스템 및 Redis 상태 OK 확인.
-- [x] `POST /admin/csv-import/validate`: 표준 로그 CSV 검증 통과 확인.
+# Database (MySQL)
+DATABASE_URL=mysql+pymysql://xmasuser:2026@db:3306/xmas_event
 
----
+# Security (JWT)
+JWT_SECRET=${JWT_SECRET}
+JWT_ALGORITHM=HS256
+V2_ACCESS_TOKEN_EXPIRE_MINUTES=15
 
-## 📢 3. 배포 통보 및 모니터링
+# Telegram
+TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+TELEGRAM_BOT_USERNAME=ccjm
+TELEGRAM_CHANNEL_USERNAME=-1003462656986
+TELEGRAM_MINI_APP_URL=https://cc-jm.com
 
-1. **로그 수준**: 배포 초기 24시간 동안은 `LOG_LEVEL=INFO` 유지 권장.
-2. **Sentry**: 배포 직후 새로운 Issue가 발생하는지 실시간 모니터링.
-3. **Redis Stream**: `golden:v2:events:game` 채널로 실시간 로그가 흐르는지 확인.
+# CORS
+CORS_ORIGINS=["https://cc-jm.com","https://www.cc-jm.com","http://149.28.135.147"]
+
+# Redis
+REDIS_URL=redis://redis:6379/0
+
+# Golden V2 Safety (Circuit Breaker - SoT)
+CIRCUIT_LIMIT_VAULT=100000
+CIRCUIT_LIMIT_TICKET=30
+```
+
+## 7. 배포 실행 (Execution)
+### 7.1 컨테이너 기동
+```bash
+docker compose up -d --build
+```
+
+### 7.2 DB 마이그레이션 (Alembic)
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+### 7.3 초기 데이터 적재 (선택)
+```bash
+docker compose exec backend python scripts/seed_v2_essential_data.py
+```
+
+## 8. 헬스 체크 및 스모크 검증 (Health & Smoke)
+### 8.1 표준 헬스 체크 라우트(SoT)
+- `GET /health` → `healthy`
+- `GET /api/v2/health` → `{ "status": "ok" }`
+- `GET /api/v2/health/db` → `{ "status": "ok" }`
+
+### 8.2 Today Feature (선택 인증)
+- `GET /api/v2/today-feature`
+  - 인증 없음: `feature_type`만
+  - 토큰 포함: `user_id` 포함
+
+### 8.3 운영 확인
+- Redis: `redis-cli ping` → `PONG`
+- DEV 로그인 차단: `POST /api/v2/dev/login` → 404
+
+## 9. 배포 전 최소 테스트(권장) (Recommended Smoke Tests)
+배포 전 아래 테스트 스위트를 실행해 핵심 결함을 차단한다.
+
+### 9.1 백엔드(pytest)
+- 아키텍처/SoT 준수: `pytest -v tests/v2_tests/phase1_env/test_v2_architecture_sot.py`
+- 인증/권한(RBAC): `pytest -v tests/v2/test_telegram_auth.py tests/v2/test_admin_rbac.py`
+- Golden 핵심: `pytest -v tests/v2/test_circuit_breaker.py tests/v2/test_daily_nudge_service.py`
+- Vault/Economy/Shop: `pytest -v tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_shop_inventory_logic.py`
+
+### 9.2 프론트/어드민(핵심 라우트)
+- `GET /api/v2/admin/ops/status`
+- `POST /api/v2/admin/csv-import/validate`
+
+## 10. 배포 후 모니터링 (Monitoring)
+1) 초기 24시간은 `LOG_LEVEL=INFO`를 권장한다.
+2) Sentry 신규 이슈/에러율을 확인한다.
+3) Redis Pub/Sub 이벤트(`golden:v2:events:*`) 흐름을 확인한다.
    ```bash
    redis-cli monitor | grep "golden:v2:events"
    ```
-4. **Circuit Breaker 한도(SoT)**: `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 값이 적용되어 있는지 확인.
+4) Circuit Breaker 한도가 반영되었는지 확인한다.
 
-.github/workflows/deploy.yml 파일에서 다음 3곳을 수정했습니다:
-Line 76: env 섹션에 SENTRY_DSN 추가
-Line 81: envs 리스트에 SENTRY_DSN 추가
-Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
+## 11. 롤백 (Rollback)
+### 11.1 롤백 판단 기준
+1) 텔레그램 인증/토큰 갱신 실패로 유저 진입이 차단됨
+2) Circuit Breaker 미발동 상태에서 비정상 재화 지급 발생
+3) 마이그레이션 실패로 신규 필드/테이블에 데이터 적재 불가
+4) 09:00 KST 리셋(미션/스트릭 등) 장애
 
----
+### 11.2 롤백 절차(요약)
+1) 이전 안정 버전으로 코드 롤백
+2) 컨테이너 재기동
+3) 필요 시 Alembic downgrade
+4) 캐시 초기화
+5) `/health`, `/api/v2/health/db` 재검증
 
-## 🚨 4. 롤백 판단 기준 (Rollback Criteria)
+## 12. 트러블슈팅(핵심 시나리오) (Troubleshooting)
+### 12.1 텔레그램 인증 unauthorized/Invalid Hash
+- 원인: `TELEGRAM_BOT_TOKEN` 불일치, initData 인코딩 문제
+- 조치: `.env` 토큰 대조, `app/v2/core/telegram.py` 로깅으로 `auth_date` 만료 확인
 
-다음 상황 발생 시 즉시 `git checkout <tags>` 및 컨테이너 롤백을 실행합니다.
+### 12.2 CircuitBreakerError 대량 발생
+- 원인: 한도값 과소/Redis 키 누적
+- 조치: status 확인 후 필요 시 reset(운영 API 기준)
 
-1. **로그인 불가**: Telegram Auth 또는 Refresh Token 갱신 실패로 유저 진입이 차단될 때.
-2. **자산 사고**: 서킷 브레이커(Circuit Breaker)가 발동하지 않고 비정상적인 재화가 지급될 때.
-3. **데이터 유실**: DB Migration 실패로 인해 신규 필드에 데이터가 쌓이지 않을 때.
-4. **운영일 장애**: 09:00 KST에 미션/스트릭 리셋이 발생하지 않을 때.
+### 12.3 Dockerfile/소스 누락 빌드 실패
+- 원인: 리포지토리 루트가 아닌 위치에서 실행, SCP 복사 대상 누락
+- 조치: `/opt/ch25`에서 실행, 배포 스크립트에서 작업 디렉터리 고정
 
----
+### 12.4 Celery worker/beat 빌드 실패(requirements.txt not found)
+- 원인: 서버에 소스가 없어 로컬 빌드 실패
+- 조치: pre-built 이미지 사용 설정
 
-## 📡 5. 배포 후 정밀 확인 (Post-Deployment Validation)
+### 12.5 프로덕션 볼륨 마운트 실패(alembic.ini mount error)
+- 원인: 프로덕션에 개발용 볼륨 마운트 포함
+- 조치: 프로덕션 compose에서 개발용 마운트 제거, override로 분리
 
-### 👤 5.1 유저 경험 검증 (User Experience - UX)
-유저가 실제 게임 서비스를 이용하는 데 문제가 없는지 직접 테스트합니다.
-1. **텔레그램 연동**: 봇 메뉴를 통해 웹앱 진입 시 닉네임과 `cc_id`가 상단에 올바르게 노출되는가?
-2. **자산 동기화**: 메인 지갑 잔액이 `locked_balance`와 일치하며, 0.1초 이내로 업데이트되는가?
-3. **미션 시작**: 첫 접속 시 '데일리 출석' 미션이 자동으로 시작(In-progress)되는가?
+## 13. 관련 SoT/세부 문서 (References)
+- 서버 셋업 상세: `0000_2026_v2_server_deployment_guide_ko.md`
+- 배포 자동화 스크립트 가이드: `v2_deployment_automation_script_ko.md`
+- Docker Compose 가이드: `v2_deployment_docker_compose_guide_ko.md`
+- 롤백 가이드: `v2_deployment_rollback_script_ko.md`
+- System/Ops 라우트 SoT: `v2_system_ops_sot_ko.md`
+- 배포 트러블슈팅 리포트: `0000_2026_v2_deployment_troubleshooting_guide_ko.md`
+- Golden 운영/관제 로직: `golden_v2_operational_logic_ko.md`
+- Ops 실행 스키마: `v2_ops_plan_execution_schema_sot_ko.md`
+- Ops 액션 용어집: `v2_ops_action_glossary_sot_ko.md`
+- Ops 실행 결과 API 계약: `v2_ops_execution_api_contract_ko.md`
+- 운영 메시지 정책: `v2_admin_message_policy_sot_ko.md`
+- 상점 상품 UI Config SoT: `v2_shop_products_ui_config_sot_ko.md`
 
-### 🛡️ 5.2 어드민 운영 검증 (Admin Governance - Ops)
-운영자가 시스템을 통제하고 지표를 확인하는 데 결함이 없는지 테스트합니다.
-1. **RBAC 필터링**: `STAFF` 계정으로 로그인 시 `Circuit Breaker` 설정 페이지 접근이 차단되는가?
-2. **ROI 실시간 집계**: 최근 1시간 이내의 로그 데이터가 ROI 대시보드 그래프에 반영되는가?
-3. **지급 도구(Admin Tool)**: 유저에게 수동으로 티켓 1장을 지급했을 때, `Intervention Log`에 기록되고 유저 인벤토리에 즉시 반영되는가?
-4. **CSV 분석 엔진**: 외부 로그 CSV를 업로드했을 때, 베팅액 집계(GGR)가 소수점 단위 오차 없이 계산되는가?
+## 14. 운영 서버 검증 기록(참고) (2026-01-30)
+본 섹션은 과거 검증 로그의 보관이며, 현재 SoT 검증 기준은 8~11장을 따른다.
 
----
-## ✅ 6. 점검 결과 (2026-01-30)
+### 14.1 컨테이너 상태(요약)
+- backend/frontend/db/redis/nginx/telegram_bot/celery-worker/celery-beat: 정상 가동(healthy)
 
-### 6.1 환경/인프라
-- Docker Compose 상태: backend/frontend/nginx/db/redis 모두 Healthy
-- Redis: `PONG` 확인
-- Alembic: `96be4ed554ee (head)` 확인
-- ENV: `DEV_LOGIN_ENABLED=false`, `TEST_MODE=false`, `TIMEZONE=Asia/Seoul`, `CIRCUIT_LIMIT_VAULT=100000`, `CIRCUIT_LIMIT_TICKET=30` 확인
-- JWT/Telegram 시크릿: 값 존재 확인(문서에는 노출하지 않음)
-- 헬스 체크: `/health`, `/api/v2/health/db` → 404 (Not Found)
+### 14.2 헬스체크(요약)
+- `/health` 및 `/api/v2/health`는 정상 응답으로 기록됨
+- `/api/v2/health/db`는 환경에 따라 누락/라우팅 이슈가 발생할 수 있으므로, 배포 후 반드시 재검증한다
 
-### 6.2 테스트 실행 결과
-- `pytest tests/v2/ -v` → **313 passed**
-- `pytest tests/v2_tests/ -v` → **208 passed, 4 failed, 3 skipped**
-      - 실패:
-            - `tests/v2_tests/phase4_admin/test_admin_analytics_baseline.py::test_vault2_stats_aggregation` (SQLite NOT NULL: `vault_earn_event.earn_event_id`)
-            - `tests/v2_tests/phase5_public/test_public_routes_smoke_extended.py::test_v2_public_routes_smoke_extended` (401 AUTH_REQUIRED)
-            - `tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_verify_full_scenario_v2` (401 AUTH_REQUIRED)
-            - `tests/v2_tests/phase5_public/test_verify_full_scenario_v2.py::test_full_scenario_v2` (401 AUTH_REQUIRED)
-- `pytest tests/test_streak_midnight_boundary.py -v` → **15 passed**
-- `pytest tests/test_enum_matches_sot.py -v` → **6 passed, 1 error**
-      - 에러: teardown 시 `season_pass_reward_log` 테이블 누락
-
----
-**최종 업데이트**: 2026-01-30
-**승인**: CTO / Product Owner
-
-## 7. 변경 이력
-- 2026-01-30: 체크리스트 기반 점검 결과 추가
+## 15. 변경 이력
+- v1.1 (2026-02-06): 배포 관련 SoT 문서들을 기준으로 마스터 런북 통합(환경변수/헬스체크/롤백/트러블슈팅/참조 링크 정리)

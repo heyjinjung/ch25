@@ -56,7 +56,7 @@
   - MySQL `ADD COLUMN IF NOT EXISTS` 미지원 → `column_exists()` 함수로 수정
   - Mission Stats 500 에러 → 잘못된 `type_descriptor` 코드 제거
 - **목업 데이터 정리**: 수익/지출, 재고 데이터 로컬 DB에서 삭제
-- **트러블슈팅 문서**: [0000_2026_v2_deployment_troubleshooting_guide_ko.md](docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md)
+- **트러블슈팅 문서**: [0000_2026_v2_deployment_troubleshooting_guide_ko.md](docs/SOT/deployment/0000_2026_v2_deployment_troubleshooting_guide_ko.md)
 
 ### [2026-01-28 금고 정책 SoT 승격 내역]
 - learned_/vault/20260128_vault_balance_sync_update.md: V1/V2 금고 잔액 동기화 정책, 서비스/테스트 케이스 개선, pytest 통과
@@ -109,7 +109,7 @@
 - **아이템/인벤토리 SoT**: docs/SOT/inventory/v2_item_inventory_sot_ko.md
 - **상점/교환소 정책 SoT**: docs/SOT/shop/v2_shop_exchange_policy_sot_ko.md
 - 상점/인벤토리 서비스 설계: docs/SOT/shop/v2_shop_inventory_service_design_ko.md
-- 상점 상품 UI Config SoT: docs/v2_specs/05_ops/v2_shop_products_ui_config_sot_ko.md
+- 상점 상품 UI Config SoT: docs/SOT/deployment/v2_shop_products_ui_config_sot_ko.md
 - **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
 - **V1->V2 상점 이관 검증 보고서**: docs/v2_specs/99_verification/sot_verification_report_shop.md
 - 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
@@ -145,15 +145,15 @@
 - **신규 유저 미션 로직 SoT**: docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md
 - 게임 액션 스키마 SoT: docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md
 - 게임 엔진 표준화 설계: docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md
-- Ops Plan 실행 스키마 SoT: docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md
-- Ops Action 용어집 SoT: docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md
-- 운영 메시지 정책 SoT: docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md
-- Ops 실행 결과 API 계약: docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md
+- Ops Plan 실행 스키마 SoT: docs/SOT/deployment/v2_ops_plan_execution_schema_sot_ko.md
+- Ops Action 용어집 SoT: docs/SOT/deployment/v2_ops_action_glossary_sot_ko.md
+- 운영 메시지 정책 SoT: docs/SOT/deployment/v2_admin_message_policy_sot_ko.md
+- Ops 실행 결과 API 계약: docs/SOT/deployment/v2_ops_execution_api_contract_ko.md
 - 강력한 금고 정책 SoT: docs/SOT/vault/v2_strict_vault_policy_sot_ko.md
 - 프로그레션/레벨 스키마 SoT: docs/SOT/level/v2_progression_schema_ko.md
 - **Golden System 정의서**: docs/SOT/golden/golden_v2_system_definition_ko.md
 - **Golden 개입 로직 SoT**: docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md
-- **Golden Ops 로직 SoT**: docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md
+- **Golden Ops 로직 SoT**: docs/SOT/deployment/golden_v2_operational_logic_ko.md
 - **골든아워 정책 SoT**: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
 - **HQ Margin → CC 입금 자동 반영 설계**: docs/v2_specs/07_golden/v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 - **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
@@ -195,7 +195,7 @@ Implement Korean localization for inventory item names in the user-facing invent
 - Ensure all item types (including vouchers and gifticons) are correctly localized using the centralized mapping.
 md
 - (CSV Import) docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md
-- **(배포 트러블슈팅 가이드)** docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md
+- **(배포 트러블슈팅 가이드)** docs/SOT/deployment/0000_2026_v2_deployment_troubleshooting_guide_ko.md
 
 ## 5.1 V2 Admin 라우터 모듈(코드 맵)
 - 라우터 엔트리: app/v2/api/routes.py (admin_router include)
