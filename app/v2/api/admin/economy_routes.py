@@ -1286,7 +1286,7 @@ def verify_latency_evidence(
         auto_commit=False,
     )
     db.commit()
-    return {"success": True}
+    return {"success": True, "id": id}
 
 
 @router.post("/economy/latency-evidences/{id}/reject")
@@ -1337,7 +1337,7 @@ def reject_latency_evidence(
         auto_commit=False,
     )
     db.commit()
-    return {"success": True}
+    return {"success": True, "id": id}
 
 
 @router.get("/economy/deposits/unmatched")

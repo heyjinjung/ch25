@@ -22,7 +22,9 @@ Admin에서의 변경 사항은 Redis Pub/Sub을 통해 실시간으로 시스�
 
 ### 1.2 공통 연동 규격
 - **API 프리픽스**: `/api/v2/` (Client), `/api/v2/admin/` (Admin)
+- **Slugger (Naming Rule)**: 경로 슬러그는 소문자+하이픈(`-`) 표준을 사용하며 동일 의미 혼용을 금지합니다. (기준: `docs/SOT/00_api/v2_slugger_sot_ko.md`)
 - **인증**: `Authorization: Bearer <token>` (JWT 기반, ROLE_ADMIN 검증 필수)
+- **Datetime Policy (UTC 저장 / KST 표기)**: DB 저장은 UTC 유지, API 응답 datetime은 KST(+09:00) ISO 8601로 변환 표기합니다. (기준: `docs/SOT/00_api/v2_kst_api_response_policy_v1.0.md`)
 - **에러 규격**:
   ```json
   {

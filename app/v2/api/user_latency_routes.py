@@ -1,7 +1,6 @@
 ﻿"""V2 User Latency Survival Routes - 지연 입금 신고 API."""
 from typing import Optional
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -122,7 +121,7 @@ def get_my_evidences(
     from datetime import timedelta
     from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
     
-    thirty_days_ago = datetime.now(ZoneInfo("Asia/Seoul")) - timedelta(days=30)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     
     evidences = db.query(V2UserDepositEvidence).filter(
         V2UserDepositEvidence.user_id == current_user.id,

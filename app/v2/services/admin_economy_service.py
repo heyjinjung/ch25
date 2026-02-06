@@ -79,9 +79,9 @@ class V2AdminEconomyService:
         return result
 
     @staticmethod
-    def verify_latency_evidence(db: Session, evidence_id: int, log_id: int, admin_id: int) -> None:
+    def verify_latency_evidence(db: Session, evidence_id: int, log_id: int, admin_id: int):
         from app.v2.services.latency_survival_service import V2LatencySurvivalService
-        V2LatencySurvivalService.verify_evidence(
+        return V2LatencySurvivalService.verify_evidence(
             db,
             admin_id,
             evidence_id,
@@ -89,9 +89,9 @@ class V2AdminEconomyService:
         )
 
     @staticmethod
-    def reject_latency_evidence(db: Session, evidence_id: int, reason: str, admin_id: int) -> None:
+    def reject_latency_evidence(db: Session, evidence_id: int, reason: str, admin_id: int):
         from app.v2.services.latency_survival_service import V2LatencySurvivalService
-        V2LatencySurvivalService.reject_evidence(
+        return V2LatencySurvivalService.reject_evidence(
             db,
             admin_id,
             evidence_id,

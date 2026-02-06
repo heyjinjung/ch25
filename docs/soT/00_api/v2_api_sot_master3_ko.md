@@ -23,7 +23,7 @@
 - **미션 구조**: Daily, Weekly, Starter 카테고리로 구분되며 09:00 KST에 초기화됨.
 - **스트릭**: 연속 출석 일수에 따른 가중치(`multiplier`) 및 마일스톤 보상 적용.
 - **수령 방식**: `POST /api/v2/mission/{id}/claim` (자동 수령 플래그 지원).
-- **데이터 표기**: 미션 달성 일시 및 만료 시간은 전역 KST 응답 정책(`+09:00`)을 따름.
+- **데이터 표기**: 미션 달성 일시 및 만료 시간은 전역 KST 응답 정책(`+09:00`, 기준: `docs/SOT/00_api/v2_kst_api_response_policy_v1.0.md`)을 따름.
 
 ### 1.3 팀 배틀 (Team Battle)
 - **시즌제**: 활성 시즌(`seasons/active`) 조회 및 팀 기반 리더보드 운영.

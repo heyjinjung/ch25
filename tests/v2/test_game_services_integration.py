@@ -28,7 +28,9 @@ from app.v2.services.team_battle_service import V2TeamBattleService
 from app.v2.services.ticket_zero_service import V2TicketZeroService, TicketZeroEligibilityInput
 from app.v2.services.ui_config_service import UiConfigService
 from app.v2.services.v2_dice_game_service import V2DiceGameService
+from app.v2.services.team_battle_admin_service import TeamBattleAdminService
 from app.v2.services.inventory_service import V2InventoryService
+from app.v2.models.core.team_battle import TeamEventLog
 
 
 # =============================================================================
@@ -199,20 +201,25 @@ class TestMissionServiceIntegration:
         test_db_session.add_all([m1, m2])
         test_db_session.commit()
         
-        # 1. Normal login
+        # Setup yesterday's login using service's own logic to be safe
+        service = V2MissionService(test_db_session)
+        now_tz = service._now_tz()
+        today = service._operational_play_date(now_tz)
+        yesterday = today - timedelta(days=1)
+        
+        base_user.last_play_date = yesterday
+        test_db_session.commit()
+        
+        # One call should handle both
         V2MissionService.ensure_login_progress(test_db_session, base_user.id)
+        
         prog = test_db_session.query(UserMissionProgress).filter_by(user_id=base_user.id, mission_id=m1.id).first()
         assert prog is not None
         assert prog.current_value == 1
         
-        # 2. Consecutive login (mocking yesterday)
-        base_user.last_play_date = date.today() - timedelta(days=1)
-        test_db_session.commit()
-        V2MissionService.ensure_login_progress(test_db_session, base_user.id)
         prog2 = test_db_session.query(UserMissionProgress).filter_by(user_id=base_user.id, mission_id=m2.id).first()
-        # Note: if it's already updated today, it might skip.
-        # But here we didn't update m2 yet today.
         assert prog2 is not None
+        assert prog2.current_value == 1
 
     def test_claim_streak_reward_benefits_suspended(self, test_db_session, base_user):
         """Should fail if vault benefits are suspended during streak claim."""
@@ -260,6 +267,23 @@ class TestMissionServiceIntegration:
         
         if progress:
             assert progress.current_value >= 3
+
+    def test_update_progress_weekly_mission(self, test_db_session, base_user):
+        """Should update weekly mission progress."""
+        service = V2MissionService(test_db_session)
+        week_str = datetime.utcnow().strftime("%Y-W%V")
+        m = Mission(
+            title="Weekly Play", action_type="PLAY", category=MissionCategory.WEEKLY,
+            is_active=True, reward_type=MissionRewardType.POINT, reward_amount=50,
+            logic_key="W1", target_value=5
+        )
+        test_db_session.add(m)
+        test_db_session.commit()
+        
+        service.update_progress(base_user.id, "PLAY", delta=1)
+        prog = test_db_session.query(UserMissionProgress).filter_by(user_id=base_user.id, mission_id=m.id, reset_date=week_str).first()
+        assert prog is not None
+        assert prog.current_value == 1
 
     def test_normalize_action_type(self, test_db_session, base_user):
         """Test action type normalization (JOIN_CHANNEL aliases)."""
@@ -546,18 +570,213 @@ class TestTeamBattleServiceIntegration:
             season_id=active_season.id
         )
         
+        # Verify score
         score = test_db_session.query(TeamScore).filter_by(
-            team_id=test_team.id,
+            team_id=test_team.id, 
             season_id=active_season.id
         ).first()
-        
-        if score:
-            assert score.points >= 10
+        assert score is not None
+        assert score.points >= 10
 
-    def test_constants(self):
-        """Verify SoT constants."""
-        assert V2TeamBattleService.TEAM_MAX_MEMBERS == 7
-        assert V2TeamBattleService.TEAM_SELECTION_WINDOW_HOURS == 48
+    def test_auto_assign_team(self, test_db_session, base_user, active_season):
+        """Should automatically assign user to a team."""
+        service = V2TeamBattleService()
+        # Create a few teams
+        t1 = Team(id=311, name="Team X", is_active=True)
+        t2 = Team(id=312, name="Team Y", is_active=True)
+        test_db_session.add_all([t1, t2])
+        test_db_session.commit()
+        
+        service.auto_assign_team(test_db_session, base_user.id, now=active_season.starts_at + timedelta(minutes=1))
+        membership = service.get_membership(test_db_session, base_user.id)
+        assert membership is not None
+        assert membership.team_id in [311, 312]
+
+    def test_team_battle_views(self, test_db_session, team_user, test_team, active_season):
+        """Should test view methods for frontend compatibility."""
+        service = V2TeamBattleService()
+        
+        # 1. list_joinable_teams_view
+        teams = service.list_joinable_teams_view(test_db_session)
+        assert isinstance(teams, list)
+        
+        # 2. get_membership_view
+        service.join_team(test_db_session, team_id=test_team.id, user_id=team_user.id, bypass_selection=True)
+        view = service.get_membership_view(test_db_session, team_user.id)
+        assert view is not None
+        assert view["membership"]["team_id"] == test_team.id
+        
+        # 3. get_leaderboard_view
+        lb = service.get_leaderboard_view(test_db_session, active_season.id, limit=10, offset=0)
+        assert "entries" in lb
+
+    def test_join_team_selection_closed(self, test_db_session, team_user, active_season, test_team):
+        """Should fail to join if selection window is closed (48h)."""
+        service = V2TeamBattleService()
+        # Mock 'now' to be after 48h from season start
+        # Use utcnow() as service does
+        now = active_season.starts_at + timedelta(hours=49)
+        
+        with pytest.raises(HTTPException) as exc:
+            service.join_team(test_db_session, team_id=test_team.id, user_id=team_user.id, now=now)
+        assert exc.value.status_code == status.HTTP_403_FORBIDDEN
+        assert exc.value.detail == "TEAM_SELECTION_CLOSED"
+
+    def test_leave_team_locked(self, test_db_session, team_user, active_season, test_team):
+        """Should fail to leave if selection window is closed (48h)."""
+        service = V2TeamBattleService()
+        # Join within window
+        service.join_team(test_db_session, team_id=test_team.id, user_id=team_user.id, bypass_selection=True)
+        
+        # Try to leave outside window
+        now = active_season.starts_at + timedelta(hours=49)
+        with pytest.raises(HTTPException) as exc:
+            service.leave_team(test_db_session, user_id=team_user.id, now=now)
+        assert exc.value.status_code == status.HTTP_403_FORBIDDEN
+        assert exc.value.detail == "TEAM_LOCKED"
+
+    def test_join_team_full(self, test_db_session, active_season, test_team):
+        """Should fail to join if team is full (7 members)."""
+        service = V2TeamBattleService()
+        # Fill team with 7 members
+        for i in range(7):
+            u = V2User(id=7000 + i, cc_id=f"full_test_{i}")
+            test_db_session.add(u)
+            service.join_team(test_db_session, team_id=test_team.id, user_id=u.id, bypass_selection=True)
+        
+        # Try to join 8th member
+        u8 = V2User(id=7008, cc_id="full_test_8")
+        test_db_session.add(u8)
+        test_db_session.commit()
+        
+        with pytest.raises(HTTPException) as exc:
+            service.join_team(test_db_session, team_id=test_team.id, user_id=u8.id, bypass_selection=True)
+        assert exc.value.status_code == status.HTTP_409_CONFLICT
+        assert exc.value.detail == "TEAM_FULL"
+
+    def test_auto_assign_team_fewest_members(self, test_db_session, base_user, active_season):
+        """Should assign user to the team with the fewest members."""
+        service = V2TeamBattleService()
+        # Team A: 2 members
+        t1 = Team(id=321, name="Team Few 1", is_active=True)
+        # Team B: 1 member
+        t2 = Team(id=322, name="Team Few 2", is_active=True)
+        test_db_session.add_all([t1, t2])
+        test_db_session.commit()
+    
+        # Fill T1
+        for i in range(2):
+            u = V2User(id=7100 + i, cc_id=f"assign_test_{i}")
+            test_db_session.add(u)
+            service.join_team(test_db_session, team_id=t1.id, user_id=u.id, bypass_selection=True)
+            
+        # Fill T2 with 1
+        u_t2 = V2User(id=7110, cc_id="assign_test_t2")
+        test_db_session.add(u_t2)
+        service.join_team(test_db_session, team_id=t2.id, user_id=u_t2.id, bypass_selection=True)
+        
+        # Auto-assign should pick T2
+        service.auto_assign_team(test_db_session, base_user.id, now=active_season.starts_at + timedelta(minutes=1))
+        membership = service.get_membership(test_db_session, base_user.id)
+        assert membership is not None
+        assert membership.team_id == t2.id
+
+class TestTeamBattleAdminServiceIntegration:
+    """Integration tests for TeamBattleAdminService."""
+
+    @pytest.fixture
+    def team_user(self, test_db_session):
+        """Create a user for team battle testing."""
+        user = V2User(id=6002, cc_id="team_battle_admin_test_user")
+        test_db_session.add(user)
+        test_db_session.commit()
+        return user
+
+    @pytest.fixture
+    def active_season(self, test_db_session):
+        """Create an active season."""
+        now = datetime.utcnow()
+        season = TeamSeason(
+            id=202,
+            name="Test Season Beta",
+            starts_at=now - timedelta(hours=1),
+            ends_at=now + timedelta(days=7),
+            is_active=True
+        )
+        test_db_session.add(season)
+        test_db_session.commit()
+        return season
+
+    @pytest.fixture
+    def test_team(self, test_db_session):
+        """Create a test team."""
+        team = Team(id=302, name="Test Team Beta", is_active=True)
+        test_db_session.add(team)
+        test_db_session.commit()
+        return team
+
+    @pytest.fixture(autouse=True)
+    def setup_admin_test(self, test_db_session):
+        # Ensure any needed initial state is set
+        pass
+
+    def test_admin_adjust_contribution_append_only(self, test_db_session, test_team, team_user, active_season):
+        """Admin contribution adjustments should be append-only in logs."""
+        admin_service = TeamBattleAdminService()
+        
+        # Join team
+        tb_service = V2TeamBattleService()
+        tb_service.join_team(test_db_session, team_id=test_team.id, user_id=team_user.id, bypass_selection=True)
+        
+        # Initial adjustment
+        admin_service.adjust_member_contribution(
+            test_db_session,
+            team_id=test_team.id,
+            user_id=team_user.id,
+            delta=50,
+            reason="Initial bonus",
+            admin_id=999,
+            season_id=active_season.id
+        )
+        
+        # Second adjustment
+        admin_service.adjust_member_contribution(
+            test_db_session,
+            team_id=test_team.id,
+            user_id=team_user.id,
+            delta=-20,
+            reason="Correction",
+            admin_id=999,
+            season_id=active_season.id
+        )
+        
+        # Verify logs (should be 2 entries)
+        logs = test_db_session.query(TeamEventLog).filter_by(user_id=team_user.id, team_id=test_team.id).all()
+        assert len(logs) == 2
+        assert any(l.delta == 50 for l in logs)
+        assert any(l.delta == -20 for l in logs)
+        
+        # Verify team score (50 - 20 = 30)
+        score = test_db_session.query(TeamScore).filter_by(team_id=test_team.id, season_id=active_season.id).first()
+        assert score.points == 30
+
+    def test_admin_update_joined_at(self, test_db_session, team_user, test_team):
+        """Should allow admin to update joined_at timestamp."""
+        admin_service = TeamBattleAdminService()
+        tb_service = V2TeamBattleService()
+        tb_service.join_team(test_db_session, team_id=test_team.id, user_id=team_user.id, bypass_selection=True)
+        
+        new_date = datetime.utcnow() - timedelta(days=5)
+        admin_service.update_member_joined_at(
+            test_db_session,
+            user_id=team_user.id,
+            joined_at=new_date,
+            admin_id=999,
+            reason="Fixing typo"
+        )
+        
+        member = test_db_session.get(TeamMember, team_user.id)
+        assert member.joined_at == new_date
 
 
 # =============================================================================

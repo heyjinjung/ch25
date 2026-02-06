@@ -1,6 +1,5 @@
 ﻿"""V2 Latency Survival - User Deposit Evidence Model."""
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from typing import Any
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON, Enum
@@ -9,8 +8,8 @@ import enum
 
 from app.db.base_class import Base
 
-def _kst_now() -> datetime:
-    return datetime.now(ZoneInfo("Asia/Seoul"))
+def _utc_now() -> datetime:
+    return datetime.utcnow()
 
 class EvidenceStatus(str, enum.Enum):
     PENDING = "PENDING"
@@ -37,8 +36,8 @@ class V2UserDepositEvidence(Base):
     matched_log_id = Column(Integer, nullable=True)  # Soft link to v2_cc_deposit_log
     admin_memo = Column(Text, nullable=True)
     
-    # Timestamps (KST)
-    created_at = Column(DateTime, nullable=False, default=_kst_now)
+    # Timestamps (UTC naive; serialized to KST at API boundary)
+    created_at = Column(DateTime, nullable=False, default=_utc_now)
     verified_at = Column(DateTime, nullable=True)
     
     __table_args__ = (
