@@ -97,4 +97,12 @@
 - **검증**: 관련 테스트 파일에서 정상/예외 흐름 케이스 통과로 정합 확인.
 
 ---
+
+## [2026-02-06 추가 승격: Admin 감사로그/라우팅 표준 규칙] ✅
+
+- **배경**: W06 운영 이슈에서 감사로그 호출 오타/라우팅 prefix 불일치로 500/404가 발생
+- **결론**: Admin 공통 규칙으로 SoT 고정
+- **문서**: [20260206_admin_audit_and_routing_rules.md](./20260206_admin_audit_and_routing_rules.md)
+
+---
 (본 요약은 v2_db_admin_message_inbox_ko.md, v2_db_admin_message_ko.md, v2_admin_message_policy_sot_ko.md, v2_ops_action_glossary_sot_ko.md 등에서 Admin 관련 내용만 추출/정리한 1~3차 학습 결과입니다.)

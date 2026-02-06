@@ -239,7 +239,7 @@ WEEKLY_LOGIN_STREAK_TEST:
 - `submit_evidence()` 호출 시 XP/레벨 관련 서비스 호출이 없는지 코드 확인.
 - `V2InventoryService` 지급 로그(지갑/인벤토리 원장)만 생성되는지 확인.
 
-### 02-02 - MISSION/FRONTEND: 연속 스트릭 모달 미노출
+### 02-04 - MISSION/FRONTEND: 스트릭 클레임 버튼/모달 미표시 (claimable_day 매핑 누락) ✅
 
 **증상 정의**
 | 항목 | 내용 |
@@ -250,18 +250,28 @@ WEEKLY_LOGIN_STREAK_TEST:
 | 재현 빈도 | 항상 |
 
 **근본 원인 (증거 기반)**
-- 프론트 매핑에서 `claimable_rewards` 필드가 누락되어 모달 노출 조건이 충족되지 않음.
-- 관련 코드: [src/v2/api/missionApi.ts](../../src/v2/api/missionApi.ts)
+- 백엔드 응답에는 `claimable_day`, `claimable_rewards`가 정상적으로 내려오나,
+    프론트 타입/매핑/사용처가 이를 올바르게 반영하지 못해 표시 조건이 깨졌음.
+- 구체적으로:
+    1) `StreakInfoDto`에 `claimable_day` 필드가 누락
+    2) 화면에서 `claimable_rewards[0]`를 `claimable_day`처럼 사용
+    3) 헤더/미션 페이지 모두 동일한 잘못된 조건을 사용
+- 관련 코드:
+    - [src/v2/api/missionApi.ts](../../src/v2/api/missionApi.ts)
+    - [src/v2/pages/missions/MissionsPage.tsx](../../src/v2/pages/missions/MissionsPage.tsx)
+    - [src/v2/components/layout/V2AppHeader.tsx](../../src/v2/components/layout/V2AppHeader.tsx)
 
 **해결 방법**
-- `BackendStreakInfoSchema`에 `claimable_rewards` 추가.
-- 매핑 시 `claimable_rewards` 우선 적용, 없을 경우 `claimable_day` fallback.
+- `StreakInfoDto`에 `claimable_day` 필드 추가
+- `mapBackendStreakInfo()`에서 `claimable_day`를 우선 반영하고, `claimable_rewards`는 백엔드 값을 사용
+- `MissionsPage.tsx`, `V2AppHeader.tsx`에서 표시 조건을 `claimable_day` 기준으로 전환
 
 **검증 방법**
-- `GET /api/v2/mission/` 응답에 `claimable_rewards` 존재 시 모달 노출 확인.
-- KST 09:00 기준 스트릭 리셋 구간에서 동작 확인.
+- `GET /api/v2/mission/` 응답에 `claimable_day`가 내려올 때 클레임 버튼/모달이 노출되는지 확인
+- `npm run build` 통과 확인
+- KST 09:00 운영일 리셋 경계에서 표시 조건이 흔들리지 않는지 확인
 
-**상태**: ✅ 해결 완료 (2026-02-02)
+**상태**: ✅ 해결 완료 (2026-02-04)
 
 ---
 

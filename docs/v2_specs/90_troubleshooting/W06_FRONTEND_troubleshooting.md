@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 6 |
+| 해결된 이슈 | 9 |
 | SoT 승격 예정 | 0 |
 
 ---
@@ -23,6 +23,93 @@
 ---
 
 ## 🔍 주간 이슈 내역
+
+### 02-04 - FRONTEND/BUILD: PasteImportPage.tsx TS6133 (unused React import)로 빌드 실패 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 프론트엔드 빌드(TypeScript) |
+| HTTP Status | N/A (빌드 에러) |
+| 영향 범위 | 프론트 빌드 전체 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- `PasteImportPage.tsx`에서 `React`를 import 했지만 실제로 사용하지 않아 `TS6133`가 발생.
+- Vite/React 환경에서는 JSX 사용을 위해 `React` 명시 import가 필수는 아니며, 사용하지 않는 import는 빌드/타입체크에서 실패 원인이 됨.
+
+**해결 방법**
+- 사용하지 않는 `React` import 제거.
+
+**수정 파일**
+- [src/v2/admin/pages/ops/PasteImportPage.tsx](../../../src/v2/admin/pages/ops/PasteImportPage.tsx)
+
+**검증 방법**
+- `npm run build` 통과 확인
+
+**🏷️ 태그**
+`P1` `FRONTEND` `BUILD` `TSC` `TS6133` `✅해결완료`
+
+---
+
+### 02-04 - FRONTEND/ADMIN: 붙여넣기 Import 시간정보 손실/선택 불가 개선 ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 어드민 붙여넣기 Import (DAILY_DEPOSIT) |
+| HTTP Status | 200 (Logic/UX 문제) |
+| 영향 범위 | 어드민 Import 운영 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 일부 입력 포맷에서 시간 정보가 소실되어 `deposit_at=00:00:00`으로 저장됨.
+- 미리보기에서 상태만 확인 가능하고, 운영자가 “원하는 행만” 선택해 Import할 수 없었음.
+
+**해결 방법**
+- 시간 추출 로직 보강: 시간(`:`) 포함 필드 우선 사용
+- 선택적 Import 지원: 체크박스 UI + `selected_indices` 파라미터 추가
+
+**수정 파일**
+- [app/v2/services/paste_import_service.py](../../../app/v2/services/paste_import_service.py)
+- [app/v2/api/admin/csv_import_routes.py](../../../app/v2/api/admin/csv_import_routes.py)
+- [src/v2/api/adminApi.ts](../../../src/v2/api/adminApi.ts)
+- [src/v2/admin/pages/ops/PasteImportPage.tsx](../../../src/v2/admin/pages/ops/PasteImportPage.tsx)
+
+**검증 방법**
+1) 미리보기에서 각 행 상태가 노출되는지 확인
+2) 체크박스로 일부 행만 선택 후 Import 실행되는지 확인
+3) 시간 정보가 00:00:00으로 강제되지 않는지 확인
+
+**🏷️ 태그**
+`P1` `FRONTEND` `ADMIN` `PASTE_IMPORT` `DAILY_DEPOSIT` `✅해결완료`
+
+---
+
+### 02-03 - FRONTEND/ROUTING: /login 라우팅 정상화 (prod/test/dev 분리) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 유저 로그인 라우팅 |
+| HTTP Status | N/A (라우팅 정리) |
+| 영향 범위 | 로그인 진입 경로 |
+| 재현 빈도 | 항상 |
+
+**근본 원인 (증거 기반)**
+- 오픈 준비 과정에서 프로덕션/테스트/개발 로그인 페이지 진입 경로가 혼재되어 운영 혼선 가능성이 있었음.
+
+**해결 방법**
+- 라우팅을 목적별로 분리:
+  - `/login` → `TelegramLoginPage` (프로덕션)
+  - `/login/test` → `TelegramTestLoginPage` (테스트)
+  - `/login/dev` → `DevLoginPage` (개발용 레거시)
+
+**수정 파일**
+- [src/v2/router/V2UserRoutes.tsx](../../../src/v2/router/V2UserRoutes.tsx)
+
+**🏷️ 태그**
+`P2` `FRONTEND` `ROUTING` `LOGIN` `✅해결완료`
 
 ### [02-05] - FRONTEND/BACKEND: /api/auth/token, /api/events/status, /api/ui-config 404
 
