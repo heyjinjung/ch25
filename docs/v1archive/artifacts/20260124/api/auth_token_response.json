@@ -1,0 +1,7 @@
+﻿Invoke-RestMethod : Internal Server Error
+위치 줄:1 문자:579
++ ... $diceResp = Invoke-RestMethod -Method Post -Uri "http://localhost:800 ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod], WebExce 
+   ption
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand

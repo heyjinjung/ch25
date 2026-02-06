@@ -1,0 +1,9 @@
+﻿{
+    "id":  3,
+    "label":  "3rd Prize",
+    "weight":  10,
+    "stock":  1000,
+    "rewardType":  "NONE",
+    "rewardAmount":  100,
+    "isActive":  true
+}

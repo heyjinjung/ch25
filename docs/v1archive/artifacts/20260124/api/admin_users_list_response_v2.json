@@ -1,0 +1,140 @@
+﻿{
+    "users":  [
+                  {
+                      "id":  2,
+                      "cc_id":  2,
+                      "nickname":  "Administrator",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  500000,
+                      "last_active":  "2026-01-24 04:49",
+                      "status":  "Suspended"
+                  },
+                  {
+                      "id":  12,
+                      "cc_id":  12,
+                      "nickname":  "Web Dev User",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  -100,
+                      "last_active":  "2026-01-24 04:39",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  11,
+                      "cc_id":  11,
+                      "nickname":  "Withdraw Tier",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  12000,
+                      "last_active":  "2026-01-24 00:10",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  10,
+                      "cc_id":  10,
+                      "nickname":  "Edge Reward",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  53000,
+                      "last_active":  "2026-01-23 23:48",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  9,
+                      "cc_id":  9,
+                      "nickname":  "Edge Mission",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  2800,
+                      "last_active":  "2026-01-23 16:38",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  8,
+                      "cc_id":  8,
+                      "nickname":  "(ë¯¸ì¤ì )",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  42000,
+                      "last_active":  "2026-01-23 15:54",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  7,
+                      "cc_id":  7,
+                      "nickname":  "Vault Dev",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  200,
+                      "last_active":  "2026-01-23 15:35",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  3,
+                      "cc_id":  3,
+                      "nickname":  "test",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  300000,
+                      "last_active":  "2026-01-23 12:11",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  6,
+                      "cc_id":  6,
+                      "nickname":  "ê°ë° í\u0085ì¤í¸ ì ì ",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  10,
+                      "vaultBalance":  100000,
+                      "last_active":  "2026-01-23 11:52",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  5,
+                      "cc_id":  5,
+                      "nickname":  "Test User",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  10,
+                      "last_active":  "2026-01-23 11:23",
+                      "status":  "Active"
+                  },
+                  {
+                      "id":  4,
+                      "cc_id":  4,
+                      "nickname":  "test002",
+                      "telegram_id":  null,
+                      "telegram_username":  null,
+                      "tier":  "COMMON",
+                      "level":  1,
+                      "vaultBalance":  100000,
+                      "last_active":  "2026-01-23 10:34",
+                      "status":  "Active"
+                  }
+              ],
+    "total":  11,
+    "page":  1,
+    "limit":  20,
+    "totalPages":  1
+}

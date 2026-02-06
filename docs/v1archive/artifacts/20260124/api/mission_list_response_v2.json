@@ -1,0 +1,212 @@
+﻿{
+    "missions":  [
+                     {
+                         "mission":  {
+                                         "id":  2,
+                                         "title":  "?? ???",
+                                         "description":  "?? ?? ??",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "welcome_signup",
+                                         "action_type":  "welcome_signup",
+                                         "target_value":  1,
+                                         "reward_type":  "POINT",
+                                         "reward_amount":  3000,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  3,
+                                         "title":  "???? ??",
+                                         "description":  "???? ?? ?? ??",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "welcome_telegram",
+                                         "action_type":  "welcome_telegram",
+                                         "target_value":  1,
+                                         "reward_type":  "TICKET_ROULETTE",
+                                         "reward_amount":  1,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  4,
+                                         "title":  "?? 1? ???",
+                                         "description":  "?? ?? 1? ??",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "start_play_roulette",
+                                         "action_type":  "start_play_roulette",
+                                         "target_value":  1,
+                                         "reward_type":  "GAME_XP",
+                                         "reward_amount":  100,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  5,
+                                         "title":  "??? 1? ???",
+                                         "description":  "??? ?? 1? ??",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "start_play_dice",
+                                         "action_type":  "start_play_dice",
+                                         "target_value":  1,
+                                         "reward_type":  "TICKET_DICE",
+                                         "reward_amount":  1,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  6,
+                                         "title":  "? ??? ??",
+                                         "description":  "?? ?? ?? 1? ??",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "start_first_win",
+                                         "action_type":  "start_first_win",
+                                         "target_value":  1,
+                                         "reward_type":  "POINT",
+                                         "reward_amount":  1000,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  7,
+                                         "title":  "? ?? ??",
+                                         "description":  "?? ? ?? ?? (?? ??)",
+                                         "category":  "NEW_USER",
+                                         "logic_key":  "start_first_deposit",
+                                         "action_type":  "start_first_deposit",
+                                         "target_value":  1,
+                                         "reward_type":  "BUNDLE",
+                                         "reward_amount":  1,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  0,
+                                          "is_completed":  false,
+                                          "is_claimed":  false,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  8,
+                                         "title":  "SOT Daily Mission",
+                                         "description":  "SOT daily test",
+                                         "category":  "DAILY",
+                                         "logic_key":  "sot_daily_20260124152412",
+                                         "action_type":  "sot_daily_20260124152412",
+                                         "target_value":  1,
+                                         "reward_type":  "POINT",
+                                         "reward_amount":  10,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  1,
+                                          "is_completed":  true,
+                                          "is_claimed":  true,
+                                          "approval_status":  "NONE"
+                                      }
+                     },
+                     {
+                         "mission":  {
+                                         "id":  9,
+                                         "title":  "SOT Weekly Mission",
+                                         "description":  "SOT weekly test",
+                                         "category":  "WEEKLY",
+                                         "logic_key":  "sot_weekly_20260124152412",
+                                         "action_type":  "sot_weekly_20260124152412",
+                                         "target_value":  1,
+                                         "reward_type":  "POINT",
+                                         "reward_amount":  20,
+                                         "xp_reward":  0,
+                                         "requires_approval":  false,
+                                         "start_time":  null,
+                                         "end_time":  null,
+                                         "auto_claim":  false,
+                                         "is_active":  true
+                                     },
+                         "progress":  {
+                                          "current_value":  1,
+                                          "is_completed":  true,
+                                          "is_claimed":  true,
+                                          "approval_status":  "NONE"
+                                      }
+                     }
+                 ],
+    "streak_info":  {
+                        "streak_days":  1,
+                        "current_multiplier":  1.0,
+                        "is_hot":  false,
+                        "is_legend":  false,
+                        "next_milestone":  3,
+                        "claimable_day":  null
+                    }
+}

@@ -1,0 +1,9 @@
+﻿{
+    "id":  2,
+    "label":  "2nd Prize",
+    "weight":  5,
+    "stock":  500,
+    "rewardType":  "POINT",
+    "rewardAmount":  50,
+    "isActive":  true
+}

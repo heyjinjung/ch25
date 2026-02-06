@@ -1,0 +1,11 @@
+﻿{
+    "access_token":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMyIsImlhdCI6MTc2OTIzMDA0MSwiZXhwIjoxNzY5MzE2NDQxLCJ0eXAiOiJhY2Nlc3MifQ.kxKbxBTEevAawcOTwHozA5nSDI0zhcTSS3dVsL4f5Wk",
+    "token_type":  "bearer",
+    "user":  {
+                 "id":  13,
+                 "cc_id":  "dev_web_user",
+                 "nickname":  "Dev Web User",
+                 "telegram_id":  null,
+                 "telegram_username":  null
+             }
+}

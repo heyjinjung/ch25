@@ -1,0 +1,20 @@
+﻿{
+    "result":  "OK",
+    "segment":  {
+                    "id":  1,
+                    "label":  "100 P",
+                    "reward_type":  "POINT",
+                    "reward_amount":  100,
+                    "slot_index":  0
+                },
+    "season_pass":  null,
+    "vault_earn":  100,
+    "streak_info":  {
+                        "streak_days":  1,
+                        "current_multiplier":  1.0,
+                        "is_hot":  false,
+                        "is_legend":  false,
+                        "next_milestone":  3,
+                        "claimable_day":  null
+                    }
+}

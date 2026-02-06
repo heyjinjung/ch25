@@ -1,0 +1,19 @@
+﻿{
+    "user_id":  12,
+    "external_id":  "dev_web_user",
+    "telegram_username":  null,
+    "nickname":  "Web Dev User",
+    "user":  {
+                 "id":  12,
+                 "external_id":  "dev_web_user",
+                 "nickname":  "Web Dev User",
+                 "tg_id":  null,
+                 "tg_username":  null,
+                 "real_name":  null,
+                 "phone_number":  null,
+                 "tags":  null,
+                 "memo":  null
+             },
+    "token_type":  "LOTTERY_TICKET",
+    "balance":  12
+}

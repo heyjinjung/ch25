@@ -1,0 +1,9 @@
+﻿{
+    "id":  5,
+    "label":  "? ??",
+    "weight":  100,
+    "stock":  null,
+    "rewardType":  "NONE",
+    "rewardAmount":  0,
+    "isActive":  true
+}
