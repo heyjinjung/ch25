@@ -96,7 +96,7 @@ def test_db_session():
         for module in list(sys.modules.values()):
             if module is None:
                 continue
-            if getattr(module, "SessionLocal", None) is original_sessionlocal:
+            if hasattr(module, "SessionLocal") and getattr(module, "SessionLocal", None) is original_sessionlocal:
                 setattr(module, "SessionLocal", _make_scoped_session)
                 patched_modules.append(module)
 

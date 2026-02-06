@@ -9,7 +9,7 @@
 | 항목 | 내용 |
 |---|---|
 | 미해결 이슈 | 0 |
-| 해결된 이슈 | 5 |
+| 해결된 이슈 | 4 |
 | SoT 승격 예정 | 1 (중복 호출 방지 로직) |
 
 ---
@@ -23,63 +23,6 @@
 ---
 
 ## 🔍 주간 이슈 내역
-
-### 02-04 - MISSION/CRITICAL: 신규유저 텔레그램 채널 가입 미션 진행 안 됨 (404 에러) 🔴
-
-**에러 트리아지 체크리스트 적용**
-- 기준 문서: [docs/v2_specs/90_troubleshooting/archive/20260130_error_triage_checklist.md](./archive/20260130_error_triage_checklist.md)
-- 분류 결과: **404 Not Found - 엔드포인트 누락**
-
-**증상 정의**
-| 항목 | 내용 |
-|---|---|
-| 대상 기능 | 신규유저 텔레그램 채널 가입 미션 (NEW_USER_TELEGRAM_JOIN) |
-| HTTP Status | 404 Not Found |
-| 영향 범위 | 전체 신규유저 |
-| 재현 빈도 | 항상 |
-
-**운영 서버 증거**
-```
-INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
-INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
-INFO: POST /api/viral/verify/channel HTTP/1.1" 404 Not Found
-```
-
-**DB 상태 확인**
-- 최근 유저(16, 17, 18, 20)에 `NEW_USER_TELEGRAM_JOIN` 미션 진행 기록 없음
-- `NEW_USER_FIRST_LOGIN`만 기록됨
-
-**근본 원인 (RCA)**
-1. 프론트엔드가 `/api/viral/verify/channel` 엔드포인트 호출
-2. 백엔드에 해당 라우트 **미구현** → 404 반환
-3. 미션 진행 트리거 실패
-
-**수정 내용 (2026-02-04)**
-1. `app/v2/api/viral_routes.py` 신규 생성
-   - `POST /api/viral/verify/channel` - 텔레그램 채널 구독 확인 및 미션 진행
-   - `POST /api/viral/action` - 바이럴 액션 기록
-2. `app/v2/api/routes.py`에 viral_router 등록
-
-**핵심 코드**
-```python
-# viral_routes.py
-@router.post("/verify/channel")
-def verify_channel_subscription(payload, db, user_id):
-    service = V2MissionService(db)
-    # JOIN_TELEGRAM_CHANNEL 액션으로 미션 진행
-    updated = service.update_progress(user_id, "JOIN_TELEGRAM_CHANNEL", delta=1)
-    mission_completed = any(p.is_completed for p in updated)
-    return VerifyChannelResponse(success=True, mission_completed=mission_completed)
-```
-
-**검증 방법**
-- 배포 후 신규 유저로 텔레그램 채널 가입 버튼 클릭
-- `/api/viral/verify/channel` 200 응답 확인
-- DB에서 `NEW_USER_TELEGRAM_JOIN` 미션 진행 기록 확인
-
-**상태**: ✅ 코드 완료 (배포 필요)
-
----
 
 ### 02-03 - MISSION/CRITICAL: V1/V2 중복 호출로 인한 주간 미션 초과 달성 버그 🔴
 
@@ -239,7 +182,7 @@ WEEKLY_LOGIN_STREAK_TEST:
 - `submit_evidence()` 호출 시 XP/레벨 관련 서비스 호출이 없는지 코드 확인.
 - `V2InventoryService` 지급 로그(지갑/인벤토리 원장)만 생성되는지 확인.
 
-### 02-04 - MISSION/FRONTEND: 스트릭 클레임 버튼/모달 미표시 (claimable_day 매핑 누락) ✅
+### 02-02 - MISSION/FRONTEND: 연속 스트릭 모달 미노출
 
 **증상 정의**
 | 항목 | 내용 |
@@ -250,28 +193,18 @@ WEEKLY_LOGIN_STREAK_TEST:
 | 재현 빈도 | 항상 |
 
 **근본 원인 (증거 기반)**
-- 백엔드 응답에는 `claimable_day`, `claimable_rewards`가 정상적으로 내려오나,
-    프론트 타입/매핑/사용처가 이를 올바르게 반영하지 못해 표시 조건이 깨졌음.
-- 구체적으로:
-    1) `StreakInfoDto`에 `claimable_day` 필드가 누락
-    2) 화면에서 `claimable_rewards[0]`를 `claimable_day`처럼 사용
-    3) 헤더/미션 페이지 모두 동일한 잘못된 조건을 사용
-- 관련 코드:
-    - [src/v2/api/missionApi.ts](../../src/v2/api/missionApi.ts)
-    - [src/v2/pages/missions/MissionsPage.tsx](../../src/v2/pages/missions/MissionsPage.tsx)
-    - [src/v2/components/layout/V2AppHeader.tsx](../../src/v2/components/layout/V2AppHeader.tsx)
+- 프론트 매핑에서 `claimable_rewards` 필드가 누락되어 모달 노출 조건이 충족되지 않음.
+- 관련 코드: [src/v2/api/missionApi.ts](../../src/v2/api/missionApi.ts)
 
 **해결 방법**
-- `StreakInfoDto`에 `claimable_day` 필드 추가
-- `mapBackendStreakInfo()`에서 `claimable_day`를 우선 반영하고, `claimable_rewards`는 백엔드 값을 사용
-- `MissionsPage.tsx`, `V2AppHeader.tsx`에서 표시 조건을 `claimable_day` 기준으로 전환
+- `BackendStreakInfoSchema`에 `claimable_rewards` 추가.
+- 매핑 시 `claimable_rewards` 우선 적용, 없을 경우 `claimable_day` fallback.
 
 **검증 방법**
-- `GET /api/v2/mission/` 응답에 `claimable_day`가 내려올 때 클레임 버튼/모달이 노출되는지 확인
-- `npm run build` 통과 확인
-- KST 09:00 운영일 리셋 경계에서 표시 조건이 흔들리지 않는지 확인
+- `GET /api/v2/mission/` 응답에 `claimable_rewards` 존재 시 모달 노출 확인.
+- KST 09:00 기준 스트릭 리셋 구간에서 동작 확인.
 
-**상태**: ✅ 해결 완료 (2026-02-04)
+**상태**: ✅ 해결 완료 (2026-02-02)
 
 ---
 
@@ -341,52 +274,5 @@ def _get_streak_reward_rules(self) -> List[Dict[str, Any]]:
 
 ---
 
-### 02-04 - MISSION/INVESTIGATION: 연속 스트릭 클레임 미동작 조사
-
-**증상 정의**
-| 항목 | 내용 |
-|---|---|
-| 대상 기능 | 연속 스트릭 보상 클레임 |
-| HTTP Status | 조사 중 |
-| 영향 범위 | 테스트 유저 |
-| 재현 빈도 | 항상 |
-
-**어드민 설정 확인 (정상)**
-```json
-// app_ui_config.key = "streak_reward_rules"
-{
-  "rules": [
-    {"day": 1, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "DICE_TICKET"}], "enabled": true},
-    {"day": 2, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "DICE_TICKET"}], "enabled": true},
-    {"day": 3, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "ROULETTE_TICKET"}], "enabled": true},
-    {"day": 4, "grants": [{"kind": "WALLET", "amount": 1, "token_type": "LOTTERY_TICKET"}], "enabled": true},
-    {"day": 5, "grants": [{"kind": "WALLET", "amount": 2, "token_type": "DICE_TICKET"}], "enabled": true},
-    {"day": 6, "grants": [{"kind": "WALLET", "amount": 3, "token_type": "DICE_TICKET"}], "enabled": true},
-    {"day": 7, "grants": [{"kind": "WALLET", "amount": 2, "token_type": "ROULETTE_TICKET"}], "enabled": true}
-  ]
-}
-```
-
-**백엔드 로직 검증 (정상)**
-- `get_pending_streak_milestone()`: Day 1~7 모두 지원
-- `_get_streak_reward_rules()`: DB에서 설정 정상 조회
-- user_id=1 (Admin): play_streak=2, Day 1/2 클레임 가능 상태
-
-**이벤트 로그 확인**
-- user_id=1: 스트릭 이벤트 **없음** → Day 2 클레임 가능
-- user_id=10: Day 1만 클레임됨 → Day 2 클레임 가능
-- `/api/v2/mission/streak/claim` 호출 기록 **없음** (프론트 미호출)
-
-**추정 원인**
-1. 프론트엔드에서 `claimable_rewards` 감지 후 클레임 버튼 미표시
-2. 또는 클레임 모달이 이미 표시된 것으로 처리됨 (localStorage)
-
-**다음 액션**
-- [ ] 프론트엔드 `V2StreakModalContainer` 클레임 버튼 표시 조건 확인
-- [ ] localStorage에서 `v2_streak_claim_shown_*` 키 확인
-
----
-
 ## 📝 관리 가이드
 - 일일 미션, 신규 유저 미션, 스트릭 보상 지급 확인
-- viral 미션(채널 가입, 스토리 공유 등)은 `/api/viral/*` 엔드포인트 사용
