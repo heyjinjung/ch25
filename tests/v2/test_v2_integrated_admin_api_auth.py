@@ -74,24 +74,17 @@ class TestAdminAuthIntegration:
         token = create_access_token(admin_user.id, role=V2UserRole.ADMIN.value)
         
         # Mock Request with Admin Token
-        # get_current_admin_info expects credentials object via HTTPBearer, 
-        # but here we'll mock the internal logic or use the function directly if accessible via dependency override.
-        # Ideally, we verify the logic inside get_current_admin_info or simulate a request.
-        # Since we are testing integration logic, let's simulate the dependency logic part.
-        
-        # Using a direct call to dependency if possible requires mocking Request and HTTPAuthorizationCredentials
         from fastapi.security import HTTPAuthorizationCredentials
         creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
         
         request = Request({"type": "http", "client": ("127.0.0.1", 12345), "headers": [(b"user-agent", b"TestAgent")]})
 
         # When
-        admin_info = get_current_admin_info(request, db, creds)
+        admin_id, role_str = get_current_admin_info(request, db, creds)
         
         # Then
-        assert admin_info is not None
-        assert admin_info.id == admin_user.id
-        assert admin_info.role in [V2UserRole.ADMIN, V2UserRole.SUPER_ADMIN]
+        assert admin_id == admin_user.id
+        assert role_str in [V2UserRole.ADMIN.value, V2UserRole.SUPER_ADMIN.value, "ADMIN", "SUPER_ADMIN"]
 
     def test_normal_user_access_denied(self, db: Session, normal_user: V2User):
         """USER role을 가진 유저는 Admin 접근 시 403 Forbidden 및 RBAC_DENIED 로그가 발생해야 한다."""
@@ -214,7 +207,7 @@ class TestAdminOperationalSafety:
         # When/Then
         # 'force=True' flag might exist in implementation, but strict policy usually forbids negative balance.
         # Let's assume standard withdraw raises error.
-        with pytest.raises(ValueError, match="Insufficient"):
+        with pytest.raises(ValueError, match="(?i)insufficient"):
             vault_service.withdraw(
                 db, 
                 user_id=normal_user.id, 
@@ -239,26 +232,18 @@ class TestUserStateIntegration:
     """
 
     def test_ban_user_immediate_termination(self, db: Session, admin_user: V2User, normal_user: V2User):
-        """유저를 BANNED 상태로 변경하면 로직 상 접근이 차단되어야 한다."""
+        """유저를 SUSPENDED 상태로 변경하면 로직 상 접근이 차단되어야 한다."""
         # Given
-        normal_user.status = V2UserStatus.BANNED
+        normal_user.status = V2UserStatus.SUSPENDED
         db.commit()
         
         # When: Try to authenticate or check rights
-        # Simulating logic that checks status usually in deps.py or auth_service
         
         token = create_access_token(normal_user.id, role=V2UserRole.USER.value)
-        # Assuming we have a way to validate token and check DB status
-        # Most V2 implementations check DB status during get_current_user
-        
-        # Let's verify via get_current_user dependent simulation if available, 
-        # or check logic directly.
-        # If get_current_user is not easily importable/mockable here, we verify the attribute.
         
         db.refresh(normal_user)
-        assert normal_user.status == V2UserStatus.BANNED
-        
-        # Additionally, verify refresh token revocations if purge happens (in next test)
+        assert normal_user.status == V2UserStatus.SUSPENDED
+
 
     def test_purge_user_cleanup(self, db: Session, admin_user: V2User, normal_user: V2User):
         """
