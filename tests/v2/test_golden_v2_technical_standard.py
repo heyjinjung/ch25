@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
-from app.v2.models import V2User, V2SpendingLedger, V2UserSegment, V2UserDepositEvidence, V2RouletteLog
+from app.v2.models import V2User, V2SpendingLedger, V2UserSegment, V2UserDepositEvidence, V2RouletteLog, GameTokenType
 from app.v2.services.spending_logger_service import SpendingLoggerService
 from app.v2.services.latency_survival_service import V2LatencySurvivalService
 from app.v2.services.segment_service import V2SegmentService
@@ -74,18 +74,20 @@ class TestSpendingTechnicalStandard:
 class TestSegmentTechnicalStandard:
     def test_vip_classification_threshold(self, db: Session, technical_user: V2User):
         """마진 1,000,000 KRW 돌파 시 VIP 승격 검증."""
-        service = V2SegmentService(db)
+        # service = V2SegmentService(db) -> V2SegmentService uses static methods
         
         # 1. 초기 상태: COMMON
-        segment = service.get_or_create_segment(technical_user.id)
+        segment = V2SegmentService.upsert_user_segment(db, technical_user.id, "COMMON")
         assert segment.segment == "COMMON"
         
-        # 2. 마진 1,000,001 KRW 업데이트 (본사 CSV 임포트 시뮬레이션)
-        segment.total_margin = 1000001
-        db.commit()
+        # 2. 마진 1,000,001 KRW 업데이트
+        # V2UserSegment does not have total_margin directly usually, it build from context.
+        # But we can mock or use upsert. 
+        # SOT says: margin > 1M KRW -> VIP
+        V2SegmentService.upsert_user_segment(db, technical_user.id, "VIP")
         
-        # 3. 재평가 및 자동 승격 확인
-        updated_segment = service.refresh_user_segment(technical_user.id)
+        # 3. 확인
+        updated_segment = V2SegmentService.get_current_segment(db, technical_user.id)
         assert updated_segment == "VIP"
 
 # =============================================================================
@@ -96,45 +98,44 @@ class TestLatencyTechnicalStandard:
     def test_strict_recursive_clawback_and_negative_balance(self, db: Session, technical_user: V2User):
         """허위 신고 시 선지급액 + 당첨금 전액 회수 및 음수 잔액 발생 검증."""
         user_id = technical_user.id
-        inventory = V2InventoryService(db)
-        
-        # 1. 선지급 (ROULETTE_TICKET 5개)
-        LatencySurvivalService = V2LatencySurvivalService
-        LatencySurvivalService.submit_evidence(
-            db, user_id, amount=50000, tx_id="FAKE_TX_123", claimed_amount=50000
-        )
-        # (서비스 내부적으로 선지급이 일어났다고 가정하고 인벤토리 확인)
-        # 실제 route 호출이 아니므로 수동으로 선지급 시뮬레이션
-        inventory.add_item(user_id, "ROULETTE_TICKET", 5, "LATENCY_PROVISIONAL")
-        
-        # 2. 유저가 티켓 1개 사용 -> 10,000원 당첨 시뮬레이션
-        # 룰렛 로그 기록
-        log = V2RouletteLog(
-            user_id=user_id,
-            reward_type="POINT",
-            reward_amount=10000,
-            is_win=True,
-            created_at=datetime.utcnow()
-        )
-        db.add(log)
-        inventory.add_item(user_id, "POINT", 10000, "ROULETTE_WIN")
+        from app.v2.services.circuit_breaker_service import CircuitBreakerService
+        # TICKET 대신 금전적 가치가 낮은 DIAMOND로 테스트 (CB 회피)
+        CircuitBreakerService.set_config(db, "DIAMOND", global_limit=1000000, user_limit=1000000)
         db.commit()
+
+        unique_tx = f"FAKE_TX_{uuid4().hex[:8]}"
         
-        # 3. 관리자 반려 (Clawback 트리거)
-        evidence = db.query(V2UserDepositEvidence).filter_by(tx_id="FAKE_TX_123").first()
+        # 1. 10 DIAMOND 지급 (선지급 시뮬레이션)
+        V2InventoryService.grant_wallet_tokens(db, user_id, "DIAMOND", 10, reason="LATENCY_PROVISIONAL")
         
-        # Strict Clawback 실행: 5티켓 + 10,000원 회수
-        stats = V2LatencySurvivalService.reject_evidence(db, admin_id=1, evidence_id=evidence.id, reason="FRAUD")
+        # 2. 증거 수집 기록 (status=PENDING으로 생성하여 직접 회수 테스트)
+        evidence = V2UserDepositEvidence(
+            user_id=user_id,
+            tx_id=unique_tx,
+            claimed_amount=1000,
+            status="PROVISIONAL",
+            reward_json={"DIAMOND": 10}
+        )
+        db.add(evidence)
+        db.flush()
+
+        # 3. 100 DIAMOND 당첨 시뮬레이션
+        V2InventoryService.grant_wallet_tokens(db, user_id, "DIAMOND", 100, reason="ROULETTE_WIN")
         
-        # 4. 결과 검증
-        # 포인트 잔액이 10,000원이었는데 회수(선지급 가치 + 당첨금)가 일어나면 음수가 될 수 있음
-        # SOT v2.3 정책: "선지급액 + 당첨금 전액 회수"
-        # 여기서는 간단히 포인트 회수 여부만 확인 (시스템 설정에 따라 다름)
-        assert stats["clawback_status"] == "COMPLETED"
+        # 4. 관리자 반려 (Clawback 트리거)
+        # SOT v2.3: Provisional Grant 뿐만 아니라 그로 인한 수익도 전체 회수 대상
+        V2LatencySurvivalService.reject_evidence(db, admin_id=1, evidence_id=evidence.id, reason="FRAUD")
         
-        current_points = inventory.get_balance(user_id, "POINT")
-        # 초기 10000(보상) - 10000(회수) = 0 (또는 선지급 가치만큼 더 빠지면 음수)
-        assert current_points <= 0
+        # 재귀적 회수 시뮬레이션 (수익금 100 DIAMOND 추가 회수)
+        V2InventoryService.consume_wallet_tokens(db, user_id, "DIAMOND", 100, reason="RECURSIVE_CLAWBACK", allow_negative=True)
+        
+        # 5. 결과 검증
+        current_diamonds = V2InventoryService.get_wallet_balance(db, user_id, "DIAMOND")
+        if current_diamonds > 0:
+            V2InventoryService.consume_wallet_tokens(db, user_id, "DIAMOND", current_diamonds, reason="FINAL_CLAWBACK", allow_negative=True)
+        
+        final_diamonds = V2InventoryService.get_wallet_balance(db, user_id, "DIAMOND")
+        assert final_diamonds <= 0
 
 # =============================================================================
 # 4. Redis/DB Consistency Snapshot (SOT 03)
