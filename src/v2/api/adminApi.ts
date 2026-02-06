@@ -3281,6 +3281,24 @@ export interface MarketingEfficiencyResponse {
   overall_roi: number;
 }
 
+// ============================================================================
+// Funnel / Tracking API
+// ============================================================================
+
+export interface FunnelDailyRowDto {
+  business_date: string;
+  bot_start_proxy: number;
+  hq_join: number;
+  first_deposit: number;
+  link_click: number;
+}
+
+export interface FunnelDailyResponse {
+  period_start: string;
+  period_end: string;
+  rows: FunnelDailyRowDto[];
+}
+
 export const getAdminRetentionAnalysis = async (params?: {
   start_date?: string;
   end_date?: string;
@@ -3327,6 +3345,17 @@ export const getAdminMarketingChannelPerformance = async (params?: {
 }): Promise<MarketingEfficiencyResponse> => {
   const response = await v2Client.get<MarketingEfficiencyResponse>(
     "/api/v2/admin/analytics/marketing/channel-performance",
+    { params },
+  );
+  return response.data;
+};
+
+export const getAdminFunnelDaily = async (params?: {
+  days?: number;
+  end_date?: string;
+}): Promise<FunnelDailyResponse> => {
+  const response = await v2Client.get<FunnelDailyResponse>(
+    "/api/v2/admin/analytics/funnel/daily",
     { params },
   );
   return response.data;

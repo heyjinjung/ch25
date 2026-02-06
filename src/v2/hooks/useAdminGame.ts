@@ -75,6 +75,7 @@ import {
   getAdminRevenueSummary,
   getAdminMarketingChannelPerformance,
   getAdminMarketingCampaignPerformance,
+  getAdminFunnelDaily,
   // Inventory Stock API
   adjustAdminStock,
   getAdminGifticonDeliveries,
@@ -724,7 +725,13 @@ export function useAdminMarketingChannelPerformance(params?: {
   end_date?: string;
 }) {
   return useQuery({
-    queryKey: ["admin", "analytics", "marketing", "channel-performance", params],
+    queryKey: [
+      "admin",
+      "analytics",
+      "marketing",
+      "channel-performance",
+      params,
+    ],
     queryFn: () => getAdminMarketingChannelPerformance(params),
   });
 }
@@ -735,11 +742,26 @@ export function useAdminMarketingCampaignPerformance(params?: {
   limit?: number;
 }) {
   return useQuery({
-    queryKey: ["admin", "analytics", "marketing", "campaign-performance", params],
+    queryKey: [
+      "admin",
+      "analytics",
+      "marketing",
+      "campaign-performance",
+      params,
+    ],
     queryFn: () => getAdminMarketingCampaignPerformance(params),
   });
 }
 
+export function useAdminFunnelDaily(params?: {
+  days?: number;
+  end_date?: string;
+}) {
+  return useQuery({
+    queryKey: ["admin", "analytics", "funnel", "daily", params],
+    queryFn: () => getAdminFunnelDaily(params),
+  });
+}
 
 // ============================================================================
 // Inventory Stock Hooks (재고 관리)

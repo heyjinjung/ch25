@@ -7,7 +7,7 @@ V2 Admin Analytics Routes
 - 마케팅 효율 분석 - 채널별 ROI, 전환율 CAC
 """
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import List, Optional
 from zoneinfo import ZoneInfo
 
@@ -18,10 +18,11 @@ from sqlalchemy.orm import Session
 
 from app.v2.api.deps import get_current_admin_info, get_db
 from app.v2.models.user import V2User
-from app.v2.models import ExternalRankingDailyDepositDelta
+from app.v2.models import ExternalRankingDailyDepositDelta, HQProspectiveUser, UserEventLog
 from app.v2.models import VaultWithdrawalRequest, V2SpendingLedger
 from app.v2.services import V2AdminAuditService
 from app.v2.services.roi_analysis_service import V2RoiAnalysisService
+from app.core.config import get_settings
 
 router = APIRouter(prefix="/analytics", tags=["admin-analytics"])
 
@@ -189,6 +190,69 @@ def _calculate_retention(db: Session, cohort_date: date, retention_days: int) ->
     ).scalar() or 0
 
     return retained_count, total_count
+
+
+def _get_business_reset_hour_kst() -> int:
+    return get_settings().streak_day_reset_hour_kst
+
+
+def _get_business_date_kst(reference: datetime | None = None) -> date:
+    tz = ZoneInfo("Asia/Seoul")
+    reset_hour = _get_business_reset_hour_kst()
+
+    if reference is None:
+        reference = datetime.now(tz)
+    elif reference.tzinfo is None:
+        reference = reference.replace(tzinfo=tz)
+    else:
+        reference = reference.astimezone(tz)
+
+    return (reference.date() - timedelta(days=1)) if reference.hour < reset_hour else reference.date()
+
+
+def _business_day_range_for_date(*, business_date: date) -> tuple[datetime, datetime, datetime, datetime]:
+    """비즈니스데이(리셋: 09:00 KST) 범위를 반환.
+
+    Returns:
+        (start_kst_naive, end_kst_naive, start_utc_naive, end_utc_naive)
+
+    주의:
+    - v2_user.created_at은 KST 기반으로 저장된 케이스가 있어 KST naive 범위를 함께 제공.
+    - linked_at/first_deposit_at/user_event_log.created_at은 datetime.utcnow() 기반(UTC naive) 케이스가 많아 UTC naive 범위를 함께 제공.
+    """
+    reset_hour = _get_business_reset_hour_kst()
+    kst = ZoneInfo("Asia/Seoul")
+    utc = ZoneInfo("UTC")
+
+    start_kst = datetime.combine(business_date, time(hour=reset_hour), tzinfo=kst)
+    end_kst = start_kst + timedelta(days=1)
+
+    start_kst_naive = start_kst.replace(tzinfo=None)
+    end_kst_naive = end_kst.replace(tzinfo=None)
+
+    start_utc_naive = start_kst.astimezone(utc).replace(tzinfo=None)
+    end_utc_naive = end_kst.astimezone(utc).replace(tzinfo=None)
+
+    return start_kst_naive, end_kst_naive, start_utc_naive, end_utc_naive
+
+
+# ============================================================================
+# Funnel / Tracking Schemas
+# ============================================================================
+
+
+class FunnelDailyRowDto(BaseModel):
+    business_date: str = Field(..., description="비즈니스 일자(YYYY-MM-DD, KST 09:00 리셋)")
+    bot_start_proxy: int = Field(..., description="봇 시작(Proxy): v2_user.created_at")
+    hq_join: int = Field(..., description="HQ Join: hq_prospective_user.is_joined + linked_at")
+    first_deposit: int = Field(..., description="첫 입금: v2_user.first_deposit_at")
+    link_click: int = Field(..., description="링크 클릭(로그): user_event_log event_name=LINK_CLICK")
+
+
+class FunnelDailyResponse(BaseModel):
+    period_start: str
+    period_end: str
+    rows: List[FunnelDailyRowDto]
 
 
 # ============================================================================
@@ -708,3 +772,93 @@ def get_roi_campaign_performance(
     )
     
     return [RoiCampaignDto(**c) for c in top_campaigns]
+
+
+# ============================================================================
+# Funnel / Tracking Endpoints
+# ============================================================================
+
+
+@router.get("/funnel/daily", response_model=FunnelDailyResponse)
+def get_funnel_daily(
+    days: int = Query(14, ge=1, le=60, description="조회 일수(비즈니스데이 기준, 기본 14)") ,
+    end_date: str | None = Query(None, description="종료 비즈니스일자(YYYY-MM-DD). 미지정 시 오늘 비즈니스일자"),
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """퍼널/트래킹 일자별 집계.
+
+    현재는 로그가 충분치 않은 상태를 고려해 최소 단계만 제공합니다.
+    - bot_start_proxy: v2_user.created_at
+    - hq_join: hq_prospective_user.is_joined + linked_at
+    - first_deposit: v2_user.first_deposit_at
+    - link_click: user_event_log(event_name=LINK_CLICK)
+    """
+
+    end_business_date = date.fromisoformat(end_date) if end_date else _get_business_date_kst()
+    start_business_date = end_business_date - timedelta(days=days - 1)
+
+    rows: List[FunnelDailyRowDto] = []
+    current = start_business_date
+    while current <= end_business_date:
+        start_kst_naive, end_kst_naive, start_utc_naive, end_utc_naive = _business_day_range_for_date(
+            business_date=current
+        )
+
+        bot_start_proxy = (
+            db.query(func.count(V2User.id))
+            .filter(V2User.created_at >= start_kst_naive, V2User.created_at < end_kst_naive)
+            .scalar()
+            or 0
+        )
+
+        hq_join = (
+            db.query(func.count(HQProspectiveUser.id))
+            .filter(
+                HQProspectiveUser.is_joined.is_(True),
+                HQProspectiveUser.linked_at.isnot(None),
+                HQProspectiveUser.linked_at >= start_utc_naive,
+                HQProspectiveUser.linked_at < end_utc_naive,
+            )
+            .scalar()
+            or 0
+        )
+
+        first_deposit = (
+            db.query(func.count(V2User.id))
+            .filter(
+                V2User.first_deposit_at.isnot(None),
+                V2User.first_deposit_at >= start_utc_naive,
+                V2User.first_deposit_at < end_utc_naive,
+            )
+            .scalar()
+            or 0
+        )
+
+        link_click = (
+            db.query(func.count(UserEventLog.id))
+            .filter(
+                UserEventLog.event_name == "LINK_CLICK",
+                UserEventLog.created_at >= start_utc_naive,
+                UserEventLog.created_at < end_utc_naive,
+            )
+            .scalar()
+            or 0
+        )
+
+        rows.append(
+            FunnelDailyRowDto(
+                business_date=current.isoformat(),
+                bot_start_proxy=int(bot_start_proxy),
+                hq_join=int(hq_join),
+                first_deposit=int(first_deposit),
+                link_click=int(link_click),
+            )
+        )
+        current += timedelta(days=1)
+
+    return FunnelDailyResponse(
+        period_start=start_business_date.isoformat(),
+        period_end=end_business_date.isoformat(),
+        rows=rows,
+    )

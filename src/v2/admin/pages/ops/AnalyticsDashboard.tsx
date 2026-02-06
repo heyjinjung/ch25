@@ -38,6 +38,7 @@ import {
   useAdminRevenueSummary,
   useAdminMarketingChannelPerformance,
   useAdminMarketingCampaignPerformance,
+  useAdminFunnelDaily,
   useAdminDailyFinance,
 } from "../../../hooks/useAdminGame";
 import { useOpsStatus } from "../../../hooks/useV2Admin";
@@ -60,6 +61,8 @@ export default function AnalyticsDashboard() {
     useAdminMarketingChannelPerformance();
   const { data: campaignData, isLoading: isLoadingCampaign } =
     useAdminMarketingCampaignPerformance();
+  const { data: funnelDaily, isLoading: isLoadingFunnelDaily } =
+    useAdminFunnelDaily({ days: 14 });
   const { data: dailyFinance } = useAdminDailyFinance();
   const { data: opsStatus } = useOpsStatus();
 
@@ -69,6 +72,9 @@ export default function AnalyticsDashboard() {
     typeof val === "number" ? formatCurrency(val) : "-";
   const formatCountMaybe = (val?: number) =>
     typeof val === "number" ? val.toLocaleString() : "-";
+
+  const formatPercentMaybe = (val?: number) =>
+    typeof val === "number" ? formatPercent(val) : "-";
 
   // CSV 기반 revenueStats fallback 적용
   const csvRevenueStats = opsStatus?.revenueStats;
@@ -229,6 +235,12 @@ export default function AnalyticsDashboard() {
             className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
           >
             마케팅 효율성
+          </TabsTrigger>
+          <TabsTrigger
+            value="funnel"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white"
+          >
+            퍼널/트래킹
           </TabsTrigger>
         </TabsList>
 
@@ -868,6 +880,147 @@ export default function AnalyticsDashboard() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Funnel/Tracking Tab */}
+        <TabsContent value="funnel" className="mt-6 space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              퍼널/트래킹 (일자별)
+              <InfoTooltip
+                title="비즈니스데이 기준"
+                description={
+                  "집계는 KST 기준 '오전 9시' 리셋(비즈니스데이)으로 계산됩니다.\n\n현재 데이터는 로그가 충분히 쌓이기 전이라 일부는 Proxy(대체 지표)로 표시될 수 있습니다."
+                }
+              />
+            </h3>
+            <Badge variant="outline">최근 14일</Badge>
+          </div>
+
+          <Card className="bg-zinc-900 border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white">퍼널 단계별 카운트</CardTitle>
+              <CardDescription className="text-zinc-400">
+                기간: {funnelDaily?.period_start ?? "-"} ~{" "}
+                {funnelDaily?.period_end ?? "-"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingFunnelDaily ? (
+                <div className="text-center py-10 text-zinc-500">로딩중...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-2 text-zinc-400">일자</th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            링크 클릭
+                            <InfoTooltip
+                              title="링크 클릭"
+                              description={
+                                "user_event_log의 LINK_CLICK 이벤트 수입니다.\n(아직 로그가 없으면 0으로 표시됩니다.)"
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            봇 시작(Proxy)
+                            <InfoTooltip
+                              title="봇 시작(Proxy)"
+                              description={
+                                "현재는 실제 /start 또는 미니앱 오픈 로그가 부족해, v2_user.created_at을 '봇 시작'의 대체 지표로 사용합니다."
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            HQ Join
+                            <InfoTooltip
+                              title="HQ Join"
+                              description={
+                                "hq_prospective_user에서 is_joined=1이며 linked_at이 있는 유저 수(해당 비즈니스데이 범위)입니다."
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            첫 입금
+                            <InfoTooltip
+                              title="첫 입금"
+                              description={
+                                "v2_user.first_deposit_at이 해당 비즈니스데이 범위에 들어오는 유저 수입니다."
+                              }
+                            />
+                          </span>
+                        </th>
+                        <th className="text-right py-2 text-zinc-400">
+                          <span className="inline-flex items-center justify-end gap-1 w-full">
+                            입금 전환율
+                            <InfoTooltip
+                              title="입금 전환율"
+                              description={
+                                "해당 일자 기준 첫 입금 수 ÷ 봇 시작(Proxy)"
+                              }
+                              formula={"계산식\n= 첫 입금 ÷ 봇 시작(Proxy)"}
+                            />
+                          </span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {funnelDaily?.rows?.map((row) => {
+                        const depositRate =
+                          row.bot_start_proxy > 0
+                            ? row.first_deposit / row.bot_start_proxy
+                            : undefined;
+                        return (
+                          <tr
+                            key={row.business_date}
+                            className="border-b border-white/5 hover:bg-white/5"
+                          >
+                            <td className="py-2 text-white">
+                              {row.business_date}
+                            </td>
+                            <td className="py-2 text-right text-zinc-300">
+                              {row.link_click.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-white">
+                              {row.bot_start_proxy.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-blue-400">
+                              {row.hq_join.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-emerald-400">
+                              {row.first_deposit.toLocaleString()}
+                            </td>
+                            <td className="py-2 text-right text-amber-400">
+                              {formatPercentMaybe(depositRate)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {!funnelDaily?.rows?.length && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="text-center py-4 text-zinc-500"
+                          >
+                            데이터가 없습니다.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
