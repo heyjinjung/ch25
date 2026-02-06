@@ -19,8 +19,8 @@ W1/W2 마케팅 실행안을 V2 운영 자동화/브레인스토밍/분석-트�
 - 협업(브레인스토밍): 실험 설계/결정 기록/핫픽스 반영 프로토콜
 
 ## 3. 선행 SoT/근거 (Sources)
-- 운영 메시지 저장/팬아웃: docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md
-- Ops 실행 결과 스키마: docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md
+- 운영 메시지 저장/팬아웃: docs/SOT/deployment/v2_admin_message_policy_sot_ko.md
+- Ops 실행 결과 스키마: docs/SOT/deployment/v2_ops_plan_execution_schema_sot_ko.md
 - 세그먼트(NEW/VIP/WHALE/COMMON/AT_RISK):
   - docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/segment/20260202_segment_new_user_window_rule.md
   - docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/segment/20260202_segment_unification_common_vip_whale_at_risk.md

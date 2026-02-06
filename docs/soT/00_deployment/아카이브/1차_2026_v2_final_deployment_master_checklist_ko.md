@@ -925,10 +925,11 @@ redis-cli ping  # PONG 확인
 ## 18. Deployment Strategy (배포 전략)
 
 ### 18.1 Health Check ✅
-- [x] **라우트 구현**: `GET /health`, `GET /api/v2/health/db`
+- [x] **라우트 구현**: (nginx) `GET /health`, (backend) `GET /api/v2/health`, `GET /api/v2/health/db`
 - [ ] **배포 환경 200 응답 확인** (nginx/DB)
 ```bash
 curl https://api.yourdomain.com/health
+curl https://api.yourdomain.com/api/v2/health
 curl https://api.yourdomain.com/api/v2/health/db
 ```
 
@@ -936,9 +937,9 @@ curl https://api.yourdomain.com/api/v2/health/db
 - [x] **Docker Compose** 설정 (문서화)
 - [x] **배포 자동화** 스크립트 (문서화)
 - [x] **롤백 스크립트** (문서화)
-  - [docs/v2_specs/05_ops/deployment/v2_deployment_docker_compose_guide_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_docker_compose_guide_ko.md)
-  - [docs/v2_specs/05_ops/deployment/v2_deployment_automation_script_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_automation_script_ko.md)
-  - [docs/v2_specs/05_ops/deployment/v2_deployment_rollback_script_ko.md](docs/v2_specs/05_ops/deployment/v2_deployment_rollback_script_ko.md)
+  - [docs/SOT/deployment/v2_deployment_docker_compose_guide_ko.md](docs/SOT/deployment/v2_deployment_docker_compose_guide_ko.md)
+  - [docs/SOT/deployment/v2_deployment_automation_script_ko.md](docs/SOT/deployment/v2_deployment_automation_script_ko.md)
+  - [docs/SOT/deployment/v2_deployment_rollback_script_ko.md](docs/SOT/deployment/v2_deployment_rollback_script_ko.md)
 
 ---
 

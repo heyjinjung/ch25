@@ -1,6 +1,6 @@
 
 문서 타입: SoT / 배포 운영 런북
-버전: v1.1
+버전: v1.2
 작성일: 2026-01-29
 최종 수정: 2026-02-06
 작성자: GitHub Copilot
@@ -92,6 +92,10 @@ REDIS_URL=redis://redis:6379/0
 # Golden V2 Safety (Circuit Breaker - SoT)
 CIRCUIT_LIMIT_VAULT=100000
 CIRCUIT_LIMIT_TICKET=30
+
+# Observability
+LOG_LEVEL=INFO
+SENTRY_DSN=${SENTRY_DSN}
 ```
 
 ## 7. 배포 실행 (Execution)
@@ -159,7 +163,7 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 2) 컨테이너 재기동
 3) 필요 시 Alembic downgrade
 4) 캐시 초기화
-5) `/health`, `/api/v2/health/db` 재검증
+5) `/health`, `/api/v2/health`, `/api/v2/health/db` 재검증
 
 ## 12. 트러블슈팅(핵심 시나리오) (Troubleshooting)
 ### 12.1 텔레그램 인증 unauthorized/Invalid Hash
@@ -195,6 +199,8 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 - Ops 실행 결과 API 계약: `v2_ops_execution_api_contract_ko.md`
 - 운영 메시지 정책: `v2_admin_message_policy_sot_ko.md`
 - 상점 상품 UI Config SoT: `v2_shop_products_ui_config_sot_ko.md`
+- 퍼널/마찰/활동 로그 요구사항(learned): `20260206_funnel_friction_activity_logging_requirements.md`
+- W1/W2 운영 자동화·트래킹(learned): `20260203_ops_marketing_w1_w2_automation_tracking.md`
 
 ## 14. 운영 서버 검증 기록(참고) (2026-01-30)
 본 섹션은 과거 검증 로그의 보관이며, 현재 SoT 검증 기준은 8~11장을 따른다.
@@ -208,3 +214,4 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 
 ## 15. 변경 이력
 - v1.1 (2026-02-06): 배포 관련 SoT 문서들을 기준으로 마스터 런북 통합(환경변수/헬스체크/롤백/트러블슈팅/참조 링크 정리)
+- v1.2 (2026-02-06): 롤백 후 헬스 재검증 경로 보강 및 관측/트래킹 learned 레퍼런스 추가
