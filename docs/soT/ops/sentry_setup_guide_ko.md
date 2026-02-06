@@ -1,8 +1,12 @@
 # Sentry 연동 가이드 (Error Tracking Setup)
 
+**버전**: v1.1
 **작성일**: 2026-01-30
+**최종 수정일**: 2026-02-06
+**작성자**: GitHub Copilot
 **대상**: DevOps, Backend 팀
 **목적**: 프로덕션 에러 추적 및 모니터링
+**상태**: SoT (종결)
 
 ---
 
@@ -22,18 +26,18 @@
 
 .github/workflows/deploy.yml 파일에서 다음 3곳을 수정했습니다:
 
-Line 76: env 섹션에 SENTRY_DSN 추가
-Line 81: envs 리스트에 SENTRY_DSN 추가
-Line 120: .env 파일 생성 시 echo "SENTRY_DSN=${SENTRY_DSN}" >> .env 추가
+최신 코드베이스 기준, `.github/workflows/deploy.yml`에서:
+- GitHub Secrets의 `SENTRY_DSN`을 원격 배포 환경변수로 주입
+- 배포 시 생성되는 운영 `.env`에 `SENTRY_DSN`을 포함
 
 ### 1.3 DSN 확인
 생성 후 표시되는 DSN을 복사합니다:
 
-**✅ 발급된 실제 DSN** (2026-01-30):
+**DSN 예시(플레이스홀더)**:
 ```
-https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928
+https://<public_key>@o<org_id>.ingest.sentry.io/<project_id>
 ```
-⚠️ **보안 주의**: DSN은 클라이언트에서도 사용 가능한 공개 키이지만, GitHub Public Repository에 직접 커밋하지 마세요. GitHub Secrets로 관리합니다.
+⚠️ **보안 주의**: DSN은 공개 키 성격이지만, 운영 값은 문서/코드에 하드코딩하지 말고 GitHub Secrets(또는 운영 서버 `.env`)로만 관리합니다.
 
 ---
 
@@ -41,28 +45,27 @@ https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4
 
 ### 2.1 Dependencies 설치 (이미 완료됨)
 ```bash
-# requirements.txt에 이미 추가됨
-sentry-sdk==1.39.2
+# requirements.txt를 SoT로 본다
+sentry-sdk>=2.44.0
 ```
 
 ### 2.2 Sentry 초기화 (이미 완료됨)
 [app/main.py](../../../app/main.py) 에 초기화 코드가 추가되었습니다:
 ```python
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+sentry_dsn = os.getenv("SENTRY_DSN")
+if sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
-sentry_sdk.init(
-    dsn=os.getenv("SENTRY_DSN"),
-    environment=settings.env,
-    traces_sample_rate=0.1,  # 10% 트랜잭션 샘플링
-    profiles_sample_rate=0.1,  # 10% 프로파일링
-    integrations=[
-        FastApiIntegration(),
-        SqlalchemyIntegration(),
-    ],
-    send_default_pii=False,  # 민감정보 필터링
-)
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=settings.env,
+        traces_sampler=...,  # 최신 코드베이스는 traces_sampler 기반
+        profiles_sample_rate=0.1,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        send_default_pii=False,
+    )
 ```
 
 ---
@@ -81,7 +84,7 @@ sentry_sdk.init(
 4. **Secret 추가**:
    ```
    Name: SENTRY_DSN
-   Value: https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928
+    Value: <YOUR_SENTRY_DSN>
    ```
 
 5. **Add secret** 클릭
@@ -100,7 +103,7 @@ ssh -i ~/.ssh/id_ed25519_vultr root@149.28.135.147
 cd /opt/ch25
 
 # .env 파일에 추가
-echo "SENTRY_DSN=https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928" >> .env
+echo "SENTRY_DSN=<YOUR_SENTRY_DSN>" >> .env
 ```
 
 ### 3.3 Docker Compose 환경 변수 전달
@@ -140,7 +143,7 @@ echo "SENTRY_DSN=https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.inge
 
    # 백엔드 로그에서 Sentry 초기화 확인
    docker logs xmas-backend --tail 50 | grep Sentry
-   # 예상 출력: ✅ Sentry initialized (env=production)
+    # 예상 출력: [SUCCESS] Sentry initialized (env=production)
    ```
 
 ### 4.2 수동 배포 (선택사항)
@@ -158,15 +161,15 @@ cd /opt/ch25
 git pull origin deploy
 
 # .env에 SENTRY_DSN 추가 (아직 추가하지 않은 경우)
-echo "SENTRY_DSN=https://9b85622ad0875d05c361d1bda1b44786@o4510798708998144.ingest.de.sentry.io/4510798723022928" >> .env
+echo "SENTRY_DSN=<YOUR_SENTRY_DSN>" >> .env
 
 # 컨테이너 재시작
-docker-compose down
-docker-compose up -d --build
+docker compose down
+docker compose up -d --build
 
 # 로그 확인
 docker logs xmas-backend --tail 50 | grep Sentry
-# 예상 출력: ✅ Sentry initialized (env=production)
+# 예상 출력: [SUCCESS] Sentry initialized (env=production)
 ```
 
 ---
@@ -179,29 +182,23 @@ docker logs xmas-backend --tail 50 | grep Sentry
 docker logs xmas-backend | grep Sentry
 
 # 예상 출력:
-# ✅ Sentry initialized (env=production)
+# [SUCCESS] Sentry initialized (env=production)
 ```
 
 ### 5.2 테스트 에러 전송
 
-**방법 1: /sentry-debug 엔드포인트 추가 (권장)**
+**방법 1: /debug-sentry 엔드포인트 호출 (최신 코드베이스 기준)**
 
-[app/main.py](../../../app/main.py)에 테스트 엔드포인트 추가:
-```python
-@app.get("/sentry-debug")
-async def trigger_error():
-    """Sentry 테스트용 에러 발생 엔드포인트 (프로덕션에서는 제거)"""
-    division_by_zero = 1 / 0
-    return {"status": "should not reach here"}
-```
+최신 코드베이스에는 Sentry 검증용 엔드포인트가 이미 존재합니다:
+- `GET /debug-sentry`
 
-그 후 브라우저나 curl로 호출:
+브라우저나 curl로 호출:
 ```bash
-curl https://cc-jm.com/sentry-debug
+curl https://cc-jm.com/debug-sentry
 # 500 Internal Server Error 발생 → Sentry에 자동 전송
 ```
 
-⚠️ **배포 후 이 엔드포인트는 보안상 제거해야 합니다.**
+⚠️ **운영에서는 외부 노출/무단 호출 리스크가 있으므로, 필요 시 내부에서만 호출하거나 임시로만 사용합니다.**
 
 **방법 2: Docker 컨테이너에서 직접 실행**
 ```bash
@@ -367,4 +364,4 @@ def filter_sensitive_data(event):
 
 **설정 담당자**: DevOps Team
 **검증 완료일**: 2026-01-30
-**다음 리뷰**: 2026-02-07
+**다음 리뷰**: 없음(종결)
