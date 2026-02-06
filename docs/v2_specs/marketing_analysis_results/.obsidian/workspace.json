@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "CC 개선방안 1주차.md",
+                "file": "v2_CC개선방안1주차.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": true,
@@ -28,10 +28,83 @@
                 }
               },
               "icon": "lucide-file",
-              "title": "CC 개선방안 1주차"
+              "title": "v2_CC개선방안1주차"
+            }
+          },
+          {
+            "id": "c4ae2db611754d6c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "v2_CC개선방안1주차.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": false,
+                  "extraContext": false,
+                  "sortOrder": "alphabetical",
+                  "showSearch": false,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "v2_CC개선방안1주차"
+            }
+          },
+          {
+            "id": "18460299747e1c9d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "v2_CC개선방안1주차_피드백.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": false,
+                  "extraContext": false,
+                  "sortOrder": "alphabetical",
+                  "showSearch": false,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "v2_CC개선방안1주차_피드백"
+            }
+          },
+          {
+            "id": "cd1a46af48c3befc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "v1 실패리포트.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": false,
+                  "extraContext": false,
+                  "sortOrder": "alphabetical",
+                  "showSearch": false,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "v1 실패리포트"
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -166,13 +239,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "CC 개선방안 1주차.md",
+                "file": "v2_CC개선방안1주차_피드백.md",
                 "followCursor": true,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "CC 개선방안 1주차 의 개요"
+              "title": "v2_CC개선방안1주차_피드백 의 개요"
             }
           },
           {
@@ -217,14 +290,24 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "c298ba0e6e3fd51a",
+  "active": "8af4447cd52aeea3",
   "lastOpenFiles": [
-    "MARKETING_w2.md",
-    "개선방안1주_2주플레이북.md",
-    "CC 개선방안 1주차.md",
+    "v2_CC개선방안1주차.md",
+    "v2_CC개선방안1주차_피드백.md",
+    "v2_funnel_since_20260204.md",
+    "v1 실패리포트.md",
+    "v2_funnel_analysis_since_20260204.md",
+    "문제점 진단.md",
     "개선방안_개요.md",
-    "실패리포트.md",
+    "개선방안1주_2주플레이북.md",
+    "무제.md",
+    "funnel_sent_list_user_status_since_20260204.csv",
+    "sent_list_20260206.txt",
+    "funnel_report_since_20260204.md",
     "CC.md",
+    "funnel_click_proxy_new_users_since_20260204.csv",
+    "funnel_joins_since_20260204.csv",
+    "MARKETING_w2.md",
     "개선방안개요.md",
     "MARKETING_w4.md",
     "개선방안_1주기록.md",
@@ -235,12 +318,8 @@
     "개선방안_1주기록.md.tmp.19072.1770114333501",
     "개선방안_1주.md.tmp.19072.1770114315777",
     "개선방안1주_2주플레이북.md.tmp.19816.1770113998971",
-    "개선방안_1주기록.md.tmp.19816.1770113971338",
     "개선방안_개요 1.md",
-    "개선방안_개요.md.tmp.19816.1770113909006",
-    "무제.base",
     "MARKETING_w3.md",
-    "무제 1.base",
     "MANUAL_OUTREACH_PLAYBOOK_W1W2_20260203.md",
     "2026-02-03.md",
     "Untitled.canvas"

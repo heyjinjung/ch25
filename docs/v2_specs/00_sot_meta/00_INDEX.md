@@ -77,6 +77,7 @@
   - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md)
   - **Golden/Import**: [HQ Margin 종합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md) | **[세그먼트 감사 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)**
   - **Ops/Growth**: [W1/W2 운영 자동화·트래킹](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260203_ops_marketing_w1_w2_automation_tracking.md)
+  - **Ops/Growth**: [퍼널/마찰/생존율 로그 요구사항(2026-02-06)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260206_funnel_friction_activity_logging_requirements.md)
 
   ### [2026-02-05 지출 원장 + HQ 환전 붙여넣기 Import]
   - **Spending Ledger**: v2_spending_ledger + HQ 환전 로그 추가

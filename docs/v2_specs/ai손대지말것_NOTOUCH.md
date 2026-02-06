@@ -23,10 +23,8 @@ C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
  ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
 
 예시 
-
-PS C:\Users\JAVIS\ch\ch25> ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker exec xmas-db mysql -u xmasuser -p2026 xmas_event -e 'SELECT id, user_id, deposit_delta, kst_date, updated_at FROM external_ranking_daily_deposit_delta ORDER BY updated_at DESC LIMIT 20;'"
-id      user_id deposit_delta   kst_date        updated_at
-
+다운로드: scp -i "C:\Users\JAVIS\.ssh\id_ed25519_vultr" root@149.28.135.147:/root/xmas_event_backup_YYYYMMDD_HHMMSS.sql.gz [ch25](http://_vscodecontentref_/1).
+적용(로컬): docker cp ... xmas-db:/tmp/prod_dump.sql.gz → docker exec xmas-db mysql -uroot -p2026 -e "DROP DATABASE...; CREATE DATABASE...;" → docker exec xmas-db sh -c "gunzip -c /tmp/prod_dump.sql.gz | mysql -uroot -p2026 xmas_event"
 
 
 
