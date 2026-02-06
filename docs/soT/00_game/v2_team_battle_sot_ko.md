@@ -140,6 +140,7 @@ V2 팀배틀(Team Battle)의 **현행 구현(app/v2)** 및 **DB 마이그레이�
   `V2TeamBattleService.ensure_current_season`, `add_points`, `POINTS_PER_PLAY`를 사용하여
   게임 플레이 시 팀 점수 누적 및 `team_event_log` 기록(append-only)을 수행한다.
 - `POINTS_PER_PLAY`는 설정값 `team_battle_points_per_play`(기본 5)를 사용한다.
+- 운영 정책: 활성 시즌이 없으면 점수 적립을 **스킵**한다(자동 시즌 생성 금지).
 
 ## 9. 시즌 운영
 ### 9.1 활성 시즌 판정
@@ -153,7 +154,7 @@ V2 팀배틀(Team Battle)의 **현행 구현(app/v2)** 및 **DB 마이그레이�
 
 ### 9.3 🔴 정책/구현 충돌: 자동 롤링 시즌 생성
 - 아카이브 SoT에는 “활성 시즌이 없으면 롤링 시즌(2일)을 자동 생성” 규칙이 존재하나,
-  현행 V2 서비스(`V2TeamBattleService`)에는 자동 생성 로직이 확인되지 않는다.
+  **현행 운영 정책은 시즌 자동 생성 없이 어드민이 시즌을 관리**하는 방향으로 정리한다.
 
 ## 10. 타임존/시간(운영 원칙 및 현행 구현)
 - 시스템 운영 원칙: `Asia/Seoul`(KST) 및 오전 9시 리셋 정책(다른 도메인 공통 원칙)
