@@ -1,0 +1,824 @@
+# yaml-language-server: $schema=https://spec.openapis.org/oas/3.0/schema/2021-09-28
+# [최종 검토일: 2026-01-26]
+# [정책 최신화 필요 여부: 🟡] 🟡 [정합성 검토 필요] Admin DTO의 `vaultBalance` 및 WalletAdjustment의 `token_type=VAULT`는 SoT와 방향 일치하나, `vaultBalance`가 `vault_locked_balance` 단일 별칭임을 명시해 혼동 방지 필요.
+openapi: 3.0.3
+info:
+  title: XMAS Event System V2 + Admin API
+  version: v2.0
+  description: |
+    V2 Admin API Specification.
+    Includes concrete schemas for Game Configs, User Management, and Marketing.
+servers:
+  - url: /
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================================================
+  # Game: Roulette
+  # ============================================================================
+  /api/v2/admin/game/roulette/configs:
+    get:
+      tags: [AdminGame]
+      summary: Get all roulette configurations (by grade)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RouletteConfigDto"
+
+  /api/v2/admin/game/roulette/config/{config_id}:
+    get:
+      tags: [AdminGame]
+      summary: Get specific roulette config
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouletteConfigDto"
+    put:
+      tags: [AdminGame]
+      summary: Update roulette config (full or partial)
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouletteConfigFullUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouletteConfigDto"
+
+  # ============================================================================
+  # Game: Dice
+  # ============================================================================
+  /api/v2/admin/game/dice/config:
+    get:
+      tags: [AdminGame]
+      summary: Get active dice configuration
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceConfigDto"
+
+  /api/v2/admin/game/dice/config/{config_id}:
+    put:
+      tags: [AdminGame]
+      summary: Update dice configuration
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiceConfigUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiceConfigDto"
+
+  # ============================================================================
+  # Game: Lottery
+  # ============================================================================
+  /api/v2/admin/game/lottery/configs:
+    get:
+      tags: [AdminGame]
+      summary: Get all lottery configurations
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LotteryConfigDto"
+
+  /api/v2/admin/game/lottery/config/{config_id}:
+    get:
+      tags: [AdminGame]
+      summary: Get specific lottery config
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LotteryConfigDto"
+    put:
+      tags: [AdminGame]
+      summary: Update lottery config details (excluding prizes)
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LotteryConfigUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LotteryConfigDto"
+
+  /api/v2/admin/game/lottery/config/{config_id}/prize/{prize_id}:
+    put:
+      tags: [AdminGame]
+      summary: Update specific lottery prize
+      parameters:
+        - name: config_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: prize_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LotteryPrizeUpdateRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LotteryPrizeDto"
+
+  # ============================================================================
+  # User Management
+  # ============================================================================
+  /api/v2/admin/users:
+    get:
+      tags: [AdminUsers]
+      summary: List users with filtering and sorting
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: minLevel
+          in: query
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: last_active
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+    post:
+      tags: [AdminUsers]
+      summary: Create new admin managed user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListDto"
+
+  /api/v2/admin/users/{user_id}:
+    get:
+      tags: [AdminUsers]
+      summary: Get user detailed profile
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserDetailDto"
+
+  /api/v2/admin/users/{user_id}/wallet/adjust:
+    post:
+      tags: [AdminUsers]
+      summary: Adjust user wallet (Vault or Tokens)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminWalletAdjustmentRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionExecutionResponse"
+
+  /api/v2/admin/users/{user_id}/intervention/{action_id}:
+    post:
+      tags: [AdminUsers]
+      summary: Execute predefined intervention action
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: action_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterventionExecutionResponse"
+
+  # ============================================================================
+  # User Level Management
+  # ============================================================================
+  /api/v2/admin/users/level:
+    get:
+      tags: [AdminUsers]
+      summary: Get user level snapshot by CC ID
+      parameters:
+        - name: cc_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
+
+  /api/v2/admin/users/level/adjust:
+    post:
+      tags: [AdminUsers]
+      summary: Adjust user XP (Delta)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserLevelAdjustRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
+
+  /api/v2/admin/users/level/set:
+    post:
+      tags: [AdminUsers]
+      summary: Set user Level or XP directly
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserLevelSetRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserLevelSnapshotDto"
+
+  # ============================================================================
+  # Marketing
+  # ============================================================================
+  /api/v2/admin/marketing/messages:
+    get:
+      tags: [AdminMarketing]
+      summary: List sent messages
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/V2MessageResponse"
+    post:
+      tags: [AdminMarketing]
+      summary: Create and send new message
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/V2MessageCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/V2MessageResponse"
+
+  /api/v2/admin/marketing/surveys:
+    get:
+      tags: [AdminMarketing]
+      summary: List surveys
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/V2AdminSurveyDto"
+
+components:
+  schemas:
+    RewardType:
+      type: string
+      enum:
+        - POINT
+        - VAULT
+        - ROULETTE_TICKET
+        - DICE_TICKET
+        - LOTTERY_TICKET
+        - DIAMOND_TICKET
+        - CHICKEN_GIFTICON_5000
+        - STARBUCKS_GIFTICON_2000
+        - NONE
+
+    # Roulette
+    RouletteSegmentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        slotIndex:
+          type: integer
+        label:
+          type: string
+        weight:
+          type: integer
+        rewardType:
+          $ref: "#/components/schemas/RewardType"
+        rewardAmount:
+          type: integer
+        isJackpot:
+          type: boolean
+
+    RouletteConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        grade:
+          type: string
+          enum: [COMMON, VIP, WHALE, AT_RISK]
+        ticketType:
+          type: string
+        maxDailySpins:
+          type: integer
+        isActive:
+          type: boolean
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouletteSegmentDto"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RouletteConfigFullUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        ticket_type:
+          type: string
+        max_daily_spins:
+          type: integer
+        is_active:
+          type: boolean
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RouletteSegmentDto"
+
+    # Dice
+    DiceConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        maxDailyPlays:
+          type: integer
+        winProbability:
+          type: number
+        drawProbability:
+          type: number
+        loseProbability:
+          type: number
+        winRewardType:
+          $ref: "#/components/schemas/RewardType"
+        winRewardAmount:
+          type: integer
+        drawRewardType:
+          $ref: "#/components/schemas/RewardType"
+        drawRewardAmount:
+          type: integer
+        loseRewardType:
+          $ref: "#/components/schemas/RewardType"
+        loseRewardAmount:
+          type: integer
+        dailyGainCap:
+          type: integer
+        enableGoldenHour:
+          type: boolean
+        goldenHourMultiplier:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DiceConfigUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        is_active:
+          type: boolean
+        max_daily_plays:
+          type: integer
+        win_reward_type:
+          type: string
+        win_reward_amount:
+          type: integer
+
+    # Lottery
+    LotteryPrizeDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        weight:
+          type: integer
+        stock:
+          type: integer
+        rewardType:
+          $ref: "#/components/schemas/RewardType"
+        rewardAmount:
+          type: integer
+        isActive:
+          type: boolean
+
+    LotteryPrizeUpdateRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        weight:
+          type: integer
+        stock:
+          type: integer
+        reward_type:
+          type: string
+        reward_amount:
+          type: integer
+        is_active:
+          type: boolean
+
+    LotteryConfigDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        isActive:
+          type: boolean
+        maxDailyPlays:
+          type: integer
+        ticketType:
+          type: string
+        puzzlePieceProbability:
+          type: number
+        prizes:
+          type: array
+          items:
+            $ref: "#/components/schemas/LotteryPrizeDto"
+
+    LotteryConfigUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        ticket_type:
+          type: string
+        is_active:
+          type: boolean
+        max_daily_plays:
+          type: integer
+
+    # User
+    AdminUserListDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cc_id:
+          type: integer
+        nickname:
+          type: string
+        tier:
+          type: string
+        level:
+          type: integer
+        vaultBalance:
+          type: integer
+        status:
+          type: string
+        last_active:
+          type: string
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUserListDto"
+        total:
+          type: integer
+        page:
+          type: integer
+
+    AdminUserCreate:
+      type: object
+      required:
+        - external_id
+      properties:
+        external_id:
+          type: string
+        nickname:
+          type: string
+        level:
+          type: integer
+
+    AdminUserDetailDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+        totalDeposit:
+          type: integer
+        currentAssets:
+          type: integer
+        vaultBalance:
+          type: integer
+        level:
+          type: integer
+        riskLevel:
+          type: string
+        playbook:
+          $ref: "#/components/schemas/InterventionPlaybookDto"
+
+    InterventionPlaybookDto:
+      type: object
+      properties:
+        risk_level:
+          type: string
+        suggested_actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/InterventionActionDto"
+
+    InterventionActionDto:
+      type: object
+      properties:
+        action_id:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+
+    InterventionExecutionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        action_id:
+          type: string
+        message:
+          type: string
+
+    AdminWalletAdjustmentRequest:
+      type: object
+      required:
+        - amount
+        - reason
+      properties:
+        amount:
+          type: integer
+        token_type:
+          type: string
+          default: VAULT
+        reason:
+          type: string
+
+    AdminUserLevelSnapshotDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+        ccId:
+          type: string
+        level:
+          type: integer
+        xp:
+          type: integer
+        nextLevel:
+          type: integer
+
+    AdminUserLevelAdjustRequest:
+      type: object
+      required:
+        - ccId
+        - deltaXp
+        - reason
+      properties:
+        ccId:
+          type: string
+        deltaXp:
+          type: integer
+        reason:
+          type: string
+
+    AdminUserLevelSetRequest:
+      type: object
+      required:
+        - ccId
+        - reason
+      properties:
+        ccId:
+          type: string
+        level:
+          type: integer
+        xp:
+          type: integer
+        reason:
+          type: string
+
+    # Marketing
+    V2MessageCreate:
+      type: object
+      required:
+        - title
+        - content
+        - target_type
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        target_type:
+          type: string
+          enum: [ALL, USER, SEGMENT, TAG]
+        target_value:
+          type: string
+        channels:
+          type: array
+          items:
+            type: string
+
+    V2MessageResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        target_type:
+          type: string
+        recipient_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    V2AdminSurveyDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        questions:
+          type: array
+          items:
+            type: object
+        is_active:
+          type: boolean
+        response_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
