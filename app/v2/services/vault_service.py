@@ -428,8 +428,17 @@ class V2VaultService:
                 created_at = created_at.replace(tzinfo=timezone.utc)
             days_since_signup = (now_dt - created_at).days
             if days_since_signup < 7:
-                # 신규 유저는 제재 대상에서 제외
-                return False, 0
+                # 신규 유저는 무입금 제재 대상에서 제외 (단, 수동 제재는 적용)
+                is_suspended = bool(getattr(user, "benefits_suspended_manual", 0))
+                return is_suspended, 0
+        
+        # 수동 제재 확인
+        if bool(getattr(user, "benefits_suspended_manual", 0)):
+            # 최근 7일 입금액 계산은 로깅/정보용으로 계속 진행
+            pass
+        else:
+            # 수동 제재가 아니면 무입금 자동 제재 로직 진행
+            pass
         
         # 최근 7일 입금 합계 확인 (6일 전 ~ 오늘)
         seven_days_ago_date = (now_dt - timedelta(days=6)).date()
@@ -442,7 +451,8 @@ class V2VaultService:
         ).scalar() or 0
         
         # 7일간 입금이 0이면 제재
-        is_suspended = int(deposit_7d) < 1
+        deposit_7d_val = int(deposit_7d)
+        is_suspended = deposit_7d_val < 1 or bool(getattr(user, "benefits_suspended_manual", 0))
         
         # [Latency Survival] Provisional Exception Check
         # 제재 대상으로 판명되었으나, 최근 24시간 내 유효한 증거(PENDING/PROVISIONAL)가 있다면 예외 허용
@@ -661,18 +671,35 @@ class V2VaultService:
 
         play_target = 30
         spend_target = 10000
+        min_deposit_target = 10000
         if "NEW" in segments:
+            play_target = 5
+            spend_target = 0
+            min_deposit_target = 0
+        elif "COMMON" in segments:
             play_target = 15
             spend_target = 5000
-        elif "AT_RISK" in segments:
-            play_target = 100
-            spend_target = 30000
-        elif deposit_7d >= 3000000:
+            min_deposit_target = 10000
+        elif "VIP" in segments:
+            play_target = 10
+            spend_target = 0
+            min_deposit_target = 100000
+        elif "WHALE" in segments:
             play_target = 0
             spend_target = 0
+            min_deposit_target = 100000
+        elif "AT_RISK" in segments:
+            play_target = 30
+            spend_target = 10000
+            min_deposit_target = 10000
+        elif deposit_7d >= 3000000:
+            play_target = 10  # VIP 기준 준용
+            spend_target = 0
+            min_deposit_target = 100000
         elif deposit_7d >= 500000:
-            play_target = 15
+            play_target = 15  # COMMON 기준 준용
             spend_target = 5000
+            min_deposit_target = 10000
 
         withdrawal_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
             VaultWithdrawalRequest.user_id == user_id,
@@ -788,6 +815,7 @@ class V2VaultService:
             "daily_vault_spent": int(getattr(user, "vault_spent_today", 0) or 0),
             "daily_vault_spent_target": int(spend_target),
             "daily_deposit_confirmed": bool(has_cc_deposit_today),
+            "daily_deposit_target": int(min_deposit_target),
             "withdrawal_count": int(withdrawal_count),
             "today_earnings": int(today_earnings),
             "minimum_withdrawal_amount": int(next_min_balance),
@@ -1461,22 +1489,52 @@ class V2VaultService:
 
         play_target = 30
         spend_target = 10000
+        min_deposit_target = 10000
+
         if "NEW" in segments:
-            play_target = 100
-            spend_target = 30000
-        elif "AT_RISK" in segments:
-            play_target = 100
-            spend_target = 30000
-        elif deposit_7d >= 3000000:
+            play_target = 5
+            spend_target = 0
+            min_deposit_target = 0 # 신규 유저는 당일 입금 조건 면제 (SoT 확인 필요하나 보통 0)
+        elif "COMMON" in segments:
+            play_target = 15
+            spend_target = 5000
+            min_deposit_target = 10000
+        elif "VIP" in segments:
+            play_target = 10
+            spend_target = 0
+            min_deposit_target = 100000
+        elif "WHALE" in segments:
             play_target = 0
             spend_target = 0
+            min_deposit_target = 100000
+        elif "AT_RISK" in segments:
+            play_target = 30
+            spend_target = 10000
+            min_deposit_target = 10000
+        elif deposit_7d >= 3000000:
+            play_target = 10
+            spend_target = 0
+            min_deposit_target = 100000
         elif deposit_7d >= 500000:
             play_target = 15
             spend_target = 5000
+            min_deposit_target = 10000
 
-        # Deposit must be confirmed for the operational day (KST 09:00 reset)
-        if not has_cc_deposit_today:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="DEPOSIT_REQUIRED_TODAY")
+        # 당일 입금액 합계 확인 (has_cc_deposit_today는 단순히 입금 여부만 체크하므로 금액 체크 추가)
+        if min_deposit_target > 0:
+            # delta_today (ExternalRankingDailyDepositDelta) 활용
+            if int(delta_today) < min_deposit_target:
+                # 보조 체크 (ExternalRankingData 등) - has_cc_deposit_today 로직과 유사하게 금액 확인
+                current_deposit_confirmed = False
+                if has_cc_deposit_today:
+                    # 이미 has_cc_deposit_today가 True라면 delta_today 외의 경로로 확인된 것.
+                    # 하지만 정확한 '금액' 확인을 위해 delta_today를 우선시하거나 다른 필드 확인 필요.
+                    # 여기서는 delta_today가 가장 정확한 '당일' 순증액임.
+                    if int(delta_today) >= min_deposit_target:
+                        current_deposit_confirmed = True
+                
+                if not current_deposit_confirmed:
+                    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"DEPOSIT_AMOUNT_INSUFFICIENT_{min_deposit_target}")
 
         # Play count must meet segment-based target (last 3 days)
         if play_target > 0:

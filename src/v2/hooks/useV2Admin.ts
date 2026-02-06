@@ -8,6 +8,8 @@ import {
   rejectWithdrawal,
   getAdminUserDetail,
   getOpsDashboardStatus,
+  getAdminOpsCampaigns,
+  getAdminOpsPlans,
   getDashboardMetrics,
   runInterventionAction,
   adjustUserWallet,
@@ -86,6 +88,8 @@ import {
   updateAdminDepositLog,
   deleteAdminDepositLog,
   getInventoryLogs,
+  OpsCampaignOut,
+  OpsPlanOut,
 } from "../api/adminApi";
 import { CreateMessageRequest } from "../api/adminApi";
 
@@ -96,6 +100,13 @@ export const ADMIN_KEYS = {
   withdrawals: (status: string) => ["admin", "withdrawals", status] as const,
   userDetail: (userId: number) => ["admin", "users", userId] as const,
   opsStatus: ["admin", "ops", "status"] as const,
+  opsCampaigns: (params?: { status?: string }) =>
+    ["admin", "ops", "campaigns", params ?? null] as const,
+  opsPlans: (params?: {
+    days?: number;
+    end_date?: string;
+    campaign_id?: number;
+  }) => ["admin", "ops", "plans", params ?? null] as const,
   userList: (params: UserSearchParams) =>
     ["admin", "users", "list", params] as const,
   userActivityLogs: (userId: number) =>
@@ -115,6 +126,25 @@ export const ADMIN_KEYS = {
   vaultLedger: (userId: number) =>
     ["admin", "vault", "ledger", userId] as const,
 };
+
+// Ops Plan (Campaign/Plan)
+export function useAdminOpsCampaigns(params?: { status?: string }) {
+  return useQuery<OpsCampaignOut[]>({
+    queryKey: ADMIN_KEYS.opsCampaigns(params),
+    queryFn: () => getAdminOpsCampaigns(params),
+  });
+}
+
+export function useAdminOpsPlans(params?: {
+  days?: number;
+  end_date?: string;
+  campaign_id?: number;
+}) {
+  return useQuery<OpsPlanOut[]>({
+    queryKey: ADMIN_KEYS.opsPlans(params),
+    queryFn: () => getAdminOpsPlans(params),
+  });
+}
 
 // Segments
 export function useRunSegmentBatch() {

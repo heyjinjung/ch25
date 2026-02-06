@@ -112,6 +112,38 @@ def reject_withdrawal(
     return economy_service.reject_withdrawal(db, withdrawal_id=withdrawal_id, admin_id=admin_id, reason=payload.reason)
 
 
+@router.post("/vault/users/{user_id}/suspend-manual")
+def toggle_manual_suspension(
+    user_id: int,
+    suspended: bool,
+    db: Session = Depends(get_db),
+    admin_info: tuple[int, str] = Depends(get_current_admin_info),
+):
+    """Toggle manual benefit suspension for a user."""
+    admin_id, _ = admin_info
+    user = db.get(V2User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="USER_NOT_FOUND")
+    
+    user.benefits_suspended_manual = 1 if suspended else 0
+    db.add(user)
+    
+    # Audit log
+    from app.v2.services.admin_audit_service import V2AdminAuditService
+    V2AdminAuditService.log(
+        db,
+        admin_id=admin_id,
+        action="BENEFITS_SUSPENDED_MANUAL_TOGGLE",
+        target_type="USER",
+        target_id=str(user_id),
+        before={"manual_suspension": not suspended},
+        after={"manual_suspension": suspended},
+    )
+    
+    db.commit()
+    return {"success": True, "suspended": suspended}
+
+
 # ─────────────────────────────────────────────────────────────────
 # 8.4 Vault & Economy Monitoring (금고/경제 모니터링)
 # ─────────────────────────────────────────────────────────────────

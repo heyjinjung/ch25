@@ -93,6 +93,8 @@ interface WithdrawalRulesChecklistProps {
   spendTarget: number;
   isSpendMet: boolean;
   isAccountVerified: boolean;
+  depositTarget?: number;
+  segment?: string;
 }
 
 export const WithdrawalRulesChecklist: React.FC<
@@ -105,6 +107,8 @@ export const WithdrawalRulesChecklist: React.FC<
   spendTarget,
   isSpendMet,
   isAccountVerified,
+  depositTarget = 10000,
+  segment = "COMMON",
 }) => {
   const toNumber = (value: number) =>
     Number.isFinite(value) ? Number(value) : 0;
@@ -137,7 +141,9 @@ export const WithdrawalRulesChecklist: React.FC<
     {
       id: "verify",
       title: "일일 입금 확인",
-      description: "오늘 1회 이상 입금(결제) 완료",
+      description: segment === "NEW" 
+        ? "신규 유저 첫 출금 혜택 적용 중"
+        : `오늘 ${toLocale(depositTarget)} 이상 입금(결제) 완료`,
       icon: Wallet,
       status: isAccountVerified,
       progressText: isAccountVerified ? "100%" : "0%",

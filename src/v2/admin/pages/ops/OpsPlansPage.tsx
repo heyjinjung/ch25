@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { ClipboardList } from "lucide-react";
 
 import { Badge } from "../../components/ui/badge";
@@ -12,26 +11,20 @@ import {
   CompactTableHead,
 } from "../../components/ui/CompactTable";
 
-import {
-  getAdminOpsCampaigns,
-  getAdminOpsPlans,
-  type OpsCampaignOut,
-  type OpsPlanOut,
-} from "../../../api/adminApi";
+import { type OpsCampaignOut, type OpsPlanOut } from "../../../api/adminApi";
 import { useAdminFunnelDaily } from "../../../hooks/useAdminGame";
+import {
+  useAdminOpsCampaigns,
+  useAdminOpsPlans,
+} from "../../../hooks/useV2Admin";
 
 export default function OpsPlansPage() {
   const days = 14;
 
-  const { data: campaigns, isLoading: isLoadingCampaigns } = useQuery({
-    queryKey: ["admin", "ops", "campaigns"],
-    queryFn: () => getAdminOpsCampaigns(),
-  });
+  const { data: campaigns, isLoading: isLoadingCampaigns } =
+    useAdminOpsCampaigns();
 
-  const { data: plans, isLoading: isLoadingPlans } = useQuery({
-    queryKey: ["admin", "ops", "plans", { days }],
-    queryFn: () => getAdminOpsPlans({ days }),
-  });
+  const { data: plans, isLoading: isLoadingPlans } = useAdminOpsPlans({ days });
 
   const { data: funnelDaily, isLoading: isLoadingFunnel } = useAdminFunnelDaily(
     {

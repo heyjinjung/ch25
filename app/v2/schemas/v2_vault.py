@@ -72,6 +72,7 @@ class VaultStatusResponse(BaseModel):
     daily_vault_spent: int = 0
     daily_vault_spent_target: int = 10000
     daily_deposit_confirmed: bool = False
+    daily_deposit_target: int = 10000
 
 
 class VaultFillResponse(BaseModel):
