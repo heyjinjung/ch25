@@ -1,5 +1,5 @@
 문서 타입: API 계약
-버전: v1.1
+버전: v1.2
 작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/FE/기획
@@ -64,6 +64,15 @@ V2 미션/스트릭 API 계약과 응답 스키마를 정의한다.
 ### 3.2 미션 보상 수령
 - Endpoint: POST /api/v2/mission/{mission_id}/claim
 
+#### 3.2.1 성공 응답 예시
+```json
+{
+  "success": true,
+  "reward_type": "POINT",
+  "reward_amount": 100
+}
+```
+
 #### 3.2.1 예시 오류 응답
 ```json
 {
@@ -74,11 +83,37 @@ V2 미션/스트릭 API 계약과 응답 스키마를 정의한다.
 ### 3.3 데일리 선물 수령
 - Endpoint: POST /api/v2/mission/daily-gift
 
+#### 3.3.1 성공 응답 예시
+```json
+{
+  "success": true,
+  "reward_type": "POINT",
+  "reward_amount": 50
+}
+```
+
 ### 3.4 스트릭 규칙 조회
 - Endpoint: GET /api/v2/mission/streak/rules
 
+#### 3.4.1 응답 예시
+```json
+{
+  "rules": [
+    {"day": 3, "enabled": true, "grants": [{"kind": "WALLET", "token_type": "DICE_TOKEN", "amount": 100}]}
+  ]
+}
+```
+
 ### 3.5 스트릭 보상 수령
 - Endpoint: POST /api/v2/mission/streak/claim
+
+#### 3.5.1 성공 응답 예시
+```json
+{
+  "success": true,
+  "claimed_day": 3
+}
+```
 
 ## 4. 어드민 API (요약)
 - POST /api/v2/admin/game/missions/reset-user/{user_id}
@@ -107,5 +142,6 @@ V2 미션/스트릭 API 계약과 응답 스키마를 정의한다.
 - [docs/SOT/mission/archive/20260204_streak_claim_button_not_showing.md](docs/SOT/mission/archive/20260204_streak_claim_button_not_showing.md)
 
 ## 9. 변경 이력
+- v1.2 (2026-02-07, GitHub Copilot): 주요 엔드포인트 응답 예시 추가
 - v1.1 (2026-02-07, GitHub Copilot): 응답 보강 규칙 및 어드민 API 요약 추가
 - v1.0 (2026-02-07, GitHub Copilot): 미션 API 계약 통합 정리

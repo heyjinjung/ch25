@@ -1,5 +1,5 @@
 문서 타입: SoT (정본)
-버전: v1.1
+버전: v1.2
 작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/FE/기획/운영
@@ -25,7 +25,22 @@
 - 진행도: current_value/target_value 비교로 완료 여부 판단
 - 수동 클레임: 완료 후 사용자가 직접 보상 수령
 
-## 5. 핵심 정책
+## 5. 데이터 모델(개념)
+### 5.1 미션 엔터티
+- mission: category, logic_key, action_type, target_value, reward_type, reward_amount, xp_reward
+- progress: current_value, is_completed, is_claimed, approval_status, reset_date
+
+### 5.2 스트릭 엔터티
+- streak_info: current_streak, claimable_day, claimable_rewards
+
+## 6. 미션 라이프사이클
+1) 생성: 어드민에서 프리셋/룰 기반 생성
+2) 진행: update_progress 이벤트로 current_value 증가
+3) 완료: current_value >= target_value
+4) 클레임: 수동 수령(승인 필요 시 APPROVED 후 가능)
+5) 리셋: 운영일 변경 시 reset_date 갱신
+
+## 7. 핵심 정책
 ### 5.1 운영일(리셋) 기준
 - 모든 미션/스트릭의 날짜 계산은 KST 기준으로 수행
 - 운영일 리셋은 오전 9시
@@ -66,18 +81,19 @@
 - 유저 미션 라우트 표준: /v2/missions
 - 레거시 라우트는 리다이렉트 또는 단계적 폐기 대상
 
-## 6. 정합성 체크리스트
+## 8. 정합성 체크리스트
 - KST 9AM 리셋 기준 적용 여부
 - WEEKLY reset_date 포맷(YYYY-WXX) 일치 여부
 - 신규 유저 168시간 정책 일치 여부
 - claimable_day 기반 스트릭 버튼 노출 여부
 - action_type/logic_key 매칭 누락 여부
 
-## 7. 참고 문서(아카이브)
+## 9. 참고 문서(아카이브)
 - [docs/SOT/mission/archive/v2_sot_mission_ko.md](docs/SOT/mission/archive/v2_sot_mission_ko.md)
 - [docs/SOT/mission/archive/20260129_mission_logic_alignment_update.md](docs/SOT/mission/archive/20260129_mission_logic_alignment_update.md)
 - [docs/SOT/mission/archive/v2_mission_timezone_fix_20260122_ko.md](docs/SOT/mission/archive/v2_mission_timezone_fix_20260122_ko.md)
 
-## 8. 변경 이력
+## 10. 변경 이력
+- v1.2 (2026-02-07, GitHub Copilot): 데이터 모델/라이프사이클 섹션 추가
 - v1.1 (2026-02-07, GitHub Copilot): 용어/식별자/라우팅 표준 및 체크리스트 확장
 - v1.0 (2026-02-07, GitHub Copilot): 미션 SoT 5분류 통합 정본 생성
