@@ -85,9 +85,9 @@ def test_idempotency_prevents_duplicate_reward(db: Session, level_flow_setup: V2
     # But usually idempotency check prevents re-grant even if logic re-visits.
     
     # Let's try to manually check reward for Level 2 again (simulating race or re-process)
-    # The service `_check_and_grant_rewards` normally handles this.
+    # The service `add_xp` handles checks.
     
-    service._check_and_grant_rewards(db, user, 1, 2) # Force check range
+    service.add_xp(db, user.id, 10, "CC_DEPOSIT", {}) # Add small XP, stay in Level 2
     db.commit()
     
     # Verify Balance unchanged

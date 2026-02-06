@@ -59,10 +59,10 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [20260204_production_backup_and_cleanup_report.md](./20260204_production_backup_and_cleanup_report.md)
 
 ### 4.6 구현 증거 (코드베이스)
-- docker-compose.yml
-- Dockerfile.backend
-- Dockerfile.frontend
-- alembic/
+- [docker-compose.yml](docker-compose.yml#L1)
+- [Dockerfile.backend](Dockerfile.backend#L52)
+- [Dockerfile.frontend](Dockerfile.frontend#L57)
+- [alembic/env.py](alembic/env.py#L116)
 
 ## 5. 영역 2: 운영/모니터링/알림
 
@@ -92,10 +92,10 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [11.roi_analysis.md](./11.roi_analysis.md)
 
 ### 5.5 구현 증거 (코드베이스)
-- app/main.py (Sentry init, health 라우트)
-- app/v2/api/routes.py (System 라우팅)
-- app/v2/api/admin/ops_routes.py (ops/status)
-- src/v2/admin/pages/dashboard/OpsDashboard.tsx (HQ 마진 카드)
+- [app/main.py](app/main.py#L63)
+- [app/v2/api/routes.py](app/v2/api/routes.py#L126-L156)
+- [app/v2/api/admin/ops_routes.py](app/v2/api/admin/ops_routes.py#L64)
+- [src/v2/admin/pages/dashboard/OpsDashboard.tsx](src/v2/admin/pages/dashboard/OpsDashboard.tsx#L26)
 
 ## 6. 영역 3: 데이터/마이그레이션/백업/복구
 
@@ -126,15 +126,15 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [20260203_production_data_reset_report.md](./20260203_production_data_reset_report.md)
 
 ### 6.6 구현 증거 (코드베이스)
-- app/v2/services/hq_margin_import_service.py
-- app/v2/services/hq_daily_deposit_import_service.py
-- app/v2/services/paste_import_service.py
-- app/v2/services/spending_logger_service.py
-- app/v2/models/v2_spending_ledger.py
-- app/v2/models/v2_hq_daily_withdrawal_log.py
-- alembic/versions/20260205_0100_add_v2_spending_ledger.py
-- alembic/versions/20260205_0200_add_v2_hq_daily_withdrawal_log.py
-- scripts/production_data_reset.sql
+- [app/v2/services/hq_margin_import_service.py](app/v2/services/hq_margin_import_service.py#L19-L93)
+- [app/v2/services/hq_daily_deposit_import_service.py](app/v2/services/hq_daily_deposit_import_service.py#L38-L167)
+- [app/v2/services/paste_import_service.py](app/v2/services/paste_import_service.py#L297-L487)
+- [app/v2/services/spending_logger_service.py](app/v2/services/spending_logger_service.py#L67-L176)
+- [app/v2/models/v2_spending_ledger.py](app/v2/models/v2_spending_ledger.py#L15-L28)
+- [app/v2/models/v2_hq_daily_withdrawal_log.py](app/v2/models/v2_hq_daily_withdrawal_log.py#L14-L24)
+- [alembic/versions/20260205_0100_add_v2_spending_ledger.py](alembic/versions/20260205_0100_add_v2_spending_ledger.py#L24-L62)
+- [alembic/versions/20260205_0200_add_v2_hq_daily_withdrawal_log.py](alembic/versions/20260205_0200_add_v2_hq_daily_withdrawal_log.py#L23-L57)
+- [scripts/production_data_reset.sql](scripts/production_data_reset.sql#L15-L40)
 
 ## 7. 영역 4: 어드민·정책·권한·감사
 
@@ -166,14 +166,15 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [20260127_lottery_prize_partial_update_fix.md](./20260127_lottery_prize_partial_update_fix.md)
 
 ### 7.6 구현 증거 (코드베이스)
-- app/v2/middleware/admin_audit.py
-- app/v2/api/admin/__init__.py
-- app/v2/api/admin/team_battle_routes.py
-- app/v2/api/admin/game_config_routes.py
-- app/v2/schemas/v2_admin_game.py
-- app/v2/api/admin/user_routes.py
-- src/v2/api/adminApi.ts
-- src/v2/admin/pages/game/AdminTeamBattlePage.tsx
+- [app/v2/middleware/admin_audit.py](app/v2/middleware/admin_audit.py#L26-L103)
+- [app/v2/api/admin/__init__.py](app/v2/api/admin/__init__.py#L25-L38)
+- [app/v2/api/admin/team_battle_routes.py](app/v2/api/admin/team_battle_routes.py#L512-L546)
+- [app/v2/api/admin/game_config_routes.py](app/v2/api/admin/game_config_routes.py#L770)
+- [app/v2/schemas/v2_admin_game.py](app/v2/schemas/v2_admin_game.py#L225)
+- [app/v2/api/admin/user_routes.py](app/v2/api/admin/user_routes.py#L281-L302)
+- [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts#L468)
+- [src/v2/api/adminApi.ts](src/v2/api/adminApi.ts#L2269)
+- [src/v2/admin/pages/game/AdminTeamBattlePage.tsx](src/v2/admin/pages/game/AdminTeamBattlePage.tsx#L244-L309)
 
 ## 8. 영역 5: 게임·경제·골든·CRM 운영
 
@@ -210,14 +211,14 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [v2_integrated_marketing_ops_sot.md](./v2_integrated_marketing_ops_sot.md)
 
 ### 8.6 구현 증거 (코드베이스)
-- app/v2/services/circuit_breaker_service.py
-- app/v2/services/vault2_service.py
-- app/v2/services/daily_nudge_service.py
-- app/v2/tasks/daily_nudge_tasks.py
-- app/v2/services/v2_lottery_game_service.py
-- app/v2/services/v2_exchange_service.py
-- app/v2/api/exchange_routes.py
-- app/v2/api/team_battle_routes.py
+- [app/v2/services/circuit_breaker_service.py](app/v2/services/circuit_breaker_service.py#L11-L89)
+- [app/v2/services/vault2_service.py](app/v2/services/vault2_service.py#L446-L487)
+- [app/v2/services/daily_nudge_service.py](app/v2/services/daily_nudge_service.py#L24-L90)
+- [app/v2/tasks/daily_nudge_tasks.py](app/v2/tasks/daily_nudge_tasks.py#L22-L46)
+- [app/v2/services/v2_lottery_game_service.py](app/v2/services/v2_lottery_game_service.py#L195)
+- [app/v2/services/v2_exchange_service.py](app/v2/services/v2_exchange_service.py#L16-L74)
+- [app/v2/api/exchange_routes.py](app/v2/api/exchange_routes.py#L31-L43)
+- [app/v2/services/team_battle_service.py](app/v2/services/team_battle_service.py#L305-L317)
 
 ## 9. 영역 6: 트러블슈팅·검증·런북
 

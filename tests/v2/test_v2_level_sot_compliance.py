@@ -146,7 +146,7 @@ class TestPrimaryMirrorSync:
         # Verify Query
         # "Left Join ... Where ... OR ..."
         
-        inconsistent = db.query(V2User).outerjoin(UserLevelProgress)\
+        inconsistent = db.query(V2User).outerjoin(UserLevelProgress, V2User.id == UserLevelProgress.user_id)\
             .filter(
                 (UserLevelProgress.user_id == None) |
                 (V2User.level != UserLevelProgress.level) |
@@ -159,7 +159,7 @@ class TestPrimaryMirrorSync:
         mirror.xp = 999
         db.commit()
         
-        inconsistent_mock = db.query(V2User).outerjoin(UserLevelProgress)\
+        inconsistent_mock = db.query(V2User).outerjoin(UserLevelProgress, V2User.id == UserLevelProgress.user_id)\
             .filter(
                 (V2User.xp != UserLevelProgress.xp)
             ).filter(V2User.id == user.id).count()
