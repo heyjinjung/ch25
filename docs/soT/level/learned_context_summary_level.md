@@ -15,10 +15,13 @@
     - GAME_XP 외의 다른 Reward Type으로 레벨포인트를 적립해선 안 된다.
 
 ## 3. DB 스키마 및 매핑 (DB Schema & Mapping)
-- **핵심 테이블**: `user_level_progress`
+- **Primary SoT (2026-02-04~)**: `v2_user`
+    - `level` (Integer, Default 1)
+    - `xp` (Integer, Default 0)
+- **레거시 Mirror(동기화)**: `user_level_progress`
     - `user_id` (PK)
     - `level` (Integer, Default 1)
-    - `xp` (Integer, Default 0) -> **`level_point` 논리명과 매핑됨**
+    - `xp` (Integer, Default 0) -> 문서상의 **`level_point` 논리명과 매핑됨**
 - **로그 테이블**:
     - `user_xp_event_log`: XP 변동 이력 (`source` 예: `CC_DEPOSIT`, `delta`, `meta`)
     - `user_level_reward_log`: 레벨 달성 보상 지급 이력 (`level`, `reward_type`, `payload`)
@@ -53,8 +56,8 @@
 ---
 
 ## 7. DB 구조 검증 (Phase 3: DB Structure)
-- **테이블 분리**: `v2_user` (`v2_db_user_ko.md`)는 유저 식별(`cc_id`, `nickname`)과 `vault_locked_balance`만 관리하며, **Level/XP 컬럼을 포함하지 않는다**.
-- **성장 전용 테이블**: Phase 1에서 확인된 `user_level_progress` 테이블이 Level/XP를 전담한다. (User Identity vs Progression 분리 원칙 준수)
+- **SoT 통합**: 2026-02-04부터 `v2_user`는 유저 식별 + 금고 + **Level/XP + 입금 누적**까지 포함하는 Primary SoT로 통합되었다.
+- **레거시 호환**: `user_level_progress`는 Level/XP의 레거시 Mirror로 유지되며, 신규 판단 기준은 `v2_user`를 따른다.
 - **보상 테이블**: `v2_level_reward_table` (`v2_db_level_reward_table_ko.md`)이 존재하며 `level`, `required_xp`, `reward_type`, `reward_amount` 컬럼으로 보상표를 물리적으로 저장한다.
     - `reward_payload` (JSON) 컬럼이 있어 `GIFTICON` 등의 메타데이터 확장이 가능하다.
 
