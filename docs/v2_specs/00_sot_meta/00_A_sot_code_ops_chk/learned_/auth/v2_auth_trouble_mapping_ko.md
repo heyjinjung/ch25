@@ -6,6 +6,8 @@
 대상: BE/FE/운영
 상태: 구현 완료 ✅ (트러블 예상율 0%)
 
+※ 2026-02-06 기준: 코드 정합 점검 결과, 일부 경로/라우터 노출 이슈가 남아 있어 본 문서의 “완전 해결” 표기를 완화/정정한다.
+
 ---
 
 # V2 Auth SoT 적용 시 예상 트러블 매핑표
@@ -202,14 +204,16 @@ Auth SoT 적용 시 9개 도메인(admin, game, inventory, level, mission, shop,
 
 ## 3. 크로스도메인 충돌 포인트
 
-### 3.1 Activity 경로 불일치 ✅ 해결됨
+### 3.1 Activity 경로 불일치 🟡 부분 해결
 
 **해결 방안**: 옵션 B 적용 (BE 별칭 추가)
 
-**현재 상태**:
-- V1: `/api/activity/record` (기존 유지)
-- V2: `/api/v2/activity/ingest` (원본)
-- V2: `/api/v2/activity/record` (별칭 추가)
+**현재 상태(코드 기준)**:
+- V2: `/api/v2/activity/ingest` (원본, 현재 mock)
+- V2: `/api/v2/activity/record` (별칭)
+- FE: `src/api/activityApi.ts`는 `/api/activity/record`를 호출 중
+
+**결론**: V2 내부에서 `/ingest`↔`/record` 정합은 되었으나, FE 호출 경로(`/api/activity/record`)와는 여전히 불일치하여 404 위험이 남아 있음.
 
 **수정 파일**: `app/v2/api/activity_routes.py`
 
@@ -242,6 +246,10 @@ if not settings.dev_login_enabled and not is_dev_env:
 ```
 
 **예상 부작용**: 없음 (기본값 False로 PROD 안전)
+
+⚠️ **운영 주의(코드 정합성)**:
+- `app/v2/api/dev_login.py` 라우터는 파일로 존재하나, 현재 `app/v2/api/routes.py`에 include되지 않아 실제 `/api/v2/dev/login` 엔드포인트가 비활성(404)일 수 있음.
+- 또한 dev_login은 Access Token 발급 시 `create_access_token()` 기본 만료(`JWT_EXPIRE_MINUTES`)를 사용하므로, V2 표준(15분)과 다를 수 있음.
 
 ---
 
@@ -626,7 +634,8 @@ scripts/
 |------|------|--------|------|
 | v1.0 | 2026-01-28 | GitHub Copilot | 최초 작성 |
 | v1.1 | 2026-01-29 | GitHub Copilot | Phase 1, 2 완료 반영, V1 의존성 완전 제거 |
-| v1.2 | 2026-01-29 | GitHub Copilot | 트러블 예상율 0% 달성 - 모든 충돌 포인트 해결 |
+| v1.2 | 2026-01-29 | GitHub Copilot | Phase 1~3 반영 (당시 기준) |
+| v1.3 | 2026-02-06 | GitHub Copilot | 코드 기준 재점검: Activity/DEV Login 잔여 이슈 반영 |
 
 ---
 
@@ -634,10 +643,10 @@ scripts/
 
 | 항목 | 이전 상태 | 현재 상태 | 비고 |
 |------|----------|----------|------|
-| 3.1 Activity 경로 | 미해결 | ✅ 해결 | /record 별칭 추가 |
-| 3.2 DEV 로그인 환경 제한 | 미해결 | ✅ 해결 | dev_login_enabled 플래그 |
+| 3.1 Activity 경로 | 미해결 | 🟡 부분 해결 | V2 내부 별칭은 존재하나 FE(`/api/activity/record`)와 불일치 |
+| 3.2 DEV 로그인 환경 제한 | 미해결 | 🟡 운영 점검 필요 | 플래그는 존재하나 라우터 include/만료정책 정리 필요 |
 | 3.3 Telegram hash 검증 | 미해결 | ✅ 해결 | V2 전용 모듈 |
 | 3.4 Access Token 만료 | 미해결 | ✅ 해결 | V2 전용 설정 분리 |
 | 2.4 Admin RBAC 로깅 | 미해결 | ✅ 해결 | RBAC_DENIED 이벤트 |
 
-**총 트러블 예상율: 0%** (모든 충돌 포인트 해결 완료)
+**요약**: 문서 기준 “완전 해결” 상태가 아니라, 운영 점검(라우터 노출/FE 경로) 후 마무리 필요.

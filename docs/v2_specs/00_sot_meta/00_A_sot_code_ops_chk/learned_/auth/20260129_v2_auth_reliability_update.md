@@ -1,3 +1,13 @@
+문서 타입: learned_ 패치 노트
+버전: v1.1
+작성일: 2026-01-29
+수정일: 2026-02-06
+작성자: GitHub Copilot
+대상: BE/FE/QA
+상태: 적용 완료 ✅ (문서 정합 갱신)
+
+---
+
 # 2026-01-29 V2 인증 신뢰성 및 정합성 업데이트
 
 ## 1. 배경
@@ -25,12 +35,45 @@ V2 인증 시스템의 SOT(단일 원천) 정책과 실제 `auth_routes.py` 코�
 ## 3. 검증 결과
 - **단위 테스트**: `tests/v2/test_telegram_auth_api.py` (10 passed)
 - **확인 항목**:
-    - `POST /auth/token` 호출 시 `refresh_token` 포함 여부 확인 완료.
+    - `POST /api/v2/auth/token` 호출 시 `refresh_token` 포함 여부 확인 완료.
     - 로그인 실패 시 `LOGIN_FAILED` 이벤트 DB 기록 확인 완료.
     - 로그인 성공 시 `LOGIN_SUCCESS` 이벤트 및 미션 트리거 확인 완료.
 
 ## 4. 향후 계획
 - 30일 sliding window 만료 및 자동 갱신 로직(발급 7일 전) 모니터링.
+
+---
+
+## 5. 프론트엔드 로그인 화면(요약)
+
+### 5.1 테스트 로그인 페이지 (정식 배포 전)
+- 경로: `/login/test`
+- 파일: `src/v2/pages/auth/V2TelegramTestLoginPage.tsx`
+- 특징:
+    - 초기화 경고 배너
+    - 텔레그램 환경: initData 인증 버튼
+    - 비텔레그램 환경: CC ID 기반 개발 로그인
+
+### 5.2 프로덕션 텔레그램 로그인 페이지 (정식 배포 후)
+- 경로: `/login`
+- 파일: `src/v2/pages/auth/V2TelegramLoginPage.tsx`
+- 특징:
+    - 페이지 로드 시 자동 인증 시도
+    - 상태별 UI(로딩 → 성공 → 홈 이동)
+    - 실패 시 재시도 제공
+    - 비 텔레그램 환경 가드 문구
+
+### 5.3 라우팅 구조
+
+| 경로 | 페이지 | 용도 |
+|------|--------|------|
+| `/login` | V2TelegramLoginPage | 프로덕션(자동 인증) |
+| `/login/test` | V2TelegramTestLoginPage | 테스트(초기화 경고) |
+| `/login/dev` | V2UserLoginPage | 개발용(레거시) |
+
+### 5.4 백엔드 연동
+- `POST /api/v2/telegram/auth` : initData 기반 인증
+- Refresh Token 지원
 
 텔레그램 로그인 화면 2개를 구현했습니다:
 

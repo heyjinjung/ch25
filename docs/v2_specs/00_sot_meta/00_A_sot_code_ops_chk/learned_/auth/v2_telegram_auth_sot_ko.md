@@ -7,7 +7,7 @@
 상태: 구현 완료 ✅
 
 [최종 검토일: 2026-01-29]
-정책 최신화 필요 여부: 🟢 코드 구현 완료, DB Migration 대기
+정책 최신화 필요 여부: 🟡 코드 구현 완료. 마이그레이션 파일 존재(20260128_1800_add_v2_auth_tables.py) — 적용 여부는 alembic 상태로 확인 필요
 
 ---
 
@@ -48,6 +48,10 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 
 ### [A] Auth 관련 DB 스키마
 
+> [!IMPORTANT]
+> **현재 V2 Telegram Auth 구현은 `user`(V1) 테이블을 사용하지 않고, `v2_user`만 사용한다.**
+> 따라서 아래 `user.*` 항목은 레거시/참고용이며, 본 SoT의 실제 구현 기준은 `v2_user.*`이다.
+
 | 테이블/컬럼 | 제약조건 | 설명 | 비고 |
 |------------|---------|------|------|
 | user.id | PK, INT | 마스터 유저 ID | V1/V2 공통 |
@@ -57,8 +61,11 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 | user.telegram_join_count | INT, DEFAULT 0 | 로그인 횟수 | |
 | user.first_login_at | DATETIME, NULL | 최초 로그인 | |
 | user.last_login_at | DATETIME, NULL | 마지막 로그인 | |
-| v2_user.id | PK, INT | V2 유저 ID | user.id와 동일 |
+| v2_user.id | PK, INT | V2 유저 ID | (현재 구현은 v2_user 단독 사용) |
 | v2_user.cc_id | VARCHAR(100), UNIQUE, NOT NULL | 외부 ID | V2 인증 키 |
+| v2_user.telegram_id | BIGINT, UNIQUE, NULL | 텔레그램 유저 ID | V2 인증 키 |
+| v2_user.telegram_username | VARCHAR(100), INDEX | @username | V2 표시/검색 |
+| v2_user.last_login_at | DATETIME, NULL | 마지막 로그인 | V2 유지 |
 | v2_user.vault_locked_balance | INT, NOT NULL | 금고 잔액 | SoT 단일 출처 |
 | telegram_link_code.code | VARCHAR(12), UNIQUE | 링크 코드 | 1회용 |
 | telegram_link_code.user_id | FK(user.id) | 유저 참조 | |
@@ -86,9 +93,9 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 | 정책 문서 | 실제 코드 | DB 컬럼/제약 | FE API 경로 | 상태 |
 |----------|----------|-------------|------------|------|
 | Telegram initData 검증 | `app/v2/core/telegram.py::validate_init_data()` | - | `/api/v2/telegram/auth` | ✅ 구현 완료 (hash 비교 포함) |
-| Access Token 발급 | `app/core/security.py::create_access_token()` | - | - | ✅ 정합 |
+| Access Token 발급 | `app/core/security.py::create_access_token()` | - | - | ✅ 정합 (V2는 만료 15분을 별도 설정으로 오버라이드) |
 | Refresh Token 발급 | `app/v2/services/auth_service.py::issue_tokens()` | v2_user_refresh_token | `/api/v2/auth/refresh` | ✅ 구현 완료 |
-| DEV 로그인 | `app/v2/api/dev_login.py` | v2_user.cc_id | `/api/v2/dev/login` | ✅ 정합 (env 제한) |
+| DEV 로그인 | `app/v2/api/dev_login.py` | v2_user.cc_id | `/api/v2/dev/login` | 🟡 운영 점검 필요 (라우터 include 여부 확인) |
 | RBAC 검증 | `app/api/deps.py::get_current_admin_info()` | admin_user_profile.tags | - | ✅ 정합 |
 | 로그인 이력 | `app/v2/models/auth_event.py` | v2_user_auth_event | - | ✅ 구현 완료 |
 | 로그아웃 | `app/v2/api/auth_routes.py::v2_logout()` | v2_user_refresh_token | `/api/v2/auth/logout` | ✅ 구현 완료 |
@@ -102,14 +109,13 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 ```
 1. Telegram Mini App → initData 전송
 2. BE → HMAC-SHA256 서명 검증 (TELEGRAM_BOT_TOKEN 기반)
-3. BE → telegram_id로 기존 유저 조회
+3. BE → `v2_user.telegram_id`로 기존 유저 조회
 4. 신규 유저 시:
-   a. start_param이 "link_{code}" → 기존 계정 연동
-   b. telegram_username으로 사전 생성 유저 조회
-   c. 없으면 자동 생성 (external_id: tg_{tg_id}_{uuid8})
+   a. (현재 구현) 자동 생성 (cc_id: `tg_{tg_id}_{uuid8}`)
+   b. start_param이 `ref_{user_id}`인 경우 추천인 처리
+   c. ⚠️ `link_{code}` 기반 기존 계정 연동은 현재 V2 Telegram 라우트에 미구현(추후 작업)
 5. 기존 유저 시:
-   a. last_login_at 갱신
-   b. telegram_join_count 증가
+   a. `v2_user.last_login_at` 갱신
 6. LOGIN 미션 진행 (09:00 KST 리셋 기준)
 7. Access Token 발급 (15분 만료)
 8. Refresh Token 발급 (30일 sliding)
@@ -141,12 +147,15 @@ Telegram Mini App 기반 인증 정책 및 V2 시스템 통합 방식을 정의�
 
 ### 6.4 기존 유저 연동 정책
 
+> [!NOTE]
+> 아래 link_* 기반 연동 정책은 설계 SoT로 유지하되, 현재 `app/v2/api/telegram_routes.py`에는 미구현이다.
+
 ```
 1. start_param = "link_{code}" 형식 검증
 2. DB에서 telegram_link_code 조회 (FOR UPDATE)
 3. 만료 여부 확인 (expires_at > NOW)
 4. 사용 여부 확인 (used_at IS NULL)
-5. user.telegram_id 업데이트
+5. (목표) v2_user.telegram_id 업데이트
 6. telegram_link_code.used_at 갱신
 7. telegram_join_count 증가
 8. TELEGRAM_LINK 이벤트 기록

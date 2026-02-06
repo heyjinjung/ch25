@@ -53,8 +53,10 @@ def test_evidence_bypass_logic(db, vault_service):
     db.flush()
 
     # 입금 증거 추가 (PENDING, 1시간 전)
+    # tx_id 필드가 필수(nullable=False)이므로 추가
     evidence = V2UserDepositEvidence(
         user_id=user.id,
+        tx_id="test_tx_123",
         status=EvidenceStatus.PENDING,
         created_at=datetime.now(timezone.utc) - timedelta(hours=1)
     )
@@ -70,7 +72,7 @@ def test_toggle_manual_suspension_api_logic(db):
     db.add(user)
     db.flush()
 
-    # API 직접 호출 (토깅)
+    # API 직접 호출 (토그링)
     result = toggle_manual_suspension(
         user_id=user.id, 
         suspended=True, 
@@ -82,7 +84,7 @@ def test_toggle_manual_suspension_api_logic(db):
     assert result["suspended"] is True
     assert user.benefits_suspended_manual == 1
 
-    # 감사 로그 확인
+    # 감사 로그 확인 (필드명 after_json 확인)
     audit_log = db.query(AdminAuditLog).filter(
         AdminAuditLog.target_id == str(user.id),
         AdminAuditLog.action == "BENEFITS_SUSPENDED_MANUAL_TOGGLE"
@@ -90,7 +92,8 @@ def test_toggle_manual_suspension_api_logic(db):
     
     assert audit_log is not None
     assert audit_log.admin_id == 999
-    assert audit_log.after["manual_suspension"] is True
+    # AdminAuditLog 모델의 필드는 after_json, before_json임
+    assert audit_log.after_json["manual_suspension"] is True
 
 def test_toggle_manual_suspension_not_found(db):
     """존재하지 않는 유저 ID로 수동 제재 시 404 발생 확인."""

@@ -430,7 +430,7 @@ def list_users(
 ### 4.1 현재 DEV 로그인 환경 제한
 
 ```python
-# app/v2/api/dev_login.py Line 38-41
+# app/v2/api/dev_login.py (현재 구현)
 
 @router.post("/login", response_model=DevLoginResponse)
 def dev_login(
@@ -440,56 +440,51 @@ def dev_login(
 ):
     settings = get_settings()
 
-    # 환경 제한: local, development, dev만 허용
-    if settings.env not in ["local", "development", "dev"]:
+    # 명시적 플래그(우선) 또는 env 체크(폴백)
+    is_dev_env = settings.env in ["local", "development", "dev"]
+    if not settings.dev_login_enabled and not is_dev_env:
         raise HTTPException(status_code=403, detail="DEV_LOGIN_DISABLED")
 
     # ... 이후 로직 ...
 ```
 
-### 4.2 명시적 플래그 추가 권장
+> [!IMPORTANT]
+> 코드 파일은 존재하나, `app/v2/api/routes.py`에 `dev_login` 라우터 include가 누락되어 있으면 실제 `/api/v2/dev/login`은 404가 될 수 있다.
+> (운영/문서 정합성 관점에서 라우터 등록 여부를 반드시 확인)
+
+### 4.2 명시적 플래그 + V2 만료 설정 (현재 구현 ✅)
 
 ```python
-# app/core/config.py (추가)
+# app/core/config.py (현재 구현 발췌)
 
 class Settings(BaseSettings):
     # ... 기존 설정 ...
 
-    # Auth 관련 설정
     dev_login_enabled: bool = Field(
         False,
         validation_alias=AliasChoices("DEV_LOGIN_ENABLED", "dev_login_enabled"),
-        description="DEV 로그인 허용 여부 (PROD에서는 반드시 false)"
     )
 
-    jwt_access_token_expire_minutes: int = Field(
+    v2_access_token_expire_minutes: int = Field(
         15,
-        validation_alias=AliasChoices("JWT_ACCESS_TOKEN_EXPIRE_MINUTES"),
-        description="Access Token 만료 시간 (분)"
-    )
-
-    jwt_refresh_token_expire_days: int = Field(
-        30,
-        validation_alias=AliasChoices("JWT_REFRESH_TOKEN_EXPIRE_DAYS"),
-        description="Refresh Token 만료 시간 (일)"
+        validation_alias=AliasChoices(
+            "V2_ACCESS_TOKEN_EXPIRE_MINUTES",
+            "v2_access_token_expire_minutes",
+        ),
     )
 ```
 
-### 4.3 개선된 DEV 로그인 검증
+### 4.3 DEV 로그인 검증 (요약)
 
 ```python
-# app/v2/api/dev_login.py (개선)
+# app/v2/api/dev_login.py
 
 @router.post("/login", response_model=DevLoginResponse)
 def dev_login(...):
     settings = get_settings()
 
-    # 방법 1: 명시적 플래그 우선 (권장)
-    if hasattr(settings, 'dev_login_enabled') and not settings.dev_login_enabled:
-        raise HTTPException(status_code=403, detail="DEV_LOGIN_DISABLED")
-
-    # 방법 2: 환경 기반 fallback
-    if settings.env not in ["local", "development", "dev"]:
+    is_dev_env = settings.env in ["local", "development", "dev"]
+    if not settings.dev_login_enabled and not is_dev_env:
         raise HTTPException(status_code=403, detail="DEV_LOGIN_DISABLED")
 
     # ... 이후 로직 ...
@@ -501,12 +496,12 @@ def dev_login(...):
 # .env.local
 DEV_LOGIN_ENABLED=true
 TEST_MODE=true
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 개발 편의를 위해 24시간
+V2_ACCESS_TOKEN_EXPIRE_MINUTES=15
 
 # .env.production
 DEV_LOGIN_ENABLED=false
 TEST_MODE=false
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+V2_ACCESS_TOKEN_EXPIRE_MINUTES=15
 TELEGRAM_BOT_TOKEN=123456:ABC...
 ```
 

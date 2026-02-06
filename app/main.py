@@ -20,6 +20,10 @@ from app.v2.workers.golden_intervention_worker import run_golden_intervention_wo
 
 settings = get_settings()
 
+# Production safety guard: never allow dev login in production.
+if settings.env == "production" and settings.dev_login_enabled:
+    raise RuntimeError("Invalid config: DEV_LOGIN_ENABLED must be false in production")
+
 # Sentry 초기화 (프로덕션 에러 추적)
 sentry_dsn = os.getenv("SENTRY_DSN")
 if sentry_dsn:

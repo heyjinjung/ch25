@@ -1,5 +1,13 @@
-[최종 검토일: 2026-01-26]
-정책 최신화 필요 여부: 🔴 업데이트 필요 (인증 내역 누락, API 경로 불일치, 및 파일명 부정합)
+문서 타입: learned_ 정합성 체크
+버전: v1.1
+작성일: 2026-01-26
+수정일: 2026-02-06
+작성자: GitHub Copilot
+대상: BE/FE/운영
+상태: 운영 점검 필요 🟡
+
+[최종 검토일: 2026-02-06]
+정책 최신화 필요 여부: 🟡 업데이트 필요 (활동 기록 경로, DEV 로그인 라우터 노출)
 
 ## 정책 정합성/충돌 처리 원칙
 - SoT-코드-운영-DB-프론트 매핑에서 부정합/충돌 발견 시 아래와 같이 명시:
@@ -16,8 +24,7 @@
 - [ ] 인증/인가/세션 관리 실시간 점검 및 운영자 알림 연동
 - [ ] 정책/구현/운영 불일치 발견 시 즉시 표기 및 TODO/임시 예외 명시
 - [ ] 최신 정책/운영 사례 반영 주기적 검토(작성일/최종 검토일 갱신)
-#
-...existing code...
+
 # Auth 영역 SoT-코드-운영-DB-프론트 매핑 표 (관리자 친화형)
 
 ## 1. 인증 정책/핵심 Enum/상수/제약조건
@@ -25,35 +32,36 @@
 ### [A] 주요 DB 컬럼/제약조건/Enum
 | DB 테이블/컬럼                | 제약조건/Enum/설명                                   | 정책/코드/프론트 매핑 필드명         | 비고 |
 |-------------------------------|------------------------------------------------------|--------------------------------------|------|
-| user.id                       | PK, UNIQUE                                           | user_id                              | 🟢 정합 (공통 PK) |
-| user_auth.user_id             | FK(user.id)                                          | user_id                              | 🟢 정합 (user_auth_user_id_fkey) |
-| user_auth.provider            | ENUM(AuthProviderType)                               | AuthProviderType, provider           | 🟢 정합 (TELEGRAM, DEV_WEB) |
-| access_token.user_id          | FK(user.id)                                          | user_id                              | 🟢 정합 (V1 호환 세션) |
+| v2_user.id                    | PK, UNIQUE                                           | user_id                              | 🟢 정합 (V2 PK) |
+| v2_user.cc_id                 | UNIQUE, NOT NULL                                     | cc_id / external_id                  | 🟢 정합 (V2 인증 키) |
+| v2_user.telegram_id           | UNIQUE, NULL                                         | telegram_id                          | 🟢 정합 (텔레그램 인증 키) |
+| v2_user_auth_event.user_id    | INDEX (물리 FK 없음)                                 | user_id                              | 🟢 정합 (LOGIN_FAILED=0 대응) |
+| v2_user_refresh_token.jti     | UNIQUE                                               | jti                                  | 🟢 정합 (Refresh Token 추적) |
 | (기타 FK/UNIQUE/ENUM)         | (각 테이블별로 명시)                                 |                                      |      |
 
 ### [B] 프론트-백엔드-DB-코드-정책 1:1 매핑 구조
 | 정책/문서           | 실제 코드/Enum/상수         | DB 컬럼/제약조건                | 프론트 필드명         | 비고 |
 |---------------------|-----------------------------|----------------------------------|----------------------|------|
-| v2_pre_release_auth_policy_ko.md | AuthProviderType, DEV_LOGIN_ENABLED | user_auth.provider | provider | 🟢 정합 (dev_login.py 연동) |
-| v2_auth_user_api_contract_ko.md | /api/auth/token, /api/activity/record | (Mock Response) | authApi, activityApi | 🔴 [정책/구현 충돌] 활동 기록 구현 누락 |
-| V2UserLoginPage.tsx | external_id, login_button | (Front-end Component) | external_id | 🟢 정합 (V2 FE 연동 완료) |
+| v2_telegram_auth_sot_ko.md | Telegram initData 검증/토큰 발급/이벤트 로깅 | v2_user_auth_event, v2_user_refresh_token | - | 🟢 정합 (V2 구현 완료) |
+| v2_auth_user_api_contract_ko.md | `POST /api/v2/auth/token` | - | authApi | 🟢 정합 |
+| activityApi.ts | `POST /api/activity/record` 호출 | - | activityApi | 🔴 [정책/구현 충돌] BE는 `/api/v2/activity/record`만 제공 |
 
 ---
 
 ## 2. 인증 정책
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 정책    | v2_pre_release_auth_policy_ko.md     | "DEV 환경 external_id 로그인 허용, 비밀번호 미사용, 토큰 발급 정책, 엔드포인트: /api/v2/dev/login" | app/v2/api/auth.py                  | /api/v2/auth/*, /api/v2/dev/login      |           |         | ✅ 이관 | /login    | 로그인    | 2026-01-26  | ✅ 완료 | Pre-Release 정책 준수 확인 (dev_login.py) |
+| 인증 정책    | v2_telegram_auth_sot_ko.md     | "Telegram initData 인증 + Access/Refresh + 이벤트 로깅" | app/v2/api/auth_routes.py, app/v2/api/telegram_routes.py | /api/v2/auth/*, /api/v2/telegram/auth  |           |         | ✅ 이관 | /login    | 로그인    | 2026-02-06  | 🟡 점검 필요 | DEV 로그인 라우트는 코드에 있으나 라우터 등록 누락 가능 |
 
 ## 3. 인증 DB/토큰
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 DB/토큰 | v2_pre_release_auth_policy_ko.md     | "DB: user, user_auth, access_token 발급/검증, external_id 기반 매칭" | app/v2/services/auth_service.py      | 테스트: test_auth_service.py           |           |         | ✅ 이관 |         |           | 2026-01-26  | ✅ 완료 | DB 스키마 및 Token 유효성 검증 완료 |
+| 인증 DB/토큰 | v2_telegram_auth_sot_ko.md     | "DB: v2_user_refresh_token, v2_user_auth_event" | app/v2/services/auth_service.py      | /api/v2/auth/token, /api/v2/auth/refresh, /api/v2/auth/logout |           |         | ✅ 이관 |         |           | 2026-02-06  | 🟢 확인 | Access(기본 15분)은 `V2_ACCESS_TOKEN_EXPIRE_MINUTES` 사용 |
 
 ## 4. 인증 상수/Enum
 | 구분         | SoT 문서/정책/스키마                | SoT 한글 설명/핵심값/상수/필드         | 실제 코드/핵심 파일                | 운영 상태/테스트/DB/엔드포인트         | DB 적용값 | V1 폐기 | V2 이관 | FE 라우팅 | FE 표시값 | 최신화 일자 | 검증 결과 | 비고 |
 |--------------|--------------------------------------|------------------------------------------|-------------------------------------|----------------------------------------|-----------|---------|---------|-----------|-----------|-------------|-----------|------|
-| 인증 상수/Enum| v2_pre_release_auth_policy_ko.md     | "상수: DEV_LOGIN_ENABLED, Enum: AuthProviderType, 필드: external_id, access_token" | app/v2/services/auth_service.py      | DB: user, user_auth                   |           |         | ✅ 이관 |         |           | 2026-01-26  | ✅ 완료 | AuthProviderType Enum 정합성 확인 |
+| 인증 상수/Enum| v2_telegram_auth_sot_ko.md     | "상수: DEV_LOGIN_ENABLED, V2_ACCESS_TOKEN_EXPIRE_MINUTES, Enum: AuthEventType" | app/core/config.py, app/v2/models/auth_event.py | DB: v2_user_auth_event, v2_user_refresh_token |           |         | ✅ 이관 |         |           | 2026-02-06  | 🟢 확인 | DEV 로그인 플래그/만료시간 분리 구현 |
 
 <!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->
 
@@ -65,21 +73,23 @@
 | :--- | :--- | :--- | :--- |
 | **1차** | 인증 정책(v2_pre_release) 및 기본 토큰 발급 로직 검증 완료 | 🟢 정합 | ✅🟢 |
 | **2차** | Dev Login 환경 제한 및 JWT Role 클레임(`role`, `roles`) 정합성 확인 | 🟢 정합 | ✅🟢 |
-| **3차** | **인증 내역(Auth History) 및 활동 로그 구현 누락 확인**. 정책상 정의된 활동 기록 API가 Mock으로만 존재함. | 🔴 충돌/누락 | ❌🔴 |
+| **3차** | **(과거 이슈) 인증 내역(Auth Event) 및 설정 플래그 불일치** | ✅ 해결 | ✅🟢 |
+| **4차** | **(현재 이슈) FE 활동 기록 경로 불일치** (`/api/activity/record` vs `/api/v2/activity/record`) | 🔴 충돌/누락 | ❌🔴 |
 
-## 4. 정합성 검증 상세 리포트 (Step 2-2)
+## 4. 정합성 검증 상세 리포트 (Updated 2026-02-06)
 
-- **상태**: 🔴 **업데이트 필요 (인증 내역/활동 로그 구현 누락)**
+- **상태**: 🟡 **일부 업데이트 필요 (활동 로그 경로, DEV 로그인 노출 상태 점검)**
 - **주요 발견 사항**:
-    - 🟢 [정책/구현 일치]: `v2_pre_release_auth_policy_ko.md`의 "DEV 로그인 환경 제한" 정책이 `dev_login.py` (Line 40: `env in ["local", "development", "dev"]`)에 정확히 구현됨.
-    - 🟢 [API 계약 준수]: `/api/auth/token` (v2_issue_token) 응답 스키마가 `AuthUser` 모델을 통해 `vault_locked_balance` SoT를 준수함.
+    - 🟢 [정책/구현 일치]: `/api/v2/auth/token`은 Access+Refresh를 발급하고, `v2_user_auth_event`에 LOGIN_SUCCESS/FAILED를 기록함.
+    - 🟢 [API 계약 준수]: `AuthUser.vault_locked_balance`는 V2 금고 SoT를 준수함.
     - 🟢 [JWT Claims]: `app/core/security.py`가 `role`, `roles` 클레임을 지원하여 Admin RBAC 기반 마련됨.
-    - 🔴 [정책/구현 충돌]: **인증 내역(Auth History) 구현 누락**. 
-        - SoT(`v2_auth_user_api_contract_ko.md`)에는 `/api/activity/record` 활동 기록 API가 정의되어 있으나, 실제 `activity_routes.py`는 **Mock 응답**만 반환함.
-        - V1(`app/api/routes/auth.py`)과 달리 V2 Auth(`dev_login.py`, `auth_service.py`)에 **로그인 이벤트 적재(`UserEventLog`) 로직이 전무함**.
+    - 🔴 [정책/구현 충돌]: **활동 기록 경로 불일치**.
+        - FE는 `/api/activity/record`를 호출.
+        - BE V2는 `/api/v2/activity/record`만 제공.
+        - 결과: 동일 오리진 구성(nginx)에서는 404 위험.
 - **조치 사항**:
-    - 🔴 [긴급]: `V2AuthService` 및 `dev_login` 성공 시 `UserEventLog` (또는 유력한 V2용 신규 로그 테이블) 적재 로직 추가 필수.
-    - 🟡 [모니터링]: Prod 환경 배포 시 `DEV_LOGIN_DISABLED` 예외가 정상 발생하여 Dev Login이 차단되는지 스모크 테스트 필요.
+    - 🔴 [긴급]: FE 활동 기록 엔드포인트를 `/api/v2/activity/record`로 변경하거나, BE에 `/api/activity/record` 별칭 라우터를 추가.
+    - 🟡 [모니터링]: DEV 로그인은 `DEV_LOGIN_ENABLED`로 차단되도록 설정하되, 현재 라우터 include 여부를 코드로 재확인 필요.
 
 ## 5. 코드베이스 실전영역 체크 리포트 (Step 3-3)
 
@@ -91,14 +101,14 @@
         - **결과**: 현재 프론트엔드 활동 기록 기능 동작 불가 (404 예상).
     - 🟡 **[파일명/문서 부정합]**: 
         - SoT에서는 핵심 파일을 `app/v2/api/auth.py`로 명시하나, 실제 파일명은 `auth_routes.py`임. 문서 업데이트 필요.
-    - 🟡 **[환경 변수/설정]**: 
-        - SoT의 `DEV_LOGIN_ENABLED` 불리언 상수는 실제 `config.py`에 존재하지 않음. 
-        - 대신 `dev_login.py` 내에서 `settings.env` 값을 직접 체크하는 방식으로 수동 구현됨.
+    - 🟢 **[환경 변수/설정]**: `DEV_LOGIN_ENABLED`는 `app/core/config.py`에 존재하며, V2 Access 만료는 `V2_ACCESS_TOKEN_EXPIRE_MINUTES`를 사용함.
     - 🟢 **[로그인 기능 정합]**: 
-        - `V2UserLoginPage.tsx`에서 `/api/v2/dev/login` 및 `/api/v2/auth/token`을 통한 로그인 연동 확인 완료.
-    - 🔴 **[Critical] 인증 내역/활동 로그 누락**:
-        - `V2AuthService` 및 `dev_login` 성공 시 유저 로그인 이력을 남기는 `UserEventLog` 적재 로직이 V2 코드 전체에서 누락됨.
-- **최종 결론**: **🔴 업데이트 필요**. 인증 기본 기능은 작동하나, 활동 기록 API의 경로 불일치로 인해 실전 운영이 불가능한 상태임. 또한 운영 정책인 '인증 내역 적재'가 누락되어 있어 보완 필수.
+        - `V2TelegramLoginPage.tsx`(프로덕션) / `V2TelegramTestLoginPage.tsx`(테스트) 라우팅 존재.
+    - 🟡 **[DEV 로그인 노출 점검]**:
+        - `app/v2/api/dev_login.py` 파일은 존재하나, `app/v2/api/routes.py`에 include가 누락되어 실제 엔드포인트가 비활성일 수 있음.
+    - 🔴 **[Critical] 활동 기록 경로 불일치**:
+        - FE(`/api/activity/record`) vs BE(`/api/v2/activity/record`).
+- **최종 결론**: **🔴 부분 업데이트 필요**. 인증(토큰/이벤트/미션 트리거)은 정합하나, 활동 기록 경로 불일치와 DEV 로그인 엔드포인트 노출 상태를 정리해야 함.
 
 
 <!-- 각 그룹별로 SoT 한글 설명/핵심값/상수/필드가 명확히 들어가도록 작성, 최신화/검증 결과/비고는 수동 또는 자동화 스크립트로 채움 -->
