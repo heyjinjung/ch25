@@ -760,7 +760,7 @@ class TestTeamBattleAdminServiceIntegration:
         score = test_db_session.query(TeamScore).filter_by(team_id=test_team.id, season_id=active_season.id).first()
         assert score.points == 30
 
-    def test_admin_update_joined_at(self, test_db_session, team_user, test_team):
+    def test_admin_update_joined_at(self, test_db_session, team_user, test_team, active_season):
         """Should allow admin to update joined_at timestamp."""
         admin_service = TeamBattleAdminService()
         tb_service = V2TeamBattleService()

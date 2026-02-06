@@ -1,6 +1,6 @@
 
 문서 타입: SoT / 배포 운영 런북
-버전: v1.2
+버전: v1.3
 작성일: 2026-01-29
 최종 수정: 2026-02-06
 작성자: GitHub Copilot
@@ -98,6 +98,11 @@ LOG_LEVEL=INFO
 SENTRY_DSN=${SENTRY_DSN}
 ```
 
+#### 6.1.1 Sentry (에러 트래킹) SoT
+- `SENTRY_DSN`은 **GitHub Secrets**(또는 운영 서버 `.env`)로만 주입한다. 리포지토리에 하드코딩/커밋 금지.
+- 최신 코드베이스 기준, 백엔드는 `SENTRY_DSN`이 설정된 경우에만 Sentry를 초기화한다.
+- Sentry SDK 버전은 `requirements.txt`를 기준으로 한다. (현재: `sentry-sdk>=2.44.0`)
+
 ## 7. 배포 실행 (Execution)
 ### 7.1 컨테이너 기동
 ```bash
@@ -138,9 +143,22 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 - Golden 핵심: `pytest -v tests/v2/test_circuit_breaker.py tests/v2/test_daily_nudge_service.py`
 - Vault/Economy/Shop: `pytest -v tests/v2_tests/phase2_core/test_vault_withdrawal_logic.py tests/v2_tests/phase2_core/test_shop_inventory_logic.py`
 
+### 9.1.1 V2 Import Cleanup Gate (v2-only)
+- V2 코드(`app/v2/**`)는 V1 네임스페이스(`app.services.*`, `app.api.routes.*`) import를 금지한다.
+- 배포 전 “아키텍처 이관(Architectural)” 기준은 `tests/v2_tests/phase1_env/test_v2_architecture_sot.py`를 통과하는 것으로 판정한다.
+- (선택) 빠른 수동 스캔 예시:
+   - `Get-ChildItem -Recurse app\v2 -Filter *.py | Select-String -Pattern 'from app\.services|import app\.services|from app\.api\.routes|import app\.api\.routes'`
+
 ### 9.2 프론트/어드민(핵심 라우트)
 - `GET /api/v2/admin/ops/status`
 - `POST /api/v2/admin/csv-import/validate`
+
+### 9.3 유저 프론트(핵심 라우트) (Design 개편 전 논리 검증)
+- 기준 문서: `docs/SOT/00_deployment/v2_user_frontend_sot_verification_plan_ko.md`
+- 검증 포인트(요약):
+   - 유저 라우팅이 `/api/v2/*`만 호출하는지(V1 혼용 금지)
+   - `src/v2/hooks/*` 기반 Hook 사용 여부
+   - 핵심 경로: `/login`, `/home`, `/game/*`, `/shop`, `/inventory`, `/missions`, `/team-battle`, `/vault`
 
 ## 10. 배포 후 모니터링 (Monitoring)
 1) 초기 24시간은 `LOG_LEVEL=INFO`를 권장한다.
@@ -150,6 +168,12 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
    redis-cli monitor | grep "golden:v2:events"
    ```
 4) Circuit Breaker 한도가 반영되었는지 확인한다.
+
+### 10.1 Sentry 검증 (코드베이스 기준)
+- 컨테이너 로그에서 Sentry 초기화 메시지를 확인한다.
+   - 예: `[SUCCESS] Sentry initialized (env=production)`
+- (선택) Sentry 테스트 엔드포인트는 최신 코드베이스 기준 `GET /debug-sentry`이다.
+   - 운영에서는 외부 노출/무단 호출 리스크가 있으므로, 필요 시 내부에서만 호출하거나 임시로만 사용한다.
 
 ## 11. 롤백 (Rollback)
 ### 11.1 롤백 판단 기준
@@ -201,6 +225,10 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 - 상점 상품 UI Config SoT: `v2_shop_products_ui_config_sot_ko.md`
 - 퍼널/마찰/활동 로그 요구사항(learned): `20260206_funnel_friction_activity_logging_requirements.md`
 - W1/W2 운영 자동화·트래킹(learned): `20260203_ops_marketing_w1_w2_automation_tracking.md`
+- Sentry 연동 가이드: `docs/SOT/00_deployment/sentry_setup_guide_ko.md`
+- V2 Import Cleanup 가이드: `docs/SOT/00_deployment/v2_sig_import_cleanup_guide_v1.0.md`
+- V2 User Frontend SoT 검증 계획: `docs/SOT/00_deployment/v2_user_frontend_sot_verification_plan_ko.md`
+- V2 배포/검증 체크리스트: `docs/SOT/00_deployment/v2_verification_checklist_ko.md`
 
 ## 14. 운영 서버 검증 기록(참고) (2026-01-30)
 본 섹션은 과거 검증 로그의 보관이며, 현재 SoT 검증 기준은 8~11장을 따른다.
@@ -215,3 +243,4 @@ docker compose exec backend python scripts/seed_v2_essential_data.py
 ## 15. 변경 이력
 - v1.1 (2026-02-06): 배포 관련 SoT 문서들을 기준으로 마스터 런북 통합(환경변수/헬스체크/롤백/트러블슈팅/참조 링크 정리)
 - v1.2 (2026-02-06): 롤백 후 헬스 재검증 경로 보강 및 관측/트래킹 learned 레퍼런스 추가
+- v1.3 (2026-02-06): Sentry/Import Cleanup/User FE 검증/Verification Checklist를 최신 코드베이스 기준으로 반영(부정합 값 정리)
