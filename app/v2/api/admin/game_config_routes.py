@@ -789,22 +789,23 @@ def update_lottery_prize(
         raise HTTPException(status_code=404, detail="LOTTERY_PRIZE_NOT_FOUND")
 
     try:
-        # 부분 업데이트 지원: None이 아닌 필드만 업데이트
-        if payload.label is not None:
-            prize.label = payload.label
-        if payload.weight is not None:
-            prize.weight = payload.weight
-        if payload.stock is not None:
-            prize.stock = payload.stock
-        elif hasattr(payload, "stock"):
-            # 명시적으로 stock=None 전달 시 무제한으로 설정
-            prize.stock = None
-        if payload.reward_type is not None:
-            prize.reward_type = _normalize_reward_type_for_write(payload.reward_type)
-        if payload.reward_amount is not None:
-            prize.reward_amount = payload.reward_amount
-        if payload.is_active is not None:
-            prize.is_active = payload.is_active
+        # 부분 업데이트 지원: unset 필드는 건너뛰고, set된 필드만 업데이트
+        update_data = payload.dict(exclude_unset=True)
+        
+        if "label" in update_data:
+            prize.label = update_data["label"]
+        if "weight" in update_data:
+            prize.weight = update_data["weight"]
+        if "stock" in update_data:
+            # None이면 무제한, 정수면 제한
+            prize.stock = update_data["stock"]
+        if "reward_type" in update_data:
+            prize.reward_type = _normalize_reward_type_for_write(update_data["reward_type"])
+        if "reward_amount" in update_data:
+            prize.reward_amount = update_data["reward_amount"]
+        if "is_active" in update_data:
+            prize.is_active = update_data["is_active"]
+            
         prize.updated_at = datetime.utcnow()
 
         V2AdminAuditService.log(

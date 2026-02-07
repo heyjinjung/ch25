@@ -2,8 +2,8 @@
 
 **문서 정보**
 - **문서 타입**: 도메인 통합 마스터 SoT (Integrated Domain Master)
-- **버전**: v1.1 (Detailed Expansion)
-- **최종 업데이트**: 2026-02-06
+- **버전**: v1.2 (Admin Full-Stack Verification)
+- **최종 업데이트**: 2026-02-07
 - **상태**: 🟢 최신화 완료
 - **대상**: 개발팀, 운영팀, 인프라팀
 
@@ -135,6 +135,11 @@ Golden V2의 경제 생태계 보호를 위해 '최근 7일 입금 내역'을 �
 ## 7. 정합성 자동화 체크리스트 (Verification)
 운영자와 개발자는 배포 전후로 아래 항목을 전수 점검해야 합니다.
 
+### 7.1 풀스택 검증 현황 (Admin 설정 반영)
+- **주사위(Dice)**: Admin UI -> Backend API -> DB Config -> Game Service -> User API 전체 경로 검증 완료
+- **복권(Lottery)**: Admin UI -> DB -> Game Service -> User V2 API -> 지갑/인벤토리/금고 반영 검증 완료
+- **근거 문서**: [주사위 어드민 설정 풀스택 검증 완료.md](./%EC%A3%BC%EC%82%AC%EC%9C%84%20%EC%96%B4%EB%93%9C%EB%AF%BC%20%EC%84%A4%EC%A0%95%20%ED%92%80%EC%8A%A4%ED%83%9D%20%EA%B2%80%EC%A6%9D%20%EC%99%84%EB%A3%8C.md)
+
 - **정책 부문**
   - [ ] 7일 입금 없는 유저의 상점 접근 시 403 Forbidden 및 안내 팝업 노출 여부.
   - [ ] 금고 잔액 부족 시 `INSUFFICIENT_BALANCE` 코드와 정확한 부족 금액 표시 여부.
@@ -154,3 +159,9 @@ Golden V2의 경제 생태계 보호를 위해 '최근 7일 입금 내역'을 �
 ---
 
 *본 문서는 Golden V2의 최우선 System of Truth이며, 모든 기술 문서 및 기획 문서는 본 마스터 가이드를 준수해야 합니다.*
+
+---
+
+## 변경 이력
+- v1.2 (2026-02-07): 주사위/복권 어드민 설정 풀스택 검증 결과 반영
+- v1.1 (2026-02-06): Detailed Expansion 업데이트

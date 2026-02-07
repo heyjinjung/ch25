@@ -1,6 +1,6 @@
 문서 타입: DB 스키마
-버전: v1.0
-작성일: 2026-01-19
+버전: v1.2
+작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/DB/운영
 상태: SoT
@@ -58,9 +58,10 @@ V2 룰렛 설정/슬롯/로그 테이블 스키마를 정의한다.
 - ix_v2_roulette_log_user_created_at(user_id, created_at)
 
 ## 5. 근거 (Source)
-- V2 게임 엔진 SoT: docs/v2_specs/02_game/v2_game_engine_sot_ko.md
-- V2 어드민 게임 설정 스키마: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
+- V2 게임 엔진 SoT: docs/SOT/00_game/아카이브/v2_game_engine_sot_ko.md
+- V2 어드민 게임 설정 스키마: docs/SOT/00_game/아카이브/v2_admin_game_config_schema_ko.md
 
 ## 6. 변경 이력
 - v1.1 (2026-01-25, GitHub Copilot): grade 컬럼 Deprecated 처리, slot_index 범위 0~7로 확장 (8세그먼트)
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v1.2 (2026-02-07, GitHub Copilot): SoT 경로 갱신

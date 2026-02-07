@@ -212,7 +212,7 @@ class V2DiceGameService:
             event_plays_max=None,
             event_ineligible_reason=None,
             reward_config=reward_config,
-            is_golden_hour=V2EventService().is_golden_hour(db=db, now=now),
+            is_golden_hour=self._is_golden_hour_active(config, now),
         )
 
 

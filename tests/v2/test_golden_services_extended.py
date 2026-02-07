@@ -29,7 +29,7 @@ def golden_test_user(db: Session):
     db.refresh(user)
     # Ensure retention state exists
     if not db.query(V2UserRetentionState).filter_by(user_id=user.id).first():
-        db.add(V2UserRetentionState(user_id=user.id, segment="COMMON"))
+        db.add(V2UserRetentionState(user_id=user.id, user_segment_tag="COMMON"))
         db.commit()
     return user
 
@@ -69,6 +69,7 @@ class TestGoldenIntervention:
         db.add(V2GoldenInterventionLog(
             user_id=golden_test_user.id,
             trigger_id="TRG_LOSE_5",
+            action_taken="Trigger_Pity_Win",
             created_at=datetime.utcnow(),
             status="COMPLETED"
         ))
@@ -116,17 +117,23 @@ class TestRetentionIntervention:
 
     def test_resolve_intervention_loss_streak(self, db: Session, golden_test_user):
         """Should resolve reward for LOSS_STREAK event."""
-        service = V2RetentionInterventionService(db)
-        
+        service = V2RetentionInterventionService()
+
+        settings_stub = MagicMock(
+            ch25_intervention_enabled=True,
+            ch25_intervention_rollout_pct=100,
+            ch25_intervention_seed="test",
+        )
         # Mock dependent calls to avoid complex DB setup for LTV/Churn
-        with patch.object(service, "_resolve_base_reward", return_value=100), \
+        with patch("app.v2.services.retention_intervention_service.get_settings", return_value=settings_stub), \
+             patch.object(service, "_assign_experiment_group", return_value="MISSION"), \
+             patch.object(service, "_resolve_base_reward", return_value=100), \
              patch.object(service, "_apply_cmax", return_value=(100, 1000)), \
              patch.object(service, "_log_intervention"):
-             
             result = service.resolve_intervention(
-                db, 
+                db,
                 user_id=golden_test_user.id,
-                event_type="LOSS_STREAK", 
+                event_type="LOSS_STREAK",
                 data={"streak": 5}
             )
             
@@ -135,17 +142,23 @@ class TestRetentionIntervention:
 
     def test_resolve_intervention_ineligible(self, db: Session, golden_test_user):
         """Should return ineligible if reward <= 0."""
-        service = V2RetentionInterventionService(db)
-        
-        with patch.object(service, "_resolve_base_reward", return_value=0), \
+        service = V2RetentionInterventionService()
+
+        settings_stub = MagicMock(
+            ch25_intervention_enabled=True,
+            ch25_intervention_rollout_pct=100,
+            ch25_intervention_seed="test",
+        )
+        with patch("app.v2.services.retention_intervention_service.get_settings", return_value=settings_stub), \
+             patch.object(service, "_assign_experiment_group", return_value="MISSION"), \
+             patch.object(service, "_resolve_base_reward", return_value=0), \
              patch.object(service, "_apply_cmax", return_value=(0, 1000)):
-             
             result = service.resolve_intervention(
-                db, 
-                user_id=golden_test_user.id, 
-                event_type="SESSION_END", 
+                db,
+                user_id=golden_test_user.id,
+                event_type="SESSION_END",
                 data={}
             )
-            
+
             assert result["eligible"] is False
             assert result["reward_amount"] == 0

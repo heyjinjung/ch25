@@ -1,6 +1,6 @@
 문서 타입: DB 스키마
-버전: v1.0
-작성일: 2026-01-19
+버전: v1.1
+작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/DB/운영
 상태: SoT
@@ -28,7 +28,8 @@ V2 관리자 메시지 인박스 테이블 스키마를 정의한다.
 - `ix_v2_admin_message_inbox_message_id` (message_id)
 
 ## 5. 근거 (Source)
-- 메시지 정책 SoT: [docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md](../05_ops/v2_admin_message_policy_sot_ko.md#L1)
+- 메시지 정책 SoT: [docs/SOT/00_deployment/아카이브/v2_admin_message_policy_sot_ko.md](../00_deployment/%EC%95%84%EC%B9%B4%EC%9D%B4%EB%B8%8C/v2_admin_message_policy_sot_ko.md#L1)
 
 ## 6. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v1.1 (2026-02-07, GitHub Copilot): SoT 경로 갱신

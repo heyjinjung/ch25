@@ -22,6 +22,20 @@
             }
           },
           {
+            "id": "a207d50f64194ca9",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "01_CC_funnel_since_20260204.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "01_CC_funnel_since_20260204"
+            }
+          },
+          {
             "id": "e3c879c0ab64d3ec",
             "type": "leaf",
             "state": {
@@ -35,7 +49,8 @@
               "title": "00_CC_멘트 템플릿"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -197,18 +212,18 @@
       "bases:새 베이스 생성하기": false
     }
   },
-  "active": "44c25abe1e3b9b5c",
+  "active": "a207d50f64194ca9",
   "lastOpenFiles": [
-    "00_CC_멘트 템플릿.md",
+    "00_v2_integrated_marketing_ops_sot.md",
+    "00_CC개선방안1주차_피드백.md",
     "00_CC개선방안1주차.md",
+    "00_CC_멘트 템플릿.md",
+    "00_개선방안_개요.md",
     "09_v2_마케팅전문가관리자리포트_w1.md",
     "99_v1 실패리포트.md",
     "개선방안1주_2주플레이북.md",
     "MARKETING_w4.md",
-    "00_v2_integrated_marketing_ops_sot.md",
     "01_CC_funnel_since_20260204.md",
-    "00_CC개선방안1주차_피드백.md",
-    "00_개선방안_개요.md",
     "마케팅_전문가_관리자_리포트 1.md",
     "개선방안_개요 1.md",
     "개선방안1주_2주플레이북 1.md",

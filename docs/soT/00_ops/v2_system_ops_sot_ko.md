@@ -1,5 +1,5 @@
 문서 타입: SoT
-버전: v2.1
+버전: v2.2
 작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/FE/운영/QA
@@ -25,6 +25,8 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 4) Admin API는 /api/v2/admin 하위로만 노출하며, 프론트 호출 경로와 1:1 동일해야 한다.
 5) Admin 변경성 작업은 V2AdminAuditService.log 표준 시그니처로 감사 로그를 남긴다.
 6) Enum/상수/DB 제약조건은 코드-DB-프론트-문서 1:1 정합성을 유지한다.
+7) 퍼널/마찰/생존율/체리피커 지표는 user_event_log 기반 최소 이벤트 표준과 correlation key를 유지한다.
+8) 운영 메시지/캠페인은 질문형 시작, 상호성, 실데이터, 과도한 재시도 금지 가드레일을 준수한다.
 
 ## 4. 영역 1: 배포/인프라/환경
 
@@ -91,7 +93,19 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [sentry_setup_guide_ko.md](./sentry_setup_guide_ko.md)
 - [11.roi_analysis.md](./11.roi_analysis.md)
 
-### 5.5 구현 증거 (코드베이스)
+### 5.5 Ops/Growth 트래킹 규칙 (요약)
+1) 캠페인 퍼널 단계는 메시지 클릭 -> 봇 시작 -> 게임 플레이 -> 입금 순서로 정의한다.
+2) 최소 이벤트: LINK_CLICK, TG_START, PLAY, DEPOSIT_CONFIRMED(또는 first_deposit_at 보조) 를 유지한다.
+3) correlation key(campaign_id/message_id/click_id/session_id 중 1개 이상)를 반드시 남긴다.
+4) 환전 마찰 로그는 EXCHANGE_* 이벤트와 error_code 표준을 사용한다.
+5) 집계는 운영일(09:00 KST 리셋) 기준으로 정렬한다.
+
+### 5.6 Ops/Growth 상세 링크
+- [20260203_ops_marketing_w1_w2_automation_tracking.md](../user/%EB%B3%80%EA%B2%BD%EB%A1%9C%EA%B7%B8/20260203_ops_marketing_w1_w2_automation_tracking.md)
+- [20260206_funnel_friction_activity_logging_requirements.md](../user/%EB%B3%80%EA%B2%BD%EB%A1%9C%EA%B7%B8/20260206_funnel_friction_activity_logging_requirements.md)
+- [v2_funnel_since_20260204.md](./v2_funnel_since_20260204.md)
+
+### 5.7 구현 증거 (코드베이스)
 - [app/main.py](app/main.py#L63)
 - [app/v2/api/routes.py](app/v2/api/routes.py#L126-L156)
 - [app/v2/api/admin/ops_routes.py](app/v2/api/admin/ops_routes.py#L64)
@@ -155,6 +169,7 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 ### 7.4 Admin 테스트/검증
 - Full-Stack Admin 통합 테스트 로그 기준 통과
 - /api/v2/admin/ops/status, /api/v2/admin/dashboard/metrics 실호출 정상
+- Admin/Ops 정합성 검증 보고서 기준 100% 일치 유지
 
 ### 7.5 상세 링크 (ops 문서)
 - [01.adminguide.md](./01.adminguide.md)
@@ -164,6 +179,7 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [v2_fullstack_integration_test_logs_admin_20260124.md](./v2_fullstack_integration_test_logs_admin_20260124.md)
 - [20260126_team_battle_nickname_lookup_update.md](./20260126_team_battle_nickname_lookup_update.md)
 - [20260127_lottery_prize_partial_update_fix.md](./20260127_lottery_prize_partial_update_fix.md)
+- [v2_admin_ops_verification_report_ko.md](./v2_admin_ops_verification_report_ko.md)
 
 ### 7.6 구현 증거 (코드베이스)
 - [app/v2/middleware/admin_audit.py](app/v2/middleware/admin_audit.py#L26-L103)
@@ -241,6 +257,8 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - [20260204_legacy_code_cleanup_report.md](./20260204_legacy_code_cleanup_report.md)
 - [20260204_reward_service_refactor_and_test_reset.md](./20260204_reward_service_refactor_and_test_reset.md)
 - [20260130_deployment_verification_report.md](./20260130_deployment_verification_report.md)
+- [v2_backend_test_master_flowchart.md](./v2_backend_test_master_flowchart.md)
+- [v2_implementation_progress_checklist_ko.md](./v2_implementation_progress_checklist_ko.md)
 
 ## 10. 부록: 핵심 API/스키마 요약
 
@@ -258,6 +276,7 @@ V2 운영(System/Ops) 전반의 기준을 6개 영역으로 통합하고, 우선
 - channels: golden:v2:events:game, golden:v2:events:intervention, golden:v2:feed:public, golden:v2:ops:ws
 
 ## 11. 변경 이력
+- v2.2 (2026-02-07, GitHub Copilot): Ops/Growth 트래킹 규칙 및 관련 링크, 검증 문서 링크 보강
 - v2.1 (2026-02-07, GitHub Copilot): 6개 영역별 상세 링크 및 구현 증거 추가
 - v2.0 (2026-02-07, GitHub Copilot): ops 문서 6개 영역 통합, 운영 공통 규칙/체크리스트 정리
 - v1.1 (2026-01-30, GitHub Copilot): /api/v2/health/db 헬스 체크 추가

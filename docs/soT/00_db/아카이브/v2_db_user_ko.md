@@ -1,6 +1,6 @@
 문서 타입: DB 스키마
-버전: v1.0
-작성일: 2026-01-19
+버전: v1.1
+작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/DB/운영
 상태: SoT
@@ -29,8 +29,9 @@ V2 User 테이블 스키마를 정의한다.
 | updated_at | DATETIME | NOT NULL | 수정 시각 (KST 기준) |
 
 ## 4. 근거 (Source)
-- V2 User SoT: [docs/v2_specs/01_core/v2_user_sot_ko.md](../01_core/v2_user_sot_ko.md#L1)
-- 금고 용어 SoT: [docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md](../01_core/v2_vault_glossary_sot_ko.md#L1)
+- V2 User SoT: [docs/SOT/user/v2_user_sot_ko.md](../user/v2_user_sot_ko.md#L1)
+- 금고 용어 SoT: [docs/SOT/vault/v2_vault_glossary_sot_ko.md](../vault/v2_vault_glossary_sot_ko.md#L1)
 
 ## 5. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성
+- v1.1 (2026-02-07, GitHub Copilot): SoT 경로 갱신

@@ -37,15 +37,14 @@ class TestHQMarginImportService:
         assert HQMarginImportService._parse_int(None) == 0
         assert HQMarginImportService._parse_int(100) == 100
 
-    @pytest.mark.asyncio
     @patch("pathlib.Path.read_bytes")
     @patch("chardet.detect")
-    async def test_import_hq_margin_csv_valid(self, mock_detect, mock_read, mock_db):
+    def test_import_hq_margin_csv_valid(self, mock_detect, mock_read, mock_db):
         """Test valid CSV import flow."""
+        import asyncio
         # Mock file content
         csv_content = """이름 (아이디),닉네임,누적 충전 금액,누적 환전 금액,총 운영 마진,미접속 경과일
-        test_user,TestNick,100000,0,50000,3
-        """.encode("utf-8")
+test_user,TestNick,100000,0,50000,3""".encode("utf-8")
         
         mock_read.return_value = csv_content
         mock_detect.return_value = {"encoding": "utf-8", "confidence": 1.0}
@@ -53,13 +52,13 @@ class TestHQMarginImportService:
         # Mock V2User match: Return (user, "MATCHED")
         mock_user = MagicMock(id=1, cc_id="test_user")
         
-        # We need to mock _match_v2_user static method or ensure DB query in it returns mock
-        # Let's mock the static method for simplicity in unit test
+        # We need to mock _match_v2_user static method
         with patch.object(HQMarginImportService, "_match_v2_user", return_value=(mock_user, "MATCHED")):
             # Mock V2UserSegment query
             mock_db.query.return_value.filter.return_value.first.return_value = None # No existing segment
             
-            result = await HQMarginImportService.import_hq_margin_csv(mock_db, "dummy.csv", "admin_1")
+            # Execute async method synchronously
+            result = asyncio.run(HQMarginImportService.import_hq_margin_csv(mock_db, "dummy.csv", "admin_1"))
             
             assert result["success"] is True
             assert result["total_rows"] == 1

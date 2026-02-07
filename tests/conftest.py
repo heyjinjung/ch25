@@ -5,11 +5,16 @@ os.environ.setdefault("JWT_SECRET", "test-secret")
 
 import pytest
 import sys
+from fastapi.testclient import TestClient
 from sqlalchemy import event
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 from app.db.base_class import Base  # SQLAlchemy Base
+from app.core.config import get_settings
+from app.core.security import create_access_token
+from app.v2.models import User
+from app.v2.models.user import V2User, V2UserRole, V2UserStatus
 
 # 테스트용 DB URL (환경에 맞게 수정)
 # 기본값은 in-memory SQLite로, 테스트 간 데이터 잔존/파일 잠금 이슈를 방지한다.
@@ -172,3 +177,55 @@ def mock_golden_events():
     with patch("redis.from_url", return_value=mock_client), \
          patch("app.v2.services.golden_event_service.GoldenV2EventService.get_redis_client", return_value=mock_client):
         yield
+
+
+@pytest.fixture(scope="function")
+def test_client():
+    os.environ.setdefault("TEST_MODE", "1")
+    get_settings.cache_clear()
+    from app.main import app
+
+    with TestClient(app) as client:
+        yield client
+
+
+@pytest.fixture(scope="function")
+def db_session(test_db_session):
+    return test_db_session
+
+
+@pytest.fixture(scope="function")
+def base_user(test_db_session):
+    v1_user = User(
+        id=9001,
+        external_id="test_v1_user_9001",
+        nickname="test_v1_user",
+    )
+    v2_user = V2User(
+        id=9001,
+        cc_id="test_v2_user_9001",
+        nickname="test_v2_user",
+        role=V2UserRole.USER,
+        status=V2UserStatus.ACTIVE,
+    )
+    test_db_session.add_all([v1_user, v2_user])
+    test_db_session.commit()
+    return v2_user
+
+
+@pytest.fixture(scope="function")
+def admin_token(test_db_session):
+    admin = test_db_session.query(V2User).filter(V2User.cc_id == "admin_test_9000").first()
+    if admin is None:
+        admin = V2User(
+            id=9000,
+            cc_id="admin_test_9000",
+            nickname="admin_test",
+            role=V2UserRole.ADMIN,
+            status=V2UserStatus.ACTIVE,
+        )
+        test_db_session.add(admin)
+        test_db_session.commit()
+        test_db_session.refresh(admin)
+
+    return create_access_token(int(admin.id), role="ADMIN")

@@ -1,6 +1,6 @@
 문서 타입: DB Master SoT
-버전: v1.0
-작성일: 2026-02-06
+버전: v1.2
+작성일: 2026-02-07
 작성자: GitHub Copilot
 대상: BE/DB/운영
 상태: SoT
@@ -24,7 +24,7 @@
 ## 3. SoT 우선순위 및 공통 규칙
 ### 3.1 우선순위
 - 스키마/정책 판단의 1차 기준은 docs/SOT/00_db 내 각 도메인 SoT 문서이다.
-- 상위 정책/열거형(예: TicketType, 세그먼트 정책 등)은 docs/v2_specs/의 해당 SoT를 근거로 한다.
+- 상위 정책/열거형(예: TicketType, 세그먼트 정책 등)은 docs/SOT 내 해당 SoT를 근거로 한다.
 - learned_ 최신 규칙/패치 내역과 충돌하는 경우 learned_를 우선한다(최신/핵심 규칙 우선 원칙).
 
 ### 3.2 공통 컬럼/타임존 관례
@@ -159,12 +159,9 @@
     - 스냅샷 적용 후 `alembic current`가 기준 리비전과 일치해야 함
 
 ## 8. 정합성 메모 (SoT 간 불일치 가능 지점)
-- 세그먼트 키:
-  - v2_user_segment SoT는 표준 세그먼트에 WINNER를 포함한다.
-  - v2_segment_rule SoT의 “표준 세그먼트 키” 예시는 WINNER가 누락되어 있다.
-  - 운영/정책 기준으로는 세그먼트 키 집합을 NEW/COMMON/VIP/WHALE/AT_RISK/WINNER로 통합 해석하는 것이 안전하며,
-    필요 시 v2_db_segment_rule_ko.md 문서의 표준 키 표기를 최신화한다.
+- 현재 기준 불일치 없음 (세그먼트 키 NEW/COMMON/VIP/WHALE/AT_RISK/WINNER로 통일 완료)
 
 ## 9. 변경 이력
 - v1.0 (2026-02-06, GitHub Copilot): 첨부된 docs/SOT/00_db 스키마/정책 SoT를 최상위 인덱스로 통합(v2_db_sot2.md 생성)
 - v1.1 (2026-02-06, GitHub Copilot): 티켓 변환 정책/티켓 제로 로그/스냅샷 재생성 정책 섹션을 첨부 SoT 기준으로 구체화하고, docs/SOT/00_db 경로 표기를 정정
+- v1.2 (2026-02-07, GitHub Copilot): SoT 경로 원칙 갱신 및 세그먼트 키 정합성 메모 최신화

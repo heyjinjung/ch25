@@ -59,7 +59,8 @@ def test_list_campaigns(client, mock_service):
     response = client.get("/admin/api/ops/campaigns?status=ACTIVE")
     assert response.status_code == 200
     assert response.json() == []
-    mock_service.list_campaigns.assert_called_with(pytest.any(), status_filter="ACTIVE")
+    from unittest.mock import ANY
+    mock_service.list_campaigns.assert_called_with(ANY, status_filter="ACTIVE")
 
 def test_execute_task(client, mock_service):
     from app.v2.schemas.v2_ops_plan import OpsPlanTaskOut
