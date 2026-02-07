@@ -192,6 +192,19 @@ def _normalize_roulette_ticket_type(value: str | None) -> str:
     return normalized
 
 
+def _normalize_shop_reward_type(value: str | None) -> str:
+    raw = str(value or "").strip().upper()
+    mapping = {
+        "GOLDEN_TICKET": "GOLD_KEY_TICKET",
+        "GOLD_KEY": "GOLD_KEY_TICKET",
+        "DIAMOND_KEY": "DIAMOND_TICKET",
+        "ROULETTE_COIN": "ROULETTE_TICKET",
+        "DICE_TOKEN": "DICE_TICKET",
+        "TRIAL_TOKEN": "TRIAL_TICKET",
+    }
+    return mapping.get(raw, raw)
+
+
 @router.get("/roulette/status", response_model=RouletteStatusResponse)
 def roulette_status(
     ticket_type: str = GameTokenType.ROULETTE_COIN.value,
@@ -546,7 +559,7 @@ def list_shop_products(
         name = raw.get("name") or raw.get("title")
         cost_type = raw.get("cost_type") or "VAULT"
         cost_amount = raw.get("cost_amount")
-        reward_type = raw.get("reward_type")
+        reward_type = _normalize_shop_reward_type(raw.get("reward_type"))
         reward_amount = raw.get("reward_amount")
         if not sku or not name or cost_amount is None or reward_type is None or reward_amount is None:
             continue
@@ -615,7 +628,7 @@ def purchase_shop_product(
     if cost_amount <= 0:
         raise HTTPException(status_code=400, detail="INVALID_COST_AMOUNT")
 
-    reward_type = str(product.get("reward_type"))
+    reward_type = _normalize_shop_reward_type(product.get("reward_type"))
     reward_amount = int(product.get("reward_amount", 0) or 0)
     if reward_type != "NONE" and reward_amount <= 0:
         raise HTTPException(status_code=400, detail="INVALID_REWARD_AMOUNT")

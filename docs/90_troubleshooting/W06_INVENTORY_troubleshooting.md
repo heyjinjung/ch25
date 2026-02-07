@@ -23,6 +23,47 @@
 
 ## 🔍 주간 이슈 내역
 
+### [02-07] - INVENTORY/SHOP/GAME: 상점 GOLDEN_TICKET 지급으로 룰렛 티켓 미차감
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 상점 구매 → 룰렛 플레이 → 인벤토리 차감 |
+| HTTP Status | 200 (Logic Error - 룰렛 미진입/차감 없음) |
+| 영향 범위 | GOLDEN_TICKET 지급 상품 구매 유저 |
+| 재현 빈도 | 항상 (해당 상품) |
+
+**증거 기반 RCA**
+- 운영 DB `app_ui_config`의 `v2_shop_products`에 `reward_type=GOLDEN_TICKET` 존재.
+- GOLDEN_TICKET는 `GameTokenType`에 없어서 상점 지급이 지갑 토큰이 아닌 **인벤토리 아이템**으로 라우팅됨.
+- 결과적으로 룰렛 소비는 지갑 토큰(`GOLD_KEY_TICKET`)만 차감되므로 플레이/차감이 실패.
+
+```sql
+SELECT JSON_SEARCH(value_json, 'one', 'GOLDEN_TICKET')
+FROM app_ui_config
+WHERE `key`='v2_shop_products';
+
+SELECT JSON_EXTRACT(value_json, '$.products[5]')
+FROM app_ui_config
+WHERE `key`='v2_shop_products';
+-- {"sku":"SOT_GOLD_KEY_TICKET","cost_type":"POINT",..."reward_type":"GOLDEN_TICKET"}
+```
+
+**해결 방법 (로컬)**
+- 상점 응답/구매 경로에서 `GOLDEN_TICKET` → `GOLD_KEY_TICKET` 정규화.
+- 정규화 적용 위치: `app/v2/api/routes.py` (상점 상품 목록/구매 처리).
+
+**운영 조치**
+- 운영 서버 수정/재배포는 하지 않음 (요청에 따라 리젝트).
+
+**검증 방법**
+1) 로컬에서 `v2_shop_products`에 `reward_type=GOLDEN_TICKET` 설정.
+2) 구매 후 `user_game_wallet`의 `GOLD_KEY_TICKET` 증가 확인.
+3) `/api/v2/roulette/play` 정상 소모 및 로그 생성 확인.
+
+**🏷️ 태그**
+`P1` `SHOP` `INVENTORY` `ROULETTE` `LEGACY_ENUM`
+
 ### [02-04] - INVENTORY/ADMIN: 회수(ADMIN_REVOKE) 로그가 USE로 표시됨
 
 **증상 정의**
