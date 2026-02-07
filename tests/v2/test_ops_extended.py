@@ -15,7 +15,7 @@ import io
 from sqlalchemy.orm import Session
 from app.v2.services.hq_margin_import_service import HQMarginImportService
 from app.v2.services.hq_daily_deposit_import_service import HQDailyDepositImportService
-from app.v2.services.paste_import_service import V2PasteImportService
+from app.v2.services.paste_import_service import PasteImportService as V2PasteImportService
 from app.v2.models import V2User, V2UserSegment, HQProspectiveUser, HQDailyDepositLog, CCDepositLog
 from app.v2.api.admin.ops_routes import get_ops_dashboard_stats
 

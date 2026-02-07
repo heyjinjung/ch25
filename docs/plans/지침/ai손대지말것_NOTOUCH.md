@@ -35,3 +35,6 @@ https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=o
 http://localhost:8501/ - 엑셀 누적 데이터! 
 
 
+C:\Users\JAVIS\ch\ch25\docs\SOT\vault\0000_2026_v2_fullstack_deployment_runbook_ko.md
+C:\Users\JAVIS\ch\ch25\docs\SOT\vault\05.inventory.md
+

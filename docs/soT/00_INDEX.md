@@ -158,6 +158,12 @@
 - **HQ Margin → CC 입금 자동 반영 설계**: docs/v2_specs/07_golden/v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
 - **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
 - **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
+- **Vault 통합 SoT (docs/SOT/shop)**:
+  - docs/SOT/shop/01_vault_overview_sot_ko.md
+  - docs/SOT/shop/02_vault_policy_withdrawal_sot_ko.md
+  - docs/SOT/shop/03_vault_ledger_spend_earn_sot_ko.md
+  - docs/SOT/shop/04_vault_shop_integration_sot_ko.md
+  - docs/SOT/shop/05_vault_ops_troubleshooting_sot_ko.md
 - V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
 - V2 DB 레벨 보상 테이블: docs/v2_specs/04_db/v2_db_level_reward_table_ko.md
 - V2 DB User: docs/v2_specs/04_db/v2_db_user_ko.md
@@ -227,6 +233,7 @@ md
 
 
 ## 7. 변경 이력
+- v2.21 (2026-02-07, GitHub Copilot): 금고 SoT 통합 문서 5종 신규 작성 및 docs/SOT/shop 경로 추가
 - v2.20 (2026-02-05, Claude Opus): 상점 결제재화(CostType) 확장 - 모든 게임 토큰으로 결제 가능 (VAULT/DIAMOND → +13개 토큰)
 - v2.19 (2026-02-04, GitHub Copilot): V2 SoT 통합(레벨/XP/입금 v2_user 단일화), 붙여넣기 Import(게임 로그/데일리 입금), 세그먼트 시스템 전체 감사, Cherry Picker 세그먼트 설계
 - v2.18 (2026-02-03, GitHub Copilot): W1/W2 마케팅 플랜 기반 Ops/Growth(메시지 가드레일·자동화·트래킹) learned_ 문서 추가 및 메시지 정책 SoT 보강
