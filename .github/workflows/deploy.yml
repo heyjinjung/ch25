@@ -53,14 +53,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Prepare SSH for SCP
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
       - name: Copy config files via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml,nginx/*,scripts/init.sql,Dockerfile.backend,Dockerfile.frontend,alembic.ini,alembic/*"
-          target: "/opt/ch25"
+        run: |
+          scp -r \
+            docker-compose.yml \
+            nginx \
+            scripts/init.sql \
+            Dockerfile.backend \
+            Dockerfile.frontend \
+            alembic.ini \
+            alembic \
+            root@${{ secrets.SERVER_IP }}:/opt/ch25
 
       - name: Deploy to Vultr via SSH
         uses: appleboy/ssh-action@v1.0.3
