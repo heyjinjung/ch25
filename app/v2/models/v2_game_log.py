@@ -23,6 +23,7 @@ from sqlalchemy.dialects.mysql import JSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+from app.v2.utils.timezone import kst_now
 
 
 class V2GameLog(Base):
@@ -37,6 +38,15 @@ class V2GameLog(Base):
     __tablename__ = "v2_game_log"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
+
+    # 중복 방지 키 (선택적)
+    dedup_key = Column(
+        String(128),
+        unique=True,
+        nullable=True,
+        index=True,
+        comment="중복 방지 키 (user_id + game_type + timestamp)",
+    )
     
     # 유저 연결 (V2User와 FK)
     user_id = Column(
@@ -105,6 +115,16 @@ class V2GameLog(Base):
         nullable=False,
         comment="CSV의 기록 일시 (원본 데이터)",
     )
+    # Assuming _kst_now is defined elsewhere or will be added.
+    # For a complete solution, _kst_now would need to be imported or defined.
+    # Example:
+    # from pytz import timezone
+    # KST = timezone('Asia/Seoul')
+    # def _kst_now():
+    #     return datetime.now(KST)
+    created_at = Column(DateTime, nullable=False, default=kst_now)
+    updated_at = Column(DateTime, nullable=False, default=kst_now, onupdate=kst_now)
+
     imported_at = Column(
         DateTime(timezone=True),
         nullable=False,

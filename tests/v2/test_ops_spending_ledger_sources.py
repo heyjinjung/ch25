@@ -26,8 +26,11 @@ def test_spending_ledger_hq_w_source(db_session):
     # When: HQ_W 지출 기록
     ledger = V2SpendingLedger(
         user_id=user.id,
-        source="HQ_W",
+        spending_source="HQ_W",
         amount=50000,
+        currency_type="KRW",
+        converted_krw_amount=50000,
+        kst_date=datetime.utcnow().date(),
         transaction_id=f"HQ_W_{user.id}_{datetime.utcnow().timestamp()}",
         created_at=datetime.utcnow()
     )
@@ -36,7 +39,7 @@ def test_spending_ledger_hq_w_source(db_session):
 
     # Then
     db_session.refresh(ledger)
-    assert ledger.source == "HQ_W"
+    assert ledger.spending_source == "HQ_W"
     assert ledger.amount == 50000
 
 
@@ -55,8 +58,11 @@ def test_spending_ledger_vault_w_source(db_session):
     # When: VAULT_W 지출 기록
     ledger = V2SpendingLedger(
         user_id=user.id,
-        source="VAULT_W",
+        spending_source="VAULT_W",
         amount=30000,
+        currency_type="KRW",
+        converted_krw_amount=30000,
+        kst_date=datetime.utcnow().date(),
         transaction_id=f"VAULT_W_{user.id}_{datetime.utcnow().timestamp()}",
         created_at=datetime.utcnow()
     )
@@ -65,7 +71,7 @@ def test_spending_ledger_vault_w_source(db_session):
 
     # Then
     db_session.refresh(ledger)
-    assert ledger.source == "VAULT_W"
+    assert ledger.spending_source == "VAULT_W"
     assert ledger.amount == 30000
 
 
@@ -84,8 +90,11 @@ def test_spending_ledger_shop_u_source(db_session):
     # When: SHOP_U 지출 기록
     ledger = V2SpendingLedger(
         user_id=user.id,
-        source="SHOP_U",
+        spending_source="SHOP_U",
         amount=10000,
+        currency_type="POINT",
+        converted_krw_amount=10000,
+        kst_date=datetime.utcnow().date(),
         transaction_id=f"SHOP_U_{user.id}_{datetime.utcnow().timestamp()}",
         created_at=datetime.utcnow()
     )
@@ -94,7 +103,7 @@ def test_spending_ledger_shop_u_source(db_session):
 
     # Then
     db_session.refresh(ledger)
-    assert ledger.source == "SHOP_U"
+    assert ledger.spending_source == "SHOP_U"
     assert ledger.amount == 10000
 
 
@@ -115,8 +124,11 @@ def test_spending_ledger_duplicate_transaction_id_prevention(db_session):
     # When: 첫 번째 기록
     ledger1 = V2SpendingLedger(
         user_id=user.id,
-        source="HQ_W",
+        spending_source="HQ_W",
         amount=50000,
+        currency_type="KRW",
+        converted_krw_amount=50000,
+        kst_date=datetime.utcnow().date(),
         transaction_id=transaction_id,
         created_at=datetime.utcnow()
     )
@@ -162,8 +174,11 @@ def test_spending_ledger_multiple_sources(db_session):
     for source, amount in sources:
         ledger = V2SpendingLedger(
             user_id=user.id,
-            source=source,
+            spending_source=source,
             amount=amount,
+            currency_type="KRW" if "W" in source else "POINT",
+            converted_krw_amount=amount,
+            kst_date=datetime.utcnow().date(),
             transaction_id=f"{source}_{user.id}_{datetime.utcnow().timestamp()}",
             created_at=datetime.utcnow()
         )

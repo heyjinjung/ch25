@@ -11,7 +11,7 @@ class UserIdentityHistory(Base):
     __tablename__ = "user_identity_history"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("user.id"), index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id"), index=True, nullable=False)
     
     # Field that was changed: 'nickname', 'real_name', 'telegram_id', 'telegram_username'
     field_name = Column(String(50), nullable=False)

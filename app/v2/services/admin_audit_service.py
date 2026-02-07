@@ -20,8 +20,8 @@ class V2AdminAuditService:
             action=action,
             target_type=target_type,
             target_id=target_id,
-            before_json=before,
-            after_json=after
+            before_json=before if before is not None else None,
+            after_json=after if after is not None else None
         )
         db.add(log_entry)
         if auto_commit:

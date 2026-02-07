@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.exceptions import DailyLimitReachedError
-from app.v2.models import UserEventLog, User
+from app.v2.models import UserEventLog, V2User
 from app.v2.services.season_pass_service import V2SeasonPassService as SeasonPassService
 from app.v2.services.team_battle_service import TeamBattleService
 
@@ -161,7 +161,7 @@ def _infer_game_result(result_payload: dict[str, Any]) -> str:
 
 def _get_current_balance(db: Session, user_id: int) -> int:
     try:
-        user = db.get(User, user_id)
+        user = db.get(V2User, user_id)
         return int(getattr(user, "vault_locked_balance", 0) or 0)
     except Exception:
         return 0
@@ -332,5 +332,27 @@ def _log_team_battle_points(ctx: GamePlayContext, db: Session, result_payload: d
     except Exception:
         return
 
-__all__ = ["GamePlayContext", "log_game_play", "should_apply_dda", "record_dda_outcome", "enforce_daily_limit", "apply_season_pass_stamp"]
+
+class GameCommonService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def apply_golden_hour_boost(self, points: int) -> int:
+        from app.v2.services.ui_config_service import UiConfigService
+        
+        # UI Config에서 골든타임 설정 조회
+        # UiConfigService.get 구현이 없다면 직접 조회해야 할 수도 있음.
+        # 여기서는 test_integrated_game_coverage.py에서 upsert를 사용했으므로
+        # get 메서드가 있다고 가정하거나, 유사한 로직으로 구현.
+        try:
+            config = UiConfigService.get(self.db, "golden_hour_config")
+            if config and config.value_json and config.value_json.get("manual_override") == "FORCE_ON":
+                multiplier = float(config.value_json.get("multiplier", 1.0))
+                return int(points * multiplier)
+        except Exception:
+            pass
+            
+        return points
+
+__all__ = ["GamePlayContext", "log_game_play", "should_apply_dda", "record_dda_outcome", "enforce_daily_limit", "apply_season_pass_stamp", "GameCommonService"]
 

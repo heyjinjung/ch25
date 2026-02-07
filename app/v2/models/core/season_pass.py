@@ -67,7 +67,7 @@ class SeasonPassProgress(Base):
     __table_args__ = (UniqueConstraint("user_id", "season_id", name="uq_user_season_progress"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     season_id = Column(Integer, ForeignKey("season_pass_config.id", ondelete="CASCADE"), nullable=False)
     current_level = Column(Integer, nullable=False, default=1)
     current_xp = Column(Integer, nullable=False, default=0)
@@ -90,7 +90,7 @@ class SeasonPassStampLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     season_id = Column(Integer, ForeignKey("season_pass_config.id", ondelete="CASCADE"), nullable=False)
     progress_id = Column(Integer, ForeignKey("season_pass_progress.id", ondelete="CASCADE"), nullable=True)
     date = Column(Date, nullable=False)
@@ -115,7 +115,7 @@ class SeasonPassRewardLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     season_id = Column(Integer, ForeignKey("season_pass_config.id", ondelete="CASCADE"), nullable=False)
     progress_id = Column(Integer, ForeignKey("season_pass_progress.id", ondelete="CASCADE"), nullable=True)
     level = Column(Integer, nullable=False)

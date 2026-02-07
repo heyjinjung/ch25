@@ -186,7 +186,7 @@ class TestMissionNewUserLimit:
     def test_update_progress_skips_expired_new_user_missions(self, mock_is_new, db_session):
         """신규 유저 만료 시 NEW_USER 카테고리 미션 업데이트 스킵."""
         from app.v2.services.mission_service import V2MissionService
-        from app.v2.models import Mission, MissionCategory
+        from app.v2.models import Mission, MissionCategory, MissionRewardType
         
         service = V2MissionService(db_session)
         mock_is_new.return_value = False # User is NOT new anymore
@@ -195,9 +195,13 @@ class TestMissionNewUserLimit:
         mission = Mission(
             title="신규 환영",
             category=MissionCategory.NEW_USER,
+            logic_key="new_user_login_once",
             action_type="LOGIN",
             target_value=1,
-            is_active=True
+            reward_type=MissionRewardType.NONE,
+            reward_amount=0,
+            xp_reward=0,
+            is_active=True,
         )
         db_session.add(mission)
         db_session.commit()

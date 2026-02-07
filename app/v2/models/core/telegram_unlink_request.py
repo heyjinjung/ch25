@@ -21,10 +21,10 @@ class TelegramUnlinkRequest(Base):
     telegram_id = Column(String(50), nullable=False, index=True)
     
     # The user currently linked to this telegram_id
-    current_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    current_user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)
     
     # The user requesting the unlink (usually a new/different account)
-    requester_user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    requester_user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)
     
     # Request details
     reason = Column(Text, nullable=True)  # User's explanation
@@ -34,12 +34,12 @@ class TelegramUnlinkRequest(Base):
     status = Column(String(20), default="PENDING", nullable=False, index=True)
     
     # Admin processing
-    processed_by = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    processed_by = Column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)
     processed_at = Column(DateTime, nullable=True)
     admin_memo = Column(Text, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
-    current_user = relationship("User", foreign_keys=[current_user_id])
-    requester_user = relationship("User", foreign_keys=[requester_user_id])
+    current_user = relationship("V2User", foreign_keys=[current_user_id])
+    requester_user = relationship("V2User", foreign_keys=[requester_user_id])

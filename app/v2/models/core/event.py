@@ -30,7 +30,7 @@ class EventParticipationLog(Base):
     __tablename__ = "event_participation_log"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     event_id = Column(Integer, ForeignKey("event_config.id", ondelete="SET NULL"), nullable=True, index=True)
     event_type = Column(String(50), nullable=True, index=True)
     participated_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)

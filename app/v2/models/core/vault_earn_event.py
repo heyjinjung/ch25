@@ -20,7 +20,7 @@ class VaultEarnEvent(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
 
     # Globally unique idempotency key, e.g. "GAME:DICE:123".
     earn_event_id = Column(String(128), nullable=False)
@@ -46,4 +46,4 @@ class VaultEarnEvent(Base):
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    user = relationship("User")
+    user = relationship("V2User", backref="vault_earn_events")

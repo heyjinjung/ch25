@@ -7,7 +7,7 @@ V2 Auth Event 모델
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, Integer, String, Index
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, Integer, String, Index, ForeignKey
 from app.db.base_class import Base
 
 
@@ -38,7 +38,13 @@ class V2UserAuthEvent(Base):
     __tablename__ = "v2_user_auth_event"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False, index=True, comment="유저 ID (실패 시 0)")
+    user_id = Column(
+        Integer, 
+        ForeignKey("v2_user.id", ondelete="CASCADE"),
+        nullable=False, 
+        index=True, 
+        comment="유저 ID (v2_user.id 참조, 실패 시 0)"
+    )
     event_type = Column(
         Enum(AuthEventType), nullable=False, comment="이벤트 타입"
     )

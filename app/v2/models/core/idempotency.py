@@ -13,7 +13,7 @@ class UserIdempotencyKey(Base):
     __tablename__ = "user_idempotency_key"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
 
     scope = Column(String(50), nullable=False, index=True)
     idempotency_key = Column(String(128), nullable=False)

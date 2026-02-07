@@ -58,7 +58,7 @@ class UserEventLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     feature_type = Column(String(30), nullable=False)
     event_name = Column(String(50), nullable=False)
     meta_json = Column(JSON, nullable=True)

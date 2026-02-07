@@ -12,7 +12,7 @@ class UserCashLedger(Base):
     __tablename__ = "user_cash_ledger"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
 
     delta = Column(Integer, nullable=False)
     balance_after = Column(Integer, nullable=False)
@@ -23,4 +23,4 @@ class UserCashLedger(Base):
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
-    user = relationship("User")
+    user = relationship("V2User", backref="cash_ledgers")

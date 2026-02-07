@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime
 from app.v2.models import V2User
 from app.v2.models.user import V2UserRole, V2UserStatus
-from app.v2.models.v2_hq_daily_deposit import V2HQDailyDeposit
+from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
 
 
 def test_ops_status_hq_stats_endpoint(test_client, admin_token):
@@ -46,20 +46,21 @@ def test_ops_status_hq_stats_aggregation(db_session):
     total_deposits = 0
     for user in users:
         amount = (users.index(user) + 1) * 10000
-        deposit = V2HQDailyDeposit(
+        deposit = HQDailyDepositLog(
             user_id=user.id,
-            cc_id=user.cc_id,
-            deposit_amount=amount,
-            deposit_date=datetime(2026, 2, 7),
-            dedup_key=f"{user.cc_id}_2026-02-07"
+            nickname=user.nickname,
+            amount=amount,
+            deposit_at=datetime(2026, 2, 7),
+            dedup_key=f"{user.nickname}_{amount}_2026-02-07",
+            status="MATCHED"
         )
         db_session.add(deposit)
         total_deposits += amount
     db_session.commit()
 
     # When: 통계 집계
-    deposits = db_session.query(V2HQDailyDeposit).all()
-    total = sum(d.deposit_amount for d in deposits)
+    deposits = db_session.query(HQDailyDepositLog).all()
+    total = sum(d.amount for d in deposits)
 
     # Then
     assert total == total_deposits
@@ -103,12 +104,13 @@ def test_ops_status_hq_stats_daily_summary(db_session):
     ]
 
     for date in dates:
-        deposit = V2HQDailyDeposit(
+        deposit = HQDailyDepositLog(
             user_id=user.id,
-            cc_id=user.cc_id,
-            deposit_amount=10000,
-            deposit_date=date,
-            dedup_key=f"{user.cc_id}_{date.strftime('%Y-%m-%d')}"
+            nickname=user.nickname,
+            amount=10000,
+            deposit_at=date,
+            dedup_key=f"{user.nickname}_10000_{date.strftime('%Y-%m-%d')}",
+            status="MATCHED"
         )
         db_session.add(deposit)
     db_session.commit()
@@ -116,9 +118,9 @@ def test_ops_status_hq_stats_daily_summary(db_session):
     # When: 날짜별 집계
     from sqlalchemy import func
     daily_stats = db_session.query(
-        func.date(V2HQDailyDeposit.deposit_date).label("date"),
-        func.sum(V2HQDailyDeposit.deposit_amount).label("total")
-    ).group_by(func.date(V2HQDailyDeposit.deposit_date)).all()
+        func.date(HQDailyDepositLog.deposit_at).label("date"),
+        func.sum(HQDailyDepositLog.amount).label("total")
+    ).group_by(func.date(HQDailyDepositLog.deposit_at)).all()
 
     # Then: 3일치 데이터
     assert len(daily_stats) == 3

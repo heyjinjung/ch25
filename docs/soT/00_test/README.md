@@ -12,6 +12,7 @@
 |------|------|------|----------|
 | [테스트 실패 분석 보고서](./20260207_test_failure_analysis_report.md) | 166개 실패 + 129개 에러 도메인별 분석 | 🔴 분석 완료 | P0 |
 | [테스트 수정 체크리스트](./20260207_test_fix_checklist.md) | 11개 Task, 예상 +95개 통과 | 🔴 진행중 | P0 |
+| [테스트 재실행 증거 보고서](./20260207_test_rerun_evidence_report.md) | 최근 실패 로그 재실행 증거 및 공통 차단 이슈 고정 | 🔴 최신 | P0 |
 
 ---
 
@@ -21,11 +22,20 @@
 
 ```
 총 테스트: 611개
-- ✅ 통과: 315개 (51.6%)
-- ❌ 실패: 166개 (27.2%)
+- ✅ 통과: 333개 (54.5%) (+18 개선)
+- ❌ 실패: 163개 (26.7%)
 - 🔴 에러: 129개 (21.1%)
 - ⏭️ 스킵: 1개 (0.2%)
 ```
+
+추가 재실행:
+- `tests/v2/test_ops_smoke_core_routes.py` PASS (8)
+- `tests/v2/test_ops_paste_import_game_log.py` PASS (4)
+- `tests/v2/test_mission_sot.py` PASS (15)
+- `tests/v2/test_golden_intervention_flow.py` PASS (5)
+- `tests/v2/test_ops_hq_daily_deposit_import.py` PASS
+- `tests/v2/test_ops_hq_margin_import.py` PASS
+- `tests/v2/test_ops_paste_import_daily_deposit.py` PASS
 
 ### 목표
 
@@ -47,6 +57,7 @@
 | 🔴 FK 참조 문제 | 분석 보고서 §2 | [Vault 도메인](./20260207_test_failure_analysis_report.md#-2-vault-도메인-28개-문제) |
 | 🟡 Relationship 누락 | 체크리스트 P0-Task1 | [V2User 수정](./20260207_test_fix_checklist.md#-task-1-v2user-모델-relationship-추가) |
 | 🟡 Mission FK | 분석 보고서 §3 | [Game 도메인](./20260207_test_failure_analysis_report.md#-3-game-도메인-14개-문제) |
+| 🔴 ORM 초기화 차단 | 재실행 증거 §3~4 | [UserCashLedger 이슈](./20260207_test_rerun_evidence_report.md#3-실행-결과-요약) |
 
 ### 도메인별로 찾기
 
@@ -108,12 +119,12 @@ pytest tests/v2/ --cov=app/v2 --cov-report=term
 
 ## 📊 진행 상황 대시보드
 
-### P0 완료율: ⬜⬜⬜⬜ 0/4 (0%)
+### P0 완료율: ✅✅✅✅ 4/4 (100%)
 
-- [ ] Task 1: V2User Relationship 추가
-- [ ] Task 2: 테스트 Import 수정 (4개 파일)
-- [ ] Task 3: Golden Daily Nudge 모델
-- [ ] Task 4: Game Log dedup_key 추가
+- [x] Task 1: V2User Relationship 추가
+- [x] Task 2: 테스트 Import 수정 (4개 파일)
+- [x] Task 3: Golden Daily Nudge 모델
+- [x] Task 4: Game Log dedup_key 추가
 
 ### P1 완료율: ⬜⬜⬜⬜ 0/4 (0%)
 
@@ -142,7 +153,7 @@ graph LR
 
 | 단계 | 예상 소요 | 누적 통과율 | 상태 |
 |------|-----------|-------------|------|
-| P0 완료 | 1-2시간 | 57.3% | ⬜ 대기중 |
+| P0 완료 | 1-2시간 | 57.3% | ✅ 완료 |
 | P1 완료 | 2-4시간 | 63.9% | ⬜ 대기중 |
 | P2 완료 | 1-2일 | 67.2% | ⬜ 대기중 |
 | **목표 달성** | **2-3일** | **70%+** | ⬜ 대기중 |

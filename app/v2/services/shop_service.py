@@ -10,6 +10,7 @@ from app.v2.schemas.v2_constants import GAME_TOKEN_COST_TYPES
 from app.v2.services.inventory_service import V2InventoryService
 from app.v2.services.vault_service import V2VaultService
 from app.v2.services.spending_logger_service import SpendingLoggerService
+from app.v2.services.reward_service import V2RewardService
 
 logger = logging.getLogger(__name__)
 
@@ -143,6 +144,18 @@ class V2ShopService:
                 int(reward_amount),
                 reason="V2_SHOP_PURCHASE",
                 auto_commit=False,
+            )
+            return
+
+        if normalized_reward in {"BUNDLE", "TICKET_BUNDLE", "TICKET"}:
+            deliver_type = "TICKET_BUNDLE" if normalized_reward == "TICKET" else normalized_reward
+            V2RewardService().deliver(
+                db,
+                user_id=user_id,
+                reward_type=deliver_type,
+                reward_amount=int(reward_amount),
+                meta={"reason": "V2_SHOP_PURCHASE"},
+                commit=False,
             )
             return
 

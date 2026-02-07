@@ -25,20 +25,20 @@ def test_hq_margin_import_creates_segments(db_session, admin_token, test_client)
     # When: HQ_MARGIN 데이터 import 시뮬레이션
     segment = V2UserSegment(
         user_id=user.id,
-        segment_type=SegmentType.VIP,
-        hq_margin=150000,
-        is_active=True
+        segment="VIP",
+        total_margin=150000,
+        is_synced_from_hq=True
     )
     db_session.add(segment)
     db_session.commit()
 
     # Then: 세그먼트가 VIP/WHALE/AT_RISK/COMMON 중 하나
     db_session.refresh(segment)
-    assert segment.segment_type in [
-        SegmentType.VIP,
-        SegmentType.WHALE,
-        SegmentType.AT_RISK,
-        SegmentType.COMMON
+    assert segment.segment in [
+        "VIP",
+        "WHALE",
+        "AT_RISK",
+        "COMMON"
     ]
 
 
@@ -46,10 +46,10 @@ def test_hq_margin_segment_classification(db_session):
     """HQ_MARGIN 기반 세그먼트 자동 분류"""
     # Given: 여러 마진 금액의 유저
     test_cases = [
-        (300000, SegmentType.WHALE),  # 30만 이상
-        (150000, SegmentType.VIP),    # 15만 이상
-        (50000, SegmentType.COMMON),  # 일반
-        (-50000, SegmentType.AT_RISK) # 마이너스
+        (300000, "WHALE"),  # 30만 이상
+        (150000, "VIP"),    # 15만 이상
+        (50000, "COMMON"),  # 일반
+        (-50000, "AT_RISK") # 마이너스
     ]
 
     for margin, expected_segment in test_cases:
@@ -64,19 +64,19 @@ def test_hq_margin_segment_classification(db_session):
 
         # 세그먼트 분류 로직
         if margin >= 300000:
-            segment_type = SegmentType.WHALE
+            segment_name = "WHALE"
         elif margin >= 150000:
-            segment_type = SegmentType.VIP
+            segment_name = "VIP"
         elif margin < 0:
-            segment_type = SegmentType.AT_RISK
+            segment_name = "AT_RISK"
         else:
-            segment_type = SegmentType.COMMON
+            segment_name = "COMMON"
 
         segment = V2UserSegment(
             user_id=user.id,
-            segment_type=segment_type,
-            hq_margin=margin,
-            is_active=True
+            segment=segment_name,
+            total_margin=margin,
+            is_synced_from_hq=True
         )
         db_session.add(segment)
 
@@ -102,20 +102,21 @@ def test_hq_margin_import_prevents_duplicates(db_session):
     # When: 첫 번째 세그먼트 생성
     segment1 = V2UserSegment(
         user_id=user.id,
-        segment_type=SegmentType.VIP,
-        hq_margin=150000,
-        is_active=True
+        segment="VIP",
+        total_margin=150000,
+        is_synced_from_hq=True
     )
     db_session.add(segment1)
     db_session.commit()
 
     # When: 두 번째 import 시 기존 것 비활성화하고 새로 생성
-    segment1.is_active = False
+    segment1.is_synced_from_hq = False
     segment2 = V2UserSegment(
         user_id=user.id,
-        segment_type=SegmentType.WHALE,
-        hq_margin=350000,
-        is_active=True
+        segment="WHALE",
+        total_margin=350000,
+        is_synced_from_hq=True,
+        overwrite=True # Custom flag for test logic if needed, but V2UserSegment has user_id as PK
     )
     db_session.add(segment2)
     db_session.commit()

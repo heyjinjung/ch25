@@ -92,7 +92,7 @@ class UserMissionProgress(Base):
     __table_args__ = (UniqueConstraint("user_id", "mission_id", "reset_date", name="uq_user_mission_reset"),)
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     mission_id = Column(Integer, ForeignKey("mission.id", ondelete="CASCADE"), nullable=False, index=True)
 
     current_value = Column(Integer, nullable=False, default=0)
@@ -109,16 +109,16 @@ class UserMissionProgress(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
 
-    user = relationship("User")
+    user = relationship("V2User")
     mission = relationship("Mission")
 
 
-# Backward compatibility: 일부 테스트/레거시 코드에서 UserMission 이름을 참조한다.
+# Backward compatibility: �Ϻ� �׽�Ʈ/���Ž� �ڵ忡�� UserMission �̸��� �����Ѵ�.
 UserMission = UserMissionProgress
 
 
 class StreakConfig(Base):
-    """Streak daily reward config (테스트용 호환 모델)."""
+    """Streak daily reward config (�׽�Ʈ�� ȣȯ ��)."""
     __tablename__ = "streak_config"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -129,13 +129,13 @@ class StreakConfig(Base):
 
 
 class UserStreak(Base):
-    """User streak tracking (테스트용 호환 모델)."""
+    """User streak tracking (�׽�Ʈ�� ȣȯ ��)."""
     __tablename__ = "user_streak"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     current_streak = Column(Integer, nullable=False, default=0)
     last_hit_date = Column(DateTime, nullable=True)
     total_hits = Column(Integer, nullable=False, default=0)
 
-    user = relationship("User")
+    user = relationship("V2User")

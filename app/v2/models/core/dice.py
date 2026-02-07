@@ -45,7 +45,7 @@ class DiceLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     config_id = Column(Integer, ForeignKey("dice_config.id", ondelete="CASCADE"), nullable=False)
     user_dice_1 = Column(Integer, nullable=False)
     user_dice_2 = Column(Integer, nullable=False)

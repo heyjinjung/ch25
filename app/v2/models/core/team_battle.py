@@ -48,7 +48,7 @@ class TeamMember(Base):
     __tablename__ = "team_member"
     __table_args__ = (Index("idx_team_member_team", "team_id"),)
 
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
     team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"), nullable=False)
     role = Column(String(10), nullable=False, default="member")
     joined_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -81,7 +81,7 @@ class TeamEventLog(Base):
 
     id = Column(BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True)
     team_id = Column(Integer, ForeignKey("team.id", ondelete="CASCADE"), nullable=False)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)
     season_id = Column(Integer, ForeignKey("team_season.id", ondelete="CASCADE"), nullable=False)
     action = Column(String(50), nullable=False)
     delta = Column(Integer, nullable=False)

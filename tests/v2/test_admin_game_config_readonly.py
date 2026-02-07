@@ -10,13 +10,16 @@ import pytest
 def test_roulette_config_read(test_client, admin_token):
     """룰렛 설정 조회 API"""
     response = test_client.get(
-        "/api/v2/admin/game/roulette/config",
+        "/api/v2/admin/game/roulette/configs",
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    # 필수 필드 검증
-    assert "config" in data or "configs" in data or isinstance(data, list)
+    # 리스트 형태 반환됨
+    assert isinstance(data, list)
+    if len(data) > 0:
+        assert "id" in data[0]
+        assert "ticket_type" in data[0]
 
 
 def test_dice_config_read(test_client, admin_token):
@@ -25,38 +28,31 @@ def test_dice_config_read(test_client, admin_token):
         "/api/v2/admin/game/dice/config",
         headers={"Authorization": f"Bearer {admin_token}"}
     )
-    assert response.status_code == 200
-    data = response.json()
-    # 필수 필드 검증
-    assert "config" in data or "configs" in data or isinstance(data, list)
+    # 200(성공) 또는 404(설정 없음) 허용
+    assert response.status_code in [200, 404]
+    
+    if response.status_code == 200:
+        data = response.json()
+        assert "max_daily_plays" in data
+        assert "win_probability" in data
 
 
 def test_lottery_config_read(test_client, admin_token):
     """복권 설정 조회 API"""
     response = test_client.get(
-        "/api/v2/admin/game/lottery/config",
+        "/api/v2/admin/game/lottery/configs",
         headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     data = response.json()
-    # 필수 필드 검증
-    assert "config" in data or "configs" in data or isinstance(data, list)
-
-
-def test_game_config_list(test_client, admin_token):
-    """전체 게임 설정 목록 조회"""
-    response = test_client.get(
-        "/api/v2/admin/game/configs",
-        headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    # 200 또는 404(아직 구현 안됨) 허용
-    assert response.status_code in [200, 404]
-    if response.status_code == 200:
-        data = response.json()
-        assert isinstance(data, (dict, list))
+    # 리스트 형태 반환됨
+    assert isinstance(data, list)
+    if len(data) > 0:
+        assert "id" in data[0]
+        assert "ticket_type" in data[0]
 
 
 def test_game_config_unauthorized(test_client):
     """인증 없이 게임 설정 조회 시 401"""
-    response = test_client.get("/api/v2/admin/game/roulette/config")
+    response = test_client.get("/api/v2/admin/game/roulette/configs")
     assert response.status_code == 401

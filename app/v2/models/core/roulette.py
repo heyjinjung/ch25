@@ -57,7 +57,7 @@ class RouletteLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     config_id = Column(Integer, ForeignKey("roulette_config.id", ondelete="CASCADE"), nullable=False)
     segment_id = Column(Integer, ForeignKey("roulette_segment.id", ondelete="CASCADE"), nullable=False)
     reward_type = Column(String(50), nullable=False)

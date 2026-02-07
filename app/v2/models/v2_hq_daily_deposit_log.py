@@ -7,8 +7,8 @@
 """
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Index
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import Base
 
@@ -31,8 +31,11 @@ class HQDailyDepositLog(Base):
     deposit_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # CSV의 충전 시각
     
     # 매칭 결과
-    user_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 매칭된 V2User.id
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("v2_user.id", ondelete="SET NULL"), nullable=True)  # 매칭된 V2User.id
     status: Mapped[str] = mapped_column(String(20), nullable=False)  # MATCHED, NOT_FOUND, AMBIGUOUS
+    
+    # Relationship
+    user: Mapped["V2User"] = relationship("V2User", back_populates="hq_daily_deposits")
     
     # 메타
     import_batch_id: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 같은 배치 구분

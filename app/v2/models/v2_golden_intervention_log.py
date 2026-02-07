@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
 
 from app.db.base_class import Base
+from app.v2.utils.timezone import kst_now
 
 
 class V2GoldenInterventionLog(Base):
@@ -19,7 +20,7 @@ class V2GoldenInterventionLog(Base):
     status = Column(
         String(20),
         nullable=False,
-        default="SENT",
+        default="PENDING_APPROVAL",
         index=True,
     )  # PENDING_APPROVAL, APPROVED, REJECTED, SENT
 
@@ -30,4 +31,4 @@ class V2GoldenInterventionLog(Base):
 
     # Metadata
     cooldown_expires_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime, nullable=False, default=kst_now, index=True)

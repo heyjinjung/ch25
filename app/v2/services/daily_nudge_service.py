@@ -46,7 +46,7 @@ class DailyNudgeService:
         Returns:
             list[tuple[int, str]]: (user_id, cc_id) 리스트
         """
-        now_kst = business_day_start(offset_hours=-kst_hour)  # 현재 운영일 시작 시각
+        now_kst = business_day_start()  # 현재 운영일 시작 시각
         today_start = now_kst
         lookback_start = today_start - timedelta(days=lookback_days)
 
@@ -239,7 +239,7 @@ class DailyNudgeService:
                 - eligible_users: int (넛지 대상 유저 수)
                 - suspended_users: int (제재 유저 수)
         """
-        now_kst = business_day_start(offset_hours=-9)
+        now_kst = business_day_start()
         today_start = now_kst
         lookback_start = today_start - timedelta(days=lookback_days)
 

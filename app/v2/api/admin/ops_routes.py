@@ -53,6 +53,17 @@ from app.v2.utils.timezone import business_day_start, KST
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+ 
+ 
+@router.get("/health")
+def ops_health():
+    return {"status": "ok"}
+
+
+@router.get("/health/db")
+def ops_health_db(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    return {"status": "ok"}
 
 
 
@@ -660,7 +671,7 @@ def approve_intervention(
         f"INTERVENTION_{action}",
         "GOLDEN_CRM",
         str(intervention_id),
-        after={"user_id": intervention.user_id, "trigger_id": intervention.trigger_id},
+        after_data={"user_id": intervention.user_id, "trigger_id": intervention.trigger_id},
     )
     
     return {
@@ -704,7 +715,7 @@ def batch_approve_interventions(
         f"INTERVENTION_BATCH_{action}",
         "GOLDEN_CRM",
         ",".join(map(str, intervention_ids)),
-        after={"count": updated},
+        after_data={"count": updated},
     )
     
     return {

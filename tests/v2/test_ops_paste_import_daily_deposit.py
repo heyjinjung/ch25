@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime, timedelta
 from app.v2.models import V2User
 from app.v2.models.user import V2UserRole, V2UserStatus
-from app.v2.models.v2_hq_daily_deposit import V2HQDailyDeposit
+from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
 
 
 def test_paste_import_daily_deposit_latest_time_filter(db_session):
@@ -24,24 +24,26 @@ def test_paste_import_daily_deposit_latest_time_filter(db_session):
     db_session.commit()
 
     latest_time = datetime(2026, 2, 5, 12, 0, 0)
-    existing_deposit = V2HQDailyDeposit(
+    existing_deposit = HQDailyDepositLog(
         user_id=user.id,
-        cc_id=user.cc_id,
-        deposit_amount=30000,
-        deposit_date=latest_time,
-        dedup_key=f"{user.cc_id}_{latest_time.strftime('%Y-%m-%d_%H%M%S')}"
+        nickname=user.nickname,
+        amount=30000,
+        deposit_at=latest_time,
+        dedup_key=f"{user.nickname}_30000_{latest_time.strftime('%Y-%m-%d_%H%M%S')}",
+        status="MATCHED"
     )
     db_session.add(existing_deposit)
     db_session.commit()
 
     # When: 새로운 데이터 import (latest_time 이후만)
     new_time = latest_time + timedelta(hours=1)
-    new_deposit = V2HQDailyDeposit(
+    new_deposit = HQDailyDepositLog(
         user_id=user.id,
-        cc_id=user.cc_id,
-        deposit_amount=40000,
-        deposit_date=new_time,
-        dedup_key=f"{user.cc_id}_{new_time.strftime('%Y-%m-%d_%H%M%S')}"
+        nickname=user.nickname,
+        amount=40000,
+        deposit_at=new_time,
+        dedup_key=f"{user.nickname}_40000_{new_time.strftime('%Y-%m-%d_%H%M%S')}",
+        status="MATCHED"
     )
 
     # latest_time 이전 데이터는 skip
@@ -52,12 +54,12 @@ def test_paste_import_daily_deposit_latest_time_filter(db_session):
     db_session.commit()
 
     # Then: latest_time 이후 데이터만 존재
-    deposits = db_session.query(V2HQDailyDeposit).filter(
-        V2HQDailyDeposit.user_id == user.id,
-        V2HQDailyDeposit.deposit_date > latest_time
+    deposits = db_session.query(HQDailyDepositLog).filter(
+        HQDailyDepositLog.user_id == user.id,
+        HQDailyDepositLog.deposit_at > latest_time
     ).all()
     assert len(deposits) == 1
-    assert deposits[0].deposit_date == new_time
+    assert deposits[0].deposit_at == new_time
 
 
 def test_paste_import_daily_deposit_batch_processing(db_session):
@@ -78,19 +80,20 @@ def test_paste_import_daily_deposit_batch_processing(db_session):
     # When: 배치로 입금 기록 생성
     base_time = datetime(2026, 2, 7, 10, 0, 0)
     for i, user in enumerate(users):
-        deposit = V2HQDailyDeposit(
+        deposit = HQDailyDepositLog(
             user_id=user.id,
-            cc_id=user.cc_id,
-            deposit_amount=(i + 1) * 10000,
-            deposit_date=base_time,
-            dedup_key=f"{user.cc_id}_{base_time.strftime('%Y-%m-%d_%H%M%S')}"
+            nickname=user.nickname,
+            amount=(i + 1) * 10000,
+            deposit_at=base_time,
+            dedup_key=f"{user.nickname}_{(i + 1) * 10000}_{base_time.strftime('%Y-%m-%d_%H%M%S')}",
+            status="MATCHED"
         )
         db_session.add(deposit)
     db_session.commit()
 
     # Then: 모든 배치 데이터 정상 생성
-    deposits = db_session.query(V2HQDailyDeposit).filter(
-        V2HQDailyDeposit.deposit_date == base_time
+    deposits = db_session.query(HQDailyDepositLog).filter(
+        HQDailyDepositLog.deposit_at == base_time
     ).all()
     assert len(deposits) == 3
 
@@ -108,18 +111,19 @@ def test_paste_import_daily_deposit_validation(db_session):
     db_session.commit()
 
     # When: 유효한 데이터만 처리
-    valid_deposit = V2HQDailyDeposit(
+    valid_deposit = HQDailyDepositLog(
         user_id=user.id,
-        cc_id=user.cc_id,
-        deposit_amount=50000,  # 양수
-        deposit_date=datetime(2026, 2, 7),
-        dedup_key=f"{user.cc_id}_2026-02-07"
+        nickname=user.nickname,
+        amount=50000,  # 양수
+        deposit_at=datetime(2026, 2, 7),
+        dedup_key=f"{user.nickname}_50000_2026-02-07",
+        status="MATCHED"
     )
     db_session.add(valid_deposit)
     db_session.commit()
 
     # Then: 데이터 검증 통과
     db_session.refresh(valid_deposit)
-    assert valid_deposit.deposit_amount > 0
-    assert valid_deposit.cc_id is not None
+    assert valid_deposit.amount > 0
+    assert valid_deposit.nickname is not None
     assert valid_deposit.dedup_key is not None

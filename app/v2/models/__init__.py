@@ -22,6 +22,7 @@ from .v2_user_retention_state import V2UserRetentionState
 from .v2_user_segment import V2UserSegment
 from .hq_prospective_user import HQProspectiveUser
 from .v2_game_log import V2GameLog
+from .v2_golden_daily_nudge import V2GoldenDailyNudge
 from .v2_external_deposit_unmatched import V2ExternalDepositUnmatched, UnmatchedStatus, UnmatchedReason
 from .v2_hq_daily_deposit_log import HQDailyDepositLog
 from .v2_spending_ledger import V2SpendingLedger

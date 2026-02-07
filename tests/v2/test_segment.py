@@ -114,7 +114,7 @@ class TestSegmentServicePriority:
     def test_first_match_wins_priority(self, db_session):
         """Priority 오름차순으로 첫 매칭 규칙이 결과를 결정 (SoT 4, 11)."""
         from app.v2.services.segment_service import V2SegmentService
-        from app.v2.models.v2_user_segment import V2SegmentRule
+        from app.v2.models.v2_segment_rule import V2SegmentRule
         
         # 1. High Priority (10) Rule: COMMON if deposit > 1000
         rule_high = V2SegmentRule(

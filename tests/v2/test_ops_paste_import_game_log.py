@@ -6,7 +6,6 @@ fixtures: admin_token, db_session
 """
 import pytest
 from datetime import datetime
-from unittest.mock import patch, MagicMock
 from app.v2.models import V2User
 from app.v2.models.user import V2UserRole, V2UserStatus
 from app.v2.models.v2_game_log import V2GameLog
@@ -26,12 +25,13 @@ def test_paste_import_game_log_creates_records(db_session):
 
     # When: 게임 로그 생성
     game_log = V2GameLog(
+        id=1,
         user_id=user.id,
         game_type="ROULETTE",
         bet_amount=1000,
         result="WIN",
-        payout=2000,
-        played_at=datetime(2026, 2, 7, 10, 30, 0)
+        payout_amount=2000,
+        recorded_at=datetime(2026, 2, 7, 10, 30, 0)
     )
     db_session.add(game_log)
     db_session.commit()
@@ -42,8 +42,7 @@ def test_paste_import_game_log_creates_records(db_session):
     assert game_log.result in ["WIN", "LOSE"]
 
 
-@patch("app.v2.services.game_analysis_service.analyze_game_pattern")
-def test_paste_import_game_log_triggers_analysis(mock_analyze, db_session):
+def test_paste_import_game_log_triggers_analysis(db_session):
     """게임 로그 import 시 분석 로직 호출 확인"""
     # Given
     user = V2User(
@@ -57,20 +56,18 @@ def test_paste_import_game_log_triggers_analysis(mock_analyze, db_session):
 
     # When: 게임 로그 생성 후 분석 트리거
     game_log = V2GameLog(
+        id=1,
         user_id=user.id,
         game_type="DICE",
         bet_amount=5000,
         result="LOSE",
-        payout=0,
-        played_at=datetime.utcnow()
+        payout_amount=0,
+        recorded_at=datetime.utcnow()
     )
     db_session.add(game_log)
     db_session.commit()
 
-    # 분석 로직 호출 시뮬레이션
-    mock_analyze.return_value = {"pattern": "normal"}
-
-    # Then: 분석 함수 호출 여부만 확인 (실제로는 백그라운드 작업)
+    # Then: 분석 함수 호출 여부는 별도 워커에서 처리
     # 여기서는 로그가 정상 생성되었는지만 검증
     assert game_log.id is not None
 
@@ -93,12 +90,13 @@ def test_paste_import_game_log_batch_insert(db_session):
 
     for i, (game_type, result) in enumerate(zip(game_types, results)):
         log = V2GameLog(
+            id=100 + i,
             user_id=user.id,
             game_type=game_type,
             bet_amount=1000 * (i + 1),
             result=result,
-            payout=2000 * (i + 1) if result == "WIN" else 0,
-            played_at=datetime(2026, 2, 7, 10, i, 0)
+            payout_amount=2000 * (i + 1) if result == "WIN" else 0,
+            recorded_at=datetime(2026, 2, 7, 10, i, 0)
         )
         db_session.add(log)
     db_session.commit()
@@ -126,12 +124,13 @@ def test_paste_import_game_log_deduplication(db_session):
 
     # When: 첫 번째 로그
     log1 = V2GameLog(
+        id=1,
         user_id=user.id,
         game_type="ROULETTE",
         bet_amount=1000,
         result="WIN",
-        payout=2000,
-        played_at=played_at,
+        payout_amount=2000,
+        recorded_at=played_at,
         dedup_key=f"{user.id}_ROULETTE_{played_at.isoformat()}"
     )
     db_session.add(log1)

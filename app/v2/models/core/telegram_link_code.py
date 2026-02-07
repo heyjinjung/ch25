@@ -16,7 +16,7 @@ class TelegramLinkCode(Base):
     __tablename__ = "telegram_link_code"
 
     code = Column(String(16), primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     
     expires_at = Column(DateTime, nullable=False)
     used_at = Column(DateTime, nullable=True)
@@ -26,4 +26,4 @@ class TelegramLinkCode(Base):
     user_agent = Column(Text, nullable=True)
     
     # Relationships
-    user = relationship("User")
+    user = relationship("V2User")

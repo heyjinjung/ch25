@@ -233,6 +233,27 @@ app.include_router(ui_config_public_router)
 app.include_router(api_router, prefix="/api/v2")
 
 
+@app.get("/health", summary="Root health")
+def root_health() -> dict[str, str]:
+    """Public health endpoint for smoke checks."""
+
+    return {"status": "ok"}
+
+
+@app.get("/health/db", summary="Root DB health")
+def root_health_db() -> dict[str, str]:
+    """Public DB health endpoint for smoke checks."""
+    from app.v2.api.deps import get_db
+    from sqlalchemy import text
+
+    db = next(get_db())
+    try:
+        db.execute(text("SELECT 1"))
+    finally:
+        db.close()
+    return {"status": "ok"}
+
+
 @app.get("/", summary="Root ping")
 def root() -> dict[str, str]:
     """Simple root endpoint placeholder."""

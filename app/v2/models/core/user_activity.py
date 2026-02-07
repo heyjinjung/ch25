@@ -15,7 +15,7 @@ class UserActivity(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Optional mirror field; user.last_login_at already exists.
     last_login_at = Column(DateTime, nullable=True)

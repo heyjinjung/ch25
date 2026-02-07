@@ -57,7 +57,7 @@ class OpsTargetMember(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     target_list_id = Column(Integer, ForeignKey("ops_target_list.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Execution status for this specific member in this specific list
     status = Column(String(20), nullable=False, default="PENDING")  # PENDING, SENT, FAILED
@@ -75,4 +75,4 @@ class OpsTargetMember(Base):
 
     # Relationships
     target_list = relationship("OpsTargetList", back_populates="members")
-    user = relationship("User")
+    user = relationship("V2User")

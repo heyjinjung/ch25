@@ -44,7 +44,7 @@ class AdminMessageInbox(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False, index=True)
     message_id = Column(Integer, ForeignKey("admin_message.id", ondelete="CASCADE"), nullable=False, index=True)
 
     is_read = Column(Boolean, default=False)
@@ -53,5 +53,5 @@ class AdminMessageInbox(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     # Relationships
-    user = relationship("User")
+    user = relationship("V2User")
     message = relationship("AdminMessage")

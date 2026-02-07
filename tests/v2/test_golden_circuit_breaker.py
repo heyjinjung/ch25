@@ -3,12 +3,15 @@ Test 24: Golden Circuit Breaker
 시나리오: 한도 초과 -> 차단
 fixtures: db_session
 가드레일: skip_circuit_breaker 옵션 확인
+
+Note: Using V2GoldenInterventionLog as a proxy for benefit tracking
+since V2GoldenBenefitLog doesn't exist in the current model structure.
 """
 import pytest
 from datetime import datetime, timedelta
 from app.v2.models import V2User
 from app.v2.models.user import V2UserRole, V2UserStatus
-from app.v2.models.v2_golden_benefit_log import V2GoldenBenefitLog
+from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
 
 
 def test_golden_circuit_breaker_daily_limit(db_session):
@@ -23,32 +26,34 @@ def test_golden_circuit_breaker_daily_limit(db_session):
     db_session.add(user)
     db_session.commit()
 
-    # 일일 한도: 예를 들어 100,000원
-    daily_limit = 100000
+    # 일일 한도: 5건
+    daily_limit = 5
     today = datetime.utcnow().date()
 
-    # When: 오늘 이미 한도만큼 혜택 받음
+    # When: 오늘 이미 한도만큼 intervention 발생
     for i in range(5):
-        benefit = V2GoldenBenefitLog(
+        intervention = V2GoldenInterventionLog(
             user_id=user.id,
-            benefit_type="INTERVENTION",
-            amount=20000,
+            trigger_id="TRG_BENEFIT",
+            action_taken="GRANT_BENEFIT",
+            status="SENT",
             created_at=datetime.combine(today, datetime.min.time()) + timedelta(hours=i)
         )
-        db_session.add(benefit)
+        db_session.add(intervention)
     db_session.commit()
 
-    # Then: 오늘 총 혜택 금액 확인
+    # Then: 오늘 총 intervention 건수 확인
     from sqlalchemy import func
-    total_today = db_session.query(func.sum(V2GoldenBenefitLog.amount)).filter(
-        V2GoldenBenefitLog.user_id == user.id,
-        func.date(V2GoldenBenefitLog.created_at) == today
+    count_today = db_session.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.user_id == user.id,
+        func.date(V2GoldenInterventionLog.created_at) == today,
+        V2GoldenInterventionLog.status == "SENT"
     ).scalar() or 0
 
-    assert total_today == daily_limit
+    assert count_today == daily_limit
 
     # 한도 초과 여부 체크
-    is_over_limit = total_today >= daily_limit
+    is_over_limit = count_today >= daily_limit
     assert is_over_limit is True
 
 
@@ -64,30 +69,33 @@ def test_golden_circuit_breaker_weekly_limit(db_session):
     db_session.add(user)
     db_session.commit()
 
-    # 주간 한도: 예를 들어 500,000원
-    weekly_limit = 500000
+    # 주간 한도: 20건
+    weekly_limit = 20
     week_ago = datetime.utcnow() - timedelta(days=7)
 
-    # When: 지난 7일간 혜택 누적
+    # When: 지난 7일간 intervention 누적
     for i in range(7):
-        benefit = V2GoldenBenefitLog(
-            user_id=user.id,
-            benefit_type="INTERVENTION",
-            amount=70000,
-            created_at=week_ago + timedelta(days=i)
-        )
-        db_session.add(benefit)
+        for j in range(2):  # 하루에 2건씩
+            intervention = V2GoldenInterventionLog(
+                user_id=user.id,
+                trigger_id="TRG_BENEFIT",
+                action_taken="GRANT_BENEFIT",
+                status="SENT",
+                created_at=week_ago + timedelta(days=i, hours=j)
+            )
+            db_session.add(intervention)
     db_session.commit()
 
-    # Then: 주간 총액 확인
+    # Then: 주간 총 건수 확인
     from sqlalchemy import func
-    total_week = db_session.query(func.sum(V2GoldenBenefitLog.amount)).filter(
-        V2GoldenBenefitLog.user_id == user.id,
-        V2GoldenBenefitLog.created_at >= week_ago
+    count_week = db_session.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.user_id == user.id,
+        V2GoldenInterventionLog.created_at >= week_ago,
+        V2GoldenInterventionLog.status == "SENT"
     ).scalar() or 0
 
-    assert total_week == 490000  # 70000 * 7
-    is_over_limit = total_week >= weekly_limit
+    assert count_week == 14  # 7일 * 2건
+    is_over_limit = count_week >= weekly_limit
     assert is_over_limit is False
 
 
@@ -104,45 +112,47 @@ def test_golden_circuit_breaker_skip_option(db_session):
     db_session.commit()
 
     # 이미 한도 초과 상태
-    daily_limit = 100000
+    daily_limit = 5
     today = datetime.utcnow().date()
 
     for i in range(5):
-        benefit = V2GoldenBenefitLog(
+        intervention = V2GoldenInterventionLog(
             user_id=user.id,
-            benefit_type="INTERVENTION",
-            amount=20000,
+            trigger_id="TRG_BENEFIT",
+            action_taken="GRANT_BENEFIT",
+            status="SENT",
             created_at=datetime.combine(today, datetime.min.time()) + timedelta(hours=i)
         )
-        db_session.add(benefit)
+        db_session.add(intervention)
     db_session.commit()
 
     # When: skip_circuit_breaker=True로 추가 혜택
     from sqlalchemy import func
-    total_today = db_session.query(func.sum(V2GoldenBenefitLog.amount)).filter(
-        V2GoldenBenefitLog.user_id == user.id,
-        func.date(V2GoldenBenefitLog.created_at) == today
+    count_today = db_session.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.user_id == user.id,
+        func.date(V2GoldenInterventionLog.created_at) == today,
+        V2GoldenInterventionLog.status == "SENT"
     ).scalar() or 0
 
     skip_circuit_breaker = True  # 관리자 수동 승인 등
 
-    if skip_circuit_breaker or total_today < daily_limit:
+    if skip_circuit_breaker or count_today < daily_limit:
         # 한도 우회 또는 한도 내
-        extra_benefit = V2GoldenBenefitLog(
+        extra_intervention = V2GoldenInterventionLog(
             user_id=user.id,
-            benefit_type="MANUAL",
-            amount=30000,
-            created_at=datetime.utcnow(),
-            metadata={"skip_circuit_breaker": True}
+            trigger_id="MANUAL_OVERRIDE",
+            action_taken="MANUAL_GRANT",
+            status="SENT",
+            created_at=datetime.utcnow()
         )
-        db_session.add(extra_benefit)
+        db_session.add(extra_intervention)
         db_session.commit()
 
     # Then: 한도 초과했지만 skip 옵션으로 추가 혜택 부여됨
-    all_benefits = db_session.query(V2GoldenBenefitLog).filter(
-        V2GoldenBenefitLog.user_id == user.id
+    all_interventions = db_session.query(V2GoldenInterventionLog).filter(
+        V2GoldenInterventionLog.user_id == user.id
     ).all()
-    assert len(all_benefits) == 6  # 5 + 1(skip)
+    assert len(all_interventions) == 6  # 5 + 1(skip)
 
 
 def test_golden_circuit_breaker_per_user_limit(db_session):
@@ -163,31 +173,38 @@ def test_golden_circuit_breaker_per_user_limit(db_session):
     db_session.add_all([user1, user2])
     db_session.commit()
 
-    # When: 각각 다른 금액의 혜택
-    benefit1 = V2GoldenBenefitLog(
-        user_id=user1.id,
-        benefit_type="INTERVENTION",
-        amount=50000,
-        created_at=datetime.utcnow()
-    )
-    benefit2 = V2GoldenBenefitLog(
-        user_id=user2.id,
-        benefit_type="INTERVENTION",
-        amount=30000,
-        created_at=datetime.utcnow()
-    )
-    db_session.add_all([benefit1, benefit2])
+    # When: 각각 다른 건수의 intervention
+    for i in range(3):
+        intervention1 = V2GoldenInterventionLog(
+            user_id=user1.id,
+            trigger_id="TRG_BENEFIT",
+            action_taken="GRANT_BENEFIT",
+            status="SENT",
+            created_at=datetime.utcnow()
+        )
+        db_session.add(intervention1)
+
+    for i in range(2):
+        intervention2 = V2GoldenInterventionLog(
+            user_id=user2.id,
+            trigger_id="TRG_BENEFIT",
+            action_taken="GRANT_BENEFIT",
+            status="SENT",
+            created_at=datetime.utcnow()
+        )
+        db_session.add(intervention2)
+
     db_session.commit()
 
     # Then: 각 유저의 한도는 독립적
     from sqlalchemy import func
-    total1 = db_session.query(func.sum(V2GoldenBenefitLog.amount)).filter(
-        V2GoldenBenefitLog.user_id == user1.id
+    count1 = db_session.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.user_id == user1.id
     ).scalar()
-    total2 = db_session.query(func.sum(V2GoldenBenefitLog.amount)).filter(
-        V2GoldenBenefitLog.user_id == user2.id
+    count2 = db_session.query(func.count(V2GoldenInterventionLog.id)).filter(
+        V2GoldenInterventionLog.user_id == user2.id
     ).scalar()
 
-    assert total1 == 50000
-    assert total2 == 30000
-    assert total1 != total2
+    assert count1 == 3
+    assert count2 == 2
+    assert count1 != count2

@@ -73,10 +73,23 @@ class V2User(Base):
     game_wallets = relationship("UserGameWallet", back_populates="user", lazy="dynamic")
     
     # V2 Game Log relationship (for CSV import analytics)
-    game_logs = relationship("V2GameLog", back_populates="user", lazy="dynamic")
+    game_logs = relationship(
+        "V2GameLog", 
+        back_populates="user", 
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
 
     # Spending ledger relationship
-    spending_records = relationship("V2SpendingLedger", back_populates="user", lazy="dynamic")
-
-    # Admin Profile link ( CRM Data )
+    spending_records = relationship(
+        "V2SpendingLedger", 
+        back_populates="user", 
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+    
+    # HQ Daily Deposit Logs
+    hq_daily_deposits = relationship("HQDailyDepositLog", back_populates="user", lazy="dynamic")
+    
+    # V2 Admin Profile link ( CRM Data )
     admin_profile = relationship("AdminUserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
