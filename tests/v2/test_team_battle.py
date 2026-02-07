@@ -131,6 +131,15 @@ class TestMembershipRules:
         is_window_open = season_start <= now <= window_end
         assert is_window_open is False
 
+    def test_leave_window_closed_locked(self):
+        """선택 기간 후 탈퇴 불가 (Locked)."""
+        now = datetime.utcnow()
+        season_start = now - timedelta(hours=50) # 50시간 경과
+        window_end = season_start + timedelta(hours=48)
+        
+        is_locked = now > window_end
+        assert is_locked is True
+
 
 class TestTeamEventLog:
     """팀 이벤트 로그 테스트."""

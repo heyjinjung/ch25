@@ -107,3 +107,73 @@ class TestSegmentRulesEngineReal:
 
         assert matches_condition(vip_condition, vip_ctx) is True
         assert matches_condition(whale_condition, whale_ctx) is True
+
+class TestSegmentServicePriority:
+    """세그먼트 서비스 우선순위 테스트 (SoT 6.2)."""
+
+    def test_first_match_wins_priority(self, db_session):
+        """Priority 오름차순으로 첫 매칭 규칙이 결과를 결정 (SoT 4, 11)."""
+        from app.v2.services.segment_service import V2SegmentService
+        from app.v2.models.v2_user_segment import V2SegmentRule
+        
+        # 1. High Priority (10) Rule: COMMON if deposit > 1000
+        rule_high = V2SegmentRule(
+            name="TEST_COMMON",
+            segment="COMMON",
+            priority=10,
+            condition_json={"field": "deposit_amount", "op": ">=", "value": 1000},
+            enabled=True
+        )
+        # 2. Low Priority (20) Rule: VIP if deposit > 5000
+        rule_low = V2SegmentRule(
+            name="TEST_VIP",
+            segment="VIP",
+            priority=20,
+            condition_json={"field": "deposit_amount", "op": ">=", "value": 5000},
+            enabled=True
+        )
+        db_session.add_all([rule_high, rule_low])
+        db_session.commit()
+        
+        # User with 10000 deposit - matches both, but priority 10 wins (COMMON)
+        ctx = _base_ctx(deposit_amount=10000)
+        rules = V2SegmentService.list_enabled_rules(db_session)
+        segment, rule_name = V2SegmentService._recommend_segment(rules, ctx)
+        assert segment == "COMMON"
+        assert rule_name == "TEST_COMMON"
+
+class TestSegmentWinnerClassification:
+    """마진 기반 WINNER 세그먼트 분류 테스트 (SoT 7.5)."""
+
+    def test_classify_winner_if_margin_negative(self, db_session):
+        """마진이 음수이면 WINNER로 분류 (SoT 7.5)."""
+        from app.v2.services.segment_service import V2SegmentService
+        
+        # Margin is a context field in SegmentContext
+        # margin_total < 0 -> WINNER
+        ctx = _base_ctx(margin_total=-500)
+        
+        # In a real scenario, WINNER is often a special rule or direct logic
+        # Based on SOT, margin < 0 is the criterion.
+        # Ensure V2SegmentService respects this or has a rule for it.
+        
+        # Let's verify matches_condition first
+        condition = {"field": "margin_total", "op": "<", "value": 0}
+        assert matches_condition(condition, ctx) is True
+        
+        # Verify via service if rule exists
+        from app.v2.models.v2_segment_rule import V2SegmentRule
+        winner_rule = V2SegmentRule(
+            name="TEST_WINNER",
+            segment="WINNER",
+            priority=5, # Highest priority
+            condition_json={"field": "margin_total", "op": "<", "value": 0},
+            enabled=True
+        )
+        db_session.add(winner_rule)
+        db_session.commit()
+        
+        rules = V2SegmentService.list_enabled_rules(db_session)
+        segment, rule_name = V2SegmentService._recommend_segment(rules, ctx)
+        assert segment == "WINNER"
+        assert rule_name == "TEST_WINNER"

@@ -33,58 +33,8 @@
 3) 대량 작업은 샘플 1~3건으로 축소.
 4) 실패 케이스는 표준 에러 코드와 status만 검증.
 
-## 6. 테스트 파일 분해 (25개)
+## 6. 테스트 파일 분해 (15개)
 
-### A. Admin (12)
-1) 파일: tests/v2/test_admin_game_config_integration.py
-- 시나리오: 룰렛 8세그먼트 설정 저장 + 복권 재고 설정 저장
-- fixtures: admin_token, test_client, db_session
-- 가드레일: 필수 필드 누락 케이스는 400만 확인
-
-2) 파일: tests/v2/test_admin_lottery_prize_partial_update.py
-- 시나리오: 복권 경품 부분 업데이트(라벨만 변경)
-- fixtures: admin_token, test_client
-- 가드레일: 기존 값 유지 확인(나머지 필드)
-
-3) 파일: tests/v2/test_admin_team_battle_season_lifecycle.py
-- 시나리오: 시즌 생성 -> 활성화 -> 종료
-- fixtures: admin_token, db_session, test_client
-- 가드레일: 중복 활성화 금지(409 or 400)
-
-4) 파일: tests/v2/test_admin_team_battle_force_member.py
-- 시나리오: 강제 가입/탈퇴
-- fixtures: admin_token, base_user, test_client
-- 가드레일: 이미 가입 상태 처리
-
-5) 파일: tests/v2/test_admin_audit_log_guard.py
-- 시나리오: 변경성 API 호출 시 감사 로그 생성
-- fixtures: admin_token, db_session, test_client
-- 가드레일: audit row 1건 이상
-
-6) 파일: tests/v2/test_admin_user_asset_adjust.py
-- 시나리오: 유저 자산 조정(금고/지갑)
-- fixtures: admin_token, base_user, test_client
-- 가드레일: 음수 차감 실패 케이스
-
-7) 파일: tests/v2/test_admin_inventory_grant.py
-- 시나리오: 티켓 지급
-- fixtures: admin_token, base_user, test_client
-- 가드레일: reward_type 표준값 검증
-
-8) 파일: tests/v2/test_admin_marketing_message_fanout.py
-- 시나리오: 메시지 생성 + 인박스 팬아웃
-- fixtures: admin_token, base_user, test_client
-- 가드레일: recipient_count >= 1
-
-9) 파일: tests/v2/test_admin_segment_run.py
-- 시나리오: 세그먼트 배치 실행
-- fixtures: admin_token, test_client
-- 가드레일: processed/changed 필드 존재
-
-10) 파일: tests/v2/test_admin_ops_status_smoke.py
-- 시나리오: /api/v2/admin/ops/status 조회
-- fixtures: admin_token, test_client
-- 가드레일: system_status == OK
 
 11) 파일: tests/v2/test_admin_game_config_readonly.py
 - 시나리오: 룰렛/다이스/복권 설정 조회

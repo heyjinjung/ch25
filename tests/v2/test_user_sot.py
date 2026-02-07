@@ -10,7 +10,7 @@ SoT 문서: docs/v2_specs/01_core/v2_user_sot_ko.md
 import pytest
 from sqlalchemy.orm import Session
 
-from app.v2.models import V2User
+from app.v2.models import V2User, UserGameWallet
 
 
 class TestV2UserSoT:
@@ -25,6 +25,10 @@ class TestV2UserSoT:
         )
         db.add(user)
         db.flush()
+        # Add required wallet
+        wallet = UserGameWallet(user_id=user.id, token_type="ROULETTE_TICKET", balance=0)
+        db.add(wallet)
+        db.flush()
 
         assert user.vault_locked_balance == 50000
         assert hasattr(user, "vault_locked_balance")
@@ -36,6 +40,9 @@ class TestV2UserSoT:
             nickname="필수필드테스트",
         )
         db.add(user)
+        db.flush()
+        wallet = UserGameWallet(user_id=user.id, token_type="ROULETTE_TICKET", balance=0)
+        db.add(wallet)
         db.flush()
 
         # 필수 필드 존재
@@ -57,6 +64,7 @@ class TestV2UserSoT:
         db.flush()
 
         # 금고 적립
+        db.add(UserGameWallet(user_id=user.id, token_type="ROULETTE_TICKET", balance=0))
         user.vault_locked_balance += 5000
         db.flush()
         assert user.vault_locked_balance == 15000
@@ -86,6 +94,8 @@ class TestV2UserSoT:
             telegram_username=None,
         )
         db.add(user)
+        db.flush()
+        db.add(UserGameWallet(user_id=user.id, token_type="ROULETTE_TICKET", balance=0))
         db.flush()
 
         assert user.telegram_id is None

@@ -334,7 +334,8 @@ class TestMissionServiceIntegration:
     def test_sync_play_streak_consecutive_day(self, test_db_session, base_user):
         """Streak should increment on consecutive days."""
         service = V2MissionService(test_db_session)
-        now = datetime.now(timezone.utc)
+        # Use a safe hour (e.g., 10 AM UTC = 7 PM KST) to avoid reset hour issues (9 AM KST)
+        now = datetime.now(timezone.utc).replace(hour=10, minute=0, second=0, microsecond=0)
         
         # Set up previous day play
         yesterday = (now - timedelta(days=1)).date()
