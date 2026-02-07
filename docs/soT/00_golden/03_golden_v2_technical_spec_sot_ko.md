@@ -1,7 +1,7 @@
 # 03. Golden V2 Technical Spec SoT (Master Expansion v2.3)
 
 **문서 타입**: Technical & Engineering Specification (Highest Detail)
-**버전**: v2.3 (2026-02-06 - Absolute Maximum Expansion)
+**버전**: v2.4 (2026-02-07 - Architecture & Seed Integration)
 **상태**: ✅ Active SoT (Implementation Reference)
 
 ---
@@ -15,6 +15,21 @@ Golden V2는 마이크로서비스 지향의 이벤트 중심 아키텍처를 �
 2.  **Logic Layer**: `InterventionWorker` (Python/Celery)가 룰셋을 평가하고 개입 추천 생성.
 3.  **Persistence Layer**: PostgreSQL (RDBMS)은 모든 원장과 로그의 최종 권위자(SoT). Redis는 성능 가속을 위한 실시간 캐시.
 4.  **Admin CRM**: React/TypeScript 기반 관제 센터. WebSocket을 통한 실시간 데이터 스트리밍 서비스.
+
+### 1.2 실시간 개입 흐름 (Event-Driven Flow)
+1.  Game Engine이 결과를 `golden:v2:events:game`에 Publish.
+2.  Analysis Worker가 이벤트를 Consume 후 개입 여부 판단.
+3.  개입 이벤트를 `golden:v2:events:intervention`으로 Publish.
+4.  API가 WebSocket(`/api/v2/ws/golden`)으로 유저에게 즉시 푸시.
+
+**표준 채널**
+- `ch25_events`
+- `golden:v2:events:game`
+- `golden:v2:events:intervention`
+
+**표준 엔드포인트**
+- User WS: `/api/v2/ws/golden`
+- Admin WS: `/api/v2/admin/ws/golden/events`
 
 ---
 
@@ -39,6 +54,18 @@ Golden V2는 마이크로서비스 지향의 이벤트 중심 아키텍처를 �
 - **Deduplication Strategy**: `spending_source` + `ref_id` 조합의 `transaction_id` 유니크 제약 사용. (예: `HQ_W_12345678`)
 - **Operational Date Logic**: `SpendingLoggerService.get_operational_date_kst`를 통해 **오전 09:00 KST**를 기점으로 일자 관리.
 - **Conversion Rate**: `POINT_TO_KRW_RATE = 1` 고정 적용.
+
+### 2.3 프로덕션 시드 데이터 우선순위
+Local → Production 시드 데이터 동기화의 최소 요구치를 아래 순서로 적용한다.
+
+**HIGH (즉시 필요)**
+- `v2_dice_config`, `v2_lottery_config`, `v2_lottery_prize`, `mission`, `admin_user_profile`
+
+**MEDIUM (기능 완성)**
+- `v2_roulette_config`, `v2_roulette_segment`, `v2_segment_rule`, `segment_rule`, `feature_config`
+
+**LOW (선택적)**
+- `feature_schedule`, `app_ui_config`, `v2_admin_message`
 
 ---
 
@@ -93,6 +120,8 @@ Golden V2는 마이크로서비스 지향의 이벤트 중심 아키텍처를 �
 - `golden:v2:user:{id}:pity`: 보정 확률(Pity Count) 누적치.
 - `golden:v2:audit:admin:{id}:last_action`: 관리자별 마지막 승인/거절 시각 (어뷰징 방지용).
 
+> 표준 prefix: `golden:v2:user:{user_id}:...`
+
 ### 5.2 글로벌 서킷 브레이커 (Circuit Breaker)
 - `golden:v2:cb:global:limit`: 당일 총 보상 지급 한도.
 - `golden:v2:cb:global:spent`: 현재까지 소진된 보상액.
@@ -112,3 +141,8 @@ Golden V2는 마이크로서비스 지향의 이벤트 중심 아키텍처를 �
 ---
 > [!IMPORTANT]
 > 본 문서는 엔지니어링 표준이며, 모든 코드 변경(PR)은 본 명세의 키 명칭과 데이터 타입을 준수해야 합니다. 특히 Redis 키의 TTL 설정 누락은 메모리 부족의 원인이 되므로 엄격히 관리하십시오.
+
+---
+
+## 변경 이력
+- v2.4 (2026-02-07): 실시간 이벤트 흐름/채널/WS 및 시드 데이터 우선순위 통합.

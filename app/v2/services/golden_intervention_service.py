@@ -183,3 +183,110 @@ class GoldenInterventionService:
             .limit(limit)
             .all()
         )
+
+    def check_zero_balance_trigger(
+        self,
+        user_id: int,
+        current_balance: float,
+        cooldown_hours: int = 24,
+    ) -> Optional[V2GoldenInterventionLog]:
+        """
+        Check TRG_ZERO_BAL: Current balance is 0.
+
+        Args:
+            user_id: The user ID
+            current_balance: Current balance
+            cooldown_hours: Cooldown period in hours (default 24h for zero balance)
+
+        Returns:
+            Intervention log if triggered
+        """
+        if current_balance > 0:
+            return None
+
+        # Check cooldown
+        if self._is_on_cooldown(user_id, "TRG_ZERO_BAL", cooldown_hours):
+            return None
+
+        logger.warning(f"TRG_ZERO_BAL triggered for user {user_id}: Zero balance")
+
+        intervention_log = V2GoldenInterventionLog(
+            user_id=user_id,
+            trigger_id="TRG_ZERO_BAL",
+            trigger_condition="Balance is 0",
+            action_taken="Zero_Balance_Nudge",
+            status="PENDING_APPROVAL",
+            cooldown_expires_at=datetime.utcnow() + timedelta(hours=cooldown_hours),
+        )
+
+        self.db.add(intervention_log)
+        self.db.commit()
+        self.db.refresh(intervention_log)
+        self._update_intervention_timestamp(user_id)
+
+        return intervention_log
+
+    def check_abuse_detection_trigger(
+        self,
+        user_id: int,
+        abuse_reason: str,
+        cooldown_hours: int = 48,
+    ) -> Optional[V2GoldenInterventionLog]:
+        """
+        Check TRG_ABUSE_DET: Suspicious activity detected.
+        """
+        # Check cooldown
+        if self._is_on_cooldown(user_id, "TRG_ABUSE_DET", cooldown_hours):
+            return None
+
+        logger.error(f"TRG_ABUSE_DET triggered for user {user_id}: {abuse_reason}")
+
+        intervention_log = V2GoldenInterventionLog(
+            user_id=user_id,
+            trigger_id="TRG_ABUSE_DET",
+            trigger_condition=abuse_reason,
+            action_taken="Account_Review_Required",
+            status="PENDING_APPROVAL",
+            cooldown_expires_at=datetime.utcnow() + timedelta(hours=cooldown_hours),
+        )
+
+        self.db.add(intervention_log)
+        self.db.commit()
+        self.db.refresh(intervention_log)
+        self._update_intervention_timestamp(user_id)
+
+        return intervention_log
+
+    def check_vip_welcome_trigger(
+        self,
+        user_id: int,
+        is_new_vip: bool,
+    ) -> Optional[V2GoldenInterventionLog]:
+        """
+        Check VIP_WELCOME: User recently promoted to VIP.
+        """
+        if not is_new_vip:
+            return None
+
+        # VIP Welcome trigger usually happens once per promotion, 
+        # but we check if already sent recently to avoid duplicates.
+        if self._is_on_cooldown(user_id, "VIP_WELCOME", 168):  # 1 week cooldown
+            return None
+
+        logger.info(f"VIP_WELCOME triggered for user {user_id}")
+
+        intervention_log = V2GoldenInterventionLog(
+            user_id=user_id,
+            trigger_id="VIP_WELCOME",
+            trigger_condition="New VIP promotion",
+            action_taken="VIP_Gift_Box",
+            status="PENDING_APPROVAL",
+            cooldown_expires_at=datetime.utcnow() + timedelta(hours=168),
+        )
+
+        self.db.add(intervention_log)
+        self.db.commit()
+        self.db.refresh(intervention_log)
+        self._update_intervention_timestamp(user_id)
+
+        return intervention_log

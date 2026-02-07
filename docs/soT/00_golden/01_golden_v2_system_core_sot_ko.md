@@ -1,7 +1,7 @@
 # 01. Golden V2 System Core SoT (Master Expansion v2.2)
 
 **문서 타입**: System Foundation & Universal Principles (Authoritative)
-**버전**: v2.2 (2026-02-06 - Massive Expansion)
+**버전**: v2.3 (2026-02-07 - Expansion Integration)
 **상태**: ✅ Active SoT (Extreme Detail)
 
 ---
@@ -19,6 +19,20 @@ Golden V2는 단순한 마케팅 엔진을 넘어, **데이터 기반 유기적 
 - **Analyze (분석)**: `ch25_events` 스트림을 구독하여 유저의 '심리적 전조 증상'을 포제.
 - **Intervene (개입)**: `InterventionWorker`가 트리거를 감지하고 보상을 추천하며 운영자의 승인을 대기.
 - **Measure (평가)**: 개입 후 24시간/7일 수익(Revenue) 및 리텐션 변화를 ROI(%)로 정량화.
+
+### 1.3 V2 핵심 3요소 및 확장 모듈
+Golden V2의 운영 원리는 아래 3요소와 4대 확장 모듈을 기준으로 통합한다.
+
+**핵심 3요소 (Core Pillars)**
+1) **개입(Intervention)**: 유저 상태를 보고 적절한 타이밍에 개입을 실행.
+2) **관제(Operations)**: 운영자의 액션을 기록/추적하고 문제 시 즉시 회수 가능.
+3) **증거 수집(Evidence)**: 개입 효과를 ROI로 검증하는 데이터 파이프라인.
+
+**4대 확장 모듈**
+- **증거 센터**: ROI 및 데이터 실효성 증명.
+- **반자동 CRM**: AI 추천 + 운영자 승인 루프.
+- **유연한 케어**: 코호트 방어/배지/스트릭 복구 등 케어 중심 전략.
+- **지연 대응**: 입금 지연 시 증거 기반 선지급/사후 검증.
 
 ---
 
@@ -99,3 +113,8 @@ Golden V2는 본사 마진 데이터를 기반으로 유저를 4가지 핵심 �
 ---
 > [!IMPORTANT]
 > 본 문서는 Golden V2 시스템의 헌법과도 같은 최상위 SOT입니다. 모든 하위 정책서(02)와 기술 명세서(03)는 본 문서의 정의를 엄격히 따라야 하며, 명칭 불일치 시 본 문서를 기준으로 정규화합니다. 상세한 구현 이력은 `Archive/v2_patch_execution_log_ko.md`를 참조하십시오.
+
+---
+
+## 변경 이력
+- v2.3 (2026-02-07): 핵심 3요소 및 4대 확장 모듈을 통합 반영.

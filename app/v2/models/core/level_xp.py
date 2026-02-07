@@ -12,7 +12,7 @@ class UserLevelProgress(Base):
 
     __tablename__ = "user_level_progress"
 
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), primary_key=True)
     level = Column(Integer, nullable=False, default=1)
     xp = Column(Integer, nullable=False, default=0)
     updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
@@ -40,7 +40,7 @@ class UserLevelRewardLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     level = Column(Integer, nullable=False)
     reward_type = Column(String(50), nullable=False)
     reward_payload = Column(JSON, nullable=True)
@@ -66,7 +66,7 @@ class UserXpEventLog(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("v2_user.id", ondelete="CASCADE"), nullable=False)
     source = Column(String(100), nullable=False)
     delta = Column(Integer, nullable=False)
     meta = Column(JSON, nullable=True)

@@ -53,7 +53,7 @@
 - `NOT_JOINED`
 
 ## 5. 근거 (Source)
-- 팀배틀 SoT: [docs/v2_specs/02_game/v2_team_battle_sot_ko.md](../../v2_specs/02_game/v2_team_battle_sot_ko.md)
+- 팀배틀 SoT: [docs/SOT/00_game/v2_team_battle_sot_ko.md](v2_team_battle_sot_ko.md)
 
 ## 6. 변경 이력
 - v1.0 (2026-01-19, GitHub Copilot): 최초 작성

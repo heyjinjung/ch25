@@ -37,7 +37,7 @@
 ---
 
 ## 3. 팀배틀 시스템 표준 (Team Battle Specs)
-*참조: [v2_team_battle_sot_ko.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/game/v2_team_battle_sot_ko.md), [v2_team_battle_rebuild_plan_v1.0.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/game/v2_team_battle_rebuild_plan_v1.0.md)*
+*참조: [v2_team_battle_sot_ko.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/game/v2_team_battle_sot_ko.md), [v2_team_battle_rebuild_plan_v1.0.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/game/v2_team_battle_rebuild_plan_v1.0.md), [v2_team_battle_api_contract_ko.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/00_game/v2_team_battle_api_contract_ko.md)*
 
 팀 단위 경쟁을 통해 보상을 획득하는 고도화된 게임 모드입니다.
 
@@ -52,6 +52,18 @@
 - **보상 기준**: 최소 **350점** 이상 기여 시 보상 참여 자격 부여.
 - **현행 보상**: 수동 지급(Manual) 전제로 `manual_coupon` 형태의 결과값 반환 (1등 30만, 2등 20만, 3등 5만).
 - **고급 보상 (Recent Depositors)**: 최근 3일 이내 입금 유저가 350점/500점 도달 시 금고 포인트 및 유료 티켓 번들 추가 자동 지급.
+
+### 3.3 Team Battle API 계약 (Contract)
+- **현재 시즌**: `GET /api/v2/team-battle/seasons/active`
+- **팀 목록**: `GET /api/v2/team-battle/teams`
+- **팀 가입/탈퇴**: `POST /api/v2/team-battle/teams/join`, `leave`
+- **내 팀 정보**: `GET /api/v2/team-battle/teams/me`
+- **리더보드**: `GET /api/v2/team-battle/teams/leaderboard`
+- **Admin**:
+    - 멤버 상세: `GET .../teams/{team_id}/members`
+    - 기여도 로그: `GET .../members/{user_id}/contributions`
+    - 가입일 수정: `PATCH .../members/{user_id}/joined-at`
+    - 기여도 조정: `POST .../contributions/adjust`
 
 ---
 

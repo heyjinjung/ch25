@@ -46,7 +46,8 @@ class V2LatencySurvivalService:
             raise HTTPException(status_code=400, detail="DUPLICATE_TX_ID")
             
         # 2. Rate Limit (Simple count check)
-        one_hour_ago = cls._kst_now() - timedelta(hours=1)
+        from datetime import datetime
+        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
         recent_count = db.query(V2UserDepositEvidence).filter(
             V2UserDepositEvidence.user_id == user_id,
             V2UserDepositEvidence.created_at >= one_hour_ago

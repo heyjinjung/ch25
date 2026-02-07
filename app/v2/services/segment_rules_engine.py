@@ -32,6 +32,7 @@ class SegmentContext:
     account_age_days: int | None = None
     is_telegram_linked: bool = False
     has_charge_history: bool = False
+    margin_total: float = 0.0
 
 
 def _coerce_number(value: Any) -> float | None:

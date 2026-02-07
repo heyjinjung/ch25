@@ -1,7 +1,7 @@
 # 02. Golden V2 Logic & Policy SoT (Master Expansion v2.2)
 
 **문서 타입**: Business Logic & Policy (Authoritative)
-**버전**: v2.2 (2026-02-06 - Massive Expansion)
+**버전**: v2.3 (2026-02-07 - Policy Integration)
 **상태**: ✅ Active SoT (Extreme Detail)
 
 ---
@@ -46,19 +46,23 @@
 
 ---
 
-## 3. 입금 지연 생존 전략 (Latency Survival v4.0)
+## 3. 입금 지연 생존 전략 (Latency Survival v4.1)
 
 외부 데이터 지연 시 유저의 게임 경험이 단절되지 않도록 하는 신뢰 기반 정책입니다.
 
 ### 3.1 증거 제출 및 선지급 (Provisional Grant)
 - **증거 요건**: 금액, 입금 날짜(오늘/어제), 시간, TX ID 필수 제출.
-- **즉시 지급**: 검증 전 `ROULETTE_TICKET x 5` 즉시 지급 및 혜택 한도 유예.
+- **즉시 지급**: 검증 전 `ROULETTE_TICKET x 3` 즉시 지급 및 혜택 한도 유예.
 - **제한(Rate Limit)**: 유저당 **시간당 최대 3회**까지만 신고 가능.
 
 ### 3.2 사후 검증 및 강력한 회수 (Strict Clawback)
 - **검증**: 관리자가 실제 입금 로그와 대조하여 `VERIFIED` 또는 `REJECTED` 처리.
 - **회수 공식**: `Total Clawback = 선지급액 + (선지급 재화를 사용하여 획득한 모든 당첨금)`.
 - **음수 잔액 (Negative Balance)**: 회수 시 잔액이 부족하면 음수(-)로 처리하여 추후 입금 시 자동 변제.
+- **부채 상태**: 회수 후 음수 잔액 유저는 `DEBTOR` 상태로 관리.
+
+### 3.3 제재 예외 (Benefit Suspension Bypass)
+- 최근 24시간 내 `PENDING` 또는 `PROVISIONAL` 증거가 존재하면 제재를 일시 해제.
 
 ---
 
@@ -90,3 +94,8 @@ $$ROI (\%) = \frac{(Actual Return - Intervention Cost)}{Intervention Cost} \time
 ---
 > [!CAUTION]
 > **음수 잔액(Negative Balance)** 발생 시 유저는 입금 전까지 모든 혜택 수령이 차단되며, 시스템은 이를 `DEBTOR` 상태로 관리합니다. 회수 로직 수정 시 반드시 `LatencySurvivalService`의 재귀적 당첨금 추적 로직을 검증하십시오.
+
+---
+
+## 변경 이력
+- v2.3 (2026-02-07): Latency Survival 선지급/제재 예외 정책 최신화.

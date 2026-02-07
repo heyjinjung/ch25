@@ -1,7 +1,7 @@
 # 04. Golden V2 Ops & Marketing SoT (Master Expansion v2.2)
 
 **문서 타입**: Operations & Marketing Guide (Authoritative)
-**버전**: v2.2 (2026-02-06 - Massive Expansion)
+**버전**: v2.3 (2026-02-07 - Ops Integration)
 **상태**: ✅ Active SoT (Extreme Detail)
 
 ---
@@ -41,9 +41,32 @@ Golden V2 마케팅의 핵심은 유저에게 "매일 접속해야 할 구체적
 2.  **Game Log 데이터**: 내부에서 집계된 실시간 배팅/당첨액 기반 수익.
 3.  **Revenue 배지**: 현재 화면에 표시된 데이터 소스(`HQ_MARGIN` vs `GAME_LOG`)를 명시적으로 상시 노출.
 
+### 2.3 Ops Log Schema (운영 로그 스키마)
+모든 Golden 개입 및 관리자 액션은 표준화된 로그 포맷을 따른다.
+
+| Field | Type | Description | Example |
+| :--- | :--- | :--- | :--- |
+| `log_id` | UUID | 로그 식별자 | `550e8400-e29b...` |
+| `timestamp` | ISO8601 | 발생 시각 (UTC) | `2026-01-19T12:00:00Z` |
+| `actor` | String | 행위자 | `SYSTEM:RETENTION_ENGINE` |
+| `target_user_id` | Int | 대상 유저 ID | `10045` |
+| `action_type` | Enum | 액션 유형 | `GIVE_REWARD` |
+| `trigger_id` | String | 발동 원인 규칙 ID | `TRG_LOSE_5` |
+| `payload` | JSON | 상세 내용 | `{"reward":"ticket_x1"}` |
+| `status` | Enum | 처리 결과 | `SUCCESS`, `FAIL`, `SKIPPED` |
+
+### 2.4 Dashboard Requirements (관제 요구사항)
+- **Real-time Status**: 활성 트리거/발동 횟수/지급 총액/에러 현황
+- **Intervention History**: 유저별 개입 이력 타임라인 및 사유 추적
+
 ---
 
 ## 3. 위기 관리 및 운영 보안 (Crisis & Abuse Control)
+
+### 3.0 Safety Mechanisms (안전장치)
+- **Circuit Breaker**: 보상 과다 지급/에러율 급증 시 자동 중단.
+- **Manual Override**: 운영자 Emergency Stop.
+- **Rollback Policy**: 미사용 보상 Soft 회수, 심각 시 Hard 복구.
 
 ### 3.1 어뷰징 감지 및 대응 (Abuse Radar)
 - **중복 신고 차단**: `Latency Report` 시 TX ID가 이미 존재하거나 처리 중인 경우 즉시 반려.
@@ -69,3 +92,8 @@ Golden V2는 **Human-in-the-loop** 원칙을 고수합니다.
 ---
 > [!TIP]
 > **Zeigarnik Effect**를 극대화하기 위해, `Latency Survival` 신고 완료 후 결과 대기 화면에서 실시간 "확인 진행률"을 시각화하십시오. 이는 사용자의 이탈을 막는 강력한 심리적 고리가 됩니다.
+
+---
+
+## 변경 이력
+- v2.3 (2026-02-07): Ops 로그/관제 요구사항 및 안전장치 통합.

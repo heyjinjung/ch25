@@ -85,6 +85,7 @@
 
 ## 6. 트러블슈팅 및 사후 분석 (RCA Summary)
 과거 발생한 주요 장애의 근본 원인을 기록하여 재발을 방지합니다.
+*참조: [v2_troubleshooting_game_token_issues_ko.md](file:///c:/Users/JAVIS/ch/ch25/docs/SOT/00_game/v2_troubleshooting_game_token_issues_ko.md)*
 
 | 이슈 | 근본 원인 (Root Cause) | 해결책 |
 | :--- | :--- | :--- |
@@ -92,6 +93,11 @@
 | **복권 수정 400 에러** | Pydantic 필수 필드 제약 조건과 프론트엔드 부분 전송 불일치 | 스키마 Optional 전환 및 부분 업데이트 로직 구현 |
 | **퍼즐 조각 미지급** | DB 설정 오류(amount=0) 및 레거시 토큰명(`PUZZLE_C`) 혼선 | DB 마이그레이션(0->1), 토큰명 정규화, 코드 내 조회 로직 통일 |
 | **레저 기록 정합성 실패** | Fallback 차감 시 코인/티켓 중복 기록 또는 누락 | 소비 경로 일원화 및 원자적 레저 로깅 보장 |
+| **티켓 차감 누락 (골드/다이아)** | FE(Legacy)와 BE(Standard) 토큰명 불일치 | FE 매핑(V2 Map) 및 BE 양방향 호환 조회 로직 적용 |
+| **Enum ValueError** | `GameTokenType`에 Legacy Alias(GOLD_KEY 등) 부재 | Enum에 Legacy Alias 추가 및 표준명 매핑 |
+| **Config 조회 실패** | DB에 Legacy 이름으로 저장됨 (코드 불일치) | 조회 시 `in_([STD, LEGACY])` 사용 및 DB 마이그레이션 |
+| **Premium 접근 우회** | 권한 체크 로직이 표준 토큰명만 검사 | 검사 대상에 Legacy 토큰명 포함 (`in` 연산자 확장) |
+| **Game Status 404** | `NO_FEATURE_TODAY` 응답이 404로 처리되어 FE 깨짐 | V1 Fallback 체인 적용 및 `Default Empty State` 반환 |
 
 ---
 

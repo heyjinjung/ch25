@@ -201,7 +201,18 @@ class V2RollbackService:
             if admin_id:
                 admin_memo += f":admin_{admin_id}"
 
-            # Placeholder - 실제 티켓 차감 로직 필요
+            # V2InventoryService를 통해 실제 차감 수행
+            from app.v2.models.core.game_wallet import GameTokenType
+            V2InventoryService.consume_wallet_tokens(
+                db,
+                v2_user_id=user_id,
+                token_type=GameTokenType(token_type),
+                amount=amount,
+                reason="ADMIN_ROLLBACK",
+                label=admin_memo,
+                allow_negative=True  # 회수 시 음수 허용 (Strict Policy)
+            )
+
             return {
                 "success": True,
                 "recovered": amount,
@@ -277,40 +288,44 @@ class V2RollbackService:
 
         result = RollbackResult()
 
-        # Placeholder - 실제 로그 조회 및 회수 로직 필요
-        # logs = db.query(V2GoldenInterventionLog).filter(
-        #     V2GoldenInterventionLog.ops_execution_id == execution_id,
-        #     V2GoldenInterventionLog.rolled_back_at.is_(None),
-        # ).all()
+        from app.v2.models.v2_golden_intervention_log import V2GoldenInterventionLog
+        
+        logs = db.query(V2GoldenInterventionLog).filter(
+            V2GoldenInterventionLog.status == execution_id, # ops_execution_id가 status 필드에 임시 저장되는 구조일 경우 대비 (또는 필드 확인 필요)
+            V2GoldenInterventionLog.status != "ROLLED_BACK",
+        ).all()
 
-        # for log in logs:
-        #     if log.reward_type == "VAULT":
-        #         result_item = V2RollbackService.rollback_vault(
-        #             db, log.user_id, log.amount, reason, admin_id
-        #         )
-        #     elif log.reward_type in ["ROULETTE", "DICE"]:
-        #         result_item = V2RollbackService.rollback_ticket(
-        #             db, log.user_id, log.reward_type, log.amount, reason, admin_id
-        #         )
-        #     else:
-        #         result.add_failed(log.user_id, log.amount, "UNSUPPORTED_TYPE")
-        #         continue
+        for log in logs:
+            # reward_json 분석
+            if not log.reward_json:
+                continue
 
-        #     if result_item["success"]:
-        #         if result_item.get("is_full"):
-        #             result.add_success(log.user_id, log.amount)
-        #         else:
-        #             result.add_partial(
-        #                 log.user_id,
-        #                 result_item["requested"],
-        #                 result_item["recovered"],
-        #             )
-        #         # 로그에 회수 시각 기록
-        #         log.rolled_back_at = datetime.now(timezone.utc)
-        #     else:
-        #         result.add_failed(log.user_id, log.amount, result_item["message"])
+            for reward_type, amount in log.reward_json.items():
+                if reward_type == "VAULT":
+                    result_item = V2RollbackService.rollback_vault(
+                        db, log.user_id, amount, reason, admin_id
+                    )
+                else:
+                    result_item = V2RollbackService.rollback_ticket(
+                        db, log.user_id, reward_type, amount, reason, admin_id
+                    )
 
-        # db.commit()
+                if result_item["success"]:
+                    if result_item.get("is_full"):
+                        result.add_success(log.user_id, amount)
+                    else:
+                        result.add_partial(
+                            log.user_id,
+                            result_item["requested"],
+                            result_item["recovered"],
+                        )
+                else:
+                    result.add_failed(log.user_id, amount, result_item["message"])
+
+            # 로그 상태 업데이트
+            log.status = "ROLLED_BACK"
+
+        db.commit()
 
         return result.to_dict()
 
