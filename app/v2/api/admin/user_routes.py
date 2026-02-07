@@ -1075,6 +1075,7 @@ def adjust_user_inventory(
         "PIZZA_GIFTICON_10000",
         "GOOGLE_GIFTICON_5000",
         "GOOGLE_GIFTICON_10000",
+        "GOLDEN_TICKET",
     }
     if clean_item_type not in allowed_inventory_types:
         raise HTTPException(status_code=400, detail="INVALID_INVENTORY_ITEM")

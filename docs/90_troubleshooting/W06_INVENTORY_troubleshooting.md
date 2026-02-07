@@ -52,6 +52,7 @@ WHERE `key`='v2_shop_products';
 **해결 방법 (로컬)**
 - 상점 응답/구매 경로에서 `GOLDEN_TICKET` → `GOLD_KEY_TICKET` 정규화.
 - 정규화 적용 위치: `app/v2/api/routes.py` (상점 상품 목록/구매 처리).
+- 관리자 인벤토리 정리: `GOLDEN_TICKET` 항목을 어드민 조정으로 차감 가능하도록 허용.
 
 **운영 조치**
 - 운영 서버 수정/재배포는 하지 않음 (요청에 따라 리젝트).
@@ -60,6 +61,7 @@ WHERE `key`='v2_shop_products';
 1) 로컬에서 `v2_shop_products`에 `reward_type=GOLDEN_TICKET` 설정.
 2) 구매 후 `user_game_wallet`의 `GOLD_KEY_TICKET` 증가 확인.
 3) `/api/v2/roulette/play` 정상 소모 및 로그 생성 확인.
+4) 어드민 인벤토리 조정에서 `GOLDEN_TICKET` 음수 차감 가능 확인.
 
 **🏷️ 태그**
 `P1` `SHOP` `INVENTORY` `ROULETTE` `LEGACY_ENUM`
