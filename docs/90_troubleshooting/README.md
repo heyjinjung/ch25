@@ -54,19 +54,59 @@ W{주차}_{도메인코드}_troubleshooting.md
 ```
 
 ### SoT 우선순위 (필수)
-1. **learned_ 최신 문서** (가장 우선)
-2. docs/v2_specs/ 내 최신 SoT 문서
-3. 레거시 문서/운영 메모
+1. 폴더 구조 규칙 (SOT)
+- `docs/SOT/00_INDEX.md` : 전체 인덱스
+- `docs/SOT/01_V2_DOCUMENTATION_RULES.md` : 문서 작성 규칙
+- `docs/SOT/00_admin/` : 어드민 관련 명세
+- `docs/SOT/00_api/` : API 계약 및 명세
+- `docs/SOT/00_auth/` : 인증 및 보안
+- `docs/SOT/00_db/` : DB 스키마 및 마이그레이션
+- `docs/SOT/00_deployment/` : 배포 및 인프라
+- `docs/SOT/00_design/` : 디자인 시스템 및 UI/UX
+- `docs/SOT/00_game/` : 게임 로직 및 확률
+- `docs/SOT/00_golden/` : Golden V2 시스템 및 정책
+- `docs/SOT/00_inventory/` : 인벤토리 및 아이템
+- `docs/SOT/00_level/` : 레벨 및 경험치 시스템
+- `docs/SOT/00_mission/` : 미션 및 업적
+- `docs/SOT/00_ops/` : 운영 및 모니터링
+- `docs/SOT/00_segment/` : 유저 세그먼트 정책
+- `docs/SOT/00_shop/` : 상점 및 구매 로직
+- `docs/SOT/00_test/` : 테스트 계획 및 리포트
+- `docs/SOT/00_user/` : 유저 데이터 및 프로필
+- `docs/SOT/00_vault/` : 금고 및 재화 관리
+- `docs/SOT/00_verification/` : 검증 및 QA
+2. 레거시 문서/운영 메모
 
 **참조 기준 문서**
 - 인덱스: [docs/v2_specs/00_sot_meta/00_INDEX.md](../00_sot_meta/00_INDEX.md)
-- learned 통합 컨텍스트: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
+
 
 **기술 기준문서 (필수 참조)**
-- learned_ 도메인별 최신 문서: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_](../00_sot_meta/00_A_sot_code_ops_chk/learned_)
-- learned 통합 컨텍스트: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md](../00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
-- 00_A_sot_code_ops_chk 전체 문서: [docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk](../00_sot_meta/00_A_sot_code_ops_chk)
-- 인덱스 최신 변경 이력: [docs/v2_specs/00_sot_meta/00_INDEX.md](../00_sot_meta/00_INDEX.md)
+- 도메인별 최신 문서: 
+1. 폴더 구조 규칙 (SOT)
+- `docs/SOT/00_INDEX.md` : 전체 인덱스
+- `docs/SOT/01_V2_DOCUMENTATION_RULES.md` : 문서 작성 규칙
+- `docs/SOT/00_admin/` : 어드민 관련 명세
+- `docs/SOT/00_api/` : API 계약 및 명세
+- `docs/SOT/00_auth/` : 인증 및 보안
+- `docs/SOT/00_db/` : DB 스키마 및 마이그레이션
+- `docs/SOT/00_deployment/` : 배포 및 인프라
+- `docs/SOT/00_design/` : 디자인 시스템 및 UI/UX
+- `docs/SOT/00_game/` : 게임 로직 및 확률
+- `docs/SOT/00_golden/` : Golden V2 시스템 및 정책
+- `docs/SOT/00_inventory/` : 인벤토리 및 아이템
+- `docs/SOT/00_level/` : 레벨 및 경험치 시스템
+- `docs/SOT/00_mission/` : 미션 및 업적
+- `docs/SOT/00_ops/` : 운영 및 모니터링
+- `docs/SOT/00_segment/` : 유저 세그먼트 정책
+- `docs/SOT/00_shop/` : 상점 및 구매 로직
+- `docs/SOT/00_test/` : 테스트 계획 및 리포트
+- `docs/SOT/00_user/` : 유저 데이터 및 프로필
+- `docs/SOT/00_vault/` : 금고 및 재화 관리
+- `docs/SOT/00_verification/` : 검증 및 QA
+- 통합 컨텍스트: C:\Users\JAVIS\ch\ch25\docs\SOT\00_con.md
+- 인덱스 최신 변경 이력: C:\Users\JAVIS\ch\ch25\docs\SOT\00_INDEX.md
+
 
 ---
 
@@ -149,7 +189,6 @@ W{주차}_{도메인코드}_troubleshooting.md
 
 ## 🗄️ 아카이브
 
-과거 주차 문서는 [archive/](./archive/) 폴더에서 확인하세요.
 
 ---
 

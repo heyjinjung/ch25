@@ -1,0 +1,50 @@
+
+## 사용자 요청사항 대응법 
+### 1. 기술 기준문서 : 각각의 기능 도메인에서 sot 확인하고 계획 세울것
+- C:\Users\JAVIS\ch\ch25\docs\SOT
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_admin
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_api
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_auth
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_db
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_deployment
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_design
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_game
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_golden
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_inventory
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_level
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_mission
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_ops
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_segment
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_shop
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_test
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_user
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_vault
+- C:\Users\JAVIS\ch\ch25\docs\SOT\00_verification
+
+2. 에러트리아지에 해당되는 경우가 아닌 신규기능 생성일시에는 
+    사용자가 제공한 기술문서들을 확인 후 기준값, 계획 수립후 실행한다
+3. 완료 후 트러블슈팅 문서 및 C:\Users\JAVIS\ch\ch25\docs\SOT\{도메인}\변경로그 에 
+    파일 생성하여 업데이트 한다 
+
+## 주의 
+관리자가 직접 깃 커밋/ 푸쉬하니까 넌 깃은 손대지 말것 
+
+### 트래블슈팅문서 업데이트 및 작성법
+C:\Users\JAVIS\ch\ch25\docs\90_troubleshooting\README.md
+
+### 기술 기준문서 : 각각의 기능 도메인에서 sot 확인하고 계획 세울것 
+C:\Users\JAVIS\ch\ch25\docs\SOT\{도메인}
+
+#### ssh 접속 실제 운영서버 확인 
+C:\Users\JAVIS\.ssh\id_ed25519_vultr roott@149.28.135.147
+ssh -i C:\Users\JAVIS\.ssh\id_ed25519_vultr root@149.28.135.147 "docker logs xmas-backend --tail=200"
+
+- 예시 
+다운로드: scp -i "C:\Users\JAVIS\.ssh\id_ed25519_vultr" root@149.28.135.147:/root/xmas_event_backup_YYYYMMDD_HHMMSS.sql.gz [ch25](http://_vscodecontentref_/1).
+적용(로컬): docker cp ... xmas-db:/tmp/prod_dump.sql.gz → docker exec xmas-db mysql -uroot -p2026 -e "DROP DATABASE...; CREATE DATABASE...;" → docker exec xmas-db sh -c "gunzip -c /tmp/prod_dump.sql.gz | mysql -uroot -p2026 xmas_event"
+
+----------
+https://opengameart.org/art-search-advanced?keys=&title=&field_art_tags_tid_op=or&field_art_tags_tid=&name=&field_art_type_tid%5B%5D=12&field_art_type_tid%5B%5D=13&sort_by=count&sort_order=DESC&items_per_page=24&Collection=
+
+ docker compose build --no-cache; docker compose up -d
+

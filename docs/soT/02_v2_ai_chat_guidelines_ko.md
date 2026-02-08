@@ -12,6 +12,12 @@
 1) **항상 한글로 응답**
 2) **작업 순서 준수**: PLAN → PATCH → VERIFY → SHIP
 3) **최신 SoT/learned_ 우선**: 인덱스 0번 섹션과 learned_ 최신 문서 기준
+    - **SOT 참조 경로**:
+      - `docs/SOT/00_admin`, `docs/SOT/00_api`, `docs/SOT/00_auth`, `docs/SOT/00_db`
+      - `docs/SOT/00_deployment`, `docs/SOT/00_design`, `docs/SOT/00_game`, `docs/SOT/00_golden`
+      - `docs/SOT/00_inventory`, `docs/SOT/00_level`, `docs/SOT/00_mission`, `docs/SOT/00_ops`
+      - `docs/SOT/00_segment`, `docs/SOT/00_shop`, `docs/SOT/00_test`, `docs/SOT/00_user`
+      - `docs/SOT/00_vault`, `docs/SOT/00_verification`
 4) **Brainstorming 스킬 적용**: 창의적/구조적 작업 전 반드시 설계/이해락 절차 선행
 5) **트러블슈팅/증거 기반 분석**: 모든 문제는 증거(로그, DB 제약조건) 기반으로 정의/분석
 6) **설계/결정로그/문서화**: 모든 설계/결정은 Markdown 등 내구성 있는 포맷으로 기록

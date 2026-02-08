@@ -32,7 +32,26 @@ XMAS Event System에서 AI가 지속적으로 개발 작업을 수행할 때, �
 
 ## 5. 프로젝트 규칙 (핵심 SoT)
 ### 5.1 경제/보상 SoT
-- sot 문서를 준수한다
+- 아래 SOT 경로의 문서를 준수한다:
+  - C:\Users\JAVIS\ch\ch25\docs\SOT
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_admin
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_api
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_auth
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_db
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_deployment
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_design
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_game
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_golden
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_inventory
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_level
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_mission
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_ops
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_segment
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_shop
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_test
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_user
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_vault
+  - C:\Users\JAVIS\ch\ch25\docs\SOT\00_verification
 
 ### 5.2 프록시/Rate Limit/안전
 - Real IP 신뢰가 필수(ProxyHeadersMiddleware + Nginx 전달).

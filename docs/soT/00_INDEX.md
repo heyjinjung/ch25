@@ -1,238 +1,134 @@
 문서 타입: 인덱스
+버전: v2.5
+작성일: 2026-02-08
+작성자: Antigravity Agent
+state: SoT (Living Document)
 
-## 0. 핵심/최신 일관성 체크아웃 (Code/Ops Consistency)
+# V2 SOT (Source of Truth) Index
 
----
-### [2026-02-04 V2 Legacy Purge & Migration 완료]
-- **Legacy Purge**: `app/api`, `models`, `services`, `schemas`, `utils` 등 레거시 폴더 의존성 완전 제거 (Isolated)
-- **Service Migration**:
-  - `VaultService`: `record_game_play_earn_event` 등 핵심 로직 V2 이식, Bridge 제거
-  - `Ch25EventService`: V2 Native 구현, `ch25_event_worker` 리팩토링 (`V2User` 사용)
-- **Core Update**: `main.py` 레거시 라우터/미들웨어 제거, Pure V2 모드 전환
-- **문서**: [V2 Legacy Purge 리포트](docs/v2_specs/90_troubleshooting/20260204_legacy_purge_and_v2_migration_completion.md)
+## 00. AI Rules & Guidelines (최우선 준수)
+- [00_v2_ai_critical_rules_ko.md](00_v2_ai_critical_rules_ko.md)
+- [02_v2_ai_chat_guidelines_ko.md](02_v2_ai_chat_guidelines_ko.md)
+- [03_v2_ai_base_guide_ko.md](03_v2_ai_base_guide_ko.md)
 
-### [2026-02-04 V2 SoT 통합 및 붙여넣기 Import]
-- **V2 SoT 통합 완료**: 레벨/XP/입금 데이터를 `v2_user` 테이블로 단일화
-  - `v2_user.level`, `v2_user.xp` (신규), `v2_user.total_charge_amount` → **V2 SoT**
-  - `user_level_progress`, `external_ranking_data` → **레거시 동기화 (읽기 전용)**
-  - 마이그레이션: `20260204_0400_add_xp_to_v2_user.py`
-- **붙여넣기 Import**: CSV 업로드 없이 클립보드 붙여넣기로 데이터 반입
-  - 데일리 입금 로그: 입금 → 레벨 → 보상 → 세그먼트 순서 처리
-  - 게임 로그: V2GameLog → Analytics → 위기 감지
-  - 시간 기반 필터링: DB 최신 기록 이후만 처리
-- **세그먼트 시스템 감사**: CRM 세그먼트 키 통일 (NEW/COMMON/VIP/WHALE/AT_RISK/WINNER)
-- **어드민 회수 로그 분류 개선**: 티켓/인벤토리 회수 로그를 REVOKE로 분류 (ADMIN 라벨/related_id 기반)
-- **금고 보상 적립 로그 정합성**: 보상 적립 경로를 VaultLedger 기록 경로로 통합
-- **문서**:
-  - [V2 SoT 통합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)
-  - [세그먼트 감사](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)
-  - [Cherry Picker 설계](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260204_cherry_picker_segment_design.md)
+## 00. Admin (관리자 시스템)
+- [01.admin.md](00_admin/01.admin.md)
+- [v2_sot_admin_ko.md](00_admin/v2_sot_admin_ko.md)
+- [Legacy/Archive](00_admin/아카이브/)
 
-### [2026-01-30 운영 서버 검증 결과]
-- **검증 시간**: 2026-01-30 17:45~17:51 KST
-- **검증 방법**: SSH `root@149.28.135.147` 접속 후 docker/curl 명령 실행
+## 00. API (인터페이스 계약)
+- [v2_api_sot_master_ko.md](00_api/v2_api_sot_master_ko.md)
+- [v2_api_sot_master2_ko.md](00_api/v2_api_sot_master2_ko.md)
+- [v2_api_sot_master3_ko.md](00_api/v2_api_sot_master3_ko.md)
 
-| 항목 | 상태 | 검증 결과 |
-|------|------|-----------|
-| API Health (`/health`) | ✅ OK | "healthy" |
-| V2 API Health (`/api/v2/health`) | ✅ OK | `{"status":"ok"}` |
-| Telegram Bot | ✅ OK | Webhook 설정 완료, Application started |
-| Redis | ✅ OK | PONG 응답 |
-| DEV Login | ✅ 차단됨 | 404 Not Found (엔드포인트 없음) |
-| Celery Worker/Beat | ⚠️ 완화됨 | 헬스체크/pidfile 수정 (운영 배포 필요) |
-| V1 Auth | ⚠️ 완화됨 | `auth.py` password_hash 가드 추가 (운영 배포 필요) |
-| Circuit Breaker | ⏳ 대기 | 아직 사용 전 (키 없음) |
+## 00. Auth (인증 및 보안)
+- [v2_sot_auth_ko.md](00_auth/v2_sot_auth_ko.md)
+- [v2_troubleshooting_20260120_permission_restriction_ko.md](00_auth/v2_troubleshooting_20260120_permission_restriction_ko.md)
 
-**미해결 이슈**:
-- `auth.py:64`: V1 Auth 라우터 password_hash 가드 적용 완료(로컬), 운영 배포 필요
-- Celery healthcheck: pidfile 기준 헬스체크로 수정 완료(로컬), 운영 배포 필요
+## 00. DB (데이터베이스)
+- [v2_db_sot1.md](00_db/v2_db_sot1.md)
+- [v2_db_sot2.md](00_db/v2_db_sot2.md)
+- [v2_troubleshooting_20260120_alembic_legacy_ko.md](00_db/v2_troubleshooting_20260120_alembic_legacy_ko.md)
 
-### [2026-01-30 배포 트러블슈팅 및 저장소 이관]
-- **저장소 이관 완료**: `heyjinjung/ch25` → `jm956-cc/202601_app` (전체 브랜치/태그/히스토리 이관)
-- **배포 이슈 해결** (deploy.yml, docker-compose.yml, migration 수정):
-  - Dockerfile SCP 복사 누락 → `Dockerfile.backend`, `Dockerfile.frontend` 추가
-  - celery-worker/beat 빌드 실패 → `image: ghcr.io/.../xmas-backend:latest` 추가
-  - 프로덕션 볼륨 마운트 오류 → 개발용 볼륨을 `docker-compose.override.yml`로 분리
-  - MySQL `ADD COLUMN IF NOT EXISTS` 미지원 → `column_exists()` 함수로 수정
-  - Mission Stats 500 에러 → 잘못된 `type_descriptor` 코드 제거
-- **목업 데이터 정리**: 수익/지출, 재고 데이터 로컬 DB에서 삭제
-- **트러블슈팅 문서**: [0000_2026_v2_deployment_troubleshooting_guide_ko.md](docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md)
+## 00. Deployment (배포)
+- [v2_deployment_sot_ko.md](00_deployment/v2_deployment_sot_ko.md)
+- [v2_troubleshooting_20260120_backend_runtime_ko.md](00_deployment/v2_troubleshooting_20260120_backend_runtime_ko.md)
 
-### [2026-01-28 금고 정책 SoT 승격 내역]
-- learned_/vault/20260128_vault_balance_sync_update.md: V1/V2 금고 잔액 동기화 정책, 서비스/테스트 케이스 개선, pytest 통과
-- learned_/vault/20260127_vault_today_spent_shop_purchase_update.md, learned_/vault/20260127_vault_daily_spent_tracks_v2_shop_purchase.md: 상점 구매 시 vault_spent_today/total 누적/리셋, 원장 기록, V2User 동기화, 테스트 케이스 보강
-- learned_/vault/20260127_vault_withdrawal_modal_condition_delivery_fix.md: API 응답 필드 정규화, 프론트 타입/어댑터 보강, UI 검증
-- learned_/vault/20260127_dice_vault_deduction_fix.md: 게임 결과별 금고 차감 정책, 서비스 로직/테스트 케이스 보강
-각 diff의 적용일자/핫픽스/테스트 결과를 SoT 변경 이력에 기록함
-- **통합 컨텍스트**: [learned_/00_con.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/00_con.md)
-- **도메인별 최신 Learned SoT**:
-  - **Auth/User**: [02.user.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/02.user.md) | [User 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/user_consistency_guide.md) | [잠재유저 매칭](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/user/20260202_prospect_linking_implementation.md)
-  - **Level**: [07.level.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/07.level.md) | **[V2 SoT 통합 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/level/20260204_v2_sot_consolidation.md)**
-  - **Admin**: [01.admin.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.admin.md) | [Admin 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/admin/01.adminguide.md)
-  - **Game**: [03.game.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/03.game.md) | [금고 정책](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/01_strict_vault_policy.md) | [복권 상금 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/game/20260127_lottery_prize_partial_update_fix.md)
-  - **Inventory**: [05.inventory.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory.md) | [인벤 패치 가이드](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/inventory/05.inventory_patch_guide.md)
-  - **Mission**: [09.mission.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/09.mission.md) | [빌더 규칙](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/mission/20260127_mission_admin_builder_rules_update.md)
-  - **Shop**: [06.shop.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/06.shop.md) | [상점 비용 수정](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260127_shop_cost_type_fix.md) | **[CostType 확장 (2026-02-05)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260205_shop_cost_type_expansion.md)**
-  - **Vault**: [08.vault.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/08.vault.md) | [금고 동기화](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/vault/20260128_vault_balance_sync_update.md)
-  - **Team Battle**: [04.team_battle.md](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/teambattle/04.team_battle.md)
-  - **Golden/Import**: [HQ Margin 종합](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/12.hq_margin_csv_import_comprehensive.md) | **[세그먼트 감사 (2026-02-04)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/20260204_segment_mapping_audit.md)**
-  - **Ops/Growth**: [W1/W2 운영 자동화·트래킹](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260203_ops_marketing_w1_w2_automation_tracking.md)
-  - **Ops/Growth**: [퍼널/마찰/생존율 로그 요구사항(2026-02-06)](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/ops/20260206_funnel_friction_activity_logging_requirements.md)
+## 00. Design (디자인/UX)
+- [v2_admin_master_plan_ko.md](00_design/v2_admin_master_plan_ko.md)
+- [v2_frontend_master_plan_ko.md](00_design/v2_frontend_master_plan_ko.md)
+- [v2_prompting_guide_ko.md](00_design/v2_prompting_guide_ko.md)
+- [v2_admin_pages_list.md](00_design/V2_admin_pages_list.md)
+- [v2_design_analysis_report_ko.md](00_design/v2_design_analysis_report_ko.md)
+- [v2_error_messages_audit.md](00_design/v2_error_messages_audit.md)
+- [v2_frontend_routing_sot_ko.md](00_design/v2_frontend_routing_sot_ko.md)
+- [roulette_figma_svg_manual_v2_20260125.md](00_design/roulette_figma_svg_manual_v2_20260125.md)
+- [v2_troubleshooting_20260120_frontend_startup_ko.md](00_design/v2_troubleshooting_20260120_frontend_startup_ko.md)
+- [v2_troubleshooting_20260120_undefined_error_ko.md](00_design/v2_troubleshooting_20260120_undefined_error_ko.md)
 
-  ### [2026-02-05 지출 원장 + HQ 환전 붙여넣기 Import]
-  - **Spending Ledger**: v2_spending_ledger + HQ 환전 로그 추가
-  - **Import**: 붙여넣기 환전 Import + 지출 기록 연동
-  - **문서**: [지출 원장/환전 Import 구현 기록](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/golden/20260205_spending_ledger_withdrawal_import_impl.md)
+## 00. Game (게임 로직)
+- [v2_game_sot_master_ko.md](00_game/v2_game_sot_master_ko.md)
+- [v2_game_sot_master2_ko.md](00_game/v2_game_sot_master2_ko.md)
+- [v2_game_sot_master3_ko.md](00_game/v2_game_sot_master3_ko.md)
+- [v2_game_sot_master4_ko.md](00_game/v2_game_sot_master4_ko.md)
+- [v2_game_sot_master5_ko.md](00_game/v2_game_sot_master5_ko.md)
+- [v2_team_battle_sot_ko.md](00_game/v2_team_battle_sot_ko.md)
+- [v2_troubleshooting_game_token_issues_ko.md](00_game/v2_troubleshooting_game_token_issues_ko.md)
 
-### [2026-02-05 상점 결제재화(CostType) 확장]
-  - **CostType 확장**: VAULT/DIAMOND 외 모든 게임 토큰으로 결제 가능
-  - **지원 타입**: DIAMOND, ROULETTE_TICKET, DICE_TICKET, LOTTERY_TICKET, GOLD_KEY_TICKET, DIAMOND_TICKET, TRIAL_TICKET, GOLD_KEY_FRAGMENT, DIAMOND_FRAGMENT, PUZZLE_C1~M
-  - **제외**: 기프티콘 (최종 상품으로만 사용)
-  - **수정 파일**: `v2_constants.py`, `shop_service.py`, `v2_shop_exchange.py`
-  - **문서**: [CostType 확장 구현](docs/v2_specs/00_sot_meta/00_A_sot_code_ops_chk/learned_/shop/20260205_shop_cost_type_expansion.md)
+## 00. Golden (골든 시스템 V2)
+- [01_golden_v2_system_core_sot_ko.md](00_golden/01_golden_v2_system_core_sot_ko.md)
+- [02_golden_v2_logic_and_policy_sot_ko.md](00_golden/02_golden_v2_logic_and_policy_sot_ko.md)
+- [03_golden_v2_technical_spec_sot_ko.md](00_golden/03_golden_v2_technical_spec_sot_ko.md)
+- [04_golden_v2_ops_and_marketing_sot_ko.md](00_golden/04_golden_v2_ops_and_marketing_sot_ko.md)
+- [v2_latency_survival_master_spec_ko.md](00_golden/v2_latency_survival_master_spec_ko.md)
+- [v2_golden_realtime_monitoring_guide_ko.md](00_golden/v2_golden_realtime_monitoring_guide_ko.md)
+- [learned_hq_margin_max_token_analysis.md](00_golden/learned_hq_margin_max_token_analysis.md)
 
-## 1. 도메인별 기본 SoT (Legacy/Standard)
-- 팀배틀 SoT: docs/v2_specs/02_game/v2_team_battle_sot_ko.md
-- 티켓 Enum SoT: docs/v2_specs/01_core/v2_ticket_enum_sot_ko.md
-- 티켓 Enum 코드 정합 SoT: docs/v2_specs/01_core/v2_ticket_enum_code_alignment_sot_ko.md
-- 레벨포인트 SoT: docs/v2_specs/01_core/v2_level_point_sot_ko.md
-- 레벨포인트 저장 필드 SoT: docs/v2_specs/01_core/v2_level_point_storage_sot_ko.md
-- Redis 키/채널 SoT: docs/v2_specs/01_core/v2_redis_keys_channels_sot_ko.md
-- 보상 매핑 SoT: docs/v2_specs/01_core/v2_reward_mapping_sot_ko.md
-- RewardType 표준 SoT: docs/v2_specs/01_core/v2_reward_type_standard_sot_ko.md
-- 금고 용어 SoT: docs/v2_specs/01_core/v2_vault_glossary_sot_ko.md
-- V2 User SoT: docs/v2_specs/01_core/v2_user_sot_ko.md
-- 레벨 보상표 SoT: docs/v2_specs/01_core/v2_level_reward_table_sot_ko.md
-- 기프티콘 네이밍 SoT: docs/v2_specs/01_core/v2_gifticon_naming_sot_ko.md
-- 만능티켓 변환 SoT: docs/v2_specs/01_core/v2_ticket_conversion_sot_ko.md
-- 레벨포인트 확장 SoT: docs/v2_specs/01_core/v2_level_point_extension_sot_ko.md
-- **아이템/인벤토리 SoT**: docs/v2_specs/01_core/v2_item_inventory_sot_ko.md
-- **상점/교환소 정책 SoT**: docs/v2_specs/01_core/v2_shop_exchange_policy_sot_ko.md
-- 상점/인벤토리 서비스 설계: docs/v2_specs/01_core/v2_shop_inventory_service_design_ko.md
-- 상점 상품 UI Config SoT: docs/v2_specs/05_ops/v2_shop_products_ui_config_sot_ko.md
-- **V1→V2 상점 상품 변환 가이드**: docs/v2_specs/99_verification/v1_to_v2_shop_products_conversion_ko.md
-- **V1->V2 상점 이관 검증 보고서**: docs/v2_specs/99_verification/sot_verification_report_shop.md
-- 어드민 게임 설정 스키마 SoT: docs/v2_specs/02_game/v2_admin_game_config_schema_ko.md
-- 검증/세그먼트 So# Tasks
+## 00. Inventory (아이템/인벤토리)
+- [01_v2_economy_asset_storage_sot_ko.md](00_inventory/정본/01_v2_economy_asset_storage_sot_ko.md)
+- [02_v2_reward_type_and_delivery_routing_sot_ko.md](00_inventory/정본/02_v2_reward_type_and_delivery_routing_sot_ko.md)
+- [03_v2_game_token_type_sot_ko.md](00_inventory/정본/03_v2_game_token_type_sot_ko.md)
+- [04_v2_inventory_item_type_and_gifticon_sot_ko.md](00_inventory/정본/04_v2_inventory_item_type_and_gifticon_sot_ko.md)
+- [05_v2_ticket_enum_and_legacy_mapping_sot_ko.md](00_inventory/정본/05_v2_ticket_enum_and_legacy_mapping_sot_ko.md)
 
-- [x] Consolidate Monitoring & Analytics menu structure
-- [x] Fix HQ Margin CSV import encoding issues
-- [x] Improve User Detail Drawer with Vault and Game Logs
-- [x] Fix GameLogItemDto key error (segment_index -> segment_id)
-# Tasks
+## 00. Level (레벨 시스템)
+- [01_v2_level_domain_overview_sot_ko.md](00_level/01_v2_level_domain_overview_sot_ko.md)
+- [02_v2_level_xp_storage_sync_sot_ko.md](00_level/02_v2_level_xp_storage_sync_sot_ko.md)
+- [03_v2_level_point_earning_rules_sot_ko.md](00_level/03_v2_level_point_earning_rules_sot_ko.md)
+- [04_v2_level_reward_table_and_db_sot_ko.md](00_level/04_v2_level_reward_table_and_db_sot_ko.md)
+- [05_v2_admin_paste_import_deposit_ops_sot_ko.md](00_level/05_v2_admin_paste_import_deposit_ops_sot_ko.md)
 
-- [x] Consolidate Monitoring & Analytics menu structure
-- [x] Fix HQ Margin CSV import encoding issues
-- [x] Improve User Detail Drawer with Vault and Game Logs
-- [x] Fix GameLogItemDto key error (segment_index -> segment_id)
-- [x] Localize User Inventory Item Names
-  - [x] Update `InventoryPage.tsx` to use `getRewardItemLabel`
-  - [x] Verify Korean item names in User Inventory Page
-- [ ] Final verification and documentation update
-- 게임 API 계약: docs/v2_specs/03_api/v2_game_api_contract_ko.md
-- Auth/User API 계약: docs/v2_specs/03_api/v2_auth_user_api_contract_ko.md
-- Mission/Streak API 계약: docs/v2_specs/03_api/v2_mission_streak_api_contract_ko.md
-- Inventory/Shop API 계약: docs/v2_specs/03_api/v2_inventory_shop_api_contract_ko.md
-- **지갑/금고/인벤 로그 라우터 요약**: docs/v2_specs/03_api/v2_economy_asset_log_routes_ko_v1.0.md
-- Team Battle API 계약: docs/v2_specs/03_api/v2_team_battle_api_contract_ko.md
-- Admin/Ops API 계약: docs/v2_specs/03_api/v2_admin_ops_api_contract_ko.md
-- Golden V2 API 계약: docs/v2_specs/07_golden/v2_golden_api_contract_ko.md
-- Ticket Zero API 계약: docs/v2_specs/03_api/v2_ticket_zero_api_contract_ko.md
-- **V1 Legacy API 감사**: docs/v2_specs/03_api/v1_legacy_api_list_ko.md (보안감사 포함)
-- **V1 API 불일치 리포트**: docs/v2_specs/03_api/v1_api_discrepancy_report_ko.md (Deep Audit)
-- 미션 용어 SoT: docs/v2_specs/02_game/v2_mission_glossary_sot_ko.md
-- 게임 엔진 SoT: docs/v2_specs/02_game/v2_game_engine_sot_ko.md
-- **신규 유저 미션 로직 SoT**: docs/v2_specs/02_game/v2_new_user_mission_logic_sot_ko.md
-- 게임 액션 스키마 SoT: docs/v2_specs/02_game/v2_game_action_schema_sot_ko.md
-- 게임 엔진 표준화 설계: docs/v2_specs/02_game/v2_game_engine_standardization_design_ko.md
-- Ops Plan 실행 스키마 SoT: docs/v2_specs/05_ops/v2_ops_plan_execution_schema_sot_ko.md
-- Ops Action 용어집 SoT: docs/v2_specs/05_ops/v2_ops_action_glossary_sot_ko.md
-- 운영 메시지 정책 SoT: docs/v2_specs/05_ops/v2_admin_message_policy_sot_ko.md
-- Ops 실행 결과 API 계약: docs/v2_specs/05_ops/v2_ops_execution_api_contract_ko.md
-- 강력한 금고 정책 SoT: docs/v2_specs/01_core/v2_strict_vault_policy_sot_ko.md
-- 프로그레션/레벨 스키마 SoT: docs/v2_specs/01_core/v2_progression_schema_ko.md
-- **Golden System 정의서**: docs/v2_specs/07_golden/golden_v2_system_definition_ko.md
-- **Golden 개입 로직 SoT**: docs/v2_specs/07_golden/golden_v2_intervention_logic_ko.md
-- **Golden Ops 로직 SoT**: docs/v2_specs/07_golden/golden_v2_operational_logic_ko.md
-- **골든아워 정책 SoT**: docs/v2_specs/07_golden/v2_golden_hour_policy_sot_ko.md
-- **HQ Margin → CC 입금 자동 반영 설계**: docs/v2_specs/07_golden/v2_golden_hq_margin_cc_deposit_auto_reflection_design_ko.md
-- **출석 스트릭 로직 SoT**: docs/v2_specs/02_game/v2_attendance_streak_logic_sot_ko.md
-- **티켓 제로(구조) SoT**: docs/v2_specs/02_game/v2_ticket_zero_policy_sot_ko.md
-- **Vault 통합 SoT (docs/SOT/shop)**:
-  - docs/SOT/shop/01_vault_overview_sot_ko.md
-  - docs/SOT/shop/02_vault_policy_withdrawal_sot_ko.md
-  - docs/SOT/shop/03_vault_ledger_spend_earn_sot_ko.md
-  - docs/SOT/shop/04_vault_shop_integration_sot_ko.md
-  - docs/SOT/shop/05_vault_ops_troubleshooting_sot_ko.md
-- V2 DB 베이스라인 스냅샷: docs/v2_specs/04_db/v2_db_baseline_snapshot_ko.md
-- V2 DB 레벨 보상 테이블: docs/v2_specs/04_db/v2_db_level_reward_table_ko.md
-- V2 DB User: docs/v2_specs/04_db/v2_db_user_ko.md
-- V2 DB 티켓 전환 정책: docs/v2_specs/04_db/v2_db_ticket_conversion_policy_ko.md
-- V2 DB 상점 주문 로그: docs/v2_specs/04_db/v2_db_shop_order_ko.md
-- V2 DB 교환소 로그: docs/v2_specs/04_db/v2_db_exchange_log_ko.md
-- V2 DB 티켓 제로 로그: docs/v2_specs/04_db/v2_db_ticket_zero_log_ko.md
-- V2 DB Ops 실행 결과: docs/v2_specs/04_db/v2_db_ops_execution_result_ko.md
-- **CC 입금/외부 랭킹 SoT**: docs/v2_specs/01_core/v2_cc_deposit_sot_ko.md
-- V2 DB 룰렛: docs/v2_specs/04_db/v2_db_roulette_ko.md
-- V2 DB 주사위: docs/v2_specs/04_db/v2_db_dice_ko.md
-- V2 DB 복권: docs/v2_specs/04_db/v2_db_lottery_ko.md
-- V2 DB Golden 데이터 맵: docs/v2_specs/07_golden/v2_db_golden_data_map_ko.md
-- V2 DB 세그먼트 규칙: docs/v2_specs/04_db/v2_db_segment_rule_ko.md
-- V2 DB 유저 세그먼트: docs/v2_specs/04_db/v2_db_user_segment_ko.md
-- V2 DB 관리자 메시지: docs/v2_specs/04_db/v2_db_admin_message_ko.md
-- V2 DB 관리자 메시지 인박스: docs/v2_specs/04_db/v2_db_admin_message_inbox_ko.md
-- V2 DB 스냅샷 재생성 정책: docs/v2_specs/04_db/v2_db_snapshot_regeneration_policy_ko.md
+## 00. Mission (미션 시스템)
+- [00_mission_sot_master.md](00_mission/00_mission_sot_master.md)
+- [01_mission_api_contracts.md](00_mission/01_mission_api_contracts.md)
+- [02_mission_admin_builder.md](00_mission/02_mission_admin_builder.md)
+- [03_mission_ops_verification.md](00_mission/03_mission_ops_verification.md)
+- [04_mission_integrations.md](00_mission/04_mission_integrations.md)
 
-## 5. Troubleshooting
-- (DB/Alembic) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_alembic_legacy_ko.md
-- (Backend Runtime) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_backend_runtime_ko.md
-- (Frontend Startup) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_frontend_startup_ko.md
-- (Admin UI Undefined Error) docs/v2_specs/90_troubleshooting/v2_troubleshooting_20260120_undefined_error_ko.md
-- (Ticket/Inventory Search)# Localization: User Inventory Item Names
+## 00. Ops (운영)
+- [v2_system_ops_sot_ko.md](00_ops/v2_system_ops_sot_ko.md)
+- [v2_csv_import_pipeline_guide_ko.md](00_ops/v2_csv_import_pipeline_guide_ko.md)
+- [20260130_error_triage_checklist.md](00_ops/20260130_error_triage_checklist.md)
 
-Implement Korean localization for inventory item names in the user-facing inventory page by adhering to SOT standards.
+## 00. Segment (세그먼트)
+- [01_segment_policy_sot_ko.md](00_segment/01_segment_policy_sot_ko.md)
+- [02_segment_ops_db_consistency_ko.md](00_segment/02_segment_ops_db_consistency_ko.md)
 
-## Proposed Changes
+## 00. Shop (상점)
+- [01_shop_overview_policy_sot_ko.md](00_shop/01_shop_overview_policy_sot_ko.md)
+- [02_shop_products_ui_config_sot_ko.md](00_shop/02_shop_products_ui_config_sot_ko.md)
+- [03_shop_purchase_flow_integrity_sot_ko.md](00_shop/03_shop_purchase_flow_integrity_sot_ko.md)
+- [04_exchange_inventory_mapping_sot_ko.md](00_shop/04_exchange_inventory_mapping_sot_ko.md)
+- [05_shop_ops_risk_troubleshooting_sot_ko.md](00_shop/05_shop_ops_risk_troubleshooting_sot_ko.md)
 
-### [User Frontend]
+## 00. Test (테스트 결과)
+- [20260207_test_failure_analysis_report.md](00_test/20260207_test_failure_analysis_report.md)
+- [20260207_test_fix_checklist.md](00_test/20260207_test_fix_checklist.md)
+- [20260207_test_rerun_evidence_report.md](00_test/20260207_test_rerun_evidence_report.md)
+- [README.md](00_test/README.md)
 
-#### [MODIFY] [InventoryPage.tsx](file:///C:/Users/JAVIS/ch/ch25/src/v2/pages/inventory/InventoryPage.tsx)
-- Replace local `ITEM_NAME_MAP` and `getFriendlyItemName` with `getRewardItemLabel` from `src/v2/constants/rewardItems.ts`.
-- Ensure all item types (including vouchers and gifticons) are correctly localized using the centralized mapping.
-md
-- (CSV Import) docs/v2_specs/90_troubleshooting/v2_csv_import_pipeline_guide_ko.md
-- **(배포 트러블슈팅 가이드)** docs/v2_specs/00_sot_meta/0000_2026_v2_deployment_troubleshooting_guide_ko.md
+## 00. User (유저)
+- [01_user_sot_overview_ko.md](00_user/01_user_sot_overview_ko.md)
+- [02_user_identity_auth_sync_ko.md](00_user/02_user_identity_auth_sync_ko.md)
+- [03_user_db_schema_integrity_ko.md](00_user/03_user_db_schema_integrity_ko.md)
+- [04_user_segment_hq_linking_ko.md](00_user/04_user_segment_hq_linking_ko.md)
+- [05_user_ops_verify_troubleshooting_ko.md](00_user/05_user_ops_verify_troubleshooting_ko.md)
 
-## 5.1 V2 Admin 라우터 모듈(코드 맵)
-- 라우터 엔트리: app/v2/api/routes.py (admin_router include)
-- Admin 라우터 집계: app/v2/api/admin/__init__.py (prefix=/admin)
-- 모듈 라우터
-	- app/v2/api/admin/economy_routes.py
-	- app/v2/api/admin/game_config_routes.py
-	- app/v2/api/admin/inventory_routes.py
-	- app/v2/api/admin/level_routes.py
-	- app/v2/api/admin/marketing_routes.py
-	- app/v2/api/admin/mission_routes.py
-	- app/v2/api/admin/ops_routes.py
-	- app/v2/api/admin/segment_routes.py
-	- app/v2/api/admin/user_routes.py
-	- app/v2/api/admin/vault_routes.py
-	- app/v2/api/admin/csv_import_routes.py
-	- app/v2/api/admin_cc_deposit.py
-	- app/v2/api/admin_ops_plan.py
+## 00. Vault (금고)
+- [01_vault_policy_sot_ko.md](00_vault/01_vault_policy_sot_ko.md)
+- [02_vault_database_sot_ko.md](00_vault/02_vault_database_sot_ko.md)
+- [03_vault_service_logic_sot_ko.md](00_vault/03_vault_service_logic_sot_ko.md)
+- [04_vault_api_contract_sot_ko.md](00_vault/04_vault_api_contract_sot_ko.md)
+- [05_vault_operations_troubleshooting_sot_ko.md](00_vault/05_vault_operations_troubleshooting_sot_ko.md)
 
-## 6. 운영/검증 (QA)
-- 프론트엔드 마스터 플랜: docs/v2_specs/06_design/v2_frontend_master_plan_ko.md
-- 어드민 마스터 플랜: docs/v2_specs/06_design/v2_admin_master_plan_ko.md
-- **GSAP 레퍼런스**: docs/v2_specs/06_design/v2_gsap_reference_ko.md
-
-- **V2 어드민 개발/테스트 가이드(로컬 런북)**: docs/06_ops/admin/01_v2_admin_dev_test_guide_ko_v1.0.md
-
-- [ ] 문서 분류/링크 최신화
-- [ ] SoT 우선순위 준수
+## 00. Verification (검증/트러블슈팅 Master)
+- [master_v2_verification_standard.md](00_verification/master_v2_verification_standard.md)
+- [master_v2_troubleshooting_guide.md](00_verification/master_v2_troubleshooting_guide.md)
+- [master_v2_test_evidence_archive.md](00_verification/master_v2_test_evidence_archive.md)
 
 
 ## 7. 변경 이력
+- v2.22 (2026-02-08, Antigravity Agent): 문서 규칙 업데이트
 - v2.21 (2026-02-07, GitHub Copilot): 금고 SoT 통합 문서 5종 신규 작성 및 docs/SOT/shop 경로 추가
 - v2.20 (2026-02-05, Claude Opus): 상점 결제재화(CostType) 확장 - 모든 게임 토큰으로 결제 가능 (VAULT/DIAMOND → +13개 토큰)
 - v2.19 (2026-02-04, GitHub Copilot): V2 SoT 통합(레벨/XP/입금 v2_user 단일화), 붙여넣기 Import(게임 로그/데일리 입금), 세그먼트 시스템 전체 감사, Cherry Picker 세그먼트 설계
