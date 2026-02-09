@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /home
+Disallow: /game
+Disallow: /vault
+Disallow: /shop
+Disallow: /inventory
+Disallow: /event
+Disallow: /v2/
+Disallow: /login
+
+Sitemap: https://cc-jm.com/sitemap.xml

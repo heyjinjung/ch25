@@ -22,6 +22,9 @@ const MissionsPage = lazy(() => import("../pages/missions/MissionsPage"));
 const TeamBattlePage = lazy(() => import("../pages/game/TeamBattlePage"));
 const LevelTowerPage = lazy(() => import("../pages/game/LevelTowerPage"));
 const EventPage = lazy(() => import("../pages/event/EventPage"));
+const PublicLandingPage = lazy(
+  () => import("../pages/public/PublicLandingPage"),
+);
 
 // Loading fallback component
 const PageLoader = () => (
@@ -37,6 +40,9 @@ export const V2UserRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Public SEO Landing */}
+        <Route path="/" element={<PublicLandingPage />} />
+
         {/* Auth - Telegram Login (프로덕션) */}
         <Route path="/login" element={<TelegramLoginPage />} />
         {/* 테스트용 (개발 환경에서만 사용) */}
@@ -82,7 +88,6 @@ export const V2UserRoutes = () => {
         </Route>
 
         {/* Default redirect to Home */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Suspense>

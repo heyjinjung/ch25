@@ -134,6 +134,7 @@ state: SoT (Living Document)
 
 
 ## 7. 변경 이력
+- v2.25 (2026-02-10, GitHub Copilot): SEO 키워드 타깃팅/랜딩 URL(루트) 확정 및 GSC 리포트 템플릿 보강
 - v2.24 (2026-02-10, GitHub Copilot): SEO 랜딩 콘텐츠 스펙 및 로그 리포트 템플릿 추가
 - v2.23 (2026-02-10, GitHub Copilot): SEO SoT 및 실행 계획 문서 추가
 - v2.22 (2026-02-08, Antigravity Agent): 문서 규칙 업데이트

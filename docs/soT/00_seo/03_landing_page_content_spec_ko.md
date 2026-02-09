@@ -12,6 +12,14 @@
 - 대상: 대외 공개 랜딩 페이지 1종
 - 제외: 로그인 이후 페이지, 내부 운영 페이지
 
+## 2.1 타깃 키워드 (운영 목표)
+- 1차: `씨씨카지노`, `씨씨 카지노`
+- 2차: `씨씨지민` (의도 정의가 선행되어야 하며, 랜딩 의도와 다르면 별도 페이지 분리)
+
+## 2.2 랜딩 URL 원칙
+- 대표 랜딩 URL: `https://cc-jm.com/`
+- Canonical은 반드시 루트로 고정한다.
+
 ## 3. 정보 구조(IA)
 1) 헤더
 - 로고
@@ -75,8 +83,8 @@
 - twitter:card, twitter:title, twitter:description, twitter:image 필수
 
 ### 5.3 메타 샘플
-- Title: XMAS Event System | 랜딩 한 페이지로 핵심 기능 정리
-- Description: 구글 검색 반영을 위한 핵심 랜딩 페이지. 문제-해결-성과 중심으로 정보를 정리합니다.
+- Title: 씨씨카지노 | 한 페이지로 핵심 기능 정리
+- Description: 씨씨카지노(씨씨 카지노) 서비스 소개 랜딩. 핵심 기능과 이용 흐름을 한 페이지로 정리합니다.
 
 ## 6. 구조화 데이터(JSON-LD)
 - WebSite + Organization 기본 적용
@@ -87,8 +95,8 @@
 {
 	"@context": "https://schema.org",
 	"@type": "WebPage",
-	"name": "XMAS Event System",
-	"url": "https://example.com/landing"
+	"name": "씨씨카지노",
+	"url": "https://cc-jm.com/"
 }
 ```
 
