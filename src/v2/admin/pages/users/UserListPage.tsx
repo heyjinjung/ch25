@@ -152,7 +152,7 @@ export default function UserListPage({
   >("last_active");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
 
   // Build search params
   const searchParams: UserSearchParams = {
@@ -544,9 +544,27 @@ export default function UserListPage({
 
       {/* Pagination */}
       <div className="flex items-center justify-between px-4 py-3 bg-[#18181B] rounded-xl border border-white/5">
-        <div className="text-sm text-zinc-400">
-          {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
-          명
+        <div className="flex items-center gap-3">
+          <div className="text-sm text-zinc-400">
+            {(page - 1) * limit + 1}~{Math.min(page * limit, total)} / 총 {total}
+            명
+          </div>
+          <Select
+            value={String(limit)}
+            onValueChange={(value) => {
+              setLimit(Number(value));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[100px] h-8 bg-black/20 border-white/10 text-zinc-300 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-800 border-zinc-700">
+              <SelectItem value="20">20개</SelectItem>
+              <SelectItem value="50">50개</SelectItem>
+              <SelectItem value="100">100개</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-2">
           <Button

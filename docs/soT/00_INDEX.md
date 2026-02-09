@@ -90,6 +90,12 @@ state: SoT (Living Document)
 - [v2_csv_import_pipeline_guide_ko.md](00_ops/v2_csv_import_pipeline_guide_ko.md)
 - [20260130_error_triage_checklist.md](00_ops/20260130_error_triage_checklist.md)
 
+## 00. SEO (대외 공개 웹)
+- [01_seo_sot_ko.md](00_seo/01_seo_sot_ko.md)
+- [02_seo_execution_plan_ko.md](00_seo/02_seo_execution_plan_ko.md)
+- [03_landing_page_content_spec_ko.md](00_seo/03_landing_page_content_spec_ko.md)
+- [04_seo_log_report_templates_ko.md](00_seo/04_seo_log_report_templates_ko.md)
+
 ## 00. Segment (세그먼트)
 - [01_segment_policy_sot_ko.md](00_segment/01_segment_policy_sot_ko.md)
 - [02_segment_ops_db_consistency_ko.md](00_segment/02_segment_ops_db_consistency_ko.md)
@@ -128,6 +134,8 @@ state: SoT (Living Document)
 
 
 ## 7. 변경 이력
+- v2.24 (2026-02-10, GitHub Copilot): SEO 랜딩 콘텐츠 스펙 및 로그 리포트 템플릿 추가
+- v2.23 (2026-02-10, GitHub Copilot): SEO SoT 및 실행 계획 문서 추가
 - v2.22 (2026-02-08, Antigravity Agent): 문서 규칙 업데이트
 - v2.21 (2026-02-07, GitHub Copilot): 금고 SoT 통합 문서 5종 신규 작성 및 docs/SOT/shop 경로 추가
 - v2.20 (2026-02-05, Claude Opus): 상점 결제재화(CostType) 확장 - 모든 게임 토큰으로 결제 가능 (VAULT/DIAMOND → +13개 토큰)
