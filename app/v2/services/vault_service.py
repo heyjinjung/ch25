@@ -622,7 +622,9 @@ class V2VaultService:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
                     sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
-                if sync_dt_utc.astimezone(tz).date() == now_kst_date and rank_data.deposit_amount > (rank_data.daily_base_deposit or 0):
+                # operational day 기준으로 비교 (09:00 KST 리셋)
+                sync_op_date = self._operational_date_kst(sync_dt_utc)
+                if sync_op_date == op_date_kst and rank_data.deposit_amount > (rank_data.daily_base_deposit or 0):
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
@@ -631,7 +633,9 @@ class V2VaultService:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
                     last_charge_utc = last_charge_utc.replace(tzinfo=timezone.utc)
-                if last_charge_utc.astimezone(tz).date() == now_kst_date:
+                # operational day 기준으로 비교 (09:00 KST 리셋)
+                charge_op_date = self._operational_date_kst(last_charge_utc)
+                if charge_op_date == op_date_kst:
                     has_cc_deposit_today = True
 
         # Activity stats
@@ -1463,7 +1467,9 @@ class V2VaultService:
                 sync_dt_utc = rank_data.updated_at
                 if sync_dt_utc.tzinfo is None:
                     sync_dt_utc = sync_dt_utc.replace(tzinfo=timezone.utc)
-                if sync_dt_utc.astimezone(tz).date() == now_kst_date and rank_data.deposit_amount > (rank_data.daily_base_deposit or 0):
+                # operational day 기준으로 비교 (09:00 KST 리셋)
+                sync_op_date = self._operational_date_kst(sync_dt_utc)
+                if sync_op_date == op_date_kst and rank_data.deposit_amount > (rank_data.daily_base_deposit or 0):
                     has_cc_deposit_today = True
 
         if not has_cc_deposit_today:
@@ -1472,7 +1478,9 @@ class V2VaultService:
                 last_charge_utc = activity.last_charge_at
                 if last_charge_utc.tzinfo is None:
                     last_charge_utc = last_charge_utc.replace(tzinfo=timezone.utc)
-                if last_charge_utc.astimezone(tz).date() == now_kst_date:
+                # operational day 기준으로 비교 (09:00 KST 리셋)
+                charge_op_date = self._operational_date_kst(last_charge_utc)
+                if charge_op_date == op_date_kst:
                     has_cc_deposit_today = True
 
         # 1. Strict Withdrawal Eligibility (SoT): deposit today + play target + spend target
