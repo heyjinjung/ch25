@@ -60,29 +60,19 @@ export default function PublicLandingPage() {
             <Button asChild variant="figma-primary" size="lg">
               <Link to={primaryCtaHref}>무료로 시작하기</Link>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-white/10"
-            >
+            <Button asChild variant="figma-secondary" size="lg">
               <a href={telegramHref} target="_blank" rel="noreferrer">
                 텔레그램 공식 채널
               </a>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-white/10"
-            >
+            <Button asChild variant="figma-secondary" size="lg">
               <a href={ccMainSiteHref} target="_blank" rel="noreferrer">
                 CC카지노 본사이트
               </a>
             </Button>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-2 text-xs text-obsidian-muted">
+          <div className="mt-6 flex flex-wrap gap-2 text-xs">
             {[
               "지민코드 전용",
               "텔레그램 미니앱",
@@ -91,7 +81,7 @@ export default function PublicLandingPage() {
             ].map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-obsidian-border px-3 py-1"
+                className="rounded-full border border-zinc-600 bg-zinc-800/60 px-3 py-1 text-zinc-300"
               >
                 {tag}
               </span>
@@ -421,12 +411,7 @@ export default function PublicLandingPage() {
                 텔레그램 공식 채널
               </a>
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="border-white/10"
-            >
+            <Button asChild variant="figma-secondary" size="lg">
               <a href={ccMainSiteHref} target="_blank" rel="noreferrer">
                 CC카지노 본사이트
               </a>
