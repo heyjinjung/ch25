@@ -118,7 +118,7 @@ state: SoT (Living Document)
 - [02_user_identity_auth_sync_ko.md](00_user/02_user_identity_auth_sync_ko.md)
 - [03_user_db_schema_integrity_ko.md](00_user/03_user_db_schema_integrity_ko.md)
 - [04_user_segment_hq_linking_ko.md](00_user/04_user_segment_hq_linking_ko.md)
-- [05_user_ops_verify_troubleshooting_ko.md](00_user/05_user_ops_verify_troubleshooting_ko.md)
+- [05_user_ops_verify_troubleshooting_ko.md](00_use r/05_user_ops_verify_troubleshooting_ko.md)
 
 ## 00. Vault (금고)
 - [01_vault_policy_sot_ko.md](00_vault/01_vault_policy_sot_ko.md)

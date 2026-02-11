@@ -12,7 +12,7 @@ interface VaultHeroProps {
 export const VaultHero: React.FC<VaultHeroProps> = ({
   vaultBalance,
   todayEarnings,
-  goalAmount = 100000,
+  goalAmount = 10000,
 }) => {
   return (
     <div className="relative flex flex-col items-center justify-center py-8">

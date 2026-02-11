@@ -3,7 +3,14 @@ import { motion } from "framer-motion";
 import gsap from "gsap";
 import { Target } from "lucide-react";
 
-// 정책 기반 금고 목표 금액 배열 (SoT와 동기화 필요)
+/**
+ * 회차별 금고 출금 목표 금액 배열
+ * SoT: docs/SOT/00_vault/01_vault_policy_sot_ko.md - 섹션 7.3
+ * withdrawal_count = 0(1회차) → 10,000원
+ * withdrawal_count = 1(2회차) → 10,000원
+ * withdrawal_count = 2(3회차) → 30,000원
+ * withdrawal_count = 3+(4회차+) → 50,000원
+ */
 const VAULT_GOALS = [10000, 10000, 30000, 50000];
 
 interface VaultProgressProps {

@@ -28,6 +28,7 @@ interface BackendVaultStatusResponse {
   readonly segment?: string | null;
   readonly deposit_status?: string | null;
   readonly benefits_suspended?: boolean;
+  readonly minimum_withdrawal_amount?: number;
 
   // Withdrawal Conditions
   readonly daily_play_count?: number;
@@ -36,6 +37,7 @@ interface BackendVaultStatusResponse {
   readonly daily_vault_spent?: number;
   readonly daily_vault_spent_target?: number;
   readonly withdrawal_count?: number;
+  readonly today_earnings?: number;
 }
 
 export interface VaultStatusResponse {
@@ -70,6 +72,7 @@ export interface VaultStatusResponse {
   readonly vaultMaxLimit?: number;
   readonly depositStatus?: string | null;
   readonly benefitsSuspended?: boolean;
+  readonly minimum_withdrawal_amount?: number;
 
   // Withdrawal Conditions
   readonly dailyPlayCount?: number;
@@ -78,14 +81,18 @@ export interface VaultStatusResponse {
   readonly dailyVaultSpent?: number;
   readonly dailyVaultSpentTarget?: number;
   readonly withdrawalCount?: number;
+  readonly today_earnings?: number;
 }
 
 export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
-  const response = await userApi.get<BackendVaultStatusResponse>("/api/vault/status");
+  const response =
+    await userApi.get<BackendVaultStatusResponse>("/api/vault/status");
   const data = response.data;
-  const locked = data.vault_amount_total ?? data.locked_balance ?? data.vault_balance ?? 0;
+  const locked =
+    data.vault_amount_total ?? data.locked_balance ?? data.vault_balance ?? 0;
   const available = data.vault_amount_available ?? data.available_balance ?? 0;
-  const reserved = data.vault_amount_reserved ?? Math.max(locked - available, 0);
+  const reserved =
+    data.vault_amount_reserved ?? Math.max(locked - available, 0);
   return {
     eligible: data.eligible,
     // Keep legacy name but prefer source-of-truth locked balance when available
@@ -102,7 +109,8 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     ctaPayload: (data.cta_payload as Record<string, unknown> | null) ?? null,
 
     programKey: data.program_key ?? null,
-    unlockRulesJson: (data.unlock_rules_json as Record<string, unknown> | null) ?? null,
+    unlockRulesJson:
+      (data.unlock_rules_json as Record<string, unknown> | null) ?? null,
     uiCopyJson: (data.ui_copy_json as Record<string, unknown> | null) ?? null,
 
     accrualMultiplier: data.accrual_multiplier ?? null,
@@ -117,6 +125,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     vaultMaxLimit: data.vault_max_limit ?? 0,
     depositStatus: data.deposit_status ?? "ACTIVE",
     benefitsSuspended: data.benefits_suspended ?? false,
+    minimum_withdrawal_amount: data.minimum_withdrawal_amount ?? 10000,
 
     // Withdrawal Conditions
     dailyPlayCount: data.daily_play_count ?? 0,
@@ -125,6 +134,7 @@ export const getVaultStatus = async (): Promise<VaultStatusResponse> => {
     dailyVaultSpent: data.daily_vault_spent ?? 0,
     dailyVaultSpentTarget: data.daily_vault_spent_target ?? 10000,
     withdrawalCount: data.withdrawal_count ?? 0,
+    today_earnings: data.today_earnings ?? 0,
   };
 };
 
@@ -133,30 +143,35 @@ const mapWithdrawalErrorMessage = (detail: unknown): string | null => {
 
   switch (detail) {
     case "DEPOSIT_REQUIRED_TODAY":
-      return "?�늘 ?�금(충전) ?�역???�어??출금 ?�청??가?�합?�다.";
+      return "?�늘 ?�금(충전) ?�역???�어??출금 ?�청??가?�합?�다.";
     case "NO_DEPOSIT_RECORD_TODAY":
-      return "?�늘 ?�금(충전) ?�역???�인?��? ?�아 출금 ?�청??불�??�합?�다.";
+      return "?�늘 ?�금(충전) ?�역???�인?��? ?�아 출금 ?�청??불�??�합?�다.";
     case "MIN_PLAY_COUNT_30_REQUIRED":
-        return "최근 3???�내 게임 ?�레??30??조건??만족?�야 ?�니??";
+      return "최근 3???�내 게임 ?�레??30??조건??만족?�야 ?�니??";
     case "MIN_DAILY_SPEND_10000_REQUIRED":
-        return "?�늘 금고 ?�용?�이 10,000???�상?�어???�니??";
+      return "?�늘 금고 ?�용?�이 10,000???�상?�어???�니??";
     case "NO_DEPOSIT_HISTORY":
-        return "?�금 ?�력???�는 계정?� 출금?????�습?�다.";
+      return "?�금 ?�력???�는 계정?� 출금?????�습?�다.";
     case "DEPOSIT_REQUIRED_TODAY_SYNC":
-        return "?�늘 ?�금(충전) 기록???�인?��? ?�았?�니??";
+      return "?�늘 ?�금(충전) 기록???�인?��? ?�았?�니??";
     default:
       return null;
   }
 };
 // Phase 1 MVP Withdrawal Request
-export const requestWithdrawal = async (amount: number): Promise<{ success: boolean; message: string }> => {
+export const requestWithdrawal = async (
+  amount: number,
+): Promise<{ success: boolean; message: string }> => {
   try {
     await userApi.post("/api/vault/withdraw", { amount });
-    return { success: true, message: "출금 ?�청???�료?�었?�니??" };
+    return { success: true, message: "출금 ?�청???�료?�었?�니??" };
   } catch (err: any) {
     // Handle specific errors like 'insufficient_funds', 'daily_limit', etc.
     const detail = err.response?.data?.detail;
-    const msg = mapWithdrawalErrorMessage(detail) ?? detail ?? "?�청 �??�류가 발생?�습?�다.";
+    const msg =
+      mapWithdrawalErrorMessage(detail) ??
+      detail ??
+      "?�청 �??�류가 발생?�습?�다.";
     return { success: false, message: msg };
   }
 };

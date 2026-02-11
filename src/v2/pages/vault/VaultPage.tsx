@@ -12,7 +12,8 @@ import V2WithdrawalGuideModal from "../../components/vault/V2WithdrawalGuideModa
 import LatencyReportModal from "../../components/user/LatencyReportModal";
 import "./VaultRedesign.css";
 
-// const WITHDRAWAL_GOAL = 100000; // Deprecated: Now dynamic from backend
+// 정책 기반 회차별 최소 출금 금액 (SoT 01_vault_policy_sot_ko.md 섹션 7.3)
+const VAULT_WITHDRAWAL_GOALS = [10000, 10000, 30000, 50000];
 
 const VaultPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,7 +24,14 @@ const VaultPage: React.FC = () => {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showLatencyModal, setShowLatencyModal] = useState(false);
   const todayEarnings = vault?.today_earnings || 0;
-  const withdrawalGoal = vault?.minimum_withdrawal_amount || 100000;
+
+  // 회차별 목표 금액 계산 (withdrawal_count 기반)
+  const withdrawalCount = vault?.withdrawal_count || 0;
+  const currentGoalIndex = Math.min(
+    withdrawalCount,
+    VAULT_WITHDRAWAL_GOALS.length - 1,
+  );
+  const withdrawalGoal = VAULT_WITHDRAWAL_GOALS[currentGoalIndex] || 10000;
 
   useEffect(() => {
     if (vault) {
@@ -98,9 +106,10 @@ const VaultPage: React.FC = () => {
   }
 
   const vaultBalance = vault.vaultBalance || 0;
+  // SoT: 출금 자격 검증은 회차별 최소 금액 배열 기반 (정책 우선)
   const isEligible =
     vault.eligible &&
-    vaultBalance >= (vault.minimum_withdrawal_amount || 100000);
+    vaultBalance >= withdrawalGoal;
 
   return (
     <div className="vault-page-container">

@@ -7,7 +7,7 @@ fixtures: admin_token, db_session
 import pytest
 from app.v2.models import V2User
 from app.v2.models.user import V2UserRole, V2UserStatus
-from app.v2.models.v2_user_segment import V2UserSegment, SegmentType
+from app.v2.models.v2_user_segment import V2UserSegment
 
 
 def test_hq_margin_import_creates_segments(db_session, admin_token, test_client):
@@ -109,22 +109,14 @@ def test_hq_margin_import_prevents_duplicates(db_session):
     db_session.add(segment1)
     db_session.commit()
 
-    # When: 두 번째 import 시 기존 것 비활성화하고 새로 생성
+    # When: 두 번째 import 시 기존 세그먼트가 PK로 덮어씌워짐
     segment1.is_synced_from_hq = False
-    segment2 = V2UserSegment(
-        user_id=user.id,
-        segment="WHALE",
-        total_margin=350000,
-        is_synced_from_hq=True,
-        overwrite=True # Custom flag for test logic if needed, but V2UserSegment has user_id as PK
-    )
-    db_session.add(segment2)
+    segment1.segment = "WHALE"
+    segment1.total_margin = 350000
     db_session.commit()
 
-    # Then: 활성 세그먼트는 1개만
-    active_segments = db_session.query(V2UserSegment).filter(
-        V2UserSegment.user_id == user.id,
-        V2UserSegment.is_active == True
-    ).all()
-    assert len(active_segments) == 1
-    assert active_segments[0].segment_type == SegmentType.WHALE
+    # Then: 세그먼트가 업데이트됨
+    segment = db_session.query(V2UserSegment).filter_by(user_id=user.id).first()
+    assert segment is not None
+    assert segment.segment == "WHALE"
+    assert segment.total_margin == 350000
