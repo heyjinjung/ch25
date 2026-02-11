@@ -53,7 +53,7 @@ const VaultPage: React.FC = () => {
   }, [vault, playVaultJingle, withdrawalGoal]);
 
   const handleWithdraw = async () => {
-    if (!vault || !vault.eligible) {
+    if (!vault || !isEligible) {
       setShowGuideModal(true);
       return;
     }
@@ -106,8 +106,15 @@ const VaultPage: React.FC = () => {
   }
 
   const vaultBalance = vault.vaultBalance || 0;
-  // SoT: 출금 자격 검증은 회차별 최소 금액 배열 기반 (정책 우선)
-  const isEligible = vault.eligible && vaultBalance >= withdrawalGoal;
+  // SoT: 출금 자격 = 프로그램 eligible + 잔액 + 일일입금 + 플레이 + 소비 조건 모두 충족
+  const isDepositMet = vault.daily_deposit_confirmed ?? false;
+  const isPlayMet =
+    (vault.daily_play_count ?? 0) >= (vault.daily_play_target ?? 0);
+  const isSpendMet =
+    (vault.daily_vault_spent ?? 0) >= (vault.daily_vault_spent_target ?? 0);
+  const isBalanceMet = vaultBalance >= withdrawalGoal;
+  const isEligible =
+    vault.eligible && isBalanceMet && isDepositMet && isPlayMet && isSpendMet;
 
   return (
     <div className="vault-page-container">

@@ -45,6 +45,8 @@ export interface VaultStatusResponse {
   daily_vault_spent: number;
   daily_vault_spent_target: number;
   daily_deposit_confirmed: boolean;
+  play_requirement_met: boolean;
+  spend_requirement_met: boolean;
   withdrawal_count: number;
   today_earnings: number;
   minimum_withdrawal_amount: number;
@@ -110,6 +112,12 @@ export const vaultApi = {
       ),
       daily_deposit_confirmed: Boolean(
         data.daily_deposit_confirmed ?? data.dailyDepositConfirmed ?? false,
+      ),
+      play_requirement_met: Boolean(
+        data.play_requirement_met ?? data.playRequirementMet ?? false,
+      ),
+      spend_requirement_met: Boolean(
+        data.spend_requirement_met ?? data.spendRequirementMet ?? false,
       ),
       withdrawal_count: Number(
         data.withdrawal_count ?? data.withdrawalCount ?? 0,

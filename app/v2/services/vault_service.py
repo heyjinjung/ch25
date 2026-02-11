@@ -679,7 +679,7 @@ class V2VaultService:
         if "NEW" in segments:
             play_target = 5
             spend_target = 0
-            min_deposit_target = 0
+            min_deposit_target = 10000  # SoT 7.2: NEW도 당일 1만 이상
         elif "COMMON" in segments:
             play_target = 15
             spend_target = 5000
@@ -704,6 +704,24 @@ class V2VaultService:
             play_target = 15  # COMMON 기준 준용
             spend_target = 5000
             min_deposit_target = 10000
+
+        # ── daily_deposit_confirmed: 입금 여부 + 금액 충족 검증 ──
+        # has_cc_deposit_today는 입금 '존재' 여부, delta_today가 실제 금액
+        if min_deposit_target <= 0:
+            deposit_requirement_met = True  # 입금 조건 없음
+        elif int(delta_today) >= min_deposit_target:
+            deposit_requirement_met = True  # delta 테이블 기준 금액 충족
+        elif has_cc_deposit_today and int(delta_today) > 0:
+            # 폴백 경로로 입금 확인됐지만 delta 금액이 목표 미달
+            deposit_requirement_met = int(delta_today) >= min_deposit_target
+        else:
+            deposit_requirement_met = False
+
+        # 플레이 조건 충족 여부
+        play_requirement_met = recent_play_count >= play_target
+
+        # 소비 조건 충족 여부
+        spend_requirement_met = int(getattr(user, "vault_spent_today", 0) or 0) >= spend_target
 
         withdrawal_count = db.query(func.count(VaultWithdrawalRequest.id)).filter(
             VaultWithdrawalRequest.user_id == user_id,
@@ -818,8 +836,10 @@ class V2VaultService:
             "daily_play_target": int(play_target),
             "daily_vault_spent": int(getattr(user, "vault_spent_today", 0) or 0),
             "daily_vault_spent_target": int(spend_target),
-            "daily_deposit_confirmed": bool(has_cc_deposit_today),
+            "daily_deposit_confirmed": bool(deposit_requirement_met),
             "daily_deposit_target": int(min_deposit_target),
+            "play_requirement_met": bool(play_requirement_met),
+            "spend_requirement_met": bool(spend_requirement_met),
             "withdrawal_count": int(withdrawal_count),
             "today_earnings": int(today_earnings),
             "minimum_withdrawal_amount": int(next_min_balance),
@@ -1502,7 +1522,7 @@ class V2VaultService:
         if "NEW" in segments:
             play_target = 5
             spend_target = 0
-            min_deposit_target = 0 # 신규 유저는 당일 입금 조건 면제 (SoT 확인 필요하나 보통 0)
+            min_deposit_target = 10000  # SoT 7.2: NEW도 당일 1만 이상
         elif "COMMON" in segments:
             play_target = 15
             spend_target = 5000

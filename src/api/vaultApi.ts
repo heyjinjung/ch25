@@ -36,6 +36,8 @@ interface BackendVaultStatusResponse {
   readonly daily_deposit_confirmed?: boolean;
   readonly daily_vault_spent?: number;
   readonly daily_vault_spent_target?: number;
+  readonly play_requirement_met?: boolean;
+  readonly spend_requirement_met?: boolean;
   readonly withdrawal_count?: number;
   readonly today_earnings?: number;
 }
