@@ -107,9 +107,7 @@ const VaultPage: React.FC = () => {
 
   const vaultBalance = vault.vaultBalance || 0;
   // SoT: 출금 자격 검증은 회차별 최소 금액 배열 기반 (정책 우선)
-  const isEligible =
-    vault.eligible &&
-    vaultBalance >= withdrawalGoal;
+  const isEligible = vault.eligible && vaultBalance >= withdrawalGoal;
 
   return (
     <div className="vault-page-container">
