@@ -414,9 +414,50 @@ const V2TelegramLoginPage: FC = () => {
           </p>
 
           {/* 주요 기능 소개 */}
-          <div className="pt-6 border-t border-obsidian-border space-y-4">
-            <p className="text-sm text-obsidian-muted">주요 기능</p>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="pt-8 border-t border-obsidian-border space-y-8 text-left">
+            <h2 className="text-xl font-bold text-white text-center">씨씨카지노 (cc카지노) 가이드</h2>
+            
+            <article className="space-y-2">
+              <h3 className="text-obsidian-accent font-bold">텔레그램 인앱(Mini App)이란?</h3>
+              <p className="text-sm text-obsidian-muted leading-relaxed">
+                텔레그램 메신저 내부에서 별도의 설치 없이 바로 실행되는 혁신적인 앱 생태계입니다. 
+                씨씨카지노는 이 기술을 통해 가장 안전하고 빠른 게임 경험을 제공합니다.
+              </p>
+            </article>
+
+            <article className="space-y-2">
+              <h3 className="text-obsidian-accent font-bold">텔레그램 룰렛 게임이란?</h3>
+              <p className="text-sm text-obsidian-muted leading-relaxed">
+                운과 전략이 결합된 씨씨카지노의 시그니처 게임입니다. 4종의 다양한 티켓을 활용하여 
+                실시간으로 보상을 획득하고 금고 포인트를 쌓을 수 있는 가장 인기 있는 컨텐츠입니다.
+              </p>
+            </article>
+
+            <article className="space-y-2">
+              <h3 className="text-obsidian-accent font-bold">텔레그램 씨씨카지노 (cc카지노)란?</h3>
+              <p className="text-sm text-obsidian-muted leading-relaxed">
+                지민코드 전용으로 운영되는 공식 이벤트 플랫폼입니다. 텔레그램을 통해 누구나 쉽고 
+                안전하게 주사위, 룰렛, 팀배틀 등 다양한 게임과 혜택을 누릴 수 있습니다.
+              </p>
+            </article>
+
+            <article className="space-y-2">
+              <h3 className="text-obsidian-accent font-bold">지민코드만의 장점</h3>
+              <p className="text-sm text-obsidian-muted leading-relaxed">
+                오직 지민코드로 가입한 유저에게만 제공되는 특별 VIP 혜택이 핵심입니다. 
+                압도적인 보상 배율, 전용 이벤트, 그리고 씨씨지민의 특별한 관리를 경험해보세요.
+              </p>
+            </article>
+
+            <article className="space-y-2">
+              <h3 className="text-obsidian-accent font-bold">씨씨지민 경험 소개</h3>
+              <p className="text-sm text-obsidian-muted leading-relaxed">
+                단순한 게임을 넘어, 미션 수행과 보상 교환을 통해 실제 가치를 창출하는 경험을 제공합니다. 
+                적립된 포인트는 상점에서 기프티콘으로 즉시 교환하여 일상에서 사용하실 수 있습니다.
+              </p>
+            </article>
+
+            <div className="grid grid-cols-3 gap-4 pt-4">
               <div className="text-center">
                 <div className="mx-auto w-10 h-10 rounded-xl bg-obsidian-accent/20 flex items-center justify-center mb-2">
                   <Zap className="h-5 w-5 text-obsidian-accent" />
