@@ -763,3 +763,7 @@ class V2MissionService:
             pass
         
         # 3. (Optional) 추후 가입 보너스 등 추가 로직 확장 가능
+
+
+# Backward-compatible alias (legacy imports)
+MissionService = V2MissionService

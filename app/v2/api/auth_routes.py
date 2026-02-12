@@ -11,6 +11,10 @@ from app.v2.services.auth_service import V2AuthService, log_auth_event
 from app.v2.services.user_service import V2UserService
 from app.v2.models.auth_event import AuthEventType
 
+# Backward-compatible aliases (used by legacy alias routers)
+TokenRequest = AuthTokenRequest
+TokenResponse = AuthTokenResponse
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
@@ -85,6 +89,14 @@ def v2_issue_token(
             vault_locked_balance=int(user.vault_locked_balance or 0),
         ),
     )
+
+
+def issue_token(
+    payload: AuthTokenRequest,
+    request: Request,
+    db: Session,
+) -> AuthTokenResponse:
+    return v2_issue_token(payload, request, db)
 
 
 @router.post("/login", response_model=AuthTokenResponse, summary="Login (alias)")

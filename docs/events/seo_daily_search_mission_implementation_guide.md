@@ -301,7 +301,7 @@ class V2SeoCodeService:
             SeoDailyCode.is_active == True,
         ).update({"is_active": False})
 
-        # 새 코드 생성 (영문 대문자 + 숫자 6자리)
+        # 새 코드 생성 (영문 대문자 + 숫자, 총 8자리 — 사용자 입력 시 대소문자 무관)
         import string
         chars = string.ascii_uppercase + string.digits
         code = "SEO" + "".join(random.choices(chars, k=5))
@@ -692,7 +692,7 @@ const STEPS = [
   {
     num: 3,
     title: "코드 입력",
-    desc: "확인한 코드를 아래 입력창에 입력하고 보상을 받으세요!",
+    desc: "확인한 코드를 아래 입력창에 입력하고 보상을 받으세요! (대소문자 구분 없음)",
     tip: "매일 오전 9시에 새로운 코드가 생성됩니다.",
   },
 ];
@@ -840,10 +840,10 @@ export default function SeoMissionPage() {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="코드 입력 (예: SEO4K2B1)"
+              placeholder="코드 입력 (예: seo4k2b1)"
               maxLength={20}
               disabled={claimMutation.isPending || alreadyClaimed}
-              className="flex-1 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-mono text-white uppercase placeholder:text-white/30 focus:border-blue-500/50 focus:outline-none disabled:opacity-50"
+              className="flex-1 rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-mono text-white placeholder:text-white/30 focus:border-blue-500/50 focus:outline-none disabled:opacity-50"
             />
             <button
               type="submit"
