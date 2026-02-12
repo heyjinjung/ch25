@@ -402,7 +402,7 @@ const V2TelegramLoginPage: FC = () => {
             </p>
           </div>
           <a
-            href="https://t.me/YOUR_BOT_USERNAME"
+            href="https://t.me/jm956_bot"
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full rounded-xl bg-blue-500 px-4 py-3 font-bold text-white hover:opacity-90"

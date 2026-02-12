@@ -3,32 +3,45 @@ import {
   useAdminLatencyEvidences,
   useAdminVerifyLatencyEvidence,
   useAdminRejectLatencyEvidence,
-  useUnmatchedDeposits
+  useUnmatchedDeposits,
 } from "../../../hooks/useAdminEconomy";
-import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../../components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Check, X, Search, Info } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "../../components/ui/dialog";
 import { Textarea } from "../../components/ui/textarea";
 import type { AdminLatencyEvidenceDto } from "../../../api/adminApi";
 
 const LatencySurvivalPage: React.FC = () => {
   const { data: evidences, isLoading } = useAdminLatencyEvidences();
-  const { data: unmatchedDeposits } = useUnmatchedDeposits(24);
+  const { data: unmatchedDeposits } = useUnmatchedDeposits(120);
   const verifyMutation = useAdminVerifyLatencyEvidence();
   const rejectMutation = useAdminRejectLatencyEvidence();
 
-  const [selectedEvidence, setSelectedEvidence] = useState<AdminLatencyEvidenceDto | null>(null);
+  const [selectedEvidence, setSelectedEvidence] =
+    useState<AdminLatencyEvidenceDto | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
@@ -37,7 +50,10 @@ const LatencySurvivalPage: React.FC = () => {
   const handleVerify = async () => {
     if (!selectedEvidence || selectedLogId === null) return;
     try {
-      await verifyMutation.mutateAsync({ id: selectedEvidence.id, logId: selectedLogId });
+      await verifyMutation.mutateAsync({
+        id: selectedEvidence.id,
+        logId: selectedLogId,
+      });
       toast.success("증거가 확인되었습니다.");
       setIsVerifyDialogOpen(false);
       setSelectedLogId(null);
@@ -50,9 +66,9 @@ const LatencySurvivalPage: React.FC = () => {
   const handleReject = async () => {
     if (!selectedEvidence || !rejectReason) return;
     try {
-      await rejectMutation.mutateAsync({ 
-        id: selectedEvidence.id, 
-        reason: rejectReason 
+      await rejectMutation.mutateAsync({
+        id: selectedEvidence.id,
+        reason: rejectReason,
       });
       toast.success("증거가 반려되었습니다.");
       setIsRejectDialogOpen(false);
@@ -71,8 +87,12 @@ const LatencySurvivalPage: React.FC = () => {
     <div className="space-y-6 text-zinc-200">
       <div className="flex justify-end items-center">
         <div className="flex gap-2">
-          <Badge variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-400">
-            대기중: {evidences?.filter(e => e.status === 'PENDING').length || 0}
+          <Badge
+            variant="outline"
+            className="bg-zinc-900 border-zinc-800 text-zinc-400"
+          >
+            대기중:{" "}
+            {evidences?.filter((e) => e.status === "PENDING").length || 0}
           </Badge>
         </div>
       </div>
@@ -82,8 +102,8 @@ const LatencySurvivalPage: React.FC = () => {
           <CardTitle className="text-lg font-medium">증거 제출 목록</CardTitle>
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-            <input 
-              placeholder="TX ID 또는 유저 검색" 
+            <input
+              placeholder="TX ID 또는 유저 검색"
               className="w-full bg-zinc-950 border-white/5 rounded-md pl-9 pr-3 py-1.5 text-sm focus:ring-1 ring-lime-400/50 outline-none transition-all"
             />
           </div>
@@ -92,33 +112,57 @@ const LatencySurvivalPage: React.FC = () => {
           <Table>
             <TableHeader className="bg-zinc-950/50">
               <TableRow className="border-none">
-                <TableHead className="text-zinc-500 font-medium">ID / 유저</TableHead>
-                <TableHead className="text-zinc-500 font-medium text-center">TX ID (증거)</TableHead>
-                <TableHead className="text-zinc-500 font-medium text-right">금액</TableHead>
-                <TableHead className="text-zinc-500 font-medium text-center">상태</TableHead>
-                <TableHead className="text-zinc-500 font-medium text-right">액션</TableHead>
+                <TableHead className="text-zinc-500 font-medium">
+                  ID / 유저
+                </TableHead>
+                <TableHead className="text-zinc-500 font-medium text-center">
+                  TX ID (증거)
+                </TableHead>
+                <TableHead className="text-zinc-500 font-medium text-right">
+                  금액
+                </TableHead>
+                <TableHead className="text-zinc-500 font-medium text-center">
+                  상태
+                </TableHead>
+                <TableHead className="text-zinc-500 font-medium text-right">
+                  액션
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {evidences?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-zinc-600">
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-12 text-zinc-600"
+                  >
                     현재 대기 중인 증거가 없습니다.
                   </TableCell>
                 </TableRow>
               ) : (
                 evidences?.map((evidence: AdminLatencyEvidenceDto) => (
-                  <TableRow key={evidence.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                  <TableRow
+                    key={evidence.id}
+                    className="border-white/5 hover:bg-white/[0.02] transition-colors"
+                  >
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-zinc-200">{evidence.nickname || `User ${evidence.userId}`}</span>
-                        <span className="text-xs text-zinc-500">ID: {evidence.userId}</span>
+                        <span className="font-medium text-zinc-200">
+                          {evidence.nickname || `User ${evidence.userId}`}
+                        </span>
+                        <span className="text-xs text-zinc-500">
+                          ID: {evidence.userId}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell className="text-center font-mono text-xs text-zinc-400">
                       <div className="flex items-center justify-center gap-1">
                         {evidence.txId}
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-zinc-600 hover:text-lime-400">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-zinc-600 hover:text-lime-400"
+                        >
                           <Info className="w-3 h-3" />
                         </Button>
                       </div>
@@ -130,11 +174,12 @@ const LatencySurvivalPage: React.FC = () => {
                       <StatusBadge status={evidence.status} />
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
-                      {evidence.status === 'PENDING' || evidence.status === 'PROVISIONAL' ? (
+                      {evidence.status === "PENDING" ||
+                      evidence.status === "PROVISIONAL" ? (
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="destructive" 
-                            size="sm" 
+                          <Button
+                            variant="destructive"
+                            size="sm"
                             className="bg-red-500/10 text-red-500 hover:bg-red-500/20 h-8 border-none"
                             onClick={() => {
                               setSelectedEvidence(evidence);
@@ -155,7 +200,9 @@ const LatencySurvivalPage: React.FC = () => {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-xs text-zinc-600">{new Date(evidence.createdAt).toLocaleDateString()}</span>
+                        <span className="text-xs text-zinc-600">
+                          {new Date(evidence.createdAt).toLocaleDateString()}
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -184,8 +231,19 @@ const LatencySurvivalPage: React.FC = () => {
             />
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsRejectDialogOpen(false)}>취소</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectReason}>반려 확정</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setIsRejectDialogOpen(false)}
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={!rejectReason}
+            >
+              반려 확정
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -201,8 +259,14 @@ const LatencySurvivalPage: React.FC = () => {
               매칭할 입금 로그를 선택해주세요.
             </div>
             <div className="bg-zinc-950 border border-white/5 rounded-md p-3 space-y-2">
-              <p className="text-xs text-zinc-500">유저: {selectedEvidence?.nickname || `User ${selectedEvidence?.userId}`}</p>
-              <p className="text-xs text-zinc-500">신고 금액: {selectedEvidence?.claimedAmount.toLocaleString()} CC</p>
+              <p className="text-xs text-zinc-500">
+                유저:{" "}
+                {selectedEvidence?.nickname ||
+                  `User ${selectedEvidence?.userId}`}
+              </p>
+              <p className="text-xs text-zinc-500">
+                신고 금액: {selectedEvidence?.claimedAmount.toLocaleString()} CC
+              </p>
             </div>
             <select
               className="w-full bg-zinc-950 border border-white/10 rounded-md h-10 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
@@ -213,18 +277,25 @@ const LatencySurvivalPage: React.FC = () => {
               {unmatchedDeposits?.map((deposit) => (
                 <option key={deposit.id} value={deposit.id}>
                   ID: {deposit.id} | 금액: ₩{deposit.amount.toLocaleString()} |
-                  {deposit.created_at ? new Date(deposit.created_at).toLocaleString('ko-KR') : 'N/A'}
+                  {deposit.created_at
+                    ? new Date(deposit.created_at).toLocaleString("ko-KR")
+                    : "N/A"}
                 </option>
               ))}
             </select>
             {unmatchedDeposits?.length === 0 && (
               <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md p-2">
-                최근 24시간 내 미매칭 입금 로그가 없습니다.
+                최근 5일 내 미매칭 입금 로그가 없습니다.
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsVerifyDialogOpen(false)}>취소</Button>
+            <Button
+              variant="ghost"
+              onClick={() => setIsVerifyDialogOpen(false)}
+            >
+              취소
+            </Button>
             <Button
               className="bg-lime-400 text-black hover:bg-lime-500"
               onClick={handleVerify}

@@ -1353,38 +1353,42 @@ def list_unmatched_deposits(
     Used for admin dropdown selection when verifying latency evidence.
     """
     from datetime import datetime, timedelta
-    from app.v2.models import UserCashLedger
+
+    from app.v2.models.v2_hq_daily_deposit_log import HQDailyDepositLog
     from app.v2.models.v2_user_deposit_evidence import V2UserDepositEvidence
 
-    # Get deposits from last N hours
     cutoff_time = datetime.utcnow() - timedelta(hours=hours)
 
-    # Find all deposit log IDs that have been matched
-    matched_log_ids = db.query(V2UserDepositEvidence.matched_log_id).filter(
-        V2UserDepositEvidence.matched_log_id.isnot(None)
-    ).all()
-    matched_ids = [row[0] for row in matched_log_ids]
-
-    # Get unmatched deposits (reason='DEPOSIT' and not in matched list)
-    query = db.query(UserCashLedger).filter(
-        UserCashLedger.reason == 'DEPOSIT',
-        UserCashLedger.created_at >= cutoff_time
+    # NOTE:
+    # - Latency evidence의 matched_log_id는 "특정 입금 로그"를 가리키는 soft link입니다.
+    # - 현재 V2에서 운영상 확인 가능한 입금 로그 소스는 HQ CSV import 로그(HQDailyDepositLog)입니다.
+    # - 이미 evidence에 매칭된 로그는 드롭다운에서 제외합니다.
+    query = (
+        db.query(HQDailyDepositLog)
+        .outerjoin(
+            V2UserDepositEvidence,
+            V2UserDepositEvidence.matched_log_id == HQDailyDepositLog.id,
+        )
+        .filter(
+            HQDailyDepositLog.user_id.isnot(None),
+            HQDailyDepositLog.created_at >= cutoff_time,
+            V2UserDepositEvidence.id.is_(None),
+        )
+        .order_by(HQDailyDepositLog.created_at.desc())
+        .limit(50)
     )
 
-    if matched_ids:
-        query = query.filter(~UserCashLedger.id.in_(matched_ids))
-
-    unmatched_deposits = query.order_by(UserCashLedger.created_at.desc()).limit(50).all()
+    rows = query.all()
 
     return [
         {
-            "id": deposit.id,
-            "user_id": deposit.user_id,
-            "amount": deposit.amount,
-            "created_at": deposit.created_at.isoformat() if deposit.created_at else None,
-            "label": deposit.label,
+            "id": row.id,
+            "user_id": row.user_id,
+            "amount": row.amount,
+            "created_at": (row.deposit_at or row.created_at).isoformat() if (row.deposit_at or row.created_at) else None,
+            "label": row.nickname,
         }
-        for deposit in unmatched_deposits
+        for row in rows
     ]
 
 

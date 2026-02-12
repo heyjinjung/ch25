@@ -10,3 +10,4 @@ export * from "./inboxApi";
 export * from "./teamBattleApi";
 export * from "./adminApi";
 export * from "./goldenApi";
+export * from "./eventApi";

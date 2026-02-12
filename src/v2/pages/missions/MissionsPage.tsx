@@ -15,6 +15,9 @@ import { Meteors } from "../../components/effects/Meteors";
 import "./MissionRedesign.css";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
+import { useValentineSeolStatus } from "../../hooks/useValentineSeol";
+import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
+import SecretCodeInput from "../../components/event/SecretCodeInput";
 
 const FloatingTimer = ({ deadline }: { deadline: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -65,6 +68,24 @@ const FloatingTimer = ({ deadline }: { deadline: string }) => {
   );
 };
 
+type EventDay = "valentine" | "seol_day1" | "seol_day2" | "seol_day3" | null;
+
+function getEventDay(): EventDay {
+  const kst = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+  );
+  const y = kst.getFullYear();
+  const m = String(kst.getMonth() + 1).padStart(2, "0");
+  const d = String(kst.getDate()).padStart(2, "0");
+  const dateStr = `${y}-${m}-${d}`;
+
+  if (dateStr === "2026-02-14") return "valentine";
+  if (dateStr === "2026-02-15") return "seol_day1";
+  if (dateStr === "2026-02-16") return "seol_day2";
+  if (dateStr === "2026-02-17") return "seol_day3";
+  return null;
+}
+
 const CATEGORIES = [
   { id: "DAILY", label: "일일", emoji: "🔥" },
   { id: "WEEKLY", label: "주간", emoji: "🏆" },
@@ -86,6 +107,10 @@ export default function MissionsPage() {
   );
 
   const claimMutation = useV2ClaimMission();
+
+  const eventDay = getEventDay();
+  const isEventPeriod = eventDay !== null;
+  const { data: eventStatus } = useValentineSeolStatus(isEventPeriod);
 
   const setCategory = (cat: string) => {
     navigate(`?cat=${cat}`, { replace: true });
@@ -153,6 +178,24 @@ export default function MissionsPage() {
             className="w-full max-w-md"
           />
         </motion.div>
+
+        {/* Valentine & Seol Event (2026-02-14 ~ 2026-02-17) */}
+        {isEventPeriod && eventDay && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 space-y-4"
+          >
+            <ValentineSeolBanner
+              eventDay={eventDay}
+              streakCurrent={eventStatus?.streak_current ?? 0}
+              streakTarget={eventStatus?.streak_target ?? 4}
+            />
+            <SecretCodeInput
+              claimedCodes={eventStatus?.secret_codes_claimed}
+            />
+          </motion.div>
+        )}
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">

@@ -308,4 +308,36 @@
 
 ---
 
-**상태**: ✅ 기획 완료, 구현 대기
+**상태**: ✅ Phase 1 (백엔드) 완료, ✅ Phase 2 (프론트엔드) 완료
+
+---
+
+## 10. Phase 2: 프론트엔드 구현 기록 (2026-02-12)
+
+### 구현 내용
+
+#### 신규 파일 생성
+| 파일 | 용도 |
+|------|------|
+| `src/v2/api/eventApi.ts` | 이벤트 API 모듈 (GET status, POST secret-code/claim) |
+| `src/v2/hooks/useValentineSeol.ts` | React Query 훅 (useValentineSeolStatus, useClaimSecretCode) |
+| `src/v2/components/event/ValentineSeolBanner.tsx` | 일자별 이벤트 배너 (valentine/seol_day1~3) + 4일 스트릭 진행 표시 |
+| `src/v2/components/event/SecretCodeInput.tsx` | 비밀코드 입력 폼 + 에러 매핑 + 토스트 알림 |
+| `scripts/send_secret_code_announcement.py` | 텔레그램 채널 일별 비밀코드 공지 (Cron 10:00 KST) |
+
+#### 기존 파일 수정
+| 파일 | 변경 내용 |
+|------|-----------|
+| `src/v2/api/index.ts` | `export * from "./eventApi"` 추가 |
+| `src/v2/pages/missions/MissionsPage.tsx` | getEventDay() 헬퍼 + 이벤트 배너/비밀코드 입력 조건부 삽입 (기존 기능 전체 보존) |
+
+### 기술 결정
+- **CSS**: Tailwind CSS (기획서 plain CSS 대신 프로젝트 표준 적용)
+- **API 호출**: React Query 훅 패턴 (기획서 apiClient 대신)
+- **시간대**: `Intl` API로 KST(Asia/Seoul) 판별
+- **이벤트 기간 외**: `getEventDay()=null` → 렌더링 스킵 + API 미호출 (404 방지)
+- **에러 매핑**: INVALID_CODE, CODE_EXPIRED, ALREADY_CLAIMED → 한국어 메시지
+
+### 작성자
+- **작성일**: 2026-02-12
+- **작성자**: Claude Opus 4.6

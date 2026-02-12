@@ -110,7 +110,23 @@ W{주차}_{도메인코드}_troubleshooting.md
 
 ---
 
-## 📅 현재 주차 문서 (W06: 02-03 ~ 02-09)
+## 📅 현재 주차 문서 (W07: 02-10 ~ 02-16)
+
+| 도메인 | 문서 | 이슈 수 |
+|---|---|---|
+| EVENT | [W07_EVENT_valentine_seol_planning.md](./W07_EVENT_valentine_seol_planning.md) | **1** |
+| VAULT | [W07_VAULT_troubleshooting.md](./W07_VAULT_troubleshooting.md) | **1** |
+| FRONTEND | [W07_FRONTEND_troubleshooting.md](./W07_FRONTEND_troubleshooting.md) | **1** |
+
+### W07 주요 이슈 요약 (02-10 ~ 02-16)
+| # | 도메인 | 이슈 | 상태 |
+|---|---|---|---|
+| 1 | EVENT | 발렌타인 & 설 이벤트 프론트엔드 구현 (Phase 2) | ✅ 완료 |
+| 2 | FRONTEND | Latency Survival 승인 시 입금로그 드롭다운 미노출 | ✅ 해결 |
+
+---
+
+## 📅 지난 주차 (W06: 02-03 ~ 02-09)
 
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
