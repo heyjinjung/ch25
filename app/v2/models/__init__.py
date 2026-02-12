@@ -104,5 +104,6 @@ from .core.user_activity_event import UserActivityEvent
 
 from .core.season_pass import SeasonPassConfig, SeasonPassLevel, SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
 from .core.event_secret_code import EventSecretCode, UserSecretCodeClaim
+from .core.seo_daily_code import SeoDailyCode, UserSeoDailyCodeClaim
 
 

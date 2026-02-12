@@ -234,20 +234,16 @@ export default function HomePage() {
             />
             <span className="tile-title">금고</span>
           </div>
-          {/* Item 4: Square Card (All Games) */}
+          {/* Item 4: Square Card (SEO Search Mission) */}
           <div
             className="bento-tile bento-tile--square"
             onClick={() => {
               playTabTouch();
-              navigate("/v2/missions?cat=LEVEL");
+              navigate("/v2/event/seo-mission");
             }}
           >
-            <img
-              src="/assets/season_pass/icon_node_cleared.webp"
-              alt="all"
-              className="tile-img-small"
-            />
-            <span className="tile-title">레벨미션</span>
+            <span className="tile-img-small text-2xl">🔍</span>
+            <span className="tile-title">검색미션</span>
           </div>
         </div>
 

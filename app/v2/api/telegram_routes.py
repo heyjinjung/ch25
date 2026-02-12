@@ -18,10 +18,16 @@ from app.v2.api import deps
 from app.v2.core import telegram as v2_telegram
 from app.v2.models.auth_event import AuthEventType
 from app.v2.models.user import V2User
+from app.v2.schemas import v2_telegram as telegram_schemas
 from app.v2.services.auth_service import log_auth_event, V2AuthService
 
 
 router = APIRouter(prefix="/telegram", tags=["v2-telegram"])
+
+# Backward-compatible schema exports (used by alias routers)
+TelegramAuthRequest = telegram_schemas.TelegramAuthRequest
+TelegramAuthResponse = telegram_schemas.TelegramAuthResponse
+TelegramLinkTokenResponse = telegram_schemas.TelegramLinkTokenResponse
 
 
 # ============ Schemas ============
@@ -47,6 +53,81 @@ class V2TelegramAuthResponse(BaseModel):
     refresh_token: str | None = None
     is_new_user: bool = False
     user: V2TelegramAuthUser
+
+
+def telegram_auth(payload: TelegramAuthRequest, db: Session) -> TelegramAuthResponse:
+    """Backward-compatible wrapper for alias routes.
+
+    NOTE: This path intentionally omits Request metadata (client_ip/user_agent).
+    """
+    # 1. initData 검증
+    try:
+        validated_data = v2_telegram.validate_init_data(payload.init_data)
+        tg_user = v2_telegram.extract_telegram_user(validated_data)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    tg_id = tg_user.get("id")
+    tg_username = tg_user.get("username")
+    tg_nickname = v2_telegram.generate_nickname(tg_user)
+    start_param = (payload.start_param or validated_data.get("start_param") or "").strip()
+
+    # 2. V2User 조회/생성
+    v2_user = db.query(V2User).filter(V2User.telegram_id == tg_id).first()
+    is_new_user = False
+    if not v2_user:
+        v2_user, is_new_user = _create_v2_user(db, tg_id, tg_username, tg_nickname, start_param)
+    else:
+        _update_v2_user(db, v2_user, tg_username, tg_nickname)
+
+    # 3. 토큰 발급
+    access_token, refresh_token, _ = V2AuthService.issue_tokens(db, v2_user.id)
+
+    return TelegramAuthResponse(
+        access_token=access_token,
+        token_type="bearer",
+        is_new_user=is_new_user,
+        linked_to_existing=False,
+        user=telegram_schemas.AuthUser(
+            id=int(v2_user.id),
+            external_id=str(v2_user.cc_id),
+            nickname=v2_user.nickname,
+            telegram_id=v2_user.telegram_id,
+        ),
+    )
+
+
+def issue_link_token(db: Session, user_id: int) -> TelegramLinkTokenResponse:
+    """Issue a short start_param code for linking an existing user to Telegram."""
+    from app.v2.models import TelegramLinkCode
+
+    now_utc = datetime.utcnow()
+    expires_at = now_utc + timedelta(minutes=10)
+
+    # Remove existing active codes for the user to keep it simple.
+    db.query(TelegramLinkCode).filter(TelegramLinkCode.user_id == int(user_id)).delete(synchronize_session=False)
+
+    # Generate a short code (16 chars) with collision check.
+    for _ in range(5):
+        code = uuid.uuid4().hex[:16]
+        exists = db.query(TelegramLinkCode).filter(TelegramLinkCode.code == code).first()
+        if not exists:
+            record = TelegramLinkCode(
+                code=code,
+                user_id=int(user_id),
+                expires_at=expires_at,
+                used_at=None,
+            )
+            db.add(record)
+            db.commit()
+            start_param = f"link_{code}"
+            return TelegramLinkTokenResponse(
+                expires_at_utc=expires_at,
+                start_param=start_param,
+                open_url=None,
+            )
+
+    raise HTTPException(status_code=500, detail="LINK_TOKEN_GENERATION_FAILED")
 
 
 # ============ Endpoints ============

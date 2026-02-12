@@ -8,14 +8,15 @@ Test: Onboarding (New User)
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
 from app.v2.api import new_user_onboarding
 from app.v2.api import v1_auth_user_alias
-from app.v2.models import Mission, MissionCategory, MissionRewardType
+from app.v2.models import ExternalRankingData, Mission, MissionCategory, MissionRewardType, User, UserActivity
 from app.v2.services.mission_service import MissionService
+from app.v2.models.user import V2User, V2UserRole, V2UserStatus
 
 
 def test_new_user_status_user_not_found(db):
@@ -88,3 +89,51 @@ def test_claim_welcome_success_with_stubbed_reward_claim(db, base_user, monkeypa
     keys = {r.get("logic_key") for r in res.rewards}
     assert keys == set(new_user_onboarding.WELCOME_AUTO_CLAIM_KEYS)
     assert all(r.get("reward_type") == "VAULT" for r in res.rewards)
+
+
+def test_new_user_status_window_inactive_and_existing_member_by_external_deposit(db):
+    now = datetime.utcnow()
+
+    v1_user = User(
+        id=9100,
+        external_id="test_v1_user_9100",
+        nickname="test_v1_user_9100",
+        created_at=now - timedelta(hours=30),
+    )
+    v2_user = V2User(
+        id=9100,
+        cc_id="test_v2_user_9100",
+        nickname="test_v2_user_9100",
+        role=V2UserRole.USER,
+        status=V2UserStatus.ACTIVE,
+    )
+    db.add_all([v1_user, v2_user])
+
+    # external deposit history -> existing_member_by_external_deposit=True
+    db.add(
+        ExternalRankingData(
+            user_id=9100,
+            deposit_amount=100,
+            play_count=0,
+        )
+    )
+
+    # activity exists but no charge history
+    db.add(
+        UserActivity(
+            user_id=9100,
+            roulette_plays=1,
+            dice_plays=2,
+            lottery_plays=3,
+            last_charge_at=None,
+        )
+    )
+    db.commit()
+
+    res = new_user_onboarding.status(db=db, user_id=9100)
+    assert res.eligible is True
+    assert res.is_new_user_window_active is False
+    assert res.seconds_left == 0
+    assert res.existing_member_by_external_deposit is True
+    assert res.deposit_amount == 100
+    assert res.total_play_count == 6

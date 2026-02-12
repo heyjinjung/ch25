@@ -8,6 +8,8 @@ Test: Admin Vault - aggregate & manual suspension
 
 from __future__ import annotations
 
+from datetime import date
+
 from app.v2.api.admin import vault_routes
 from app.v2.models.user import V2User, V2UserRole, V2UserStatus
 
@@ -58,3 +60,49 @@ def test_toggle_manual_suspension_updates_user(db, base_user):
 
     db.refresh(base_user)
     assert int(base_user.benefits_suspended_manual or 0) == 1
+
+
+def test_vault_spend_limits_filters_and_flags(db):
+    today = date.today().isoformat()
+
+    u1 = _seed_v2_user(db, user_id=9201, cc_id="u9201", locked=0, available=0)
+    u1.vault_spent_today = 40000
+    u1.vault_spent_reset_date = today
+
+    u2 = _seed_v2_user(db, user_id=9202, cc_id="u9202", locked=0, available=0)
+    u2.vault_spent_today = 50000
+    u2.vault_spent_reset_date = today
+
+    u3 = _seed_v2_user(db, user_id=9203, cc_id="u9203", locked=0, available=0)
+    u3.vault_spent_today = 0
+    u3.vault_spent_reset_date = today
+
+    db.commit()
+
+    res = vault_routes.get_vault_spend_limits(min_usage_rate=0.81, limit=50, db=db, admin_info=(1, "ADMIN"))
+    assert [r.user_id for r in res] == [9202]
+    assert res[0].is_limit_reached is True
+
+    res2 = vault_routes.get_vault_spend_limits(min_usage_rate=0.8, limit=50, db=db, admin_info=(1, "ADMIN"))
+    ids = {r.user_id for r in res2}
+    assert ids == {9201, 9202}
+
+
+def test_vault_spend_limits_summary_counts(db):
+    today = date.today().isoformat()
+
+    u1 = _seed_v2_user(db, user_id=9301, cc_id="u9301", locked=0, available=0)
+    u1.vault_spent_today = 40000
+    u1.vault_spent_reset_date = today
+
+    u2 = _seed_v2_user(db, user_id=9302, cc_id="u9302", locked=0, available=0)
+    u2.vault_spent_today = 50000
+    u2.vault_spent_reset_date = today
+
+    db.commit()
+
+    out = vault_routes.get_vault_spend_limits_summary(db=db, admin_info=(1, "ADMIN"))
+    assert out.total_users == 2
+    assert out.users_at_limit == 1
+    assert out.users_above_80_percent == 2
+    assert out.total_daily_spent == 90000

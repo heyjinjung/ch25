@@ -81,7 +81,7 @@ from sqlalchemy import (
     ForeignKey, UniqueConstraint, Index,
 )
 from sqlalchemy.orm import relationship
-from app.v2.models.base import Base
+from app.db.base_class import Base
 
 
 class SeoDailyCode(Base):

@@ -10,6 +10,7 @@ from starlette.types import ASGIApp
 from app.v2.api.routes import router as api_router
 from app.v2.api.events import router as events_router
 from app.v2.api.event_routes import router as event_seol_router
+from app.v2.api.seo_mission_routes import router as seo_mission_router
 from app.v2.api.ui_config_public_routes import router as ui_config_public_router
 from app.core.config import get_settings
 from app.core.error_handlers import register_exception_handlers
@@ -231,6 +232,7 @@ async def shutdown_event():
 register_exception_handlers(app)
 app.include_router(events_router)
 app.include_router(event_seol_router)
+app.include_router(seo_mission_router)
 app.include_router(ui_config_public_router)
 app.include_router(api_router, prefix="/api/v2")
 

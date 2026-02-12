@@ -148,6 +148,10 @@ class V2MissionService:
             return now_tz.strftime("%Y-W%V")
         return "NON_RESET"
 
+    # Backward-compatible API (legacy callers)
+    def get_reset_date_str(self, category: MissionCategory) -> str:
+        return self._get_reset_date_str(category)
+
     def get_streak_info(self, user_id: int) -> StreakInfoSchema:
         user = self.db.execute(select(V2User).where(V2User.id == user_id)).scalar_one_or_none()
         if not user:

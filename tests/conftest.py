@@ -229,3 +229,8 @@ def admin_token(test_db_session):
         test_db_session.refresh(admin)
 
     return create_access_token(int(admin.id), role="ADMIN")
+
+
+@pytest.fixture(scope="function")
+def user_token(base_user):
+    return create_access_token(int(base_user.id), role="USER")

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { Button } from "../../components/common/Button";
@@ -450,7 +450,58 @@ export default function PublicLandingPage() {
             내용은 공식 채널을 통해 안내됩니다.
           </p>
         </section>
+
+        {/* ───── SEO Mission Hidden Code (구글 검색 유입 전용) ───── */}
+        <SeoHiddenCodeSection />
       </main>
     </div>
+  );
+}
+
+// ── SEO Hidden Code Section (검색 유입 시에만 코드 노출) ────────────────
+function SeoHiddenCodeSection() {
+  const [code, setCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ref = document.referrer.toLowerCase();
+    const isFromSearch =
+      ref.includes("google.") ||
+      ref.includes("naver.") ||
+      ref.includes("daum.") ||
+      ref.includes("bing.");
+
+    if (isFromSearch) {
+      fetch("/api/v2/seo-mission/public/today-hint")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.code) setCode(data.code);
+          else setCode(null);
+        })
+        .catch(() => setCode(null));
+    }
+  }, []);
+
+  if (!code) return null;
+
+  return (
+    <section className="mt-10 rounded-xl border border-blue-500/20 bg-blue-500/5 p-6">
+      <h2 className="text-lg font-bold text-white">
+        🔍 일일 검색 미션 코드
+      </h2>
+      <p className="mt-2 text-sm text-obsidian-muted">
+        구글 검색을 통해 방문해 주셔서 감사합니다!
+        아래 코드를 씨씨카지노 앱 내 검색 미션 페이지에서 입력하면
+        3,000 ~ 5,000P를 받을 수 있습니다.
+      </p>
+      <div
+        className="mt-4 inline-block rounded-xl bg-white/10 px-6 py-3 font-mono text-xl font-black text-white tracking-widest select-all"
+        data-nosnippet=""
+      >
+        {code}
+      </div>
+      <p className="mt-3 text-xs text-zinc-500">
+        매일 오전 9시에 새로운 코드가 생성됩니다. 계정당 하루 1회 참여 가능.
+      </p>
+    </section>
   );
 }
