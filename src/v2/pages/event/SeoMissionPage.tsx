@@ -21,13 +21,13 @@ const STEPS = [
   {
     num: 1,
     title: "구글 검색",
-    desc: '"씨씨카지노" 또는 "씨씨지민"을 구글에서 검색하세요.',
+    desc: '"씨씨지민"을 구글에서 검색하세요.',
     tip: "Wi-Fi 대신 LTE/5G 사용 시 검색 결과가 더 빨리 반영됩니다.",
   },
   {
     num: 2,
     title: "랜딩 페이지 방문",
-    desc: "검색 결과에서 씨씨카지노 공식 페이지(cc-jm.com)를 클릭하세요.",
+    desc: "검색 결과에서 씨씨지민 공식 페이지(cc-jm.com)를 클릭하세요.",
     tip: "페이지 맨 아래에 오늘의 미션 코드가 표시됩니다.",
   },
   {
@@ -110,7 +110,7 @@ export default function SeoMissionPage() {
             검색하고 <span className="text-blue-500">포인트</span> 받기
           </h1>
           <p className="text-sm text-zinc-400 mt-2">
-            매일 구글에서 씨씨카지노를 검색하고 코드를 입력하면 3,000 ~ 5,000P를 받을 수 있습니다.
+            매일 구글에서 "씨씨지민"을 검색하고 코드를 입력하면 3,000 ~ 5,000P를 받을 수 있습니다.
           </p>
         </motion.div>
 
