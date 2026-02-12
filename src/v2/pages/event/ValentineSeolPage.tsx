@@ -1,0 +1,270 @@
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Sparkles, AlertTriangle } from "lucide-react";
+import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
+import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
+import SecretCodeInput from "../../components/event/SecretCodeInput";
+import { useValentineSeolStatus } from "../../hooks/useValentineSeol";
+
+// ============================================================================
+// Date helpers (KST)
+// ============================================================================
+
+type EventDay = "valentine" | "seol_day1" | "seol_day2" | "seol_day3";
+
+interface EventDayInfo {
+  day: EventDay;
+  isTest: boolean;
+}
+
+function getEventDayInfo(): EventDayInfo | null {
+  const kst = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+  );
+  const y = kst.getFullYear();
+  const m = String(kst.getMonth() + 1).padStart(2, "0");
+  const d = String(kst.getDate()).padStart(2, "0");
+  const dateStr = `${y}-${m}-${d}`;
+
+  // 테스트 기간 (2/12-13)
+  if (dateStr === "2026-02-12") return { day: "valentine", isTest: true };
+  if (dateStr === "2026-02-13") return { day: "seol_day1", isTest: true };
+  // 실제 이벤트 기간 (2/14-17)
+  if (dateStr === "2026-02-14") return { day: "valentine", isTest: false };
+  if (dateStr === "2026-02-15") return { day: "seol_day1", isTest: false };
+  if (dateStr === "2026-02-16") return { day: "seol_day2", isTest: false };
+  if (dateStr === "2026-02-17") return { day: "seol_day3", isTest: false };
+  return null;
+}
+
+// ============================================================================
+// Mission Card (inline)
+// ============================================================================
+
+interface MissionInfo {
+  mission_id: number;
+  title: string;
+  logic_key: string | null;
+  target_value: number;
+  current_value: number;
+  is_completed: boolean;
+  is_claimed: boolean;
+  reward_type: string | null;
+  reward_amount: number | null;
+}
+
+function EventMissionCard({ mission }: { mission: MissionInfo }) {
+  const progress = Math.min(
+    (mission.current_value / mission.target_value) * 100,
+    100,
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4"
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <h4 className="text-sm font-bold text-white mb-0.5">
+            {mission.title}
+          </h4>
+          <p className="text-[11px] text-zinc-500">
+            {mission.reward_type && mission.reward_amount
+              ? `보상: ${mission.reward_type} × ${mission.reward_amount}`
+              : ""}
+          </p>
+        </div>
+        <div className="ml-3">
+          {mission.is_completed ? (
+            <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              {mission.is_claimed ? "수령 완료" : "완료 ✓"}
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-zinc-500 border border-white/10">
+              진행중
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`h-full rounded-full ${
+            mission.is_completed
+              ? "bg-emerald-500"
+              : "bg-gradient-to-r from-purple-500 to-rose-500"
+          }`}
+        />
+      </div>
+      <div className="flex items-center justify-between mt-1.5">
+        <span className="text-[10px] font-medium text-zinc-600">
+          {mission.current_value} / {mission.target_value}
+        </span>
+        <span className="text-[10px] font-bold text-zinc-500">
+          {Math.round(progress)}%
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// Main Page
+// ============================================================================
+
+export default function ValentineSeolPage() {
+  const navigate = useNavigate();
+  const dayInfo = getEventDayInfo();
+  const isActive = dayInfo !== null;
+  const { data: eventStatus, isLoading } = useValentineSeolStatus(isActive);
+
+  return (
+    <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]">
+      <BackgroundPaths count={20} />
+
+      <div className="relative z-10 px-4 pb-10">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <button
+            onClick={() => navigate("/event")}
+            className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4"
+          >
+            <ArrowLeft size={18} />
+            <span className="text-xs font-bold">이벤트 목록</span>
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+              <span className="text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em]">
+                Special Event
+              </span>
+            </div>
+          </div>
+          <h1 className="text-3xl font-black text-white tracking-tighter">
+            💝 발렌타인 & <span className="text-amber-500">설날</span> 이벤트
+          </h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            2026.02.14 — 02.17 | 4일 연속 달성하면 특별 보너스!
+          </p>
+        </motion.div>
+
+        {/* Test Mode Warning */}
+        {dayInfo?.isTest && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-4 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4"
+          >
+            <AlertTriangle size={20} className="text-amber-400 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-amber-400">
+                [테스트 모드]
+              </p>
+              <p className="text-xs text-amber-400/70">
+                2/12-13은 테스트 기간입니다. 실제 이벤트는 2/14부터 시작됩니다.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Not Active */}
+        {!isActive && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-20 text-center gap-4 bg-white/[0.02] rounded-3xl border border-dashed border-white/10"
+          >
+            <Sparkles size={40} className="text-zinc-600" />
+            <div>
+              <p className="text-lg font-bold text-zinc-400">
+                이벤트 준비 중
+              </p>
+              <p className="text-sm text-zinc-600 mt-1">
+                2026년 2월 14일부터 참여할 수 있습니다!
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Active Content */}
+        {isActive && dayInfo && (
+          <div className="space-y-5">
+            {/* Banner */}
+            <ValentineSeolBanner
+              eventDay={dayInfo.day}
+              streakCurrent={eventStatus?.streak_current ?? 0}
+              streakTarget={eventStatus?.streak_target ?? 4}
+            />
+
+            {/* Secret Code Input */}
+            <SecretCodeInput
+              claimedCodes={eventStatus?.secret_codes_claimed}
+            />
+
+            {/* Event Missions */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={16} className="text-amber-400" />
+                <h2 className="text-base font-black text-white">
+                  이벤트 미션
+                </h2>
+              </div>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin" />
+                </div>
+              ) : eventStatus?.missions && eventStatus.missions.length > 0 ? (
+                <div className="space-y-3">
+                  {eventStatus.missions.map((mission) => (
+                    <EventMissionCard
+                      key={mission.mission_id}
+                      mission={mission}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-zinc-600 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
+                  <p className="text-sm font-bold">
+                    미션 데이터를 불러오는 중...
+                  </p>
+                </div>
+              )}
+            </motion.div>
+
+            {/* Streak Bonus Info */}
+            {eventStatus?.streak_completed && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center"
+              >
+                <p className="text-lg font-black text-emerald-400">
+                  🎊 4일 연속 달성 완료!
+                </p>
+                <p className="text-xs text-emerald-400/70 mt-1">
+                  특별 보너스 보상이 지급되었습니다.
+                </p>
+              </motion.div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

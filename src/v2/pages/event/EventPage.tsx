@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
 import { MatrixText } from "../../components/ui/MatrixText";
 import { BorderBeam } from "../../components/ui/BorderBeam";
@@ -7,6 +8,16 @@ import { EventModals } from "../../components/event/EventModals";
 import "./EventPage.css";
 
 const EVENT_ITEMS = [
+  {
+    id: "valentine-seol",
+    title: "💝 발렌타인 & 설날",
+    desc: "4일 연속 미션 + 비밀코드 보상",
+    icon: "🎊",
+    color: "from-rose-500/20 via-pink-500/10 to-amber-500/20",
+    badge: "🔥 HOT",
+    isWide: true,
+    route: "/v2/event/valentine-seol",
+  },
   {
     id: "attendance",
     title: "연속출석 이벤",
@@ -52,6 +63,15 @@ const EVENT_ITEMS = [
 
 const EventPage: React.FC = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const handleCardClick = (item: (typeof EVENT_ITEMS)[number]) => {
+    if ("route" in item && item.route) {
+      navigate(item.route);
+    } else {
+      setSelectedEventId(item.id);
+    }
+  };
 
   return (
     <div className="event-page relative min-h-tg bg-[#09090B] overflow-x-hidden">
@@ -97,7 +117,7 @@ const EventPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              onClick={() => setSelectedEventId(item.id)}
+              onClick={() => handleCardClick(item)}
               className={`event-card ${item.isWide ? 'event-grid-wide' : ''} group`}
             >
               <div className={`relative h-full overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/40 backdrop-blur-md p-5 flex flex-col justify-between transition-all duration-300 group-hover:bg-neutral-800/60`}>

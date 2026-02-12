@@ -115,10 +115,10 @@ def upgrade():
     # 3. Insert Secret Code Data
     op.execute("""
         INSERT INTO event_secret_code (code, event_date, reward_type, reward_amount, is_active, expires_at, created_at, updated_at) VALUES
-        ('LOVE2026', '2026-02-14', 'ROULETTE_TICKET', 2, 1, '2026-02-14 23:59:59', NOW(), NOW()),
-        ('SEOL777', '2026-02-15', 'LOTTERY_TICKET', 1, 1, '2026-02-15 23:59:59', NOW(), NOW()),
-        ('LUCKY888', '2026-02-16', 'DICE_TICKET', 2, 1, '2026-02-16 23:59:59', NOW(), NOW()),
-        ('JACKPOT999', '2026-02-17', 'POINT', 10000, 1, '2026-02-17 23:59:59', NOW(), NOW())
+        ('LOVE2026', '2026-02-14', 'ROULETTE_TICKET', 2, 1, '2026-02-14 23:59:59+09:00', NOW(), NOW()),
+        ('SEOL777', '2026-02-15', 'LOTTERY_TICKET', 1, 1, '2026-02-15 23:59:59+09:00', NOW(), NOW()),
+        ('LUCKY888', '2026-02-16', 'DICE_TICKET', 2, 1, '2026-02-16 23:59:59+09:00', NOW(), NOW()),
+        ('JACKPOT999', '2026-02-17', 'POINT', 10000, 1, '2026-02-17 23:59:59+09:00', NOW(), NOW())
         ON DUPLICATE KEY UPDATE
             event_date = VALUES(event_date),
             reward_type = VALUES(reward_type),

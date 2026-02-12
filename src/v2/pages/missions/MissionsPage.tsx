@@ -16,8 +16,7 @@ import "./MissionRedesign.css";
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useValentineSeolStatus } from "../../hooks/useValentineSeol";
-import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
-import SecretCodeInput from "../../components/event/SecretCodeInput";
+import { Heart, ChevronRight, AlertTriangle } from "lucide-react";
 
 const FloatingTimer = ({ deadline }: { deadline: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -70,7 +69,12 @@ const FloatingTimer = ({ deadline }: { deadline: string }) => {
 
 type EventDay = "valentine" | "seol_day1" | "seol_day2" | "seol_day3" | null;
 
-function getEventDay(): EventDay {
+interface EventDayResult {
+  day: EventDay;
+  isTest: boolean;
+}
+
+function getEventDayResult(): EventDayResult {
   const kst = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
   );
@@ -79,11 +83,15 @@ function getEventDay(): EventDay {
   const d = String(kst.getDate()).padStart(2, "0");
   const dateStr = `${y}-${m}-${d}`;
 
-  if (dateStr === "2026-02-14") return "valentine";
-  if (dateStr === "2026-02-15") return "seol_day1";
-  if (dateStr === "2026-02-16") return "seol_day2";
-  if (dateStr === "2026-02-17") return "seol_day3";
-  return null;
+  // 테스트 기간 (2/12-13)
+  if (dateStr === "2026-02-12") return { day: "valentine", isTest: true };
+  if (dateStr === "2026-02-13") return { day: "seol_day1", isTest: true };
+  // 실제 이벤트 기간
+  if (dateStr === "2026-02-14") return { day: "valentine", isTest: false };
+  if (dateStr === "2026-02-15") return { day: "seol_day1", isTest: false };
+  if (dateStr === "2026-02-16") return { day: "seol_day2", isTest: false };
+  if (dateStr === "2026-02-17") return { day: "seol_day3", isTest: false };
+  return { day: null, isTest: false };
 }
 
 const CATEGORIES = [
@@ -108,7 +116,7 @@ export default function MissionsPage() {
 
   const claimMutation = useV2ClaimMission();
 
-  const eventDay = getEventDay();
+  const { day: eventDay, isTest: isTestMode } = getEventDayResult();
   const isEventPeriod = eventDay !== null;
   const { data: eventStatus } = useValentineSeolStatus(isEventPeriod);
 
@@ -179,21 +187,42 @@ export default function MissionsPage() {
           />
         </motion.div>
 
-        {/* Valentine & Seol Event (2026-02-14 ~ 2026-02-17) */}
-        {isEventPeriod && eventDay && (
+        {/* Valentine & Seol Event Banner → 전용 페이지로 이동 */}
+        {isEventPeriod && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 space-y-4"
+            className="mb-6"
           >
-            <ValentineSeolBanner
-              eventDay={eventDay}
-              streakCurrent={eventStatus?.streak_current ?? 0}
-              streakTarget={eventStatus?.streak_target ?? 4}
-            />
-            <SecretCodeInput
-              claimedCodes={eventStatus?.secret_codes_claimed}
-            />
+            <button
+              onClick={() => navigate("/v2/event/valentine-seol")}
+              className="w-full relative overflow-hidden rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-amber-500/15 p-4 text-left group transition-all hover:border-rose-500/50"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
+                    <Heart size={20} className="text-rose-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-black text-white">
+                        💝 발렌타인 & 설날 이벤트
+                      </h3>
+                      {isTestMode && (
+                        <span className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                          <AlertTriangle size={10} />
+                          TEST
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                      미션 {eventStatus?.streak_current ?? 0}/{eventStatus?.streak_target ?? 4}일 · 비밀코드 보상 받기
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight size={18} className="text-zinc-600 group-hover:text-rose-400 transition-colors" />
+              </div>
+            </button>
           </motion.div>
         )}
 

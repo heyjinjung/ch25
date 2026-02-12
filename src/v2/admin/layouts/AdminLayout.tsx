@@ -127,6 +127,11 @@ export default function AdminLayout() {
           label: "메시지 및 고객 관리",
           path: "/admin/marketing/messages",
         },
+        {
+          icon: Settings,
+          label: "이벤트 관리",
+          path: "/admin/marketing/events",
+        },
       ],
     },
     {

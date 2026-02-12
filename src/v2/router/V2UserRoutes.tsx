@@ -23,6 +23,9 @@ const TeamBattlePage = lazy(() => import("../pages/game/TeamBattlePage"));
 const LevelTowerPage = lazy(() => import("../pages/game/LevelTowerPage"));
 const EventPage = lazy(() => import("../pages/event/EventPage"));
 const SeoMissionPage = lazy(() => import("../pages/event/SeoMissionPage"));
+const ValentineSeolPage = lazy(
+  () => import("../pages/event/ValentineSeolPage"),
+);
 const PublicLandingPage = lazy(
   () => import("../pages/public/PublicLandingPage"),
 );
@@ -65,6 +68,7 @@ export const V2UserRoutes = () => {
 
           {/* SEO Daily Search Mission */}
           <Route path="/v2/event/seo-mission" element={<SeoMissionPage />} />
+          <Route path="/v2/event/valentine-seol" element={<ValentineSeolPage />} />
 
           {/* Game Routes */}
           <Route path="/game/roulette" element={<RoulettePage />} />

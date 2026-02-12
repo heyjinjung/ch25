@@ -1,11 +1,11 @@
 # 🎁 씨씨카지노 발렌타인데이 & 설 연휴 통합 이벤트 기획서
 
 **문서 정보**
-- **작성일**: 2026-02-11 (v1.1 수정)
+- **작성일**: 2026-02-12 (v1.3 구현 완료)
 - **이벤트 기간**: 2026-02-14 (발렌타인데이) ~ 2026-02-17 (설 연휴 종료)
 - **목적**: 씨씨카지노 리텐션율 상승 및 고액 입금 유저 확보
 - **타겟**: 한국 도박 성향 20-50대 남성
-- **문서 상태**: 기획안 v1.1 (입금 조건 상향, 비밀코드 추가)
+- **문서 상태**: ✅ 구현 완료 v1.3 (프론트엔드 통합 + 어드민 이벤트 관리 + 테스트 날짜 게이팅)
 
 ---
 
@@ -826,14 +826,25 @@ export default MissionsPage;
 - [x] EVENT_STREAK 스트릭 핸들러 구현
 
 #### 프론트엔드
-- [ ] 비밀코드 입력 컴포넌트 생성 (`SecretCodeInput.tsx`)
-- [ ] 미션 페이지에 컴포넌트 삽입
-- [ ] CSS 스타일링 완료
+- [x] 비밀코드 입력 컴포넌트 생성 (`SecretCodeInput.tsx`)
+- [x] 미션 페이지에 이벤트 배너 삽입 (`MissionsPage.tsx` → 전용 페이지 이동)
+- [x] CSS 스타일링 완료 (Obsidian 테마 적용)
+- [x] 전용 이벤트 페이지 생성 (`ValentineSeolPage.tsx`) — 배너 + 비밀코드 + 미션 카드
+- [x] 이벤트 메인 페이지에 Valentine 카드 추가 (`EventPage.tsx`)
+- [x] 라우트 등록 (`/v2/event/valentine-seol` in `V2UserRoutes.tsx`)
+- [x] 테스트 날짜 게이팅 (2/12-13 [TEST] 라벨)
+
+#### 어드민
+- [x] 어드민 이벤트 관리 API (`admin_event_routes.py` — stats/toggle/sync)
+- [x] 어드민 이벤트 페이지 (`AdminEventPage.tsx` — 통계 + 코드 관리 + 동기화)
+- [x] 어드민 사이드바 「이벤트 관리」 항목 추가 (`AdminLayout.tsx`)
+- [x] 어드민 라우트 등록 (`/admin/marketing/events` in `V2AdminRoutes.tsx`)
 
 #### 운영
-- [ ] 텔레그램 공지 스크립트 작성 및 Cron 설정
-- [ ] 비밀코드 4종 확정 (LOVE2026, SEOL777, LUCKY888, JACKPOT999)
+- [x] 텔레그램 공지 스크립트 작성 (`scripts/send_secret_code_announcement.py`)
+- [x] 비밀코드 4종 확정 (LOVE2026, SEOL777, LUCKY888, JACKPOT999)
 - [ ] FAQ 준비 (비밀코드 입력 방법, 중복 입력 불가 안내)
+- [ ] Cron 설정 (매일 오전 10시 텔레그램 공지)
 
 ---
 
@@ -907,6 +918,7 @@ export default MissionsPage;
 
 | 날짜 | 버전 | 변경 내용 | 작성자 |
 |------|------|-----------|--------|
+| 2026-02-12 | v1.3 | **프론트엔드 통합 구현 완료**: `ValentineSeolPage.tsx` 전용 이벤트 페이지 생성, `EventPage.tsx` Valentine 카드 추가, `MissionsPage.tsx` 이벤트 배너 (→전용 페이지 이동), 테스트 날짜 게이팅 (2/12-13 [TEST]), 어드민 이벤트 관리 (`AdminEventPage.tsx` + `admin_event_routes.py` — 통계/코드 토글/전역 동기화), 마이그레이션 expires_at +09:00 KST 타임존 수정 | Antigravity |
 | 2026-02-12 | v1.2 | **코드 정합성 반영**: DAY 2 복권+주사위(Bundle 21), DAY 3 Bundle 22, 스트릭 Bundle 25/EVENT_STREAK, SEOL777 복권 1장, API 경로 `/api/events/*`, FE 엔드포인트 수정, 배포 체크리스트 업데이트 | Claude Sonnet 4.5 |
 | 2026-02-11 | v1.1 | 입금 조건 상향 (10만/30만), 세그먼트 차등 삭제, 비밀코드 시스템 추가 | Claude Sonnet 4.5 |
 | 2026-02-11 | v1.0 | 초안 작성 | Claude Sonnet 4.5 |

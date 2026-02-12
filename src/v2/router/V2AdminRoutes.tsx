@@ -21,6 +21,7 @@ import DiceConfigPage from "../admin/pages/game/DiceConfigPage";
 import LotteryConfigPage from "../admin/pages/game/LotteryConfigPage";
 import TicketInventoryTabPage from "../admin/pages/economy/TicketInventoryTabPage";
 import MarketingTabPage from "../admin/pages/marketing/MarketingTabPage";
+import AdminEventPage from "../admin/pages/marketing/AdminEventPage";
 import UserManagementTabPage from "../admin/pages/users/UserManagementTabPage";
 import ModalControlPage from "../admin/pages/game/ModalControlPage";
 import AdminTeamBattlePage from "../admin/pages/game/AdminTeamBattlePage";
@@ -129,6 +130,7 @@ const V2AdminRoutes: React.FC = () => {
 
           {/* Marketing - Tabbed */}
           <Route path="marketing/messages" element={<MarketingTabPage />} />
+          <Route path="marketing/events" element={<AdminEventPage />} />
 
           {/* Prospect Linking */}
           <Route path="prospect/linking" element={<ProspectLinkingPage />} />

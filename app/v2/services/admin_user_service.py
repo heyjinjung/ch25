@@ -285,6 +285,8 @@ class V2AdminUserService:
         from app.v2.models.v2_shop_order import V2ShopOrder
         from app.v2.models.v2_user_retention_state import V2UserRetentionState
 
+        from app.v2.models import UserSecretCodeClaim, UserSeoDailyCodeClaim
+
         # Game Wallet / Tokens
         db.query(UserGameWalletLedger).filter(UserGameWalletLedger.user_id == user_id).delete(synchronize_session=False)
         db.query(UserGameWallet).filter(UserGameWallet.user_id == user_id).delete(synchronize_session=False)
@@ -368,6 +370,10 @@ class V2AdminUserService:
                     db.query(TelegramUnlinkRequest).filter(
                         TelegramUnlinkRequest.telegram_id == str(int(target_telegram_id))
                     ).delete(synchronize_session=False)
+
+        # Event & SEO Claims
+        db.query(UserSecretCodeClaim).filter(UserSecretCodeClaim.user_id == user_id).delete(synchronize_session=False)
+        db.query(UserSeoDailyCodeClaim).filter(UserSeoDailyCodeClaim.user_id == user_id).delete(synchronize_session=False)
 
         # Admin Profile
         db.query(AdminUserProfile).filter(AdminUserProfile.user_id == user_id).delete(synchronize_session=False)
