@@ -47,7 +47,7 @@
 - 마이그레이션 파일을 재실행 안전(idempotent)하게 수정:
   - `expires_at` 값에서 `+09` 제거 (DATETIME 호환)
   - 테이블/인덱스 생성은 존재 여부를 확인 후 수행
-  - `event_secret_code`/`mission` seed는 `ON DUPLICATE KEY UPDATE` 또는 스키마 기반 동적 UPSERT 적용
+  - `mission` seed SQL에서 `visible` 컬럼을 제거하여 스키마 불일치 환경에서도 실행 가능하게 함
 - 수정 파일: [alembic/versions/20260214_1000_event_valentine_seol_missions.py](../../alembic/versions/20260214_1000_event_valentine_seol_missions.py)
 
 **검증 방법**

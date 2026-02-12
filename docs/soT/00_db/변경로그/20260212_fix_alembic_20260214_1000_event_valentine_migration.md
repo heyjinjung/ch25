@@ -10,7 +10,7 @@
 ## 1. 변경 요약
 - `alembic upgrade head`가 실패하던 `20260214_1000_event_valentine_seol_missions` 리비전을 재실행 안전(idempotent)하게 수정
 - MySQL `DATETIME` 호환을 위해 seed 데이터의 타임존 오프셋 문자열을 제거
-- `mission` 테이블 스키마 차이(`visible` 컬럼 유무)에 안전하도록 seed UPSERT를 스키마 기반으로 수행
+- `mission` 테이블 스키마 차이(`visible` 컬럼 유무)에 안전하도록 seed SQL에서 `visible` 컬럼을 제거
 
 ## 2. 원인 및 증거
 - MySQL 에러: `Incorrect datetime value: 'YYYY-MM-DD HH:MM:SS+09'` (DATETIME 컬럼에 오프셋 포함 문자열 삽입)
