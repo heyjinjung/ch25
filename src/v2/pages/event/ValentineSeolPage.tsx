@@ -38,6 +38,55 @@ function getEventDayInfo(): EventDayInfo | null {
 }
 
 // ============================================================================
+// Reward label helpers
+// ============================================================================
+
+/** Bundle ID → 한국어 보상 설명 */
+const BUNDLE_LABELS: Record<number, string> = {
+  3:  "🎰 룰렛 1장 + 주사위 1장 + 복권 1장",
+  21: "🎲 복권 1장 + 주사위 3장",
+  22: "💎 20,000P + 다이아몬드 1장",
+  23: "🎰 10,000P + 룰렛 2장",
+  25: "🔑 20,000P + 골드키 1장",
+};
+
+/** reward_type 코드 → 한국어 단위명 */
+const TICKET_LABELS: Record<string, string> = {
+  ROULETTE_TICKET: "룰렛 티켓",
+  DICE_TICKET:     "주사위 티켓",
+  LOTTERY_TICKET:  "복권 티켓",
+  GOLD_KEY_TICKET: "골드키",
+  DIAMOND_TICKET:  "다이아몬드",
+  TICKET_ROULETTE: "룰렛 티켓",
+  TICKET_DICE:     "주사위 티켓",
+  TICKET_LOTTERY:  "복권 티켓",
+  TICKET_BUNDLE:   "게임 티켓 번들",
+  POINT:           "포인트",
+  CC_POINT:        "포인트",
+};
+
+function getRewardLabel(rewardType: string | null, rewardAmount: number | null): string {
+  if (!rewardType || !rewardAmount) return "";
+  if (rewardType === "BUNDLE" || rewardType === "TICKET_BUNDLE") {
+    return BUNDLE_LABELS[rewardAmount] ?? `번들 #${rewardAmount}`;
+  }
+  const label = TICKET_LABELS[rewardType];
+  if (label) return `${label} ${rewardAmount.toLocaleString()}장`;
+  if (rewardType === "POINT" || rewardType === "CC_POINT") return `${rewardAmount.toLocaleString()}P`;
+  return `${rewardType} × ${rewardAmount}`;
+}
+
+/** action_type → 유저가 해야 할 행동 설명 */
+function getTaskDescription(logicKey: string | null, actionType: string | null, targetValue: number): string {
+  if (logicKey === "EVENT_VALENTINE_2026") return `아무 게임 ${targetValue}판 플레이하세요`;
+  if (logicKey === "EVENT_SEOL_DAY2_2026") return `아무 게임 ${targetValue}판 플레이하세요`;
+  if (logicKey === "EVENT_SEOL_DAY1_2026") return `오늘 ${(targetValue).toLocaleString()}원 이상 입금하세요`;
+  if (logicKey === "EVENT_SEOL_DAY3_2026") return `오늘 ${(targetValue).toLocaleString()}원 이상 입금하세요`;
+  if (logicKey === "EVENT_SEOL_STREAK_2026") return `4일간 모든 이벤트 미션을 완료하세요`;
+  return "";
+}
+
+// ============================================================================
 // Mission Card (inline)
 // ============================================================================
 
@@ -45,6 +94,7 @@ interface MissionInfo {
   mission_id: number;
   title: string;
   logic_key: string | null;
+  action_type?: string | null;
   target_value: number;
   current_value: number;
   is_completed: boolean;
@@ -59,6 +109,9 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
     100,
   );
 
+  const rewardLabel = getRewardLabel(mission.reward_type, mission.reward_amount);
+  const taskDesc = getTaskDescription(mission.logic_key, mission.action_type ?? null, mission.target_value);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -70,11 +123,16 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
           <h4 className="text-sm font-bold text-white mb-0.5">
             {mission.title}
           </h4>
-          <p className="text-[11px] text-zinc-500">
-            {mission.reward_type && mission.reward_amount
-              ? `보상: ${mission.reward_type} × ${mission.reward_amount}`
-              : ""}
-          </p>
+          {taskDesc && (
+            <p className="text-[11px] text-amber-400/80 mb-0.5">
+              📋 {taskDesc}
+            </p>
+          )}
+          {rewardLabel && (
+            <p className="text-[11px] text-emerald-400/80">
+              🎁 보상: {rewardLabel}
+            </p>
+          )}
         </div>
         <div className="ml-3">
           {mission.is_completed ? (

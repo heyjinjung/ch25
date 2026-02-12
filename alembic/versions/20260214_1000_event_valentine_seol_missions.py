@@ -137,8 +137,8 @@ def upgrade():
             requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
-            '💝 발렌타인 럭키박스 받기',
-            '오늘 로그인하고 게임 3회 플레이하면 티켓 번들 GET!',
+            '💝 발렌타인 럭키박스',
+            '게임 3판 플레이하면 룰렛+주사위+복권 티켓 GET!',
             'SPECIAL', 'EVENT_VALENTINE_2026', 'PLAY_GAME',
             3, 'TICKET_BUNDLE', 3, 500,
             FALSE, FALSE, TRUE,
@@ -170,8 +170,8 @@ def upgrade():
             requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
-            '🧧 설날 세뱃돈 DAY 1 - 10만원 입금',
-            '오늘 10만원 이상 입금하면 포인트 10,000P + 룰렛 티켓!',
+            '🧧 설날 DAY 1 — 10만원 입금',
+            '오늘 10만원 이상 입금하면 10,000P + 룰렛 2장!',
             'SPECIAL', 'EVENT_SEOL_DAY1_2026', 'CC_DEPOSIT',
             100000, 'BUNDLE', 23, 1000,
             FALSE, FALSE, TRUE,
@@ -203,8 +203,8 @@ def upgrade():
             requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
-            '🎮 설날 세뱃돈 DAY 2 - 게임 즐기기',
-            '오늘 게임 5회 플레이하면 골드키 + 주사위 티켓!',
+            '🎮 설날 DAY 2 — 게임 5판',
+            '아무 게임 5판 플레이하면 복권 1장 + 주사위 3장!',
             'SPECIAL', 'EVENT_SEOL_DAY2_2026', 'PLAY_GAME',
             5, 'BUNDLE', 21, 800,
             FALSE, FALSE, TRUE,
@@ -236,8 +236,8 @@ def upgrade():
             requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
-            '💎 설날 세뱃돈 DAY 3 - 30만원 입금',
-            '오늘 30만원 이상 입금하면 포인트 20,000P + 다이아몬드 티켓!',
+            '💎 설날 DAY 3 — 30만원 입금',
+            '오늘 30만원 이상 입금하면 20,000P + 다이아몬드 1장!',
             'SPECIAL', 'EVENT_SEOL_DAY3_2026', 'CC_DEPOSIT',
             300000, 'BUNDLE', 22, 1500,
             FALSE, FALSE, TRUE,
@@ -270,7 +270,7 @@ def upgrade():
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '🏆 4일 연속 달성 보너스',
-            '2/14~2/17 모든 미션 완료 시 추가 보상!',
+            '4일간 모든 이벤트 미션 완료 시 20,000P + 골드키 1장!',
             'SPECIAL', 'EVENT_SEOL_STREAK_2026', 'EVENT_STREAK',
             4, 'BUNDLE', 25, 2000,
             FALSE, FALSE, TRUE,
