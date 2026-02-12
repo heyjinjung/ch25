@@ -17,8 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.v2.api.deps import get_db
 from app.v2.models.core.event_secret_code import EventSecretCode, UserSecretCodeClaim
-from app.v2.models.core.mission import Mission
-from app.v2.models.core.user_mission import UserMission
+from app.v2.models.core.mission import Mission, UserMission
 
 logger = logging.getLogger(__name__)
 
