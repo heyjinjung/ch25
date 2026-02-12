@@ -87,6 +87,15 @@ function getTaskDescription(logicKey: string | null, _actionType: string | null,
   return "";
 }
 
+function getMissionTitle(logicKey: string | null, originalTitle: string): string {
+  if (logicKey === "EVENT_VALENTINE_2026") return KOREAN.MISSION_TITLE_VALENTINE;
+  if (logicKey === "EVENT_SEOL_DAY1_2026") return KOREAN.MISSION_TITLE_SEOL_1;
+  if (logicKey === "EVENT_SEOL_DAY2_2026") return KOREAN.MISSION_TITLE_SEOL_2;
+  if (logicKey === "EVENT_SEOL_DAY3_2026") return KOREAN.MISSION_TITLE_SEOL_3;
+  if (logicKey === "EVENT_SEOL_STREAK_2026") return KOREAN.MISSION_TITLE_STREAK;
+  return originalTitle;
+}
+
 // ============================================================================
 // Animation Variants
 // ============================================================================
@@ -159,6 +168,7 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
 
   const rewardLabel = getRewardLabel(mission.reward_type, mission.reward_amount);
   const taskDesc = getTaskDescription(mission.logic_key, mission.action_type ?? null, mission.target_value);
+  const title = getMissionTitle(mission.logic_key, mission.title);
 
   return (
     <motion.div
@@ -183,7 +193,7 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
       <div className="flex items-start justify-between mb-3 relative z-10">
         <div className="flex-1">
           <h4 className="text-sm font-bold text-white mb-0.5 group-hover:text-amber-200 transition-colors">
-            {mission.title}
+            {title}
           </h4>
           {taskDesc && (
             <p className="text-[11px] text-amber-400/80 mb-0.5">
