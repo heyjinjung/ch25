@@ -35,10 +35,30 @@ describe("SeoMissionPage", () => {
     
     beforeEach(() => {
         vi.clearAllMocks();
+
+        // Mocks for JSDOM
+        window.ResizeObserver = vi.fn().mockImplementation(() => ({
+            observe: vi.fn(),
+            unobserve: vi.fn(),
+            disconnect: vi.fn(),
+        }));
+
+        window.matchMedia = vi.fn().mockImplementation(query => ({
+            matches: false,
+            media: query,
+            onchange: null,
+            addListener: vi.fn(), // deprecated
+            removeListener: vi.fn(), // deprecated
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            dispatchEvent: vi.fn(),
+        }));
         
         // Default status: not claimed
         (useSeoMissionHooks.useSeoMissionStatus as any).mockReturnValue({
-            data: { has_claimed_today: false, reward_amount: null }
+            data: { has_claimed_today: false, reward_amount: null },
+            isLoading: false,
+            error: null
         });
 
         // Default mutation

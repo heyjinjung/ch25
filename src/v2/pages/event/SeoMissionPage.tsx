@@ -178,6 +178,7 @@ export default function SeoMissionPage() {
 
           <form onSubmit={handleSubmit} className="flex gap-3 mb-3">
             <input
+              data-testid="seo-code-input"
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
