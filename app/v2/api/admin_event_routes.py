@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from sqlalchemy import func, case
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.v2.api.deps import get_db
 from app.v2.models.core.event_secret_code import EventSecretCode, UserSecretCodeClaim
 from app.v2.models.core.mission import Mission
 from app.v2.models.core.user_mission import UserMission
