@@ -34,7 +34,7 @@ export default function AdminEventPage() {
       setError(null);
       const data = await getEventStats();
       setStats(data);
-    } catch (e) {
+    } catch {
       setError("통계 데이터를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
