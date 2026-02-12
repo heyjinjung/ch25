@@ -48,3 +48,33 @@
 
 **🏷️ 태그**
 `P1` `FRONTEND` `ADMIN` `LATENCY_SURVIVAL` `DROPDOWN` `✅해결완료`
+
+### 02-12 - FRONTEND/EVENT: Valentine & Seol Page 한글 깨짐 (Mojibake) ✅
+
+**증상 정의**
+| 항목 | 내용 |
+|---|---|
+| 대상 기능 | 2026 발렌타인 & 설날 이벤트 페이지 (미션 목록, 배너, 비밀코드 입력) |
+| 증상 | 한글 텍스트가 `ðŸ†...` 형태의 외계어(Mojibake)로 표시됨 (UTF-8을 Latin-1로 오해석) |
+| 영향 범위 | 이벤트 페이지 전체 (PC/Mobile 공통) |
+| 재현 빈도 | 항상 (Nginx Charset 설정 부재 시) |
+
+**근본 원인**
+- **Nginx 설정 미흡**: `nginx/frontend.conf`에 `charset utf-8;` 지시어가 없어 브라우저가 응답 헤더에서 인코딩을 확인하지 못하고, OS/브라우저 기본값(Latin-1 등)으로 해석함.
+- **소스 코드 리터럴**: React 컴포넌트 내에 한글 리터럴이 포함되어 있어, 파일 인코딩 인식 실패 시 깨짐 현상이 그대로 노출됨.
+
+**해결 방법**
+| # | 레이어 | 수정 내용 |
+|---|---|---|
+| 1 | Infra | `nginx/frontend.conf`에 `charset utf-8;` 추가하여 응답 헤더에 명시 |
+| 2 | FE | 모든 한글 리터럴을 **Unicode Escape Sequence** (`\uxxxx`)로 변환하여 `KoreanConstants.ts`로 분리. 소스 파일 인코딩과 무관하게 렌더링되도록 수정 (Nuclear Option) |
+
+**수정/추가 파일**
+- [nginx/frontend.conf](../../nginx/frontend.conf)
+- [src/v2/pages/event/KoreanConstants.ts](../../src/v2/pages/event/KoreanConstants.ts) (New)
+- [src/v2/pages/event/ValentineSeolPage.tsx](../../src/v2/pages/event/ValentineSeolPage.tsx)
+- [src/v2/components/event/ValentineSeolBanner.tsx](../../src/v2/components/event/ValentineSeolBanner.tsx)
+- [src/v2/components/event/SecretCodeInput.tsx](../../src/v2/components/event/SecretCodeInput.tsx)
+
+**🏷️ 태그**
+`P0` `FRONTEND` `EVENT` `ENCODING` `UNICODE` `✅해결완료`
