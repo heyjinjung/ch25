@@ -122,7 +122,7 @@ describe("SeoMissionPage", () => {
 
         render(<SeoMissionPage />);
         
-        const input = screen.getByPlaceholderText(/코드 입력/i);
+        const input = screen.getByTestId("seo-code-input");
         const submitButton = screen.getByText("보상 받기");
 
         fireEvent.change(input, { target: { value: "WRONG_CODE" } });
@@ -144,7 +144,7 @@ describe("SeoMissionPage", () => {
 
         render(<SeoMissionPage />);
         
-        const input = screen.getByPlaceholderText(/코드 입력/i);
+        const input = screen.getByTestId("seo-code-input");
         const submitButton = screen.getByText("보상 받기");
 
         fireEvent.change(input, { target: { value: "USED_CODE" } });
