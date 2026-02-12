@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles, AlertTriangle } from "lucide-react";
 import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
@@ -87,6 +87,53 @@ function getTaskDescription(logicKey: string | null, _actionType: string | null,
 }
 
 // ============================================================================
+// Animation Variants
+// ============================================================================
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 25,
+    },
+  },
+  hover: {
+    scale: 1.02,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    transition: { duration: 0.2 },
+  },
+  tap: { scale: 0.98 },
+};
+
+const badgeVariants = {
+  initial: { scale: 1, opacity: 0.8 },
+  animate: {
+    scale: [1, 1.1, 1],
+    opacity: [0.8, 1, 0.8],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+// ============================================================================
 // Mission Card (inline)
 // ============================================================================
 
@@ -114,13 +161,27 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4"
+      variants={cardVariants}
+      whileHover="hover"
+      whileTap="tap"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4 group cursor-default"
     >
-      <div className="flex items-start justify-between mb-3">
+      {/* Magic UI Shimmer Effect */}
+      <motion.div
+        className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
+        initial={{ x: "-150%" }}
+        animate={{ x: "250%" }}
+        transition={{
+          repeat: Infinity,
+          duration: 3,
+          ease: "linear",
+          repeatDelay: Math.random() * 2 + 1, // Random delay for natural feel
+        }}
+      />
+
+      <div className="flex items-start justify-between mb-3 relative z-10">
         <div className="flex-1">
-          <h4 className="text-sm font-bold text-white mb-0.5">
+          <h4 className="text-sm font-bold text-white mb-0.5 group-hover:text-amber-200 transition-colors">
             {mission.title}
           </h4>
           {taskDesc && (
@@ -136,9 +197,13 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
         </div>
         <div className="ml-3">
           {mission.is_completed ? (
-            <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <motion.span
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-block"
+            >
               {mission.is_claimed ? "수령 완료" : "완료 ✓"}
-            </span>
+            </motion.span>
           ) : (
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-zinc-500 border border-white/10">
               진행중
@@ -148,19 +213,27 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-white/5 overflow-hidden relative z-10">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className={`h-full rounded-full ${
+          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+          className={`h-full rounded-full relative overflow-hidden ${
             mission.is_completed
               ? "bg-emerald-500"
               : "bg-gradient-to-r from-purple-500 to-rose-500"
           }`}
-        />
+        >
+          {/* Progress bar glint */}
+          <motion.div
+             className="absolute inset-0 bg-white/30 w-full"
+             initial={{ x: "-100%" }}
+             animate={{ x: "100%" }}
+             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+          />
+        </motion.div>
       </div>
-      <div className="flex items-center justify-between mt-1.5">
+      <div className="flex items-center justify-between mt-1.5 relative z-10">
         <span className="text-[10px] font-medium text-zinc-600">
           {mission.current_value} / {mission.target_value}
         </span>
@@ -203,7 +276,12 @@ export default function ValentineSeolPage() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+              <motion.div
+                 variants={badgeVariants}
+                 initial="initial"
+                 animate="animate"
+                 className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+              />
               <span className="text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em]">
                 Special Event
               </span>
@@ -272,9 +350,9 @@ export default function ValentineSeolPage() {
 
             {/* Event Missions */}
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={16} className="text-amber-400" />
@@ -288,14 +366,16 @@ export default function ValentineSeolPage() {
                   <div className="w-8 h-8 border-4 border-white/10 border-t-rose-500 rounded-full animate-spin" />
                 </div>
               ) : eventStatus?.missions && eventStatus.missions.length > 0 ? (
-                <div className="space-y-3">
-                  {eventStatus.missions.map((mission) => (
-                    <EventMissionCard
-                      key={mission.mission_id}
-                      mission={mission}
-                    />
-                  ))}
-                </div>
+                <motion.div className="space-y-3">
+                  <AnimatePresence>
+                    {eventStatus.missions.map((mission) => (
+                      <EventMissionCard
+                        key={mission.mission_id}
+                        mission={mission}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-zinc-600 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
                   <p className="text-sm font-bold">
