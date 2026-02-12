@@ -153,11 +153,31 @@ class V2SeoCodeService:
 
     @staticmethod
     def generate_daily_code(db: Session, target_date: date) -> SeoDailyCode:
-        """지정 날짜의 새 코드를 생성한다. 기존 코드는 비활성화."""
+        """지정 날짜의 새 코드를 생성한다. 기존 코드는 비활성화.
+
+        같은 target_date로 재호출되면 기존 코드를 재사용한다.
+        """
+
+        existing = (
+            db.query(SeoDailyCode)
+            .filter(SeoDailyCode.target_date == target_date)
+            .order_by(SeoDailyCode.id.desc())
+            .first()
+        )
+        if existing is not None:
+            db.query(SeoDailyCode).filter(
+                SeoDailyCode.is_active == True,
+                SeoDailyCode.id != existing.id,
+            ).update({"is_active": False})
+            if not existing.is_active:
+                existing.is_active = True
+                db.add(existing)
+            db.commit()
+            db.refresh(existing)
+            return existing
+
         # 기존 활성 코드 비활성화
-        db.query(SeoDailyCode).filter(
-            SeoDailyCode.is_active == True,
-        ).update({"is_active": False})
+        db.query(SeoDailyCode).filter(SeoDailyCode.is_active == True).update({"is_active": False})
 
         # 새 코드 생성 (영문 대문자 + 숫자, 총 8자리 — 사용자 입력 시 대소문자 무관)
         import string
