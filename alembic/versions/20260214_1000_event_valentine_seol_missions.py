@@ -134,14 +134,14 @@ def upgrade():
         INSERT INTO mission (
             title, description, category, logic_key, action_type,
             target_value, reward_type, reward_amount, xp_reward,
-            requires_approval, auto_claim, is_active, visible,
+            requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '💝 발렌타인 럭키박스 받기',
             '오늘 로그인하고 게임 3회 플레이하면 티켓 번들 GET!',
             'SPECIAL', 'EVENT_VALENTINE_2026', 'PLAY_GAME',
             3, 'TICKET_BUNDLE', 3, 500,
-            FALSE, FALSE, TRUE, TRUE,
+            FALSE, FALSE, TRUE,
             '2026-02-14 00:00:00', '2026-02-14 23:59:59', '00:00:00', '23:59:59', NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -156,7 +156,6 @@ def upgrade():
             requires_approval = VALUES(requires_approval),
             auto_claim = VALUES(auto_claim),
             is_active = VALUES(is_active),
-            visible = VALUES(visible),
             start_date = VALUES(start_date),
             end_date = VALUES(end_date),
             start_time = VALUES(start_time),
@@ -168,14 +167,14 @@ def upgrade():
         INSERT INTO mission (
             title, description, category, logic_key, action_type,
             target_value, reward_type, reward_amount, xp_reward,
-            requires_approval, auto_claim, is_active, visible,
+            requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '🧧 설날 세뱃돈 DAY 1 - 10만원 입금',
             '오늘 10만원 이상 입금하면 포인트 10,000P + 룰렛 티켓!',
             'SPECIAL', 'EVENT_SEOL_DAY1_2026', 'CC_DEPOSIT',
             100000, 'BUNDLE', 23, 1000,
-            FALSE, FALSE, TRUE, TRUE,
+            FALSE, FALSE, TRUE,
             '2026-02-15 00:00:00', '2026-02-15 23:59:59', '00:00:00', '23:59:59', NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -190,7 +189,6 @@ def upgrade():
             requires_approval = VALUES(requires_approval),
             auto_claim = VALUES(auto_claim),
             is_active = VALUES(is_active),
-            visible = VALUES(visible),
             start_date = VALUES(start_date),
             end_date = VALUES(end_date),
             start_time = VALUES(start_time),
@@ -202,14 +200,14 @@ def upgrade():
         INSERT INTO mission (
             title, description, category, logic_key, action_type,
             target_value, reward_type, reward_amount, xp_reward,
-            requires_approval, auto_claim, is_active, visible,
+            requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '🎮 설날 세뱃돈 DAY 2 - 게임 즐기기',
             '오늘 게임 5회 플레이하면 골드키 + 주사위 티켓!',
             'SPECIAL', 'EVENT_SEOL_DAY2_2026', 'PLAY_GAME',
             5, 'BUNDLE', 21, 800,
-            FALSE, FALSE, TRUE, TRUE,
+            FALSE, FALSE, TRUE,
             '2026-02-16 00:00:00', '2026-02-16 23:59:59', '00:00:00', '23:59:59', NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -224,7 +222,6 @@ def upgrade():
             requires_approval = VALUES(requires_approval),
             auto_claim = VALUES(auto_claim),
             is_active = VALUES(is_active),
-            visible = VALUES(visible),
             start_date = VALUES(start_date),
             end_date = VALUES(end_date),
             start_time = VALUES(start_time),
@@ -236,14 +233,14 @@ def upgrade():
         INSERT INTO mission (
             title, description, category, logic_key, action_type,
             target_value, reward_type, reward_amount, xp_reward,
-            requires_approval, auto_claim, is_active, visible,
+            requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '💎 설날 세뱃돈 DAY 3 - 30만원 입금',
             '오늘 30만원 이상 입금하면 포인트 20,000P + 다이아몬드 티켓!',
             'SPECIAL', 'EVENT_SEOL_DAY3_2026', 'CC_DEPOSIT',
             300000, 'BUNDLE', 22, 1500,
-            FALSE, FALSE, TRUE, TRUE,
+            FALSE, FALSE, TRUE,
             '2026-02-17 00:00:00', '2026-02-17 23:59:59', '00:00:00', '23:59:59', NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -258,7 +255,6 @@ def upgrade():
             requires_approval = VALUES(requires_approval),
             auto_claim = VALUES(auto_claim),
             is_active = VALUES(is_active),
-            visible = VALUES(visible),
             start_date = VALUES(start_date),
             end_date = VALUES(end_date),
             start_time = VALUES(start_time),
@@ -270,14 +266,14 @@ def upgrade():
         INSERT INTO mission (
             title, description, category, logic_key, action_type,
             target_value, reward_type, reward_amount, xp_reward,
-            requires_approval, auto_claim, is_active, visible,
+            requires_approval, auto_claim, is_active,
             start_date, end_date, start_time, end_time, created_at
         ) VALUES (
             '🏆 4일 연속 달성 보너스',
             '2/14~2/17 모든 미션 완료 시 추가 보상!',
             'SPECIAL', 'EVENT_SEOL_STREAK_2026', 'EVENT_STREAK',
             4, 'BUNDLE', 25, 2000,
-            FALSE, FALSE, TRUE, TRUE,
+            FALSE, FALSE, TRUE,
             '2026-02-14 00:00:00', '2026-02-17 23:59:59', '00:00:00', '23:59:59', NOW()
         )
         ON DUPLICATE KEY UPDATE
@@ -292,7 +288,6 @@ def upgrade():
             requires_approval = VALUES(requires_approval),
             auto_claim = VALUES(auto_claim),
             is_active = VALUES(is_active),
-            visible = VALUES(visible),
             start_date = VALUES(start_date),
             end_date = VALUES(end_date),
             start_time = VALUES(start_time),
