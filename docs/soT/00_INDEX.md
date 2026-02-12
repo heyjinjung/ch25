@@ -29,6 +29,7 @@ state: SoT (Living Document)
 - [v2_db_sot1.md](00_db/v2_db_sot1.md)
 - [v2_db_sot2.md](00_db/v2_db_sot2.md)
 - [v2_troubleshooting_20260120_alembic_legacy_ko.md](00_db/v2_troubleshooting_20260120_alembic_legacy_ko.md)
+- [20260212_fix_alembic_20260214_1000_event_valentine_migration.md](00_db/변경로그/20260212_fix_alembic_20260214_1000_event_valentine_migration.md)
 
 ## 00. Deployment (배포)
 - [v2_deployment_sot_ko.md](00_deployment/v2_deployment_sot_ko.md)
@@ -118,7 +119,7 @@ state: SoT (Living Document)
 - [02_user_identity_auth_sync_ko.md](00_user/02_user_identity_auth_sync_ko.md)
 - [03_user_db_schema_integrity_ko.md](00_user/03_user_db_schema_integrity_ko.md)
 - [04_user_segment_hq_linking_ko.md](00_user/04_user_segment_hq_linking_ko.md)
-- [05_user_ops_verify_troubleshooting_ko.md](00_use r/05_user_ops_verify_troubleshooting_ko.md)
+- [05_user_ops_verify_troubleshooting_ko.md](00_user/05_user_ops_verify_troubleshooting_ko.md)
 
 ## 00. Vault (금고)
 - [01_vault_policy_sot_ko.md](00_vault/01_vault_policy_sot_ko.md)
@@ -134,6 +135,7 @@ state: SoT (Living Document)
 
 
 ## 7. 변경 이력
+- v2.26 (2026-02-12, GitHub Copilot): DB 마이그레이션(20260214_1000) 안정화 변경로그 추가
 - v2.25 (2026-02-10, GitHub Copilot): SEO 키워드 타깃팅/랜딩 URL(루트) 확정 및 GSC 리포트 템플릿 보강
 - v2.24 (2026-02-10, GitHub Copilot): SEO 랜딩 콘텐츠 스펙 및 로그 리포트 템플릿 추가
 - v2.23 (2026-02-10, GitHub Copilot): SEO SoT 및 실행 계획 문서 추가

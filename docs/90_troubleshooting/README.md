@@ -115,6 +115,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 도메인 | 문서 | 이슈 수 |
 |---|---|---|
 | EVENT | [W07_EVENT_valentine_seol_planning.md](./W07_EVENT_valentine_seol_planning.md) | **1** |
+| DB | [W07_DB_troubleshooting.md](./W07_DB_troubleshooting.md) | **1** |
 | VAULT | [W07_VAULT_troubleshooting.md](./W07_VAULT_troubleshooting.md) | **1** |
 | FRONTEND | [W07_FRONTEND_troubleshooting.md](./W07_FRONTEND_troubleshooting.md) | **1** |
 
