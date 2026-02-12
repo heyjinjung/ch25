@@ -232,19 +232,19 @@ jobs:
             # Gate(3.5/3.8): 마이그레이션 (최대 5회 재시도, 대기시간 증가)
             echo "[MIGRATION] Running alembic upgrade head..."
             mig_try=0
-            until docker compose exec -T backend alembic upgrade head; do
+            until docker compose run --rm -T --no-deps backend alembic upgrade head; do
               mig_try=$((mig_try+1))
               if [ "$mig_try" -ge 5 ]; then
                 echo "[MIGRATION] alembic upgrade head failed after 5 attempts" >&2
-                docker compose exec -T backend alembic current || true
-                docker compose exec -T backend alembic heads || true
+                docker compose run --rm -T --no-deps backend alembic current || true
+                docker compose run --rm -T --no-deps backend alembic heads || true
                 exit 1
               fi
               echo "[MIGRATION] retrying (${mig_try}/5)" >&2
               sleep $((5 + mig_try * 2))
             done
-            docker compose exec -T backend alembic current
-            docker compose exec -T backend alembic heads
+            docker compose run --rm -T --no-deps backend alembic current
+            docker compose run --rm -T --no-deps backend alembic heads
 
             # Gate(3.6): 헬스 체크
             # 1) backend 자체가 준비됐는지 먼저 확인(nginx 영향 제거)

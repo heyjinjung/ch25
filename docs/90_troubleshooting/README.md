@@ -119,6 +119,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | VAULT | [W07_VAULT_troubleshooting.md](./W07_VAULT_troubleshooting.md) | **1** |
 | FRONTEND | [W07_FRONTEND_troubleshooting.md](./W07_FRONTEND_troubleshooting.md) | **1** |
 | ADMIN | [W07_ADMIN_troubleshooting.md](./W07_ADMIN_troubleshooting.md) | **1** |
+| INFRA | [W07_INFRA_troubleshooting.md](./W07_INFRA_troubleshooting.md) | **1** |
 
 ### W07 주요 이슈 요약 (02-10 ~ 02-16)
 | # | 도메인 | 이슈 | 상태 |
@@ -126,6 +127,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 1 | EVENT | 발렌타인 & 설 이벤트 프론트엔드 구현 (Phase 2) | ✅ 완료 |
 | 2 | FRONTEND | Latency Survival 승인 시 입금로그 드롭다운 미노출 | ✅ 해결 |
 | 3 | ADMIN | 유저 퍼지 500 오류 (FK 제약 위반 - UserSeoDailyCodeClaim) | ✅ 해결 |
+| 4 | INFRA | CI 배포 실패 - Exit Code 137 (OOM) | ✅ 분석 |
 
 ---
 
