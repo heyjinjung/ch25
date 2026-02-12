@@ -58,3 +58,32 @@ def test_vault2_append_event_initializes_progress_json():
     assert isinstance(status.progress_json, dict)
     assert isinstance(status.progress_json.get("events"), list)
     assert status.progress_json["events"][0]["type"] == "EARN"
+
+
+def test_vault2_effective_config_defaults_when_none_or_empty():
+    cfg_none = Vault2Service._build_effective_config(None)
+    assert cfg_none["enable_game_earn_events"] is True
+
+    cfg_empty = Vault2Service._build_effective_config({})
+    assert cfg_empty["enable_game_earn_events"] is True
+
+
+def test_vault2_grace_hours_and_append_event_extra_branches():
+    program_not_dict = VaultProgram(unlock_rules_json=[1, 2, 3])
+    assert Vault2Service._get_available_grace_hours(program_not_dict) == 0
+
+    program_negative = VaultProgram(unlock_rules_json={"available_grace_hours": -5})
+    assert Vault2Service._get_available_grace_hours(program_negative) == 0
+
+    status = VaultStatus(progress_json="not-a-dict")
+    Vault2Service._append_event(status, {"type": "UNLOCK"})
+    assert isinstance(status.progress_json, dict)
+    assert status.progress_json["events"][0]["type"] == "UNLOCK"
+
+
+def test_vault2_is_expiry_enabled_handles_duration_and_policy():
+    program_no_duration = VaultProgram(expire_policy="FIXED_24H", duration_hours=0)
+    assert Vault2Service._is_expiry_enabled(program_no_duration) is False
+
+    program_no_expiry = VaultProgram(expire_policy="NO_EXPIRY", duration_hours=24)
+    assert Vault2Service._is_expiry_enabled(program_no_expiry) is False

@@ -74,7 +74,7 @@ describe("SeoMissionPage", () => {
         expect(screen.getByText("구글 검색")).toBeInTheDocument();
         expect(screen.getByText("랜딩 페이지 방문")).toBeInTheDocument();
         expect(screen.getByText("코드 입력")).toBeInTheDocument();
-        expect(screen.getByPlaceholderText(/코드 입력/i)).toBeInTheDocument();
+        expect(screen.getByTestId("seo-code-input")).toBeInTheDocument();
     });
 
     it("handles code input and submission success", async () => {
@@ -87,7 +87,7 @@ describe("SeoMissionPage", () => {
 
         render(<SeoMissionPage />);
         
-        const input = screen.getByPlaceholderText(/코드 입력/i);
+        const input = screen.getByTestId("seo-code-input");
         const submitButton = screen.getByText("보상 받기");
 
         // Enter code
@@ -166,7 +166,7 @@ describe("SeoMissionPage", () => {
         expect(screen.getByText("오늘 미션 완료!")).toBeInTheDocument();
         expect(screen.getByText("5,000P 지급됨")).toBeInTheDocument();
         
-        const input = screen.getByPlaceholderText(/코드 입력/i);
+        const input = screen.getByTestId("seo-code-input");
         expect(input).toBeDisabled();
         
         const button = screen.getByText("완료");
