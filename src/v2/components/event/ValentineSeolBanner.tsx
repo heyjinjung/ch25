@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart, Sparkles, Check } from "lucide-react";
+import { KOREAN } from "../../pages/event/KoreanConstants";
 
 type EventDay = "valentine" | "seol_day1" | "seol_day2" | "seol_day3";
 
@@ -24,7 +25,7 @@ const DAY_CONFIG: Record<
   valentine: {
     badge: "D-DAY",
     title: "Valentine Lucky Box",
-    description: "3판 플레이하고 럭키박스를 열어보세요!",
+    description: KOREAN.BANNER_VALENTINE_DESC,
     gradient: "from-rose-500/20 via-pink-500/10 to-transparent",
     accentBorder: "border-rose-500/30",
     badgeBg: "bg-rose-500/20 text-rose-400",
@@ -32,8 +33,8 @@ const DAY_CONFIG: Record<
   },
   seol_day1: {
     badge: "DAY 1",
-    title: "설날 세뱃돈",
-    description: "100,000원 이상 입금하고 세뱃돈을 받으세요!",
+    title: KOREAN.BANNER_SEOL_TITLE,
+    description: KOREAN.BANNER_SEOL_DAY1_DESC,
     gradient: "from-amber-500/20 via-orange-500/10 to-transparent",
     accentBorder: "border-amber-500/30",
     badgeBg: "bg-amber-500/20 text-amber-400",
@@ -41,8 +42,8 @@ const DAY_CONFIG: Record<
   },
   seol_day2: {
     badge: "DAY 2",
-    title: "설날 세뱃돈",
-    description: "5판 플레이하고 복권을 받으세요!",
+    title: KOREAN.BANNER_SEOL_TITLE,
+    description: KOREAN.BANNER_SEOL_DAY2_DESC,
     gradient: "from-emerald-500/20 via-teal-500/10 to-transparent",
     accentBorder: "border-emerald-500/30",
     badgeBg: "bg-emerald-500/20 text-emerald-400",
@@ -50,8 +51,8 @@ const DAY_CONFIG: Record<
   },
   seol_day3: {
     badge: "DAY 3",
-    title: "설날 세뱃돈",
-    description: "300,000원 이상 입금하고 대박 보상을 받으세요!",
+    title: KOREAN.BANNER_SEOL_TITLE,
+    description: KOREAN.BANNER_SEOL_DAY3_DESC,
     gradient: "from-violet-500/20 via-purple-500/10 to-transparent",
     accentBorder: "border-violet-500/30",
     badgeBg: "bg-violet-500/20 text-violet-400",
@@ -119,7 +120,7 @@ export default function ValentineSeolBanner({
         <div className="mt-4 pt-4 border-t border-white/5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              4일 연속 달성
+              {KOREAN.BANNER_STREAK_LABEL}
             </span>
             <span className="text-[10px] font-bold text-zinc-500">
               {streakCurrent}/{streakTarget}
