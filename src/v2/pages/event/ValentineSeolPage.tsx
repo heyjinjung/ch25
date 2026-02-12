@@ -77,7 +77,7 @@ function getRewardLabel(rewardType: string | null, rewardAmount: number | null):
 }
 
 /** action_type → 유저가 해야 할 행동 설명 */
-function getTaskDescription(logicKey: string | null, actionType: string | null, targetValue: number): string {
+function getTaskDescription(logicKey: string | null, _actionType: string | null, targetValue: number): string {
   if (logicKey === "EVENT_VALENTINE_2026") return `아무 게임 ${targetValue}판 플레이하세요`;
   if (logicKey === "EVENT_SEOL_DAY2_2026") return `아무 게임 ${targetValue}판 플레이하세요`;
   if (logicKey === "EVENT_SEOL_DAY1_2026") return `오늘 ${(targetValue).toLocaleString()}원 이상 입금하세요`;
