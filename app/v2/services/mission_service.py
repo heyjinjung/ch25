@@ -32,6 +32,7 @@ ACTION_TYPE_ALIASES = {
     "JOIN_TELEGRAM_CHANNEL": ["TELEGRAM_JOIN", "TG_CHANNEL_JOIN"],
     "JOIN_CC_CHANNEL": ["CC_CHANNEL_JOIN", "OFFICIAL_CHANNEL_JOIN"],
     "CONSECUTIVE_LOGIN": ["NEXT_DAY_LOGIN", "LOGIN_STREAK"],
+    "EVENT_STREAK": ["EVENT_CONSECUTIVE"],  # 이벤트 전용 스트릭 (일반 연속 로그인과 분리)
 }
 
 
@@ -634,10 +635,77 @@ class V2MissionService:
         return
 
     def check_all_daily_completed(self, user_id: int) -> None:
-        """Check if all daily missions are completed and potentially grant a bonus.
-        Implementation TODO: Define bonus mission and grant logic.
+        """Check if all daily missions are completed and update event streak progress.
+        
+        [FIX C3] Valentine & Seol Event 2026:
+        EVENT_SEOL_STREAK_2026 미션은 4일 이벤트 미션(EVENT_VALENTINE_2026, 
+        EVENT_SEOL_DAY1/2/3_2026) 중 완료된 미션 수를 추적합니다.
+        일반 CONSECUTIVE_LOGIN과 분리하여 이벤트 범위만 검증합니다.
         """
-        return
+        EVENT_LOGIC_KEYS = [
+            "EVENT_VALENTINE_2026",
+            "EVENT_SEOL_DAY1_2026",
+            "EVENT_SEOL_DAY2_2026",
+            "EVENT_SEOL_DAY3_2026",
+        ]
+        STREAK_LOGIC_KEY = "EVENT_SEOL_STREAK_2026"
+
+        try:
+            # 1) Find the streak mission
+            streak_mission = self.db.query(Mission).filter(
+                Mission.logic_key == STREAK_LOGIC_KEY,
+                Mission.is_active == True,
+            ).first()
+            if not streak_mission:
+                return
+
+            # 2) Count how many event missions are completed (and claimed)
+            event_missions = self.db.query(Mission).filter(
+                Mission.logic_key.in_(EVENT_LOGIC_KEYS),
+                Mission.is_active == True,
+            ).all()
+
+            completed_count = 0
+            for em in event_missions:
+                # Each event mission has its own date range, use NON_RESET for SPECIAL
+                reset_date = self._get_reset_date_str(em.category)
+                progress = self.db.query(UserMissionProgress).filter(
+                    UserMissionProgress.user_id == user_id,
+                    UserMissionProgress.mission_id == em.id,
+                    UserMissionProgress.reset_date == reset_date,
+                    UserMissionProgress.is_completed == True,
+                ).first()
+                if progress:
+                    completed_count += 1
+
+            # 3) Update streak mission progress to match completed count
+            streak_reset_date = self._get_reset_date_str(streak_mission.category)
+            streak_progress = self.db.query(UserMissionProgress).filter(
+                UserMissionProgress.user_id == user_id,
+                UserMissionProgress.mission_id == streak_mission.id,
+                UserMissionProgress.reset_date == streak_reset_date,
+            ).first()
+
+            if not streak_progress:
+                streak_progress = UserMissionProgress(
+                    user_id=user_id,
+                    mission_id=streak_mission.id,
+                    current_value=0,
+                    reset_date=streak_reset_date,
+                )
+                self.db.add(streak_progress)
+
+            if not streak_progress.is_completed and completed_count > streak_progress.current_value:
+                streak_progress.current_value = completed_count
+                if streak_progress.current_value >= streak_mission.target_value:
+                    streak_progress.current_value = streak_mission.target_value
+                    streak_progress.is_completed = True
+                    streak_progress.completed_at = datetime.utcnow()
+                self.db.flush()
+
+        except Exception:
+            pass
+
 
 
     @classmethod

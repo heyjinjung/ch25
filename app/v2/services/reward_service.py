@@ -215,6 +215,18 @@ class V2RewardService:
                 bundle_items = [(GameTokenType.DIAMOND_TICKET, 3)]
             elif reward_amount == 4:
                 bundle_items = [(GameTokenType.ROULETTE_TICKET, 2), (GameTokenType.DICE_TICKET, 2)]
+            # === Event Bundles (2026 Valentine & Seol) ===
+            elif reward_amount == 21:  # DAY 2: 복권 1장 + 주사위 3장
+                bundle_items = [(GameTokenType.LOTTERY_TICKET, 1), (GameTokenType.DICE_TICKET, 3)]
+            elif reward_amount == 22:  # DAY 3: 포인트 20,000P + 다이아몬드 1장
+                self._grant_vault_locked(db, user_id=user_id, amount=20000, reason="EVENT_SEOL_DAY3", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.DIAMOND_TICKET, 1)]
+            elif reward_amount == 23:  # DAY 1: 포인트 10,000P + 룰렛 2장
+                self._grant_vault_locked(db, user_id=user_id, amount=10000, reason="EVENT_SEOL_DAY1", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.ROULETTE_TICKET, 2)]
+            elif reward_amount == 25:  # 4일 연속 보너스: 포인트 20,000P + 골드키 1개
+                self._grant_vault_locked(db, user_id=user_id, amount=20000, reason="EVENT_SEOL_STREAK", meta=meta, commit=commit)
+                bundle_items = [(GameTokenType.GOLD_KEY_TICKET, 1)]
             
             for token_type, amount in bundle_items:
                 self.grant_ticket(db, user_id=user_id, token_type=token_type, amount=amount, meta=meta, commit=commit)

@@ -101,6 +101,8 @@ from .core.level_xp import UserLevelProgress, UserLevelRewardLog, UserXpEventLog
 from .core.vault2 import VaultProgram, VaultStatus
 from .core.ranking import RankingDaily
 from .core.user_activity_event import UserActivityEvent
+
 from .core.season_pass import SeasonPassConfig, SeasonPassLevel, SeasonPassProgress, SeasonPassRewardLog, SeasonPassStampLog
+from .core.event_secret_code import EventSecretCode, UserSecretCodeClaim
 
 

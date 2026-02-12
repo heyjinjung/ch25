@@ -346,18 +346,19 @@ class V2AdminCCDepositService:
                 )
 
                 # Mission progress update: CC_DEPOSIT 미션 진행 업데이트
-                # deposit_steps 단위로 미션 카운트 (입금 횟수 기준)
+                # [FIX C1] delta를 실제 입금 금액으로 전달 (이벤트 금액 미션 지원)
                 try:
                     from app.v2.services.mission_service import V2MissionService
                     mission_service = V2MissionService(db)
                     mission_service.update_progress(
                         user_id=row.user_id,
                         action_type="CC_DEPOSIT",
-                        delta=1  # 입금 1회로 카운트
+                        delta=int(deposit_delta)  # 실제 입금 금액 전달
                     )
                     logger.info(
-                        "cc_deposit -> mission progress updated: user_id=%s action=CC_DEPOSIT delta=1",
-                        row.user_id
+                        "cc_deposit -> mission progress updated: user_id=%s action=CC_DEPOSIT delta=%s",
+                        row.user_id,
+                        deposit_delta
                     )
                 except Exception as e:
                     logger.warning(

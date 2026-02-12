@@ -86,7 +86,7 @@ def test_withdrawal_policy_common(db, vault_service):
     assert "VAULT_SPENT_INSUFFICIENT_5000" in str(excinfo.value.detail)
 
 def test_withdrawal_policy_new(db, vault_service):
-    # NEW: 5 plays / 0 spend / 0 deposit
+    # NEW: 5 plays / 0 spend / 10,000 deposit (SoT 7.2)
     user = V2User(cc_id="new_user_test", nickname="NEW_TEST", vault_locked_balance=50000, vault_spent_today=0)
     db.add(user)
     db.flush()
@@ -94,7 +94,12 @@ def test_withdrawal_policy_new(db, vault_service):
     V2SegmentService.upsert_user_segment(db, user.id, "NEW")
     db.flush()
 
-    # Check play count (target 5)
+    # SoT 7.2: NEW도 당일 1만원 이상 입금 필요
+    op_date = V2VaultService._operational_date_kst(datetime.utcnow())
+    db.add(ExternalRankingDailyDepositDelta(user_id=user.id, deposit_delta=10000, kst_date=op_date))
+    db.flush()
+
+    # Check play count (target 5) — deposit gate already satisfied
     with pytest.raises(HTTPException) as excinfo:
         vault_service.request_withdrawal(db, user.id, 10000)
     assert "PLAY_COUNT_INSUFFICIENT_5" in str(excinfo.value.detail)

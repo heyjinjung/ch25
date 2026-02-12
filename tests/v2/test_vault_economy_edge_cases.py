@@ -165,6 +165,12 @@ class TestWithdrawalIntegrationNewSegment:
                     created_at=now_utc.replace(tzinfo=None),
                 )
             )
+
+        # SoT 7.2: NEW 세그먼트도 당일 1만원 이상 입금 필요
+        op_date = V2VaultService._operational_date_kst(now_utc)
+        db.add(ExternalRankingDailyDepositDelta(
+            user_id=user.id, deposit_delta=10_000, kst_date=op_date,
+        ))
         db.commit()
         return user
 

@@ -14,7 +14,10 @@
       "Bash(scp:*)",
       "Bash(git log:*)",
       "Bash(npm run build:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(dir:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

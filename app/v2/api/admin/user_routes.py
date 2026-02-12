@@ -200,6 +200,11 @@ def get_admin_users_list(
 
     if sortBy == "vault_balance":
         order_col = func.coalesce(V2User.vault_locked_balance, 0)
+    elif sortBy == "level":
+        order_col = V2User.level
+    elif sortBy == "last_active":
+        # UI에서의 '최근 접속일'은 V2User.updated_at 기반
+        order_col = V2User.updated_at
     elif sortBy == "created_at":
         order_col = V2User.created_at
     elif sortBy == "uid":
@@ -212,9 +217,9 @@ def get_admin_users_list(
         order_col = V2User.updated_at
 
     if sortOrder == "asc":
-        query = query.order_by(order_col.asc())
+        query = query.order_by(order_col.asc(), V2User.id.asc())
     else:
-        query = query.order_by(order_col.desc())
+        query = query.order_by(order_col.desc(), V2User.id.desc())
 
     total = query.count()
     offset = (page - 1) * limit
