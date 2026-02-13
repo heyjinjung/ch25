@@ -120,6 +120,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 | FRONTEND | [W07_FRONTEND_troubleshooting.md](./W07_FRONTEND_troubleshooting.md) | **1** |
 | ADMIN | [W07_ADMIN_troubleshooting.md](./W07_ADMIN_troubleshooting.md) | **1** |
 | INFRA | [W07_INFRA_troubleshooting.md](./W07_INFRA_troubleshooting.md) | **1** |
+| SEO | [W07_SEO_troubleshooting.md](./W07_SEO_troubleshooting.md) | **1** |
+| GAME | [W07_GAME_troubleshooting.md](./W07_GAME_troubleshooting.md) | **1** |
 
 ### W07 주요 이슈 요약 (02-10 ~ 02-16)
 | # | 도메인 | 이슈 | 상태 |
@@ -129,6 +131,8 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 3 | ADMIN | 유저 퍼지 500 오류 (FK 제약 위반 - UserSeoDailyCodeClaim) | ✅ 해결 |
 | 4 | INFRA | CI 배포 실패 - Exit Code 137 (OOM) | ✅ 분석 |
 | 5 | EVENT | 설날/발렌타인 이벤트 한글 깨짐 (Mojibake) | ✅ 해결 |
+| 6 | SEO | SEO 일일 코드 미생성 (Celery Beat 미등록) | ✅ 해결 |
+| 7 | GAME | 모든 게임 play 403 BENEFITS_SUSPENDED (입금 미반영 유저) | 🔍 진단완료 |
 
 ---
 

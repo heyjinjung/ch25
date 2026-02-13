@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.v2.tasks.roi_tasks",
         "app.v2.tasks.segment_tasks",
         "app.v2.tasks.unmatched_deposit_tasks",
+        "app.v2.tasks.seo_code_tasks",
     ],
 )
 
@@ -45,6 +46,10 @@ celery_app.conf.update(
         "unmatched-deposit-cleanup": {
             "task": "app.v2.tasks.unmatched_deposit_tasks.cleanup_old_unmatched_logs_task",
             "schedule": crontab(hour=2, minute=0),  # 매일 02:00 KST
+        },
+        "seo-daily-code-morning": {
+            "task": "app.v2.tasks.seo_code_tasks.generate_seo_daily_code_task",
+            "schedule": crontab(hour=9, minute=0),  # 매일 09:00 KST
         },
     },
 )

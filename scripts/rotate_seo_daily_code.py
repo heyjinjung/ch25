@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.v2.models.base import SessionLocal  # DB 세션 팩토리
+from app.db.session import SessionLocal  # DB 세션 팩토리
 from app.v2.services.seo_code_service import V2SeoCodeService
 
 KST = ZoneInfo("Asia/Seoul")

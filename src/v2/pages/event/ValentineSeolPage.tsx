@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
 import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
 import SecretCodeInput from "../../components/event/SecretCodeInput";
@@ -15,26 +15,28 @@ type EventDay = "valentine" | "seol_day1" | "seol_day2" | "seol_day3";
 
 interface EventDayInfo {
   day: EventDay;
-  isTest: boolean;
 }
 
 function getEventDayInfo(): EventDayInfo | null {
-  const kst = new Date(
+  // KST 기준 + 운영일(오전 9시 리셋) 적용
+  const kstNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
   );
-  const y = kst.getFullYear();
-  const m = String(kst.getMonth() + 1).padStart(2, "0");
-  const d = String(kst.getDate()).padStart(2, "0");
+  const operational = new Date(kstNow);
+  if (operational.getHours() < 9) {
+    operational.setDate(operational.getDate() - 1);
+  }
+
+  const y = operational.getFullYear();
+  const m = String(operational.getMonth() + 1).padStart(2, "0");
+  const d = String(operational.getDate()).padStart(2, "0");
   const dateStr = `${y}-${m}-${d}`;
 
-  // 테스트 기간 (2/12-13)
-  if (dateStr === "2026-02-12") return { day: "valentine", isTest: true };
-  if (dateStr === "2026-02-13") return { day: "seol_day1", isTest: true };
-  // 실제 이벤트 기간 (2/14-17)
-  if (dateStr === "2026-02-14") return { day: "valentine", isTest: false };
-  if (dateStr === "2026-02-15") return { day: "seol_day1", isTest: false };
-  if (dateStr === "2026-02-16") return { day: "seol_day2", isTest: false };
-  if (dateStr === "2026-02-17") return { day: "seol_day3", isTest: false };
+  // 실제 이벤트 기간 (2/14-17, KST 운영일 기준)
+  if (dateStr === "2026-02-14") return { day: "valentine" };
+  if (dateStr === "2026-02-15") return { day: "seol_day1" };
+  if (dateStr === "2026-02-16") return { day: "seol_day2" };
+  if (dateStr === "2026-02-17") return { day: "seol_day3" };
   return null;
 }
 
@@ -346,26 +348,6 @@ export default function ValentineSeolPage() {
           </p>
         </motion.div>
 
-        {/* Test Mode Warning */}
-        {dayInfo?.isTest && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-4 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4"
-          >
-            <AlertTriangle size={20} className="text-amber-400 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-amber-400">
-                "[테스트 모드]"
-              </p>
-              <p className="text-xs text-amber-400/70">
-                "2/12-13은 테스트 기간입니다. 실제 이벤트는 2/14부터
-                시작됩니다."
-              </p>
-            </div>
-          </motion.div>
-        )}
-
         {/* Not Active */}
         {!isActive && (
           <motion.div
@@ -379,7 +361,7 @@ export default function ValentineSeolPage() {
                 "이벤트 준비 중"
               </p>
               <p className="text-sm text-zinc-600 mt-1">
-                "2026년 2월 14일부터 참여할 수 있습니다!"
+                "2026년 2월 14일 오전 9시부터 참여할 수 있습니다!"
               </p>
             </div>
           </motion.div>
