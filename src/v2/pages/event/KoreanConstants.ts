@@ -29,7 +29,7 @@ export const KOREAN = {
   LABEL_TASK: "\uD83D\uDCCB ", // 📋 
   
   // Streak Bonus
-  STREAK_COMPLETE_TITLE: "\uD83C\uDF8A 4\uC77C \uC5F0\uC18D \uB2EC\uC131 \uC644\uB8CC!", // 🎊 4일 연속 달성 완료!
+  STREAK_COMPLETE_TITLE: "\uD83C\uDF8A 4\uC77C \uC5F0\uC18D \uB2EC\uC131 \uC644\uB8CC!", // 4일 연속 달성 완료!
   STREAK_COMPLETE_DESC: "\uD2B9\uBCC4 \uBCF4\uB108\uC2A4 \uBCF4\uC0C1\uC774 \uC9C0\uAE09\uB418\uC5C8\uC2B5\uB2C8\uB2E4.", // 특별 보너스 보상이 지급되었습니다.
 
   // Task Descriptions (Templates)

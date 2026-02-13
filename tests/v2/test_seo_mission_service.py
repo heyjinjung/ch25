@@ -27,6 +27,8 @@ def test_generate_and_get_daily_code(db_session: Session, seo_service: V2SeoCode
     assert code_obj is not None
     assert code_obj.target_date == today
     assert len(code_obj.code) > 0
+    assert code_obj.reward_min == 1000
+    assert code_obj.reward_max == 5000
     
     # 2. 동일 날짜 재생성 시도 -> 기존 코드 반환
     code_obj_2 = seo_service.generate_daily_code(db_session, today)

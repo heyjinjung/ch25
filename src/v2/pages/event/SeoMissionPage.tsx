@@ -110,7 +110,7 @@ export default function SeoMissionPage() {
             검색하고 <span className="text-blue-500">포인트</span> 받기
           </h1>
           <p className="text-sm text-zinc-400 mt-2">
-            매일 구글에서 "씨씨지민"을 검색하고 코드를 입력하면 3,000 ~ 5,000P를 받을 수 있습니다.
+            매일 구글에서 "씨씨지민"을 검색하고 코드를 입력하면 1,000 ~ 5,000P를 받을 수 있습니다.
           </p>
         </motion.div>
 
@@ -233,7 +233,7 @@ export default function SeoMissionPage() {
             보상 안내
           </h3>
           <div className="space-y-1.5 text-sm text-zinc-400">
-            <p>일일 미션: 3,000 ~ 5,000P (랜덤)</p>
+            <p>일일 미션: 1,000 ~ 5,000P (랜덤)</p>
             <p>갱신 시간: 매일 오전 9시 (KST)</p>
             <p>참여 제한: 계정당 하루 1회</p>
           </div>

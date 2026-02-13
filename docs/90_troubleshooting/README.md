@@ -128,6 +128,7 @@ W{주차}_{도메인코드}_troubleshooting.md
 | 2 | FRONTEND | Latency Survival 승인 시 입금로그 드롭다운 미노출 | ✅ 해결 |
 | 3 | ADMIN | 유저 퍼지 500 오류 (FK 제약 위반 - UserSeoDailyCodeClaim) | ✅ 해결 |
 | 4 | INFRA | CI 배포 실패 - Exit Code 137 (OOM) | ✅ 분석 |
+| 5 | EVENT | 설날/발렌타인 이벤트 한글 깨짐 (Mojibake) | ✅ 해결 |
 
 ---
 

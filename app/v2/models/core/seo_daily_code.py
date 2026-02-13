@@ -22,7 +22,7 @@ class SeoDailyCode(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String(20), unique=True, nullable=False, index=True)
     target_date = Column(Date, nullable=False, index=True, comment="이 코드가 유효한 날짜 (KST)")
-    reward_min = Column(Integer, nullable=False, default=3000, comment="최소 보상 포인트")
+    reward_min = Column(Integer, nullable=False, default=1000, comment="최소 보상 포인트")
     reward_max = Column(Integer, nullable=False, default=5000, comment="최대 보상 포인트")
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, default=lambda: datetime.now(ZoneInfo("Asia/Seoul")))

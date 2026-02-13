@@ -62,6 +62,7 @@
 | M_WELCOME_02 | welcome_telegram | 텔레그램 연동 | 계정 연동 완료 | 1 Ticket |
 | M_START_01 | start_play_roulette | 룰렛 플레이 | 1회 플레이 완료 | 100 EXP |
 | M_START_04 | start_first_deposit | 첫 충전 도전 | 생애 첫 입금 | Starter Pack |
+| M_SEO_DAILY | seo_search_code | 구글 검색 미션 | 매일 검색 코드 입력 | 1,000 ~ 5,000 POINT (랜덤) |
 
 참고: 신규 유저 미션 6종의 상세 구성은 운영 시드/어드민 설정을 기준으로 한다.
 

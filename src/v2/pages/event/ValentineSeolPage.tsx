@@ -5,7 +5,7 @@ import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
 import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
 import SecretCodeInput from "../../components/event/SecretCodeInput";
 import { useValentineSeolStatus } from "../../hooks/useValentineSeol";
-import { KOREAN } from "./KoreanConstants";
+// import { KOREAN } from "./KoreanConstants"; // Removed
 
 // ============================================================================
 // Date helpers (KST)
@@ -44,26 +44,26 @@ function getEventDayInfo(): EventDayInfo | null {
 
 /** Bundle ID → 한국어 보상 설명 */
 const BUNDLE_LABELS: Record<number, string> = {
-  3:  KOREAN.BUNDLE_3,
-  21: KOREAN.BUNDLE_21,
-  22: KOREAN.BUNDLE_22,
-  23: KOREAN.BUNDLE_23,
-  25: KOREAN.BUNDLE_25,
+  3:  "🎰 룰렛 1장 + 🎲 주사위 1장 + 🎟️ 복권 1장",
+  21: "🎟️ 복권 1장 + 🎲 주사위 3장",
+  22: "💎 20,000P + 다이아몬드 1장",
+  23: "🎰 10,000P + 룰렛 2장",
+  25: "🔑 20,000P + 골드키 1장",
 };
 
 /** reward_type 코드 → 한국어 단위명 */
 const TICKET_LABELS: Record<string, string> = {
-  ROULETTE_TICKET: KOREAN.REWARD_ROULETTE,
-  DICE_TICKET:     KOREAN.REWARD_DICE,
-  LOTTERY_TICKET:  KOREAN.REWARD_LOTTERY,
-  GOLD_KEY_TICKET: KOREAN.REWARD_GOLDKEY,
-  DIAMOND_TICKET:  KOREAN.REWARD_DIAMOND,
-  TICKET_ROULETTE: KOREAN.REWARD_ROULETTE,
-  TICKET_DICE:     KOREAN.REWARD_DICE,
-  TICKET_LOTTERY:  KOREAN.REWARD_LOTTERY,
-  TICKET_BUNDLE:   KOREAN.REWARD_BUNDLE,
-  POINT:           KOREAN.REWARD_POINT,
-  CC_POINT:        KOREAN.REWARD_POINT,
+  ROULETTE_TICKET: "🎰 룰렛 티켓",
+  DICE_TICKET:     "🎲 주사위 티켓",
+  LOTTERY_TICKET:  "🎟️ 복권 티켓",
+  GOLD_KEY_TICKET: "🔑 골드키",
+  DIAMOND_TICKET:  "💎 다이아몬드",
+  TICKET_ROULETTE: "🎰 룰렛 티켓",
+  TICKET_DICE:     "🎲 주사위 티켓",
+  TICKET_LOTTERY:  "🎟️ 복권 티켓",
+  TICKET_BUNDLE:   "게임 티켓 번들",
+  POINT:           "💰 포인트",
+  CC_POINT:        "💰 포인트",
 };
 
 function getRewardLabel(rewardType: string | null, rewardAmount: number | null): string {
@@ -79,20 +79,20 @@ function getRewardLabel(rewardType: string | null, rewardAmount: number | null):
 
 /** action_type → 유저가 해야 할 행동 설명 */
 function getTaskDescription(logicKey: string | null, _actionType: string | null, targetValue: number): string {
-  if (logicKey === "EVENT_VALENTINE_2026") return KOREAN.TASK_PLAY_GAME.replace("{n}", String(targetValue));
-  if (logicKey === "EVENT_SEOL_DAY2_2026") return KOREAN.TASK_PLAY_GAME.replace("{n}", String(targetValue));
-  if (logicKey === "EVENT_SEOL_DAY1_2026") return KOREAN.TASK_DEPOSIT.replace("{n}", targetValue.toLocaleString());
-  if (logicKey === "EVENT_SEOL_DAY3_2026") return KOREAN.TASK_DEPOSIT.replace("{n}", targetValue.toLocaleString());
-  if (logicKey === "EVENT_SEOL_STREAK_2026") return KOREAN.TASK_STREAK;
+  if (logicKey === "EVENT_VALENTINE_2026") return "아무 게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
+  if (logicKey === "EVENT_SEOL_DAY2_2026") return "아무 게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
+  if (logicKey === "EVENT_SEOL_DAY1_2026") return "오늘 {n}원 이상 입금하세요".replace("{n}", targetValue.toLocaleString());
+  if (logicKey === "EVENT_SEOL_DAY3_2026") return "오늘 {n}원 이상 입금하세요".replace("{n}", targetValue.toLocaleString());
+  if (logicKey === "EVENT_SEOL_STREAK_2026") return "4일간 모든 이벤트 미션을 완료하세요";
   return "";
 }
 
 function getMissionTitle(logicKey: string | null, originalTitle: string): string {
-  if (logicKey === "EVENT_VALENTINE_2026") return KOREAN.MISSION_TITLE_VALENTINE;
-  if (logicKey === "EVENT_SEOL_DAY1_2026") return KOREAN.MISSION_TITLE_SEOL_1;
-  if (logicKey === "EVENT_SEOL_DAY2_2026") return KOREAN.MISSION_TITLE_SEOL_2;
-  if (logicKey === "EVENT_SEOL_DAY3_2026") return KOREAN.MISSION_TITLE_SEOL_3;
-  if (logicKey === "EVENT_SEOL_STREAK_2026") return KOREAN.MISSION_TITLE_STREAK;
+  if (logicKey === "EVENT_VALENTINE_2026") return "💝 발렌타인 럭키박스 받기";
+  if (logicKey === "EVENT_SEOL_DAY1_2026") return "🧧 설날 세뱃돈 DAY 1 — 10만원 입금";
+  if (logicKey === "EVENT_SEOL_DAY2_2026") return "🎮 설날 세뱃돈 DAY 2 — 게임 5판";
+  if (logicKey === "EVENT_SEOL_DAY3_2026") return "💎 설날 세뱃돈 DAY 3 — 30만원 입금";
+  if (logicKey === "EVENT_SEOL_STREAK_2026") return "🏆 4일 연속 달성 보너스";
   return originalTitle;
 }
 
@@ -197,12 +197,12 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
           </h4>
           {taskDesc && (
             <p className="text-[11px] text-amber-400/80 mb-0.5">
-              {KOREAN.LABEL_TASK}{taskDesc}
+              "📋 "{taskDesc}
             </p>
           )}
           {rewardLabel && (
             <p className="text-[11px] text-emerald-400/80">
-              {KOREAN.LABEL_REWARD}{rewardLabel}
+              "🎁 보상: "{rewardLabel}
             </p>
           )}
         </div>
@@ -213,11 +213,11 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
               animate={{ scale: 1, opacity: 1 }}
               className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-block"
             >
-              {mission.is_claimed ? KOREAN.STATUS_CLAIMED : KOREAN.STATUS_COMPLETED}
+              {mission.is_claimed ? "수령 완료" : "완료 ✓"}
             </motion.span>
           ) : (
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-zinc-500 border border-white/10">
-              {KOREAN.STATUS_IN_PROGRESS}
+              "진행중"
             </span>
           )}
         </div>
@@ -282,7 +282,7 @@ export default function ValentineSeolPage() {
             className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft size={18} />
-            <span className="text-xs font-bold">{KOREAN.EVENT_LIST_BTN}</span>
+            <span className="text-xs font-bold">"이벤트 목록"</span>
           </button>
 
           <div className="flex items-center gap-3">
@@ -299,10 +299,10 @@ export default function ValentineSeolPage() {
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tighter">
-            💝 {KOREAN.TITLE_VALENTINE}<span className="text-amber-500">{KOREAN.TITLE_SEOLNAL}</span>{KOREAN.TITLE_EVENT}
+            💝 "발렌타인 & "<span className="text-amber-500">"설날"</span>" 이벤트"
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
-            {KOREAN.EVENT_SUBTITLE}
+            "2026.02.14 — 02.17 | 4일 연속 달성하면 특별 보너스!"
           </p>
         </motion.div>
 
@@ -316,10 +316,10 @@ export default function ValentineSeolPage() {
             <AlertTriangle size={20} className="text-amber-400 flex-shrink-0" />
             <div>
               <p className="text-sm font-bold text-amber-400">
-                {KOREAN.TEST_MODE_TITLE}
+                "[테스트 모드]"
               </p>
               <p className="text-xs text-amber-400/70">
-                {KOREAN.TEST_MODE_DESC}
+                "2/12-13은 테스트 기간입니다. 실제 이벤트는 2/14부터 시작됩니다."
               </p>
             </div>
           </motion.div>
@@ -335,10 +335,10 @@ export default function ValentineSeolPage() {
             <Sparkles size={40} className="text-zinc-600" />
             <div>
               <p className="text-lg font-bold text-zinc-400">
-                {KOREAN.NOT_ACTIVE_TITLE}
+                "이벤트 준비 중"
               </p>
               <p className="text-sm text-zinc-600 mt-1">
-                {KOREAN.NOT_ACTIVE_DESC}
+                "2026년 2월 14일부터 참여할 수 있습니다!"
               </p>
             </div>
           </motion.div>
@@ -368,7 +368,7 @@ export default function ValentineSeolPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={16} className="text-amber-400" />
                 <h2 className="text-base font-black text-white">
-                  {KOREAN.MISSION_SECTION_TITLE}
+                  "이벤트 미션"
                 </h2>
               </div>
 
@@ -390,7 +390,7 @@ export default function ValentineSeolPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-zinc-600 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
                   <p className="text-sm font-bold">
-                    {KOREAN.LOADING_MSG}
+                    "미션 데이터를 불러오는 중..."
                   </p>
                 </div>
               )}
@@ -404,10 +404,10 @@ export default function ValentineSeolPage() {
                 className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center"
               >
                 <p className="text-lg font-black text-emerald-400">
-                  {KOREAN.STREAK_COMPLETE_TITLE}
+                  "🎊 4일 연속 달성 완료!"
                 </p>
                 <p className="text-xs text-emerald-400/70 mt-1">
-                  {KOREAN.STREAK_COMPLETE_DESC}
+                  "특별 보너스 보상이 지급되었습니다."
                 </p>
               </motion.div>
             )}

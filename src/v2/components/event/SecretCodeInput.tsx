@@ -4,16 +4,16 @@ import { Loader2, Gift, ExternalLink } from "lucide-react";
 import { useClaimSecretCode } from "../../hooks/useValentineSeol";
 import { triggerHaptic, triggerNotification } from "../../utils/haptic";
 import { useToast } from "../common/ToastProvider";
-import { KOREAN } from "../../pages/event/KoreanConstants";
+// import { KOREAN } from "../../pages/event/KoreanConstants"; // Removed
 
 interface SecretCodeInputProps {
   claimedCodes?: string[];
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  INVALID_CODE: KOREAN.ERR_INVALID_CODE,
-  CODE_EXPIRED: KOREAN.ERR_CODE_EXPIRED,
-  ALREADY_CLAIMED: KOREAN.ERR_ALREADY_CLAIMED,
+  INVALID_CODE: "유효하지 않은 코드입니다",
+  CODE_EXPIRED: "코드가 만료되었습니다",
+  ALREADY_CLAIMED: "이미 사용한 코드입니다",
 };
 
 export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) {
@@ -38,11 +38,11 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
       triggerNotification("success");
       setFeedback({
         type: "success",
-        message: result.message || KOREAN.SECRET_SUCCESS,
+        message: result.message || "보상이 지급되었습니다!",
       });
       addToast({
         type: "success",
-        message: result.message || KOREAN.SECRET_TOAST,
+        message: result.message || "비밀코드 보상 지급 완료!",
       });
       setCode("");
 
@@ -51,7 +51,7 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
       triggerNotification("error");
       const detail = error?.response?.data?.detail || "";
       const message =
-        ERROR_MESSAGES[detail] || KOREAN.ERR_DEFAULT;
+        ERROR_MESSAGES[detail] || "코드 입력에 실패했습니다.";
       setFeedback({ type: "error", message });
     }
   };
@@ -68,11 +68,11 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
         <div className="flex items-center gap-2 mb-1">
           <Gift size={18} className="text-purple-400" />
           <h3 className="text-base font-black text-white">
-            {KOREAN.SECRET_TITLE}
+            "비밀코드 입력"
           </h3>
         </div>
         <p className="text-xs text-zinc-400">
-          {KOREAN.SECRET_DESC}
+          "텔레그램 채널에서 매일 공개되는 비밀코드를 입력하세요!"
         </p>
       </div>
 
@@ -95,7 +95,7 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
           {claimMutation.isPending ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            KOREAN.SECRET_BTN
+            "보상 받기"
           )}
         </button>
       </form>
@@ -141,7 +141,7 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
           className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
         >
           <ExternalLink size={12} />
-          {KOREAN.SECRET_LINK}
+          "텔레그램 채널 바로가기"
         </a>
       </div>
     </motion.div>

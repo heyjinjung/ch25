@@ -191,7 +191,7 @@ class V2SeoCodeService:
         new_code = SeoDailyCode(
             code=code,
             target_date=target_date,
-            reward_min=3000,
+            reward_min=1000,
             reward_max=5000,
             is_active=True,
         )
