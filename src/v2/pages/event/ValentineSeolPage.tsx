@@ -44,55 +44,79 @@ function getEventDayInfo(): EventDayInfo | null {
 
 /** Bundle ID → 한국어 보상 설명 */
 const BUNDLE_LABELS: Record<number, string> = {
-  3:  "🎰 룰렛 1장 + 🎲 주사위 1장 + 🎟️ 복권 1장",
-  21: "🎟️ 복권 1장 + 🎲 주사위 3장",
-  22: "💎 20,000P + 다이아몬드 1장",
-  23: "🎰 10,000P + 룰렛 2장",
-  25: "🔑 20,000P + 골드키 1장",
+  3: "룰렛1장+주사위1장+복권 1장",
+  21: "복권1장+주사위3장",
+  22: "2만P + 다이아카1장",
+  23: "1만P + 룰렛 2장",
+  25: "2만P + 골드키 1장",
 };
 
 /** reward_type 코드 → 한국어 단위명 */
 const TICKET_LABELS: Record<string, string> = {
-  ROULETTE_TICKET: "🎰 룰렛 티켓",
-  DICE_TICKET:     "🎲 주사위 티켓",
-  LOTTERY_TICKET:  "🎟️ 복권 티켓",
-  GOLD_KEY_TICKET: "🔑 골드키",
-  DIAMOND_TICKET:  "💎 다이아몬드",
-  TICKET_ROULETTE: "🎰 룰렛 티켓",
-  TICKET_DICE:     "🎲 주사위 티켓",
-  TICKET_LOTTERY:  "🎟️ 복권 티켓",
-  TICKET_BUNDLE:   "게임 티켓 번들",
-  POINT:           "💰 포인트",
-  CC_POINT:        "💰 포인트",
+  ROULETTE_TICKET: "🎰룰렛",
+  DICE_TICKET: "🎲주사위",
+  LOTTERY_TICKET: "🎟️복권",
+  GOLD_KEY_TICKET: "🔑골드키",
+  DIAMOND_TICKET: "💎다이아키",
+  TICKET_ROULETTE: "🎰룰렛",
+  TICKET_DICE: "🎲주사위",
+  TICKET_LOTTERY: "🎟️복권",
+  TICKET_BUNDLE: "게임티켓번들",
+  POINT: "💰포인트",
+  CC_POINT: "💰포인트",
 };
 
-function getRewardLabel(rewardType: string | null, rewardAmount: number | null): string {
+function getRewardLabel(
+  rewardType: string | null,
+  rewardAmount: number | null,
+): string {
   if (!rewardType || !rewardAmount) return "";
   if (rewardType === "BUNDLE" || rewardType === "TICKET_BUNDLE") {
     return BUNDLE_LABELS[rewardAmount] ?? `번들 #${rewardAmount}`;
   }
   const label = TICKET_LABELS[rewardType];
   if (label) return `${label} ${rewardAmount.toLocaleString()}\uC7A5`;
-  if (rewardType === "POINT" || rewardType === "CC_POINT") return `${rewardAmount.toLocaleString()}P`;
+  if (rewardType === "POINT" || rewardType === "CC_POINT")
+    return `${rewardAmount.toLocaleString()}P`;
   return `${rewardType} × ${rewardAmount}`;
 }
 
 /** action_type → 유저가 해야 할 행동 설명 */
-function getTaskDescription(logicKey: string | null, _actionType: string | null, targetValue: number): string {
-  if (logicKey === "EVENT_VALENTINE_2026") return "아무 게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
-  if (logicKey === "EVENT_SEOL_DAY2_2026") return "아무 게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
-  if (logicKey === "EVENT_SEOL_DAY1_2026") return "오늘 {n}원 이상 입금하세요".replace("{n}", targetValue.toLocaleString());
-  if (logicKey === "EVENT_SEOL_DAY3_2026") return "오늘 {n}원 이상 입금하세요".replace("{n}", targetValue.toLocaleString());
-  if (logicKey === "EVENT_SEOL_STREAK_2026") return "4일간 모든 이벤트 미션을 완료하세요";
+function getTaskDescription(
+  logicKey: string | null,
+  _actionType: string | null,
+  targetValue: number,
+): string {
+  if (logicKey === "EVENT_VALENTINE_2026")
+    return "어플게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
+  if (logicKey === "EVENT_SEOL_DAY2_2026")
+    return "어플게임 {n}판 플레이하세요".replace("{n}", String(targetValue));
+  if (logicKey === "EVENT_SEOL_DAY1_2026")
+    return "오늘 {n}원 이상 입금하세요".replace(
+      "{n}",
+      targetValue.toLocaleString(),
+    );
+  if (logicKey === "EVENT_SEOL_DAY3_2026")
+    return "오늘 {n}원 이상 입금하세요".replace(
+      "{n}",
+      targetValue.toLocaleString(),
+    );
+  if (logicKey === "EVENT_SEOL_STREAK_2026")
+    return "4일간 모든 이벤트 미션을 완료하세요";
   return "";
 }
 
-function getMissionTitle(logicKey: string | null, originalTitle: string): string {
-  if (logicKey === "EVENT_VALENTINE_2026") return "💝 발렌타인 럭키박스 받기";
-  if (logicKey === "EVENT_SEOL_DAY1_2026") return "🧧 설날 세뱃돈 DAY 1 — 10만원 입금";
-  if (logicKey === "EVENT_SEOL_DAY2_2026") return "🎮 설날 세뱃돈 DAY 2 — 게임 5판";
-  if (logicKey === "EVENT_SEOL_DAY3_2026") return "💎 설날 세뱃돈 DAY 3 — 30만원 입금";
-  if (logicKey === "EVENT_SEOL_STREAK_2026") return "🏆 4일 연속 달성 보너스";
+function getMissionTitle(
+  logicKey: string | null,
+  originalTitle: string,
+): string {
+  if (logicKey === "EVENT_VALENTINE_2026") return "💝발렌타인럭키박스";
+  if (logicKey === "EVENT_SEOL_DAY1_2026")
+    return "🧧설날세뱃돈 1일 — 10만원 입금";
+  if (logicKey === "EVENT_SEOL_DAY2_2026") return "🎮설날세뱃돈 2일 — 게임 5판";
+  if (logicKey === "EVENT_SEOL_DAY3_2026")
+    return "💎설날세뱃돈 3일 — 30만원 입금";
+  if (logicKey === "EVENT_SEOL_STREAK_2026") return "🏆4일 연속 달성 보너스";
   return originalTitle;
 }
 
@@ -166,8 +190,15 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
     100,
   );
 
-  const rewardLabel = getRewardLabel(mission.reward_type, mission.reward_amount);
-  const taskDesc = getTaskDescription(mission.logic_key, mission.action_type ?? null, mission.target_value);
+  const rewardLabel = getRewardLabel(
+    mission.reward_type,
+    mission.reward_amount,
+  );
+  const taskDesc = getTaskDescription(
+    mission.logic_key,
+    mission.action_type ?? null,
+    mission.target_value,
+  );
   const title = getMissionTitle(mission.logic_key, mission.title);
 
   return (
@@ -175,7 +206,7 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
       variants={cardVariants}
       whileHover="hover"
       whileTap="tap"
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4 group cursor-default"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 group cursor-default"
     >
       {/* Magic UI Shimmer Effect */}
       <motion.div
@@ -190,20 +221,28 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
         }}
       />
 
-      <div className="flex items-start justify-between mb-3 relative z-10">
+      <div className="flex items-start justify-between mb-4 relative z-10">
         <div className="flex-1">
-          <h4 className="text-sm font-bold text-white mb-0.5 group-hover:text-amber-200 transition-colors">
+          <h4 className="text-[15px] leading-snug font-bold text-white group-hover:text-amber-200 transition-colors">
             {title}
           </h4>
-          {taskDesc && (
-            <p className="text-[11px] text-amber-400/80 mb-0.5">
-              "📋 "{taskDesc}
-            </p>
-          )}
-          {rewardLabel && (
-            <p className="text-[11px] text-emerald-400/80">
-              "🎁 보상: "{rewardLabel}
-            </p>
+          {(taskDesc || rewardLabel) && (
+            <div className="mt-2 space-y-1.5">
+              {taskDesc && (
+                <p className="text-[12px] leading-relaxed text-zinc-400">
+                  <span className="font-semibold text-zinc-500">미션</span>
+                  <span className="mx-1 text-zinc-600">·</span>
+                  {taskDesc}
+                </p>
+              )}
+              {rewardLabel && (
+                <p className="text-[12px] leading-relaxed text-emerald-400/80">
+                  <span className="font-semibold text-zinc-500">보상</span>
+                  <span className="mx-1 text-zinc-600">·</span>
+                  {rewardLabel}
+                </p>
+              )}
+            </div>
           )}
         </div>
         <div className="ml-3">
@@ -217,7 +256,7 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
             </motion.span>
           ) : (
             <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-white/5 text-zinc-500 border border-white/10">
-              "진행중"
+              진행중
             </span>
           )}
         </div>
@@ -237,19 +276,19 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
         >
           {/* Progress bar glint */}
           <motion.div
-             className="absolute inset-0 bg-white/30 w-full"
-             initial={{ x: "-100%" }}
-             animate={{ x: "100%" }}
-             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+            className="absolute inset-0 bg-white/30 w-full"
+            initial={{ x: "-100%" }}
+            animate={{ x: "100%" }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
           />
         </motion.div>
       </div>
-      <div className="flex items-center justify-between mt-1.5 relative z-10">
-        <span className="text-[10px] font-medium text-zinc-600">
-          {mission.current_value} / {mission.target_value}
+      <div className="flex items-center justify-between mt-2 relative z-10">
+        <span className="text-[11px] font-medium text-zinc-500">
+          {mission.is_completed ? "완료" : "진행"}
         </span>
-        <span className="text-[10px] font-bold text-zinc-500">
-          {Math.round(progress)}%
+        <span className="text-[11px] font-mono text-zinc-500">
+          {mission.current_value} / {mission.target_value}
         </span>
       </div>
     </motion.div>
@@ -288,10 +327,10 @@ export default function ValentineSeolPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 mb-1">
               <motion.div
-                 variants={badgeVariants}
-                 initial="initial"
-                 animate="animate"
-                 className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                variants={badgeVariants}
+                initial="initial"
+                animate="animate"
+                className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
               />
               <span className="text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em]">
                 Special Event
@@ -299,10 +338,11 @@ export default function ValentineSeolPage() {
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tighter">
-            💝 "발렌타인 & "<span className="text-amber-500">"설날"</span>" 이벤트"
+            💝 "발렌타인 & "<span className="text-amber-500">"설날"</span>"
+            이벤트"
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
-            "2026.02.14 — 02.17 | 4일 연속 달성하면 특별 보너스!"
+            "2026.02.14 — 02.17 | 4일 연속 달성시 특별 보너스!"
           </p>
         </motion.div>
 
@@ -319,7 +359,8 @@ export default function ValentineSeolPage() {
                 "[테스트 모드]"
               </p>
               <p className="text-xs text-amber-400/70">
-                "2/12-13은 테스트 기간입니다. 실제 이벤트는 2/14부터 시작됩니다."
+                "2/12-13은 테스트 기간입니다. 실제 이벤트는 2/14부터
+                시작됩니다."
               </p>
             </div>
           </motion.div>
@@ -355,9 +396,7 @@ export default function ValentineSeolPage() {
             />
 
             {/* Secret Code Input */}
-            <SecretCodeInput
-              claimedCodes={eventStatus?.secret_codes_claimed}
-            />
+            <SecretCodeInput claimedCodes={eventStatus?.secret_codes_claimed} />
 
             {/* Event Missions */}
             <motion.div
