@@ -81,6 +81,29 @@ EVENT_LOGIC_KEYS = [
     "EVENT_SEOL_STREAK_2026",
 ]
 
+# DB title이 인코딩 깨짐(mojibake)일 경우 대비 — logic_key → 올바른 한글 타이틀
+_EVENT_TITLE_MAP: dict[str, str] = {
+    "EVENT_SEOL_DAY1_2026": "🧧 설날 DAY 1 — 10만원 입금",
+    "EVENT_SEOL_DAY2_2026": "🎮 설날 DAY 2 — 게임 5판",
+    "EVENT_SEOL_DAY3_2026": "💎 설날 DAY 3 — 30만원 입금",
+    "EVENT_SEOL_STREAK_2026": "🏆 4일 연속 달성 보너스",
+    "EVENT_VALENTINE_2026": "💑 발렌타인 럭키박스",
+}
+
+
+def _safe_title(logic_key: str | None, db_title: str) -> str:
+    """DB title이 ASCII 범위 밖 문자가 깨져 있으면 fallback 매핑 사용."""
+    if logic_key and logic_key in _EVENT_TITLE_MAP:
+        # DB title에 한글이 정상적으로 들어있는지 검사
+        try:
+            has_korean = any("\uac00" <= ch <= "\ud7a3" for ch in db_title)
+            if has_korean:
+                return db_title
+        except Exception:
+            pass
+        return _EVENT_TITLE_MAP[logic_key]
+    return db_title
+
 
 # ── GET /valentine-seol/stats ────────────────────────────────────────────
 
@@ -125,7 +148,7 @@ def get_event_stats(db: Session = Depends(get_db)):
 
         mission_stats.append(MissionStats(
             mission_id=m.id,
-            title=m.title,
+            title=_safe_title(m.logic_key, m.title),
             logic_key=m.logic_key,
             total_participants=total,
             completed_count=completed,
