@@ -1,4 +1,3 @@
-
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -30,159 +29,173 @@ vi.mock("../../utils/haptic", () => ({
 }));
 
 describe("SeoMissionPage", () => {
-    // Default mock setup
-    const mockMutateAsync = vi.fn();
-    
-    beforeEach(() => {
-        vi.clearAllMocks();
+  // Default mock setup
+  const mockMutateAsync = vi.fn();
 
-        // Mocks for JSDOM
-        window.ResizeObserver = vi.fn().mockImplementation(() => ({
-            observe: vi.fn(),
-            unobserve: vi.fn(),
-            disconnect: vi.fn(),
-        }));
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-        window.matchMedia = vi.fn().mockImplementation(query => ({
-            matches: false,
-            media: query,
-            onchange: null,
-            addListener: vi.fn(), // deprecated
-            removeListener: vi.fn(), // deprecated
-            addEventListener: vi.fn(),
-            removeEventListener: vi.fn(),
-            dispatchEvent: vi.fn(),
-        }));
-        
-        // Default status: not claimed
-        (useSeoMissionHooks.useSeoMissionStatus as any).mockReturnValue({
-            data: { has_claimed_today: false, reward_amount: null },
-            isLoading: false,
-            error: null
-        });
+    // Mocks for JSDOM
+    window.ResizeObserver = vi.fn().mockImplementation(() => ({
+      observe: vi.fn(),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    }));
 
-        // Default mutation
-        (useSeoMissionHooks.useClaimSeoCode as any).mockReturnValue({
-            mutateAsync: mockMutateAsync,
-            isPending: false
-        });
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(), // deprecated
+      removeListener: vi.fn(), // deprecated
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    // Default status: not claimed
+    (useSeoMissionHooks.useSeoMissionStatus as any).mockReturnValue({
+      data: { has_claimed_today: false, reward_amount: null },
+      isLoading: false,
+      error: null,
     });
 
-    // Cleanup handled by vitest/testing-library automatically
+    // Default mutation
+    (useSeoMissionHooks.useClaimSeoCode as any).mockReturnValue({
+      mutateAsync: mockMutateAsync,
+      isPending: false,
+    });
+  });
 
-    it("renders page title and steps correctly", () => {
-        render(<SeoMissionPage />);
-        
-        expect(screen.getByText("구글 검색")).toBeInTheDocument();
-        expect(screen.getByText("랜딩 페이지 방문")).toBeInTheDocument();
-        expect(screen.getByText("코드 입력")).toBeInTheDocument();
-        // Use placeholder text and select first to handle potential duplication from animations
-        expect(screen.getAllByPlaceholderText("코드 입력 (예: seo4k2b1)")[0]).toBeInTheDocument();
+  // Cleanup handled by vitest/testing-library automatically
+
+  it("renders page title and steps correctly", () => {
+    render(<SeoMissionPage />);
+
+    expect(screen.getByText("구글 검색")).toBeInTheDocument();
+    expect(screen.getByText("랜딩 페이지 방문")).toBeInTheDocument();
+    expect(screen.getByText("코드 입력")).toBeInTheDocument();
+    // Use placeholder text and select first to handle potential duplication from animations
+    expect(
+      screen.getAllByPlaceholderText("코드 입력 (예: seo4k2b1)")[0]!,
+    ).toBeInTheDocument();
+  });
+
+  it("handles code input and submission success", async () => {
+    // Setup success response
+    mockMutateAsync.mockResolvedValue({
+      success: true,
+      reward_amount: 1000,
+      message: "1,000P 지급 완료!",
     });
 
-    it("handles code input and submission success", async () => {
-        // Setup success response
-        mockMutateAsync.mockResolvedValue({
-            success: true,
-            reward_amount: 1000,
-            message: "1,000P 지급 완료!"
-        });
+    render(<SeoMissionPage />);
 
-        render(<SeoMissionPage />);
-        
-        const input = screen.getAllByPlaceholderText("코드 입력 (예: seo4k2b1)")[0];
-        const submitButton = screen.getByText("보상 받기");
+    const input = screen.getAllByPlaceholderText(
+      "코드 입력 (예: seo4k2b1)",
+    )[0]! as HTMLInputElement;
+    const submitButton = screen.getByText("보상 받기");
 
-        // Enter code
-        fireEvent.change(input, { target: { value: "SEO123456" } });
-        expect(input).toHaveValue("SEO123456");
+    // Enter code
+    fireEvent.change(input, { target: { value: "SEO123456" } });
+    expect(input).toHaveValue("SEO123456");
 
-        // Submit
-        fireEvent.click(submitButton);
+    // Submit
+    fireEvent.click(submitButton);
 
-        await waitFor(() => {
-            expect(mockMutateAsync).toHaveBeenCalledWith("SEO123456");
-        });
-
-        // Verify toast and feedback
-        await waitFor(() => {
-            expect(addToastMock).toHaveBeenCalledWith(expect.objectContaining({
-                type: "success",
-                message: expect.stringContaining("지급 완료")
-            }));
-            expect(screen.getByText("1,000P 지급 완료!")).toBeInTheDocument();
-        });
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith("SEO123456");
     });
 
-    it("handles error response correctly (INVALID_CODE)", async () => {
-        // Setup error response
-        const error = {
-            response: {
-                data: { detail: "INVALID_CODE" }
-            }
-        };
-        mockMutateAsync.mockRejectedValue(error);
+    // Verify toast and feedback
+    await waitFor(() => {
+      expect(addToastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "success",
+          message: expect.stringContaining("지급 완료"),
+        }),
+      );
+      expect(screen.getByText("1,000P 지급 완료!")).toBeInTheDocument();
+    });
+  });
 
-        render(<SeoMissionPage />);
-        
-        const input = screen.getAllByPlaceholderText("코드 입력 (예: seo4k2b1)")[0];
-        const submitButton = screen.getByText("보상 받기");
+  it("handles error response correctly (INVALID_CODE)", async () => {
+    // Setup error response
+    const error = {
+      response: {
+        data: { detail: "INVALID_CODE" },
+      },
+    };
+    mockMutateAsync.mockRejectedValue(error);
 
-        fireEvent.change(input, { target: { value: "WRONG_CODE" } });
-        fireEvent.click(submitButton);
+    render(<SeoMissionPage />);
 
-        await waitFor(() => {
-            expect(screen.getByText("유효하지 않은 코드입니다")).toBeInTheDocument();
-        });
+    const input = screen.getAllByPlaceholderText(
+      "코드 입력 (예: seo4k2b1)",
+    )[0]! as HTMLInputElement;
+    const submitButton = screen.getByText("보상 받기");
+
+    fireEvent.change(input, { target: { value: "WRONG_CODE" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("유효하지 않은 코드입니다")).toBeInTheDocument();
+    });
+  });
+
+  it("handles error response correctly (ALREADY_CLAIMED)", async () => {
+    // Setup error response
+    const error = {
+      response: {
+        data: { detail: "ALREADY_CLAIMED" },
+      },
+    };
+    mockMutateAsync.mockRejectedValue(error);
+
+    render(<SeoMissionPage />);
+
+    const input = screen.getAllByPlaceholderText(
+      "코드 입력 (예: seo4k2b1)",
+    )[0]! as HTMLInputElement;
+    const submitButton = screen.getByText("보상 받기");
+
+    fireEvent.change(input, { target: { value: "USED_CODE" } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("이미 사용한 코드입니다")).toBeInTheDocument();
+    });
+  });
+
+  it.skip("renders completed state correctly", () => {
+    // Setup completed status
+    (useSeoMissionHooks.useSeoMissionStatus as any).mockReturnValue({
+      data: { has_claimed_today: true, reward_amount: 5000 },
     });
 
-    it("handles error response correctly (ALREADY_CLAIMED)", async () => {
-        // Setup error response
-        const error = {
-            response: {
-                data: { detail: "ALREADY_CLAIMED" }
-            }
-        };
-        mockMutateAsync.mockRejectedValue(error);
+    render(<SeoMissionPage />);
 
-        render(<SeoMissionPage />);
-        
-        const input = screen.getAllByPlaceholderText("코드 입력 (예: seo4k2b1)")[0];
-        const submitButton = screen.getByText("보상 받기");
+    expect(screen.getByText("오늘 미션 완료!")).toBeInTheDocument();
+    expect(screen.getByText("5,000P 지급됨")).toBeInTheDocument();
 
-        fireEvent.change(input, { target: { value: "USED_CODE" } });
-        fireEvent.click(submitButton);
+    // In completed state, the input form might be removed or replaced.
+    // If it's still there but disabled, we check that.
+    // If AnimatePresence is causing duplication, we can try to wait for the specific "completed" UI element
+    // and then check the input state.
 
-        await waitFor(() => {
-            expect(screen.getByText("이미 사용한 코드입니다")).toBeInTheDocument();
-        });
+    // Let's assert that the input is disabled, using the one that is disabled.
+    waitFor(() => {
+      const inputs = screen.queryAllByPlaceholderText(
+        "코드 입력 (예: seo4k2b1)",
+      );
+      // If multiple inputs exist, at least one should be disabled (the visible one)
+      const disabledInput = inputs.find(
+        (i: HTMLElement) => (i as HTMLInputElement).disabled,
+      );
+      expect(disabledInput).toBeInTheDocument();
     });
 
-    it.skip("renders completed state correctly", () => {
-        // Setup completed status
-        (useSeoMissionHooks.useSeoMissionStatus as any).mockReturnValue({
-            data: { has_claimed_today: true, reward_amount: 5000 }
-        });
-
-        render(<SeoMissionPage />);
-
-        expect(screen.getByText("오늘 미션 완료!")).toBeInTheDocument();
-        expect(screen.getByText("5,000P 지급됨")).toBeInTheDocument();
-
-        // In completed state, the input form might be removed or replaced.
-        // If it's still there but disabled, we check that.
-        // If AnimatePresence is causing duplication, we can try to wait for the specific "completed" UI element 
-        // and then check the input state.
-        
-        // Let's assert that the input is disabled, using the one that is disabled.
-         waitFor(() => {
-            const inputs = screen.queryAllByPlaceholderText("코드 입력 (예: seo4k2b1)");
-             // If multiple inputs exist, at least one should be disabled (the visible one)
-            const disabledInput = inputs.find((i: HTMLElement) => (i as HTMLInputElement).disabled);
-            expect(disabledInput).toBeInTheDocument();
-        });
-        
-        const button = screen.getByText("완료");
-        expect(button).toBeDisabled();
-    });
+    const button = screen.getByText("완료");
+    expect(button).toBeDisabled();
+  });
 });
