@@ -21,24 +21,28 @@ const ASSET_PATH = "/assets/02gamedash";
 const GAMES = [
   {
     id: "dice",
+    name: "주사위",
     to: "/game/dice",
     icon: `${ASSET_PATH}/Group 12.png`,
     color: "from-blue-500/20",
   },
   {
     id: "rocket",
+    name: "룰렛",
     to: "/game/roulette",
     icon: `${ASSET_PATH}/Group 13.png`,
     color: "from-purple-500/20",
   },
   {
     id: "ball",
+    name: "복권",
     to: "/game/lottery",
     icon: `${ASSET_PATH}/Group 14.png`,
     color: "from-emerald-500/20",
   },
   {
     id: "crown",
+    name: "팀배틀",
     to: "/team-battle",
     icon: `${ASSET_PATH}/Group 15.png`,
     color: "from-amber-500/20",
@@ -53,9 +57,9 @@ export default function GamedashPage() {
   const lotteryStatusQuery = useV2LotteryStatus();
 
   const noticeItems = [
-    "🔥 지민코드 2월 업뎃!",
-    "📢 매일 터지는 이벤트",
-    "✨ 지민전용 특별선물",
+    "📢 설날이벤트 시작",
+    "✨ 발렌타인 럭키박스 오픈",
+    "🔥 주 3회 입금 선물",
   ];
 
   const getGameBadge = (gameId: string) => {
@@ -203,7 +207,7 @@ export default function GamedashPage() {
                 <div className="relative z-10 h-full flex flex-col">
                   <div className="flex justify-between items-start mb-auto">
                     <span className="text-[9px] font-black text-white/30 tracking-widest uppercase">
-                      Level: 01
+                      {game.name}
                     </span>
                     {(() => {
                       const remaining = getGameBadge(game.id);
