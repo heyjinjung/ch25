@@ -79,6 +79,8 @@ def _create_mission(
     target_value: int = 1,
     reward_type: MissionRewardType = MissionRewardType.POINT,
     reward_amount: int = 100,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     start_time: time | None = None,
     end_time: time | None = None,
     is_active: bool = True,
@@ -94,6 +96,8 @@ def _create_mission(
         target_value=target_value,
         reward_type=reward_type,
         reward_amount=reward_amount,
+        start_date=start_date,
+        end_date=end_date,
         start_time=start_time,
         end_time=end_time,
         is_active=is_active,
@@ -691,6 +695,165 @@ class TestMissionProgressUpdate:
 
         # 진행 기록 없음 (PLAY_ROULETTE != PLAY_DICE)
         assert progress is None or progress.current_value == 0
+
+    def test_no_progress_outside_date_window(self, db_session: Session):
+        """start_date/end_date 범위 밖 미션은 진행도 업데이트되지 않음"""
+        user = _create_user(db_session, 10)
+
+        kst = ZoneInfo("Asia/Seoul")
+        mission = _create_mission(
+            db_session,
+            10,
+            category=MissionCategory.SPECIAL,
+            action_type="PLAY_GAME",
+            target_value=5,
+            start_date=datetime(2026, 2, 16, 0, 0, 0),
+            end_date=datetime(2026, 2, 16, 23, 59, 59),
+            start_time=time(0, 0),
+            end_time=time(23, 59, 59),
+        )
+
+        service = V2MissionService(db_session)
+
+        with patch.object(V2MissionService, "_now_tz") as mock_time:
+            mock_time.return_value = datetime(2026, 2, 15, 12, 0, 0, tzinfo=kst)
+            service.update_progress(user.id, "PLAY_GAME", delta=1)
+
+        progress = (
+            db_session.query(UserMissionProgress)
+            .filter(
+                UserMissionProgress.user_id == user.id,
+                UserMissionProgress.mission_id == mission.id,
+            )
+            .first()
+        )
+
+        assert progress is None
+
+    def test_no_progress_for_next_day_before_reset_hour(self, db_session: Session):
+        """09:00 KST 이전에는 다음날(start_date=오늘) 미션 진행이 올라가면 안 됨"""
+        user = _create_user(db_session, 11)
+
+        kst = ZoneInfo("Asia/Seoul")
+        mission = _create_mission(
+            db_session,
+            11,
+            category=MissionCategory.SPECIAL,
+            action_type="PLAY_GAME",
+            target_value=5,
+            start_date=datetime(2026, 2, 16, 0, 0, 0),
+            end_date=datetime(2026, 2, 16, 23, 59, 59),
+            start_time=time(0, 0),
+            end_time=time(23, 59, 59),
+        )
+
+        service = V2MissionService(db_session)
+
+        with patch.object(V2MissionService, "_now_tz") as mock_time:
+            # 2/16 01:00 KST는 운영일 기준으로 2/15
+            mock_time.return_value = datetime(2026, 2, 16, 1, 0, 0, tzinfo=kst)
+            service.update_progress(user.id, "PLAY_GAME", delta=1)
+
+        progress = (
+            db_session.query(UserMissionProgress)
+            .filter(
+                UserMissionProgress.user_id == user.id,
+                UserMissionProgress.mission_id == mission.id,
+            )
+            .first()
+        )
+
+        assert progress is None
+
+
+# =============================================================================
+# 9. 미션 활성 기간(start_date/end_date) + 운영일(09:00 KST) 조회/클레임 검증
+# =============================================================================
+
+
+class TestMissionActiveWindowOperationalDay:
+    def test_get_user_missions_excludes_future_day_before_reset(self, db_session: Session):
+        """09:00 KST 이전에는 다음날 미션이 목록에 나오면 안 됨"""
+        user = _create_user(db_session, 20)
+        kst = ZoneInfo("Asia/Seoul")
+
+        _create_mission(
+            db_session,
+            20,
+            category=MissionCategory.SPECIAL,
+            action_type="PLAY_GAME",
+            target_value=1,
+            start_date=datetime(2026, 2, 16, 0, 0, 0),
+            end_date=datetime(2026, 2, 16, 23, 59, 59),
+        )
+
+        service = V2MissionService(db_session)
+        with patch.object(V2MissionService, "_now_tz") as mock_time:
+            mock_time.return_value = datetime(2026, 2, 16, 1, 0, 0, tzinfo=kst)
+            missions = service.get_user_missions(user.id, category=MissionCategory.SPECIAL)
+
+        assert missions == []
+
+    def test_get_user_missions_includes_day_after_reset(self, db_session: Session):
+        """09:00 KST 이후에는 해당일 미션이 목록에 포함됨"""
+        user = _create_user(db_session, 21)
+        kst = ZoneInfo("Asia/Seoul")
+
+        _create_mission(
+            db_session,
+            21,
+            category=MissionCategory.SPECIAL,
+            action_type="PLAY_GAME",
+            target_value=1,
+            start_date=datetime(2026, 2, 16, 0, 0, 0),
+            end_date=datetime(2026, 2, 16, 23, 59, 59),
+        )
+
+        service = V2MissionService(db_session)
+        with patch.object(V2MissionService, "_now_tz") as mock_time:
+            mock_time.return_value = datetime(2026, 2, 16, 10, 0, 0, tzinfo=kst)
+            missions = service.get_user_missions(user.id, category=MissionCategory.SPECIAL)
+
+        assert len(missions) == 1
+        assert missions[0].mission.logic_key == "test_mission_21"
+
+    @patch("app.v2.services.vault_service.V2VaultService.is_benefits_suspended")
+    def test_claim_reward_blocked_outside_date_window(self, mock_suspended, db_session: Session):
+        """미션 완료 상태라도 start_date/end_date 밖이면 클레임 차단"""
+        mock_suspended.return_value = (False, None)
+        user = _create_user(db_session, 22)
+        kst = ZoneInfo("Asia/Seoul")
+
+        mission = _create_mission(
+            db_session,
+            22,
+            category=MissionCategory.SPECIAL,
+            action_type="PLAY_GAME",
+            target_value=1,
+            start_date=datetime(2026, 2, 16, 0, 0, 0),
+            end_date=datetime(2026, 2, 16, 23, 59, 59),
+        )
+
+        service = V2MissionService(db_session)
+        reset_date = service._get_reset_date_str(mission.category)
+        db_session.add(
+            UserMissionProgress(
+                user_id=user.id,
+                mission_id=mission.id,
+                current_value=1,
+                is_completed=True,
+                is_claimed=False,
+                reset_date=reset_date,
+            )
+        )
+        db_session.commit()
+
+        with patch.object(V2MissionService, "_now_tz") as mock_time:
+            mock_time.return_value = datetime(2026, 2, 15, 12, 0, 0, tzinfo=kst)
+            success, message, _ = service.claim_reward(user.id, mission.id)
+
+        assert success is False
+        assert message == "MISSION_NOT_ACTIVE"
 
 
 # =============================================================================

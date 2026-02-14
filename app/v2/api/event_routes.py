@@ -6,7 +6,7 @@ Endpoints:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -194,11 +194,25 @@ def get_valentine_seol_status(
     """발렌타인 & 설날 이벤트 현황을 조회합니다."""
     mission_service = V2MissionService(db)
 
+    # 운영일(09:00 KST 리셋) 기준으로 "현재" 이벤트 미션만 노출한다.
+    now_tz = mission_service._now_tz()
+    op_day = mission_service._operational_play_date(now_tz)
+    op_day_start = datetime.combine(op_day, datetime.min.time())
+    op_day_end = op_day_start + timedelta(days=1)
+
     # 1) 이벤트 미션 목록
-    event_missions = db.query(Mission).filter(
-        Mission.logic_key.in_(EVENT_LOGIC_KEYS),
-        Mission.is_active == True,
-    ).order_by(Mission.start_date.asc()).all()
+    event_missions = (
+        db.query(Mission)
+        .filter(
+            Mission.logic_key.in_(EVENT_LOGIC_KEYS),
+            Mission.is_active == True,
+            # 운영일 구간과 기간이 겹치는 미션만 반환 (경계값 end_date=23:59:59 등 안정)
+            (Mission.start_date == None) | (Mission.start_date < op_day_end),
+            (Mission.end_date == None) | (Mission.end_date >= op_day_start),
+        )
+        .order_by(Mission.start_date.asc())
+        .all()
+    )
 
     missions_out: list[EventMissionStatus] = []
     streak_current = 0

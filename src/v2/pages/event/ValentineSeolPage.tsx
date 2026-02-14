@@ -1,10 +1,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { BackgroundPaths } from "../../components/effects/BackgroundPaths";
 import ValentineSeolBanner from "../../components/event/ValentineSeolBanner";
 import SecretCodeInput from "../../components/event/SecretCodeInput";
 import { useValentineSeolStatus } from "../../hooks/useValentineSeol";
+import { claimV2Mission } from "../../api/missionApi";
 // import { KOREAN } from "./KoreanConstants"; // Removed
 
 // ============================================================================
@@ -186,7 +189,15 @@ interface MissionInfo {
   reward_amount: number | null;
 }
 
-function EventMissionCard({ mission }: { mission: MissionInfo }) {
+function EventMissionCard({
+  mission,
+  onClaim,
+  isClaiming,
+}: {
+  mission: MissionInfo;
+  onClaim?: () => void;
+  isClaiming?: boolean;
+}) {
   const progress = Math.min(
     (mission.current_value / mission.target_value) * 100,
     100,
@@ -293,6 +304,17 @@ function EventMissionCard({ mission }: { mission: MissionInfo }) {
           {mission.current_value} / {mission.target_value}
         </span>
       </div>
+
+      {mission.is_completed && !mission.is_claimed && onClaim && (
+        <button
+          type="button"
+          onClick={onClaim}
+          disabled={Boolean(isClaiming)}
+          className="mt-4 w-full rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-[12px] font-black text-emerald-200 hover:bg-emerald-500/20 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        >
+          {isClaiming ? "수령 중..." : "수령하기"}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -306,6 +328,26 @@ export default function ValentineSeolPage() {
   const dayInfo = getEventDayInfo();
   const isActive = dayInfo !== null;
   const { data: eventStatus, isLoading } = useValentineSeolStatus(isActive);
+
+  const queryClient = useQueryClient();
+  const claimMutation = useMutation({
+    mutationFn: (missionId: number) => claimV2Mission(String(missionId)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["v2", "event", "valentine-seol"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["v2", "missions"] });
+      queryClient.invalidateQueries({ queryKey: ["v2", "inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-vault-status"] });
+      queryClient.invalidateQueries({ queryKey: ["v2-user-me"] });
+      toast.success("보상을 수령했습니다");
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error ? error.message : "보상 수령에 실패했습니다";
+      toast.error(message);
+    },
+  });
 
   return (
     <div className="relative min-h-tg bg-[#09090B] overflow-x-hidden pt-[var(--header-offset)] pb-[var(--nav-offset)]">
@@ -396,6 +438,11 @@ export default function ValentineSeolPage() {
                       <EventMissionCard
                         key={mission.mission_id}
                         mission={mission}
+                        onClaim={() => claimMutation.mutate(mission.mission_id)}
+                        isClaiming={
+                          claimMutation.isPending &&
+                          claimMutation.variables === mission.mission_id
+                        }
                       />
                     ))}
                   </AnimatePresence>

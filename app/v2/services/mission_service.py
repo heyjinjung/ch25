@@ -87,34 +87,51 @@ class V2MissionService:
         return diff.days < 7
 
     def _within_time_window(self, mission: Mission, now_tz: datetime) -> bool:
+        op_day = self._operational_play_date(now_tz)
+
+        if mission.start_date is not None:
+            start_day = mission.start_date.date()
+            if op_day < start_day:
+                return False
+
+        if mission.end_date is not None:
+            end_day = mission.end_date.date()
+            if op_day > end_day:
+                return False
+
         if mission.start_time and mission.end_time:
             current_time = now_tz.time()
             return mission.start_time <= current_time <= mission.end_time
+
         return True
 
     def get_user_missions(self, user_id: int, category: Optional[MissionCategory] = None) -> List[MissionWithProgress]:
         """Fetch active missions with user's current progress, optionally filtered by category."""
         now_tz = self._now_tz()
-        today = now_tz.date()
+        op_day = self._operational_play_date(now_tz)
+        op_day_start = datetime.combine(op_day, datetime.min.time())
+        op_day_end = op_day_start + timedelta(days=1)
         
         # 1. Fetch all active missions
         conditions = [
             Mission.is_active == True,
             and_(
-                or_(Mission.start_date == None, Mission.start_date <= datetime.combine(today, datetime.min.time())),
-                or_(Mission.end_date == None, Mission.end_date >= datetime.combine(today, datetime.max.time()))
+                # Active when mission window overlaps the operational day interval.
+                # Use overlap semantics to avoid edge issues like end_date=23:59:59.
+                or_(Mission.start_date == None, Mission.start_date < op_day_end),
+                or_(Mission.end_date == None, Mission.end_date >= op_day_start),
             )
         ]
         
         if category:
             conditions.append(Mission.category == category)
 
-        missions = self.db.execute(
-            select(Mission).where(*conditions)
-        ).scalars().all()
+        missions = self.db.execute(select(Mission).where(*conditions)).scalars().all()
         
         result = []
         for m in missions:
+            if not self._within_time_window(m, now_tz):
+                continue
             reset_date = self._get_reset_date_str(m.category)
             progress = self.db.execute(
                 select(UserMissionProgress).where(
@@ -462,16 +479,24 @@ class V2MissionService:
     def update_progress(self, user_id: int, action_type: str, delta: int = 1) -> List[UserMissionProgress]:
         query_action_types = self._normalize_action_type(action_type)
 
+        now_tz = self._now_tz()
+        op_day = self._operational_play_date(now_tz)
+        op_day_start = datetime.combine(op_day, datetime.min.time())
+        op_day_end = op_day_start + timedelta(days=1)
+
         missions = self.db.query(Mission).filter(
             or_(
                 Mission.action_type.in_(query_action_types),
                 Mission.logic_key == action_type
             ),
-            Mission.is_active == True
+            Mission.is_active == True,
+            and_(
+                or_(Mission.start_date == None, Mission.start_date < op_day_end),
+                or_(Mission.end_date == None, Mission.end_date >= op_day_start),
+            ),
         ).all()
 
         updated_list: list[UserMissionProgress] = []
-        now_tz = self._now_tz()
 
         if action_type in ["PLAY_GAME", "PLAY"] and delta > 0:
             try:
