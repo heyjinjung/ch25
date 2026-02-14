@@ -1,6 +1,6 @@
 문서 타입: SoT (정본)
-버전: v1.2
-작성일: 2026-02-07
+버전: v1.3
+작성일: 2026-02-14
 작성자: GitHub Copilot
 대상: BE/FE/기획/운영
 상태: Stable
@@ -45,6 +45,8 @@
 - 모든 미션/스트릭의 날짜 계산은 KST 기준으로 수행
 - 운영일 리셋은 오전 9시
 - API 레이어에 자정 기준 날짜 계산 금지(서비스 단일화)
+- 날짜/기간 필터는 운영일 구간과 `start_date/end_date`의 **overlap(겹침)** 기준을 사용(예: `end_date=23:59:59` 같은 경계값에 안정)
+- 이벤트 상태 API는 “현재 운영일” 기준으로 미션을 반환해야 함 (예: `GET /api/events/valentine-seol/status`)
 
 ### 5.2 리셋 키 포맷
 - DAILY: YYYY-MM-DD (운영일)
@@ -84,6 +86,7 @@
 
 ## 8. 정합성 체크리스트
 - KST 9AM 리셋 기준 적용 여부
+- 운영일 구간 overlap 기준(start_date/end_date) 적용 여부
 - WEEKLY reset_date 포맷(YYYY-WXX) 일치 여부
 - 신규 유저 168시간 정책 일치 여부
 - claimable_day 기반 스트릭 버튼 노출 여부
@@ -95,6 +98,7 @@
 - [docs/SOT/mission/archive/v2_mission_timezone_fix_20260122_ko.md](docs/SOT/mission/archive/v2_mission_timezone_fix_20260122_ko.md)
 
 ## 10. 변경 이력
+- v1.3 (2026-02-14, GitHub Copilot): 운영일 구간 overlap 기준 및 이벤트 status 운영일 필터 규칙 명시
 - v1.2 (2026-02-07, GitHub Copilot): 데이터 모델/라이프사이클 섹션 추가
 - v1.1 (2026-02-07, GitHub Copilot): 용어/식별자/라우팅 표준 및 체크리스트 확장
 - v1.0 (2026-02-07, GitHub Copilot): 미션 SoT 5분류 통합 정본 생성

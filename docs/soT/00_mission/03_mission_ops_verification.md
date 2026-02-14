@@ -1,6 +1,6 @@
 문서 타입: 운영/검증 가이드
-버전: v1.1
-작성일: 2026-02-07
+버전: v1.3
+작성일: 2026-02-14
 작성자: GitHub Copilot
 대상: 운영/QA/BE/FE
 상태: Stable
@@ -18,6 +18,10 @@
 - 09:01 KST 로그인: 운영일 변경으로 스트릭 증가
 - 자정 이후 9AM 이전 로그인: 스트릭 유지
 - 하루 건너뛰기: streak.reset 발생
+
+## 3.2 이벤트 status 운영일 검증 시나리오
+- `GET /api/events/valentine-seol/status`는 **현재 운영일(09:00 KST 리셋)** 기준으로 이벤트 미션만 반환해야 한다.
+- 09:00 이전 조회는 “전날 운영일”로 계산되어야 한다.
 
 ### 3.1 권장 검증 케이스
 - 동일 운영일 내 재로그인 시 streak 증가 금지
@@ -71,6 +75,7 @@ WHERE event_name = 'streak.reset'
 - [docs/SOT/mission/archive/20260204_streak_claim_button_not_showing.md](docs/SOT/mission/archive/20260204_streak_claim_button_not_showing.md)
 
 ## 12. 변경 이력
+- v1.3 (2026-02-14, GitHub Copilot): 이벤트 status 운영일 검증 시나리오 추가
 - v1.2 (2026-02-07, GitHub Copilot): 이슈 대응 흐름 추가
 - v1.1 (2026-02-07, GitHub Copilot): 보고 포맷/모니터링 지표/SQL 예시 확장
 - v1.0 (2026-02-07, GitHub Copilot): 운영/검증 기준 통합 정리

@@ -20,6 +20,7 @@ state: SoT (Living Document)
 - [v2_api_sot_master_ko.md](00_api/v2_api_sot_master_ko.md)
 - [v2_api_sot_master2_ko.md](00_api/v2_api_sot_master2_ko.md)
 - [v2_api_sot_master3_ko.md](00_api/v2_api_sot_master3_ko.md)
+- [20260214_valentine_seol_status_operational_day_filter.md](00_api/변경로그/20260214_valentine_seol_status_operational_day_filter.md)
 
 ## 00. Auth (인증 및 보안)
 - [v2_sot_auth_ko.md](00_auth/v2_sot_auth_ko.md)
@@ -85,6 +86,7 @@ state: SoT (Living Document)
 - [02_mission_admin_builder.md](00_mission/02_mission_admin_builder.md)
 - [03_mission_ops_verification.md](00_mission/03_mission_ops_verification.md)
 - [04_mission_integrations.md](00_mission/04_mission_integrations.md)
+- [20260214_operational_day_mission_activation_alignment.md](00_mission/변경로그/20260214_operational_day_mission_activation_alignment.md)
 
 ## 00. Ops (운영)
 - [v2_system_ops_sot_ko.md](00_ops/v2_system_ops_sot_ko.md)
@@ -135,6 +137,7 @@ state: SoT (Living Document)
 
 
 ## 7. 변경 이력
+- v2.28 (2026-02-14, GitHub Copilot): 이벤트 status 운영일(09:00 KST) 기준 필터 규칙 및 미션 활성 판정(기간 overlap) 문서화
 - v2.27 (2026-02-13, GitHub Copilot): 설날/발렌타인 이벤트 텔레그램 공지 문구 보상 추가 및 변경로그 기록
 - v2.26 (2026-02-12, GitHub Copilot): DB 마이그레이션(20260214_1000) 안정화 변경로그 추가
 - v2.25 (2026-02-10, GitHub Copilot): SEO 키워드 타깃팅/랜딩 URL(루트) 확정 및 GSC 리포트 템플릿 보강
