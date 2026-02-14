@@ -1,6 +1,6 @@
 문서 타입: 인덱스
-버전: v2.5
-작성일: 2026-02-08
+버전: v2.6
+작성일: 2026-02-13
 작성자: Antigravity Agent
 state: SoT (Living Document)
 
@@ -135,6 +135,7 @@ state: SoT (Living Document)
 
 
 ## 7. 변경 이력
+- v2.27 (2026-02-13, GitHub Copilot): 설날/발렌타인 이벤트 텔레그램 공지 문구 보상 추가 및 변경로그 기록
 - v2.26 (2026-02-12, GitHub Copilot): DB 마이그레이션(20260214_1000) 안정화 변경로그 추가
 - v2.25 (2026-02-10, GitHub Copilot): SEO 키워드 타깃팅/랜딩 URL(루트) 확정 및 GSC 리포트 템플릿 보강
 - v2.24 (2026-02-10, GitHub Copilot): SEO 랜딩 콘텐츠 스펙 및 로그 리포트 템플릿 추가

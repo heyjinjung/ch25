@@ -570,6 +570,59 @@ export default SecretCodeInput;
 
 ### 3.4 텔레그램 공지 스크립트
 
+#### 이벤트 시작 공지 문구
+
+🎉 **설날 & 발렌타인 이벤트 시작!** 🎉
+
+🌟 **설날 미션 챌린지!**  
+- **DAY 1**: 10만원 입금 💰 → 1만P + 룰렛 2장 🎰  
+- **DAY 2**: 게임 5판 플레이 🎮 → 복권1장 + 주사위3장 🎲  
+- **DAY 3**: 30만원 입금 💸 → 2만P + 다이아카1장 💎  
+- **보너스**: 4일 연속 달성 시 특별 보상! 🎁 → 2만P + 골드키 1장 🗝️  
+
+🍫 **발렌타인 럭키박스**: 사랑의 행운을 잡아라! 💖 → 룰렛1장 + 주사위1장 + 복권 1장 🎁  
+
+지금 참여하고 풍성한 보상 받으세요! 🚀 #설날이벤트 #발렌타인 #럭키박스
+
+**파일**: `scripts/send_event_start_announcement.py`
+
+```python
+import requests
+import os
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHANNEL_ID = os.getenv("TELEGRAM_CHANNEL_ID")
+
+def send_telegram_message(message: str):
+    """텔레그램 채널에 메시지 발송"""
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHANNEL_ID,
+        "text": message,
+        "parse_mode": "Markdown"
+    }
+    response = requests.post(url, json=payload)
+    return response.json()
+
+if __name__ == "__main__":
+    message = """🎉 **설날 & 발렌타인 이벤트 시작!** 🎉
+
+🌟 **설날 미션 챌린지!**  
+- **DAY 1**: 10만원 입금 💰 → 1만P + 룰렛 2장 🎰  
+- **DAY 2**: 게임 5판 플레이 🎮 → 복권1장 + 주사위3장 🎲  
+- **DAY 3**: 30만원 입금 💸 → 2만P + 다이아카1장 💎  
+- **보너스**: 4일 연속 달성 시 특별 보상! 🎁 → 2만P + 골드키 1장 🗝️  
+
+🍫 **발렌타인 럭키박스**: 사랑의 행운을 잡아라! 💖 → 룰렛1장 + 주사위1장 + 복권 1장 🎁  
+
+지금 참여하고 풍성한 보상 받으세요! 🚀 #설날이벤트 #발렌타인 #럭키박스"""
+    
+    send_telegram_message(message)
+    print("✅ 이벤트 시작 공지 발송 완료")
+```
+
+#### 일별 비밀코드 공지 스크립트
+
 **파일**: `scripts/send_secret_code_announcement.py`
 
 ```python

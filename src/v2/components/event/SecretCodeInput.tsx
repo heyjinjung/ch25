@@ -16,7 +16,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   ALREADY_CLAIMED: "이미 사용한 코드입니다",
 };
 
-export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) {
+export default function SecretCodeInput({
+  claimedCodes,
+}: SecretCodeInputProps) {
   const [code, setCode] = useState("");
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -50,8 +52,7 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
     } catch (error: any) {
       triggerNotification("error");
       const detail = error?.response?.data?.detail || "";
-      const message =
-        ERROR_MESSAGES[detail] || "코드 입력에 실패했습니다.";
+      const message = ERROR_MESSAGES[detail] || "코드 입력에 실패했습니다.";
       setFeedback({ type: "error", message });
     }
   };
@@ -67,12 +68,10 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-1">
           <Gift size={18} className="text-purple-400" />
-          <h3 className="text-base font-black text-white">
-            "비밀코드 입력"
-          </h3>
+          <h3 className="text-base font-black text-white">비밀코드 입력</h3>
         </div>
         <p className="text-xs text-zinc-400">
-          "텔레그램 채널에서 매일 공개되는 비밀코드를 입력하세요!"
+          텔레그램 채널에서 매일 공개되는 비밀코드를 입력하세요!
         </p>
       </div>
 
@@ -141,7 +140,7 @@ export default function SecretCodeInput({ claimedCodes }: SecretCodeInputProps) 
           className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
         >
           <ExternalLink size={12} />
-          "텔레그램 채널 바로가기"
+          텔레그램 채널 바로가기
         </a>
       </div>
     </motion.div>

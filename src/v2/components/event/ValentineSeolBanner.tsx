@@ -24,7 +24,7 @@ const DAY_CONFIG: Record<
 > = {
   valentine: {
     badge: "D-DAY",
-    title: "Valentine Lucky Box",
+    title: "발렌타인럭키박스",
     description: "3판 플레이하고 럭키박스를 열어보세요!",
     gradient: "from-rose-500/20 via-pink-500/10 to-transparent",
     accentBorder: "border-rose-500/30",
@@ -120,7 +120,7 @@ export default function ValentineSeolBanner({
         <div className="mt-4 pt-4 border-t border-white/5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-              "4일 연속 달성"
+              4일 연속 달성
             </span>
             <span className="text-[10px] font-bold text-zinc-500">
               {streakCurrent}/{streakTarget}
@@ -132,7 +132,10 @@ export default function ValentineSeolBanner({
               const isCurrent = i === currentDayIndex;
 
               return (
-                <div key={day} className="flex flex-col items-center gap-1.5 flex-1">
+                <div
+                  key={day}
+                  className="flex flex-col items-center gap-1.5 flex-1"
+                >
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all ${
                       isCompleted

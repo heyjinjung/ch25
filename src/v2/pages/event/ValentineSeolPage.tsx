@@ -323,7 +323,7 @@ export default function ValentineSeolPage() {
             className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft size={18} />
-            <span className="text-xs font-bold">"이벤트 목록"</span>
+            <span className="text-xs font-bold">이벤트 목록</span>
           </button>
 
           <div className="flex items-center gap-3">
@@ -334,17 +334,13 @@ export default function ValentineSeolPage() {
                 animate="animate"
                 className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.8)]"
               />
-              <span className="text-[10px] font-black text-rose-500/80 uppercase tracking-[0.2em]">
-                Special Event
-              </span>
             </div>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tighter">
-            💝 "발렌타인 & "<span className="text-amber-500">"설날"</span>"
-            이벤트"
+            발렌타인/설날이벤트
           </h1>
           <p className="text-sm text-zinc-500 mt-1">
-            "2026.02.14 — 02.17 | 4일 연속 달성시 특별 보너스!"
+            02.14 — 02.17 | 4일 연속 달성시 특별 보너스!
           </p>
         </motion.div>
 
@@ -357,11 +353,9 @@ export default function ValentineSeolPage() {
           >
             <Sparkles size={40} className="text-zinc-600" />
             <div>
-              <p className="text-lg font-bold text-zinc-400">
-                "이벤트 준비 중"
-              </p>
+              <p className="text-lg font-bold text-zinc-400">이벤트 준비 중</p>
               <p className="text-sm text-zinc-600 mt-1">
-                "2026년 2월 14일 오전 9시부터 참여할 수 있습니다!"
+                2026년 2월 14일 오전 9시부터 참여할 수 있습니다!
               </p>
             </div>
           </motion.div>
@@ -388,9 +382,7 @@ export default function ValentineSeolPage() {
             >
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={16} className="text-amber-400" />
-                <h2 className="text-base font-black text-white">
-                  "이벤트 미션"
-                </h2>
+                <h2 className="text-base font-black text-white">이벤트 미션</h2>
               </div>
 
               {isLoading ? (
@@ -411,7 +403,7 @@ export default function ValentineSeolPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-zinc-600 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
                   <p className="text-sm font-bold">
-                    "미션 데이터를 불러오는 중..."
+                    미션 데이터를 불러오는 중...
                   </p>
                 </div>
               )}
@@ -425,10 +417,10 @@ export default function ValentineSeolPage() {
                 className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center"
               >
                 <p className="text-lg font-black text-emerald-400">
-                  "🎊 4일 연속 달성 완료!"
+                  🎊 4일 연속 달성 완료!
                 </p>
                 <p className="text-xs text-emerald-400/70 mt-1">
-                  "특별 보너스 보상이 지급되었습니다."
+                  특별 보너스 보상이 지급되었습니다.
                 </p>
               </motion.div>
             )}
