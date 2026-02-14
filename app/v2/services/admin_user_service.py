@@ -237,6 +237,15 @@ class V2AdminUserService:
             "nickname": target_nickname,
         }
 
+        from sqlalchemy import inspect
+        inspector = inspect(db.bind)
+
+        def _has_table(model: Any) -> bool:
+            try:
+                return bool(inspector.has_table(getattr(model, "__tablename__", "")))
+            except Exception:
+                return True
+
         # ─── 연관 테이블 방어적 삭제 (CASCADE 미보장 대비) ───
         from app.v2.models import (
             AdminMessageInbox,
@@ -278,6 +287,10 @@ class V2AdminUserService:
             from app.v2.models import TelegramUnlinkRequest
         except Exception:
             TelegramUnlinkRequest = None  # type: ignore
+
+        # Tables with FK to v2_user that may not have CASCADE
+        from app.v2.models import VaultLedger, HQProspectiveUser
+        from app.v2.models.core.user_history import UserIdentityHistory
 
         from app.v2.models.auth_event import V2UserAuthEvent
         from app.v2.models.refresh_token import V2UserRefreshToken
@@ -321,9 +334,22 @@ class V2AdminUserService:
 
         # Vault
         db.query(VaultEarnEvent).filter(VaultEarnEvent.user_id == user_id).delete(synchronize_session=False)
+        if _has_table(VaultLedger):
+            db.query(VaultLedger).filter(VaultLedger.user_id == user_id).delete(synchronize_session=False)
         db.query(VaultWithdrawalRequest).filter(VaultWithdrawalRequest.user_id == user_id).delete(synchronize_session=False)
         db.query(VaultStatus).filter(VaultStatus.user_id == user_id).delete(synchronize_session=False)
         db.query(V2UserDepositEvidence).filter(V2UserDepositEvidence.user_id == user_id).delete(synchronize_session=False)
+
+        # Identity history (may block delete if FK has no CASCADE)
+        if _has_table(UserIdentityHistory):
+            db.query(UserIdentityHistory).filter(UserIdentityHistory.user_id == user_id).delete(synchronize_session=False)
+
+        # HQ prospective link (nullable FK; must detach before deleting user)
+        if _has_table(HQProspectiveUser):
+            db.query(HQProspectiveUser).filter(HQProspectiveUser.linked_user_id == user_id).update(
+                {HQProspectiveUser.linked_user_id: None, HQProspectiveUser.linked_at: None, HQProspectiveUser.is_joined: False},
+                synchronize_session=False,
+            )
 
         # Activity
         db.query(UserActivityEvent).filter(UserActivityEvent.user_id == user_id).delete(synchronize_session=False)
@@ -358,8 +384,6 @@ class V2AdminUserService:
 
         # Telegram Unlink Requests (optional table)
         if TelegramUnlinkRequest is not None:
-            from sqlalchemy import inspect
-            inspector = inspect(db.bind)
             if inspector.has_table(TelegramUnlinkRequest.__tablename__):
                 db.query(TelegramUnlinkRequest).filter(
                     (TelegramUnlinkRequest.current_user_id == user_id)

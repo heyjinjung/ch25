@@ -253,6 +253,48 @@ class TestUserStateIntegration:
         # Given
         from app.v2.services.admin_user_service import V2AdminUserService
         user_id = normal_user.id
+
+        # Create dependent rows that can block hard delete if FK has no CASCADE
+        from sqlalchemy import inspect
+        inspector = inspect(db.bind)
+
+        if inspector.has_table("vault_ledger"):
+            from app.v2.models import VaultLedger
+            db.add(
+                VaultLedger(
+                    user_id=user_id,
+                    amount=100,
+                    balance_after=100,
+                    reason="test",
+                    ref_type="TEST",
+                )
+            )
+
+        if inspector.has_table("user_identity_history"):
+            from app.v2.models.core.user_history import UserIdentityHistory
+            db.add(
+                UserIdentityHistory(
+                    user_id=user_id,
+                    field_name="nickname",
+                    old_value="old",
+                    new_value="new",
+                    changed_by=admin_user.id,
+                )
+            )
+
+        if inspector.has_table("hq_prospective_user"):
+            from app.v2.models import HQProspectiveUser
+            db.add(
+                HQProspectiveUser(
+                    nickname="test",
+                    cc_id="test",
+                    segment="TEST",
+                    is_joined=True,
+                    linked_user_id=user_id,
+                )
+            )
+
+        db.commit()
         
         # When
         # Use service if available
@@ -276,3 +318,24 @@ class TestUserStateIntegration:
         else:
             # If hard delete
             assert user is None
+
+        # Dependent rows should be deleted/detached so purge does not 500
+        if inspector.has_table("vault_ledger"):
+            from app.v2.models import VaultLedger
+            assert db.query(VaultLedger).filter(VaultLedger.user_id == user_id).count() == 0
+
+        if inspector.has_table("user_identity_history"):
+            from app.v2.models.core.user_history import UserIdentityHistory
+            assert (
+                db.query(UserIdentityHistory).filter(UserIdentityHistory.user_id == user_id).count()
+                == 0
+            )
+
+        if inspector.has_table("hq_prospective_user"):
+            from app.v2.models import HQProspectiveUser
+            assert (
+                db.query(HQProspectiveUser)
+                .filter(HQProspectiveUser.linked_user_id == user_id)
+                .count()
+                == 0
+            )
