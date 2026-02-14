@@ -25,7 +25,7 @@ V2 시스템 운영 중 발생하는 문제를 **도메인별 주간 문서**로
 - **BENEFITS_SUSPENDED(403) 전용 안내 + 딥링크**: 상점 구매 API에서 `HTTP 403` + `detail=BENEFITS_SUSPENDED` 수신 시 전용 바텀시트를 노출하고 외부 링크를 제공한다.
    - 구현 파일: [src/v2/pages/shop/ExchangePage.tsx](../../../src/v2/pages/shop/ExchangePage.tsx)
    - 링크 오픈 규칙(TMA 우선): [src/v2/utils/openExternal.ts](../../../src/v2/utils/openExternal.ts)
-   - 환경변수(선택): `VITE_CC_DEPOSIT_URL` (기본: `https://ccc-010.com`), `VITE_TELEGRAM_OFFICIAL_CHANNEL_URL` (기본: `https://t.me/cc_jm_official`)
+   - 환경변수(선택): `VITE_CC_DEPOSIT_URL` (기본: `https://ccc-010.com`), `VITE_TELEGRAM_OFFICIAL_CHANNEL_URL` (기본: `https://t.me/+LksI3XlSjLlhZmE0`)
 
 ### 도메인 분류
 | 코드 | 도메인명 | 범위 |

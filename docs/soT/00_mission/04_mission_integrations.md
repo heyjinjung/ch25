@@ -46,7 +46,7 @@
 
 ### 5.1 환경 변수/기본값
 - TELEGRAM_CHANNEL_USERNAME 사용
-- 기본 URL: https://t.me/cc_jm_official
+- 기본 URL: https://t.me/+LksI3XlSjLlhZmE0
 
 ## 6. 공유/스토리 미션
 - 텔레그램 공유는 신뢰 기반 즉시 기록
