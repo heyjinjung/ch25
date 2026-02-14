@@ -134,7 +134,7 @@ export default function SecretCodeInput({
       {/* Telegram Link */}
       <div className="pt-3 border-t border-white/5 text-center">
         <a
-          href="https://t.me/cc_jm_official"
+          href="https://t.me/+LksI3XlSjLlhZmE0"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"

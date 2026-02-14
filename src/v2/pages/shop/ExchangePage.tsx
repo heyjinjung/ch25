@@ -71,7 +71,7 @@ export default function ExchangePage() {
   const depositUrl = viteEnv?.VITE_CC_DEPOSIT_URL || "https://ccc-010.com";
   const officialChannelUrl =
     viteEnv?.VITE_TELEGRAM_OFFICIAL_CHANNEL_URL ||
-    "https://t.me/cc_jm_official";
+    "https://t.me/+LksI3XlSjLlhZmE0";
 
   const [activeTab, setActiveTab] = useState("shop");
   const [selectedProduct, setSelectedProduct] = useState<ShopProductDto | null>(

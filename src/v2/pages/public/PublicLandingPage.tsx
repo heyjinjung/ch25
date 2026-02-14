@@ -7,7 +7,7 @@ export default function PublicLandingPage() {
   const primaryCtaHref = "/home";
 
   const telegramHref = useMemo(() => {
-    return "https://t.me/+IE0NYpuze_k1YWZk";
+    return "https://t.me/+LksI3XlSjLlhZmE0";
   }, []);
 
   const ccMainSiteHref = "https://ccc-010.com";
@@ -485,13 +485,10 @@ function SeoHiddenCodeSection() {
 
   return (
     <section className="mt-10 rounded-xl border border-blue-500/20 bg-blue-500/5 p-6">
-      <h2 className="text-lg font-bold text-white">
-        🔍 일일 검색 미션 코드
-      </h2>
+      <h2 className="text-lg font-bold text-white">🔍 일일 검색 미션 코드</h2>
       <p className="mt-2 text-sm text-obsidian-muted">
-        구글 검색을 통해 방문해 주셔서 감사합니다!
-        아래 코드를 씨씨카지노 앱 내 검색 미션 페이지에서 입력하면
-        3,000 ~ 5,000P를 받을 수 있습니다.
+        구글 검색을 통해 방문해 주셔서 감사합니다! 아래 코드를 씨씨카지노 앱 내
+        검색 미션 페이지에서 입력하면 3,000 ~ 5,000P를 받을 수 있습니다.
       </p>
       <div
         className="mt-4 inline-block rounded-xl bg-white/10 px-6 py-3 font-mono text-xl font-black text-white tracking-widest select-all"
