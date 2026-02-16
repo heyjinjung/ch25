@@ -101,7 +101,34 @@ class V2SegmentService:
     def get_current_segment(db: Session, user_id: int) -> str:
         row = db.get(V2UserSegment, user_id)
         if row is not None:
-            return V2SegmentService.normalize_segment(row.segment)
+            segment = V2SegmentService.normalize_segment(row.segment)
+
+            # ── NEW 세그먼트 만료 자동 보정 ──
+            # Celery 배치가 실행되지 않아도, NEW 유저의 가입 7일 경과 시
+            # 실시간으로 규칙 재평가하여 올바른 세그먼트를 반환/저장한다.
+            if segment == "NEW":
+                user = db.get(V2User, user_id)
+                if user is not None:
+                    now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+                    now_kst = now_utc.astimezone(ZoneInfo("Asia/Seoul"))
+                    if V2SegmentService._is_new_protection_expired(user, now_kst):
+                        # 보호 기간 만료 → pending_segment 또는 규칙 재평가
+                        row.previous_segment = "NEW"  # Grace Period 판정용
+                        if row.pending_segment:
+                            new_seg = V2SegmentService.normalize_segment(row.pending_segment)
+                            row.segment = new_seg
+                            row.pending_segment = None
+                        else:
+                            rules = V2SegmentService.list_enabled_rules(db)
+                            ctx = V2SegmentService._build_context(db, user, datetime.utcnow())
+                            rec = V2SegmentService._recommend_segment(rules, ctx)
+                            new_seg = V2SegmentService.normalize_segment(rec[0]) if rec else "COMMON"
+                            row.segment = new_seg
+                        db.add(row)
+                        db.commit()
+                        return row.segment
+
+            return segment
 
         user = db.get(V2User, user_id)
         if user is None:

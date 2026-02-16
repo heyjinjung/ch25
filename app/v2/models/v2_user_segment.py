@@ -28,6 +28,9 @@ class V2UserSegment(Base):
     # 신규 유저 보호 기간 종료 후 적용할 세그먼트 (HQ에서 가져온 원래 세그먼트)
     pending_segment = Column(String(50), nullable=True, comment="7일 후 적용할 세그먼트 (NEW 보호 기간용)")
     
+    # 세그먼트 전환 이력 (Grace Period 판정용)
+    previous_segment = Column(String(50), nullable=True, comment="직전 세그먼트 (전환 유예 기간 판정용)")
+    
     # HQ Margin CSV 연동 데이터
     total_margin = Column(BigInteger, nullable=True, default=0, comment="총 운영 마진 (충전 - 환전)")
     total_charge = Column(BigInteger, nullable=True, default=0, comment="누적 충전 금액")

@@ -1,6 +1,6 @@
 // src/components/vault/V2WithdrawalGuideModal.tsx
 import React, { useMemo } from "react";
-import { X, ShieldCheck, TrendingUp, AlertCircle } from "lucide-react";
+import { X, ShieldCheck, TrendingUp, AlertCircle, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WithdrawalRulesChecklist } from "./WithdrawalRulesChecklist";
 import { VaultStatusResponse } from "../../api/vaultApi";
@@ -24,14 +24,27 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
   const completedCount = useMemo(() => {
     let count = 0;
     if (vaultData.daily_play_count >= vaultData.daily_play_target) count++;
-    if (vaultData.daily_vault_spent >= vaultData.daily_vault_spent_target) count++;
+    if (vaultData.daily_vault_spent >= vaultData.daily_vault_spent_target)
+      count++;
     if (vaultData.daily_deposit_confirmed) count++;
     return count;
   }, [vaultData]);
 
   const totalConditions = 3;
-  const completionPercent = Math.round((completedCount / totalConditions) * 100);
+  const completionPercent = Math.round(
+    (completedCount / totalConditions) * 100,
+  );
   const isFullyComplete = completedCount === totalConditions;
+
+  // Grace Period 잔여일 계산
+  const graceDaysRemaining = useMemo(() => {
+    if (!vaultData.grace_period_active || !vaultData.grace_period_ends_at)
+      return 0;
+    const endsAt = new Date(vaultData.grace_period_ends_at);
+    const now = new Date();
+    const diffMs = endsAt.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }, [vaultData.grace_period_active, vaultData.grace_period_ends_at]);
 
   // Motivational messages based on completion
   const getMotivationalMessage = () => {
@@ -44,9 +57,9 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
         borderColor: "border-emerald-500/20",
       };
     }
-    
+
     const remaining = totalConditions - completedCount;
-    
+
     if (remaining === 1) {
       return {
         icon: AlertCircle,
@@ -56,7 +69,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
         borderColor: "border-amber-500/20",
       };
     }
-    
+
     return {
       icon: AlertCircle,
       text: `이용할수록 쌓입니다. ${remaining}개 조건 달성 필요`,
@@ -133,7 +146,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                       {completedCount} / {totalConditions} 완료
                     </span>
                   </div>
-                  
+
                   {/* Progress bar */}
                   <div className="relative h-2 bg-white/5 rounded-full overflow-hidden">
                     <motion.div
@@ -156,7 +169,7 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                       />
                     </motion.div>
                   </div>
-                  
+
                   <p className="text-center text-xs text-white/40">
                     {completionPercent}% 달성
                   </p>
@@ -166,15 +179,46 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
 
             {/* Checklist Content */}
             <div className="px-5 pb-4">
+              {/* Grace Period 전환 안내 배너 */}
+              {vaultData.grace_period_active && graceDaysRemaining > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3 flex items-start gap-3 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20"
+                >
+                  <Clock
+                    size={18}
+                    className="text-amber-400 flex-shrink-0 mt-0.5"
+                  />
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-amber-300">
+                      전환 유예 기간 ({graceDaysRemaining}일 남음)
+                    </p>
+                    <p className="text-xs text-amber-200/70 leading-relaxed">
+                      회원 등급이 변경되었지만, 유예 기간 동안 기존 신규회원
+                      조건이 유지됩니다. 유예 기간 종료 후 새로운 등급 조건이
+                      적용됩니다.
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
               <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 overflow-y-auto max-h-[240px]">
                 <WithdrawalRulesChecklist
                   playCount={vaultData.daily_play_count}
                   playTarget={vaultData.daily_play_target}
-                  isPlayMet={vaultData.daily_play_count >= vaultData.daily_play_target}
+                  isPlayMet={
+                    vaultData.daily_play_count >= vaultData.daily_play_target
+                  }
                   spendAmount={vaultData.daily_vault_spent}
                   spendTarget={vaultData.daily_vault_spent_target}
-                  isSpendMet={vaultData.daily_vault_spent >= vaultData.daily_vault_spent_target}
+                  isSpendMet={
+                    vaultData.daily_vault_spent >=
+                    vaultData.daily_vault_spent_target
+                  }
                   isAccountVerified={vaultData.daily_deposit_confirmed}
+                  depositTarget={vaultData.daily_deposit_target}
+                  segment={vaultData.segment ?? "COMMON"}
                 />
               </div>
             </div>
@@ -187,8 +231,12 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                 transition={{ delay: 0.3 }}
                 className={`flex items-center gap-3 p-4 rounded-2xl ${motivationalMessage.bgColor} border ${motivationalMessage.borderColor}`}
               >
-                <motivationalMessage.icon className={`w-5 h-5 ${motivationalMessage.color} flex-shrink-0`} />
-                <p className={`text-sm font-semibold ${motivationalMessage.color} leading-tight`}>
+                <motivationalMessage.icon
+                  className={`w-5 h-5 ${motivationalMessage.color} flex-shrink-0`}
+                />
+                <p
+                  className={`text-sm font-semibold ${motivationalMessage.color} leading-tight`}
+                >
                   {motivationalMessage.text}
                 </p>
               </motion.div>
@@ -211,14 +259,14 @@ const V2WithdrawalGuideModal: React.FC<V2WithdrawalGuideModalProps> = ({
                 </button>
               </div>
             ) : (
-                <div className="px-5 pb-6 space-y-2">
-                    <button
-                        onClick={onClose}
-                        className="w-full h-12 rounded-[24px] bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-all"
-                    >
-                        닫기
-                    </button>
-                </div>
+              <div className="px-5 pb-6 space-y-2">
+                <button
+                  onClick={onClose}
+                  className="w-full h-12 rounded-[24px] bg-white/10 hover:bg-white/20 text-white font-bold text-sm transition-all"
+                >
+                  닫기
+                </button>
+              </div>
             )}
 
             {/* Footer */}

@@ -1,6 +1,6 @@
 문서 타입: SoT
-버전: v1.0
-작성일: 2026-02-07
+버전: v1.1
+작성일: 2026-02-16
 작성자: GitHub Copilot
 대상: BE/FE/운영
 상태: SoT
@@ -81,8 +81,22 @@ V2 세그먼트 분류 규칙과 운영 기준을 단일 SoT로 정의한다.
 - 위 조건에 매칭되지 않는 기본 세그먼트
 
 ## 8. 평가 주기
-- 일 1회 배치 실행을 기본으로 한다.
+- 일 1회 배치 실행(Celery)을 기본으로 한다.
 - 운영 필요 시 수동 실행을 허용한다.
+- **NEW 자동 만료**: `get_current_segment()` 호출 시 NEW 유저의 7일 보호기간 만료를 실시간 감지하여 인라인 전환한다. 배치 미실행 시에도 안전하게 동작한다.
+
+## 8.1 NEW → 다른 세그먼트 전환 시 동작
+1. `segment_service.get_current_segment()` 호출
+2. segment=NEW이며 가입 후 7일+09:00 KST 경과 확인
+3. `row.previous_segment = "NEW"` 기록 (Grace Period 판정용)
+4. `pending_segment` 존재 시 해당 값 적용, 없으면 규칙 재평가
+5. DB 커밋 후 새 세그먼트 반환
+
+## 8.2 전환 유예 기간 (Grace Period)
+- NEW → 다른 세그먼트 전환 후 **3일간** 기존 NEW 출금 조건 유지
+- 판정: `previous_segment = 'NEW'` AND `updated_at`으로부터 3일 이내
+- 3일 경과 후 자동으로 새 세그먼트 조건 적용
+- 상세 정책은 Vault SoT §7.4 참조
 
 ## 9. 입력 데이터 및 조건 필드
 ### 9.1 데이터 소스
@@ -168,4 +182,5 @@ V2 세그먼트 분류 규칙과 운영 기준을 단일 SoT로 정의한다.
 - [v2_user_segment_policy_sot_ko.md](v2_user_segment_policy_sot_ko.md)
 
 ## 19. 변경 이력
+- v1.1 (2026-02-16): §8 NEW 자동 만료(인라인), §8.1 전환 동작, §8.2 Grace Period 추가, previous_segment 컬럼 반영
 - v1.0 (2026-02-07): 세그먼트 SoT 통합 2문서 중 1권 작성

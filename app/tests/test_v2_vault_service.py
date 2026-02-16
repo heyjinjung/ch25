@@ -96,10 +96,9 @@ class TestVaultDeposit:
         if not self.user:
             self.user = V2User(
                 id=self.test_user_id,
-                username=f"test_vault_{self.test_user_id}",
+                cc_id=f"test_vault_{self.test_user_id}",
                 vault_locked_balance=0,
                 vault_spent_today=0,
-                withdrawal_count=0,
             )
             self.db.add(self.user)
             self.db.commit()
@@ -202,10 +201,9 @@ class TestVaultWithdraw:
         if not self.user:
             self.user = V2User(
                 id=self.test_user_id,
-                username=f"test_vault_{self.test_user_id}",
+                cc_id=f"test_vault_{self.test_user_id}",
                 vault_locked_balance=100000,  # 충분한 잔액으로 시작
                 vault_spent_today=0,
-                withdrawal_count=0,
             )
             self.db.add(self.user)
             self.db.commit()
@@ -314,7 +312,7 @@ class TestVaultDailyReset:
         if not user:
             user = V2User(
                 id=test_user_id,
-                username=f"test_vault_{test_user_id}",
+                cc_id=f"test_vault_{test_user_id}",
                 vault_spent_today=5000,
                 vault_spent_reset_date="2026-02-10",  # 어제
             )

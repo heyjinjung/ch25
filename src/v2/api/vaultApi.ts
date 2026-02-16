@@ -45,11 +45,14 @@ export interface VaultStatusResponse {
   daily_vault_spent: number;
   daily_vault_spent_target: number;
   daily_deposit_confirmed: boolean;
+  daily_deposit_target: number;
   play_requirement_met: boolean;
   spend_requirement_met: boolean;
   withdrawal_count: number;
   today_earnings: number;
   minimum_withdrawal_amount: number;
+  grace_period_active: boolean;
+  grace_period_ends_at: string | null;
 }
 
 export interface WithdrawRequest {
@@ -113,6 +116,9 @@ export const vaultApi = {
       daily_deposit_confirmed: Boolean(
         data.daily_deposit_confirmed ?? data.dailyDepositConfirmed ?? false,
       ),
+      daily_deposit_target: Number(
+        data.daily_deposit_target ?? data.dailyDepositTarget ?? 10000,
+      ),
       play_requirement_met: Boolean(
         data.play_requirement_met ?? data.playRequirementMet ?? false,
       ),
@@ -126,6 +132,12 @@ export const vaultApi = {
       minimum_withdrawal_amount: Number(
         data.minimum_withdrawal_amount ?? data.minimumWithdrawalAmount ?? 0,
       ),
+      grace_period_active: Boolean(
+        data.grace_period_active ?? data.gracePeriodActive ?? false,
+      ),
+      grace_period_ends_at: (data.grace_period_ends_at ??
+        data.gracePeriodEndsAt ??
+        null) as string | null,
     };
   },
   withdraw: async (data: WithdrawRequest): Promise<WithdrawResponse> => {

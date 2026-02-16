@@ -24,9 +24,11 @@
 ### 3.1 v2_user_segment
 - user_id (PK, FK -> v2_user.id)
 - segment (CRM 세그먼트)
+- pending_segment (7일 후 적용할 세그먼트, NEW 보호기간용)
+- **previous_segment** (직전 세그먼트, Grace Period 판정용) — 2026-02-16 추가
 - total_margin, total_charge
 - inactive_days
-- updated_at
+- updated_at (onupdate=utcnow, 세그먼트 전환 시각)
 
 ### 3.2 v2_segment_rule
 - priority, enabled

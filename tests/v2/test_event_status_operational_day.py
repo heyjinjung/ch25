@@ -59,10 +59,25 @@ class TestEventStatusOperationalDay:
                 datetime(2026, 2, 14, 10, 0, 0, tzinfo=ZoneInfo("Asia/Seoul")),
                 {"EVENT_VALENTINE_2026", "EVENT_SEOL_STREAK_2026"},
             ),
+            # 2/15 10:00 KST (운영일=2/15): DAY1 + 스트릭만
+            (
+                datetime(2026, 2, 15, 10, 0, 0, tzinfo=ZoneInfo("Asia/Seoul")),
+                {"EVENT_SEOL_DAY1_2026", "EVENT_SEOL_STREAK_2026"},
+            ),
             # 2/16 01:00 KST (09시 이전 → 운영일=2/15): DAY1 + 스트릭만
             (
                 datetime(2026, 2, 16, 1, 0, 0, tzinfo=ZoneInfo("Asia/Seoul")),
                 {"EVENT_SEOL_DAY1_2026", "EVENT_SEOL_STREAK_2026"},
+            ),
+            # 2/16 10:00 KST (운영일=2/16): DAY2 + 스트릭만
+            (
+                datetime(2026, 2, 16, 10, 0, 0, tzinfo=ZoneInfo("Asia/Seoul")),
+                {"EVENT_SEOL_DAY2_2026", "EVENT_SEOL_STREAK_2026"},
+            ),
+            # 2/17 10:00 KST (운영일=2/17): DAY3 + 스트릭만
+            (
+                datetime(2026, 2, 17, 10, 0, 0, tzinfo=ZoneInfo("Asia/Seoul")),
+                {"EVENT_SEOL_DAY3_2026", "EVENT_SEOL_STREAK_2026"},
             ),
         ],
     )

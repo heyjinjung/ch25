@@ -25,6 +25,57 @@ logger = logging.getLogger(__name__)
 
 
 class V2VaultService:
+    # ── 세그먼트별 출금 조건 매핑 (SoT: 01_vault_policy_sot_ko.md 섹션 7.2) ──
+    SEGMENT_WITHDRAWAL_CONDITIONS: dict[str, dict[str, int]] = {
+        "NEW":     {"play_target": 5,  "spend_target": 0,     "min_deposit_target": 10000},
+        "COMMON":  {"play_target": 15, "spend_target": 5000,  "min_deposit_target": 10000},
+        "VIP":     {"play_target": 10, "spend_target": 0,     "min_deposit_target": 100000},
+        "WHALE":   {"play_target": 0,  "spend_target": 0,     "min_deposit_target": 100000},
+        "AT_RISK": {"play_target": 30, "spend_target": 10000, "min_deposit_target": 10000},
+    }
+
+    # Grace Period: NEW→다른 세그먼트 전환 후 기존 조건 유지 일수
+    SEGMENT_GRACE_PERIOD_DAYS = 3
+
+    @staticmethod
+    def _get_withdrawal_targets(
+        segment: str,
+        deposit_7d: int = 0,
+        *,
+        previous_segment: str | None = None,
+        transitioned_at: datetime | None = None,
+    ) -> tuple[int, int, int]:
+        """세그먼트와 7일 입금액 기반으로 (play_target, spend_target, min_deposit_target) 반환.
+        
+        Grace Period: previous_segment가 NEW이고 전환 후 3일 이내면
+        NEW 조건을 계속 적용한다.
+        """
+        # Grace Period 체크: NEW → 다른 세그먼트 전환 후 3일 이내
+        if (
+            previous_segment
+            and previous_segment.upper() == "NEW"
+            and segment.upper() != "NEW"
+            and transitioned_at is not None
+        ):
+            now_utc = datetime.utcnow()
+            if transitioned_at.tzinfo is None:
+                transitioned_at = transitioned_at.replace(tzinfo=timezone.utc)
+            if now_utc.replace(tzinfo=timezone.utc) - transitioned_at < timedelta(days=V2VaultService.SEGMENT_GRACE_PERIOD_DAYS):
+                # Grace Period 활성: NEW 조건 유지
+                conds = V2VaultService.SEGMENT_WITHDRAWAL_CONDITIONS["NEW"]
+                return conds["play_target"], conds["spend_target"], conds["min_deposit_target"]
+
+        conds = V2VaultService.SEGMENT_WITHDRAWAL_CONDITIONS.get(segment.upper())
+        if conds:
+            return conds["play_target"], conds["spend_target"], conds["min_deposit_target"]
+        # 세그먼트 미매핑 시 입금액 기반 폴백
+        if deposit_7d >= 3_000_000:
+            return 10, 0, 100000
+        if deposit_7d >= 500_000:
+            return 15, 5000, 10000
+        # 기본값
+        return 30, 10000, 10000
+
     @staticmethod
     def _to_utc(now: datetime) -> datetime:
         if now.tzinfo is None:
@@ -671,39 +722,36 @@ class V2VaultService:
         from app.v2.services.segment_service import V2SegmentService
 
         current_segment = V2SegmentService.get_current_segment(db, user_id)
-        segments = [str(current_segment).upper()] if current_segment else []
 
-        play_target = 30
-        spend_target = 10000
-        min_deposit_target = 10000
-        if "NEW" in segments:
-            play_target = 5
-            spend_target = 0
-            min_deposit_target = 10000  # SoT 7.2: NEW도 당일 1만 이상
-        elif "COMMON" in segments:
-            play_target = 15
-            spend_target = 5000
-            min_deposit_target = 10000
-        elif "VIP" in segments:
-            play_target = 10
-            spend_target = 0
-            min_deposit_target = 100000
-        elif "WHALE" in segments:
-            play_target = 0
-            spend_target = 0
-            min_deposit_target = 100000
-        elif "AT_RISK" in segments:
-            play_target = 30
-            spend_target = 10000
-            min_deposit_target = 10000
-        elif deposit_7d >= 3000000:
-            play_target = 10  # VIP 기준 준용
-            spend_target = 0
-            min_deposit_target = 100000
-        elif deposit_7d >= 500000:
-            play_target = 15  # COMMON 기준 준용
-            spend_target = 5000
-            min_deposit_target = 10000
+        # Grace Period: NEW→다른 세그먼트 전환 직후 3일간 기존 조건 유지
+        from app.v2.models.v2_user_segment import V2UserSegment as _V2US
+        seg_row = db.get(_V2US, user_id)
+        prev_seg = getattr(seg_row, "previous_segment", None) if seg_row else None
+        trans_at = getattr(seg_row, "updated_at", None) if seg_row else None
+
+        play_target, spend_target, min_deposit_target = self._get_withdrawal_targets(
+            current_segment, int(deposit_7d),
+            previous_segment=prev_seg,
+            transitioned_at=trans_at,
+        )
+
+        # Grace Period 상태 계산 (FE 전달용)
+        grace_period_active = False
+        grace_period_ends_at = None
+        if (
+            prev_seg
+            and str(prev_seg).upper() == "NEW"
+            and current_segment != "NEW"
+            and trans_at is not None
+        ):
+            if trans_at.tzinfo is None:
+                _trans_utc = trans_at.replace(tzinfo=timezone.utc)
+            else:
+                _trans_utc = trans_at
+            _grace_end = _trans_utc + timedelta(days=self.SEGMENT_GRACE_PERIOD_DAYS)
+            if now_dt.replace(tzinfo=timezone.utc) < _grace_end:
+                grace_period_active = True
+                grace_period_ends_at = _grace_end.astimezone(ZoneInfo("Asia/Seoul")).isoformat()
 
         # ── daily_deposit_confirmed: 입금 여부 + 금액 충족 검증 ──
         # has_cc_deposit_today는 입금 '존재' 여부, delta_today가 실제 금액
@@ -843,6 +891,8 @@ class V2VaultService:
             "withdrawal_count": int(withdrawal_count),
             "today_earnings": int(today_earnings),
             "minimum_withdrawal_amount": int(next_min_balance),
+            "grace_period_active": grace_period_active,
+            "grace_period_ends_at": grace_period_ends_at,
         }
 
     def record_game_play_earn_event(
@@ -1507,7 +1557,6 @@ class V2VaultService:
         from app.v2.services.segment_service import V2SegmentService
 
         current_segment = V2SegmentService.get_current_segment(db, user_id)
-        segments = [str(current_segment).upper()] if current_segment else []
 
         seven_days_ago_date = (now - timedelta(days=6)).date()
         deposit_7d = db.query(func.coalesce(func.sum(ExternalRankingDailyDepositDelta.deposit_delta), 0)).filter(
@@ -1515,38 +1564,21 @@ class V2VaultService:
             ExternalRankingDailyDepositDelta.kst_date >= seven_days_ago_date,
         ).scalar() or 0
 
-        play_target = 30
-        spend_target = 10000
-        min_deposit_target = 10000
+        play_target, spend_target, min_deposit_target = self._get_withdrawal_targets(
+            current_segment, int(deposit_7d)
+        )
 
-        if "NEW" in segments:
-            play_target = 5
-            spend_target = 0
-            min_deposit_target = 10000  # SoT 7.2: NEW도 당일 1만 이상
-        elif "COMMON" in segments:
-            play_target = 15
-            spend_target = 5000
-            min_deposit_target = 10000
-        elif "VIP" in segments:
-            play_target = 10
-            spend_target = 0
-            min_deposit_target = 100000
-        elif "WHALE" in segments:
-            play_target = 0
-            spend_target = 0
-            min_deposit_target = 100000
-        elif "AT_RISK" in segments:
-            play_target = 30
-            spend_target = 10000
-            min_deposit_target = 10000
-        elif deposit_7d >= 3000000:
-            play_target = 10
-            spend_target = 0
-            min_deposit_target = 100000
-        elif deposit_7d >= 500000:
-            play_target = 15
-            spend_target = 5000
-            min_deposit_target = 10000
+        # Grace Period: NEW→다른 세그먼트 전환 시 3일간 NEW 조건 유지
+        from app.v2.models.v2_user_segment import V2UserSegment as _V2USW
+        seg_row_w = db.get(_V2USW, user_id)
+        prev_seg_w = getattr(seg_row_w, "previous_segment", None) if seg_row_w else None
+        trans_at_w = getattr(seg_row_w, "updated_at", None) if seg_row_w else None
+        if prev_seg_w and trans_at_w:
+            play_target, spend_target, min_deposit_target = self._get_withdrawal_targets(
+                current_segment, int(deposit_7d),
+                previous_segment=prev_seg_w,
+                transitioned_at=trans_at_w,
+            )
 
         # 당일 입금액 합계 확인 (has_cc_deposit_today는 단순히 입금 여부만 체크하므로 금액 체크 추가)
         if min_deposit_target > 0:

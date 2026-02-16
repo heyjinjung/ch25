@@ -1,6 +1,6 @@
 문서 타입: SoT (정책 통합)
-버전: v1.1
-작성일: 2026-02-07
+버전: v1.2
+작성일: 2026-02-16
 작성자: GitHub Copilot
 대상: BE/FE/기획/운영
 상태: Stable
@@ -85,13 +85,21 @@
 | 3회 | 30,000 |
 | 4회 | 50,000 |
 
-### 7.4 조건 표기 원칙
+### 7.4 전환 유예 기간 (Grace Period)
+- NEW → 다른 세그먼트 전환 시 **3일간** 기존 NEW 조건을 유지한다.
+- 판정 기준: `v2_user_segment.previous_segment = 'NEW'` AND `updated_at`으로부터 3일 이내
+- Grace Period 활성 시 API 응답에 `grace_period_active: true`, `grace_period_ends_at: ISO 8601` 포함
+- FE 출금 모달에 유예 기간 안내 배너를 표시한다.
+- 유예 기간 종료 후 자동으로 새 세그먼트 조건이 적용된다.
+- `request_withdrawal()` 서버사이드 검증에서도 동일한 Grace Period 로직을 적용한다.
+
+### 7.5 조건 표기 원칙
 - UI 문구는 BE 정책과 동일한 시간 범위를 사용한다.
 - 플레이 조건: 최근 3일 기준 표기
 - 사용 조건: 오늘 사용 금액 표기
 - 입금 조건: 당일 실질 입금 표기
 
-### 7.5 조건 계산 원칙
+### 7.6 조건 계산 원칙
 - 플레이 횟수는 v2 및 legacy 게임 로그를 합산한다.
 - 소비 금액은 상점 소비만 반영한다.
 - 입금 조건은 cc_deposit 순증 기준을 사용한다.
@@ -210,5 +218,6 @@
 - CC 입금 순증 로직이 감소 케이스를 무시하는지 확인
 
 ## 22. 변경 이력
+- v1.2 (2026-02-16, GitHub Copilot): §7.4 Grace Period(전환 유예 3일) 정책 추가, FE daily_deposit_target 세그먼트 연동, SEGMENT_WITHDRAWAL_CONDITIONS 중복 제거
 - v1.1 (2026-02-07, GitHub Copilot): 정책 확장 및 구성 강화
 - v1.0 (2026-02-07, GitHub Copilot): 분산 SoT 정책 통합
