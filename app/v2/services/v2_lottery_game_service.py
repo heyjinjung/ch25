@@ -330,8 +330,13 @@ class V2LotteryGameService:
                 meta={"reason": "v2_lottery_play", "prize_id": chosen.id},
             )
 
-        # Optional: puzzle-piece side drop (config-driven)
+        # 상금으로 퍼즐 조각을 당첨받은 경우 collection_piece 설정
         collection_piece = None
+        if reward_type.startswith("PUZZLE_") and reward_amount > 0:
+            collection_piece = reward_type.replace("PUZZLE_", "")
+
+        # Optional: puzzle-piece side drop (config-driven)
+        side_drop_piece = None
         try:
             prob = float(getattr(config, "puzzle_piece_probability", 0.0) or 0.0)
             if prob > 1:
@@ -347,9 +352,12 @@ class V2LotteryGameService:
                     reason="V2_LOTTERY_PUZZLE_DROP",
                     meta={"v2_config_id": config.id, "v2_log_id": log_entry.id},
                 )
-                collection_piece = token.value.replace("PUZZLE_", "")
+                side_drop_piece = token.value.replace("PUZZLE_", "")
+                # 상금 퍼즐이 없을 때만 사이드 드랍을 collection_piece로
+                if collection_piece is None:
+                    collection_piece = side_drop_piece
         except Exception:
-            collection_piece = None
+            pass  # 사이드 드랍 실패해도 상금 퍼즐은 유지
 
         ctx = GamePlayContext(user_id=user_id, feature_type=FeatureType.LOTTERY.value, today=today)
         log_game_play(

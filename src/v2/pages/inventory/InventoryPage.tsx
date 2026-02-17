@@ -51,9 +51,21 @@ const getFriendlyItemName = (type: string) => {
 const isGifticonType = (type: string) =>
   (type || "").toUpperCase().includes("GIFTICON");
 
+// 퍼즐 토큰 타입 (wallet → inventory 표시 대상)
+const PUZZLE_TOKEN_TYPES = new Set([
+  "PUZZLE_C1",
+  "PUZZLE_C2",
+  "PUZZLE_J",
+  "PUZZLE_M",
+]);
+
 // Helper to get image path (Keep existing logic)
 const getItemImage = (type: string) => {
   const t = type.toLowerCase();
+  // Puzzle pieces
+  if (t.includes("puzzle_c")) return "/assets/icons/puzzle_c.png";
+  if (t.includes("puzzle_j")) return "/assets/icons/puzzle_j.png";
+  if (t.includes("puzzle_m")) return "/assets/icons/puzzle_m.png";
   if (t.includes("starbucks"))
     return "/assets/icons/takeaway-cup-dynamic-color.png";
   if (t.includes("google")) return "/assets/icons/bell.png";
@@ -85,7 +97,20 @@ export default function InventoryPage() {
     quantity: number;
   } | null>(null);
 
-  const items = data?.items ?? [];
+  // items + wallet 내 퍼즐 토큰을 합산하여 표시
+  const rawItems = data?.items ?? [];
+  const wallet = data?.wallet ?? {};
+
+  // wallet에서 퍼즐 토큰을 items 형태로 변환하여 합침
+  const puzzleWalletItems = Object.entries(wallet)
+    .filter(([tokenType]) => PUZZLE_TOKEN_TYPES.has(tokenType))
+    .filter(([, balance]) => (balance as number) > 0)
+    .map(([tokenType, balance]) => ({
+      item_type: tokenType,
+      quantity: balance as number,
+    }));
+
+  const items = [...rawItems, ...puzzleWalletItems];
 
   const handleTabClick = (tabId: string) => {
     if (tabId === "shop") {
