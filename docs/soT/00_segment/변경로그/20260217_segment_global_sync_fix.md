@@ -50,5 +50,17 @@
 - `app/v2/services/vault_service.py` (L29-L36)
 - `app/v2/services/segment_service.py` (L109-L112)
 
+## 테스트 (40/40 PASSED)
+- 테스트 파일: `tests/v2/test_segment_global_sync.py`
+
+| 클래스 | 항목수 | 검증 대상 |
+|--------|--------|----------|
+| TestSegmentWithdrawalConditionsMapping | 7 | 6개 세그먼트(WINNER 포함) 매핑 존재 + 값 정확성 |
+| TestGetWithdrawalTargets | 9 | 세그먼트별 반환값, 대소문자, 폴백, Grace Period |
+| TestAdminSegmentUpdate | 4 | previous_segment 기록, pending 초기화, 동일 세그먼트, WINNER 허용 |
+| TestPendingSegmentProtection | 2 | pending 자동적용 차단, 어드민 설정 보호 |
+| TestSegmentVaultPipeline | 6 | DB→segment_service→vault_service 통합 파이프라인 |
+| TestNormalizeSegment | 9 | 정규화 (대소문자, null, 빈문자열, 유효하지 않은 값) |
+
 ## 배포 필요
-로컬 수정 완료. 빌드/배포 후 운영 반영.
+로컬 수정 + 테스트 완료. 빌드/배포 후 운영 반영.
