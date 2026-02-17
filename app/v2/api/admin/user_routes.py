@@ -455,7 +455,12 @@ def update_user_segment(
     old_segment = user_segment.segment if user_segment else None
 
     if user_segment:
+        # Grace Period 판정을 위해 이전 세그먼트 기록
+        if old_segment and old_segment != segment:
+            user_segment.previous_segment = old_segment
         user_segment.segment = segment
+        # 어드민이 직접 설정했으므로 pending_segment 제거 (HQ import 덮어쓰기 방지)
+        user_segment.pending_segment = None
         user_segment.updated_at = datetime.utcnow()
     else:
         user_segment = V2UserSegment(user_id=user_id, segment=segment)

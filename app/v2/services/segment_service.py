@@ -1,6 +1,7 @@
 ﻿"""V2 segmentation batch service."""
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -19,6 +20,8 @@ from app.v2.models.user import V2User
 from app.v2.models import ExternalRankingDailyDepositDelta
 from app.v2.models import ExternalRankingData
 from app.v2.models import UserActivity
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -103,6 +106,11 @@ class V2SegmentService:
         if row is not None:
             segment = V2SegmentService.normalize_segment(row.segment)
 
+            # ── pending_segment는 자동적용하지 않음 ──
+            # pending_segment는 HQ import 등에서 설정되며, 어드민이 명시적으로
+            # /segments/batch/apply-pending 실행 시에만 적용된다.
+            # 어드민이 직접 설정한 segment를 pending이 덮어쓰지 않도록 보호.
+
             # ── NEW 세그먼트 만료 자동 보정 ──
             # Celery 배치가 실행되지 않아도, NEW 유저의 가입 7일 경과 시
             # 실시간으로 규칙 재평가하여 올바른 세그먼트를 반환/저장한다.
@@ -112,18 +120,13 @@ class V2SegmentService:
                     now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
                     now_kst = now_utc.astimezone(ZoneInfo("Asia/Seoul"))
                     if V2SegmentService._is_new_protection_expired(user, now_kst):
-                        # 보호 기간 만료 → pending_segment 또는 규칙 재평가
+                        # 보호 기간 만료 → 규칙 재평가
                         row.previous_segment = "NEW"  # Grace Period 판정용
-                        if row.pending_segment:
-                            new_seg = V2SegmentService.normalize_segment(row.pending_segment)
-                            row.segment = new_seg
-                            row.pending_segment = None
-                        else:
-                            rules = V2SegmentService.list_enabled_rules(db)
-                            ctx = V2SegmentService._build_context(db, user, datetime.utcnow())
-                            rec = V2SegmentService._recommend_segment(rules, ctx)
-                            new_seg = V2SegmentService.normalize_segment(rec[0]) if rec else "COMMON"
-                            row.segment = new_seg
+                        rules = V2SegmentService.list_enabled_rules(db)
+                        ctx = V2SegmentService._build_context(db, user, datetime.utcnow())
+                        rec = V2SegmentService._recommend_segment(rules, ctx)
+                        new_seg = V2SegmentService.normalize_segment(rec[0]) if rec else "COMMON"
+                        row.segment = new_seg
                         db.add(row)
                         db.commit()
                         return row.segment

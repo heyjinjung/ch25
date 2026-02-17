@@ -32,6 +32,7 @@ class V2VaultService:
         "VIP":     {"play_target": 10, "spend_target": 0,     "min_deposit_target": 100000},
         "WHALE":   {"play_target": 0,  "spend_target": 0,     "min_deposit_target": 100000},
         "AT_RISK": {"play_target": 30, "spend_target": 10000, "min_deposit_target": 10000},
+        "WINNER":  {"play_target": 30, "spend_target": 10000, "min_deposit_target": 10000},
     }
 
     # Grace Period: NEW→다른 세그먼트 전환 후 기존 조건 유지 일수
